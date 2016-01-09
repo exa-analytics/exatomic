@@ -4,7 +4,6 @@ from atomic import _pd as pd
 from atomic import _os as os
 try:
     from atomic.algorithms.jitted import expand
-    print('got jitted import')
 except ImportError:
     from atomic.algorithms.nonjitted import expand
 
