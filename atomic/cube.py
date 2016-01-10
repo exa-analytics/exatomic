@@ -4,10 +4,12 @@ Cube File Parsing and Composing
 =============================================
 
 '''
-from atomic.algorithms import generate_minimal_framedf_from_onedf as _gen_fdf
+from atomic import _pd as pd
+from atomic.algorithms.nonjitted import generate_minimal_framedf_from_onedf as _gen_fdf
 
 
-def read_cubes(paths, frames=None, volidxs=None, labels=None, universe=None, **kwargs):
+def read_cubes(paths, frames=None, volidxs=None, labels=None,
+               universe=None, metadata={}, **kwargs):
     '''
     Args
         paths (list): List of paths to cube files
@@ -65,8 +67,7 @@ def read_cubes(paths, frames=None, volidxs=None, labels=None, universe=None, **k
         df = pd.read_csv(fl, delim_whitespace=True, header=None,
                          skiprows=[0, 1], names=range(6), dtype=float)
 
-        # Always needed
-        nat = int(df.iloc[0, 0])
+        nat = int(df.iloc[0, 0])   # Always needed
 
         if cfidx:
             frame = frames[i]
@@ -77,24 +78,25 @@ def read_cubes(paths, frames=None, volidxs=None, labels=None, universe=None, **k
             label = labels[i]
 
         index = (frame, volidx)    # Generate voldata
-        voldat, convert_xyz = _gen_voldat(df.iloc[0:4],frame, volidx, label, spin)
+        voldat, convert_xyz = _gen_voldat(df.iloc[0:4],frame, volidx, label)
 
                                    # Generate the cube entry
         volume = _gen_volume(df.iloc[nat + 4:], frame, volidx)
         vollist.append(volume)
         voldatlist.append(voldat)
 
-        if i == 0:
+        if i == 0:                 # Only need one of these dfs each
             unikws['one'] = _gen_one(df.iloc[4:nat + 4], convert_xyz, frame)
             unikws['frame'] = _gen_fdf(unikws['one'])
 
     if universe is None:
         unikws['voldat'] = pd.concat(voldatlist)
         unikws['volume'] = pd.concat(vollist)
+        unikws['metadata'] = {'paths': paths}
         unikws.update(kwargs)
-        uni = Universe(**unikws)
-        uni.get_two_body_properties()
-        return uni
+        #uni = Universe(**unikws)
+        #uni.get_two_body_properties()
+        return unikws
     else:
         o = ['frame', 'volidx']
         if universe.volume is None:
@@ -188,7 +190,7 @@ def read_cubes(paths, frames=None, volidxs=None, labels=None, universe=None, **k
 #                universe.voldat = universe.voldat.append(voldat).reset_index(o).sort_values(o).set_index(o)
 
 
-def _gen_voldat(data, frame, volidx, label, spin):
+def _gen_voldat(data, frame, volidx, label):
     '''
     '''
     convert_xyz = False
@@ -198,7 +200,7 @@ def _gen_voldat(data, frame, volidx, label, spin):
                   'nx': v[0], 'dxi': v[3], 'dxj': v[4], 'dxk': v[5],
                   'ny': v[1], 'dyi': v[6], 'dyj': v[7], 'dyk': v[8],
                   'nz': v[2], 'dzi': v[9], 'dzj': v[10], 'dzk': v[11],
-                  'label': label, 'spin': spin}
+                  'label': label}
     df = pd.DataFrame(voldatdict, index=[0])
     # Check units
     for i in ['x', 'y', 'z']:
@@ -218,13 +220,13 @@ def _gen_one(onedf, convert_xyz, frame):
     '''
     '''
     distinct = onedf[0].astype(int).unique()
-    sym_dict = iso[iso.index.isin(distinct)]['symbol'].to_dict()
+    #sym_dict = iso[iso.index.isin(distinct)]['symbol'].to_dict()
     df = onedf.loc[:, [0, 2, 3, 4]].reset_index(drop=True)
     df.index.names = ['one']
     df.columns = ['symbol', 'x', 'y', 'z']
     if convert_xyz:
         df[['x', 'y', 'z']] *= Length['A', 'a0']
-    df['symbol'] = df['symbol'].apply(lambda sym: sym_dict[sym])
+    #df['symbol'] = df['symbol'].apply(lambda sym: sym_dict[sym])
     df['frame'] = frame
     df.set_index('frame', append=True, inplace=True)
     df = df.reorder_levels(['frame', 'one'])
