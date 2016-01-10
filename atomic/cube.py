@@ -4,6 +4,11 @@ Cube File Parsing and Composing
 =============================================
 
 '''
+# Hacky imports
+import sys
+sys.path.insert(0, '/home/tjd/Programs/analytics-exa/exa')
+
+from exa import Isotope
 from atomic import _pd as pd
 from atomic.algorithms.nonjitted import generate_minimal_framedf_from_onedf as _gen_fdf
 
@@ -12,14 +17,14 @@ def read_cubes(paths, frames=None, volidxs=None, labels=None,
                universe=None, metadata={}, **kwargs):
     '''
     Args
-        paths (list): List of paths to cube files
-        frames (list or int): List of same length as paths or frame of interest
-        volidxs (list or int): List of same length as paths or starting volidx
+        paths (str or list): str to path or list of paths to cube files
+        frames (int or list): frame of interest or list of same length as paths
+        volidxs (int or list): starting volidx or list of same length as paths
         labels (list): List of same length as paths
         universe (:class:`~atomic.container.Universe`): universe to which field belongs (see Note)
 
     Returns
-        universe: New universe or modified universe
+        unikws: New universe or modified universe
 
     Note
         See parse_cube() for the singular case.
@@ -36,32 +41,42 @@ def read_cubes(paths, frames=None, volidxs=None, labels=None,
     vollist = []
     voldatlist = []
     unikws = {}
+
     cfidx = None
     if frames is None:
         if universe is None:
             frame = 0
         else:
             frame = universe.framelist[0]
-    elif frames is int:
+    elif type(frames) is int:
         frame = frames
-    elif frames is list:
+    elif type(frames) is list:
         cfidx = True
+        frame = frames[0]
+
     cvidx = None
     if volidxs is None:
         if universe is None:
             volidx = 0
         else:
             volidx = universe.voldat.loc[frame].index.get_level_values('volidx')[-1] + 1
-    elif volidxs is int:
+    elif type(volidxs) is int:
         volidx = volidxs
-    elif volidxs is list:
+    elif type(volidxs) is list:
         cvidx = True
     clidx = None
     if labels:
         clidx = True
+        label = labels[0]
     else:
         label = None
 
+    print(frame)
+    print(label)
+    print(volidx)
+
+    onelist = []
+    framelist = []
 
     for i, fl in enumerate(paths):
         df = pd.read_csv(fl, delim_whitespace=True, header=None,
@@ -71,7 +86,8 @@ def read_cubes(paths, frames=None, volidxs=None, labels=None,
 
         if cfidx:
             frame = frames[i]
-        volidx += 1
+        else:
+            volidx += 1
         if cvidx:
             volidx = volidxs[i]
         if clidx:
@@ -85,11 +101,18 @@ def read_cubes(paths, frames=None, volidxs=None, labels=None,
         vollist.append(volume)
         voldatlist.append(voldat)
 
-        if i == 0:                 # Only need one of these dfs each
-            unikws['one'] = _gen_one(df.iloc[4:nat + 4], convert_xyz, frame)
-            unikws['frame'] = _gen_fdf(unikws['one'])
+        if cfidx:
+            onelist.append(_gen_one(df.iloc[4:nat + 4], convert_xyz, frame))
+            framelist.append(_gen_fdf(onelist[-1]))
+        else:
+            if i == 0:             # Only need one of these dfs each
+                unikws['one'] = _gen_one(df.iloc[4:nat + 4], convert_xyz, frame)
+                unikws['frame'] = _gen_fdf(unikws['one'])
 
     if universe is None:
+        if cfidx:
+            unikws['one'] = pd.concat(onelist)
+            unikws['frame'] = pd.concat(framelist)
         unikws['voldat'] = pd.concat(voldatlist)
         unikws['volume'] = pd.concat(vollist)
         unikws['metadata'] = {'paths': paths}
@@ -102,96 +125,24 @@ def read_cubes(paths, frames=None, volidxs=None, labels=None,
         if universe.volume is None:
             universe.volume = volume
         else:
-            print('If cubes exist for add cubes this fails currently.')
-            pass
-            #if index in universe.volume.index:
-            #    universe.volume.set_value(index, 'mag', volume.values)
-#            else:
-#                universe.volume = universe.volume.append(volume).reset_index(o).sort_values(o).set_index(o)
-#        if universe.voldat is None:
-#            universe.voldat = voldat
-#        else:
-#            mymap = voldat.to_dict()
-#            if index in universe.voldat.index:
-#                universe.voldat.iloc[index].map(mymap)
-#            else:
-#                universe.voldat = universe.voldat.append(voldat).reset_index(o).sort_values(o).set_index(o)
+            if index in universe.volume.index:
+                universe.volume.set_value(index, 'mag', volume.values)
+            else:
+                universe.volume = universe.volume.append(volume).reset_index(o).sort_values(o).set_index(o)
+        if universe.voldat is None:
+            universe.voldat = voldat
+        else:
+            mymap = voldat.to_dict()
+            if index in universe.voldat.index:
+                universe.voldat.iloc[index].map(mymap)
+            else:
+                universe.voldat = universe.voldat.append(voldat).reset_index(o).sort_values(o).set_index(o)
         return universe
-
-#def read_cube(cube_file, frame=None, volidx=None, label=None, spin=None, universe=None, **kwargs):
-#    '''
-#    Args
-#        cube_file (str): Cube file path
-#        frame (int): Frame index (frame) to which this field belongs (see Note)
-#        volidx (int): Volume index (may repeat volume additions if not specified)
-#        label (str): String description of the volume in the cube file
-#        spin (int): If an orbital cube, may optionally specify the spin
-#        universe (:class:`~exa.atomic.container.Universe`): Universe where the field belongs (see Note)
-#
-#    Returns
-#        universe: New universe or modified original universe
-#
-#    Note
-#        In order for the cube file to be attached correctly to a universe, all
-#        indices (frame, volidx) must be specified as well as the original universe
-#        must be provided. Otherwise it will create a universe with the given information.
-#
-#    Warning
-#        If attaching to an existing universe only the cubedata and cube tables will
-#        be updated! The frame and one body tables will not be modified!
-#    '''
-#    df = pd.read_csv(cube_file, delim_whitespace=True, header=None,
-#                     skiprows=[0, 1], names=range(6), dtype=float)
-#
-#    # Always needed
-#    nat = int(df.iloc[0, 0])
-#    if frame is None:
-#        frame = 0 if universe is None else universe.framelist[0]
-#    if volidx is None:
-#        volidx = 0 if universe is None else universe.voldat.loc[frame].index.get_level_values('volidx')[-1] + 1
-#
-#    # Generate voldata
-#    index = (frame, volidx)
-#    voldat, convert_xyz = _gen_voldat(df.iloc[0:4],frame, volidx, label, spin)
-#
-#    # Generate the cube entry
-#    volume = _gen_volume(df.iloc[nat + 4:], frame, volidx)
-#
-#    if universe is None:
-#        unikws = {}
-#        # Generate the frame table
-#        unikwargs['frame'] = _gen_fdf(nat, frame)
-#        # Generate the one body table
-#        unikwargs['one'] = _gen_one(df.iloc[4:nat + 4], convert_xyz, frame)
-#        # Attach
-#        unikwargs['voldat'] = voldat
-#        unikwargs['volume'] = volume
-#        # In case the user supplied project or job information etc.
-#        unikwargs.update(kwargs)
-#        uni = Universe(**unikwargs)
-#        uni.get_two_body_properties()
-#        return uni
-#    else:
-#        o = ['frame', 'volidx']
-#        if universe.volume is None:
-#            universe.volume = volume
-#        else:
-#            if index in universe.volume.index:
-#                universe.volume.set_value(index, 'mag', volume.values)
-#            else:
-#                universe.volume = universe.volume.append(volume).reset_index(o).sort_values(o).set_index(o)
-#        if universe.voldat is None:
-#            universe.voldat = voldat
-#        else:
-#            mymap = voldat.to_dict()
-#            if index in universe.voldat.index:
-#                universe.voldat.iloc[index].map(mymap)
-#            else:
-#                universe.voldat = universe.voldat.append(voldat).reset_index(o).sort_values(o).set_index(o)
 
 
 def _gen_voldat(data, frame, volidx, label):
     '''
+    Generates 'voldat' dataframe (volume metadata)
     '''
     convert_xyz = False
     origin = data.iloc[0, 1:4].values
@@ -218,15 +169,17 @@ def _gen_voldat(data, frame, volidx, label):
 
 def _gen_one(onedf, convert_xyz, frame):
     '''
+    Generates 'one' body dataframe
     '''
     distinct = onedf[0].astype(int).unique()
-    #sym_dict = iso[iso.index.isin(distinct)]['symbol'].to_dict()
+    nisos = [Isotope.get_element(int(znum), by='znum') for znum in distinct]
+    isos = {iso.Z: iso.symbol for iso in nisos}
     df = onedf.loc[:, [0, 2, 3, 4]].reset_index(drop=True)
     df.index.names = ['one']
     df.columns = ['symbol', 'x', 'y', 'z']
     if convert_xyz:
         df[['x', 'y', 'z']] *= Length['A', 'a0']
-    #df['symbol'] = df['symbol'].apply(lambda sym: sym_dict[sym])
+    df['symbol'] = df['symbol'].map(isos)
     df['frame'] = frame
     df.set_index('frame', append=True, inplace=True)
     df = df.reorder_levels(['frame', 'one'])
@@ -235,6 +188,7 @@ def _gen_one(onedf, convert_xyz, frame):
 
 def _gen_volume(data, frame, volidx):
     '''
+    Generates 'volume' dataframe
     '''
     df = data.stack().dropna().reset_index(drop=True).to_frame()
     df.columns = ['mag']
