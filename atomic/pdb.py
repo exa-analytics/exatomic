@@ -6,6 +6,7 @@ from atomic import _np as np
 from atomic import _sys as sys
 import requests as _req
 import json as _json
+from io import StringIO
 from warnings import warn as _warn
 
 #Hacky imports
@@ -13,7 +14,7 @@ sys.path.insert(0, '/home/tjd/Programs/analytics-exa/exa')
 from exa.utils import mkpath
 
 _selfpath = os.path.abspath(__file__).replace('pdb.py', '')
-_recpath = mkpath(_selfpath, 'static', 'pdb.json')
+_recpath = mkpath(_selfpath, 'static', 'pdb-small.json')
 
 with open(_recpath, 'r') as f:
     records = _json.load(f)
@@ -40,55 +41,54 @@ def read_pdb(path):
             flins = _req.get(url).text.splitlines()
         except:
             ConnectionError('{}: check that url exists.'.format(url))
-    rds = _pre_process_pdb(flins)       # Get number of occurances of records
-    sepdict, errors = _parse_pdb(flins, rds)    # dictionary separated into records
-    return sepdict, errors
-
+    rds, fdict = _pre_process_pdb(flins)
+    sepdict = _parse_pdb(flins, rds)
+    frame = pd.DataFrame.from_dict(fdict)
+    fidxs = [e for e, j in enumerate(frame.values) for i in range(j)]
+    oidxs = [i for j in frame.values for i in range(j)]
+    one = sepdict['ATOM'][['symbol', 'x', 'y', 'z']]
+    one.loc[:, 'one'] = oidxs
+    one.loc[:, 'frame'] = fidxs
+    one.set_index(['frame', 'one'], inplace=True)
+    return {'frame': frame, 'one': one}
 
 def _pre_process_pdb(flins):
-    recdims = {}
-    reccnt = [line[:6].strip() for line in flins]
+    rds = {}
+    recs = [line[:6].strip() for line in flins]
     for record in records:
-        if 'ORIGX' in record or 'SCALE' in record \
-        or 'MATRX' in record or 'DBREF' in record:
-            recdims[record[:5]] = [sum([1 for rec in reccnt if record == rec]), 0]
-        else:
-            recdims[record] = [sum([1 for rec in reccnt if record == rec]), 0]
-    print(recdims['ATOM'])
-    print(recdims['HETATM'])
-    print(recdims['ANISOU'])
-    return recdims
+        rds[record] = [sum([1 for rec in recs if record == rec]), 0]
+    if rds['ENDMDL'][0]:
+        nrf = rds['ENDMDL'][0]
+    else:
+        nrf = 1
+    nat = rds['ATOM'][0] // nrf
+    fdict = {'count': np.empty((nrf,), dtype='i8')}
+    for i in range(nrf):
+        fdict['count'][i] = nat
+    return rds, fdict
 
 def _parse_pdb(flins, rds):
     sepdict = {}
-    errors = []
-    for key, val in records.items():
-        trec = val['rec']
-        if trec:
-            dtyp=[(i[2], i[3]) for i in trec]
-            sepdict[key] = np.empty((rds[key][0], ), dtype=dtyp)
     for i, line in enumerate(flins):
         rec = line[:6].strip()
-        if 'ORIGX' in rec or 'SCALE' in rec \
-        or 'MATRX' in rec or 'DBREF' in rec:
-            rec = rec[:5]
+        #if 'ORIGX' in rec or 'SCALE' in rec \
+        #or 'MATRX' in rec or 'DBREF' in rec:
+        #    rec = rec[:5]
+        #if rec == 'ATOM' or rec == 'HETATM' or rec == 'ANISOU':
         if records[rec]['rec']:
-            slices = [(i[0], i[1]) for i in records[rec]['rec']]
-            dtyps = [(i[2], i[3]) for i in records[rec]['rec']]
-            if rec in sepdict:
-                cidx = rds[rec][1]
-                print(rec)
-                print(line)
-                print(slices)
-                print(dtyps)
-                #try:
-                sepdict[rec][cidx] = tuple([line[i:j] for i, j in slices])
-                #except (ValueError, TypeError) as e:
-                #    errors.append('{}:{}'.format(rec, e))
-                #    pass
-                rds[rec][1] += 1
-    return sepdict, errors
-
+            sepdict.setdefault(
+                rec, {i[2]: np.zeros(
+                    (rds[rec][0], ), dtype=i[3]
+                ) for i in records[rec]['rec']}
+            )
+            slices = [(i[2], i[0], i[1]) for i in records[rec]['rec']]
+            for sub, i, j in slices:
+                if line[i:j].strip():
+                    sepdict[rec][sub][rds[rec][1]] = line[i:j]
+            rds[rec][1] += 1
+    for rec in sepdict:
+        sepdict[rec] = pd.DataFrame.from_dict(sepdict[rec])
+    return sepdict
 
 
 def write_pdb(fp):
