@@ -16,7 +16,8 @@ columns = ['symbol', 'x', 'y', 'z']
 
 def read_xyz(path, unit='A', metadata={}, **kwargs):
     '''
-    Reads an xyz or xyz trajectory file
+    Reads an xyz or xyz trajectory file following a format similar to:
+
 
     Args
         path (str): file path
@@ -25,17 +26,17 @@ def read_xyz(path, unit='A', metadata={}, **kwargs):
         **kwargs: only if using with exa content management system
 
     Return
-        unikws (dict): dataframes containing 'frame' and 'one' body data
+        unikws (dict): dataframes containing 'frame', 'one' body and 'meta' data
 
     See Also
         :class:`atomic.container.Universe`
     '''
-    df = pd.read_csv(path, names=columns, delim_whitespace=True, skip_blank_lines=False)
-    try:
-        units = getline(path, 1).split()[1]
-    except IndexError:
-        units = unit
+    df = _rawdf(path)
+    units = _unit(path)
+    if units:
+        unit = units
     frdxs = _index(df)
+    #return df, frdxs
     comments = _comments(path, frdxs + 2)
     one = _parse_xyz(df, units, frdxs)
     frame = _gen_fdf(one)
@@ -46,6 +47,15 @@ def read_xyz(path, unit='A', metadata={}, **kwargs):
     }
     unikws['metadata'].update(metadata)
     return unikws
+
+def _rawdf(path):
+    return pd.read_csv(path, names=columns, delim_whitespace=True, skip_blank_lines=False)
+
+def _unit(path):
+    try:
+        return getline(path, 1).split()[1]
+    except IndexError:
+        return
 
 def _index(df):
     vals = df['symbol'].values
@@ -84,4 +94,4 @@ def _parse_xyz(df, unit, frdxs):
     return one
 
 def write_xyz(uni, path):
-    pass
+    raise NotImplementedError("This will get added in due time.")
