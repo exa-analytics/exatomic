@@ -41,16 +41,21 @@ def read_pdb(path):
             flins = _req.get(url).text.splitlines()
         except:
             ConnectionError('{}: check that url exists.'.format(url))
-    rds, fdict = _pre_process_pdb(flins)
+    rds = _pre_process_pdb(flins)
+    odx = [i for i range(rds['nat'])]
+    frdx = [i for j in range(rds['nrf']) for i in j]
+    print('odx', odx)
+    print('frdx', frdx)
     sepdict = _parse_pdb(flins, rds)
-    frame = pd.DataFrame.from_dict(fdict)
-    fidxs = [e for e, j in enumerate(frame.values) for i in range(j)]
-    oidxs = [i for j in frame.values for i in range(j)]
+    #frame = pd.DataFrame.from_dict(fdict)
+    #fidxs = [e for e, j in enumerate(frame.values) for i in range(j)]
+    #oidxs = [i for j in frame.values for i in range(j)]
     one = sepdict['ATOM'][['symbol', 'x', 'y', 'z']]
-    one.loc[:, 'one'] = oidxs
-    one.loc[:, 'frame'] = fidxs
-    one.set_index(['frame', 'one'], inplace=True)
-    return {'frame': frame, 'one': one}
+    #one.loc[:, 'one'] = oidxs
+    #one.loc[:, 'frame'] = fidxs
+    #one.set_index(['frame', 'one'], inplace=True)
+    #return {'frame': frame, 'one': one}
+    return one
 
 def _pre_process_pdb(flins):
     rds = {}
@@ -62,10 +67,12 @@ def _pre_process_pdb(flins):
     else:
         nrf = 1
     nat = rds['ATOM'][0] // nrf
-    fdict = {'count': np.empty((nrf,), dtype='i8')}
-    for i in range(nrf):
-        fdict['count'][i] = nat
-    return rds, fdict
+    #fdict = {'count': np.empty((nrf,), dtype='i8')}
+    #for i in range(nrf):
+    #    fdict['count'][i] = nat
+    rds['nrf'] = nrf
+    rds['nat'] = nat
+    return rds#, fdict
 
 def _parse_pdb(flins, rds):
     sepdict = {}
