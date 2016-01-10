@@ -1,16 +1,20 @@
 # -*- coding: utf-8 -*-
 
+from linecache import getline
 from atomic import _pd as pd
+from atomic import _np as np
 from atomic import _os as os
 try:
     from atomic.algorithms.jitted import expand
-    print('got jitted import')
 except ImportError:
     from atomic.algorithms.nonjitted import expand
 
+#Hacks?
+from atomic.algorithms.nonjitted import generate_minimal_framedf_from_onedf as _gen_fdf
+convert = 1.88973
 columns = ['symbol', 'x', 'y', 'z']
 
-def read_xyz(fp, unit='A', metadata={}, **kwargs):
+def read_xyz(path, unit='A', metadata={}, **kwargs):
     '''
     Reads an xyz or xyz trajectory file
 
@@ -26,29 +30,58 @@ def read_xyz(fp, unit='A', metadata={}, **kwargs):
     See Also
         :class:`atomic.container.Universe`
     '''
-    df = pd.read_csv(fp, names=columns, delim_whitespace=True, skip_blank_lines=False)
-    unikws = _parse_xyz(df, unit)
-    #unikws['metadata'].update(metadata)
-    return df
+    df = pd.read_csv(path, names=columns, delim_whitespace=True, skip_blank_lines=False)
+    try:
+        units = getline(path, 1).split()[1]
+    except IndexError:
+        units = unit
+    frdxs = _index(df)
+    comments = _comments(path, frdxs + 2)
+    one = _parse_xyz(df, units, frdxs)
+    frame = _gen_fdf(one)
+    unikws = {
+        'one': one,
+        'frame': frame,
+        'metadata': {'comments': comments, 'path': path}
+    }
+    unikws['metadata'].update(metadata)
+    return unikws
 
-def _parse_xyz(df, unit):
-    nats = df.loc[df[['x', 'y', 'z']].isnull().all(axis=1)]
-    ## This method for getting number of atoms support variable nat frames
-    #nats = df.loc[df[['x', 'y', 'z']].isnull().all(axis=1) & df.symbol.str.isdigit(), 'symbol'].astype(int)
-    ## Get the xyz and symbol data
-    #framedx, onedx, indices = expand(nats.index.values + 2, nats.values)
-    #one = df.loc[df.index.isin(indices), ['symbol', 'x', 'y', 'z']]
-    #one.loc[:, ['x', 'y', 'z']] = one.loc[:, ['x', 'y', 'z']].astype(float)
-    #one.loc[:, ['x', 'y', 'z']] *= Length[unit, 'a0']
-    #one['frame'] = framedx
-    #one['one'] = onedx
-    #one.set_index(['frame', 'one'], inplace=True)
-    ## Get metadata
-    #comment_idx = nats.index + 1
-    #metadata = {'comments': df.loc[comment_idx].dropna().apply(join_row, on=' ', axis=1).to_dict()}
-    ## Generate the framedf
-    #frame = generate_minimal_framedf_from_onedf(one)
-    #return {'frame': frame, 'one': one, 'metadata': metadata}
+def _index(df):
+    vals = df['symbol'].values
+    tot = len(vals)
+    idxs = [0]
+    cidx = int(vals[0]) + 2
+    idxs.append(cidx)
+    while cidx < tot:
+        try:
+            nidx = int(vals[cidx]) + 2
+            cidx += nidx
+            idxs.append(cidx)
+        except ValueError:
+            cidx += 1
+    idxs.pop(-1)
+    return np.array(idxs)
 
-def write_xyz(fp):
+def _comments(path, cidxs):
+    ret = ''
+    for ln in cidxs:
+        com = getline(path, ln)
+        if com.strip():
+            ret = ''.join([ret, str(ln), ':', com])
+    return ret
+
+def _parse_xyz(df, unit, frdxs):
+    natdxs = np.array([int(df['symbol'].values[idx]) for idx in frdxs])
+    frdx, odx, idxs = expand(frdxs + 2, natdxs)
+    one = df.loc[df.index.isin(idxs), ['symbol', 'x', 'y', 'z']]
+    one.loc[:, ['x', 'y', 'z']] = one.loc[:, ['x', 'y', 'z']].astype(float)
+    if unit == 'A':
+        one.loc[:, ['x', 'y', 'z']] *= convert
+    one['frame'] = frdx
+    one['one'] = odx
+    one.set_index(['frame', 'one'], inplace=True)
+    return one
+
+def write_xyz(uni, path):
     pass
