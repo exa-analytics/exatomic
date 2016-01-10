@@ -3,14 +3,18 @@
 from atomic import _os as os
 from atomic import _pd as pd
 from atomic import _np as np
-from atomic import _sys as sys
-import requests as _req
+from atomic import sys
+from requests import get as _get
 import json as _json
-from io import StringIO
 from warnings import warn as _warn
 
-#Hacky imports
+try:
+    from atomic.algorithms.jitted import expand as _expand
+except ImportError:
+    from atomic.algorithms.nonjitted import expand as _expand
+
 from atomic.algorithms.nonjitted import generate_minimal_framedf_from_onedf as _gen_fdf
+#Hacky imports
 sys.path.insert(0, '/home/tjd/Programs/analytics-exa/exa')
 from exa.utils import mkpath
 
@@ -35,35 +39,43 @@ def read_pdb(path, metadata={}, **kwargs):
     See Also
         :class:`atomic.container.Universe`
     '''
-    if os.sep in path:
-        with open(path, 'r') as f:
-            flins = f.read().splitlines()
-    else:
-        try:
-            url = 'http://www.rcsb.org/pdb/files/{}.pdb'.format(path.lower())
-            flins = _req.get(url).text.splitlines()
-        except:
-            ConnectionError('{}: check that url exists.'.format(url))
+    flins = _path_handler(path)
     rds = _pre_process_pdb(flins)
-    frdx = [i for i in range(rds['nrf']) for j in range(rds['nat'])]
-    odx = [i for j in range(rds['nrf']) for i in range(rds['nat'])]
+    frdx, odx, ptls = _expand(
+        np.arange(0, rds['nrf']),
+        np.array([rds['nat'] for i in range(rds['nrf'])])
+    )
+    del ptls
     sepdict = _parse_pdb(flins, rds)
-    one = sepdict['ATOM'].loc[:, ['symbol', 'x', 'y', 'z']]
-    one['frame'] = frdx
-    one['one'] = odx
-    one.set_index(['frame', 'one'], inplace=True)
+    one = _restruct_one(sepdict['ATOM'], frdx, odx)
     frame = _gen_fdf(one)
     unikws = {'frame': frame, 'one': one, 'metadata': {'text': sepdict['TEXT']}}
     unikws['metadata'].update(metadata)
-    try:
-        aniso = sepdict['ANISOU'].loc[:, ['symbol', 'x', 'y', 'z']]
-        aniso['frame'] = frdx
-        aniso['one'] = odx
-        aniso.set_index(['frame', 'one'], inplace=True)
-        unikws['aniso'] = aniso
-    except KeyError:
-        pass
+    #try:
+    #    unikws['aniso'] = _restruct_one(sepdict['ANISOU'], frdx, odx)
+    #except KeyError:
+    #    pass
     return unikws
+
+def _path_handler(path):
+    if os.sep in path:
+        return _local_path(path)
+    else:
+        return _remote_path(path)
+
+def _local_path(path):
+    with open(path, 'r') as f:
+        flins = f.read().splitlines()
+    return flins
+
+
+def _remote_path(path):
+    url = 'http://www.rcsb.org/pdb/files/{}.pdb'.format(path.lower())
+    flins = _get(url).text.splitlines()
+    if 'FileNotFoundException' in flins[0]:
+        raise FileNotFoundError('{}:{}'.format(url, ' may not exist.'))
+    return flins
+
 
 def _pre_process_pdb(flins):
     rds = {}
@@ -78,6 +90,13 @@ def _pre_process_pdb(flins):
     rds['nrf'] = nrf
     rds['nat'] = nat
     return rds
+
+def _restruct_one(atomdf, frdx, odx):
+    one = atomdf.loc[:, ['symbol', 'x', 'y', 'z', 'res.seq.']]
+    one['frame'] = frdx
+    one['one'] = odx
+    one.set_index(['frame', 'one'], inplace=True)
+    return one
 
 def _parse_pdb(flins, rds):
     sepdict = {}
