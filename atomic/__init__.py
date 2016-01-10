@@ -11,6 +11,7 @@ import numpy as _np
 import pandas as _pd
 from .xyz import read_xyz, write_xyz
 from .pdb import read_pdb, write_pdb
+from .cube import read_cube, read_cubes
 
 # Aliases
 __atomic_version__ = (0, 1, 0)    # atomic VERSION NUMBER

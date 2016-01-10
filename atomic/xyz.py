@@ -25,7 +25,7 @@ def read_xyz(path, unit='A', metadata={}, **kwargs):
         **kwargs: only if using with exa content management system
 
     Return
-        unikws (dict): dataframes containing 'frame' and 'one' body data
+        unikws (dict): dataframes containing 'frame', 'one' body and 'meta' data
 
     See Also
         :class:`atomic.container.Universe`
