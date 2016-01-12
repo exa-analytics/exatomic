@@ -11,6 +11,7 @@ from exa.relational.base import Column, Integer, ForeignKey
 #from atomic.molecule import Molecule
 
 
+
 class Universe(Container):
     '''
     An :class:`~atomic.universe.Universe` represents a collection of time
@@ -18,7 +19,7 @@ class Universe(Container):
     be thought of as a snapshot in time. Each snaphot in time has information
     about atomic positions, energies, bond distances, etc.
     '''
-    pkid = Column(Integer, ForeignKey('container.pkid'), primary_key=True)
+    cid = Column(Integer, ForeignKey('container.pkid'), primary_key=True)
     frame_count = Column(Integer)
     __mapper_args__ = {'polymorphic_identity': 'universe'}
 
