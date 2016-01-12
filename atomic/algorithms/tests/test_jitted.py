@@ -1,15 +1,16 @@
 # -*- coding: utf-8 -*-
-
-# Hacky import
-import sys
-sys.path.insert(0, '/home/tjd/Programs/analytics-exa/atomic')
-sys.path.insert(0, '/home/tjd/Programs/analytics-exa/exa')
+'''
+Tests for :mod:`~atomic.algorithms.jitted`
+=============================================
+'''
 from exa.testers import UnitTester
-from atomic.algorithms.nonjitted import expand
 from atomic import _np as np
+from atomic.algorithms.jitted import expand
 
-class TestNJExpand(UnitTester):
 
+class TestJitted(UnitTester):
+    '''
+    '''
     def test_expand(self):
         a = np.arange(0, 100, 5) + 2
         b = np.array([3] * 20)

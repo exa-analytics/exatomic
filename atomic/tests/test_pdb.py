@@ -1,19 +1,17 @@
 # -*- coding: utf-8 -*-
-
-# Hacky imports
-import sys
-sys.path.insert(0, '/home/tjd/Programs/analytics-exa/atomic')
-sys.path.insert(0, '/home/tjd/Programs/analytics-exa/exa')
-
+'''
+Tests for :mod:`~atomic.pdb`
+===============================
+'''
+from requests import get as _get
 from exa.testers import UnitTester
 from exa.utils import mkpath
-from requests import get as _get
 from atomic import _np as np
 from atomic import _os as os
 from atomic import pdb
 
 
-_selfpath = os.path.abspath(__file__).replace('tests/test_pdb.py', '')
+_selfpath = os.path.dirname(os.path.realpath(__file__))
 _pdbpath = mkpath(_selfpath, 'static', '3nir.pdb')
 
 

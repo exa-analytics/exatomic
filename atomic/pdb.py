@@ -1,28 +1,31 @@
 # -*- coding: utf-8 -*-
-
+'''
+PDB File I/O
+=======================
+'''
+from requests import get as _get
+from json import load
+from warnings import warn as _warn
+from exa.utils import mkpath
 from atomic import _os as os
 from atomic import _pd as pd
 from atomic import _np as np
-from atomic import sys
-from requests import get as _get
-import json as _json
-from warnings import warn as _warn
-
+from atomic import _sys as sys
+from atomic.algorithms.nonjitted import generate_minimal_framedf_from_onedf as _gen_fdf
 try:
     from atomic.algorithms.jitted import expand as _expand
 except ImportError:
     from atomic.algorithms.nonjitted import expand as _expand
 
-from atomic.algorithms.nonjitted import generate_minimal_framedf_from_onedf as _gen_fdf
-#Hacky imports
-sys.path.insert(0, '/home/tjd/Programs/analytics-exa/exa')
-from exa.utils import mkpath
 
 _selfpath = os.path.abspath(__file__).replace('pdb.py', '')
 _recpath = mkpath(_selfpath, 'static', 'pdb-min.json')
 
+
+records = None
 with open(_recpath, 'r') as f:
-    records = _json.load(f)
+    records = load(f)
+
 
 def read_pdb(path, metadata={}, **kwargs):
     '''
@@ -37,7 +40,7 @@ def read_pdb(path, metadata={}, **kwargs):
         unikws (dict): dataframes containing 'frame', 'one' body and 'meta' data
 
     See Also
-        :class:`atomic.container.Universe`
+        :class:`atomic.universe.Universe`
     '''
     flins = _path_handler(path)
     rds = _pre_process_pdb(flins)
@@ -51,17 +54,15 @@ def read_pdb(path, metadata={}, **kwargs):
     frame = _gen_fdf(one)
     unikws = {'frame': frame, 'one': one, 'metadata': {'text': sepdict['TEXT']}}
     unikws['metadata'].update(metadata)
-    #try:
-    #    unikws['aniso'] = _restruct_one(sepdict['ANISOU'], frdx, odx)
-    #except KeyError:
-    #    pass
     return unikws
+
 
 def _path_handler(path):
     if os.sep in path:
         return _local_path(path)
     else:
         return _remote_path(path)
+
 
 def _local_path(path):
     with open(path, 'r') as f:
@@ -91,12 +92,14 @@ def _pre_process_pdb(flins):
     rds['nat'] = nat
     return rds
 
+
 def _restruct_one(atomdf, frdx, odx):
     one = atomdf.loc[:, ['symbol', 'x', 'y', 'z', 'res.seq.']]
     one['frame'] = frdx
     one['one'] = odx
     one.set_index(['frame', 'one'], inplace=True)
     return one
+
 
 def _parse_pdb(flins, rds):
     sepdict = {}
@@ -131,7 +134,7 @@ def write_pdb(pdbuni, path):
     Writes a PDB file if it was parsed with :method:`atomic.read_csv`
 
     Args
-        pdbuni (:class:`atomic.container.Universe`): atomic universe from PDB
+        pdbuni (:class:`atomic.universe.Universe`): atomic universe from PDB
         path (str): file path to be written to
 
     Return

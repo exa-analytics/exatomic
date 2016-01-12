@@ -4,11 +4,7 @@ Cube File Parsing and Composing
 =============================================
 
 '''
-# Hacky imports
-import sys
-sys.path.insert(0, '/home/tjd/Programs/analytics-exa/exa')
-
-from exa import Isotope
+from atomic import Isotope
 from atomic import _pd as pd
 from atomic.algorithms.nonjitted import generate_minimal_framedf_from_onedf as _gen_fdf
 

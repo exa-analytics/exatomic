@@ -1,23 +1,26 @@
 # -*- coding: utf-8 -*-
-
+'''
+XYZ File I/O
+====================
+'''
 from linecache import getline
 from atomic import _pd as pd
 from atomic import _np as np
 from atomic import _os as os
+from atomic import Length
 try:
     from atomic.algorithms.jitted import expand
 except ImportError:
     from atomic.algorithms.nonjitted import expand
-
-#Hacks?
 from atomic.algorithms.nonjitted import generate_minimal_framedf_from_onedf as _gen_fdf
-convert = 1.88973
+
+
 columns = ['symbol', 'x', 'y', 'z']
+
 
 def read_xyz(path, unit='A', metadata={}, **kwargs):
     '''
     Reads an xyz or xyz trajectory file following a format similar to:
-
 
     Args
         path (str): file path
@@ -48,14 +51,17 @@ def read_xyz(path, unit='A', metadata={}, **kwargs):
     unikws['metadata'].update(metadata)
     return unikws
 
+
 def _rawdf(path):
     return pd.read_csv(path, names=columns, delim_whitespace=True, skip_blank_lines=False)
+
 
 def _unit(path):
     try:
         return getline(path, 1).split()[1]
     except IndexError:
         return
+
 
 def _index(df):
     vals = df['symbol'].values
@@ -73,6 +79,7 @@ def _index(df):
     idxs.pop(-1)
     return np.array(idxs)
 
+
 def _comments(path, cidxs):
     ret = ''
     for ln in cidxs:
@@ -81,17 +88,19 @@ def _comments(path, cidxs):
             ret = ''.join([ret, str(ln), ':', com])
     return ret
 
+
 def _parse_xyz(df, unit, frdxs):
     natdxs = np.array([int(df['symbol'].values[idx]) for idx in frdxs])
     frdx, odx, idxs = expand(frdxs + 2, natdxs)
     one = df.loc[df.index.isin(idxs), ['symbol', 'x', 'y', 'z']]
     one.loc[:, ['x', 'y', 'z']] = one.loc[:, ['x', 'y', 'z']].astype(float)
     if unit == 'A':
-        one.loc[:, ['x', 'y', 'z']] *= convert
+        one.loc[:, ['x', 'y', 'z']] *= Length[unit, 'au']
     one['frame'] = frdx
     one['one'] = odx
     one.set_index(['frame', 'one'], inplace=True)
     return one
+
 
 def write_xyz(uni, path):
     raise NotImplementedError("This will get added in due time.")

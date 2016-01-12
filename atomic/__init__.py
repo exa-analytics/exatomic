@@ -4,7 +4,6 @@ import os as _os
 _sys.path.insert(0, _os.sep.join(
     (_os.path.dirname(_os.path.realpath(__file__)), '..', '..', 'exa'))
 )
-print(_sys.path)
 
 
 __atomic_version__ = (0, 1, 0)                  # atomic VERSION NUMBER
@@ -20,4 +19,5 @@ from exa.relational.constants import Constant
 from atomic.xyz import read_xyz, write_xyz      # atomic imports
 from atomic.pdb import read_pdb, write_pdb
 from atomic.cube import read_cubes
-from atomic import tests
+import atomic.tests
+import atomic.algorithms.tests
