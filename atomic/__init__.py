@@ -12,10 +12,12 @@ __version__ = '.'.join((str(v) for v in __atomic_version__))
 
 from exa import _pd, _np                        # imports from exa
 from exa import run_unittests, run_doctests
+from exa import Dashboard, DataFrame
 from exa.relational.isotopes import Isotope
 from exa.relational.units import Length, Energy
 from exa.relational.constants import Constant
 
+from atomic.universe import Universe
 from atomic.xyz import read_xyz, write_xyz      # atomic imports
 from atomic.pdb import read_pdb, write_pdb
 from atomic.cube import read_cubes
