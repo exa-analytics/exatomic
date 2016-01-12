@@ -1,10 +1,10 @@
 # Byte-compiled / optimized / DLL files
+__pycache__
 _pycache__*
 __pycache__/*
-exa/__pycache__/*
-exa/atomic/__pycache__/*
-exa/qe/__pycahce__/*
-exa/nwchem/__pycache__/*
+atomic/__pycache__/*
+atomic/qe/__pycahce__/*
+atomic/nwchem/__pycache__/*
 *.py[cod]
 *.nbc
 *.nbi
