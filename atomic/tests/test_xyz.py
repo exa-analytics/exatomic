@@ -1,14 +1,12 @@
 # -*- coding: utf-8 -*-
-
-# Hacky import
-import sys
-sys.path.insert(0, '/home/tjd/Programs/analytics-exa/atomic')
-sys.path.insert(0, '/home/tjd/Programs/analytics-exa/exa')
-
+'''
+Tests for :mod:`~atomic.xyz`
+===============================
+'''
+from io import StringIO
 from exa.testers import UnitTester
 from atomic import xyz
 from atomic import _np as np
-from io import StringIO
 
 xyzfl = '''3
 1 comment

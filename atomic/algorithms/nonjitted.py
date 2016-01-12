@@ -1,7 +1,11 @@
 # -*- coding: utf-8 -*-
-
+'''
+Non-jitted
+=============
+'''
 from atomic import _np as np
 from atomic import _pd as pd
+
 
 def generate_minimal_framedf_from_onedf(onedf):
     '''
@@ -15,6 +19,7 @@ def generate_minimal_framedf_from_onedf(onedf):
     frame = onedf.groupby(level='frame').apply(count).to_frame()
     frame.columns = ['count']
     return frame
+    
 
 def expand(fridxs, natcnts):
     n = np.sum(natcnts)
