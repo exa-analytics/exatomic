@@ -28,13 +28,7 @@ class TestReadXYZ(UnitTester):
         self.raw = xyz._rawdf(StringIO(xyzfl))
         self.idx = xyz._index(self.raw)
 
-    def test__rawdf(self):
-        self.assertEqual(self.raw.shape, (9, 4))
-
-    def test__index(self):
-        self.assertTrue(np.all(np.array(self.idx) == np.array([0, 5])))
-
-    def test__parse_xyz(self):
+    def test_read_xyz(self):
         to = xyz._parse_xyz(self.raw, 'A', self.idx)
         self.assertTrue(np.all(np.array(to.index.levels[0]) == np.array([0, 1])))
         self.assertTrue(np.all(np.array(to.index.levels[1]) == np.array([0, 1, 2])))
