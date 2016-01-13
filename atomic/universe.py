@@ -7,7 +7,9 @@ The atomic container object.
 from exa import Container
 from exa.relational.base import Column, Integer, ForeignKey
 from atomic.atom import Atom
-#from atomic.two import Two
+from atomic.atom import compute_twobody as _compute_twobody
+from atomic.twobody import TwoBody
+from atomic.frame import Frame
 #from atomic.molecule import Molecule
 
 
@@ -20,26 +22,53 @@ class Universe(Container):
     be thought of as a snapshot in time, though the frame axis is not required
     to be time. Each frame has information about atomic positions, energies,
     bond distances, energies, etc. The following table outlines the structures
-    provided by this container (specifics can be found on the relevant dataframe
-    pages). The only required dataframe is the :class:`~atomic.atom.Atom` dataframe.
+    provided by this container. A description of the index or columns can be
+    found in the corresponding dataframe link. The only required dataframe is
+    the :class:`~atomic.atom.Atom` dataframe (attribute name: **atoms**).
 
-    +------------------------------------+-------------+------------------+
-    | Attribute (DataFrame)              | Dimensions  | Required Columns |
-    +====================================+=============+==================+
-    | atoms (:class:`~atomic.atom.Atom`) | frame, atom | symbol, x, y, z  |
-    +------------------------------------+-------------+------------------+
+    +--------------------------------------------+--------------+---------------------------------+
+    | Attribute (DataFrame)                      | Dimensions   | Required Columns                |
+    +============================================+==============+=================================+
+    | atoms (:class:`~atomic.atom.Atom`)         | frame, atom  | symbol, x, y, z                 |
+    +--------------------------------------------+--------------+---------------------------------+
+    | twobody (:class:`~atomic.twobody.TwoBody`) | frame, index | atom1, atom2, symbols, distance |
+    +--------------------------------------------+--------------+---------------------------------+
 
-
-    .. Tip:: The only required :class:`~exa.dataframe.DataFrame` is :class:`~atomic.atom.Atom`.
+    Note:
+        The only required :class:`~exa.dataframe.DataFrame` is :class:`~atomic.atom.Atom`.
     '''
     cid = Column(Integer, ForeignKey('container.pkid'), primary_key=True)
     frame_count = Column(Integer)
     __mapper_args__ = {'polymorphic_identity': 'universe'}
 
-    def __init__(self, atoms=None, two=None, molecule=None, **kwargs):
+    def compute_twobody(self, k=None, bond_extra=0.45, dmax=13.0, dmin=0.3):
+        '''
+        Compute two body information from the current atom dataframe.
+
+        This function does not return the computed dataframe but rather
+        attaches it directly to the active universe object (**obj.twobody**).
+
+        Args:
+            k (int): Number of distances (per atom) to compute
+            bond_extra (float): Extra distance to include when determining bonds (see above)
+            dmax (float): Max distance of interest (larger distances are ignored)
+            dmin (float): Min distance of interest (smaller distances are ignored)
+
+        See Also:
+            :func:`~atomic.atom.compute_twobody`.
+        '''
+        self.two = _compute_twobody(self.atoms, *args, **kwargs)
+
+    @classmethod
+    def from_xyz(cls, path, unit='A'):
+        raise NotImplementedError()
+
+    def __init__(self, atoms=None, frames=None, twobody=None,
+                 molecule=None, **kwargs):
         '''
         '''
         super().__init__(**kwargs)
         self.atoms = Atom(atoms)
-#        self.two = Two(two)
+        self.frames = Frame(frames)
+        self.twobody = TwoBody(twobody)
         #self.molecule = Molecule(molecule)

@@ -15,6 +15,7 @@ if Config.numba:
 else:
     from exa.algorithms.indexing import idxs_from_starts_and_counts
 from atomic import Length, Universe
+from atomic.frame import minimal_frame_from_atoms
 
 
 def read_xyz(path, unit='A'):
@@ -67,9 +68,10 @@ def read_xyz(path, unit='A'):
         df.columns = ['Z', 'x', 'y', 'z']
         df['Z'] = df['Z'].astype(np.int)
         df.loc[:, 'symbol'] = df['Z'].map(Z_to_symbol_map)
+    frame = minimal_frame_from_atoms(df)
     meta = {'file': path, 'comments': comments}                                                 # Generate metadata
     name = os.path.basename(path)
-    return Universe(name=name, description=path, atoms=df, meta=meta)
+    return Universe(name=name, description=path, atoms=df, frames=frame, meta=meta)
 
 
 def write_xyz():
