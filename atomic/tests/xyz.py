@@ -5,8 +5,9 @@ Tests for :mod:`~atomic.xyz`
 '''
 from io import StringIO
 from exa.testers import UnitTester
-from atomic import xyz
+from atomic.xyz import read_xyz
 from atomic import _np as np
+
 
 xyzfl = '''3
 1 comment
@@ -19,11 +20,17 @@ H 0.0  0.0 0.0
 H 0.0 -0.7 0.0
 '''
 
-# Only partial testing of read_xyz
-# Not sure how to implement testing linecache
-# funtionality with a StringIO approach
 
-class TestReadXYZ(UnitTester):
+class TestXYZ(UnitTester):
+    '''
+    '''
+    def test_read_xyz(self):
+        '''
+        '''
+        pass
+
+
+
     def setUp(self):
         self.raw = xyz._rawdf(StringIO(xyzfl))
         self.idx = xyz._index(self.raw)
