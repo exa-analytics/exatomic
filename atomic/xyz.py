@@ -4,103 +4,45 @@ XYZ File I/O
 ====================
 '''
 from linecache import getline
-from atomic import _pd as pd
-from atomic import _np as np
-from atomic import _os as os
-from atomic import Length
-try:
-    from atomic.algorithms.jitted import expand
-except ImportError:
-    from atomic.algorithms.nonjitted import expand
-from atomic.algorithms.nonjitted import generate_minimal_framedf_from_onedf as _gen_fdf
+from exa import Config
+from exa import _pd as pd
+from exa import _np as np
+from exa import _os as os
+if Config.numba:
+    from exa.jitted.indexing import idxs_from_starts_and_counts
+else:
+    from exa.algorithms.indexing import idxs_from_starts_and_counts
+from atomic import Length, Universe
 
 
-columns = ['symbol', 'x', 'y', 'z']
-
-
-def read_xyz(path, unit='A', metadata={}, **kwargs):
+def read_xyz(path):
     '''
-    Reads an xyz or xyz trajectory file following a format similar to:
+    Reads any type of XYZ or XYZ like file.
 
-    Args
-        path (str): file path
-        unit (str): unit of atomic positions (optional - default 'A')
-        metadata (dict): metadata as key, value pairs
-        **kwargs: only if using with exa content management system
+    Units will be converted from their source (Angstrom default) to atomic
+    units (Bohr: "au") as used by the atomic package.
 
-    Return
-        unikws (dict): dataframes containing 'frame', 'one' body and 'meta' data
+    Args:
+        path (str): String file path of xyz like file
 
-    See Also
-        :class:`atomic.container.Universe`
+    Returns:
+        universe (:class:`~atomic.universe.Universe`): Containing One and comments
     '''
-    df = _rawdf(path)
-    units = _unit(path)
-    if units:
-        unit = units
-    frdxs = _index(df)
-    #return df, frdxs
-    comments = _comments(path, frdxs + 2)
-    one = _parse_xyz(df, units, frdxs)
-    frame = _gen_fdf(one)
-    unikws = {
-        'one': one,
-        'frame': frame,
-        'metadata': {'comments': comments, 'path': path}
-    }
-    unikws['metadata'].update(metadata)
-    return unikws
-
-
-def _rawdf(path):
-    return pd.read_csv(path, names=columns, delim_whitespace=True, skip_blank_lines=False)
-
-
-def _unit(path):
-    try:
-        return getline(path, 1).split()[1]
-    except IndexError:
-        return
-
-
-def _index(df):
-    vals = df['symbol'].values
-    tot = len(vals)
-    idxs = [0]
-    cidx = int(vals[0]) + 2
-    idxs.append(cidx)
-    while cidx < tot:
-        try:
-            nidx = int(vals[cidx]) + 2
-            cidx += nidx
-            idxs.append(cidx)
-        except ValueError:
-            cidx += 1
-    idxs.pop(-1)
-    return np.array(idxs)
-
-
-def _comments(path, cidxs):
-    ret = ''
-    for ln in cidxs:
-        com = getline(path, ln)
-        if com.strip():
-            ret = ''.join([ret, str(ln), ':', com])
-    return ret
-
-
-def _parse_xyz(df, unit, frdxs):
-    natdxs = np.array([int(df['symbol'].values[idx]) for idx in frdxs])
-    frdx, odx, idxs = expand(frdxs + 2, natdxs)
-    one = df.loc[df.index.isin(idxs), ['symbol', 'x', 'y', 'z']]
-    one.loc[:, ['x', 'y', 'z']] = one.loc[:, ['x', 'y', 'z']].astype(float)
-    if unit == 'A':
-        one.loc[:, ['x', 'y', 'z']] *= Length[unit, 'au']
-    one['frame'] = frdx
-    one['one'] = odx
-    one.set_index(['frame', 'one'], inplace=True)
-    return one
-
-
-def write_xyz(uni, path):
-    raise NotImplementedError("This will get added in due time.")
+    df = pd.read_csv(path, header=None, skip_blank_lines=False, delim_whitespace=True, names=['symbol', 'x', 'y', 'z'])
+    nat_lines = df.loc[df[['y', 'z']].isnull().all(1)].dropna(how='all')[['symbol', 'x']]       # Filter nat rows
+    comment_lines = df.loc[df.index.isin(nat_lines.index + 1) & ~df.isnull().all(1)].index + 1  # Filter comment rows
+    starts = nat_lines.index.values.astype(np.int) + 2                                          # Use this to generate
+    counts = nat_lines['symbol'].values.astype(np.int)                                          # indexes
+    frame, atom, indexes = idxs_from_starts_and_counts(starts, counts)
+    df = df.loc[df.index.isin(indexes)]                                                         # Create one df and set index
+    df[['x', 'y', 'z']] = df[['x', 'y', 'z']].astype(np.float)
+    df.index = pd.MultiIndex.from_arrays((frame, atom), names=['frame', 'atom'])
+    comments = {num: getline(path, num) for num in comment_lines}                               # Get comments
+    if nat_lines['x'].isnull().all():                                                           # Finally handle unit conversions
+        df[['x', 'y', 'z']] *= Length['A', 'au']
+    else:
+        for i, unit in enumerate(nat_lines['x'].tolist()):
+            df.loc[i, ['x', 'y', 'z']] *= Length.from_alias(unit, 'au')
+    meta = {'file': path, 'comments': comments}                                                 # Generate metadata
+    name = os.path.basename(path)
+    return Universe(name=name, description=path, one=df, meta=meta)
