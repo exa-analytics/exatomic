@@ -46,3 +46,7 @@ def read_xyz(path):
     meta = {'file': path, 'comments': comments}                                                 # Generate metadata
     name = os.path.basename(path)
     return Universe(name=name, description=path, one=df, meta=meta)
+    
+
+def write_xyz():
+    raise NotImplementedError()
