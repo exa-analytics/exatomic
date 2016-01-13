@@ -17,6 +17,13 @@ class Atom(DataFrame):
     __columns__ = ['symbol', 'x', 'y', 'z']
 
 
+class SuperAtom(DataFrame):
+    '''
+    '''
+    __dimensions__ = ['frame', 'superatom']
+    __columns__ = ['x', 'y', 'z', 'atom']
+
+
 def compute_twobody(atoms, periodic=None, k=None, bond_extra=0.45, dmax=13.0, dmin=0.3):
     '''
     Compute two body information given a :class:`~atomic.atom.Atom` dataframe.

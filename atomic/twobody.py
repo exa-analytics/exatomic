@@ -12,3 +12,10 @@ class TwoBody(DataFrame):
     '''
     __dimensions__ = ['frame', 'index']
     __columns__ = ['atom1', 'atom2', 'symbols', 'distance']
+
+
+class SuperTwoBody(DataFrame):
+    '''
+    '''
+    __dimensions__ = ['frame', 'index']
+    __columns__ = ['superatom1', 'superatom2', 'symbols', 'distance']
