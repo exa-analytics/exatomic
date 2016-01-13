@@ -11,7 +11,6 @@ from atomic.two import Two
 from atomic.molecule import Molecule
 
 
-
 class Universe(Container):
     '''
     An :class:`~atomic.universe.Universe` represents a collection of time

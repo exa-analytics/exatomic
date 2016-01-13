@@ -10,5 +10,16 @@ from exa import DataFrame
 
 class One(DataFrame):
     '''
+    Required indexes:
+        frame, atom
+
+    Optional indexes:
+        molecule
+
+    Required columns:
+        symbol, x, y, z
+
+    Optional columns:
+        lots
     '''
     pass
