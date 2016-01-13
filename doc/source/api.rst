@@ -1,9 +1,8 @@
 API
 ===================
 
-Python
--------------------
 .. toctree::
     :maxdepth: 2
 
-    atomic.rst
+    universe.rst
+    xyz.rst

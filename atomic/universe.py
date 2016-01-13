@@ -6,26 +6,34 @@ The atomic container object.
 '''
 from exa import Container
 from exa.relational.base import Column, Integer, ForeignKey
-from atomic.one import One
-from atomic.two import Two
-from atomic.molecule import Molecule
+from atomic.atom import Atom
+#from atomic.two import Two
+#from atomic.molecule import Molecule
 
 
 class Universe(Container):
     '''
+    A collection of atoms.
+
     An :class:`~atomic.universe.Universe` represents a collection of time
     dependent frames themselves containing atoms and molecules. A frame can
-    be thought of as a snapshot in time. Each snaphot in time has information
-    about atomic positions, energies, bond distances, etc.
+    be thought of as a snapshot in time, though the frame axis is not required
+    to be time. Each frame has information about atomic positions, energies,
+    bond distances, energies, etc. The following table outlines the structures
+    provided by this container (specifics can be found on the relevant dataframe
+    pages). The only required dataframe is the :class:`~atomic.atom.Atom` dataframe.
+
+    +-----------------+------------+------------------
+    | DataFrame Name  | Dimensions | Required Columns
     '''
     cid = Column(Integer, ForeignKey('container.pkid'), primary_key=True)
     frame_count = Column(Integer)
     __mapper_args__ = {'polymorphic_identity': 'universe'}
 
-    def __init__(self, one=None, two=None, molecule=None, **kwargs):
+    def __init__(self, atoms=None, two=None, molecule=None, **kwargs):
         '''
         '''
         super().__init__(**kwargs)
-        self.one = One(one)
-        self.two = Two(two)
-        self.molecule = Molecule(molecule)
+        self.atoms = Atom(atoms)
+#        self.two = Two(two)
+        #self.molecule = Molecule(molecule)

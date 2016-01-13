@@ -23,4 +23,4 @@ from atomic.xyz import read_xyz
 #import atomic.tests
 #import atomic.algorithms.tests
 
-del universe, xyz, one, two, molecule
+del universe, xyz
