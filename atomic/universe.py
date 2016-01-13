@@ -6,9 +6,9 @@ The atomic container object.
 '''
 from exa import Container
 from exa.relational.base import Column, Integer, ForeignKey
-#from atomic.one import One
-#from atomic.two import Two
-#from atomic.molecule import Molecule
+from atomic.one import One
+from atomic.two import Two
+from atomic.molecule import Molecule
 
 
 

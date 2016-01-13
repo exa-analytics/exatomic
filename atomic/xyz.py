@@ -11,14 +11,14 @@ from atomic import Length
 try:
     from atomic.algorithms.jitted import expand
 except ImportError:
-    from atomic.algorithms.nonjitted import expand
+    from atomic.algorithms.nonji    tted import expand
 from atomic.algorithms.nonjitted import generate_minimal_framedf_from_onedf as _gen_fdf
 
 
 columns = ['symbol', 'x', 'y', 'z']
 
 
-def read_xyz(path, unit='A', metadata={}, **kwargs):
+def read_xyz(path, length_unit='A'):
     '''
     Reads an xyz or xyz trajectory file following a format similar to:
 

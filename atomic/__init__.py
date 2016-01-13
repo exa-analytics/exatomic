@@ -18,6 +18,8 @@ from exa.relational.units import Length, Energy
 from exa.relational.constants import Constant
 
 from atomic.universe import Universe
+from atomic.one import One
+from atomic.two import Two
 from atomic.xyz import read_xyz, write_xyz      # atomic imports
 from atomic.pdb import read_pdb, write_pdb
 from atomic.cube import read_cubes
