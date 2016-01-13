@@ -23,8 +23,14 @@ class Universe(Container):
     provided by this container (specifics can be found on the relevant dataframe
     pages). The only required dataframe is the :class:`~atomic.atom.Atom` dataframe.
 
-    +-----------------+------------+------------------
-    | DataFrame Name  | Dimensions | Required Columns
+    +------------------------------------+-------------+------------------+
+    | Attribute (DataFrame)              | Dimensions  | Required Columns |
+    +====================================+=============+==================+
+    | atoms (:class:`~atomic.atom.Atom`) | frame, atom | symbol, x, y, z  |
+    +------------------------------------+-------------+------------------+
+
+
+    .. Tip:: The only required :class:`~exa.dataframe.DataFrame` is :class:`~atomic.atom.Atom`.
     '''
     cid = Column(Integer, ForeignKey('container.pkid'), primary_key=True)
     frame_count = Column(Integer)

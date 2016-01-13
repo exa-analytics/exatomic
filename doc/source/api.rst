@@ -5,4 +5,5 @@ API
     :maxdepth: 2
 
     universe.rst
+    atom.rst
     xyz.rst
