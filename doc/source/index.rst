@@ -10,7 +10,6 @@ Contents
 .. toctree::
     :maxdepth: 2
 
-    install.rst
     started.rst
     api.rst
     glossary.rst
@@ -18,7 +17,7 @@ Contents
 ****************
 License
 ****************
-:download:`License <../../LICENSE.md>`
+:download:`License <../../LICENSE>`
 
 ****************
 Indexes
@@ -26,5 +25,3 @@ Indexes
 * :ref:`genindex`
 * :ref:`modindex`
 * :ref:`search`
-
-*This is a flying circus after all...*

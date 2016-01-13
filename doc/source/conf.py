@@ -44,8 +44,7 @@ extensions = [
     'sphinx.ext.mathjax',
     'sphinx.ext.ifconfig',
     'sphinx.ext.viewcode',
-    'sphinx.ext.napoleon',
-    #'sphinxcontrib.autoanysrc'
+    'sphinx.ext.napoleon'
 ]
 
 # sphinx.ext.napoleon settings
@@ -389,10 +388,10 @@ epub_use_index = True
 
 
 # Example configuration for intersphinx: refer to the Python standard library.
-#intersphinx_mapping = {'https://docs.python.org/': None}
 intersphinx_mapping = {
-    'python': ('http://docs.python.org/', None),
-    'pandas': ('http://pandas.pydata.org/pandas-docs/dev', None)
+    'python': ('http://docs.python.org/3/', None),
+    'pandas': ('http://pandas.pydata.org/pandas-docs/version/0.17.1/', None),
+    'exa': ('/'.join(('..', '..', '..', 'exa', 'doc', 'build', 'html')), None)
 }
 
 autodoc_member_order = 'bysource'
