@@ -1,8 +1,11 @@
 # -*- coding: utf-8 -*-
-
-#from atomic import _np as np
-import numpy as np
+'''
+Jitted
+============
+'''
 from numba import jit, int64
+from atomic import _np as np
+
 
 @jit(nopython=True, cache=True)
 def expand(fridxs, natcnts):
