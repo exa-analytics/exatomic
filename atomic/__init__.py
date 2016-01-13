@@ -11,7 +11,7 @@ __version__ = '.'.join((str(v) for v in __atomic_version__))
 
 
 from exa import run_unittests, run_doctests     # imports from exa
-from exa import Dashboard, DataFrame
+from exa import Dashboard
 from exa.relational.isotopes import Isotope
 from exa.relational.units import Length, Energy
 from exa.relational.constants import Constant
@@ -22,3 +22,5 @@ from atomic.xyz import read_xyz
 #from atomic.cube import read_cubes
 #import atomic.tests
 #import atomic.algorithms.tests
+
+del universe, xyz, one, two, molecule

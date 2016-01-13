@@ -26,3 +26,6 @@ class Universe(Container):
         '''
         '''
         super().__init__(**kwargs)
+        self.one = One(one)
+        self.two = Two(two)
+        self.molecule = Molecule(molecule)

@@ -6,12 +6,13 @@ XYZ File I/O
 from linecache import getline
 from exa import Config
 from exa import _pd as pd
+from exa import _np as np
+from exa import _os as os
 if Config.numba:
     from exa.jitted.indexing import idxs_from_starts_and_counts
 else:
     from exa.algorithms.indexing import idxs_from_starts_and_counts
 from atomic import Length, Universe
-from atomic.one import One
 
 
 def read_xyz(path):
@@ -32,8 +33,9 @@ def read_xyz(path):
     comment_lines = df.loc[df.index.isin(nat_lines.index + 1) & ~df.isnull().all(1)].index + 1  # Filter comment rows
     starts = nat_lines.index.values.astype(np.int) + 2                                          # Use this to generate
     counts = nat_lines['symbol'].values.astype(np.int)                                          # indexes
-    frame, atom, indexes = _idxs_from_starts_and_counts(starts, counts)
-    df = One(df.loc[df.index.isin(indexes)])                                                    # Create one df and set index
+    frame, atom, indexes = idxs_from_starts_and_counts(starts, counts)
+    df = df.loc[df.index.isin(indexes)]                                                         # Create one df and set index
+    df[['x', 'y', 'z']] = df[['x', 'y', 'z']].astype(np.float)
     df.index = pd.MultiIndex.from_arrays((frame, atom), names=['frame', 'atom'])
     comments = {num: getline(path, num) for num in comment_lines}                               # Get comments
     if nat_lines['x'].isnull().all():                                                           # Finally handle unit conversions
@@ -41,5 +43,6 @@ def read_xyz(path):
     else:
         for i, unit in enumerate(nat_lines['x'].tolist()):
             df.loc[i, ['x', 'y', 'z']] *= Length.from_alias(unit, 'au')
-    metadata = {'file': path, 'comments': comments}                                             # Generate metadata
-    return Universe(one=df, metadata=metadata)
+    meta = {'file': path, 'comments': comments}                                                 # Generate metadata
+    name = os.path.basename(path)
+    return Universe(name=name, description=path, one=df, meta=meta)
