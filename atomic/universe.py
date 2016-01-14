@@ -10,7 +10,6 @@ from atomic.atom import Atom
 from atomic.atom import compute_twobody as _compute_twobody
 from atomic.twobody import TwoBody
 from atomic.frame import Frame
-#from atomic.molecule import Molecule
 
 
 class Universe(Container):
@@ -23,8 +22,7 @@ class Universe(Container):
     to be time. Each frame has information about atomic positions, energies,
     bond distances, energies, etc. The following table outlines the structures
     provided by this container. A description of the index or columns can be
-    found in the corresponding dataframe link. The only required dataframe is
-    the :class:`~atomic.atom.Atom` dataframe (attribute name: **atoms**).
+    found in the corresponding dataframe link.
 
     +--------------------------------------------+--------------+---------------------------------+
     | Attribute (DataFrame)                      | Dimensions   | Required Columns                |
@@ -33,13 +31,19 @@ class Universe(Container):
     +--------------------------------------------+--------------+---------------------------------+
     | twobody (:class:`~atomic.twobody.TwoBody`) | frame, index | atom1, atom2, symbols, distance |
     +--------------------------------------------+--------------+---------------------------------+
-
-    Note:
-        The only required :class:`~exa.dataframe.DataFrame` is :class:`~atomic.atom.Atom`.
     '''
     cid = Column(Integer, ForeignKey('container.pkid'), primary_key=True)
     frame_count = Column(Integer)
     __mapper_args__ = {'polymorphic_identity': 'universe'}
+
+    def compute_cell_magnitudes(self):
+        '''
+        Compute periodic cell dimension magnitudes.
+
+        See Also:
+            :func:`~atomic.frame.Frame.cell_mags`
+        '''
+        self.frames.cell_mags()
 
     def compute_twobody(self, k=None, bond_extra=0.45, dmax=13.0, dmin=0.3):
         '''
@@ -68,8 +72,6 @@ class Universe(Container):
         '''
         '''
         super().__init__(**kwargs)
-        print(atoms)
         self.atoms = Atom(atoms)
         self.frames = Frame(frames)
         self.twobody = TwoBody(twobody)
-        #self.molecule = Molecule(molecule)
