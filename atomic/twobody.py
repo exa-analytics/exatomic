@@ -14,7 +14,7 @@ class TwoBody(DataFrame):
     __columns__ = ['atom1', 'atom2', 'symbols', 'distance']
 
 
-class SuperTwoBody(DataFrame):
+class PeriodicTwoBody(DataFrame):
     '''
     '''
     __dimensions__ = ['frame', 'index']

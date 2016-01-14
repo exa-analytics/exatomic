@@ -14,7 +14,7 @@ class Molecule(DataFrame):
     __columns__ = ['formula', 'mass', 'cx', 'cy', 'cz']
 
 
-class SuperMolecule(DataFrame):
+class PeriodicMolecule(DataFrame):
     '''
     '''
     __dimensions__ = ['frame', 'supermolecule']

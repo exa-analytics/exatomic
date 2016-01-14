@@ -9,6 +9,8 @@ from atomic.twobody import TwoBody
 
 class Atom(DataFrame):
     '''
+    Absolute positions of atoms and their symbol.
+
     Required indexes: frame, atom
 
     Required columns: symbol, x, y, z
@@ -17,8 +19,9 @@ class Atom(DataFrame):
     __columns__ = ['symbol', 'x', 'y', 'z']
 
 
-class SuperAtom(DataFrame):
+class PeriodicAtom(DataFrame):
     '''
+    Supercell created from a unit cell (itself created from the atoms dataframe).
     '''
     __dimensions__ = ['frame', 'superatom']
     __columns__ = ['x', 'y', 'z', 'atom']
