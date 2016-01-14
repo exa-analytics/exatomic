@@ -6,7 +6,7 @@ The atomic container object.
 '''
 from exa import Container
 from exa.relational.base import Column, Integer, ForeignKey
-from atomic.atom import Atom
+from atomic.atom import Atom, PBCAtom, VisualAtom
 from atomic.atom import compute_twobody as _compute_twobody
 from atomic.twobody import TwoBody
 from atomic.frame import Frame
@@ -31,10 +31,32 @@ class Universe(Container):
     +--------------------------------------------+--------------+---------------------------------+
     | twobody (:class:`~atomic.twobody.TwoBody`) | frame, index | atom1, atom2, symbols, distance |
     +--------------------------------------------+--------------+---------------------------------+
+
+    Warning:
+        The correct way to set DataFrame object is as follows:
+
+        .. code-block:: Python
+
+            universe = atomic.Universe()
+            df = pd.DataFrame()
+            universe['atoms'] = df
+            or
+            setattr(universe, 'atoms', df)
+
+        Avoid setting objects using the **__dict__** attribute as follows:
+
+        .. code-block:: Python
+
+            universe = atomic.Universe()
+            df = pd.DataFrame()
+            universe.atoms = df
+
+        (This is used in **__init__** where type control is enforced.)
     '''
     cid = Column(Integer, ForeignKey('container.pkid'), primary_key=True)
     frame_count = Column(Integer)
     __mapper_args__ = {'polymorphic_identity': 'universe'}
+    __dfclasses__ = {'atoms': Atom, 'frames': Frame, 'atomspbc': AtomPBC}
 
     def cell_mags(self):
         '''
@@ -75,9 +97,6 @@ class Universe(Container):
 
     def __init__(self, atoms=None, frames=None, twobody=None,
                  molecule=None, **kwargs):
-        '''
-        '''
         super().__init__(**kwargs)
         self.atoms = Atom(atoms)
         self.frames = Frame(frames)
-        self.twobody = TwoBody(twobody)

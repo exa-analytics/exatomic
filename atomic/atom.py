@@ -20,12 +20,12 @@ class Atom(DataFrame):
     __columns__ = ['symbol', 'x', 'y', 'z']
 
 
-class AtomPBC(DataFrame):
+class PBCAtom(DataFrame):
     '''
     Periodic (boundary conditions) atoms positions with a foriegn key point
     back to the absolute positions table.
     '''
-    __indices__ = ['frame', 'atompbc']
+    __indices__ = ['frame', 'pbc_atom']
     __columns__ = ['x', 'y', 'z', 'atom']
 
 
@@ -35,7 +35,7 @@ class VisualAtom(DataFrame):
     are used in combination with the Atom table to generate representative
     animations.
     '''
-    __indices__ = ['frame', 'atomvis']
+    __indices__ = ['frame', 'vis_atom']
     __columns__ = ['x', 'y', 'z', 'atom']
 
 
@@ -67,16 +67,21 @@ def compute_twobody(universe, k=None, bond_extra=0.45, dmax=13.0, dmin=0.3):
     if 'periodic' in universe.frames.columns:    # Figure out what type of two body properties to compute
         if any(universe.frames['periodic'] == True):
             req = ['xr', 'yr', 'zr']
-            if any((mag not in universe.frames.columns for mag in req)):
+            if any((mag not in universe.frames.columns for mag in req)): # Check the requirements are met
                 raise ColumnError(req, universe.frames)
-        return _compute_periodic_twobody(atoms, periodic, k, bond_extra, dmax, dmin)
+        atoms = universe.atoms[['symbol', 'x', 'y', 'z']]
+        frames = universe.frames[['xr', 'yr', 'zr', 'atom_count']]
+        return _compute_periodic_twobody(atoms, cells, k, bond_extra, dmax, dmin)
     else:
         raise NotImplementedError()
 
 
-def _compute_periodic_twobody(atoms, periodic, unitize=False, k=None,
-                              bond_extra=0.45, dmax=13.0, dmin=0.3):
+def _compute_periodic_twobody(atoms, cells, k, bond_extra, dmax, dmin):
     '''
     '''
-    print('got here')
-    return Two()
+    print('computing...')
+    groups = atoms.groupby(level='frame')
+    atompbcdfs = []
+    twobodypbcdfs = []
+    for i, (fdx, atomdf) =
+    return TwoBody()
