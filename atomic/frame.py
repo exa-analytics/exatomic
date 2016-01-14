@@ -17,11 +17,15 @@ class Frame(DataFrame):
 
     def cell_mags(self):
         '''
-        Compute the magnitudes of the periodic unit cell.
+        Compute the magnitudes of the unit cell vectors.
 
         Note that this computation adds three new column to the dataframe;
         'xr', 'yr', and 'zr'.
         '''
+        req_cols = ['xi', 'xj', 'xk', 'yi', 'yj', 'yk', 'zi', 'zj', 'zk']
+        missing_req = set(req_cols).difference(self.columns)
+        if missing_req:           # Check that we have cell dimensions
+            raise ColumnError(missing_req, self)
         xi = self['xi'].values    # Vector component variables are denoted by
         xj = self['xj'].values    # their basis vector ending: _i, _j, _k
         xk = self['xk'].values
@@ -41,5 +45,4 @@ def minimal_frame_from_atoms(atoms):
     '''
     df = atoms.groupby(level='frame')['symbol'].count().to_frame()
     df.columns = ['atom_count']
-    df['periodic'] = False
     return df

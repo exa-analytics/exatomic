@@ -39,7 +39,7 @@ class VisualAtom(DataFrame):
     __columns__ = ['x', 'y', 'z', 'atom']
 
 
-def compute_twobody(atoms, frames=None, k=None, bond_extra=0.45, dmax=13.0, dmin=0.3):
+def compute_twobody(universe, k=None, bond_extra=0.45, dmax=13.0, dmin=0.3):
     '''
     Compute two body information given a :class:`~atomic.atom.Atom` dataframe.
 
@@ -64,15 +64,12 @@ def compute_twobody(atoms, frames=None, k=None, bond_extra=0.45, dmax=13.0, dmin
     Return:
         df (:class:`~atomic.twobody.TwoBody`): Two body property table
     '''
-    # TODO: Check that necessary data have be computed (e.g. unit cell mags).
-    if frames:
-        req_cols = ['xi', 'xj', 'xk', 'yi', 'yj', 'yk', 'zi', 'zj', 'zk']
-        mia = set(req_cols).difference(periodic.columns)
-        if mia:                          # Check that we have cell dimensions
-            raise ColumnError(mia, self)
-        if any((mag not in periodic.columns for mag in ['xr', 'yr', 'zr'])):
-            frames.cell_mags()
-        return compute_periodic_twobody(atoms, periodic, k, bond_extra, dmax, dmin)
+    if 'periodic' in universe.frames.columns:    # Figure out what type of two body properties to compute
+        if any(universe.frames['periodic'] == True):
+            req = ['xr', 'yr', 'zr']
+            if any((mag not in universe.frames.columns for mag in req)):
+                raise ColumnError(req, universe.frames)
+        return _compute_periodic_twobody(atoms, periodic, k, bond_extra, dmax, dmin)
     else:
         raise NotImplementedError()
 
@@ -82,3 +79,4 @@ def _compute_periodic_twobody(atoms, periodic, unitize=False, k=None,
     '''
     '''
     print('got here')
+    return Two()

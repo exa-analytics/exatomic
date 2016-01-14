@@ -36,7 +36,7 @@ class Universe(Container):
     frame_count = Column(Integer)
     __mapper_args__ = {'polymorphic_identity': 'universe'}
 
-    def compute_cell_magnitudes(self):
+    def cell_mags(self):
         '''
         Compute periodic cell dimension magnitudes.
 
@@ -45,7 +45,8 @@ class Universe(Container):
         '''
         self.frames.cell_mags()
 
-    def compute_twobody(self, k=None, bond_extra=0.45, dmax=13.0, dmin=0.3):
+    def get_twobody(self, k=None, bond_extra=0.45, inplace=False,
+                    dmax=13.0, dmin=0.3):
         '''
         Compute two body information from the current atom dataframe.
 
@@ -57,11 +58,16 @@ class Universe(Container):
             bond_extra (float): Extra distance to include when determining bonds (see above)
             dmax (float): Max distance of interest (larger distances are ignored)
             dmin (float): Min distance of interest (smaller distances are ignored)
+            inplace (bool): Perform action in place (default False)
 
         See Also:
             :func:`~atomic.atom.compute_twobody`.
         '''
-        self.two = _compute_twobody(self.atoms, *args, **kwargs)
+        twobody = _compute_twobody(self, k=k, bond_extra=bond_extra, dmax=dmax, dmin=dmin)
+        if inplace:
+            self.twobody = twobody
+        else:
+            return twobody
 
     @classmethod
     def from_xyz(cls, path, unit='A'):
