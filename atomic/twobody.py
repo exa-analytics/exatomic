@@ -10,12 +10,16 @@ from exa import DataFrame
 class TwoBody(DataFrame):
     '''
     '''
-    __dimensions__ = ['frame', 'index']
+    __indices__ = ['frame', 'index']
     __columns__ = ['atom1', 'atom2', 'symbols', 'distance']
 
 
-class PeriodicTwoBody(DataFrame):
+class TwoBodyPBC(DataFrame):
     '''
+    Two body properties corresponding to the periodic atoms dataframe.
+
+    See Also:
+        :class:`~atomic.atom.AtomPBC`
     '''
-    __dimensions__ = ['frame', 'index']
+    __indices__ = ['frame', 'index']
     __columns__ = ['superatom1', 'superatom2', 'symbols', 'distance']

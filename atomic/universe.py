@@ -68,6 +68,7 @@ class Universe(Container):
         '''
         '''
         super().__init__(**kwargs)
+        print(atoms)
         self.atoms = Atom(atoms)
         self.frames = Frame(frames)
         self.twobody = TwoBody(twobody)

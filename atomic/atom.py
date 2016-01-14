@@ -15,15 +15,26 @@ class Atom(DataFrame):
 
     Required columns: symbol, x, y, z
     '''
-    __dimensions__ = ['frame', 'atom']
+    __indices__ = ['frame', 'atom']
     __columns__ = ['symbol', 'x', 'y', 'z']
 
 
-class PeriodicAtom(DataFrame):
+class AtomPBC(DataFrame):
     '''
-    Supercell created from a unit cell (itself created from the atoms dataframe).
+    Periodic (boundary conditions) atoms positions with a foriegn key point
+    back to the absolute positions table.
     '''
-    __dimensions__ = ['frame', 'superatom']
+    __indices__ = ['frame', 'atompbc']
+    __columns__ = ['x', 'y', 'z', 'atom']
+
+
+class VisualAtom(DataFrame):
+    '''
+    Special positions for atoms (not the actual absolute positions) that
+    are used in combination with the Atom table to generate representative
+    animations.
+    '''
+    __indices__ = ['frame', 'atomvis']
     __columns__ = ['x', 'y', 'z', 'atom']
 
 
@@ -52,6 +63,7 @@ def compute_twobody(atoms, periodic=None, k=None, bond_extra=0.45, dmax=13.0, dm
     Return:
         df (:class:`~atomic.twobody.TwoBody`): Two body property table
     '''
+    # TODO: Check that necessary data have be computed (e.g. unit cell mags).
     if periodic:
         return compute_periodic_twobody(atoms, periodic, k, bond_extra, dmax, dmin)
     else:
@@ -61,4 +73,5 @@ def compute_twobody(atoms, periodic=None, k=None, bond_extra=0.45, dmax=13.0, dm
 def compute_periodic_twobody(atoms, periodic, unitize=False, k=None,
                              bond_extra=0.45, dmax=13.0, dmin=0.3):
     '''
+
     '''
