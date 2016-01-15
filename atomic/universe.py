@@ -6,7 +6,7 @@ The atomic container object.
 '''
 from exa import Container
 from exa.relational.base import Column, Integer, ForeignKey
-from atomic.atom import Atom, PBCAtom, VisualAtom
+from atomic.atom import Atom, SuperCellAtom, VisualAtom
 from atomic.atom import compute_twobody as _compute_twobody
 from atomic.twobody import TwoBody
 from atomic.frame import Frame
@@ -56,7 +56,8 @@ class Universe(Container):
     cid = Column(Integer, ForeignKey('container.pkid'), primary_key=True)
     frame_count = Column(Integer)
     __mapper_args__ = {'polymorphic_identity': 'universe'}
-    __dfclasses__ = {'atoms': Atom, 'frames': Frame, 'atomspbc': AtomPBC}
+    __dfclasses__ = {'atoms': Atom, 'frames': Frame, 'pbcatoms': SuperCellAtom,
+                     'visatoms': VisualAtom}
 
     def cell_mags(self):
         '''

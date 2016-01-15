@@ -15,12 +15,12 @@ class Frame(DataFrame):
     __indices__ = ['frame']
     __columns__ = ['atom_count']
 
-    def cell_mags(self):
+    def cell_mags(self, inplace=False):
         '''
         Compute the magnitudes of the unit cell vectors.
 
         Note that this computation adds three new column to the dataframe;
-        'xr', 'yr', and 'zr'.
+        'rx', 'ry', and 'rz'.
         '''
         req_cols = ['xi', 'xj', 'xk', 'yi', 'yj', 'yk', 'zi', 'zj', 'zk']
         missing_req = set(req_cols).difference(self.columns)
@@ -35,14 +35,28 @@ class Frame(DataFrame):
         zi = self['zi'].values
         zj = self['zj'].values
         zk = self['zk'].values
-        self['xr'] = mag_3d(xi, xj, xk)
-        self['yr'] = mag_3d(yi, yj, yk)
-        self['zr'] = mag_3d(zi, zj, zk)
+        rx = mag_3d(xi, xj, xk)
+        ry = mag_3d(yi, yj, yk)
+        rz = mag_3d(zi, zj, zk)
+        if inplace:
+            self['rx'] = rx
+            self['ry'] = ry
+            self['rz'] = rz
+        else:
+            return (rx, ry, rz)
 
 
 def minimal_frame_from_atoms(atoms):
     '''
+    Generate the minimal :class:`~atomic.frame.Frame` dataframe given an
+    :class:`~atomic.atom.Atom` dataframe.
+
+    Args:
+        atoms (:class:`~atomic.atom.Atom`): Atoms dataframe
+
+    Returns:
+        frames (:class:`~atomic.frame.Frame`): Frames dataframe
     '''
-    df = atoms.groupby(level='frame')['symbol'].count().to_frame()
+    df = atoms['symbol'].groupby(level='frame').count().to_frame()
     df.columns = ['atom_count']
-    return df
+    return Frame(df)
