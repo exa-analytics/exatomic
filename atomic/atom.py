@@ -150,7 +150,7 @@ def compute_twobody(universe, k=None, bond_extra=0.45, dmax=13.0, dmin=0.3):
             req = ['xr', 'yr', 'zr']
             if any((mag not in universe.frames.columns for mag in req)): # Check the requirements are met
                 raise ColumnError(req, universe.frames)
-        return _compute_periodic_twobody(universe, k, bond_extra, dmax)
+#        return _compute_periodic_twobody(universe, k, bond_extra, dmax)
     else:
         raise NotImplementedError()
 
@@ -185,62 +185,6 @@ def compute_twobody(universe, k=None, bond_extra=0.45, dmax=13.0, dmin=0.3):
 
 
 
-#
-#
-#
-#
-#def compute_pbc_atom(universe):
-#    '''
-#    Create a periodic super cell from original positions.
-#
-#    Args:
-#        universe (:class:`~atomic.universe.Universe`): Atomic universe
-#
-#    Returns:
-#        pbcatoms (:class:`~atomic.atom.PBCAtom`): Periodic super cell
-#    '''
-#    # Perform checks before computing
-#    raise NotImplementedError()
-#
-#
-#def _compute_pbc_atoms(xyzdf, xrs, yrs, zrs, ois, ojs, oks):
-#    '''
-#    Args:
-#        xyz (:class:`~atomic.atom.Atom`): Dataframe containing only x, y, z values
-#        xrs (:class:`~pandas.Series`): Unit cell magnitude in x
-#        yrs (:class:`~pandas.Series`): Unit cell magnitude in y
-#        zrs (:class:`~pandas.Series`): Unit cell magnitude in z
-#        ois (:class:`~pandas.Series`): Unit cell origin in x
-#        ojs (:class:`~pandas.Series`): Unit cell origin in y
-#        oks (:class:`~pandas.Series`): Unit cell origin in z
-#
-#    Returns:
-#        pbc_atoms (:class:`~atomic.atom.PBCAtom`): Periodic atom positions dataframe
-#    '''
-#    groups = xyzdf.groupby(level='frame')
-#    pbc_xyz_list = []          # These lists contain per frame data to be
-#    pbc_atom_list = []         # concatenated. Performing operations on
-#    pbc_index_list = []        # pandas groups in this manner is more
-#    pbc_frame_list = []        # efficient than attempting to reconstruct
-#    for fdx, xyz in groups:    # a DataFrame or Series on the fly.
-#        xr = xrs[fdx]
-#        yr = yrs[fdx]
-#        zr = zrs[fdx]          # Build the original atom index for pbc_xyz
-#        atom = np.tile(xyz.index.get_level_values('atom'), 27)
-#        n = len(atom)
-#        unit_xyz = np.mod(xyz, [xr, yr, zr]) - []
-#        pbc_xyz_list.append(periodic_supercell(unit_xyz.values, xr, yr, zr))
-#        pbc_atom_list.append(atom)
-#        pbc_frame_list.append(repeat_int([fdx], n))
-#        pbc_index_list.append(range(n))
-#    df = pd.DataFrame(np.concatenate(pbc_xyz_list), columns=['x', 'y', 'z'])
-#    df['pbc_atom'] = np.concatenate(pbc_index_list)
-#    df['atom'] = np.concatenate(pbc_atom_list)
-#    df['frame'] = np.concatenate(pbc_frame_list)
-#    df.set_index(['frame', 'pbc_atom'], inplace=True)
-#    return PBCAtom(df)
-#
-#
 #def _compute_periodic_twobody(universe, k, bond_extra, dmax):
 #    '''
 #    Compute the periodic two body properties for a given set of atoms and frames.
