@@ -6,8 +6,7 @@ The atomic container object.
 '''
 from exa import Container
 from exa.relational.base import Column, Integer, ForeignKey
-from atomic.atom import Atom, SuperCellAtom, VisualAtom
-from atomic.atom import compute_twobody as _compute_twobody
+from atomic.atom import Atom, SuperAtom, VisualAtom, PrimitiveAtom, compute_primitive, compute_supercell
 from atomic.twobody import TwoBody
 from atomic.frame import Frame
 
@@ -56,17 +55,43 @@ class Universe(Container):
     cid = Column(Integer, ForeignKey('container.pkid'), primary_key=True)
     frame_count = Column(Integer)
     __mapper_args__ = {'polymorphic_identity': 'universe'}
-    __dfclasses__ = {'atoms': Atom, 'frames': Frame, 'pbcatoms': SuperCellAtom,
+    __dfclasses__ = {'atoms': Atom, 'frames': Frame, 'pbcatoms': SuperAtom,
                      'visatoms': VisualAtom}
 
-    def cell_mags(self):
+    def get_cell_mags(self, inplace=False):
         '''
-        Compute periodic cell dimension magnitudes.
+        Compute periodic cell dimension magnitudes in place.
 
         See Also:
             :func:`~atomic.frame.Frame.cell_mags`
         '''
-        self.frames.cell_mags()
+        return self.frames.cell_mags(inplace=inplace)
+
+    def get_primitive_atoms(self, inplace=False):
+        '''
+        Compute primitive atom positions in place.
+
+        See Also:
+            :func:`~atomic.atom.compute_primitive`
+        '''
+        patoms = compute_primitive(self)
+        if inplace:
+            self.primitive_atoms = patoms
+        else:
+            return patoms
+
+    def get_super_atoms(self, inplace=False):
+        '''
+        Compute the super cell atom positions from the primitive atom positions.
+
+        See Also:
+            :func:`~atomic.atom.compute_supercell`
+        '''
+        obj = compute_supercell(self)
+        if inplace:
+            self.super_atoms = obj
+        else:
+            return obj
 
     def get_twobody(self, k=None, bond_extra=0.45, inplace=False,
                     dmax=13.0, dmin=0.3):
@@ -86,7 +111,8 @@ class Universe(Container):
         See Also:
             :func:`~atomic.atom.compute_twobody`.
         '''
-        twobody = _compute_twobody(self, k=k, bond_extra=bond_extra, dmax=dmax, dmin=dmin)
+        twobody = None
+#        twobody = _compute_twobody(self, k=k, bond_extra=bond_extra, dmax=dmax, dmin=dmin)
         if inplace:
             self.twobody = twobody
         else:

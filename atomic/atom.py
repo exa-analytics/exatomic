@@ -11,12 +11,10 @@ from exa.errors import MissingColumns
 from atomic.errors import PeriodicError
 from atomic.twobody import TwoBody
 if Config.numba:
-    from exa.jitted.iteration import periodic_supercell, repeat_int
-    from exa.jitted.broadcasting import mod
+    from exa.jitted.iteration import repeat_f8_array2d_by_counts, periodic_supercell, repeat_i8
 else:
-    from exa.algorithms.iteration import periodic_supercell
-    import numpy.repeat as repeat_int
-    import numpy.mod as mod
+    from exa.algorithms.iteration import repeat_f8_array2d_by_counts, periodic_supercell
+    import numpy.repeat as repeat_i8
 
 
 class Atom(DataFrame):
@@ -43,23 +41,32 @@ class PrimitiveAtom(DataFrame):
     '''
     Primitive (or in unit cell) coordinates.
     '''
-    __indices__ = ['frame', 'prim_atom']
-    __columns__ = ['x', 'y', 'z', 'atom']
+    __indices__ = ['frame', 'atom']
+    __columns__ = ['x', 'y', 'z']
 
 
-class SuperCellAtom(DataFrame):
+class SuperAtom(DataFrame):
     '''
     A 3 x 3 x 3 super cell generate using the primitive cell positions.
 
     See Also:
         :class:`~atomic.atom.PrimitiveAtom`
     '''
-    __indices__ = ['frame', 'sc_atom']
+    __indices__ = ['frame', 'super_atom']
     __columns__ = ['x', 'y', 'z', 'atom']
 
 
-
-rfc = ['rx', 'ry', 'rz', 'ox', 'oy', 'oz']    # Required columns in the Frame table for periodic calcs
+def check(universe):
+    '''
+    '''
+    rfc = ['rx', 'ry', 'rz', 'ox', 'oy', 'oz']    # Required columns in the Frame table for periodic calcs
+    if 'periodic' in universe.frames.columns:
+        if any(universe.frames['periodic'] == True):
+            missing = set(rfc).difference(universe.frames.columns)
+            if missing:
+                raise MissingColumns(missing, universe.frames.__class__.__name__)
+            return True
+    return False
 
 
 def compute_primitive(universe):
@@ -72,68 +79,113 @@ def compute_primitive(universe):
     Returns:
         prim_atoms (:class:`~atomic.atom.PrimitiveAtom`): Primitive positions table
     '''
-    if 'periodic' not in universe.frames.columns:
-        raise PeriodicError()
-    elif any(universe.frames['periodic'] == True):
-        if any((col not in universe.frames.columns for col in rfc)):
-            raise MissingColumns()
+    if check(universe):
+        rovalues = universe.frames[['rx', 'ry', 'rz', 'ox', 'oy', 'oz']].values.astype(float)  # Get correct dimensions
+        counts = universe.frames['atom_count'].values.astype(int)                              # for unit cell
+        ro = repeat_f8_array2d_by_counts(rovalues, counts)                                     # magnitudes (r) and
+        r = ro[:, 0:3]                                                                         # origins (o).
+        o = ro[:, 3:]
+        df = np.mod(universe.atoms[['x', 'y', 'z']], r) + o    # Compute unit cell positions
+        return PrimitiveAtom(df)
+    raise PeriodicError()
 
 
-def _compute_primitive_frame(xs, ys, zs, rx, ry, rz, ox, oy, oz):
+def compute_supercell(universe):
     '''
-    For a given frame (see :class:`~atomic.atom.Atom`), compute the primitive
-    cell.
+    '''
+    if check(universe):
+        if hasattr(universe, 'primitive_atoms'):
+            groups = universe.primitive_atoms[['x', 'y', 'z']].groupby(level='frame')
+            n = groups.ngroups
+            pxyz_list = np.empty((n, ), dtype='O')
+            atom_list = np.empty((n, ), dtype='O')
+            index_list = np.empty((n, ), dtype='O')
+            frame_list = np.empty((n, ), dtype='O')
+            for i, (fdx, xyz) in enumerate(groups):
+                rx = universe.frames.ix[fdx, 'rx']
+                ry = universe.frames.ix[fdx, 'ry']
+                rz = universe.frames.ix[fdx, 'rz']
+                ac = universe.frames.ix[fdx, 'atom_count']
+                n = ac * 27
+                pxyz_list[i] = periodic_supercell(xyz.values, rx, ry, rz)
+                atom_list[i] = np.tile(xyz.index.get_level_values('atom'), 27)
+                index_list[i] = range(n)
+                frame_list[i] = repeat_i8(fdx, n)
+            df = pd.DataFrame(np.concatenate(pxyz_list), columns=['x', 'y', 'z'])
+            df['atom'] = np.concatenate(atom_list)
+            df['super_atom'] = np.concatenate(index_list)
+            df['frame'] = np.concatenate(frame_list)
+            df.set_index(['frame', 'super_atom'], inplace=True)
+            return SuperAtom(df)
+    raise PeriodicError()
+
+
+def compute_twobody(universe, k=None, bond_extra=0.45, dmax=13.0, dmin=0.3):
+    '''
+    Compute two body information given a universe.
+
+    For non-periodic systems the only required argument is the table of atom
+    positions and symbols. For periodic systems, at a minimum, the atoms and
+    frames dataframes must be provided.
+
+    Bonds are computed semi-empirically and exist if:
+
+    .. math::
+
+        distance(A, B) < covalent\_radius(A) + covalent\_radius(B) + bond\_extra
 
     Args:
-        xs (:class:`~numpy.ndarray`): Array of x positions
-        ys (:class:`~numpy.ndarray`): Array of y positions
-        zs (:class:`~numpy.ndarray`): Array of z positions
-        rx (float): Cell magnitude in x
-        ry (float): Cell magnitude in y
-        rz (float): Cell magnitude in z
-        ox (float): Cell origin in x
-        oy (float): Cell origin in y
-        oz (float): Cell origin in z
+        atoms (:class:`~atomic.atom.Atom`): Table of nuclear positions and symbols
+        frames (:class:`~pandas.DataFrame`): DataFrame of periodic cell dimensions (or False if )
+        k (int): Number of distances (per atom) to compute
+        bond_extra (float): Extra distance to include when determining bonds (see above)
+        dmax (float): Max distance of interest (larger distances are ignored)
+        dmin (float): Min distance of interest (smaller distances are ignored)
 
-    Returns
+    Returns:
+        df (:class:`~atomic.twobody.TwoBody`): Two body property table
     '''
+    if 'periodic' in universe.frames.columns:    # Figure out what type of two body properties to compute
+        if any(universe.frames['periodic'] == True):
+            req = ['xr', 'yr', 'zr']
+            if any((mag not in universe.frames.columns for mag in req)): # Check the requirements are met
+                raise ColumnError(req, universe.frames)
+        return _compute_periodic_twobody(universe, k, bond_extra, dmax)
+    else:
+        raise NotImplementedError()
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 #
-#def compute_twobody(universe, k=None, bond_extra=0.45, dmax=13.0, dmin=0.3):
-#    '''
-#    Compute two body information given a :class:`~atomic.atom.Atom` dataframe.
-#
-#    For non-periodic systems the only required argument is the table of atom
-#    positions and symbols. For periodic systems, at a minimum, the atoms and
-#    frames dataframes must be provided.
-#
-#    Bonds are computed semi-empirically and exist if:
-#
-#    .. math::
-#
-#        distance(A, B) < covalent\_radius(A) + covalent\_radius(B) + bond\_extra
-#
-#    Args:
-#        atoms (:class:`~atomic.atom.Atom`): Table of nuclear positions and symbols
-#        frames (:class:`~pandas.DataFrame`): DataFrame of periodic cell dimensions (or False if )
-#        k (int): Number of distances (per atom) to compute
-#        bond_extra (float): Extra distance to include when determining bonds (see above)
-#        dmax (float): Max distance of interest (larger distances are ignored)
-#        dmin (float): Min distance of interest (smaller distances are ignored)
-#
-#    Returns:
-#        df (:class:`~atomic.twobody.TwoBody`): Two body property table
-#    '''
-#    if 'periodic' in universe.frames.columns:    # Figure out what type of two body properties to compute
-#        if any(universe.frames['periodic'] == True):
-#            req = ['xr', 'yr', 'zr']
-#            if any((mag not in universe.frames.columns for mag in req)): # Check the requirements are met
-#                raise ColumnError(req, universe.frames)
-#        return _compute_periodic_twobody(universe, k, bond_extra, dmax)
-#    else:
-#        raise NotImplementedError()
 #
 #
 #
