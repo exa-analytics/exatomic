@@ -145,16 +145,29 @@ def compute_twobody(universe, k=None, bond_extra=0.45, dmax=13.0, dmin=0.3):
     Returns:
         df (:class:`~atomic.twobody.TwoBody`): Two body property table
     '''
-    if 'periodic' in universe.frames.columns:    # Figure out what type of two body properties to compute
-        if any(universe.frames['periodic'] == True):
-            req = ['xr', 'yr', 'zr']
-            if any((mag not in universe.frames.columns for mag in req)): # Check the requirements are met
-                raise ColumnError(req, universe.frames)
-#        return _compute_periodic_twobody(universe, k, bond_extra, dmax)
+    if check(universe):
+        pass
     else:
         raise NotImplementedError()
 
 
+def _in_memory():
+    pass
+
+def _memmaped():
+    pass
+
+def _periodic_from_atom():
+    pass
+
+def _periodic_from_primitive():
+    pass
+
+def _periodic_from_super():
+    pass
+
+def _periodic_fast():
+    pass
 
 
 
