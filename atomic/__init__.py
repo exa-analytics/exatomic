@@ -12,6 +12,7 @@ __version__ = '.'.join((str(v) for v in __atomic_version__))
 
 from exa import run_unittests, run_doctests     # imports from exa
 from exa import Dashboard
+from exa import _np, _pd
 from exa.relational.isotopes import Isotope
 from exa.relational.units import Length, Energy
 from exa.relational.constants import Constant

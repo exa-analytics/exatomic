@@ -10,12 +10,12 @@ from exa import DataFrame
 class Molecule(DataFrame):
     '''
     '''
-    __dimensions__ = ['frame', 'molecule']
+    __indices__ = ['frame', 'molecule']
     __columns__ = ['formula', 'mass', 'cx', 'cy', 'cz']
 
 
-class SuperMolecule(DataFrame):
+class MoleculePBC(DataFrame):
     '''
     '''
-    __dimensions__ = ['frame', 'supermolecule']
+    __indices__ = ['frame', 'moleculepbc']
     __columns__ = ['cx', 'cy', 'cz', 'molecule']
