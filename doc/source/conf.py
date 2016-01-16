@@ -390,7 +390,9 @@ epub_use_index = True
 # Example configuration for intersphinx: refer to the Python standard library.
 intersphinx_mapping = {
     'python': ('http://docs.python.org/3/', None),
-    'pandas': ('http://pandas.pydata.org/pandas-docs/version/0.17.1/', None),
+    'numpy': ('https://docs.scipy.org/doc/numpy/', None),
+    'scipy': ('https://scipy.github.io/devdocs/', None),
+    'pandas': ('https://pandas-docs.github.io/pandas-docs-travis/', None),
     'exa': ('/'.join(('..', '..', '..', 'exa', 'doc', 'build', 'html')), None)
 }
 
