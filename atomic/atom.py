@@ -13,11 +13,13 @@ from exa.relational.isotopes import symbol_to_radius
 from atomic.errors import PeriodicError
 from atomic.twobody import TwoBody, bond_extra, dmax, dmin
 if Config.numba:
-    from exa.jitted.iteration import repeat_f8_array2d_by_counts, periodic_supercell, repeat_i8
+    from exa.jitted.iteration import (repeat_f8_array2d_by_counts, periodic_supercell,
+                                      repeat_i8, repeat_i8_array)
     from exa.jitted.iteration import pdist2d as pdist
 else:
     from exa.algorithms.iteration import repeat_f8_array2d_by_counts, periodic_supercell
     import numpy.repeat as repeat_i8
+    import numpy.tile as repeat_i8_array
     from scipy.spatial.distance import pdist
 
 
@@ -99,7 +101,7 @@ def compute_supercell(universe):
     '''
     if check(universe):
         if hasattr(universe, 'primitive_atoms'):
-            groups = universe.primitive_atoms[['x', 'y', 'z']].groupby(level='frame')
+            groups = universe.primitive_atoms.groupby(level='frame')[['x', 'y', 'z']]
             n = groups.ngroups
             pxyz_list = np.empty((n, ), dtype='O')
             atom_list = np.empty((n, ), dtype='O')
@@ -168,8 +170,8 @@ def _free_in_mem(universe, dmax=12.3, dmin=0.3, bond_extra=bond_extra):
     Returns:
         twobody (:class:`~atomic.twobody.TwoBody`)
     '''
-    xyz = universe.atoms[['x', 'y', 'z']].groupby(level='frame')
-    syms = universe.atoms['symbol'].groupby(level='frame')
+    xyz = universe.atoms.groupby(level='frame')[['x', 'y', 'z']]
+    syms = universe.atoms.groupby(level='frame')['symbol']
     n = xyz.ngroups
     distances = np.empty((n, ), dtype='O')
     symbols1 = np.empty((n, ), dtype='O')
@@ -215,16 +217,51 @@ def _free_memmap():    # Same as _free_in_mem but using numpy.memmap
     raise NotImplementedError()
 
 
-def _periodic_from_atom():    # This
-    pass
+def _periodic_from_atom():    # Compute primitive cell, super cell, and periodic two body
+    raise NotImplementedError()
 
 
 def _periodic_from_primitive():
-    pass
+    raise NotImplementedError()
 
 
-def _periodic_from_super():
-    pass
+def _periodic_from_super(universe, k=None, dmax=dmax, dmin=dmin, bond_extra=bond_extra):
+    '''
+    '''
+    xyz_groups = universe.super_atoms.groupby(level='frame')[['x', 'y', 'z']]
+    n = xyz_groups.ngroups
+    distances = np.empty((n, ), dtype='O')
+    super_atom1 = np.empty((n, ), dtype='O')
+    super_atom2 = np.empty((n, ), dtype='O')
+    symbol1 = np.empty((n, ), dtype='O')
+    symbol2 = np.empty((n, ), dtype='O')
+    distances = np.empty((n, ), dtype='O')
+    indices = np.empty((n, ), dtype='O')
+    frames = np.empty((n, ), dtype='O')
+    for i, (fdx, xyz) in enumerate(xyz_groups):
+        nat = universe.frames.ix[fdx, 'atom_count']
+        k = nat if k is None else k
+        xyzv = xyz.values
+        central = xyzv[13*nat:14*nat]
+        dists, idxs = cKDTree(xyzv).query(central, k=k, distance_upper_bound=dmax)
+        super_atom1[i] = repeat_i8_array(idxs[:, 0], k)
+        super_atom2[i] = idxs.ravel()
+        distances[i] = dists.ravel()
+        n = len(distances[i])
+        indices[i] = range(n)
+        frames[i] = repeat_i8(fdx, n)
+    distances = np.concatenate(distances)
+    super_atom1 = np.concatenate(super_atom1)
+    super_atom2 = np.concatenate(super_atom2)
+    indices = np.concatenate(indices)
+    frames = np.concatenate(frames)
+    df = pd.DataFrame.from_dict({'distance': distances, 'super_atom1': super_atom1,
+                                 'super_atom2': super_atom2, 'index': indices,
+                                 'frame': frames})
+    df = df[(df['distance'] > dmin) & (df['distance'] < dmax)]
+    df.set_index(['frame', 'index'], inplace=True)
+    return df
+
 
 
 
