@@ -8,7 +8,7 @@ from exa import Config
 from exa import _pd as pd
 from exa import _np as np
 from exa import _os as os
-from exa.relational.isotopes import Z_to_symbol_map
+from exa.relational.isotopes import Z_to_symbol
 from exa.algorithms.deduplication import deduplicate_with_prev_offset
 if Config.numba:
     from exa.jitted.indexing import idxs_from_starts_and_counts
@@ -67,7 +67,7 @@ def read_xyz(path, unit='A'):
     if all(df['symbol'].str.isdigit()):
         df.columns = ['Z', 'x', 'y', 'z']
         df['Z'] = df['Z'].astype(np.int)
-        df.loc[:, 'symbol'] = df['Z'].map(Z_to_symbol_map)
+        df.loc[:, 'symbol'] = df['Z'].map(Z_to_symbol)
     frame = minimal_frame_from_atoms(df)
     meta = {'file': path, 'comments': comments}                                                 # Generate metadata
     name = os.path.basename(path)

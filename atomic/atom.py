@@ -3,18 +3,22 @@
 Atom DataFrame
 ==========================
 '''
+from itertools import combinations
 from scipy.spatial import cKDTree
 from atomic import _np as np
 from atomic import _pd as pd
 from exa import DataFrame, Config
 from exa.errors import MissingColumns
+from exa.relational.isotopes import symbol_to_radius
 from atomic.errors import PeriodicError
-from atomic.twobody import TwoBody
+from atomic.twobody import TwoBody, bond_extra, dmax, dmin
 if Config.numba:
     from exa.jitted.iteration import repeat_f8_array2d_by_counts, periodic_supercell, repeat_i8
+    from exa.jitted.iteration import pdist2d as pdist
 else:
     from exa.algorithms.iteration import repeat_f8_array2d_by_counts, periodic_supercell
     import numpy.repeat as repeat_i8
+    from scipy.spatial.distance import pdist
 
 
 class Atom(DataFrame):
@@ -120,7 +124,7 @@ def compute_supercell(universe):
     raise PeriodicError()
 
 
-def compute_twobody(universe, k=None, bond_extra=0.45, dmax=13.0, dmin=0.3):
+def compute_twobody(universe, k=None, bond_extra=bond_extra, dmax=dmax, dmin=dmin):
     '''
     Compute two body information given a universe.
 
@@ -148,28 +152,79 @@ def compute_twobody(universe, k=None, bond_extra=0.45, dmax=13.0, dmin=0.3):
     if check(universe):
         pass
     else:
-        raise NotImplementedError()
+        return _free_in_mem(universe, dmax=dmax, dmin=dmin, bond_extra=bond_extra)
 
 
-def _in_memory():
+def _free_in_mem(universe, dmax=12.3, dmin=0.3, bond_extra=bond_extra):
+    '''
+    Free boundary condition two body properties computed in memory.
+
+    Args:
+        universe (:class:`~atomic.universe.Universe`): The atomic universe
+        dmax (float): Max distance of interest
+        dmin (float): Minimum distance of interest
+        bond_extra (float): Extra distance to add when determining bonds
+
+    Returns:
+        twobody (:class:`~atomic.twobody.TwoBody`)
+    '''
+    xyz = universe.atoms[['x', 'y', 'z']].groupby(level='frame')
+    syms = universe.atoms['symbol'].groupby(level='frame')
+    n = xyz.ngroups
+    distances = np.empty((n, ), dtype='O')
+    symbols1 = np.empty((n, ), dtype='O')
+    symbols2 = np.empty((n, ), dtype='O')
+    indices = np.empty((n, ), dtype='O')
+    frames = np.empty((n, ), dtype='O')
+    atom1 = np.empty((n, ), dtype='O')
+    atom2 = np.empty((n, ), dtype='O')
+    for i, (fdx, xyz) in enumerate(xyz):   # Process each frame separately
+        sym = syms.get_group(fdx)
+        atom = xyz.index.get_level_values('atom')
+        atom1[i], atom2[i] = list(zip(*combinations(atom, 2)))
+        symbols1[i], symbols2[i] = list(zip(*combinations(sym, 2)))
+        distances[i] = pdist(xyz.values)
+        m = len(atom1[i])
+        indices[i] = range(m)
+        frames[i] = repeat_i8(fdx, m)
+    distances = np.concatenate(distances)
+    atom1 = np.concatenate(atom1)
+    atom2 = np.concatenate(atom2)
+    symbols1 = np.concatenate(symbols1)
+    symbols2 = np.concatenate(symbols2)
+    indices = np.concatenate(indices)
+    frames = np.concatenate(frames)        # Build the dataframe all at once
+    df = pd.DataFrame.from_dict({'distance': distances, 'symbol1': symbols1, 'symbol2': symbols2,
+                                 'atom1': atom1, 'atom2': atom2, 'index': indices, 'frame': frames})
+    df = df[(df['distance'] > dmin) & (df['distance'] < dmax)]
+    df.set_index(['frame', 'index'], inplace=True)   # Prune and set indices
+    df['symbols'] = df['symbol1'] + df['symbol2']
+    df['r1'] = df['symbol1'].map(symbol_to_radius)
+    df['r2'] = df['symbol2'].map(symbol_to_radius)
+    df['mbl'] = df['r1'] + df['r2'] + bond_extra
+    df['bond'] = df['distance'] < df['mbl']
+    del df['symbol1']             # Remove duplicated/unnecessary data
+    del df['symbol2']
+    del df['r1']
+    del df['r2']
+    del df['mbl']
+    return TwoBody(df)
+
+
+def _free_memmap():    # Same as _free_in_mem but using numpy.memmap
+    raise NotImplementedError()
+
+
+def _periodic_from_atom():    # This
     pass
 
-def _memmaped():
-    pass
-
-def _periodic_from_atom():
-    pass
 
 def _periodic_from_primitive():
     pass
 
+
 def _periodic_from_super():
     pass
-
-def _periodic_fast():
-    pass
-
-
 
 
 

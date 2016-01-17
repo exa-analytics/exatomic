@@ -6,7 +6,8 @@ The atomic container object.
 '''
 from exa import Container
 from exa.relational.base import Column, Integer, ForeignKey
-from atomic.atom import Atom, SuperAtom, VisualAtom, PrimitiveAtom, compute_primitive, compute_supercell
+from atomic.atom import Atom, SuperAtom, VisualAtom, PrimitiveAtom
+from atomic.atom import compute_primitive, compute_supercell, compute_twobody
 from atomic.twobody import TwoBody
 from atomic.frame import Frame
 
@@ -93,26 +94,17 @@ class Universe(Container):
         else:
             return obj
 
-    def get_twobody(self, k=None, bond_extra=0.45, inplace=False,
-                    dmax=13.0, dmin=0.3):
+    def get_twobody(self, inplace=False, **kwargs):
         '''
         Compute two body information from the current atom dataframe.
 
         This function does not return the computed dataframe but rather
         attaches it directly to the active universe object (**obj.twobody**).
 
-        Args:
-            k (int): Number of distances (per atom) to compute
-            bond_extra (float): Extra distance to include when determining bonds (see above)
-            dmax (float): Max distance of interest (larger distances are ignored)
-            dmin (float): Min distance of interest (smaller distances are ignored)
-            inplace (bool): Perform action in place (default False)
-
         See Also:
             :func:`~atomic.atom.compute_twobody`.
         '''
-        twobody = None
-#        twobody = _compute_twobody(self, k=k, bond_extra=bond_extra, dmax=dmax, dmin=dmin)
+        twobody = compute_twobody(self, **kwargs)
         if inplace:
             self.twobody = twobody
         else:
