@@ -5,11 +5,11 @@ Atom DataFrame
 '''
 from itertools import combinations
 from scipy.spatial import cKDTree
-from atomic import _np as np
-from atomic import _pd as pd
 from exa import DataFrame, Config
 from exa.errors import MissingColumns
-from exa.relational.isotopes import symbol_to_radius
+from atomic import _np as np
+from atomic import _pd as pd
+from atomic import Isotope
 from atomic.errors import PeriodicError
 from atomic.twobody import TwoBody, bond_extra, dmax, dmin
 if Config.numba:
@@ -201,8 +201,8 @@ def _free_in_mem(universe, dmax=12.3, dmin=0.3, bond_extra=bond_extra):
     df = df[(df['distance'] > dmin) & (df['distance'] < dmax)]
     df.set_index(['frame', 'index'], inplace=True)   # Prune and set indices
     df['symbols'] = df['symbol1'] + df['symbol2']
-    df['r1'] = df['symbol1'].map(symbol_to_radius)
-    df['r2'] = df['symbol2'].map(symbol_to_radius)
+    df['r1'] = df['symbol1'].map(Isotope.symbol_radius)
+    df['r2'] = df['symbol2'].map(Isotope.symbol_radius)
     df['mbl'] = df['r1'] + df['r2'] + bond_extra
     df['bond'] = df['distance'] < df['mbl']
     del df['symbol1']             # Remove duplicated/unnecessary data
@@ -217,13 +217,24 @@ def _free_memmap():    # Same as _free_in_mem but using numpy.memmap
     raise NotImplementedError()
 
 
-def _periodic_from_atom():    # Compute primitive cell, super cell, and periodic two body
-    raise NotImplementedError()
+def _periodic_from_atom(universe, k=None, dmax=dmax, dmin=dmin, bond_extra=bond_extra):    # Compute primitive cell, super cell, and periodic two body
+    '''
+    Compute periodic two body properties given only the absolute positions and
+    the cell dimensions.
+
+    Args:
+        universe (:class:`~atomic.universe.Universe`): The atomic universe
+        k (int): Number of distances (per atom) to compute
+        dmax (float): Max distance of interest
+        dmin (float): Minimum distance of interest
+    '''
+    pass
 
 
 def _periodic_from_primitive():
     raise NotImplementedError()
 
+from datetime import datetime as dt
 
 def _periodic_from_super(universe, k=None, dmax=dmax, dmin=dmin, bond_extra=bond_extra):
     '''
@@ -238,7 +249,7 @@ def _periodic_from_super(universe, k=None, dmax=dmax, dmin=dmin, bond_extra=bond
     distances = np.empty((n, ), dtype='O')
     indices = np.empty((n, ), dtype='O')
     frames = np.empty((n, ), dtype='O')
-    for i, (fdx, xyz) in enumerate(xyz_groups):
+    for i, (fdx, xyz) in enumerate(xyz_groups):    # Deal with each frame
         nat = universe.frames.ix[fdx, 'atom_count']
         k = nat if k is None else k
         xyzv = xyz.values
@@ -254,12 +265,37 @@ def _periodic_from_super(universe, k=None, dmax=dmax, dmin=dmin, bond_extra=bond
     super_atom1 = np.concatenate(super_atom1)
     super_atom2 = np.concatenate(super_atom2)
     indices = np.concatenate(indices)
-    frames = np.concatenate(frames)
+    frames = np.concatenate(frames)    # Build the dataframe once
     df = pd.DataFrame.from_dict({'distance': distances, 'super_atom1': super_atom1,
                                  'super_atom2': super_atom2, 'index': indices,
                                  'frame': frames})
-    df = df[(df['distance'] > dmin) & (df['distance'] < dmax)]
-    df.set_index(['frame', 'index'], inplace=True)
+    df = df[(df['distance'] > dmin) & (df['distance'] < dmax)] # Slow from here down
+    df.set_index(['frame', 'index'], inplace=True)   # Prune and index the dataframe
+    atoms = universe.super_atoms['atom'].to_dict()
+    symbols = universe.atoms['symbol'].to_dict()
+    def map_atoms(idx):
+        return atoms[idx]
+    def map_symbols(idx):
+        return symbols[idx]
+    o = df.reset_index('index').set_index('super_atom1', append=True)
+    o.index.names = ['frame', 'super_atom']
+    df['atom1'] = o.index.map(map_atoms)
+    o = df.reset_index('index').set_index('super_atom2', append=True)
+    o.index.names = ['frame', 'super_atom']
+    df['atom2'] = o.index.map(map_atoms)
+    o = df.reset_index('index').set_index('atom1', append=True)
+    o.index.names = ['frame', 'atom']
+    df['symbol1'] = o.index.map(map_symbols)
+    o = df.reset_index('index').set_index('atom2', append=True)
+    o.index.names = ['frame', 'atom']
+    df['symbol2'] = o.index.map(map_symbols)
+    df['r1'] = df['symbol1'].map(Isotope.symbol_radius)
+    df['r2'] = df['symbol2'].map(Isotope.symbol_radius)
+    df['mbl'] = df['r1'] + df['r2'] + bond_extra
+    df['bond'] = df['distance'] < df['mbl']
+    del df['r1']
+    del df['r2']
+    del df['mbl']
     return df
 
 
