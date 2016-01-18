@@ -8,7 +8,8 @@ from exa import Container
 from exa.relational.base import Column, Integer, ForeignKey
 from atomic.atom import Atom, SuperAtom, VisualAtom, PrimitiveAtom
 from atomic.atom import compute_primitive, compute_supercell, compute_twobody
-from atomic.twobody import TwoBody
+from atomic.twobody import TwoBody, PeriodicTwoBody
+from atomic.molecule import Molecule
 from atomic.frame import Frame
 
 
@@ -77,7 +78,7 @@ class Universe(Container):
         '''
         patoms = compute_primitive(self)
         if inplace:
-            self.primitive_atoms = patoms
+            self._primitive_atoms = patoms
         else:
             return patoms
 
@@ -90,7 +91,7 @@ class Universe(Container):
         '''
         obj = compute_supercell(self)
         if inplace:
-            self.super_atoms = obj
+            self._super_atoms = obj
         else:
             return obj
 
@@ -104,18 +105,64 @@ class Universe(Container):
         See Also:
             :func:`~atomic.atom.compute_twobody`.
         '''
-        twobody = compute_twobody(self, **kwargs)
+        data = compute_twobody(self, **kwargs)
         if inplace:
-            self.twobody = twobody
+            tb = data
+            if isinstance(data, tuple):
+                self._super_atoms = data[0]
+                tb = data[1]
+            if isinstance(tb, PeriodicTwoBody):
+                self._periodic_twobody = tb
+            else:
+                self._twobody = tb
         else:
-            return twobody
+            return data
+
+    @property
+    def twobody(self):
+        '''
+        '''
+        if len(self._twobody) == 0 and len(self._periodic_twobody) == 0:
+            self.get_twobody(inplace=True)
+        if len(self._twobody) == 0:
+            return self._periodic_twobody
+        else:
+            return self._twobody
+
+    @property
+    def periodic_twobody(self):
+        '''
+        '''
+        return self.twobody
+
+    @property
+    def primitive_atoms(self):
+        '''
+        '''
+        if len(self._primitive_atoms) == 0:
+            self.get_primitive_atoms(inplace=True)
+        return self._primitive_atoms
+
+    @property
+    def super_atoms(self):
+        '''
+        '''
+        if len(self._super_atoms) == 0:
+            self.get_super_atoms(inplace=True)
+        return self._super_atoms
 
     @classmethod
     def from_xyz(cls, path, unit='A'):
         raise NotImplementedError()
 
-    def __init__(self, atoms=None, frames=None, twobody=None,
-                 molecule=None, **kwargs):
+    def __init__(self, atoms=None, frames=None, twobody=None, molecule=None,
+                 primitive_atoms=None, super_atoms=None, periodic_twobody=None,
+                 **kwargs):
         super().__init__(**kwargs)
         self.atoms = Atom(atoms)
         self.frames = Frame(frames)
+        self._primitive_atoms = PrimitiveAtom(primitive_atoms)
+        self._super_atoms = SuperAtom(super_atoms)
+        self._periodic_twobody = PeriodicTwoBody(periodic_twobody)
+        self._twobody = TwoBody(twobody)
+        self._molecule = Molecule(molecule)

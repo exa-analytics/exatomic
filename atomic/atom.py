@@ -152,7 +152,11 @@ def compute_twobody(universe, k=None, bond_extra=bond_extra, dmax=dmax, dmin=dmi
         df (:class:`~atomic.twobody.TwoBody`): Two body property table
     '''
     if check(universe):
-        pass
+        if len(universe._super_atoms) == 0:
+            if len(universe._primitive_atoms) == 0:
+                return _periodic_from_atoms(universe, k=k, bond_extra=bond_extra, dmax=dmax, dmin=dmin)
+            return _periodic_from_primitive(universe, k=k, bond_extra=bond_extra, dmax=dmax, dmin=dmin)
+        return _periodic_from_super(universe, k=k, bond_extra=bond_extra, dmax=dmax, dmin=dmin)
     else:
         return _free_in_mem(universe, dmax=dmax, dmin=dmin, bond_extra=bond_extra)
 
@@ -217,7 +221,7 @@ def _free_memmap():    # Same as _free_in_mem but using numpy.memmap
     raise NotImplementedError()
 
 
-def _periodic_from_atom(universe, k=None, dmax=dmax, dmin=dmin, bond_extra=bond_extra):    # Compute primitive cell, super cell, and periodic two body
+def _periodic_from_atoms(universe, k=None, dmax=dmax, dmin=dmin, bond_extra=bond_extra):    # Compute primitive cell, super cell, and periodic two body
     '''
     Compute periodic two body properties given only the absolute positions and
     the cell dimensions.
@@ -231,11 +235,106 @@ def _periodic_from_atom(universe, k=None, dmax=dmax, dmin=dmin, bond_extra=bond_
 
     Returns:
     '''
-    pass
-
-
-def _periodic_from_primitive():
     raise NotImplementedError()
+
+
+def _periodic_from_primitive(universe, k=None, dmax=dmax, dmin=dmin, bond_extra=bond_extra):
+    '''
+    Compute periodic two body properties given only the absolute positions and
+    the cell dimensions.
+
+    Args:
+        universe (:class:`~atomic.universe.Universe`): The atomic universe
+        k (int): Number of distances (per atom) to compute
+        dmax (float): Max distance of interest
+        dmin (float): Minimum distance of interest
+        bond_extra (float): Extra distance to add when determining bonds
+
+    Returns:
+        periodic_twobody (:class:`~atomic.twobody.PeriodicTwoBody`): Periodic two body properties
+    '''
+    groups = universe.primitive_atoms.groupby(level='frame')
+    pxyzs = groups[['x', 'y', 'z']]
+    ng = groups.ngroups
+    super_xyz = np.empty((ng, ), dtype='O')
+    super_index = np.empty((ng, ), dtype='O')
+    super_frame = np.empty((ng, ), dtype='O')
+    super_atom = np.empty((ng, ), dtype='O')
+    tb_super_atom1 = np.empty((ng, ), dtype='O')
+    tb_super_atom2 = np.empty((ng, ), dtype='O')
+    tb_dists = np.empty((ng, ), dtype='O')
+    tb_frame = np.empty((ng, ), dtype='O')
+    tb_index = np.empty((ng, ), dtype='O')
+    for i, (fdx, pxyz) in enumerate(pxyzs):
+        rx = universe.frames.ix[fdx, 'rx']
+        ry = universe.frames.ix[fdx, 'ry']
+        rz = universe.frames.ix[fdx, 'rz']
+        atom = pxyz.index.get_level_values('atom').values
+        nat = len(atom)
+        k = nat if k is None else k
+        super_xyz[i] = periodic_supercell(pxyz.values, rx, ry, rz)
+        nsuper = len(super_xyz[i])
+        super_frame[i] = repeat_i8(fdx, nsuper)
+        super_index[i] = range(nsuper)
+        super_atom[i] = tile_i8(atom, 27)
+        dists, indices = cKDTree(super_xyz[i]).query(pxyz, k=k, distance_upper_bound=dmax)
+        tb_dists[i] = dists.ravel()
+        ntb = len(tb_dists[i])
+        tb_super_atom1[i] = repeat_i8_array(indices[:, 0], k)
+        tb_super_atom2[i] = indices.ravel()
+        tb_frame[i] = repeat_i8(fdx, ntb)
+        tb_index[i] = range(ntb)
+
+    # SuperAtom
+    super_xyz = np.concatenate(super_xyz)
+    super_frame = np.concatenate(super_frame)
+    super_index = np.concatenate(super_index)
+    super_atom = np.concatenate(super_atom)
+    super_atomsdf = pd.DataFrame(super_xyz, columns=['x', 'y', 'z'])
+    super_atomsdf['frame'] = super_frame
+    super_atomsdf['super_atom'] = super_index
+    super_atomsdf['atom'] = super_atom
+    super_atomsdf.set_index(['frame', 'super_atom'], inplace=True)
+
+    # PeriodicTwoBody
+    tb_dists = np.concatenate(tb_dists)
+    tb_super_atom1 = np.concatenate(tb_super_atom1)
+    tb_super_atom2 = np.concatenate(tb_super_atom2)
+    tb_frame = np.concatenate(tb_frame)
+    tb_index = np.concatenate(tb_index)
+    tbdf = pd.DataFrame.from_dict({'distance': tb_dists, 'super_atom1': tb_super_atom1,
+                                   'super_atom2': tb_super_atom2, 'frame': tb_frame,
+                                   'index': tb_index})
+    tbdf.set_index(['frame', 'index'], inplace=True)
+    tbdf = tbdf[(tbdf['distance'] > dmin) & (tbdf['distance'] < dmax)]
+    mapper = super_atomsdf['atom'].to_dict()
+    print(mapper)
+    def map_mapper(value):
+        return mapper[value]
+    df = tbdf.reset_index('index').set_index('super_atom1', append=True)
+    df.index.names = ['frame', 'super_atom']
+    tbdf['atom1'] = df.index.map(map_mapper)
+    df = df.reset_index('super_atom', drop=True).set_index('super_atom2', append=True)
+    df.index.names = ['frame', 'super_atom']
+    tbdf['atom2'] = df.index.map(map_mapper)
+    mapper = universe.atoms['symbol'].to_dict()
+    df = tbdf.reset_index('index').set_index('atom1', append=True)
+    df.index.names = ['frame', 'atom']
+    tbdf['symbol1'] = df.index.map(map_mapper)
+    df = df.reset_index('atom', drop=True).set_index('atom2', append=True)
+    tbdf.index.names = ['frame', 'atom']
+    tbdf['symbol2'] = df.index.map(map_mapper)
+    tbdf['symbols'] = tbdf['symbol1'] + tbdf['symbol2']
+    tbdf['r1'] = tbdf['symbol1'].map(Isotope.symbol_radius)
+    tbdf['r2'] = tbdf['symbol2'].map(Isotope.symbol_radius)
+    tbdf['mbl'] = tbdf['r1'] + tbdf['r2'] + bond_extra
+    tbdf['bond'] = tbdf['distance'] < tbdf['mbl']
+    del tbdf['r1']
+    del tbdf['r2']
+    del tbdf['mbl']
+    tbdf.index.names = ['frame', 'index']
+    return SuperAtom(super_atomsdf), PeriodicTwoBody(tbdf)
+
 
 
 def _periodic_from_super(universe, k=None, dmax=dmax, dmin=dmin, bond_extra=bond_extra):
@@ -268,110 +367,35 @@ def _periodic_from_super(universe, k=None, dmax=dmax, dmin=dmin, bond_extra=bond
     super_atom2 = np.concatenate(super_atom2)
     indices = np.concatenate(indices)
     frames = np.concatenate(frames)    # Build the dataframe once
-    df = pd.DataFrame.from_dict({'distance': distances, 'super_atom1': super_atom1,
+    tbdf = pd.DataFrame.from_dict({'distance': distances, 'super_atom1': super_atom1,
                                  'super_atom2': super_atom2, 'index': indices,
                                  'frame': frames})
-    df = df[(df['distance'] > dmin) & (df['distance'] < dmax)] # Slow from here down
-    df.set_index(['frame', 'index'], inplace=True)   # Prune and index the dataframe
-    atoms = universe.super_atoms['atom'].to_dict()
-    symbols = universe.atoms['symbol'].to_dict()
-    def map_atoms(idx):
-        return atoms[idx]
-    def map_symbols(idx):
-        return symbols[idx]
-    o = df.reset_index('index').set_index('super_atom1', append=True)
-    o.index.names = ['frame', 'super_atom']
-    df['atom1'] = o.index.map(map_atoms)
-    o = df.reset_index('index').set_index('super_atom2', append=True)
-    o.index.names = ['frame', 'super_atom']
-    df['atom2'] = o.index.map(map_atoms)
-    o = df.reset_index('index').set_index('atom1', append=True)
-    o.index.names = ['frame', 'atom']
-    df['symbol1'] = o.index.map(map_symbols)
-    o = df.reset_index('index').set_index('atom2', append=True)
-    o.index.names = ['frame', 'atom']
-    df['symbol2'] = o.index.map(map_symbols)
-    df['symbols'] = df['symbol1'] + df['symbol2']
-    df['r1'] = df['symbol1'].map(Isotope.symbol_radius)
-    df['r2'] = df['symbol2'].map(Isotope.symbol_radius)
-    df['mbl'] = df['r1'] + df['r2'] + bond_extra
-    df['bond'] = df['distance'] < df['mbl']
-    del df['r1']
-    del df['r2']
-    del df['symbol1']
-    del df['symbol2']
-    del df['mbl']
-    return PeriodicTwoBody(df)
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-#def _compute_periodic_twobody(universe, k, bond_extra, dmax):
-#    '''
-#    Compute the periodic two body properties for a given set of atoms and frames.
-#
-#    The algorithm first iterates over each frame in the universe and computes
-#    the data needed for the dataframes to be built, appending to a storage
-#    container. After completition of this loop, the dataframe objects are
-#    compiled and processed.
-#    '''
-#    groups = universe.atoms[['x', 'y', 'z']].groupby(level='frame')
-#    pbc_xyz_list = []             # XYZ data for PBCAtom
-#    pbc_atom_frame = []           # Original frame index for PBCAtom
-#    pbc_atom_indices = []         # Original (expanded) atom indices (for PBCAtom)
-#    pbc_twobody_distances = []    # Two body distances
-#    pbc_twobody_atom1 = []        # Index corresponds to the (future) pbc_xyz df
-#    pbc_twobody_atom2 = []        # Ditto
-#    pbc_twobody_frame = []        # Original frame index for PBCTwoBody
-#    for i, (fdx, xyz) in enumerate(groups):
-#        frame = universe.frames.loc[fdx]
-#        nat = frame.atom_count
-#        k = nat if k is None else k
-#        xr = frame.xr
-#        yr = frame.yr
-#        zr = frame.zr                                                   # Relative (relevant) timings
-#        atom_index = np.tile(xyz.index.get_level_values('atom'), 27)    # are given in (...)
-#        frame_index = repeat_int([fdx], len(atom_index))
-#        unit_xyz = np.mod(xyz, [xr, yr, zr])                            # Compute unit [cell] xyz  (1.0x)
-#        pbc_xyz = periodic_supercell(unit_xyz.values, xr, yr, zr)       # Compute pbc supercell (2.5x)
-#        distances, indices = cKDTree(pbc_xyz).query(unit_xyz, k=k, distance_upper_bound=dmax)    # Compute distances (10x)
-#        pbc_atom1 = repeat_int(indices[:, 0], k)
-#        pbc_atom2 = indices.ravel()
-#        pbc_frame = repeat_int([fdx], len(pbc_atom2))
-#        pbc_xyz_list.append(pbc_xyz)                       # Now begin appending
-#        pbc_atom_indices.append(atom_index)                # data to be concatenated
-#        pbc_atom_frame.append(frame_index)                 # later.
-#        pbc_twobody_distances.append(distances.ravel())
-#        pbc_twobody_atom1.append(pbc_atom1)
-#        pbc_twobody_atom2.append(pbc_atom2)
-#        pbc_twobody_frame.append(pbc_frame)
-#
-#    # Begin building DataFrames
-#    pbc_xyz = pd.DataFrame(np.concatenate(pbc_xyz_list), columns=['x', 'y', 'z'])
-#    return (pbc_xyz_list, pbc_atom_indices, pbc_atom_frame, pbc_twobody_distances, pbc_twobody_atom1, pbc_twobody_atom2, pbc_twobody_frame)
-#
+    tbdf = tbdf[(tbdf['distance'] > dmin) & (tbdf['distance'] < dmax)] # Slow from here down
+    tbdf.set_index(['frame', 'index'], inplace=True)   # Prune and index the dataframe
+    mapper = universe.super_atoms['atom'].to_dict()
+    print(mapper)
+    def map_mapper(value):
+        return mapper[value]
+    df = tbdf.reset_index('index').set_index('super_atom1', append=True)
+    df.index.names = ['frame', 'super_atom']
+    tbdf['atom1'] = df.index.map(map_mapper)
+    df = df.reset_index('super_atom', drop=True).set_index('super_atom2', append=True)
+    df.index.names = ['frame', 'super_atom']
+    tbdf['atom2'] = df.index.map(map_mapper)
+    mapper = universe.atoms['symbol'].to_dict()
+    df = tbdf.reset_index('index').set_index('atom1', append=True)
+    df.index.names = ['frame', 'atom']
+    tbdf['symbol1'] = df.index.map(map_mapper)
+    df = df.reset_index('atom', drop=True).set_index('atom2', append=True)
+    tbdf.index.names = ['frame', 'atom']
+    tbdf['symbol2'] = df.index.map(map_mapper)
+    tbdf['symbols'] = tbdf['symbol1'] + tbdf['symbol2']
+    tbdf['r1'] = tbdf['symbol1'].map(Isotope.symbol_radius)
+    tbdf['r2'] = tbdf['symbol2'].map(Isotope.symbol_radius)
+    tbdf['mbl'] = tbdf['r1'] + tbdf['r2'] + bond_extra
+    tbdf['bond'] = tbdf['distance'] < tbdf['mbl']
+    del tbdf['r1']
+    del tbdf['r2']
+    del tbdf['mbl']
+    tbdf.index.names = ['frame', 'index']
+    return PeriodicTwoBody(tbdf)
