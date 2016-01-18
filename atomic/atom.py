@@ -14,12 +14,12 @@ from atomic.errors import PeriodicError
 from atomic.twobody import TwoBody, bond_extra, dmax, dmin, PeriodicTwoBody
 if Config.numba:
     from exa.jitted.iteration import (repeat_f8_array2d_by_counts, periodic_supercell,
-                                      repeat_i8, repeat_i8_array)
+                                      repeat_i8, repeat_i8_array, tile_i8)
     from exa.jitted.iteration import pdist2d as pdist
 else:
     from exa.algorithms.iteration import repeat_f8_array2d_by_counts, periodic_supercell
     import numpy.repeat as repeat_i8
-    import numpy.tile as repeat_i8_array
+    import numpy.tile as tile_i8
     from scipy.spatial.distance import pdist
 
 
@@ -114,7 +114,7 @@ def compute_supercell(universe):
                 ac = universe.frames.ix[fdx, 'atom_count']
                 n = ac * 27
                 pxyz_list[i] = periodic_supercell(xyz.values, rx, ry, rz)
-                atom_list[i] = np.tile(xyz.index.get_level_values('atom'), 27)
+                atom_list[i] = tile_i8(xyz.index.get_level_values('atom').values, 27)
                 index_list[i] = range(n)
                 frame_list[i] = repeat_i8(fdx, n)
             df = pd.DataFrame(np.concatenate(pxyz_list), columns=['x', 'y', 'z'])
@@ -237,7 +237,6 @@ def _periodic_from_atom(universe, k=None, dmax=dmax, dmin=dmin, bond_extra=bond_
 def _periodic_from_primitive():
     raise NotImplementedError()
 
-from datetime import datetime as dt
 
 def _periodic_from_super(universe, k=None, dmax=dmax, dmin=dmin, bond_extra=bond_extra):
     '''
