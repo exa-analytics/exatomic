@@ -308,7 +308,6 @@ def _periodic_from_primitive(universe, k=None, dmax=dmax, dmin=dmin, bond_extra=
     tbdf.set_index(['frame', 'index'], inplace=True)
     tbdf = tbdf[(tbdf['distance'] > dmin) & (tbdf['distance'] < dmax)]
     mapper = super_atomsdf['atom'].to_dict()
-    print(mapper)
     def map_mapper(value):
         return mapper[value]
     df = tbdf.reset_index('index').set_index('super_atom1', append=True)
@@ -340,6 +339,7 @@ def _periodic_from_primitive(universe, k=None, dmax=dmax, dmin=dmin, bond_extra=
 def _periodic_from_super(universe, k=None, dmax=dmax, dmin=dmin, bond_extra=bond_extra):
     '''
     '''
+    raise NotImplementedError('Bug here; use _periodic_from_primitive')
     xyz_groups = universe.super_atoms.groupby(level='frame')[['x', 'y', 'z']]
     n = xyz_groups.ngroups
     distances = np.empty((n, ), dtype='O')
@@ -373,7 +373,6 @@ def _periodic_from_super(universe, k=None, dmax=dmax, dmin=dmin, bond_extra=bond
     tbdf = tbdf[(tbdf['distance'] > dmin) & (tbdf['distance'] < dmax)] # Slow from here down
     tbdf.set_index(['frame', 'index'], inplace=True)   # Prune and index the dataframe
     mapper = universe.super_atoms['atom'].to_dict()
-    print(mapper)
     def map_mapper(value):
         return mapper[value]
     df = tbdf.reset_index('index').set_index('super_atom1', append=True)
