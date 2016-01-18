@@ -19,7 +19,7 @@ class TwoBody(DataFrame):
     __columns__ = ['atom1', 'atom2', 'symbols', 'distance']
 
 
-class SuperTwoBody(DataFrame):
+class PeriodicTwoBody(DataFrame):
     '''
     Two body properties corresponding to the super cell atoms dataframe.
 

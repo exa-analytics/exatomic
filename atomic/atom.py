@@ -11,7 +11,7 @@ from atomic import _np as np
 from atomic import _pd as pd
 from atomic import Isotope
 from atomic.errors import PeriodicError
-from atomic.twobody import TwoBody, bond_extra, dmax, dmin
+from atomic.twobody import TwoBody, bond_extra, dmax, dmin, PeriodicTwoBody
 if Config.numba:
     from exa.jitted.iteration import (repeat_f8_array2d_by_counts, periodic_supercell,
                                       repeat_i8, repeat_i8_array)
@@ -227,6 +227,9 @@ def _periodic_from_atom(universe, k=None, dmax=dmax, dmin=dmin, bond_extra=bond_
         k (int): Number of distances (per atom) to compute
         dmax (float): Max distance of interest
         dmin (float): Minimum distance of interest
+        bond_extra (float): Extra distance to add when determining bonds
+
+    Returns:
     '''
     pass
 
@@ -289,14 +292,17 @@ def _periodic_from_super(universe, k=None, dmax=dmax, dmin=dmin, bond_extra=bond
     o = df.reset_index('index').set_index('atom2', append=True)
     o.index.names = ['frame', 'atom']
     df['symbol2'] = o.index.map(map_symbols)
+    df['symbols'] = df['symbol1'] + df['symbol2']
     df['r1'] = df['symbol1'].map(Isotope.symbol_radius)
     df['r2'] = df['symbol2'].map(Isotope.symbol_radius)
     df['mbl'] = df['r1'] + df['r2'] + bond_extra
     df['bond'] = df['distance'] < df['mbl']
     del df['r1']
     del df['r2']
+    del df['symbol1']
+    del df['symbol2']
     del df['mbl']
-    return df
+    return PeriodicTwoBody(df)
 
 
 
