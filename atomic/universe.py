@@ -7,9 +7,9 @@ The atomic container object.
 from exa import Container
 from exa.relational.base import Column, Integer, ForeignKey
 from atomic.atom import Atom, SuperAtom, VisualAtom, PrimitiveAtom
-from atomic.atom import compute_primitive, compute_supercell, compute_twobody
+from atomic.atom import compute_primitive, compute_supercell
 from atomic.frame import Frame
-from atomic.twobody import TwoBody, PeriodicTwoBody
+from atomic.twobody import TwoBody, PeriodicTwoBody, compute_twobody
 from atomic.orbitals import Orbital
 from atomic.molecule import Molecule
 
