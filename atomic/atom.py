@@ -71,10 +71,12 @@ def compute_primitive(universe):
         prim_atoms (:class:`~atomic.atom.PrimitiveAtom`): Primitive positions table
     '''
     if check(universe):
-        groups = universe.atoms[['x', 'y', 'z']].groupby(level='frame')
+        groups = universe.atoms.groupby(level='frame')
+        xyzs = groups[['x', 'y', 'z']]
+        syms = groups['symbol']
         xyz = np.empty((groups.ngroups, ), dtype='O')
         for i, (fdx, group) in enumerate(groups):
-            if np.mod(i, 1000) == 0:
+            if np.mod(i, Config.gc) == 0:
                 gc.collect()
             r = universe.frames.ix[fdx, ['rx', 'ry', 'rz']].values
             o = universe.frames.ix[fdx, ['ox', 'oy', 'oz']].values

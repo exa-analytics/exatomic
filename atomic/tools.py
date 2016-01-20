@@ -2,8 +2,9 @@
 '''
 Tools
 ====================
-Require internal (atomic) imports.
+Require internal imports.
 '''
+from operator import itemgetter
 from exa.errors import MissingColumns
 from exa.relational.base import create_all
 
@@ -25,3 +26,9 @@ def check(universe):
                 raise MissingColumns(missing, universe.frames.__class__.__name__)
             return True
     return False
+
+
+def formula_dict_to_string(fdict):
+    '''
+    '''
+    return ''.join([k + '(' + str(fdict[k]) + ')' for k in sorted(fdict, key=itemgetter(0))])
