@@ -8,9 +8,10 @@ from exa import Container
 from exa.relational.base import Column, Integer, ForeignKey
 from atomic.atom import Atom, SuperAtom, VisualAtom, PrimitiveAtom
 from atomic.atom import compute_primitive, compute_supercell, compute_twobody
-from atomic.twobody import TwoBody, PeriodicTwoBody
-from atomic.molecule import Molecule
 from atomic.frame import Frame
+from atomic.twobody import TwoBody, PeriodicTwoBody
+from atomic.orbitals import Orbital
+from atomic.molecule import Molecule
 
 
 class Universe(Container):
@@ -25,13 +26,15 @@ class Universe(Container):
     provided by this container. A description of the index or columns can be
     found in the corresponding dataframe link.
 
-    +--------------------------------------------+--------------+---------------------------------+
-    | Attribute (DataFrame)                      | Dimensions   | Required Columns                |
-    +============================================+==============+=================================+
-    | atoms (:class:`~atomic.atom.Atom`)         | frame, atom  | symbol, x, y, z                 |
-    +--------------------------------------------+--------------+---------------------------------+
-    | twobody (:class:`~atomic.twobody.TwoBody`) | frame, index | atom1, atom2, symbols, distance |
-    +--------------------------------------------+--------------+---------------------------------+
+    +-------------------------------------------------------+--------------+---------------------------------+
+    | Attribute (DataFrame)                                 | Dimensions   | Required Columns                |
+    +=======================================================+==============+=================================+
+    | atoms (:class:`~atomic.atom.Atom`)                    | frame, atom  | symbol, x, y, z                 |
+    +-------------------------------------------------------+--------------+---------------------------------+
+    | twobody (:class:`~atomic.twobody.TwoBody`)            | frame, index | atom1, atom2, symbols, distance |
+    +-------------------------------------------------------+--------------+---------------------------------+
+    | eigenvalues (:class:`~atomic.eigenvalues.EigenValue`) | frame, index | energy                          |
+    +-------------------------------------------------------+--------------+---------------------------------+
 
     Warning:
         The correct way to set DataFrame object is as follows:
@@ -157,10 +160,11 @@ class Universe(Container):
 
     def __init__(self, atoms=None, frames=None, twobody=None, molecule=None,
                  primitive_atoms=None, super_atoms=None, periodic_twobody=None,
-                 **kwargs):
+                 orbitals=None, **kwargs):
         super().__init__(**kwargs)
         self.atoms = Atom(atoms)
         self.frames = Frame(frames)
+        self.orbitals = Orbital(orbitals)
         self._primitive_atoms = PrimitiveAtom(primitive_atoms)
         self._super_atoms = SuperAtom(super_atoms)
         self._periodic_twobody = PeriodicTwoBody(periodic_twobody)
