@@ -13,6 +13,7 @@ from atomic.twobody import TwoBody, PeriodicTwoBody
 from atomic.twobody import compute_twobody, compute_bond_counts
 from atomic.orbitals import Orbital
 from atomic.molecule import Molecule, PeriodicMolecule, _periodic_molecules
+from atomic.algorithms.nearest import get_nearest_neighbors as _get_nearest_neighbors
 
 
 class Universe(Container):
@@ -140,6 +141,12 @@ class Universe(Container):
         else:
             return obj
 
+    def get_nearest_neighbors(self, count, solute, solvent):
+        '''
+        '''
+        kwargs = _get_nearest_neighbors(self, count, solute, solvent)
+        return self.__class__(**kwargs)
+
     @property
     def twobody(self):
         '''
@@ -178,7 +185,7 @@ class Universe(Container):
         '''
         '''
         if len(self._molecules) == 0:
-            self.get_molecules(self)
+            self.get_molecules(inplace=True)
         return self._molecules
 
     @property
@@ -186,7 +193,7 @@ class Universe(Container):
         '''
         '''
         if len(self._periodic_molecules) == 0:
-            self.get_molecules(self)
+            self.get_molecules(inplace=True)
         return self._molecules
 
     @classmethod

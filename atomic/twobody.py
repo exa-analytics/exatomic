@@ -180,13 +180,14 @@ def _periodic_from_primitive(universe, k=None, dmax=dmax, dmin=dmin, bond_extra=
     super_index = np.empty((ng, ), dtype='O')
     super_frame = np.empty((ng, ), dtype='O')
     super_atom = np.empty((ng, ), dtype='O')
+    symbol_list = np.empty((ng, ), dtype='O')
     tb_super_atom1 = np.empty((ng, ), dtype='O')
     tb_super_atom2 = np.empty((ng, ), dtype='O')
     tb_dists = np.empty((ng, ), dtype='O')
     tb_frame = np.empty((ng, ), dtype='O')
     tb_index = np.empty((ng, ), dtype='O')
     for i, (fdx, pxyz) in enumerate(pxyzs):
-        if np.mod(i, 1000) == 0:
+        if np.mod(i, Config.gc) == 0:
             gc.collect()
         rx = universe.frames.ix[fdx, 'rx']
         ry = universe.frames.ix[fdx, 'ry']
@@ -199,6 +200,7 @@ def _periodic_from_primitive(universe, k=None, dmax=dmax, dmin=dmin, bond_extra=
         super_frame[i] = repeat_i8(fdx, nsuper)
         super_index[i] = range(nsuper)
         super_atom[i] = tile_i8(atom, 27)
+        symbol_list[i] = universe.atoms.ix[fdx, 'symbol'].tolist() * 27
         dists, indices = cKDTree(super_xyz[i]).query(pxyz, k=k, distance_upper_bound=dmax)
         tb_dists[i] = dists.ravel()
         ntb = len(tb_dists[i])
@@ -216,6 +218,7 @@ def _periodic_from_primitive(universe, k=None, dmax=dmax, dmin=dmin, bond_extra=
     super_atomsdf['frame'] = super_frame
     super_atomsdf['super_atom'] = super_index
     super_atomsdf['atom'] = super_atom
+    super_atomsdf['symbol'] = np.concatenate(symbol_list)
     super_atomsdf.set_index(['frame', 'super_atom'], inplace=True)
 
     # PeriodicTwoBody
