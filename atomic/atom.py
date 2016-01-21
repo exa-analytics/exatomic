@@ -71,9 +71,7 @@ def compute_primitive(universe):
         prim_atoms (:class:`~atomic.atom.PrimitiveAtom`): Primitive positions table
     '''
     if check(universe):
-        groups = universe.atoms.groupby(level='frame')
-        xyzs = groups[['x', 'y', 'z']]
-        syms = groups['symbol']
+        groups = universe.atoms[['x', 'y', 'z']].groupby(level='frame')
         xyz = np.empty((groups.ngroups, ), dtype='O')
         for i, (fdx, group) in enumerate(groups):
             if np.mod(i, Config.gc) == 0:
@@ -92,26 +90,30 @@ def compute_supercell(universe):
     '''
     if check(universe):
         if hasattr(universe, 'primitive_atoms'):
-            groups = universe.primitive_atoms.groupby(level='frame')[['x', 'y', 'z']]
+            groups = universe.primitive_atoms[['x', 'y', 'z']].groupby(level='frame')
             n = groups.ngroups
             pxyz_list = np.empty((n, ), dtype='O')
             atom_list = np.empty((n, ), dtype='O')
             index_list = np.empty((n, ), dtype='O')
             frame_list = np.empty((n, ), dtype='O')
+            symbol_list = np.empty((n, ), dtype='O')
             for i, (fdx, xyz) in enumerate(groups):
                 rx = universe.frames.ix[fdx, 'rx']
                 ry = universe.frames.ix[fdx, 'ry']
                 rz = universe.frames.ix[fdx, 'rz']
                 ac = universe.frames.ix[fdx, 'atom_count']
-                n = ac * 27
+                nn = ac * 27
                 pxyz_list[i] = periodic_supercell(xyz.values, rx, ry, rz)
                 atom_list[i] = tile_i8(xyz.index.get_level_values('atom').values, 27)
-                index_list[i] = range(n)
-                frame_list[i] = repeat_i8(fdx, n)
+                index_list[i] = range(nn)
+                frame_list[i] = repeat_i8(fdx, nn)
+                symbol_list[i] = universe.atoms.ix[fdx, 'symbol'].tolist() * 27
             df = pd.DataFrame(np.concatenate(pxyz_list), columns=['x', 'y', 'z'])
             df['atom'] = np.concatenate(atom_list)
+            obj = np.concatenate(index_list)
             df['super_atom'] = np.concatenate(index_list)
             df['frame'] = np.concatenate(frame_list)
+            df['symbol'] = np.concatenate(symbol_list)
             df.set_index(['frame', 'super_atom'], inplace=True)
             return SuperAtom(df)
     raise PeriodicError()
