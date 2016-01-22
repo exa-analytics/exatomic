@@ -7,10 +7,13 @@ The atomic container object.
 from exa import Container
 from exa.relational.base import Column, Integer, ForeignKey
 from atomic.atom import Atom, SuperAtom, VisualAtom, PrimitiveAtom
-from atomic.atom import compute_primitive, compute_supercell, compute_twobody
-from atomic.twobody import TwoBody, PeriodicTwoBody
-from atomic.molecule import Molecule
+from atomic.atom import compute_primitive, compute_supercell
 from atomic.frame import Frame
+from atomic.twobody import TwoBody, PeriodicTwoBody
+from atomic.twobody import compute_twobody, compute_bond_counts
+from atomic.orbitals import Orbital
+from atomic.molecule import Molecule, PeriodicMolecule, _periodic_molecules
+from atomic.algorithms.nearest import get_nearest_neighbors as _get_nearest_neighbors
 
 
 class Universe(Container):
@@ -25,13 +28,15 @@ class Universe(Container):
     provided by this container. A description of the index or columns can be
     found in the corresponding dataframe link.
 
-    +--------------------------------------------+--------------+---------------------------------+
-    | Attribute (DataFrame)                      | Dimensions   | Required Columns                |
-    +============================================+==============+=================================+
-    | atoms (:class:`~atomic.atom.Atom`)         | frame, atom  | symbol, x, y, z                 |
-    +--------------------------------------------+--------------+---------------------------------+
-    | twobody (:class:`~atomic.twobody.TwoBody`) | frame, index | atom1, atom2, symbols, distance |
-    +--------------------------------------------+--------------+---------------------------------+
+    +-------------------------------------------------------+--------------+---------------------------------+
+    | Attribute (DataFrame)                                 | Dimensions   | Required Columns                |
+    +=======================================================+==============+=================================+
+    | atoms (:class:`~atomic.atom.Atom`)                    | frame, atom  | symbol, x, y, z                 |
+    +-------------------------------------------------------+--------------+---------------------------------+
+    | twobody (:class:`~atomic.twobody.TwoBody`)            | frame, index | atom1, atom2, symbols, distance |
+    +-------------------------------------------------------+--------------+---------------------------------+
+    | eigenvalues (:class:`~atomic.eigenvalues.EigenValue`) | frame, index | energy                          |
+    +-------------------------------------------------------+--------------+---------------------------------+
 
     Warning:
         The correct way to set DataFrame object is as follows:
@@ -118,6 +123,30 @@ class Universe(Container):
         else:
             return data
 
+    def get_bond_counts(self, inplace=False):
+        '''
+        '''
+        counts = compute_bond_counts(self)
+        if inplace:
+            self.atoms['bond_count'] = counts
+        else:
+            return counts, periodic
+
+    def get_molecules(self, inplace=False):
+        '''
+        '''
+        obj = _periodic_molecules(self)
+        if inplace == True:
+            self['_molecules'] = obj
+        else:
+            return obj
+
+    def get_nearest_neighbors(self, count, solute, solvent):
+        '''
+        '''
+        kwargs = _get_nearest_neighbors(self, count, solute, solvent)
+        return self.__class__(**kwargs)
+
     @property
     def twobody(self):
         '''
@@ -151,18 +180,36 @@ class Universe(Container):
             self.get_super_atoms(inplace=True)
         return self._super_atoms
 
+    @property
+    def molecules(self):
+        '''
+        '''
+        if len(self._molecules) == 0:
+            self.get_molecules(inplace=True)
+        return self._molecules
+
+    @property
+    def periodic_molecules(self):
+        '''
+        '''
+        if len(self._periodic_molecules) == 0:
+            self.get_molecules(inplace=True)
+        return self._molecules
+
     @classmethod
     def from_xyz(cls, path, unit='A'):
         raise NotImplementedError()
 
     def __init__(self, atoms=None, frames=None, twobody=None, molecule=None,
                  primitive_atoms=None, super_atoms=None, periodic_twobody=None,
-                 **kwargs):
+                 periodic_molecules=None, orbitals=None, **kwargs):
         super().__init__(**kwargs)
         self.atoms = Atom(atoms)
         self.frames = Frame(frames)
+        self.orbitals = Orbital(orbitals)
         self._primitive_atoms = PrimitiveAtom(primitive_atoms)
         self._super_atoms = SuperAtom(super_atoms)
         self._periodic_twobody = PeriodicTwoBody(periodic_twobody)
         self._twobody = TwoBody(twobody)
-        self._molecule = Molecule(molecule)
+        self._molecules = Molecule(molecule)
+#        self._periodic_molecules = PeriodicMolecule(periodic_molecules)
