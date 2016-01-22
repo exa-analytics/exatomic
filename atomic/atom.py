@@ -8,7 +8,8 @@ from itertools import combinations
 from scipy.spatial import cKDTree
 from exa import _np as np
 from exa import _pd as pd
-from exa import DataFrame, Config
+from exa import DataFrame
+from exa.config import Config
 from atomic.errors import PeriodicError
 from atomic.tools import check
 if Config.numba:

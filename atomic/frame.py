@@ -11,7 +11,7 @@ class Frame(DataFrame):
     '''
     '''
     __fkeys__ = {'id': 'frame'}
-    
+
     def cell_mags(self, inplace=False):
         '''
         Compute the magnitudes of the unit cell vectors.

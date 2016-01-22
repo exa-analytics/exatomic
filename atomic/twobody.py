@@ -9,7 +9,8 @@ from itertools import combinations
 from scipy.spatial import cKDTree
 from exa import _np as np
 from exa import _pd as pd
-from exa import DataFrame, Config
+from exa.config import Config
+from exa.dataframes import DataFrame
 if Config.numba:
     from exa.jitted.iteration import periodic_supercell, repeat_i8, repeat_i8_array, tile_i8
     from exa.jitted.iteration import pdist2d as pdist

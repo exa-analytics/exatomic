@@ -62,8 +62,7 @@ class Universe(Container):
     cid = Column(Integer, ForeignKey('container.pkid'), primary_key=True)
     frame_count = Column(Integer)
     __mapper_args__ = {'polymorphic_identity': 'universe'}
-    __dfclasses__ = {'atoms': Atom, 'frames': Frame, 'pbcatoms': SuperAtom,
-                     'visatoms': VisualAtom}
+    __dfclasses__ = {'_atom': Atom, '_frame': Frame, '_two': TwoBody}
 
     def get_cell_mags(self, inplace=False):
         '''
@@ -148,6 +147,17 @@ class Universe(Container):
         return self.__class__(**kwargs)
 
     @property
+    def atom(self):
+        return self._atom
+
+    @property
+    def unit_atom(self):
+        a = self.atom.copy()
+        a.update(self._unit_atom)
+        return a
+
+
+    @property
     def twobody(self):
         '''
         '''
@@ -200,7 +210,7 @@ class Universe(Container):
     def from_xyz(cls, path, unit='A'):
         raise NotImplementedError()
 
-    def __init__(self, atoms=None, frames=None, twobody=None, molecule=None,
+    def __init__(self, atom=None, frame=None, two=None, molecule=None,
                  primitive_atoms=None, super_atoms=None, periodic_twobody=None,
                  periodic_molecules=None, orbitals=None, **kwargs):
         super().__init__(**kwargs)
