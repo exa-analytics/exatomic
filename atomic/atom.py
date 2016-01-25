@@ -30,35 +30,32 @@ class Atom(DataFrame):
 
     Required columns: symbol, x, y, z
     '''
-    __indices__ = ['frame', 'atom']
-    __columns__ = ['symbol', 'x', 'y', 'z']
+    __pk__ = ['atom']
+    __fk__ = ['frame']
 
 
 class VisualAtom(DataFrame):
     '''
     Special positions for atoms used to generate coherent animations.
     '''
-    __indices__ = ['frame', 'vis_atom']
-    __columns__ = ['x', 'y', 'z', 'atom']
+    pass
 
 
 class PrimitiveAtom(DataFrame):
     '''
     Primitive (or in unit cell) coordinates.
     '''
-    __indices__ = ['frame', 'atom']
-    __columns__ = ['x', 'y', 'z']
+    pass
 
 
-class SuperAtom(DataFrame):
+class ProjectedAtom(DataFrame):
     '''
     A 3 x 3 x 3 super cell generate using the primitive cell positions.
 
     See Also:
         :class:`~atomic.atom.PrimitiveAtom`
     '''
-    __indices__ = ['frame', 'super_atom']
-    __columns__ = ['x', 'y', 'z', 'atom']
+    pass
 
 
 def compute_primitive(universe):
