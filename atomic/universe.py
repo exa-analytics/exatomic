@@ -4,6 +4,7 @@ Universe
 ====================
 The atomic container object.
 '''
+from traitlets import Unicode
 from sqlalchemy import Column, Integer, ForeignKey
 from exa import Container
 from atomic.frame import Frame, minimal_frame
@@ -20,52 +21,20 @@ from atomic.atom import Atom
 
 class Universe(Container):
     '''
-    A collection of atoms.
-
-    An :class:`~atomic.universe.Universe` represents a collection of time
-    dependent frames themselves containing atoms and molecules. A frame can
-    be thought of as a snapshot in time, though the frame axis is not required
-    to be time. Each frame has information about atomic positions, energies,
-    bond distances, energies, etc. The following table outlines the structures
-    provided by this container. A description of the index or columns can be
-    found in the corresponding dataframe link.
-
-    +-------------------------------------------------------+--------------+---------------------------------+
-    | Attribute (DataFrame)                                 | Dimensions   | Required Columns                |
-    +=======================================================+==============+=================================+
-    | atoms (:class:`~atomic.atom.Atom`)                    | frame, atom  | symbol, x, y, z                 |
-    +-------------------------------------------------------+--------------+---------------------------------+
-    | twobody (:class:`~atomic.twobody.TwoBody`)            | frame, index | atom1, atom2, symbols, distance |
-    +-------------------------------------------------------+--------------+---------------------------------+
-    | eigenvalues (:class:`~atomic.eigenvalues.EigenValue`) | frame, index | energy                          |
-    +-------------------------------------------------------+--------------+---------------------------------+
-
-    Warning:
-        The correct way to set DataFrame object is as follows:
-
-        .. code-block:: Python
-
-            universe = atomic.Universe()
-            df = pd.DataFrame()
-            universe['atoms'] = df
-            or
-            setattr(universe, 'atoms', df)
-
-        Avoid setting objects using the **__dict__** attribute as follows:
-
-        .. code-block:: Python
-
-            universe = atomic.Universe()
-            df = pd.DataFrame()
-            universe.atoms = df
-
-        (This is used in **__init__** where type control is enforced.)
+    A collection of atoms, molecules, electronic data, and other relevant
+    information from an atomistic simulation.
     '''
+    # Relational information
     cid = Column(Integer, ForeignKey('container.pkid'), primary_key=True)
     frame_count = Column(Integer)
     __mapper_args__ = {'polymorphic_identity': 'universe'}
     __dfclasses__ = {'_frame': Frame, '_atom': Atom}
 
+    # DOMWidget settings
+    _view_module = Unicode('nbextensions/exa/atomic/universe').tag(sync=True)
+    _view_name = Unicode('UniverseView').tag(sync=True)
+
+    # Special DataFrame properties
     @property
     def frame(self):
         if len(self._frame) == 0 and len(self._atom) > 0:
@@ -271,3 +240,42 @@ def concat(universes):
 #        self._molecules = Molecule(molecule)
 ##        self._periodic_molecules = PeriodicMolecule(periodic_molecules)
 #
+
+#    An :class:`~atomic.universe.Universe` represents a collection of time
+#    dependent frames themselves containing atoms and molecules. A frame can
+#    be thought of as a snapshot in time, though the frame axis is not required
+#    to be time. Each frame has information about atomic positions, energies,
+#    bond distances, energies, etc. The following table outlines the structures
+#    provided by this container. A description of the index or columns can be
+#    found in the corresponding dataframe link.
+#
+#    +-------------------------------------------------------+--------------+---------------------------------+
+#    | Attribute (DataFrame)                                 | Dimensions   | Required Columns                |
+#    +=======================================================+==============+=================================+
+#    | atoms (:class:`~atomic.atom.Atom`)                    | frame, atom  | symbol, x, y, z                 |
+#    +-------------------------------------------------------+--------------+---------------------------------+
+#    | twobody (:class:`~atomic.twobody.TwoBody`)            | frame, index | atom1, atom2, symbols, distance |
+#    +-------------------------------------------------------+--------------+---------------------------------+
+#    | eigenvalues (:class:`~atomic.eigenvalues.EigenValue`) | frame, index | energy                          |
+#    +-------------------------------------------------------+--------------+---------------------------------+
+#
+#    Warning:
+#        The correct way to set DataFrame object is as follows:
+#
+#        .. code-block:: Python
+#
+#            universe = atomic.Universe()
+#            df = pd.DataFrame()
+#            universe['atoms'] = df
+#            or
+#            setattr(universe, 'atoms', df)
+#
+#        Avoid setting objects using the **__dict__** attribute as follows:
+#
+#        .. code-block:: Python
+#
+#            universe = atomic.Universe()
+#            df = pd.DataFrame()
+#            universe.atoms = df
+#
+#        (This is used in **__init__** where type control is enforced.)

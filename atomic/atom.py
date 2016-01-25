@@ -32,6 +32,7 @@ class Atom(DataFrame):
     '''
     __pk__ = ['atom']
     __fk__ = ['frame']
+    __slice_key__ = ['frame']
 
 
 class VisualAtom(DataFrame):
