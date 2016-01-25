@@ -54,11 +54,12 @@ def read_xyz(path, unit='A', label=False, **kwargs):
     .. _official: http://openbabel.org/wiki/XYZ_%28format%29
     '''
     df = pd.read_csv(path, header=None, skip_blank_lines=False, delim_whitespace=True,
-                     names=['symbol', 'x', 'y', 'z'])       # Parse in the data
+                     names=['symbol', 'x', 'y', 'z'])                   # Parse in the data
     natdf = df.loc[df[['y', 'z']].isnull().all(1)].dropna(how='all')    # Figure out frames & nats
     nat_indices = array1d_with_offset(natdf.index.values)
     natdf = natdf[natdf.index.isin(nat_indices)]
-    comments = natdf[natdf.index.isin(natdf.index.values + 1) & ~natdf['symbol'].isnull().all()].index.values
+    comments = natdf[natdf.index.isin(natdf.index.values + 1) &
+                     ~natdf['symbol'].isnull().all()].index.values
     starts = natdf.index.values + 2
     counts = natdf['symbol'].values.astype(np.int64)
     frame, label, indices = idxs_from_starts_and_counts(starts, counts)
