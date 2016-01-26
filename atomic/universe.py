@@ -4,9 +4,10 @@ Universe
 ====================
 The atomic container object.
 '''
-from traitlets import Unicode
+from traitlets import Unicode, Dict
 from sqlalchemy import Column, Integer, ForeignKey
 from exa import Container
+from atomic import Isotope
 from atomic.frame import Frame, minimal_frame
 from atomic.atom import Atom
 #from atomic.atom import Atom, SuperAtom, VisualAtom, PrimitiveAtom
@@ -33,8 +34,13 @@ class Universe(Container):
     # DOMWidget settings
     _view_module = Unicode('nbextensions/exa/atomic/universe').tag(sync=True)
     _view_name = Unicode('UniverseView').tag(sync=True)
+    _atom_x = Unicode().tag(sync=True)
+    _atom_y = Unicode().tag(sync=True)
+    _atom_z = Unicode().tag(sync=True)
+    _atom_r = Unicode().tag(sync=True)
+    _atom_c = Unicode().tag(sync=True)
 
-    # Special DataFrame properties
+    # DataFrame properties
     @property
     def frame(self):
         if len(self._frame) == 0 and len(self._atom) > 0:
@@ -45,13 +51,22 @@ class Universe(Container):
     def atom(self):
         return self._atom
 
+    def tmp(self):
+        self.atom['r'] = self.atom['symbol'].map(Isotope.lookup_radius_by_symbol)
+        self.atom['c'] = self.atom['symbol'].map(Isotope.lookup_color_by_symbol)
+        self._atom_x = self.atom['x'].to_json(orient='values')
+        self._atom_y = self.atom['y'].to_json(orient='values')
+        self._atom_z = self.atom['z'].to_json(orient='values')
+        self._atom_r = self.atom['r'].to_json(orient='values')
+        self._atom_c = self.atom['c'].to_json(orient='values')
+
     def __init__(self, frame=None, atom=None, unit_atom=None, projected_atom=None,
                  viz_atom=None, two=None, three=None, projected_two=None,
                  atomtwo=None, projected_atomtwo=None, orbital=None, molecule=None,
                  projected_molecule=None, **kwargs):
         '''
         The universe container represents all of the atoms, bonds, molecules,
-        orbital/densities, etc. present withina atomistic simulations.
+        orbital/densities, etc. present within an atomistic simulations.
         '''
         super().__init__(**kwargs)
         self._frame = Frame(frame)
