@@ -9,12 +9,9 @@ from exa.jitted.broadcasting import mag_3d
 
 class Frame(DataFrame):
     '''
-    Required indexes: frame
-    Required columns: atom_count
     '''
-    __indices__ = ['frame']
-    __columns__ = ['atom_count']
-
+    __fkeys__ = {'id': 'frame'}
+    
     def cell_mags(self, inplace=False):
         '''
         Compute the magnitudes of the unit cell vectors.
