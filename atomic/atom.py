@@ -10,6 +10,7 @@ from exa import _np as np
 from exa import _pd as pd
 from exa import DataFrame
 from exa.config import Config
+from atomic import Isotope
 from atomic.errors import PeriodicError
 from atomic.tools import check
 if Config.numba:
@@ -32,7 +33,22 @@ class Atom(DataFrame):
     '''
     __pk__ = ['atom']
     __fk__ = ['frame']
-    __slice_key__ = ['frame']
+    __traits__ = ['x', 'y', 'z', 'radius', 'color']
+    __groupby__ = 'frame'
+
+    def _prep_trait_values(self):
+        '''
+        '''
+        if 'radius' not in self.columns:
+            self['radius'] = self['symbol'].map(Isotope.lookup_radius_by_symbol)
+        if 'color' not in self.columns:
+            self['color'] = self['symbol'].map(Isotope.lookup_color_by_symbol)
+
+    def _post_trait_values(self):
+        '''
+        '''
+        del self['radius']
+        del self['color']
 
 
 class VisualAtom(DataFrame):

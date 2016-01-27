@@ -115,11 +115,21 @@ define([
         this.renderer.render(this.scene, this.camera);
     };
 
+    AtomicThreeJS.prototype.animate = function() {
+        /*"""
+        Animate
+        ```````````````````
+        */
+        window.requestAnimationFrame(this.animate.bind(this));
+        this.controls.update();
+    };
+
     AtomicThreeJS.prototype.add_points = function(x, y, z, r, c, filled) {
         /*"""
         Add GL Points
         ````````````````````
         */
+        console.log('adding points');
         var material = new THREE.ShaderMaterial({
             vertexShader: vertex_shader,
             fragmentShader: point_frag_shader,
@@ -137,7 +147,7 @@ define([
         var n = x.length;
         var positions = new Float32Array(n * 3);
         var colors = new Float32Array(n * 3);
-        var radius = new Float32Array(n);
+        var sizes = new Float32Array(n);
         for (var i = 0, i3 = 0; i < n; i++, i3 += 3) {
             positions[i3 + 0] = x[i];
             positions[i3 + 1] = y[i];

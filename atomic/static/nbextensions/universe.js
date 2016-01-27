@@ -62,14 +62,44 @@ define([
             this.container.append(this.button);
             this.container.append(this.canvas);
             this.setElement(this.container);
+
+            // By default draw the system
+            var x = this.get('_atom_x');
+            var y = this.get('_atom_y');
+            var z = this.get('_atom_z');
+            var r = this.get('_atom_radius');
+            var c = this.get('_atom_color');
+            var center = this.get('_center')
+            var filled = true;
+            this.threejsapp.add_points(x[0], y[0], z[0], r[0], c[0], filled);
+            this.threejsapp.camera.position.x = -30;
+            this.threejsapp.camera.position.y = -30;
+            this.threejsapp.camera.position.z = 30;
+            this.threejsapp.camera.lookAt(center);
+            this.threejsapp.controls.target = center;
             this.threejsapp.render();
+            this.on('displayed', function () {
+                self.threejsapp.animate();
+                self.threejsapp.controls.handleResize();
+            });
+        },
+
+        get: function(name) {
+            /*"""
+            Get
+            ````````````
+            Custom getter for Python objects stored as json strings
+            */
+            return JSON.parse(this.model.get(name));
         },
 
         callme: function() {
             console.log('called callme');
             console.log(this.model);
-            var got = this.model.get('_atom_x');
-            console.log(got[0][1]);
+            var x = this.model.get('_atom_x');
+            console.log(x);
+            var y = this.model.get('_atom_y');
+            console.log(y);
             this.send({'call': 'update'});
         },
     });
