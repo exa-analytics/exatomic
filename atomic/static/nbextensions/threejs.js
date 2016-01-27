@@ -90,6 +90,30 @@ define([
         this.controls.dynamicDampingFactor = 0.3;
         this.controls.keys = [65, 83, 68];
         this.controls.addEventListener('change', this.render.bind(this));
+        var dlight1 = new THREE.DirectionalLight(0xffffff, 0.3);
+        var dlight2 = new THREE.DirectionalLight(0xffffff, 0.3);
+        var dlight3 = new THREE.DirectionalLight(0xffffff, 0.3);
+        var dlight4 = new THREE.DirectionalLight(0xffffff, 0.3);
+        var dlight5 = new THREE.DirectionalLight(0xffffff, 0.3);
+        var dlight6 = new THREE.DirectionalLight(0xffffff, 0.3);
+        var dlight7 = new THREE.DirectionalLight(0xffffff, 0.3);
+        var dlight8 = new THREE.DirectionalLight(0xffffff, 0.3);
+        dlight1.position.set(100, 100, 100);
+        dlight2.position.set(-100, 100, 100);
+        dlight3.position.set(100, -100, 100);
+        dlight4.position.set(100, 100, -100);
+        dlight5.position.set(-100, -100, 100);
+        dlight6.position.set(-100, 100, -100);
+        dlight7.position.set(100, -100, -100);
+        dlight8.position.set(-100, -100, -100);
+        this.scene.add(dlight1);
+        this.scene.add(dlight2);
+        this.scene.add(dlight3);
+        this.scene.add(dlight4);
+        this.scene.add(dlight5);
+        this.scene.add(dlight6);
+        this.scene.add(dlight7);
+        this.scene.add(dlight8);
     };
 
     AtomicThreeJS.prototype.resize = function() {
@@ -124,6 +148,24 @@ define([
         this.controls.update();
     };
 
+    AtomicThreeJS.prototype.add_coordinate_axis = function() {
+        /*"""
+        */
+        var x_vec = new THREE.Vector3(1, 0, 0);
+        var y_vec = new THREE.Vector3(0, 1, 0);
+        var z_vec = new THREE.Vector3(0, 0, 1);
+        var origin = new THREE.Vector3(0, 0, 0);
+        var x_arrow = new THREE.ArrowHelper(x_vec, origin, 1, 0x000000);
+        var y_arrow = new THREE.ArrowHelper(y_vec, origin, 1, 0x000000);
+        var z_arrow = new THREE.ArrowHelper(z_vec, origin, 1, 0x000000);
+        x_arrow.line.material.linewidth = 5;
+        y_arrow.line.material.linewidth = 5;
+        z_arrow.line.material.linewidth = 5;
+        this.scene.add(x_arrow);
+        this.scene.add(y_arrow);
+        this.scene.add(z_arrow);
+    };
+
     AtomicThreeJS.prototype.add_points = function(x, y, z, r, c, filled) {
         /*"""
         Add GL Points
@@ -135,7 +177,7 @@ define([
             fragmentShader: point_frag_shader,
             transparent: false
         });
-        if (filled == true) {
+        if (filled == false) {
             material = new THREE.ShaderMaterial({
                 vertexShader: vertex_shader,
                 fragmentShader: circle_frag_shader,
@@ -143,7 +185,7 @@ define([
             });
         };
         var geometry = new THREE.BufferGeometry();
-        var color = new THREE.Color();
+        //var color = new THREE.Color();
         var n = x.length;
         var positions = new Float32Array(n * 3);
         var colors = new Float32Array(n * 3);
@@ -152,7 +194,7 @@ define([
             positions[i3 + 0] = x[i];
             positions[i3 + 1] = y[i];
             positions[i3 + 2] = z[i];
-            color.setHex(c[i]);
+            var color = new THREE.Color(c[i]);
             colors[i3 + 0] = color.r;
             colors[i3 + 1] = color.g;
             colors[i3 + 2] = color.b;

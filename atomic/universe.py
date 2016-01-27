@@ -34,6 +34,7 @@ class Universe(Container):
     _view_module = Unicode('nbextensions/exa/atomic/universe').tag(sync=True)
     _view_name = Unicode('UniverseView').tag(sync=True)
     _center = Unicode().tag(sync=True)
+    _camera = Unicode().tag(sync=True)
 
     # DataFrame properties
     @property
@@ -58,7 +59,8 @@ class Universe(Container):
         self._frame = Frame(frame)
         self._atom = Atom(atom)
         self._update_all_traits()
-        self._center = self._atom[['x', 'y', 'z']].mean().to_json(orient='values')
+        self._center = (self._atom[['x', 'y', 'z']].mean() / 2).to_json(orient='values')
+        self._camera = (self._atom[['x', 'y', 'z']].max() + 12).to_json(orient='values')
 
 
 def concat(universes):

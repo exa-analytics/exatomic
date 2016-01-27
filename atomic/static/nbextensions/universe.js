@@ -69,12 +69,14 @@ define([
             var z = this.get('_atom_z');
             var r = this.get('_atom_radius');
             var c = this.get('_atom_color');
-            var center = this.get('_center')
             var filled = true;
             this.threejsapp.add_points(x[0], y[0], z[0], r[0], c[0], filled);
-            this.threejsapp.camera.position.x = -30;
-            this.threejsapp.camera.position.y = -30;
-            this.threejsapp.camera.position.z = 30;
+            var cam = this.get('_camera');
+            this.threejsapp.camera.position.x = cam[0];
+            this.threejsapp.camera.position.y = cam[1];
+            this.threejsapp.camera.position.z = cam[2];
+            var cen = this.get('_center');
+            var center = new THREE.Vector3(cen[0], cen[1], cen[2]);
             this.threejsapp.camera.lookAt(center);
             this.threejsapp.controls.target = center;
             this.threejsapp.render();
