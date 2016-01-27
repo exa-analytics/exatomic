@@ -171,7 +171,6 @@ define([
         Add GL Points
         ````````````````````
         */
-        console.log('adding points');
         var material = new THREE.ShaderMaterial({
             vertexShader: vertex_shader,
             fragmentShader: point_frag_shader,
@@ -185,7 +184,7 @@ define([
             });
         };
         var geometry = new THREE.BufferGeometry();
-        //var color = new THREE.Color();
+        var color = new THREE.Color();
         var n = x.length;
         var positions = new Float32Array(n * 3);
         var colors = new Float32Array(n * 3);
@@ -194,7 +193,7 @@ define([
             positions[i3 + 0] = x[i];
             positions[i3 + 1] = y[i];
             positions[i3 + 2] = z[i];
-            var color = new THREE.Color(c[i]);
+            color.setHex(c[i]);
             colors[i3 + 0] = color.r;
             colors[i3 + 1] = color.g;
             colors[i3 + 2] = color.b;

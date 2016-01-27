@@ -37,8 +37,8 @@ define([
             see the documentation of Backbone.js.
             */
             var self = this;    // Alias the instance of the view for future ref.
-            this.width = this.model.get('width');
-            this.height = this.model.get('height');
+            this.width = this.model.get('_width');
+            this.height = this.model.get('_height');
             this.container = $('<div/>').width(this.width).height(this.height).resizable({
                 aspectRatio: false,
                 resize: function(event, ui) {

@@ -12,7 +12,7 @@ class Frame(DataFrame):
     '''
     __pk__ = ['frame']
 
-    def cell_mags(self, inplace=False):
+    def get_unit_cell_magnitudes(self, inplace=False):
         '''
         Compute the magnitudes of the unit cell vectors.
 

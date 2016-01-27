@@ -8,7 +8,8 @@ from traitlets import Unicode, Dict
 from sqlalchemy import Column, Integer, ForeignKey
 from exa import Container
 from atomic.frame import Frame, minimal_frame
-from atomic.atom import Atom
+from atomic.atom import Atom, UnitAtom
+from atomic.atom import get_unit_atom as _get_unit_atom
 #from atomic.atom import Atom, SuperAtom, VisualAtom, PrimitiveAtom
 #from atomic.atom import compute_primitive, compute_supercell
 #from atomic.frame import Frame
@@ -28,7 +29,7 @@ class Universe(Container):
     cid = Column(Integer, ForeignKey('container.pkid'), primary_key=True)
     frame_count = Column(Integer)
     __mapper_args__ = {'polymorphic_identity': 'universe'}
-    __dfclasses__ = {'_frame': Frame, '_atom': Atom}
+    __dfclasses__ = {'_frame': Frame, '_atom': Atom, '_unit_atom': UnitAtom}
 
     # DOMWidget settings
     _view_module = Unicode('nbextensions/exa/atomic/universe').tag(sync=True)
@@ -47,6 +48,12 @@ class Universe(Container):
     def atom(self):
         return self._atom
 
+    @property
+    def unit_atom(self):
+        if len(self._unit_atom) == 0:
+            self._unit_atom = _get_unit_atom(self)
+        return self._unit_atom
+
     def __init__(self, frame=None, atom=None, unit_atom=None, projected_atom=None,
                  viz_atom=None, two=None, three=None, projected_two=None,
                  atomtwo=None, projected_atomtwo=None, orbital=None, molecule=None,
@@ -58,6 +65,7 @@ class Universe(Container):
         super().__init__(**kwargs)
         self._frame = Frame(frame)
         self._atom = Atom(atom)
+        self._unit_atom = UnitAtom(unit_atom)
         self._update_all_traits()
         self._center = (self._atom[['x', 'y', 'z']].mean() / 2).to_json(orient='values')
         self._camera = (self._atom[['x', 'y', 'z']].max() + 12).to_json(orient='values')
