@@ -4,11 +4,12 @@ Universe
 ====================
 The atomic container object.
 '''
-from traitlets import Unicode, Dict
+from traitlets import Unicode, List
 from sqlalchemy import Column, Integer, ForeignKey
 from exa import Container
 from atomic.frame import Frame, minimal_frame
-from atomic.atom import Atom, UnitAtom
+from atomic.atom import Atom, UnitAtom, ProjectedAtom
+from atomic.atom import _compute_projected_non_var_cell
 from atomic.atom import get_unit_atom as _get_unit_atom
 #from atomic.atom import Atom, SuperAtom, VisualAtom, PrimitiveAtom
 #from atomic.atom import compute_primitive, compute_supercell
@@ -36,6 +37,14 @@ class Universe(Container):
     _view_name = Unicode('UniverseView').tag(sync=True)
     _center = Unicode().tag(sync=True)
     _camera = Unicode().tag(sync=True)
+    _framelist = List().tag(sync=True)
+
+    def compute_cell_magnitudes(self, inplace=True):
+        '''
+        See Also:
+            :func:`~atomic.atom.Atom.get_unit_cell_magnitudes`
+        '''
+        return self._frame.get_unit_cell_magnitudes(inplace)
 
     # DataFrame properties
     @property
@@ -50,14 +59,25 @@ class Universe(Container):
 
     @property
     def unit_atom(self):
+        '''
+        
+        '''
         if len(self._unit_atom) == 0:
             self._unit_atom = _get_unit_atom(self)
-        return self._unit_atom
+        atom = self.atom.copy()
+        atom.update(self._unit_atom)
+        return atom
 
-    def __init__(self, frame=None, atom=None, unit_atom=None, projected_atom=None,
-                 viz_atom=None, two=None, three=None, projected_two=None,
-                 atomtwo=None, projected_atomtwo=None, orbital=None, molecule=None,
-                 projected_molecule=None, **kwargs):
+    @property
+    def prjd_atom(self):
+        '''
+        '''
+        if len(self._prjd_atom) == 0:
+            self._prjd_atom = _compute_projected_non_var_cell(self)
+        return self._prjd_atom
+
+    def __init__(self, frame=None, atom=None, unit_atom=None, prjd_atom=None,
+                 two=None, **kwargs):
         '''
         The universe container represents all of the atoms, bonds, molecules,
         orbital/densities, etc. present within an atomistic simulations.
@@ -66,9 +86,12 @@ class Universe(Container):
         self._frame = Frame(frame)
         self._atom = Atom(atom)
         self._unit_atom = UnitAtom(unit_atom)
+        self._prjd_atom = ProjectedAtom(prjd_atom)
         self._update_all_traits()
         self._center = (self._atom[['x', 'y', 'z']].mean() / 2).to_json(orient='values')
         self._camera = (self._atom[['x', 'y', 'z']].max() + 12).to_json(orient='values')
+        if len(self._frame) > 0:
+            self._framelist = self._frame.index.tolist()
 
 
 def concat(universes):

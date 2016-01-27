@@ -2,6 +2,9 @@
 Atomic Three.js Application
 ````````````````````````````````
 Creates a 3D visualization of the atomic Universe container.
+
+This code should fully be expected to operate without any knowledge of
+where it is being rendered.
 */
 'use strict';
 
@@ -14,8 +17,11 @@ require.config({
         'nbextensions/exa/atomic/lib/TrackballControls': {
             deps: ['nbextensions/exa/atomic/lib/three.min'],
             exports: 'THREE.TrackballControls'
-        }
-    }
+        },
+        'nbextensions/exa/atomic/lib/dat.gui.min': {
+            exports: 'dat'
+        },
+    },
 });
 
 

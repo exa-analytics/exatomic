@@ -29,25 +29,22 @@ dmin = 0.3
 dmax = 12.3
 
 
-class TwoBody(DataFrame):
+class Two(DataFrame):
     '''
     '''
-    __indices__ = ['frame', 'index']
-    __columns__ = ['atom1', 'atom2', 'symbols', 'distance']
+    pass
 
 
-class PeriodicTwoBody(DataFrame):
+class ProjectedTwo(DataFrame):
     '''
     Two body properties corresponding to the super cell atoms dataframe.
 
     See Also:
         :class:`~atomic.atom.SuperAtom`
     '''
-    __indices__ = ['frame', 'index']
-    __columns__ = ['super_atom1', 'super_atom2', 'symbols', 'distance']
 
 
-def compute_twobody(universe, k=None, bond_extra=bond_extra, dmax=dmax, dmin=dmin):
+def compute_two(universe, k=None, bond_extra=bond_extra, dmax=dmax, dmin=dmin):
     '''
     Compute two body information given a universe.
 
@@ -73,11 +70,11 @@ def compute_twobody(universe, k=None, bond_extra=bond_extra, dmax=dmax, dmin=dmi
         df (:class:`~atomic.twobody.TwoBody`): Two body property table
     '''
     if check(universe):
-        if len(universe._super_atoms) == 0:
-            if len(universe._primitive_atoms) == 0:
+        if len(universe.prjd_atom) == 0:
+            if len(universe.unit_atom) == 0:
                 return _periodic_from_atoms(universe, k=k, bond_extra=bond_extra, dmax=dmax, dmin=dmin)
             return _periodic_from_primitive(universe, k=k, bond_extra=bond_extra, dmax=dmax, dmin=dmin)
-        return _periodic_from_super(universe, k=k, bond_extra=bond_extra, dmax=dmax, dmin=dmin)
+        return _periodic_from_projected(universe, k=k, bond_extra=bond_extra, dmax=dmax, dmin=dmin)
     else:
         return _free_in_mem(universe, dmax=dmax, dmin=dmin, bond_extra=bond_extra)
 
@@ -261,77 +258,9 @@ def _periodic_from_primitive(universe, k=None, dmax=dmax, dmin=dmin, bond_extra=
     return SuperAtom(super_atomsdf), PeriodicTwoBody(tbdf)
 
 
-def _periodic_from_super(universe, k=None, dmax=dmax, dmin=dmin, bond_extra=bond_extra):
+def _periodic_from_projected(universe, k=None, dmax=dmax, dmin=dmin, bond_extra=bond_extra):
     '''
     '''
-    raise NotImplementedError('Bug here; use _periodic_from_primitive')
-    xyz_groups = universe.super_atoms.groupby(level='frame')[['x', 'y', 'z']]
-    n = xyz_groups.ngroups
-    distances = np.empty((n, ), dtype='O')
-    super_atom1 = np.empty((n, ), dtype='O')
-    super_atom2 = np.empty((n, ), dtype='O')
-    symbol1 = np.empty((n, ), dtype='O')
-    symbol2 = np.empty((n, ), dtype='O')
-    distances = np.empty((n, ), dtype='O')
-    indices = np.empty((n, ), dtype='O')
-    frames = np.empty((n, ), dtype='O')
-    for i, (fdx, xyz) in enumerate(xyz_groups):    # Deal with each frame
-        nat = universe.frames.ix[fdx, 'atom_count']
-        k = nat if k is None else k
-        xyzv = xyz.values
-        central = xyzv[13*nat:14*nat]
-        dists, idxs = cKDTree(xyzv).query(central, k=k, distance_upper_bound=dmax)
-        super_atom1[i] = repeat_i8_array(idxs[:, 0], k)
-        super_atom2[i] = idxs.ravel()
-        distances[i] = dists.ravel()
-        n = len(distances[i])
-        indices[i] = range(n)
-        frames[i] = repeat_i8(fdx, n)
-    distances = np.concatenate(distances)
-    super_atom1 = np.concatenate(super_atom1)
-    super_atom2 = np.concatenate(super_atom2)
-    indices = np.concatenate(indices)
-    frames = np.concatenate(frames)    # Build the dataframe once
-    tbdf = pd.DataFrame.from_dict({'distance': distances, 'super_atom1': super_atom1,
-                                 'super_atom2': super_atom2, 'index': indices,
-                                 'frame': frames})
-    tbdf = tbdf[(tbdf['distance'] > dmin) & (tbdf['distance'] < dmax)] # Slow from here down
-    tbdf.set_index(['frame', 'index'], inplace=True)   # Prune and index the dataframe
-    mapper = universe.super_atoms['atom'].to_dict()
-    def map_mapper(value):
-        return mapper[value]
-    df = tbdf.reset_index('index').set_index('super_atom1', append=True)
-    df.index.names = ['frame', 'super_atom']
-    tbdf['atom1'] = df.index.map(map_mapper)
-    df = df.reset_index('super_atom', drop=True).set_index('super_atom2', append=True)
-    df.index.names = ['frame', 'super_atom']
-    tbdf['atom2'] = df.index.map(map_mapper)
-    mapper = universe.atoms['symbol'].to_dict()
-    df = tbdf.reset_index('index').set_index('atom1', append=True)
-    df.index.names = ['frame', 'atom']
-    tbdf['symbol1'] = df.index.map(map_mapper)
-    df = df.reset_index('atom', drop=True).set_index('atom2', append=True)
-    tbdf.index.names = ['frame', 'atom']
-    tbdf['symbol2'] = df.index.map(map_mapper)
-    tbdf['symbols'] = tbdf['symbol1'] + tbdf['symbol2']
-    tbdf['r1'] = tbdf['symbol1'].map(Isotope.symbol_radius)
-    tbdf['r2'] = tbdf['symbol2'].map(Isotope.symbol_radius)
-    tbdf['mbl'] = tbdf['r1'] + tbdf['r2'] + bond_extra
-    tbdf['bond'] = tbdf['distance'] < tbdf['mbl']
-    del tbdf['r1']
-    del tbdf['r2']
-    del tbdf['mbl']
-    tbdf.index.names = ['frame', 'index']
-    return PeriodicTwoBody(tbdf)
-
-
-def compute_bond_counts(universe):
-    '''
-    '''
-    grouped_twobody = universe.twobody.groupby(level='frame')
-    counts = np.empty((grouped_twobody.ngroups, ), dtype='O')
-    for i, (fdx, group) in enumerate(grouped_twobody):
-        atom1_counts = group.groupby('atom1')['bond'].sum()
-        atom2_counts = group.groupby('atom2')['bond'].sum()
-        counts[i] = atom1_counts.add(atom2_counts, fill_value=0) // 2
-    return pd.concat(counts).values.astype(np.int64)
+    __pk__ = ['two']
+    __traits__ = ['x', 'y', 'z', 'radius', 'color']
+    __groupby__ = 'frame'

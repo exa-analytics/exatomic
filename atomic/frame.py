@@ -11,6 +11,8 @@ class Frame(DataFrame):
     '''
     '''
     __pk__ = ['frame']
+    __traits__ = ['xi', 'xj', 'xk', 'yi', 'yj', 'yk', 'zi', 'zj', 'zk',
+                  'rx', 'ry', 'rz', 'ox', 'oy', 'oz']
 
     def get_unit_cell_magnitudes(self, inplace=False):
         '''
