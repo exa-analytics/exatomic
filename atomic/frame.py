@@ -3,16 +3,18 @@
 Atom DataFrame
 ==========================
 '''
-from exa import DataFrame
+from exa.frames import DataFrame
 from exa.jitted.broadcasting import mag_3d
 
 
 class Frame(DataFrame):
     '''
     '''
-    __fkeys__ = {'id': 'frame'}
-    
-    def cell_mags(self, inplace=False):
+    __pk__ = ['frame']
+    __traits__ = ['xi', 'xj', 'xk', 'yi', 'yj', 'yk', 'zi', 'zj', 'zk',
+                  'rx', 'ry', 'rz', 'ox', 'oy', 'oz']
+
+    def get_unit_cell_magnitudes(self, inplace=False):
         '''
         Compute the magnitudes of the unit cell vectors.
 
@@ -43,7 +45,7 @@ class Frame(DataFrame):
             return (rx, ry, rz)
 
 
-def minimal_frame_from_atoms(atoms):
+def minimal_frame(atom):
     '''
     Generate the minimal :class:`~atomic.frame.Frame` dataframe given an
     :class:`~atomic.atom.Atom` dataframe.
@@ -54,6 +56,6 @@ def minimal_frame_from_atoms(atoms):
     Returns:
         frames (:class:`~atomic.frame.Frame`): Frames dataframe
     '''
-    df = atoms['symbol'].groupby(level='frame').count().to_frame()
+    df = atom.groupby('frame').count().iloc[:, 0].to_frame()
     df.columns = ['atom_count']
     return Frame(df)

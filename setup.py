@@ -22,5 +22,5 @@ except:
     raise
 finally:
     print('atomic requires exa >= 0.1.0, please make sure it is installed!')
-    from atomic.install import initialize
-    initialize()
+    from atomic.tools import finalize_install
+    finalize_install()
