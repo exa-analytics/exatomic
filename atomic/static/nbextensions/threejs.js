@@ -4,7 +4,7 @@ Atomic Three.js Application
 Creates a 3D visualization of the atomic Universe container.
 
 This code should fully be expected to operate without any knowledge of
-where it is being rendered.
+where it is being rendered (e.g. custom web gui or IPython widget).
 */
 'use strict';
 
@@ -17,9 +17,6 @@ require.config({
         'nbextensions/exa/atomic/lib/TrackballControls': {
             deps: ['nbextensions/exa/atomic/lib/three.min'],
             exports: 'THREE.TrackballControls'
-        },
-        'nbextensions/exa/atomic/lib/dat.gui.min': {
-            exports: 'dat'
         },
     },
 });
@@ -172,6 +169,29 @@ define([
         this.scene.add(z_arrow);
     };
 
+    AtomicThreeJS.prototype.add_cell = function(xi, xj, xk, yi, yj, yk, zi, zj, zk, ox, oy, oz) {
+        /*""""
+        Create Unit Cell
+        ````````````````````
+        */
+        var geometry = new THREE.Geometry();
+        geometry.vertices.push(new THREE.Vector3(xi, xj, xk));
+        geometry.vertices.push(new THREE.Vector3(yi, yj, yk));
+        geometry.vertices.push(new THREE.Vector3(zi, zj, zk));
+        geometry.vertices.push(new THREE.Vector3(ox, oy, oz));
+        var material = new THREE.MeshBasicMaterial({
+            'transparent': true,
+            'opacity': 0.2,
+            'wireframeLinewidth': 10,
+            'wireframe': true
+        });
+        this.scene.remove(this.cell);
+        var unitmesh = new THREE.Mesh(geometry, material);
+        this.cell = new THREE.BoxHelper(unitmesh);
+        this.cell.material.color.set(0x000000);
+        this.scene.add(this.cell);
+    };
+
     AtomicThreeJS.prototype.add_points = function(x, y, z, r, c, filled) {
         /*"""
         Add GL Points
@@ -208,9 +228,31 @@ define([
         geometry.addAttribute('position', new THREE.BufferAttribute(positions, 3));
         geometry.addAttribute('color', new THREE.BufferAttribute(colors, 3));
         geometry.addAttribute('size', new THREE.BufferAttribute(sizes, 1));
-        this.scene.remove(this.points);
-        this.points = new THREE.Points(geometry, material);
-        this.scene.add(this.points);
+        this.scene.remove(this.atom);
+        this.atom = new THREE.Points(geometry, material);
+        this.scene.add(this.atom);
+    };
+
+    AtomicThreeJS.prototype.update_camera_and_controls = function() {
+        /*"""
+        Automatically Update Camera and Controls
+        `````````````````````````````````````````````````
+        */
+        this.atom.geometry.computeBoundingBox();
+        var bbox = this.atom.geometry.boundingBox;
+        var cx = (bbox.max.x - bbox.min.x) / 2;
+        var cy = (bbox.max.y - bbox.min.y) / 2;
+        var cz = (bbox.max.z - bbox.min.z) / 2;
+        this.center = new THREE.Vector3(cx, cy, cz);
+        cx = cx * 2 + 15;
+        cy = cy * 2 + 15;
+        cz = cz * 2 + 15;
+        this.cam_pos = new THREE.Vector3(cx, cy, cz);
+        this.camera.position.x = this.cam_pos.x;
+        this.camera.position.y = this.cam_pos.y;
+        this.camera.position.z = this.cam_pos.z;
+        this.camera.lookAt(this.center);
+        this.controls.target = this.center;
     };
 
     return AtomicThreeJS;
