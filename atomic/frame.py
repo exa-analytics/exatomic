@@ -3,6 +3,7 @@
 Atom DataFrame
 ==========================
 '''
+from exa import _np as np
 from exa.frames import DataFrame
 from exa.jitted.broadcasting import mag_3d
 
@@ -43,6 +44,32 @@ class Frame(DataFrame):
             self['rz'] = rz
         else:
             return (rx, ry, rz)
+
+    def is_periodic(self):
+        '''
+        '''
+        if 'periodic' in self.columns:
+            if np.any(self['periodic'] == True):
+                return True
+        return False
+
+
+    def is_variable_cell(self):
+        '''
+        Does the unit cell vary.
+
+        Returns:
+            is_vc (bool): True if variable cell dimension
+        '''
+        if 'rx' not in self.columns:
+            self.get_unit_cell_magnitudes(inplace=True)
+        rx = self['rx'].min()
+        ry = self['ry'].min()
+        rz = self['rz'].min()
+        if np.all(self['rx'] == rx) and np.all(self['ry'] == ry) and np.all(self['rz'] == rz):
+            return False
+        else:
+            return True
 
 
 def minimal_frame(atom):

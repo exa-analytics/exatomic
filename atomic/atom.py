@@ -12,9 +12,9 @@ from exa.config import Config
 from exa.frames import DataFrame, Updater
 from atomic import Isotope
 if Config.numba:
-    from exa.jitted.iteration import projected_unitcell, tile_i8
+    from exa.jitted.iteration import project_coordinates, tile_i8
 else:
-    from exa.algorithms.iteration import projected_unitcell
+    from exa.algorithms.iteration import project_coordinates
     from numpy import tile as tile_i8
 
 
@@ -49,7 +49,7 @@ class Atom(AtomBase, DataFrame):
 
     Required columns: symbol, x, y, z
     '''
-    def _compute_unit_non_var_cell(self, rxyz, oxyz):
+    def _compute_unit_atom_static_cell(self, rxyz, oxyz):
         '''
         '''
         xyz = self[['x', 'y', 'z']]
@@ -83,31 +83,40 @@ class ProjectedAtom(AtomBase, DataFrame):
 
 def get_unit_atom(universe):
     '''
+    Compute the :class:`~atomic.atom.UnitAtom` for a given
+    :class:`~atomic.universe.Universe`.
     '''
-    rxyz = universe.frame.ix[0, ['rx', 'ry', 'rz']].values
-    oxyz = universe.frame.ix[0, ['ox', 'oy', 'oz']].values
-    obj = universe.atom._compute_unit_non_var_cell(rxyz, oxyz)
-    return UnitAtom(obj)
+    if universe.is_variable_cell():
+        raise NotImplementedError()
+    else:
+        return _compute_unit_atom_static_cell(universe)
 
 
-def gen_projected_atom(universe):
+def _compute_unit_atom_static_cell(universe):
     '''
     '''
-    return _compute_projected_non_var_cell(universe)
+    rxyz = universe.frame._get_min_values(('rx', 'ry', 'rz'))
+    oxyz = universe.frame._get_min_values(('ox', 'oy', 'oz'))
+    df = universe.atom._compute_unit_atom_static_cell(rxyz, oxyz)
+    return UnitAtom(df)
 
 
-def _compute_projected_non_var_cell(universe):
+def get_projected_atom(universe):
     '''
     '''
-    rx = universe.frame.ix[0, 'rx']
-    ry = universe.frame.ix[0, 'ry']
-    rz = universe.frame.ix[0, 'rz']
-    u = universe.unit_atom
-    px = u['x'].values
-    py = u['y'].values
-    pz = u['z'].values
-    df = projected_unitcell(px, py, pz, rx, ry, rz)
-    df = pd.DataFrame(df, columns=['x', 'y', 'z'])
+    if universe.is_variable_cell():
+        raise NotImplementedError()
+    else:
+        return _compute_projected_atom_static_cell(universe)
+
+
+def _compute_projected_atom_static_cell(universe):
+    '''
+    '''
+    rxyz = universe.frame._get_min_values(('rx', 'ry', 'rz'))
+    xyz = universe.unit_atom._get_column_values(('x', 'y', 'z'))
+    df = project_coordinates(xyz, rxyz)
+    df = pd.DataFrame(df, columns=('x', 'y', 'z'))
     df.index.names = ['prjd_atom']
     df['frame'] = tile_i8(universe.atom['frame'].values, 27)
     df['symbol'] = universe.atom['symbol'].tolist() * 27

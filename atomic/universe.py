@@ -9,9 +9,8 @@ from sqlalchemy import Column, Integer, ForeignKey
 from exa import Container
 from exa.config import Config
 from atomic.frame import Frame, minimal_frame
-from atomic.atom import Atom, UnitAtom, ProjectedAtom
-from atomic.atom import _compute_projected_non_var_cell
-from atomic.atom import get_unit_atom as _get_unit_atom
+from atomic.atom import Atom, UnitAtom, ProjectedAtom, get_unit_atom, get_projected_atom
+from atomic.two import Two, ProjectedTwo, AtomTwo, ProjectedAtomTwo, get_two_body
 
 
 class Universe(Container):
@@ -31,12 +30,26 @@ class Universe(Container):
     _framelist = List().tag(sync=True)
     _atom_type = Unicode('points').tag(sync=True)
 
+    def is_variable_cell(self):
+        '''
+        Variable cell universe?
+        '''
+        return self.frame.is_variable_cell()
+
+    def is_periodic(self):
+        return self.frame.is_periodic()
+
     def compute_cell_magnitudes(self, inplace=True):
         '''
         See Also:
             :func:`~atomic.atom.Atom.get_unit_cell_magnitudes`
         '''
         return self._frame.get_unit_cell_magnitudes(inplace)
+
+    def compute_two_body(self, inplace=True, **kwargs):
+        '''
+        '''
+        return get_two_body(self, inplace=inplace, **kwargs)
 
     # DataFrame properties
     @property
@@ -57,24 +70,37 @@ class Universe(Container):
         Primitive atom positions.
         '''
         if len(self._unit_atom) == 0:
-            self._unit_atom = _get_unit_atom(self)
+            self._unit_atom = get_unit_atom(self)
         atom = self.atom.copy()
         atom.update(self._unit_atom)
-        return atom
+        return Atom(atom)
 
     @property
-    def prjd_atom(self):
+    def projected_atom(self):
         '''
+        Projected unit atom coordinates generating a 3x3x3 super cell.
         '''
         if len(self._prjd_atom) == 0:
-            self._prjd_atom = _compute_projected_non_var_cell(self)
+            self._prjd_atom = get_projected_atom(self)
         return self._prjd_atom
+
+    @property
+    def two(self):
+        '''
+        '''
+        if len(self._two) == 0 and len(self._prjd_two) == 0:
+            self.compute_two_body()
+        if len(self._two) == 0:
+            return self._prjd_two
+        else:
+            return self._two
 
     def __len__(self):
         return len(self._framelist)
 
     def __init__(self, frame=None, atom=None, unit_atom=None, prjd_atom=None,
-                 two=None, **kwargs):
+                 two=None, prjd_two=None, atomtwo=None, prjd_atomtwo=None,
+                 **kwargs):
         '''
         The universe container represents all of the atoms, bonds, molecules,
         orbital/densities, etc. present within an atomistic simulations.
@@ -84,6 +110,10 @@ class Universe(Container):
         self._atom = Atom(atom)
         self._unit_atom = UnitAtom(unit_atom)
         self._prjd_atom = ProjectedAtom(prjd_atom)
+        self._two = Two(two)
+        self._prjd_two = ProjectedTwo(prjd_two)
+        self._atomtwo = AtomTwo(atomtwo)
+        self._prjd_atomtwo = ProjectedAtomTwo(prjd_atomtwo)
         if Config.ipynb:
             self._update_all_traits()
         self._framelist = []
