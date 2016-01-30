@@ -174,6 +174,7 @@ define([
         Create Unit Cell
         ````````````````````
         */
+        console.log('adding cell');
         var geometry = new THREE.Geometry();
         geometry.vertices.push(new THREE.Vector3(xi, xj, xk));
         geometry.vertices.push(new THREE.Vector3(yi, yj, yk));
@@ -185,10 +186,12 @@ define([
             'wireframeLinewidth': 10,
             'wireframe': true
         });
+        console.log(geometry.vertices);
         this.scene.remove(this.cell);
         var unitmesh = new THREE.Mesh(geometry, material);
         this.cell = new THREE.BoxHelper(unitmesh);
         this.cell.material.color.set(0x000000);
+        console.log(this.cell);
         this.scene.add(this.cell);
     };
 

@@ -39,14 +39,27 @@ class Universe(Container):
     def is_periodic(self):
         return self.frame.is_periodic()
 
-    def compute_cell_magnitudes(self, inplace=True):
+    def compute_minimal_frame(self, inplace=False):
         '''
-        See Also:
-            :func:`~atomic.atom.Atom.get_unit_cell_magnitudes`
+        '''
+        return minimal_frame(self.atom, inplace)
+
+    def compute_cell_magnitudes(self, inplace=False):
+        '''
         '''
         return self._frame.get_unit_cell_magnitudes(inplace)
 
-    def compute_two_body(self, inplace=True, **kwargs):
+    def compute_unit_atom(self, inplace=False):
+        '''
+        '''
+        return get_unit_atom(self, inplace)
+
+    def compute_projected_atom(self, inplace=False):
+        '''
+        '''
+        return get_projected_atom(self, inplace)
+
+    def compute_two_body(self, inplace=False, **kwargs):
         '''
         '''
         return get_two_body(self, inplace=inplace, **kwargs)
@@ -55,8 +68,7 @@ class Universe(Container):
     @property
     def frame(self):
         if len(self._frame) == 0 and len(self._atom) > 0:
-            self._frame = minimal_frame(self.atom)
-        if self._framelist == []:
+            self.compute_minimal_frame(inplace=True)
             self._framelist = self._frame.index.tolist()
         return self._frame
 
@@ -70,7 +82,7 @@ class Universe(Container):
         Primitive atom positions.
         '''
         if len(self._unit_atom) == 0:
-            self._unit_atom = get_unit_atom(self)
+            self.compute_unit_atom(inplace=True)
         atom = self.atom.copy()
         atom.update(self._unit_atom)
         return Atom(atom)
@@ -81,7 +93,7 @@ class Universe(Container):
         Projected unit atom coordinates generating a 3x3x3 super cell.
         '''
         if len(self._prjd_atom) == 0:
-            self._prjd_atom = get_projected_atom(self)
+            self.compute_projected_atom(inplace=True)
         return self._prjd_atom
 
     @property
@@ -89,7 +101,7 @@ class Universe(Container):
         '''
         '''
         if len(self._two) == 0 and len(self._prjd_two) == 0:
-            self.compute_two_body()
+            self.compute_two_body(inplace=True)
         if len(self._two) == 0:
             return self._prjd_two
         else:

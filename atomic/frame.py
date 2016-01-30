@@ -72,17 +72,15 @@ class Frame(DataFrame):
             return True
 
 
-def minimal_frame(atom):
+def minimal_frame(universe, inplace=False):
     '''
     Generate the minimal :class:`~atomic.frame.Frame` dataframe given an
     :class:`~atomic.atom.Atom` dataframe.
-
-    Args:
-        atoms (:class:`~atomic.atom.Atom`): Atoms dataframe
-
-    Returns:
-        frames (:class:`~atomic.frame.Frame`): Frames dataframe
     '''
-    df = atom.groupby('frame').count().iloc[:, 0].to_frame()
+    df = universe.atom.groupby('frame').count().iloc[:, 0].to_frame()
     df.columns = ['atom_count']
-    return Frame(df)
+    df = Frame(df)
+    if inplace:
+        universe._frame = df
+    else:
+        return df

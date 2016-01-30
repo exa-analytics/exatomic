@@ -4,22 +4,24 @@ Two Body Properties DataFrame
 ===============================
 Two body properties are interatomic distances.
 '''
-from scipy.spatial import cKDTree
+from sklearn.neighbors import NearestNeighbors
 from exa import _np as np
 from exa import _pd as pd
 from exa.config import Config
 from exa.frames import DataFrame, ManyToMany
 if Config.numba:
     from exa.jitted.iteration import repeat_i8, repeat_i8_array
+    from exa.jitted.indexing import unordered_pairing_function
 else:
     import numpy.repeat as repeat_i8
     import numpy.repeat as repeat_i8_array
+    from exa.algorithms.indexing import unordered_pairing_function
 from atomic import Isotope
 
 
 bond_extra = 0.45
 dmin = 0.3
-dmax = 12.3
+dmax = 8.3
 
 
 class TwoBase:
@@ -53,9 +55,8 @@ class ProjectedAtomTwo(ManyToMany):
     __fks__ = ['prjd_atom', 'prjd_two']
 
 
-
-
-def get_two_body(universe, k=None, bond_extra=bond_extra, dmax=dmax, dmin=dmin, inplace=False):
+def get_two_body(universe, k=None, dmax=dmax, dmin=dmin,
+                 bond_extra=bond_extra, inplace=False):
     '''
     Compute two body information given a universe.
 
@@ -166,36 +167,40 @@ def _periodic_from_projected_in_mem(universe, k=None, dmax=12.3, dmin=0.3, bond_
     index1 = np.empty((n, ), dtype='O')
     index2 = np.empty((n, ), dtype='O')
     frames = np.empty((n, ), dtype='O')
-    for i, (frame, prjd) in enumerate(prjd_grps):
-        pxyz = DataFrame(prjd)._get_column_values(('x', 'y', 'z'))
-        uxyz = DataFrame(unit_grps.get_group(frame))._get_column_values(('x', 'y', 'z'))
-        dists, idxs = cKDTree(pxyz).query(uxyz, k=k, distance_upper_bound=dmax)
-        dists = pd.Series(dists.ravel())
-        dists = dists[(dists > dmin) & (dists < dmax)]
-        s = dists.index.values
-        index1[i] = prjd.iloc[repeat_i8_array(idxs[:, 0], k)[s]].index.values
-        index2[i] = prjd.iloc[idxs.ravel()[s]].index.values
-        distances[i] = dists
-        frames[i] = repeat_i8(frame, len(s))
+    for i, (frame, prjd) in enumerate(prjd_grps):                    # Per frame, compute the distances,
+        pxyz = DataFrame(prjd)._get_column_values('x', 'y', 'z')     # also saving the associated indices
+        uxyz = DataFrame(unit_grps.get_group(frame))._get_column_values('x', 'y', 'z')
+        dists, idxs = NearestNeighbors(n_neighbors=k, metric='euclidean').fit(pxyz).kneighbors(uxyz)
+        distances[i] = dists.ravel()
+        index1[i] = prjd.iloc[repeat_i8_array(idxs[:, 0], k)].index.values
+        index2[i] = prjd.iloc[idxs.ravel()].index.values
+        frames[i] = repeat_i8(frame, len(index1[i]))
     distances = np.concatenate(distances)
     index1 = np.concatenate(index1)
     index2 = np.concatenate(index2)
     frames = np.concatenate(frames)
-    df = pd.DataFrame.from_dict({'distance': distances, 'frame': frames,
-                                 'prjd_atom1': index1, 'prjd_atom2': index2})
+    two = pd.DataFrame.from_dict({'distance': distances, 'frame': frames,
+                                 'prjd_atom1': index1, 'prjd_atom2': index2})  # We will use prjd_atom1/2 to deduplicate data
+    two = two[(two['distance'] > dmin) & (two['distance'] < dmax)]
+    two['id'] = unordered_pairing_function(two['prjd_atom1'].values, two['prjd_atom2'].values)
+    print(len(two))
+    two = two.drop_duplicates('id').reset_index(drop=True)
+    print(len(two))
+    del two['id']
     symbols = universe.projected_atom['symbol']
-    df['symbol1'] = df['prjd_atom1'].map(symbols)
-    df['symbol2'] = df['prjd_atom2'].map(symbols)
-    df['symbols'] = df['symbol1'] + df['symbol2']
-    del df['symbol1']
-    del df['symbol2']
-    df['mbl'] = df['symbols'].map(Isotope.lookup_sum_radii_by_symbols)
-    df['mbl'] += bond_extra
-    df['bond'] = df['distance'] < df['mbl']
-    del df['mbl']
-    df.index.names = ['prjd_two']
-    df1 = pd.DataFrame.from_dict({'prjd_two': df.index.tolist() * 2,
-                                  'prjd_atom': df['prjd_atom1'].tolist() + df['prjd_atom2'].tolist()})
-    del df['prjd_atom1']
-    del df['prjd_atom2']
-    return ProjectedTwo(df), ProjectedAtomTwo(df1)
+    two['symbol1'] = two['prjd_atom1'].map(symbols)
+    two['symbol2'] = two['prjd_atom2'].map(symbols)
+    two['symbols'] = two['symbol1'] + two['symbol2']
+    del two['symbol1']
+    del two['symbol2']
+    two['mbl'] = two['symbols'].map(Isotope.lookup_sum_radii_by_symbols)
+    two['mbl'] += bond_extra
+    two['bond'] = two['distance'] < two['mbl']
+    del two['mbl']
+    two.index.names = ['prjd_two']
+    prjd_two = two.index.tolist() * 2
+    prjd_atom = two['prjd_atom1'].tolist() + two['prjd_atom2'].tolist()
+    del two['prjd_atom1']
+    del two['prjd_atom2']
+    atomtwo = pd.DataFrame.from_dict({'prjd_two': prjd_two, 'prjd_atom': prjd_atom})
+    return ProjectedTwo(two), ProjectedAtomTwo(atomtwo)

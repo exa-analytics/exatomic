@@ -81,40 +81,50 @@ class ProjectedAtom(AtomBase, DataFrame):
     __pk__ = ['prjd_atom']
 
 
-def get_unit_atom(universe):
+def get_unit_atom(universe, inplace=False):
     '''
     Compute the :class:`~atomic.atom.UnitAtom` for a given
     :class:`~atomic.universe.Universe`.
     '''
+    df = None
     if universe.is_variable_cell():
         raise NotImplementedError()
     else:
-        return _compute_unit_atom_static_cell(universe)
+        df = _compute_unit_atom_static_cell(universe)
+    if inplace:
+        universe._unit_atom = df
+    else:
+        return df
 
 
 def _compute_unit_atom_static_cell(universe):
     '''
     '''
-    rxyz = universe.frame._get_min_values(('rx', 'ry', 'rz'))
-    oxyz = universe.frame._get_min_values(('ox', 'oy', 'oz'))
+    rxyz = universe.frame._get_min_values('rx', 'ry', 'rz')
+    oxyz = universe.frame._get_min_values('ox', 'oy', 'oz')
     df = universe.atom._compute_unit_atom_static_cell(rxyz, oxyz)
     return UnitAtom(df)
 
 
-def get_projected_atom(universe):
+def get_projected_atom(universe, inplace=False):
     '''
     '''
+    df = None
     if universe.is_variable_cell():
         raise NotImplementedError()
     else:
-        return _compute_projected_atom_static_cell(universe)
+        df = _compute_projected_atom_static_cell(universe)
+    if inplace:
+        universe._prjd_atom = df
+    else:
+        return df
 
 
 def _compute_projected_atom_static_cell(universe):
     '''
     '''
-    rxyz = universe.frame._get_min_values(('rx', 'ry', 'rz'))
-    xyz = universe.unit_atom._get_column_values(('x', 'y', 'z'))
+    rxyz = universe.frame._get_min_values('rx', 'ry', 'rz')
+    xyz = universe.unit_atom._get_column_values('x', 'y', 'z')
     df = project_coordinates(xyz, rxyz)
     df = pd.DataFrame(df, columns=('x', 'y', 'z'))
     df.index.names = ['prjd_atom']

@@ -67,7 +67,7 @@ define([
             this.container.append(this.gui_style);
             this.setElement(this.container);
 
-            // Render
+            // Animate
             this.app.render();
             this.on('displayed', function () {
                 self.app.animate();
@@ -81,6 +81,7 @@ define([
             ```````````````````````
             Get data from backend and set it locally
             */
+            var self = this;
             this.atom_type = this.model.get('_atom_type');
             this.width = this.model.get('width');
             this.height = this.model.get('height');
@@ -195,16 +196,6 @@ define([
             this.f1['fps'].onFinishChange(function(value) {
                 self.fps = value;
             });
-
-            // Folder 4: cell
-            this.gui_f4 = {
-                show: false,
-            },
-            this.f4 = {};
-            this.f4['show'] = this.guif4.add(this.gui_f4, 'show');
-            this.f4['show'].onChange(function(value) {
-                self.update_cell(value);
-            });
         },
 
         update_atom: function(index) {
@@ -252,11 +243,10 @@ define([
 
         callme: function() {
             console.log('called callme');
-            console.log(this.model);
             var x = this.model.get('_atom_x');
-            console.log(x);
+            console.log(x[0]);
             var y = this.model.get('_atom_y');
-            console.log(y);
+            console.log(y[0]);
             this.send({'call': 'update'});
         },
 
