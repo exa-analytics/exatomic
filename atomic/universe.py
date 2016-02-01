@@ -7,10 +7,13 @@ The atomic container object.
 from traitlets import Unicode, List
 from sqlalchemy import Column, Integer, ForeignKey
 from exa import Container
+from exa import _np as np
 from exa.config import Config
 from atomic.frame import Frame, minimal_frame
-from atomic.atom import Atom, UnitAtom, ProjectedAtom, get_unit_atom, get_projected_atom
-from atomic.two import Two, ProjectedTwo, AtomTwo, ProjectedAtomTwo, get_two_body
+from atomic.atom import (Atom, UnitAtom, ProjectedAtom,
+                         get_unit_atom, get_projected_atom)
+from atomic.two import (Two, ProjectedTwo, AtomTwo, ProjectedAtomTwo,
+                        get_two_body)
 
 
 class Universe(Container):
@@ -22,13 +25,16 @@ class Universe(Container):
     cid = Column(Integer, ForeignKey('container.pkid'), primary_key=True)
     frame_count = Column(Integer)
     __mapper_args__ = {'polymorphic_identity': 'universe'}
-    __dfclasses__ = {'_frame': Frame, '_atom': Atom, '_unit_atom': UnitAtom}
+    __dfclasses__ = {'_frame': Frame, '_atom': Atom, '_unit_atom': UnitAtom,
+                     '_prjd_atom': ProjectedAtom, '_two': Two, '_prjd_two': ProjectedTwo,
+                     '_atomtwo': AtomTwo, '_prjd_atomtwo': ProjectedAtomTwo}
 
     # DOMWidget settings
     _view_module = Unicode('nbextensions/exa/atomic/universe').tag(sync=True)
     _view_name = Unicode('UniverseView').tag(sync=True)
     _framelist = List().tag(sync=True)
     _atom_type = Unicode('points').tag(sync=True)
+    _bonds = Unicode().tag(sync=True)
 
     def is_variable_cell(self):
         '''
@@ -62,9 +68,12 @@ class Universe(Container):
     def compute_two_body(self, inplace=False, **kwargs):
         '''
         '''
-        return get_two_body(self, inplace=inplace, **kwargs)
+        df = get_two_body(self, inplace=inplace, **kwargs)
+        if inplace == True:
+            self._update_bond_list()
+        return df
 
-    # DataFrame properties
+    # DataFrames are "obscured" from the user via properties
     @property
     def frame(self):
         if len(self._frame) == 0 and len(self._atom) > 0:
@@ -85,7 +94,9 @@ class Universe(Container):
             self.compute_unit_atom(inplace=True)
         atom = self.atom.copy()
         atom.update(self._unit_atom)
-        return Atom(atom)
+        if 'prjd_atom' in self._unit_atom.columns:
+            atom['prjd_atom'] = self._unit_atom['prjd_atom']
+        return Atom(atom.to_dense())
 
     @property
     def projected_atom(self):
@@ -107,6 +118,36 @@ class Universe(Container):
         else:
             return self._two
 
+    def _update_traits(self):
+        '''
+        '''
+        self._update_df_traits()
+        if len(self._frame) > 0:
+            self._update_frame_list()
+        if len(self._two) > 0 or len(self._prjd_two) > 0:
+            self._update_bond_list()
+
+    def _update_frame_list(self):
+        '''
+        '''
+        self._framelist = [int(f) for f in self._frame.index.values]
+
+    def _update_bond_list(self):
+        '''
+        Retrieve a Series containing tuples of bonded atom labels
+        '''
+        if self.is_periodic() and len(self.projected_atom) > 0:
+            mapper1 = self.projected_atom['atom']
+            mapper2 = self.atom['label']
+            df = self.two.ix[(self.two['bond'] == True), ['frame', 'prjd_atom1', 'prjd_atom2']]
+            df['atom1'] = df['prjd_atom1'].map(mapper1)
+            df['atom2'] = df['prjd_atom2'].map(mapper1)
+            df['label1'] = df['atom1'].map(mapper2)
+            df['label2'] = df['atom2'].map(mapper2)
+            self._bonds = df.groupby('frame').apply(lambda x: x[['label1', 'label2']].values.astype(np.int64)).to_json()
+        else:
+            raise NotImplementedError()
+
     def __len__(self):
         return len(self._framelist)
 
@@ -127,10 +168,7 @@ class Universe(Container):
         self._atomtwo = AtomTwo(atomtwo)
         self._prjd_atomtwo = ProjectedAtomTwo(prjd_atomtwo)
         if Config.ipynb:
-            self._update_all_traits()
-        self._framelist = []
-        if len(self._frame) > 0:
-            self._framelist = [int(f) for f in self._frame.index.values]
+            self._update_traits()
 
 
 def concat(universes):

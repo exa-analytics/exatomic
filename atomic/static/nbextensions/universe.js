@@ -58,7 +58,8 @@ define([
 
             // Threejs app
             this.app = new AtomicThreeJS(this.canvas);
-            this.update_atom(0);
+            this.update_atom(true);
+            this.update_bond(true);
             this.app.update_camera_and_controls();
 
             // Add the gui and app to the container
@@ -97,6 +98,8 @@ define([
             this.z = this.get_from_json_str('_atom_z');
             this.r = this.get_from_json_str('_atom_radius');
             this.c = this.get_from_json_str('_atom_color');
+            this.bonds = this.get_from_json_str('_bonds');
+            this.bonds_length = Object.keys(this.bonds).length;
             this.cell_xi = this.get_from_json_str('_frame_xi');
             this.cell_xj = this.get_from_json_str('_frame_xj');
             this.cell_xk = this.get_from_json_str('_frame_xk');
@@ -138,7 +141,12 @@ define([
             ```````````````
             Custom getter for Python objects stored as json strings.
             */
-            return JSON.parse(this.model.get(name));
+            try {
+                return JSON.parse(this.model.get(name));
+            } catch(err) {
+                console.log(err);
+                return {};
+            };
         },
 
         init_gui: function() {
@@ -172,7 +180,7 @@ define([
                             self.f1.index.setValue(self.index);
                         };
                         this._playing = setInterval(function() {
-                            if (self.index < self.nframes) {
+                            if (self.index < self.nframes - 1) {
                                 self.index += 1
                                 self.f1.index.setValue(self.index);
                             } else {
@@ -190,28 +198,79 @@ define([
             this.f1['frame'] = this.guif1.add(this.gui_f1, 'frame', this.framelist);
             this.f1['index'] = this.guif1.add(this.gui_f1, 'index', 0, this.nframes).step(1);
             this.f1['fps'] = this.guif1.add(this.gui_f1, 'fps', 1, 60, 1);
-            this.f1['index'].onChange(function(index) {
-                self.update_atom(index);
+            this.f1['index'].onChange(function(value) {
+                self.index = value;
+                self.frame = self.framelist[self.index];
+                self.update_atom(true);
+                if (self.bonds_length > 0) {
+                    self.update_bond(true);
+                };
             });
             this.f1['fps'].onFinishChange(function(value) {
                 self.fps = value;
             });
+
+            this.gui_f2 = {
+                show: true,
+            };
+            this.f2 = {};
+            this.f2['show'] = this.guif2.add(this.gui_f2, 'show');
+            this.f2['show'].onFinishChange(function(value) {
+                self.update_atom(value);
+            });
+
+            this.gui_f3 = {
+                show: true,
+            }
+            this.f3 = {};
+            this.f3['show'] = this.guif3.add(this.gui_f3, 'show');
+            this.f3['show'].onFinishChange(function(value) {
+                self.update_bond(value);
+            });
+
+            this.gui_f4 = {
+                show: false,
+            };
+            this.f4 = {};
+            this.f4['show'] = this.guif4.add(this.gui_f4, 'show');
+            this.f4['show'].onFinishChange(function(value) {
+                self.update_cell(value);
+            });
         },
 
-        update_atom: function(index) {
+        update_atom: function(value) {
             /*"""
             Update Atomic Positions
             `````````````````````````
             */
-            this.index = index;
-            this.frame = this.framelist[index];
-            var x = this.x[this.frame];
-            var y = this.y[this.frame];
-            var z = this.z[this.frame];
-            var r = this.r[this.frame];
-            var c = this.c[this.frame];
-            if (this.atom_type == 'points') {
-                this.app.add_points(x, y, z, r, c, this.filled);
+            if (value == true) {
+                var x = this.x[this.frame];
+                var y = this.y[this.frame];
+                var z = this.z[this.frame];
+                var r = this.r[this.frame];
+                var c = this.c[this.frame];
+                if (this.atom_type == 'points') {
+                    this.app.add_points(x, y, z, r, c, this.filled);
+                };
+            } else {
+                this.app.scene.remove(this.app.atom);
+            }
+            this.app.render();
+        },
+
+        update_bond: function(value) {
+            /*"""
+            Bonds
+            ```````````````
+            */
+            if (value == true && this.bonds_length > 0) {
+                var x = this.x[this.frame];
+                var y = this.y[this.frame];
+                var z = this.z[this.frame];
+                var bonds = this.bonds[this.frame];
+                this.app.add_bonds(bonds, x, y, z);
+            } else {
+                this.app.scene.remove(this.app.bond);
             };
             this.app.render();
         },
@@ -221,19 +280,20 @@ define([
             Update the Unit Cell
             ```````````````````````
             */
+            console.log(this.cell_xi);
             if (value == true) {
-                var xi = this.cell_xi[this.frame];
-                var xj = this.cell_xj[this.frame];
-                var xk = this.cell_xk[this.frame];
-                var yi = this.cell_yi[this.frame];
-                var yj = this.cell_yj[this.frame];
-                var yk = this.cell_yk[this.frame];
-                var zi = this.cell_zi[this.frame];
-                var zj = this.cell_zj[this.frame];
-                var zk = this.cell_zk[this.frame];
-                var ox = this.cell_ox[this.frame];
-                var oy = this.cell_oy[this.frame];
-                var oz = this.cell_oz[this.frame];
+                var xi = this.cell_xi[this.index];
+                var xj = this.cell_xj[this.index];
+                var xk = this.cell_xk[this.index];
+                var yi = this.cell_yi[this.index];
+                var yj = this.cell_yj[this.index];
+                var yk = this.cell_yk[this.index];
+                var zi = this.cell_zi[this.index];
+                var zj = this.cell_zj[this.index];
+                var zk = this.cell_zk[this.index];
+                var ox = this.cell_ox[this.index];
+                var oy = this.cell_oy[this.index];
+                var oz = this.cell_oz[this.index];
                 this.app.add_cell(xi, xj, xk, yi, yj, yk, zi, zj, zk, ox, oy, oz);
             } else {
                 this.app.scene.remove(this.app.cell);

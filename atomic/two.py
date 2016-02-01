@@ -183,9 +183,7 @@ def _periodic_from_projected_in_mem(universe, k=None, dmax=12.3, dmin=0.3, bond_
                                  'prjd_atom1': index1, 'prjd_atom2': index2})  # We will use prjd_atom1/2 to deduplicate data
     two = two[(two['distance'] > dmin) & (two['distance'] < dmax)]
     two['id'] = unordered_pairing_function(two['prjd_atom1'].values, two['prjd_atom2'].values)
-    print(len(two))
     two = two.drop_duplicates('id').reset_index(drop=True)
-    print(len(two))
     del two['id']
     symbols = universe.projected_atom['symbol']
     two['symbol1'] = two['prjd_atom1'].map(symbols)
@@ -193,14 +191,14 @@ def _periodic_from_projected_in_mem(universe, k=None, dmax=12.3, dmin=0.3, bond_
     two['symbols'] = two['symbol1'] + two['symbol2']
     del two['symbol1']
     del two['symbol2']
-    two['mbl'] = two['symbols'].map(Isotope.lookup_sum_radii_by_symbols)
+    two['mbl'] = two['symbols'].map(Isotope.symbols_to_radii_map)
     two['mbl'] += bond_extra
     two['bond'] = two['distance'] < two['mbl']
     del two['mbl']
     two.index.names = ['prjd_two']
     prjd_two = two.index.tolist() * 2
     prjd_atom = two['prjd_atom1'].tolist() + two['prjd_atom2'].tolist()
-    del two['prjd_atom1']
-    del two['prjd_atom2']
+    #del two['prjd_atom1']
+    #del two['prjd_atom2']
     atomtwo = pd.DataFrame.from_dict({'prjd_two': prjd_two, 'prjd_atom': prjd_atom})
     return ProjectedTwo(two), ProjectedAtomTwo(atomtwo)

@@ -30,9 +30,9 @@ class AtomBase:
         '''
         '''
         if 'radius' not in self.columns:
-            self['radius'] = self['symbol'].map(Isotope.lookup_radius_by_symbol)
+            self['radius'] = self['symbol'].map(Isotope.symbol_to_radius_map)
         if 'color' not in self.columns:
-            self['color'] = self['symbol'].map(Isotope.lookup_color_by_symbol)
+            self['color'] = self['symbol'].map(Isotope.symbol_to_color_map)
 
     def _post_trait_values(self):
         '''
@@ -57,6 +57,14 @@ class Atom(AtomBase, DataFrame):
         unit = unit[unit != xyz].astype(np.float64).to_sparse()
         return unit
 
+    @property
+    def _prjd_atom_to_label_map(self):
+        '''
+        '''
+        if 'label' in self.columns:
+            return self.set_index('prjd_atom')['label']
+        raise KeyError('Missing column "prjd_atom"')
+
 
 class UnitAtom(Updater):
     '''
@@ -79,6 +87,7 @@ class ProjectedAtom(AtomBase, DataFrame):
         :class:`~atomic.atom.PrimitiveAtom`
     '''
     __pk__ = ['prjd_atom']
+    __fk__ = ['atom']
 
 
 def get_unit_atom(universe, inplace=False):
@@ -87,12 +96,13 @@ def get_unit_atom(universe, inplace=False):
     :class:`~atomic.universe.Universe`.
     '''
     df = None
-    if universe.is_variable_cell():
-        raise NotImplementedError()
-    else:
-        df = _compute_unit_atom_static_cell(universe)
+    if universe.is_periodic():
+        if universe.is_variable_cell():
+            raise NotImplementedError()
+        else:
+            df = _compute_unit_atom_static_cell(universe)
     if inplace:
-        universe._unit_atom = df
+        universe._unit_atom = UnitAtom(df)
     else:
         return df
 
@@ -109,15 +119,19 @@ def _compute_unit_atom_static_cell(universe):
 def get_projected_atom(universe, inplace=False):
     '''
     '''
-    df = None
+    prjd_atom = None
     if universe.is_variable_cell():
         raise NotImplementedError()
     else:
-        df = _compute_projected_atom_static_cell(universe)
+        prjd_atom = _compute_projected_atom_static_cell(universe)
+#    nat = universe.frame['atom_count'].sum()
+#    prjd_atom_relation = prjd_atom.index[13*nat:14*nat]
     if inplace:
-        universe._prjd_atom = df
+        universe._prjd_atom = prjd_atom
+        #universe._unit_atom['prjd_atom'] = prjd_atom_relation
     else:
-        return df
+        return prjd_atom
+        #return prjd_atom, prjd_atom_relation
 
 
 def _compute_projected_atom_static_cell(universe):
@@ -130,4 +144,5 @@ def _compute_projected_atom_static_cell(universe):
     df.index.names = ['prjd_atom']
     df['frame'] = tile_i8(universe.atom['frame'].values, 27)
     df['symbol'] = universe.atom['symbol'].tolist() * 27
+    df['atom'] = tile_i8(universe.atom.index.values, 27)
     return ProjectedAtom(df)

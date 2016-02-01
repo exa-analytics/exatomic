@@ -174,7 +174,6 @@ define([
         Create Unit Cell
         ````````````````````
         */
-        console.log('adding cell');
         var geometry = new THREE.Geometry();
         geometry.vertices.push(new THREE.Vector3(xi, xj, xk));
         geometry.vertices.push(new THREE.Vector3(yi, yj, yk));
@@ -186,12 +185,10 @@ define([
             'wireframeLinewidth': 10,
             'wireframe': true
         });
-        console.log(geometry.vertices);
         this.scene.remove(this.cell);
         var unitmesh = new THREE.Mesh(geometry, material);
         this.cell = new THREE.BoxHelper(unitmesh);
         this.cell.material.color.set(0x000000);
-        console.log(this.cell);
         this.scene.add(this.cell);
     };
 
@@ -234,6 +231,30 @@ define([
         this.scene.remove(this.atom);
         this.atom = new THREE.Points(geometry, material);
         this.scene.add(this.atom);
+    };
+
+    AtomicThreeJS.prototype.add_bonds = function(bonds, x, y, z) {
+        /*"""
+        Add bonds
+        `````````````
+        */
+        var material = new THREE.LineBasicMaterial({
+            color: 0x4d4d4d,
+            linewidth: 5
+        });
+        var geometry = new THREE.Geometry();
+        var n = bonds.length;
+        for (var i = 0; i < n; i++) {
+            var a = bonds[i][0];
+            var b = bonds[i][1];
+            var va = new THREE.Vector3(x[a], y[a], z[a]);
+            var vb = new THREE.Vector3(x[b], y[b], z[b]);
+            geometry.vertices.push(va);
+            geometry.vertices.push(vb);
+        };
+        this.scene.remove(this.bond);
+        this.bond = new THREE.LineSegments(geometry, material);
+        this.scene.add(this.bond);
     };
 
     AtomicThreeJS.prototype.update_camera_and_controls = function() {
