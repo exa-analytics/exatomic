@@ -24,23 +24,36 @@ dmin = 0.3
 dmax = 8.3
 
 
-class TwoBase:
-    '''
-    '''
-    __fk__ = ['frame']
-    __groupby__ = 'frame'
-
-
 class Two(TwoBase, DataFrame):
     '''
     '''
     __pk__ = ['two']
+    __fk__ = ['frame', 'atom1', 'atom2']
+    __groupby__ = 'frame'
+
+    def _compute_bond_count(self):
+        '''
+        '''
+        bonded = self[self['bond'] == True]
+        b1 = bonded.groupby('atom1').apply(lambda b: len(b))
+        b2 = bonded.groupby('atom2').apply(lambda b: len(b))
+        return b1.add(b2, fill_value=0)
 
 
 class ProjectedTwo(TwoBase, DataFrame):
     '''
     '''
     __pk__ = ['prjd_two']
+    __fk__ = ['frame', 'prjd_atom1', 'prjd_atom2']
+    __groupby__ = 'frame'
+
+    def _compute_bond_count(self):
+        '''
+        '''
+        bonded = self[self['bond'] == True]
+        b1 = bonded.groupby('prjd_atom1').apply(lambda b: len(b))
+        b2 = bonded.groupby('prjd_atom2').apply(lambda b: len(b))
+        return b1.add(b2, fill_value=0)
 
 
 class AtomTwo(ManyToMany):
