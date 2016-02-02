@@ -24,7 +24,7 @@ dmin = 0.3
 dmax = 8.3
 
 
-class Two(TwoBase, DataFrame):
+class Two(DataFrame):
     '''
     '''
     __pk__ = ['two']
@@ -40,7 +40,7 @@ class Two(TwoBase, DataFrame):
         return b1.add(b2, fill_value=0)
 
 
-class ProjectedTwo(TwoBase, DataFrame):
+class ProjectedTwo(DataFrame):
     '''
     '''
     __pk__ = ['prjd_two']

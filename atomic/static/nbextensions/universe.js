@@ -196,7 +196,7 @@ define([
             this.f1 = {};
             this.f1['play'] = this.guif1.add(this.gui_f1, 'play');
             this.f1['frame'] = this.guif1.add(this.gui_f1, 'frame', this.framelist);
-            this.f1['index'] = this.guif1.add(this.gui_f1, 'index', 0, this.nframes).step(1);
+            this.f1['index'] = this.guif1.add(this.gui_f1, 'index', 0, this.nframes - 1).step(1);
             this.f1['fps'] = this.guif1.add(this.gui_f1, 'fps', 1, 60, 1);
             this.f1['index'].onChange(function(value) {
                 self.index = value;
