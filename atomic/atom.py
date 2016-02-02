@@ -124,14 +124,10 @@ def get_projected_atom(universe, inplace=False):
         raise NotImplementedError()
     else:
         prjd_atom = _compute_projected_atom_static_cell(universe)
-#    nat = universe.frame['atom_count'].sum()
-#    prjd_atom_relation = prjd_atom.index[13*nat:14*nat]
     if inplace:
         universe._prjd_atom = prjd_atom
-        #universe._unit_atom['prjd_atom'] = prjd_atom_relation
     else:
         return prjd_atom
-        #return prjd_atom, prjd_atom_relation
 
 
 def _compute_projected_atom_static_cell(universe):

@@ -198,7 +198,5 @@ def _periodic_from_projected_in_mem(universe, k=None, dmax=12.3, dmin=0.3, bond_
     two.index.names = ['prjd_two']
     prjd_two = two.index.tolist() * 2
     prjd_atom = two['prjd_atom1'].tolist() + two['prjd_atom2'].tolist()
-    #del two['prjd_atom1']
-    #del two['prjd_atom2']
     atomtwo = pd.DataFrame.from_dict({'prjd_two': prjd_two, 'prjd_atom': prjd_atom})
     return ProjectedTwo(two), ProjectedAtomTwo(atomtwo)
