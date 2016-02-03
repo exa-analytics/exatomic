@@ -153,7 +153,7 @@ class Universe(Container):
 
     def __init__(self, frame=None, atom=None, unit_atom=None, prjd_atom=None,
                  two=None, prjd_two=None, atomtwo=None, prjd_atomtwo=None,
-                 **kwargs):
+                 molecule=None, **kwargs):
         '''
         The universe container represents all of the atoms, bonds, molecules,
         orbital/densities, etc. present within an atomistic simulations.

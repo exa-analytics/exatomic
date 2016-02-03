@@ -117,6 +117,9 @@ define([
         this.scene.add(dlight6);
         this.scene.add(dlight7);
         this.scene.add(dlight8);
+
+        var fog = new THREE.FogExp2(0x000000, 0.8);
+        this.scene.add(fog);
     };
 
     AtomicThreeJS.prototype.resize = function() {
@@ -199,12 +202,14 @@ define([
         */
         var material = new THREE.ShaderMaterial({
             vertexShader: vertex_shader,
+            fog: true,
             fragmentShader: point_frag_shader,
             transparent: false
         });
         if (filled == false) {
             material = new THREE.ShaderMaterial({
                 vertexShader: vertex_shader,
+                fog: true,
                 fragmentShader: circle_frag_shader,
                 transparent: false
             });

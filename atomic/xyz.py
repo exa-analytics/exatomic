@@ -80,5 +80,32 @@ def read_xyz(path, unit='A', label=False, **kwargs):
     return Universe(name=name, description=description, atom=df, meta=meta, **kwargs)
 
 
-def write_xyz():
+def write_xyz(universe, path, unit='A', trajectory=True):
+    '''
+    Args:
+        universe (:class:`~atomic.universe.Universe`): Atomic universe containing atom table
+        path (str): Directory or file path
+        unit (str): Output unit of length
+        trajectory (bool): Generate a single XYZ file for each frame or one trajectory XYZ file (default)
+    '''
+    symbol = universe.atom['symbol'].values
+    x = (universe.atom['x'] * Length['au', unit]).values
+    y = (universe.atom['y'] * Length['au', unit]).values
+    z = (universe.atom['z'] * Length['au', unit]).values
+    atom_count = universe.frame['atom_count']
+    if as_trajectory:
+        write_xyz_trajectory(path, symbol, x, y, z)
+    else:
+        write_xyz_files(path, symbol, x, y, z, atom_count)
+
+
+def write_xyz_trajectory(path, symbol, x, y, z, atom_count):
+    '''
+    '''
+    raise NotImplementedError()
+
+
+def write_xyz_files(path, symbol, x, y, z, atom_count):
+    '''
+    '''
     raise NotImplementedError()

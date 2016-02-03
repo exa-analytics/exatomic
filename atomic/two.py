@@ -21,7 +21,7 @@ from atomic import Isotope
 
 bond_extra = 0.45
 dmin = 0.3
-dmax = 8.3
+dmax = 13.3
 
 
 class Two(DataFrame):

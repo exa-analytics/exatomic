@@ -3,20 +3,23 @@
 Pair Correlation Functions
 ============================
 '''
+from exa import _np as np
+from exa import _pd as pd
 
 
 def compute_radial_pair_correlation(universe, A, B, dr=0.05, start=None, stop=None):
     '''
     '''
-    start = u.two['distance'].min() - 0.1
-    stop = u.two['distance'].max() + 0.1
-    distances = u.two.ix[(u.two['symbols'] == A + B) | (u.two['symbols'] == B + A), 'distance']
+    start = universe.two['distance'].min() - 0.1
+    stop = universe.two['distance'].max() + 0.1
+    distances = universe.two.ix[(universe.two['symbols'] == A + B) | (universe.two['symbols'] == B + A), 'distance']
     bins = np.arange(start, stop, dr)
     bins = np.append(bins, bins[-1] + dr)
     hist, bins = np.histogram(distances, bins)
     n = len(distances)
-    m = len(u)
-    vol = u.frame.ix[0, 'cell_volume']
+    m = len(universe)
+    f = universe._framelist[0]
+    vol = universe.frame.ix[f, 'cell_volume']
     rho = n / vol
     r3 = bins[1:]**3 - bins[:-1]**3
     g = hist / (4 / 3 * np.pi * r3 * rho)
