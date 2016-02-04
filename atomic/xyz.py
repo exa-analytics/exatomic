@@ -66,6 +66,7 @@ def read_xyz(path, unit='A', label=False, **kwargs):
     df = df[df.index.isin(indices)]
     df[['x', 'y', 'z']] = df[['x', 'y', 'z']].astype(np.float64)
     df['frame'] = frame
+    df['label'] = label
     df.reset_index(drop=True, inplace=True)
     comments = {num: getline(path, num) for num in comments}
     df[['x', 'y', 'z']] *= Length[unit, 'au']

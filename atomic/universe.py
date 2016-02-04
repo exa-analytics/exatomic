@@ -14,12 +14,22 @@ from atomic.atom import (Atom, UnitAtom, ProjectedAtom,
                          get_unit_atom, get_projected_atom)
 from atomic.two import (Two, ProjectedTwo, AtomTwo, ProjectedAtomTwo,
                         get_two_body)
+from atomic.formula import dict_to_string
 
 
 class Universe(Container):
     '''
     A collection of atoms, molecules, electronic data, and other relevant
     information from an atomistic simulation.
+
+    Information about the data specific dataframes can be found in their class
+    documentation.
+
+    See Also:
+        :mod:`~atomic.frame`, :mod:`~atomic.atom`, :mod:`~atomic.two`, etc.
+
+    Note:
+        If a frame dataframe is not provided, a minimal frame will be created.
     '''
     # Relational information
     cid = Column(Integer, ForeignKey('container.pkid'), primary_key=True)
@@ -72,6 +82,32 @@ class Universe(Container):
         if inplace == True:
             self._update_bond_list()
         return df
+
+    def compute_frame_mass(self, inplace=False):
+        '''
+        Compute the mass (of atoms) in each frame and store it in the frame
+        dataframe.
+        '''
+        self.atom.get_element_mass(inplace=True)
+        mass = self.atom.groupby('frame').apply(lambda frame: frame['mass'].sum())
+        del self._atom['mass']
+        if inplace:
+            self._frame['mass'] = mass
+        else:
+            return mass
+
+    def compute_frame_formula(self, inplace=False):
+        '''
+        Compute the (simple) formula of each frame and store it in the frame
+        dataframe.
+        '''
+        def convert(frame):
+            return dict_to_string(frame['symbol'].value_counts().to_dict())
+        formulas = self.atom.groupby('frame').apply(convert)
+        if inplace:
+            self._frame['simple_formula'] = formulas
+        else:
+            return formulas
 
     # DataFrames are "obscured" from the user via properties
     @property
@@ -156,11 +192,15 @@ class Universe(Container):
                  molecule=None, **kwargs):
         '''
         The universe container represents all of the atoms, bonds, molecules,
-        orbital/densities, etc. present within an atomistic simulations.
+        orbital/densities, etc. present within an atomistic simulations. See
+        documentation related to each data specific dataframe for more information.
         '''
         super().__init__(**kwargs)
-        self._frame = Frame(frame)
         self._atom = Atom(atom)
+        if frame:
+            self._frame = Frame(frame)
+        else:
+            minimal_frame(self, inplace=True)
         self._unit_atom = UnitAtom(unit_atom)
         self._prjd_atom = ProjectedAtom(prjd_atom)
         self._two = Two(two)

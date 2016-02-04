@@ -45,6 +45,11 @@ class Frame(DataFrame):
         else:
             return (rx, ry, rz)
 
+    def get_formulas(self, astype='list'):
+        '''
+        '''
+        raise NotImplementedError()
+
     def is_periodic(self):
         '''
         '''
@@ -74,12 +79,21 @@ class Frame(DataFrame):
 
 def minimal_frame(universe, inplace=False):
     '''
-    Generate the minimal :class:`~atomic.frame.Frame` dataframe given an
-    :class:`~atomic.atom.Atom` dataframe.
+    Generate the minimal :class:`~atomic.frame.Frame` dataframe given a
+    :class:`~atomic.universe.Universe` with a :class:`~atomic.atom.Atom` dataframe.
+
+    Args:
+        universe (:class:`~atomic.universe.Universe`): Universe with atoms
+        inplace (bool): Attach the frame dataframe to the universe.
+
+    Returns:
+        frame (:class:`~atomic.frame.Frame`): None if inplace is true
     '''
-    df = universe.atom.groupby('frame').count().iloc[:, 0].to_frame()
-    df.columns = ['atom_count']
-    df = Frame(df)
+    df = Frame()
+    if 'frame' in universe.atom.columns:
+        df = universe.atom.groupby('frame').count().iloc[:, 0].to_frame()
+        df.columns = ['atom_count']
+        df = Frame(df)
     if inplace:
         universe._frame = df
     else:

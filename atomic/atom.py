@@ -2,6 +2,36 @@
 '''
 Atom DataFrame
 ==========================
+A specialized dataframe for storing and manipulating information about atomic
+nuclei.
+
+The following are columns that can be expected in the dataframes provided by
+this module:
++-------------------+----------+-------------------------------------------+
+| Column            | Type     | Description                               |
++===================+==========+===========================================+
+| x                 | float    | position in x                             |
++-------------------+----------+-------------------------------------------+
+| y                 | float    | position in y                             |
++-------------------+----------+-------------------------------------------+
+| z                 | float    | position in z                             |
++-------------------+----------+-------------------------------------------+
+| fx                | float    | force in x                                |
++-------------------+----------+-------------------------------------------+
+| fy                | float    | force in y                                |
++-------------------+----------+-------------------------------------------+
+| fz                | float    | force in z                                |
++-------------------+----------+-------------------------------------------+
+| vx                | float    | velocity in x                             |
++-------------------+----------+-------------------------------------------+
+| vy                | float    | velocity in y                             |
++-------------------+----------+-------------------------------------------+
+| vz                | float    | velocity in z                             |
++-------------------+----------+-------------------------------------------+
+| symbol            | object   | element symbol                            |
++-------------------+----------+-------------------------------------------+
+| label             | int      | non-unique integer label                  |
++-------------------+----------+-------------------------------------------+
 '''
 import gc
 from itertools import combinations
@@ -20,6 +50,7 @@ else:
 
 class AtomBase:
     '''
+    Base class for :class:`~atomic.atom.Atom` and :class:`~atomic.atom.ProjectedAtom`.
     '''
     __pk__ = ['atom']
     __fk__ = ['frame']
@@ -28,6 +59,7 @@ class AtomBase:
 
     def _prep_trait_values(self):
         '''
+        Maps the covalent radii and colors (for rendering the atoms).
         '''
         if 'radius' not in self.columns:
             self['radius'] = self['symbol'].map(Isotope.symbol_to_radius_map)
@@ -36,6 +68,8 @@ class AtomBase:
 
     def _post_trait_values(self):
         '''
+        Cleans up the mapped covalent radii and colors after generating the
+        (JavaScript) traits.
         '''
         del self['radius']
         del self['color']
@@ -44,26 +78,31 @@ class AtomBase:
 class Atom(AtomBase, DataFrame):
     '''
     Absolute positions of atoms and their symbol.
-
-    Required indexes: frame, atom
-
-    Required columns: symbol, x, y, z
     '''
+    def get_element_mass(self, inplace=False):
+        '''
+        Retrieve the mass of each element in the atom dataframe.
+        '''
+        masses = self['symbol'].map(Isotope.symbol_to_mass())
+        if inplace:
+            self['mass'] = masses
+        else:
+            return masses
+
+    def compute_simple_formula(self):
+        '''
+        Compute the simple formula for each frame.
+        '''
+
     def _compute_unit_atom_static_cell(self, rxyz, oxyz):
         '''
+        Given a static unit cell, compute the unit cell coordinates for each
+        atom.
         '''
         xyz = self[['x', 'y', 'z']]
         unit = np.mod(xyz, rxyz) + oxyz
         unit = unit[unit != xyz].astype(np.float64).to_sparse()
         return unit
-
-    @property
-    def _prjd_atom_to_label_map(self):
-        '''
-        '''
-        if 'label' in self.columns:
-            return self.set_index('prjd_atom')['label']
-        raise KeyError('Missing column "prjd_atom"')
 
 
 class UnitAtom(Updater):
