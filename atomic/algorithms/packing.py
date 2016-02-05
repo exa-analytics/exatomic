@@ -16,5 +16,5 @@ def cubic_cell_dimension(mass, density):
         a (float): Cubic unit cell dimension (in atomic units)
     '''
     mass *= Mass['u', 'g']
-    density *= Length['cm', 'au']**3
+    density /= Length['cm', 'au']**3    # Volume is in the denominator
     return (mass / density)**(1/3)
