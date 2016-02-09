@@ -175,14 +175,18 @@ class Universe(Container):
         if self.is_periodic() and len(self.projected_atom) > 0:
             mapper1 = self.projected_atom['atom']
             mapper2 = self.atom['label']
-            df = self.two.ix[(self.two['bond'] == True), ['frame', 'prjd_atom1', 'prjd_atom2']]
+            df = self.two.ix[(self.two['bond'] == True), ['frame', 'prjd_atom0', 'prjd_atom1']]
+            df['atom0'] = df['prjd_atom0'].map(mapper1)
             df['atom1'] = df['prjd_atom1'].map(mapper1)
-            df['atom2'] = df['prjd_atom2'].map(mapper1)
+            df['label0'] = df['atom0'].map(mapper2)
             df['label1'] = df['atom1'].map(mapper2)
-            df['label2'] = df['atom2'].map(mapper2)
-            self._bonds = df.groupby('frame').apply(lambda x: x[['label1', 'label2']].values.astype(np.int64)).to_json()
+            self._bonds = df.groupby('frame').apply(lambda x: x[['label0', 'label1']].values.astype(np.int64)).to_json()
         else:
-            raise NotImplementedError()
+            mapper = self.atom['label']
+            df = self.two.ix[(self.two['bond'] == True), ['frame', 'atom0', 'atom1']]
+            df['label0'] = df['atom0'].map(mapper)
+            df['label1'] = df['atom1'].map(mapper)
+            self._bonds = df.groupby('frame').apply(lambda x: x[['label0', 'label1']].values.astype(np.int64)).to_json()
 
     def __len__(self):
         return len(self._framelist)

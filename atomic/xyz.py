@@ -18,7 +18,7 @@ from atomic import Length, Universe, Isotope
 from atomic.frame import minimal_frame
 
 
-def read_xyz(path, unit='A', label=False, **kwargs):
+def read_xyz(path, unit='A', label=True, **kwargs):
     '''
     Reads any type of XYZ or XYZ like file.
 
@@ -62,11 +62,12 @@ def read_xyz(path, unit='A', label=False, **kwargs):
                      ~natdf['symbol'].isnull().all()].index.values
     starts = natdf.index.values + 2
     counts = natdf['symbol'].values.astype(np.int64)
-    frame, label, indices = idxs_from_starts_and_counts(starts, counts)
+    frame, lbl, indices = idxs_from_starts_and_counts(starts, counts)
     df = df[df.index.isin(indices)]
     df[['x', 'y', 'z']] = df[['x', 'y', 'z']].astype(np.float64)
     df['frame'] = frame
-    df['label'] = label
+    if label:
+        df['label'] = lbl
     df.reset_index(drop=True, inplace=True)
     comments = {num: getline(path, num) for num in comments}
     df[['x', 'y', 'z']] *= Length[unit, 'au']

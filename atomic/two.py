@@ -10,11 +10,12 @@ from exa import _pd as pd
 from exa.config import Config
 from exa.frames import DataFrame, ManyToMany
 if Config.numba:
-    from exa.jitted.iteration import repeat_i8, repeat_i8_array
+    from exa.jitted.iteration import repeat_i8, repeat_i8_array, pdist
     from exa.jitted.indexing import unordered_pairing_function
 else:
     import numpy.repeat as repeat_i8
     import numpy.repeat as repeat_i8_array
+    from exa.algorithms.iteration import pdist
     from exa.algorithms.indexing import unordered_pairing_function
 from atomic import Isotope
 
@@ -28,15 +29,15 @@ class Two(DataFrame):
     '''
     '''
     __pk__ = ['two']
-    __fk__ = ['frame', 'atom1', 'atom2']
+    __fk__ = ['frame', 'atom0', 'atom1']
     __groupby__ = 'frame'
 
     def _compute_bond_count(self):
         '''
         '''
         bonded = self[self['bond'] == True]
-        b1 = bonded.groupby('atom1').apply(lambda b: len(b))
-        b2 = bonded.groupby('atom2').apply(lambda b: len(b))
+        b1 = bonded.groupby('atom0').apply(lambda b: len(b))
+        b2 = bonded.groupby('atom1').apply(lambda b: len(b))
         return b1.add(b2, fill_value=0)
 
 
@@ -44,15 +45,15 @@ class ProjectedTwo(DataFrame):
     '''
     '''
     __pk__ = ['prjd_two']
-    __fk__ = ['frame', 'prjd_atom1', 'prjd_atom2']
+    __fk__ = ['frame', 'prjd_atom0', 'prjd_atom1']
     __groupby__ = 'frame'
 
     def _compute_bond_count(self):
         '''
         '''
         bonded = self[self['bond'] == True]
-        b1 = bonded.groupby('prjd_atom1').apply(lambda b: len(b))
-        b2 = bonded.groupby('prjd_atom2').apply(lambda b: len(b))
+        b1 = bonded.groupby('prjd_atom0').apply(lambda b: len(b))
+        b2 = bonded.groupby('prjd_atom1').apply(lambda b: len(b))
         return b1.add(b2, fill_value=0)
 
 
@@ -127,7 +128,34 @@ def _free_in_mem(universe, dmax=12.3, dmin=0.3, bond_extra=bond_extra):
     Returns:
         twobody (:class:`~atomic.twobody.TwoBody`)
     '''
-    raise NotImplementedError()
+    atom_groups = universe.atom.groupby('frame')
+    n = atom_groups.ngroups
+    atom0 = np.empty((n, ), dtype='O')
+    atom1 = np.empty((n, ), dtype='O')
+    distance = np.empty((n, ), dtype='O')
+    frames = np.empty((n, ), dtype='O')
+    for i, (frame, atom) in enumerate(atom_groups):
+        df = DataFrame(atom)
+        xyz = df._get_column_values('x', 'y', 'z')
+        print(xyz.dtype)
+        dists, i0, i1 = pdist(xyz)
+        atom0[i] = df.iloc[i0].index.values
+        atom1[i] = df.iloc[i1].index.values
+        distance[i] = dists
+        frames[i] = [frame] * len(dists)
+    distance = np.concatenate(distance)
+    atom0 = np.concatenate(atom0)
+    atom1 = np.concatenate(atom1)
+    frames = np.concatenate(frames)
+    two = Two.from_dict({'distance': distance, 'atom0': atom0, 'atom1': atom1, 'frame': frames})
+    symbol = universe.atom['symbol']
+    two['symbol0'] = two['atom0'].map(symbol)
+    two['symbol1'] = two['atom1'].map(symbol)
+    two['symbols'] = two['symbol0'] + two['symbol1']
+    two['mbl'] = two['symbols'].map(Isotope.symbols_to_radii_map)
+    two['mbl'] += bond_extra
+    two['bond'] = two['distance'] < two['mbl']
+    return two
 
 
 def _free_memmap():    # Same as _free_in_mem but using numpy.memmap
@@ -192,15 +220,15 @@ def _periodic_from_projected_in_mem(universe, k=None, dmax=12.3, dmin=0.3, bond_
     index1 = np.concatenate(index1)
     index2 = np.concatenate(index2)
     frames = np.concatenate(frames)
-    two = pd.DataFrame.from_dict({'distance': distances, 'frame': frames,
-                                 'prjd_atom1': index1, 'prjd_atom2': index2})  # We will use prjd_atom1/2 to deduplicate data
+    two = ProjectedTwo.from_dict({'distance': distances, 'frame': frames,
+                                  'prjd_atom0': index1, 'prjd_atom1': index2})  # We will use prjd_atom0/2 to deduplicate data
     two = two[(two['distance'] > dmin) & (two['distance'] < dmax)]
-    two['id'] = unordered_pairing_function(two['prjd_atom1'].values, two['prjd_atom2'].values)
+    two['id'] = unordered_pairing_function(two['prjd_atom0'].values, two['prjd_atom1'].values)
     two = two.drop_duplicates('id').reset_index(drop=True)
     del two['id']
     symbols = universe.projected_atom['symbol']
-    two['symbol1'] = two['prjd_atom1'].map(symbols)
-    two['symbol2'] = two['prjd_atom2'].map(symbols)
+    two['symbol1'] = two['prjd_atom0'].map(symbols)
+    two['symbol2'] = two['prjd_atom1'].map(symbols)
     two['symbols'] = two['symbol1'] + two['symbol2']
     del two['symbol1']
     del two['symbol2']
@@ -210,6 +238,8 @@ def _periodic_from_projected_in_mem(universe, k=None, dmax=12.3, dmin=0.3, bond_
     del two['mbl']
     two.index.names = ['prjd_two']
     prjd_two = two.index.tolist() * 2
-    prjd_atom = two['prjd_atom1'].tolist() + two['prjd_atom2'].tolist()
-    atomtwo = pd.DataFrame.from_dict({'prjd_two': prjd_two, 'prjd_atom': prjd_atom})
-    return ProjectedTwo(two), ProjectedAtomTwo(atomtwo)
+    prjd_atom = two['prjd_atom0'].tolist() + two['prjd_atom1'].tolist()
+    #atomtwo = pd.DataFrame.from_dict({'prjd_two': prjd_two, 'prjd_atom': prjd_atom})
+    atomtwo = ProjectedAtomTwo.from_dict({'prjd_two': prjd_two, 'prjd_atom': prjd_atom})
+    return two, atomtwo
+    #return ProjectedTwo(two), ProjectedAtomTwo(atomtwo)

@@ -33,7 +33,6 @@ this module:
 | label             | int      | non-unique integer label                  |
 +-------------------+----------+-------------------------------------------+
 '''
-import gc
 from itertools import combinations
 from scipy.spatial import cKDTree
 from exa import _np as np
