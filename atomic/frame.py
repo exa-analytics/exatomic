@@ -3,6 +3,7 @@
 Atom DataFrame
 ==========================
 '''
+from exa import _np as np
 from exa.frames import DataFrame
 from exa.jitted.broadcasting import mag_3d
 
@@ -44,18 +45,56 @@ class Frame(DataFrame):
         else:
             return (rx, ry, rz)
 
+    def get_formulas(self, astype='list'):
+        '''
+        '''
+        raise NotImplementedError()
 
-def minimal_frame(atom):
+    def is_periodic(self):
+        '''
+        '''
+        if 'periodic' in self.columns:
+            if np.any(self['periodic'] == True):
+                return True
+        return False
+
+
+    def is_variable_cell(self):
+        '''
+        Does the unit cell vary.
+
+        Returns:
+            is_vc (bool): True if variable cell dimension
+        '''
+        if 'rx' not in self.columns:
+            self.get_unit_cell_magnitudes(inplace=True)
+        rx = self['rx'].min()
+        ry = self['ry'].min()
+        rz = self['rz'].min()
+        if np.all(self['rx'] == rx) and np.all(self['ry'] == ry) and np.all(self['rz'] == rz):
+            return False
+        else:
+            return True
+
+
+def minimal_frame(universe, inplace=False):
     '''
-    Generate the minimal :class:`~atomic.frame.Frame` dataframe given an
-    :class:`~atomic.atom.Atom` dataframe.
+    Generate the minimal :class:`~atomic.frame.Frame` dataframe given a
+    :class:`~atomic.universe.Universe` with a :class:`~atomic.atom.Atom` dataframe.
 
     Args:
-        atoms (:class:`~atomic.atom.Atom`): Atoms dataframe
+        universe (:class:`~atomic.universe.Universe`): Universe with atoms
+        inplace (bool): Attach the frame dataframe to the universe.
 
     Returns:
-        frames (:class:`~atomic.frame.Frame`): Frames dataframe
+        frame (:class:`~atomic.frame.Frame`): None if inplace is true
     '''
-    df = atom.groupby('frame').count().iloc[:, 0].to_frame()
-    df.columns = ['atom_count']
-    return Frame(df)
+    df = Frame()
+    if 'frame' in universe.atom.columns:
+        df = universe.atom.groupby('frame').count().iloc[:, 0].to_frame()
+        df.columns = ['atom_count']
+        df = Frame(df)
+    if inplace:
+        universe._frame = df
+    else:
+        return df

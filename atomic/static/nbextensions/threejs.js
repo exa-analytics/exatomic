@@ -117,6 +117,9 @@ define([
         this.scene.add(dlight6);
         this.scene.add(dlight7);
         this.scene.add(dlight8);
+
+        var fog = new THREE.FogExp2(0x000000, 0.8);
+        this.scene.add(fog);
     };
 
     AtomicThreeJS.prototype.resize = function() {
@@ -199,12 +202,14 @@ define([
         */
         var material = new THREE.ShaderMaterial({
             vertexShader: vertex_shader,
+            fog: true,
             fragmentShader: point_frag_shader,
             transparent: false
         });
         if (filled == false) {
             material = new THREE.ShaderMaterial({
                 vertexShader: vertex_shader,
+                fog: true,
                 fragmentShader: circle_frag_shader,
                 transparent: false
             });
@@ -231,6 +236,30 @@ define([
         this.scene.remove(this.atom);
         this.atom = new THREE.Points(geometry, material);
         this.scene.add(this.atom);
+    };
+
+    AtomicThreeJS.prototype.add_bonds = function(bonds, x, y, z) {
+        /*"""
+        Add bonds
+        `````````````
+        */
+        var material = new THREE.LineBasicMaterial({
+            color: 0x4d4d4d,
+            linewidth: 5
+        });
+        var geometry = new THREE.Geometry();
+        var n = bonds.length;
+        for (var i = 0; i < n; i++) {
+            var a = bonds[i][0];
+            var b = bonds[i][1];
+            var va = new THREE.Vector3(x[a], y[a], z[a]);
+            var vb = new THREE.Vector3(x[b], y[b], z[b]);
+            geometry.vertices.push(va);
+            geometry.vertices.push(vb);
+        };
+        this.scene.remove(this.bond);
+        this.bond = new THREE.LineSegments(geometry, material);
+        this.scene.add(this.bond);
     };
 
     AtomicThreeJS.prototype.update_camera_and_controls = function() {

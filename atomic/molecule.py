@@ -17,6 +17,7 @@ else:
 from atomic import Isotope
 from atomic.tools import formula_dict_to_string
 
+
 class Molecule(DataFrame):
     '''
     '''
@@ -24,7 +25,7 @@ class Molecule(DataFrame):
     __columns__ = ['formula', 'mass', 'cx', 'cy', 'cz']
 
 
-class PeriodicMolecule(DataFrame):
+class ProjectedMolecule(DataFrame):
     '''
     '''
     __indices__ = ['frame', 'molecule']

@@ -5,5 +5,6 @@ API
     :maxdepth: 2
 
     universe.rst
-    atom.rst
+    dataframes.rst
+    utilities.rst
     xyz.rst
