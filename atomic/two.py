@@ -148,6 +148,7 @@ def _free_in_mem(universe, dmax=12.3, dmin=0.3, bond_extra=bond_extra):
     atom1 = np.concatenate(atom1)
     frames = np.concatenate(frames)
     two = Two.from_dict({'distance': distance, 'atom0': atom0, 'atom1': atom1, 'frame': frames})
+    two = two[(two['distance'] > dmin) & (two['distance'] < dmax)].reset_index(drop=True)
     symbol = universe.atom['symbol']
     two['symbol0'] = two['atom0'].map(symbol)
     two['symbol1'] = two['atom1'].map(symbol)
