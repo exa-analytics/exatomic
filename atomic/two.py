@@ -137,7 +137,6 @@ def _free_in_mem(universe, dmax=12.3, dmin=0.3, bond_extra=bond_extra):
     for i, (frame, atom) in enumerate(atom_groups):
         df = DataFrame(atom)
         xyz = df._get_column_values('x', 'y', 'z')
-        print(xyz.dtype)
         dists, i0, i1 = pdist(xyz)
         atom0[i] = df.iloc[i0].index.values
         atom1[i] = df.iloc[i1].index.values

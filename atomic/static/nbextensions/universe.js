@@ -112,6 +112,7 @@ define([
             this.cell_ox = this.get_from_json_str('_frame_ox');
             this.cell_oy = this.get_from_json_str('_frame_oy');
             this.cell_oz = this.get_from_json_str('_frame_oz');
+            this.centers = this.get_from_json_str('_center');
             this.filled = true;
             // Resizable container to house the threejs app canvas and gui
             this.container = $('<div/>').width(this.width).height(this.height).resizable({
@@ -253,9 +254,12 @@ define([
                 var z = this.z[this.frame];
                 var r = this.r[this.frame];
                 var c = this.c[this.frame];
+                //var center = this.centers[this.frame];
+                //console.log(center);
                 if (this.atom_type == 'points') {
                     this.app.add_points(x, y, z, r, c, this.filled);
                 };
+                //this.app.update_cam_ctrl(center);
             } else {
                 this.app.scene.remove(this.app.atom);
             }

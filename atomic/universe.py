@@ -9,7 +9,7 @@ from sqlalchemy import Column, Integer, ForeignKey
 from exa import Container
 from exa import _np as np
 from exa.config import Config
-from atomic.frame import Frame, minimal_frame
+from atomic.frame import Frame, minimal_frame, _min_frame_from_atom
 from atomic.atom import (Atom, UnitAtom, ProjectedAtom,
                          get_unit_atom, get_projected_atom)
 from atomic.two import (Two, ProjectedTwo, AtomTwo, ProjectedAtomTwo,
@@ -43,6 +43,7 @@ class Universe(Container):
     _view_module = Unicode('nbextensions/exa/atomic/universe').tag(sync=True)
     _view_name = Unicode('UniverseView').tag(sync=True)
     _framelist = List().tag(sync=True)
+    _center = Unicode().tag(sync=True)
     _atom_type = Unicode('points').tag(sync=True)
     _bonds = Unicode().tag(sync=True)
 
@@ -162,6 +163,7 @@ class Universe(Container):
             self._update_frame_list()
         if len(self._two) > 0 or len(self._prjd_two) > 0:
             self._update_bond_list()
+        self._center = self.atom.groupby('frame').apply(lambda x: x[['x', 'y', 'z']].mean().values).to_json() 
 
     def _update_frame_list(self):
         '''
@@ -201,10 +203,10 @@ class Universe(Container):
         '''
         super().__init__(**kwargs)
         self._atom = Atom(atom)
-        if frame:
-            self._frame = Frame(frame)
+        if frame is None:
+            self._frame = _min_frame_from_atom(self._atom)
         else:
-            minimal_frame(self, inplace=True)
+            self._frame = frame
         self._unit_atom = UnitAtom(unit_atom)
         self._prjd_atom = ProjectedAtom(prjd_atom)
         self._two = Two(two)

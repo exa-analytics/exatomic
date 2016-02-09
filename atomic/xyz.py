@@ -12,8 +12,8 @@ if Config.numba:
     from exa.jitted.indexing import idxs_from_starts_and_counts
     from exa.jitted.deduplication import array1d_with_offset
 else:
-    from exa.algortihms.deduplication import array1d_with_offset
     from exa.algorithms.indexing import idxs_from_starts_and_counts
+    from exa.algortihms.deduplication import array1d_with_offset
 from atomic import Length, Universe, Isotope
 from atomic.frame import minimal_frame
 
