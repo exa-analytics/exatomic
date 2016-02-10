@@ -3,6 +3,7 @@
 Pair Correlation Functions
 ============================
 '''
+from scipy.integrate import cumtrapz
 from exa import _np as np
 from exa import _pd as pd
 
@@ -24,5 +25,7 @@ def compute_radial_pair_correlation(universe, A, B, dr=0.05, start=None, stop=No
     r3 = bins[1:]**3 - bins[:-1]**3
     g = hist / (4 / 3 * np.pi * r3 * rho)
     r = (bins[1:] + bins[:-1]) / 2
-    i = np.cumsum(hist) / m
-    return pd.DataFrame.from_dict({'g': g, 'r': r, 'i': i})
+    count = cumtrapz(g, x=r, dx=dr)
+    count *= 4/ 3 * np.pi * r3
+    g_name = ''.join(('$g_{', A + B, '}'))
+    return pd.DataFrame.from_dict({g_name: g, '$r$': r, '$Pair Count$': count})

@@ -15,6 +15,7 @@ from atomic.atom import (Atom, UnitAtom, ProjectedAtom,
 from atomic.two import (Two, ProjectedTwo, AtomTwo, ProjectedAtomTwo,
                         get_two_body)
 from atomic.formula import dict_to_string
+from atomic.algorithms.pcf import compute_radial_pair_correlation
 
 
 class Universe(Container):
@@ -110,6 +111,13 @@ class Universe(Container):
         else:
             return formulas
 
+    def pair_correlation_function(self, **kwargs):
+        '''
+        See Also:
+            :func:`~atomic.algorithms.pcf.compute_radial_pair_correlation`
+        '''
+        return compute_radial_pair_correlation(self, **kwargs)
+
     # DataFrames are "obscured" from the user via properties
     @property
     def frame(self):
@@ -163,7 +171,7 @@ class Universe(Container):
             self._update_frame_list()
         if len(self._two) > 0 or len(self._prjd_two) > 0:
             self._update_bond_list()
-        self._center = self.atom.groupby('frame').apply(lambda x: x[['x', 'y', 'z']].mean().values).to_json() 
+        self._center = self.atom.groupby('frame').apply(lambda x: x[['x', 'y', 'z']].mean().values).to_json()
 
     def _update_frame_list(self):
         '''
