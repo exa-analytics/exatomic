@@ -32,6 +32,9 @@ class Universe(Container):
     Note:
         If a frame dataframe is not provided, a minimal frame will be created.
     '''
+    __slots__ = ['_frame', '_atom', '_two', '_prjd_atom', '_unit_atom',
+                 '_prjd_two', '_atomtwo', '_prjd_atomtwo', 'molecule',
+                 '_trait_values']
     # Relational information
     cid = Column(Integer, ForeignKey('container.pkid'), primary_key=True)
     frame_count = Column(Integer)
@@ -121,7 +124,7 @@ class Universe(Container):
     # DataFrames are "obscured" from the user via properties
     @property
     def frame(self):
-        if len(self._frame) == 0 and len(self._atom) > 0:
+        if self._frame is None:
             self.compute_minimal_frame(inplace=True)
             self._framelist = self._frame.index.tolist()
         return self._frame
@@ -135,7 +138,7 @@ class Universe(Container):
         '''
         Primitive atom positions.
         '''
-        if len(self._unit_atom) == 0:
+        if self._unit_atom is None:
             self.compute_unit_atom(inplace=True)
         atom = self.atom.copy()
         atom.update(self._unit_atom)
@@ -148,7 +151,7 @@ class Universe(Container):
         '''
         Projected unit atom coordinates generating a 3x3x3 super cell.
         '''
-        if len(self._prjd_atom) == 0:
+        if self._prjd_atom is None:
             self.compute_projected_atom(inplace=True)
         return self._prjd_atom
 
@@ -156,9 +159,9 @@ class Universe(Container):
     def two(self):
         '''
         '''
-        if len(self._two) == 0 and len(self._prjd_two) == 0:
+        if self._two is None and self._prjd_two is None and self._atom is not None:
             self.compute_two_body(inplace=True)
-        if len(self._two) == 0:
+        if self._two is None:
             return self._prjd_two
         else:
             return self._two
@@ -167,11 +170,12 @@ class Universe(Container):
         '''
         '''
         self._update_df_traits()
-        if len(self._frame) > 0:
+        if self.frame is not None:
             self._update_frame_list()
-        if len(self._two) > 0 or len(self._prjd_two) > 0:
+        if self.two is not None:
             self._update_bond_list()
-        self._center = self.atom.groupby('frame').apply(lambda x: x[['x', 'y', 'z']].mean().values).to_json()
+        if self.atom is not None:
+            self._center = self.atom.groupby('frame').apply(lambda x: x[['x', 'y', 'z']].mean().values).to_json()
 
     def _update_frame_list(self):
         '''
@@ -210,18 +214,19 @@ class Universe(Container):
         documentation related to each data specific dataframe for more information.
         '''
         super().__init__(**kwargs)
-        self._atom = Atom(atom)
+        self._atom = atom
         if frame is None:
             self._frame = _min_frame_from_atom(self._atom)
         else:
             self._frame = frame
-        self._unit_atom = UnitAtom(unit_atom)
-        self._prjd_atom = ProjectedAtom(prjd_atom)
-        self._two = Two(two)
-        self._prjd_two = ProjectedTwo(prjd_two)
-        self._atomtwo = AtomTwo(atomtwo)
-        self._prjd_atomtwo = ProjectedAtomTwo(prjd_atomtwo)
-        if Config.ipynb:
+        self._unit_atom = unit_atom
+        self._prjd_atom = prjd_atom
+        self._two = two
+        self._prjd_two = prjd_two
+        self._atomtwo = atomtwo
+        self._prjd_atomtwo = prjd_atomtwo
+        if Config.ipynb and len(self._frame) < 1000:    # TODO workup a better solution here!
+            print('here1')
             self._update_traits()
 
 

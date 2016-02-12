@@ -145,7 +145,7 @@ define([
             try {
                 return JSON.parse(this.model.get(name));
             } catch(err) {
-                console.log(err);
+//                console.log(err);
                 return {};
             };
         },
@@ -194,6 +194,7 @@ define([
                 frame: this.frame,
                 fps: this.fps
             };
+            console.log(this.gui_f1['frame']);
             this.f1 = {};
             this.f1['play'] = this.guif1.add(this.gui_f1, 'play');
             this.f1['frame'] = this.guif1.add(this.gui_f1, 'frame', this.framelist);
@@ -202,10 +203,6 @@ define([
             this.f1['index'].onChange(function(value) {
                 self.index = value;
                 self.frame = self.framelist[self.index];
-                console.log(self.f2['show']);
-                console.log(self.gui_f2['show']);
-                console.log(self.f3['show']);
-                console.log(self.gui_f3['show']);
                 self.update_atom(true);
                 if (self.bonds_length > 0) {
                     self.update_bond(true);
@@ -288,7 +285,6 @@ define([
             Update the Unit Cell
             ```````````````````````
             */
-            console.log(this.cell_xi);
             if (value == true) {
                 var xi = this.cell_xi[this.index];
                 var xj = this.cell_xj[this.index];

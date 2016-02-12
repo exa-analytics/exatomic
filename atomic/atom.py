@@ -100,8 +100,7 @@ class Atom(AtomBase, DataFrame):
         '''
         xyz = self[['x', 'y', 'z']]
         unit = np.mod(xyz, rxyz) + oxyz
-        unit = unit[unit != xyz].astype(np.float64).to_sparse()
-        return unit
+        return UnitAtom(unit[unit != xyz].astype(np.float64).to_sparse())
 
 
 class UnitAtom(Updater):
@@ -140,7 +139,7 @@ def get_unit_atom(universe, inplace=False):
         else:
             df = _compute_unit_atom_static_cell(universe)
     if inplace:
-        universe._unit_atom = UnitAtom(df)
+        universe._unit_atom = df
     else:
         return df
 
@@ -150,8 +149,7 @@ def _compute_unit_atom_static_cell(universe):
     '''
     rxyz = universe.frame._get_min_values('rx', 'ry', 'rz')
     oxyz = universe.frame._get_min_values('ox', 'oy', 'oz')
-    df = universe.atom._compute_unit_atom_static_cell(rxyz, oxyz)
-    return UnitAtom(df)
+    return universe.atom._compute_unit_atom_static_cell(rxyz, oxyz)
 
 
 def get_projected_atom(universe, inplace=False):

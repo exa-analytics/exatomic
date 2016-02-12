@@ -3,29 +3,50 @@
 Pair Correlation Functions
 ============================
 '''
-from scipy.integrate import cumtrapz
 from exa import _np as np
-from exa import _pd as pd
+from exa.frames import DataFrame
+from atomic import Length
 
 
-def compute_radial_pair_correlation(universe, A, B, dr=0.05, start=None, stop=None):
+class PCF(DataFrame):
+    '''
+    '''
+    def plot(self, count=True, **kwargs):
+        '''
+        Note:
+            Because we set_index before plotting, the "actual" plotting function
+            called is that of :class:`~exa.frames.DataFrame`.
+        '''
+        if 'secondary_y' not in kwargs and count:
+            kwargs['secondary_y'] = self.columns[2]
+        return self.set_index(self.columns[0]).plot(**kwargs)
+
+
+def compute_radial_pair_correlation(universe, a, b, dr=0.05, start=None,
+                                    stop=None, unit='A'):
     '''
     '''
     start = universe.two['distance'].min() - 0.1
-    stop = universe.two['distance'].max() + 0.1
-    distances = universe.two.ix[(universe.two['symbols'] == A + B) | (universe.two['symbols'] == B + A), 'distance']
+    stop = universe.two['distance'].max() - 0.1
+    distances = universe.two.ix[(universe.two['symbols'].isin([a + b, b + a])), 'distance']
     bins = np.arange(start, stop, dr)
     bins = np.append(bins, bins[-1] + dr)
     hist, bins = np.histogram(distances, bins)
     n = len(distances)
     m = len(universe)
-    f = universe._framelist[0]
+    f = universe._frame.index[0]
     vol = universe.frame.ix[f, 'cell_volume']
-    rho = n / vol
+    rho = 2 * n / vol
+    nats = universe.atom['symbol'].value_counts() // m
+    na = nats[a]
+    nb = nats[b]
+    nn = max((na,nb))
     r3 = bins[1:]**3 - bins[:-1]**3
     g = hist / (4 / 3 * np.pi * r3 * rho)
     r = (bins[1:] + bins[:-1]) / 2
-    count = cumtrapz(g, x=r, dx=dr)
-    count *= 4/ 3 * np.pi * r3
-    g_name = ''.join(('$g_{', A + B, '}'))
-    return pd.DataFrame.from_dict({g_name: g, '$r$': r, '$Pair Count$': count})
+    r *= Length['au', unit]
+    c = hist.cumsum() / n * nn
+    n1 = 'Pair Correlation Function ({0}, {1})'.format(a, b)
+    n2 = 'Distance ({0})'.format(unit)
+    n3 = 'Pair Count ({0}, {1})'.format(a, b)
+    return PCF.from_dict({n1: g, n2: r, n3: c})
