@@ -75,6 +75,7 @@ def read_xyz(path, unit='A', label=True, **kwargs):
         df.columns = ['Z', 'x', 'y', 'z']
         df['Z'] = df['Z'].astype(np.int64)
         df['symbol'] = df['Z'].map(Isotope.lookup_symbol_by_Z)
+    df['symbol'] = df['symbol'].astype('category')
     meta = {'file': path, 'comments': comments}
     basename = os.path.basename(path)
     name = os.path.splitext(basename)[0] if 'name' not in kwargs else kwargs['name']

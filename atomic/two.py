@@ -152,6 +152,7 @@ def _free_in_mem(universe, dmax=12.3, dmin=0.3, bond_extra=bond_extra):
     two['symbol0'] = two['atom0'].map(symbol)
     two['symbol1'] = two['atom1'].map(symbol)
     two['symbols'] = two['symbol0'] + two['symbol1']
+    two['symbols'] = two['symbols'].astype('category')
     two['mbl'] = two['symbols'].map(Isotope.symbols_to_radii_map)
     two['mbl'] += bond_extra
     two['bond'] = two['distance'] < two['mbl']
@@ -230,6 +231,7 @@ def _periodic_from_projected_in_mem(universe, k=None, dmax=12.3, dmin=0.3, bond_
     two['symbol1'] = two['prjd_atom0'].map(symbols)
     two['symbol2'] = two['prjd_atom1'].map(symbols)
     two['symbols'] = two['symbol1'] + two['symbol2']
+    two['symbols'] = two['symbols'].astype('category')
     del two['symbol1']
     del two['symbol2']
     two['mbl'] = two['symbols'].map(Isotope.symbols_to_radii_map)

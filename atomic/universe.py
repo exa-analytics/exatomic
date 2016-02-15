@@ -5,7 +5,7 @@ Universe
 The atomic container object.
 '''
 from traitlets import Unicode, List
-from sqlalchemy import Column, Integer, ForeignKey
+from sqlalchemy import Column, Integer, ForeignKey, event
 from exa import Container
 from exa import _np as np
 from exa.config import Config
@@ -16,6 +16,8 @@ from atomic.two import (Two, ProjectedTwo, AtomTwo, ProjectedAtomTwo,
                         get_two_body)
 from atomic.formula import dict_to_string
 from atomic.algorithms.pcf import compute_radial_pair_correlation
+
+from datetime import datetime as dt
 
 
 class Universe(Container):
@@ -161,21 +163,31 @@ class Universe(Container):
         '''
         if self._two is None and self._prjd_two is None and self._atom is not None:
             self.compute_two_body(inplace=True)
+            self._traits_need_update = True
         if self._two is None:
             return self._prjd_two
         else:
             return self._two
 
+
     def _update_traits(self):
         '''
         '''
+        st = dt.now()
         self._update_df_traits()
+        print('df: ', (dt.now() - st).total_seconds())
         if self.frame is not None:
+            st = dt.now()
             self._update_frame_list()
-        if self.two is not None:
+            print('frame: ', (dt.now() - st).total_seconds())
+        if self._two is not None:
+            st = dt.now()
             self._update_bond_list()
-        if self.atom is not None:
+            print('blist: ', (dt.now() - st).total_seconds())
+        if self._atom is not None:
+            st = dt.now()
             self._center = self.atom.groupby('frame').apply(lambda x: x[['x', 'y', 'z']].mean().values).to_json()
+            print('center: ', (dt.now() - st).total_seconds())
 
     def _update_frame_list(self):
         '''
@@ -225,9 +237,8 @@ class Universe(Container):
         self._prjd_two = prjd_two
         self._atomtwo = atomtwo
         self._prjd_atomtwo = prjd_atomtwo
-        if Config.ipynb and len(self._frame) < 1000:    # TODO workup a better solution here!
-            print('here1')
-            self._update_traits()
+        #if Config.ipynb and len(self._frame) < 1000:    # TODO workup a better solution here!
+        #    self._update_traits()
 
 
 def concat(universes):
@@ -235,3 +246,20 @@ def concat(universes):
     Concatenate a collection of universes.
     '''
     raise NotImplementedError()
+
+
+@event.listens_for(Universe, 'after_insert')
+def after_insert(*args, **kwargs):
+    '''
+    '''
+    print('after_insert')
+    print(args)
+    print(kwargs)
+
+@event.listens_for(Universe, 'after_update')
+def after_update(*args, **kwargs):
+    '''
+    '''
+    print('after_update')
+    print(args)
+    print(kwargs)
