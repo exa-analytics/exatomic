@@ -112,6 +112,7 @@ define([
             this.cell_ox = this.get_from_json_str('_frame_ox');
             this.cell_oy = this.get_from_json_str('_frame_oy');
             this.cell_oz = this.get_from_json_str('_frame_oz');
+            this.centers = this.get_from_json_str('_center');
             this.filled = true;
             // Resizable container to house the threejs app canvas and gui
             this.container = $('<div/>').width(this.width).height(this.height).resizable({
@@ -144,7 +145,7 @@ define([
             try {
                 return JSON.parse(this.model.get(name));
             } catch(err) {
-                console.log(err);
+//                console.log(err);
                 return {};
             };
         },
@@ -164,6 +165,8 @@ define([
             this.guif6 = this.gui.addFolder('volumes');
 
             // Folder 1: animation
+            console.log(this.index);
+            console.log(this.frame);
             this.gui_f1 = {
                 pause: function() {
                     this.playing = false;
@@ -193,6 +196,7 @@ define([
                 frame: this.frame,
                 fps: this.fps
             };
+            console.log(this.gui_f1['frame']);
             this.f1 = {};
             this.f1['play'] = this.guif1.add(this.gui_f1, 'play');
             this.f1['frame'] = this.guif1.add(this.gui_f1, 'frame', this.framelist);
@@ -201,10 +205,6 @@ define([
             this.f1['index'].onChange(function(value) {
                 self.index = value;
                 self.frame = self.framelist[self.index];
-                console.log(self.f2['show']);
-                console.log(self.gui_f2['show']);
-                console.log(self.f3['show']);
-                console.log(self.gui_f3['show']);
                 self.update_atom(true);
                 if (self.bonds_length > 0) {
                     self.update_bond(true);
@@ -253,9 +253,12 @@ define([
                 var z = this.z[this.frame];
                 var r = this.r[this.frame];
                 var c = this.c[this.frame];
+                //var center = this.centers[this.frame];
+                //console.log(center);
                 if (this.atom_type == 'points') {
                     this.app.add_points(x, y, z, r, c, this.filled);
                 };
+                //this.app.update_cam_ctrl(center);
             } else {
                 this.app.scene.remove(this.app.atom);
             }
@@ -284,7 +287,6 @@ define([
             Update the Unit Cell
             ```````````````````````
             */
-            console.log(this.cell_xi);
             if (value == true) {
                 var xi = this.cell_xi[this.index];
                 var xj = this.cell_xj[this.index];

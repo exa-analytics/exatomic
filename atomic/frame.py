@@ -91,10 +91,16 @@ def minimal_frame(universe, inplace=False):
     '''
     df = Frame()
     if 'frame' in universe.atom.columns:
-        df = universe.atom.groupby('frame').count().iloc[:, 0].to_frame()
-        df.columns = ['atom_count']
-        df = Frame(df)
+        df = _min_frame_from_atom(universe.atom)
     if inplace:
-        universe._frame = df
+        universe['_frame'] = df
     else:
         return df
+
+
+def _min_frame_from_atom(atom):
+    '''
+    '''
+    df = atom.groupby('frame').count().iloc[:, 0].to_frame()
+    df.columns = ['atom_count']
+    return Frame(df)

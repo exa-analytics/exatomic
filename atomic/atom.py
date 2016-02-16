@@ -61,9 +61,9 @@ class AtomBase:
         Maps the covalent radii and colors (for rendering the atoms).
         '''
         if 'radius' not in self.columns:
-            self['radius'] = self['symbol'].map(Isotope.symbol_to_radius_map)
+            self['radius'] = self['symbol'].astype('O').map(Isotope.symbol_to_radius_map)
         if 'color' not in self.columns:
-            self['color'] = self['symbol'].map(Isotope.symbol_to_color_map)
+            self['color'] = self['symbol'].astype('O').map(Isotope.symbol_to_color_map)
 
     def _post_trait_values(self):
         '''
@@ -82,7 +82,7 @@ class Atom(AtomBase, DataFrame):
         '''
         Retrieve the mass of each element in the atom dataframe.
         '''
-        masses = self['symbol'].map(Isotope.symbol_to_mass())
+        masses = self['symbol'].astype('O').map(Isotope.symbol_to_mass())
         if inplace:
             self['mass'] = masses
         else:
@@ -100,8 +100,7 @@ class Atom(AtomBase, DataFrame):
         '''
         xyz = self[['x', 'y', 'z']]
         unit = np.mod(xyz, rxyz) + oxyz
-        unit = unit[unit != xyz].astype(np.float64).to_sparse()
-        return unit
+        return UnitAtom(unit[unit != xyz].astype(np.float64).to_sparse())
 
 
 class UnitAtom(Updater):
@@ -140,7 +139,7 @@ def get_unit_atom(universe, inplace=False):
         else:
             df = _compute_unit_atom_static_cell(universe)
     if inplace:
-        universe._unit_atom = UnitAtom(df)
+        universe._unit_atom = df
     else:
         return df
 
@@ -150,8 +149,7 @@ def _compute_unit_atom_static_cell(universe):
     '''
     rxyz = universe.frame._get_min_values('rx', 'ry', 'rz')
     oxyz = universe.frame._get_min_values('ox', 'oy', 'oz')
-    df = universe.atom._compute_unit_atom_static_cell(rxyz, oxyz)
-    return UnitAtom(df)
+    return universe.atom._compute_unit_atom_static_cell(rxyz, oxyz)
 
 
 def get_projected_atom(universe, inplace=False):
@@ -178,5 +176,6 @@ def _compute_projected_atom_static_cell(universe):
     df.index.names = ['prjd_atom']
     df['frame'] = tile_i8(universe.atom['frame'].values, 27)
     df['symbol'] = universe.atom['symbol'].tolist() * 27
+    df['symbol'] = df['symbol'].astype('category')
     df['atom'] = tile_i8(universe.atom.index.values, 27)
     return ProjectedAtom(df)

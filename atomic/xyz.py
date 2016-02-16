@@ -12,8 +12,8 @@ if Config.numba:
     from exa.jitted.indexing import idxs_from_starts_and_counts
     from exa.jitted.deduplication import array1d_with_offset
 else:
-    from exa.algortihms.deduplication import array1d_with_offset
     from exa.algorithms.indexing import idxs_from_starts_and_counts
+    from exa.algortihms.deduplication import array1d_with_offset
 from atomic import Length, Universe, Isotope
 from atomic.frame import minimal_frame
 
@@ -75,6 +75,7 @@ def read_xyz(path, unit='A', label=True, **kwargs):
         df.columns = ['Z', 'x', 'y', 'z']
         df['Z'] = df['Z'].astype(np.int64)
         df['symbol'] = df['Z'].map(Isotope.lookup_symbol_by_Z)
+    df['symbol'] = df['symbol'].astype('category')
     meta = {'file': path, 'comments': comments}
     basename = os.path.basename(path)
     name = os.path.splitext(basename)[0] if 'name' not in kwargs else kwargs['name']
@@ -82,32 +83,38 @@ def read_xyz(path, unit='A', label=True, **kwargs):
     return Universe(name=name, description=description, atom=df, meta=meta, **kwargs)
 
 
-def write_xyz(universe, path, unit='A', trajectory=True):
+def write_xyz(universe, path, unit='A', comment='', ffmt='%.8f', trajectory=False):
     '''
     Args:
         universe (:class:`~atomic.universe.Universe`): Atomic universe containing atom table
         path (str): Directory or file path
         unit (str): Output unit of length
+        comment (str): Custom comment
+        ffmt (str): Floating point number format
         trajectory (bool): Generate a single XYZ file for each frame or one trajectory XYZ file (default)
     '''
-    symbol = universe.atom['symbol'].values
-    x = (universe.atom['x'] * Length['au', unit]).values
-    y = (universe.atom['y'] * Length['au', unit]).values
-    z = (universe.atom['z'] * Length['au', unit]).values
-    atom_count = universe.frame['atom_count']
+    atom = universe.atom[['symbol', 'x', 'y', 'z']].copy()
+    atom['x'] *= Length['au', unit]
+    atom['y'] *= Length['au', unit]
+    atom['z'] *= Length['au', unit]
+    counts = universe.frame['atom_count']
+    if comment == '':
+        comment = str(universe.meta)
     if as_trajectory:
-        write_xyz_trajectory(path, symbol, x, y, z)
+        raise NotImplementedError()
     else:
-        write_xyz_files(path, symbol, x, y, z, atom_count)
+        _write_xyz_file(path, atom, comment, ffmt)
 
 
-def write_xyz_trajectory(path, symbol, x, y, z, atom_count):
+def _write_xyz_file(path, atom, comment, ffmt):
     '''
     '''
-    raise NotImplementedError()
+    header = '{0}\n{1}'.format(len(atom), comment)
+    with open(path, 'w') as f:
+        f.write(header)
+        atom.to_csv(f, sep=' ', header=None, index=None, float_format=ffmt)
 
-
-def write_xyz_files(path, symbol, x, y, z, atom_count):
+def _write_traj_file(path, atom, frame, comments, ffmt):
     '''
     '''
-    raise NotImplementedError()
+    grps = atom.groupby('frame')

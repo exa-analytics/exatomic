@@ -117,9 +117,6 @@ define([
         this.scene.add(dlight6);
         this.scene.add(dlight7);
         this.scene.add(dlight8);
-
-        var fog = new THREE.FogExp2(0x000000, 0.8);
-        this.scene.add(fog);
     };
 
     AtomicThreeJS.prototype.resize = function() {
@@ -262,6 +259,20 @@ define([
         this.scene.add(this.bond);
     };
 
+    AtomicThreeJS.prototype.update_cam_ctrl = function(center) {
+        /*"""
+        */
+        var center = new THREE.Vector3(center[0], center[1], center[2]);
+        var cx = center[0] * 2 + 15;
+        var cy = center[1] * 2 + 15;
+        var cz = center[2] * 2 + 15;
+        this.camera.position.x = cx;
+        this.camera.position.y = cy;
+        this.camera.position.z = cz;
+        this.camera.lookAt(center);
+        this.controls.target = center;
+    };
+
     AtomicThreeJS.prototype.update_camera_and_controls = function() {
         /*"""
         Automatically Update Camera and Controls
@@ -276,6 +287,9 @@ define([
         cx = cx * 2 + 15;
         cy = cy * 2 + 15;
         cz = cz * 2 + 15;
+        var nx = this.atom.geometry;
+        //ny = this.atom.geometry.vertices.y.length;
+        //nz = this.atom.geometry.vertices.x.length;
         this.cam_pos = new THREE.Vector3(cx, cy, cz);
         this.camera.position.x = this.cam_pos.x;
         this.camera.position.y = this.cam_pos.y;

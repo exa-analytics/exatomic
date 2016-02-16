@@ -5,16 +5,19 @@ Universe
 The atomic container object.
 '''
 from traitlets import Unicode, List
-from sqlalchemy import Column, Integer, ForeignKey
+from sqlalchemy import Column, Integer, ForeignKey, event
 from exa import Container
 from exa import _np as np
 from exa.config import Config
-from atomic.frame import Frame, minimal_frame
+from atomic.frame import Frame, minimal_frame, _min_frame_from_atom
 from atomic.atom import (Atom, UnitAtom, ProjectedAtom,
                          get_unit_atom, get_projected_atom)
 from atomic.two import (Two, ProjectedTwo, AtomTwo, ProjectedAtomTwo,
                         get_two_body)
 from atomic.formula import dict_to_string
+from atomic.algorithms.pcf import compute_radial_pair_correlation
+
+from datetime import datetime as dt
 
 
 class Universe(Container):
@@ -31,6 +34,9 @@ class Universe(Container):
     Note:
         If a frame dataframe is not provided, a minimal frame will be created.
     '''
+    __slots__ = ['_frame', '_atom', '_two', '_prjd_atom', '_unit_atom',
+                 '_prjd_two', '_atomtwo', '_prjd_atomtwo', 'molecule',
+                 '_trait_values']
     # Relational information
     cid = Column(Integer, ForeignKey('container.pkid'), primary_key=True)
     frame_count = Column(Integer)
@@ -43,6 +49,7 @@ class Universe(Container):
     _view_module = Unicode('nbextensions/exa/atomic/universe').tag(sync=True)
     _view_name = Unicode('UniverseView').tag(sync=True)
     _framelist = List().tag(sync=True)
+    _center = Unicode().tag(sync=True)
     _atom_type = Unicode('points').tag(sync=True)
     _bonds = Unicode().tag(sync=True)
 
@@ -109,10 +116,17 @@ class Universe(Container):
         else:
             return formulas
 
+    def pair_correlation_function(self, **kwargs):
+        '''
+        See Also:
+            :func:`~atomic.algorithms.pcf.compute_radial_pair_correlation`
+        '''
+        return compute_radial_pair_correlation(self, **kwargs)
+
     # DataFrames are "obscured" from the user via properties
     @property
     def frame(self):
-        if len(self._frame) == 0 and len(self._atom) > 0:
+        if self._frame is None:
             self.compute_minimal_frame(inplace=True)
             self._framelist = self._frame.index.tolist()
         return self._frame
@@ -126,7 +140,7 @@ class Universe(Container):
         '''
         Primitive atom positions.
         '''
-        if len(self._unit_atom) == 0:
+        if self._unit_atom is None:
             self.compute_unit_atom(inplace=True)
         atom = self.atom.copy()
         atom.update(self._unit_atom)
@@ -139,7 +153,7 @@ class Universe(Container):
         '''
         Projected unit atom coordinates generating a 3x3x3 super cell.
         '''
-        if len(self._prjd_atom) == 0:
+        if self._prjd_atom is None:
             self.compute_projected_atom(inplace=True)
         return self._prjd_atom
 
@@ -147,21 +161,33 @@ class Universe(Container):
     def two(self):
         '''
         '''
-        if len(self._two) == 0 and len(self._prjd_two) == 0:
+        if self._two is None and self._prjd_two is None and self._atom is not None:
             self.compute_two_body(inplace=True)
-        if len(self._two) == 0:
+            self._traits_need_update = True
+        if self._two is None:
             return self._prjd_two
         else:
             return self._two
 
+
     def _update_traits(self):
         '''
         '''
+        st = dt.now()
         self._update_df_traits()
-        if len(self._frame) > 0:
+        print('df: ', (dt.now() - st).total_seconds())
+        if self.frame is not None:
+            st = dt.now()
             self._update_frame_list()
-        if len(self._two) > 0 or len(self._prjd_two) > 0:
+            print('frame: ', (dt.now() - st).total_seconds())
+        if self._two is not None:
+            st = dt.now()
             self._update_bond_list()
+            print('blist: ', (dt.now() - st).total_seconds())
+        if self._atom is not None:
+            st = dt.now()
+            self._center = self.atom.groupby('frame').apply(lambda x: x[['x', 'y', 'z']].mean().values).to_json()
+            print('center: ', (dt.now() - st).total_seconds())
 
     def _update_frame_list(self):
         '''
@@ -189,7 +215,7 @@ class Universe(Container):
             self._bonds = df.groupby('frame').apply(lambda x: x[['label0', 'label1']].values.astype(np.int64)).to_json()
 
     def __len__(self):
-        return len(self._framelist)
+        return len(self.frame)
 
     def __init__(self, frame=None, atom=None, unit_atom=None, prjd_atom=None,
                  two=None, prjd_two=None, atomtwo=None, prjd_atomtwo=None,
@@ -200,19 +226,19 @@ class Universe(Container):
         documentation related to each data specific dataframe for more information.
         '''
         super().__init__(**kwargs)
-        self._atom = Atom(atom)
-        if frame:
-            self._frame = Frame(frame)
+        self._atom = atom
+        if frame is None:
+            self._frame = _min_frame_from_atom(self._atom)
         else:
-            minimal_frame(self, inplace=True)
-        self._unit_atom = UnitAtom(unit_atom)
-        self._prjd_atom = ProjectedAtom(prjd_atom)
-        self._two = Two(two)
-        self._prjd_two = ProjectedTwo(prjd_two)
-        self._atomtwo = AtomTwo(atomtwo)
-        self._prjd_atomtwo = ProjectedAtomTwo(prjd_atomtwo)
-        if Config.ipynb:
-            self._update_traits()
+            self._frame = frame
+        self._unit_atom = unit_atom
+        self._prjd_atom = prjd_atom
+        self._two = two
+        self._prjd_two = prjd_two
+        self._atomtwo = atomtwo
+        self._prjd_atomtwo = prjd_atomtwo
+        #if Config.ipynb and len(self._frame) < 1000:    # TODO workup a better solution here!
+        #    self._update_traits()
 
 
 def concat(universes):
@@ -220,3 +246,20 @@ def concat(universes):
     Concatenate a collection of universes.
     '''
     raise NotImplementedError()
+
+
+@event.listens_for(Universe, 'after_insert')
+def after_insert(*args, **kwargs):
+    '''
+    '''
+    print('after_insert')
+    print(args)
+    print(kwargs)
+
+@event.listens_for(Universe, 'after_update')
+def after_update(*args, **kwargs):
+    '''
+    '''
+    print('after_update')
+    print(args)
+    print(kwargs)
