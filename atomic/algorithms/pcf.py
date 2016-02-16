@@ -40,7 +40,7 @@ def compute_radial_pair_correlation(universe, a, b, dr=0.05, start=None,
     na = nats[a]
     nb = nats[b]
     rho = 2 * n / vol
-    if na == 1 or nb == 1 or a == b:
+    if a == b:
         rho /= 2
     nn = max((na, nb))
     r3 = bins[1:]**3 - bins[:-1]**3
