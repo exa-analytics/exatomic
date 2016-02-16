@@ -215,7 +215,7 @@ class Universe(Container):
             self._bonds = df.groupby('frame').apply(lambda x: x[['label0', 'label1']].values.astype(np.int64)).to_json()
 
     def __len__(self):
-        return len(self._framelist)
+        return len(self.frame)
 
     def __init__(self, frame=None, atom=None, unit_atom=None, prjd_atom=None,
                  two=None, prjd_two=None, atomtwo=None, prjd_atomtwo=None,

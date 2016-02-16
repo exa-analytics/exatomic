@@ -61,9 +61,9 @@ class AtomBase:
         Maps the covalent radii and colors (for rendering the atoms).
         '''
         if 'radius' not in self.columns:
-            self['radius'] = self['symbol'].map(Isotope.symbol_to_radius_map)
+            self['radius'] = self['symbol'].astype('O').map(Isotope.symbol_to_radius_map)
         if 'color' not in self.columns:
-            self['color'] = self['symbol'].map(Isotope.symbol_to_color_map)
+            self['color'] = self['symbol'].astype('O').map(Isotope.symbol_to_color_map)
 
     def _post_trait_values(self):
         '''
@@ -82,7 +82,7 @@ class Atom(AtomBase, DataFrame):
         '''
         Retrieve the mass of each element in the atom dataframe.
         '''
-        masses = self['symbol'].map(Isotope.symbol_to_mass())
+        masses = self['symbol'].astype('O').map(Isotope.symbol_to_mass())
         if inplace:
             self['mass'] = masses
         else:
@@ -176,5 +176,6 @@ def _compute_projected_atom_static_cell(universe):
     df.index.names = ['prjd_atom']
     df['frame'] = tile_i8(universe.atom['frame'].values, 27)
     df['symbol'] = universe.atom['symbol'].tolist() * 27
+    df['symbol'] = df['symbol'].astype('category')
     df['atom'] = tile_i8(universe.atom.index.values, 27)
     return ProjectedAtom(df)

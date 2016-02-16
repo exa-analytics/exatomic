@@ -165,6 +165,8 @@ define([
             this.guif6 = this.gui.addFolder('volumes');
 
             // Folder 1: animation
+            console.log(this.index);
+            console.log(this.frame);
             this.gui_f1 = {
                 pause: function() {
                     this.playing = false;

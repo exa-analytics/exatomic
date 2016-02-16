@@ -148,14 +148,18 @@ def _free_in_mem(universe, dmax=12.3, dmin=0.3, bond_extra=bond_extra):
     frames = np.concatenate(frames)
     two = Two.from_dict({'distance': distance, 'atom0': atom0, 'atom1': atom1, 'frame': frames})
     two = two[(two['distance'] > dmin) & (two['distance'] < dmax)].reset_index(drop=True)
-    symbol = universe.atom['symbol']
-    two['symbol0'] = two['atom0'].map(symbol)
-    two['symbol1'] = two['atom1'].map(symbol)
+    symbols = universe.atom['symbol'].astype('O')
+    two['symbol0'] = two['atom0'].map(symbols)
+    two['symbol1'] = two['atom1'].map(symbols)
+    del symbols
     two['symbols'] = two['symbol0'] + two['symbol1']
     two['symbols'] = two['symbols'].astype('category')
-    two['mbl'] = two['symbols'].map(Isotope.symbols_to_radii_map)
+    del two['symbol0']
+    del two['symbol1']
+    two['mbl'] = two['symbols'].astype('O').map(Isotope.symbols_to_radii_map)
     two['mbl'] += bond_extra
     two['bond'] = two['distance'] < two['mbl']
+    del two['mbl']
     return two
 
 
@@ -230,7 +234,8 @@ def _periodic_from_projected_in_mem(universe, k=None, dmax=12.3, dmin=0.3, bond_
     symbols = universe.projected_atom['symbol']
     two['symbol1'] = two['prjd_atom0'].map(symbols)
     two['symbol2'] = two['prjd_atom1'].map(symbols)
-    two['symbols'] = two['symbol1'] + two['symbol2']
+    del symbols
+    two['symbols'] = two['symbol1'].astype('O') + two['symbol2'].astype('O')
     two['symbols'] = two['symbols'].astype('category')
     del two['symbol1']
     del two['symbol2']
