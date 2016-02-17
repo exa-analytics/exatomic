@@ -164,10 +164,16 @@ class Universe(Container):
         if self._two is None and self._prjd_two is None and self._atom is not None:
             self.compute_two_body(inplace=True)
             self._traits_need_update = True
-        if self._two is None:
-            return self._prjd_two
+        if self._two is None:                  # TEMPORARY HACK UNTIL NONE v empty DF decided
+            if len(self._prjd_two) > 0:
+                return self._prjd_two
+            else:
+                return self._two
         else:
-            return self._two
+            if len(self._two) > 0:
+                return self._two
+            else:
+                return self._prjd_two
 
 
     def _update_traits(self):
@@ -255,6 +261,7 @@ def after_insert(*args, **kwargs):
     print('after_insert')
     print(args)
     print(kwargs)
+    return args
 
 @event.listens_for(Universe, 'after_update')
 def after_update(*args, **kwargs):
@@ -263,3 +270,4 @@ def after_update(*args, **kwargs):
     print('after_update')
     print(args)
     print(kwargs)
+    return args

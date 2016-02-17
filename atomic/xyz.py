@@ -109,7 +109,7 @@ def write_xyz(universe, path, unit='A', comment='', ffmt='%.8f', trajectory=Fals
 def _write_xyz_file(path, atom, comment, ffmt):
     '''
     '''
-    header = '{0}\n{1}'.format(len(atom), comment)
+    header = '{0}\n{1}\n'.format(len(atom), comment)
     with open(path, 'w') as f:
         f.write(header)
         atom.to_csv(f, sep=' ', header=None, index=None, float_format=ffmt)

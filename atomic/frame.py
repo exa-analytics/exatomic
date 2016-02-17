@@ -90,8 +90,9 @@ def minimal_frame(universe, inplace=False):
         frame (:class:`~atomic.frame.Frame`): None if inplace is true
     '''
     df = Frame()
-    if 'frame' in universe.atom.columns:
-        df = _min_frame_from_atom(universe.atom)
+    if universe.atom is not None:
+        if 'frame' in universe.atom.columns:
+            df = _min_frame_from_atom(universe.atom)
     if inplace:
         universe['_frame'] = df
     else:
@@ -101,6 +102,7 @@ def minimal_frame(universe, inplace=False):
 def _min_frame_from_atom(atom):
     '''
     '''
-    df = atom.groupby('frame').count().iloc[:, 0].to_frame()
-    df.columns = ['atom_count']
-    return Frame(df)
+    if atom is not None:
+        df = atom.groupby('frame').count().iloc[:, 0].to_frame()
+        df.columns = ['atom_count']
+        return Frame(df)

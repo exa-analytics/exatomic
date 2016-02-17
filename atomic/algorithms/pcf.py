@@ -36,11 +36,11 @@ def compute_radial_pair_correlation(universe, a, b, dr=0.05, start=None,
     m = len(universe)
     f = universe._frame.index[0]
     vol = universe.frame.ix[f, 'cell_volume']
-    nats = (universe.atom['symbol'].value_counts() // m).astype(np.int64)
+    nats = (universe.atom['symbol'].astype('O').value_counts() // m).astype(np.int64)
     na = nats[a]
     nb = nats[b]
     rho = 2 * n / vol
-    if na == 1 or nb == 1 or a == b:
+    if a == b:
         rho /= 2
     nn = max((na, nb))
     r3 = bins[1:]**3 - bins[:-1]**3
