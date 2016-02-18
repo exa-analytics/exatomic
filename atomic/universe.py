@@ -4,212 +4,270 @@ Universe
 ====================
 The atomic container object.
 '''
+from traitlets import Unicode, List
+from sqlalchemy import Column, Integer, ForeignKey, event
 from exa import Container
-from exa.relational.base import Column, Integer, ForeignKey
-from atomic.atom import Atom, SuperAtom, VisualAtom, PrimitiveAtom
-from atomic.atom import compute_primitive, compute_supercell
-from atomic.frame import Frame
-from atomic.twobody import TwoBody, PeriodicTwoBody
-from atomic.twobody import compute_twobody, compute_bond_counts
-from atomic.orbitals import Orbital
-from atomic.molecule import Molecule, PeriodicMolecule, _periodic_molecules
-from atomic.algorithms.nearest import get_nearest_neighbors as _get_nearest_neighbors
+from exa import _np as np
+from exa.config import Config
+from atomic.frame import Frame, minimal_frame, _min_frame_from_atom
+from atomic.atom import (Atom, UnitAtom, ProjectedAtom,
+                         get_unit_atom, get_projected_atom)
+from atomic.two import (Two, ProjectedTwo, AtomTwo, ProjectedAtomTwo,
+                        get_two_body)
+from atomic.formula import dict_to_string
+from atomic.algorithms.pcf import compute_radial_pair_correlation
+
+from datetime import datetime as dt
 
 
 class Universe(Container):
     '''
-    A collection of atoms.
+    A collection of atoms, molecules, electronic data, and other relevant
+    information from an atomistic simulation.
 
-    An :class:`~atomic.universe.Universe` represents a collection of time
-    dependent frames themselves containing atoms and molecules. A frame can
-    be thought of as a snapshot in time, though the frame axis is not required
-    to be time. Each frame has information about atomic positions, energies,
-    bond distances, energies, etc. The following table outlines the structures
-    provided by this container. A description of the index or columns can be
-    found in the corresponding dataframe link.
+    Information about the data specific dataframes can be found in their class
+    documentation.
 
-    +-------------------------------------------------------+--------------+---------------------------------+
-    | Attribute (DataFrame)                                 | Dimensions   | Required Columns                |
-    +=======================================================+==============+=================================+
-    | atoms (:class:`~atomic.atom.Atom`)                    | frame, atom  | symbol, x, y, z                 |
-    +-------------------------------------------------------+--------------+---------------------------------+
-    | twobody (:class:`~atomic.twobody.TwoBody`)            | frame, index | atom1, atom2, symbols, distance |
-    +-------------------------------------------------------+--------------+---------------------------------+
-    | eigenvalues (:class:`~atomic.eigenvalues.EigenValue`) | frame, index | energy                          |
-    +-------------------------------------------------------+--------------+---------------------------------+
+    See Also:
+        :mod:`~atomic.frame`, :mod:`~atomic.atom`, :mod:`~atomic.two`, etc.
 
-    Warning:
-        The correct way to set DataFrame object is as follows:
-
-        .. code-block:: Python
-
-            universe = atomic.Universe()
-            df = pd.DataFrame()
-            universe['atoms'] = df
-            or
-            setattr(universe, 'atoms', df)
-
-        Avoid setting objects using the **__dict__** attribute as follows:
-
-        .. code-block:: Python
-
-            universe = atomic.Universe()
-            df = pd.DataFrame()
-            universe.atoms = df
-
-        (This is used in **__init__** where type control is enforced.)
+    Note:
+        If a frame dataframe is not provided, a minimal frame will be created.
     '''
+    __slots__ = ['_frame', '_atom', '_two', '_prjd_atom', '_unit_atom',
+                 '_prjd_two', '_atomtwo', '_prjd_atomtwo', 'molecule',
+                 '_trait_values']
+    # Relational information
     cid = Column(Integer, ForeignKey('container.pkid'), primary_key=True)
     frame_count = Column(Integer)
     __mapper_args__ = {'polymorphic_identity': 'universe'}
-    __dfclasses__ = {'atoms': Atom, 'frames': Frame, 'pbcatoms': SuperAtom,
-                     'visatoms': VisualAtom}
+    __dfclasses__ = {'_frame': Frame, '_atom': Atom, '_unit_atom': UnitAtom,
+                     '_prjd_atom': ProjectedAtom, '_two': Two, '_prjd_two': ProjectedTwo,
+                     '_atomtwo': AtomTwo, '_prjd_atomtwo': ProjectedAtomTwo}
 
-    def get_cell_mags(self, inplace=False):
-        '''
-        Compute periodic cell dimension magnitudes in place.
+    # DOMWidget settings
+    _view_module = Unicode('nbextensions/exa/atomic/universe').tag(sync=True)
+    _view_name = Unicode('UniverseView').tag(sync=True)
+    _framelist = List().tag(sync=True)
+    _center = Unicode().tag(sync=True)
+    _atom_type = Unicode('points').tag(sync=True)
+    _bonds = Unicode().tag(sync=True)
 
-        See Also:
-            :func:`~atomic.frame.Frame.cell_mags`
+    def is_variable_cell(self):
         '''
-        return self.frames.cell_mags(inplace=inplace)
+        Variable cell universe?
+        '''
+        return self.frame.is_variable_cell()
 
-    def get_primitive_atoms(self, inplace=False):
-        '''
-        Compute primitive atom positions in place.
+    def is_periodic(self):
+        return self.frame.is_periodic()
 
-        See Also:
-            :func:`~atomic.atom.compute_primitive`
+    def compute_minimal_frame(self, inplace=False):
         '''
-        patoms = compute_primitive(self)
-        if inplace:
-            self._primitive_atoms = patoms
-        else:
-            return patoms
+        '''
+        return minimal_frame(self.atom, inplace)
 
-    def get_super_atoms(self, inplace=False):
+    def compute_cell_magnitudes(self, inplace=False):
         '''
-        Compute the super cell atom positions from the primitive atom positions.
+        '''
+        return self._frame.get_unit_cell_magnitudes(inplace)
 
-        See Also:
-            :func:`~atomic.atom.compute_supercell`
+    def compute_unit_atom(self, inplace=False):
         '''
-        obj = compute_supercell(self)
-        if inplace:
-            self._super_atoms = obj
-        else:
-            return obj
+        '''
+        return get_unit_atom(self, inplace)
 
-    def get_twobody(self, inplace=False, **kwargs):
+    def compute_projected_atom(self, inplace=False):
         '''
-        Compute two body information from the current atom dataframe.
+        '''
+        return get_projected_atom(self, inplace)
 
-        This function does not return the computed dataframe but rather
-        attaches it directly to the active universe object (**obj.twobody**).
-
-        See Also:
-            :func:`~atomic.atom.compute_twobody`.
-        '''
-        data = compute_twobody(self, **kwargs)
-        if inplace:
-            tb = data
-            if isinstance(data, tuple):
-                self._super_atoms = data[0]
-                tb = data[1]
-            if isinstance(tb, PeriodicTwoBody):
-                self._periodic_twobody = tb
-            else:
-                self._twobody = tb
-        else:
-            return data
-
-    def get_bond_counts(self, inplace=False):
+    def compute_two_body(self, inplace=False, **kwargs):
         '''
         '''
-        counts = compute_bond_counts(self)
-        if inplace:
-            self.atoms['bond_count'] = counts
-        else:
-            return counts, periodic
-
-    def get_molecules(self, inplace=False):
-        '''
-        '''
-        obj = _periodic_molecules(self)
+        df = get_two_body(self, inplace=inplace, **kwargs)
         if inplace == True:
-            self['_molecules'] = obj
+            self._update_bond_list()
+        return df
+
+    def compute_frame_mass(self, inplace=False):
+        '''
+        Compute the mass (of atoms) in each frame and store it in the frame
+        dataframe.
+        '''
+        self.atom.get_element_mass(inplace=True)
+        mass = self.atom.groupby('frame').apply(lambda frame: frame['mass'].sum())
+        del self._atom['mass']
+        if inplace:
+            self._frame['mass'] = mass
         else:
-            return obj
+            return mass
 
-    def get_nearest_neighbors(self, count, solute, solvent):
+    def compute_frame_formula(self, inplace=False):
         '''
+        Compute the (simple) formula of each frame and store it in the frame
+        dataframe.
         '''
-        kwargs = _get_nearest_neighbors(self, count, solute, solvent)
-        return self.__class__(**kwargs)
-
-    @property
-    def twobody(self):
-        '''
-        '''
-        if len(self._twobody) == 0 and len(self._periodic_twobody) == 0:
-            self.get_twobody(inplace=True)
-        if len(self._twobody) == 0:
-            return self._periodic_twobody
+        def convert(frame):
+            return dict_to_string(frame['symbol'].value_counts().to_dict())
+        formulas = self.atom.groupby('frame').apply(convert)
+        if inplace:
+            self._frame['simple_formula'] = formulas
         else:
-            return self._twobody
+            return formulas
+
+    def pair_correlation_function(self, **kwargs):
+        '''
+        See Also:
+            :func:`~atomic.algorithms.pcf.compute_radial_pair_correlation`
+        '''
+        return compute_radial_pair_correlation(self, **kwargs)
+
+    # DataFrames are "obscured" from the user via properties
+    @property
+    def frame(self):
+        if self._frame is None:
+            self.compute_minimal_frame(inplace=True)
+            self._framelist = self._frame.index.tolist()
+        return self._frame
 
     @property
-    def periodic_twobody(self):
-        '''
-        '''
-        return self.twobody
+    def atom(self):
+        return self._atom
 
     @property
-    def primitive_atoms(self):
+    def unit_atom(self):
         '''
+        Primitive atom positions.
         '''
-        if len(self._primitive_atoms) == 0:
-            self.get_primitive_atoms(inplace=True)
-        return self._primitive_atoms
+        if self._unit_atom is None:
+            self.compute_unit_atom(inplace=True)
+        atom = self.atom.copy()
+        atom.update(self._unit_atom)
+        if 'prjd_atom' in self._unit_atom.columns:
+            atom['prjd_atom'] = self._unit_atom['prjd_atom']
+        return Atom(atom.to_dense())
 
     @property
-    def super_atoms(self):
+    def projected_atom(self):
         '''
+        Projected unit atom coordinates generating a 3x3x3 super cell.
         '''
-        if len(self._super_atoms) == 0:
-            self.get_super_atoms(inplace=True)
-        return self._super_atoms
+        if self._prjd_atom is None:
+            self.compute_projected_atom(inplace=True)
+        return self._prjd_atom
 
     @property
-    def molecules(self):
+    def two(self):
         '''
         '''
-        if len(self._molecules) == 0:
-            self.get_molecules(inplace=True)
-        return self._molecules
+        if self._two is None and self._prjd_two is None and self._atom is not None:
+            self.compute_two_body(inplace=True)
+            self._traits_need_update = True
+        if self._two is None:                  # TEMPORARY HACK UNTIL NONE v empty DF decided
+            if len(self._prjd_two) > 0:
+                return self._prjd_two
+            else:
+                return self._two
+        else:
+            if len(self._two) > 0:
+                return self._two
+            else:
+                return self._prjd_two
 
-    @property
-    def periodic_molecules(self):
+
+    def _update_traits(self):
         '''
         '''
-        if len(self._periodic_molecules) == 0:
-            self.get_molecules(inplace=True)
-        return self._molecules
+        st = dt.now()
+        self._update_df_traits()
+        print('df: ', (dt.now() - st).total_seconds())
+        if self.frame is not None:
+            st = dt.now()
+            self._update_frame_list()
+            print('frame: ', (dt.now() - st).total_seconds())
+        if self._two is not None:
+            st = dt.now()
+            self._update_bond_list()
+            print('blist: ', (dt.now() - st).total_seconds())
+        if self._atom is not None:
+            st = dt.now()
+            self._center = self.atom.groupby('frame').apply(lambda x: x[['x', 'y', 'z']].mean().values).to_json()
+            print('center: ', (dt.now() - st).total_seconds())
 
-    @classmethod
-    def from_xyz(cls, path, unit='A'):
-        raise NotImplementedError()
+    def _update_frame_list(self):
+        '''
+        '''
+        self._framelist = [int(f) for f in self._frame.index.values]
 
-    def __init__(self, atoms=None, frames=None, twobody=None, molecule=None,
-                 primitive_atoms=None, super_atoms=None, periodic_twobody=None,
-                 periodic_molecules=None, orbitals=None, **kwargs):
+    def _update_bond_list(self):
+        '''
+        Retrieve a Series containing tuples of bonded atom labels
+        '''
+        if self.is_periodic() and len(self.projected_atom) > 0:
+            mapper1 = self.projected_atom['atom']
+            mapper2 = self.atom['label']
+            df = self.two.ix[(self.two['bond'] == True), ['frame', 'prjd_atom0', 'prjd_atom1']]
+            df['atom0'] = df['prjd_atom0'].map(mapper1)
+            df['atom1'] = df['prjd_atom1'].map(mapper1)
+            df['label0'] = df['atom0'].map(mapper2)
+            df['label1'] = df['atom1'].map(mapper2)
+            self._bonds = df.groupby('frame').apply(lambda x: x[['label0', 'label1']].values.astype(np.int64)).to_json()
+        else:
+            mapper = self.atom['label']
+            df = self.two.ix[(self.two['bond'] == True), ['frame', 'atom0', 'atom1']]
+            df['label0'] = df['atom0'].map(mapper)
+            df['label1'] = df['atom1'].map(mapper)
+            self._bonds = df.groupby('frame').apply(lambda x: x[['label0', 'label1']].values.astype(np.int64)).to_json()
+
+    def __len__(self):
+        return len(self.frame)
+
+    def __init__(self, frame=None, atom=None, unit_atom=None, prjd_atom=None,
+                 two=None, prjd_two=None, atomtwo=None, prjd_atomtwo=None,
+                 molecule=None, **kwargs):
+        '''
+        The universe container represents all of the atoms, bonds, molecules,
+        orbital/densities, etc. present within an atomistic simulations. See
+        documentation related to each data specific dataframe for more information.
+        '''
         super().__init__(**kwargs)
-        self.atoms = Atom(atoms)
-        self.frames = Frame(frames)
-        self.orbitals = Orbital(orbitals)
-        self._primitive_atoms = PrimitiveAtom(primitive_atoms)
-        self._super_atoms = SuperAtom(super_atoms)
-        self._periodic_twobody = PeriodicTwoBody(periodic_twobody)
-        self._twobody = TwoBody(twobody)
-        self._molecules = Molecule(molecule)
-#        self._periodic_molecules = PeriodicMolecule(periodic_molecules)
+        self._atom = atom
+        if frame is None:
+            self._frame = _min_frame_from_atom(self._atom)
+        else:
+            self._frame = frame
+        self._unit_atom = unit_atom
+        self._prjd_atom = prjd_atom
+        self._two = two
+        self._prjd_two = prjd_two
+        self._atomtwo = atomtwo
+        self._prjd_atomtwo = prjd_atomtwo
+        #if Config.ipynb and len(self._frame) < 1000:    # TODO workup a better solution here!
+        #    self._update_traits()
+
+
+def concat(universes):
+    '''
+    Concatenate a collection of universes.
+    '''
+    raise NotImplementedError()
+
+
+@event.listens_for(Universe, 'after_insert')
+def after_insert(*args, **kwargs):
+    '''
+    '''
+    print('after_insert')
+    print(args)
+    print(kwargs)
+    return args
+
+@event.listens_for(Universe, 'after_update')
+def after_update(*args, **kwargs):
+    '''
+    '''
+    print('after_update')
+    print(args)
+    print(kwargs)
+    return args
