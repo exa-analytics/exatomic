@@ -20,9 +20,9 @@ else:
 from atomic import Isotope
 
 
-bond_extra = 0.45
+bond_extra = 0.5
 dmin = 0.3
-dmax = 17.3
+dmax = 11.3
 
 
 class Two(DataFrame):
@@ -32,13 +32,13 @@ class Two(DataFrame):
     __fk__ = ['frame', 'atom0', 'atom1']
     __groupby__ = 'frame'
 
-    def _compute_bond_count(self):
+    def compute_bond_count(self):
         '''
         '''
         bonded = self[self['bond'] == True]
-        b1 = bonded.groupby('atom0').apply(lambda b: len(b))
-        b2 = bonded.groupby('atom1').apply(lambda b: len(b))
-        return b1.add(b2, fill_value=0)
+        b0 = bonded.groupby('atom0').size()
+        b1 = bonded.groupby('atom1').size()
+        return b0.add(b1, fill_value=0)
 
 
 class ProjectedTwo(DataFrame):
@@ -48,13 +48,13 @@ class ProjectedTwo(DataFrame):
     __fk__ = ['frame', 'prjd_atom0', 'prjd_atom1']
     __groupby__ = 'frame'
 
-    def _compute_bond_count(self):
+    def compute_bond_count(self):
         '''
         '''
         bonded = self[self['bond'] == True]
-        b1 = bonded.groupby('prjd_atom0').apply(lambda b: len(b))
-        b2 = bonded.groupby('prjd_atom1').apply(lambda b: len(b))
-        return b1.add(b2, fill_value=0)
+        b0 = bonded.groupby('prjd_atom0').size()
+        b1 = bonded.groupby('prjd_atom1').size()
+        return b0.add(b1, fill_value=0)
 
 
 class AtomTwo(ManyToMany):
@@ -115,7 +115,7 @@ def get_two_body(universe, k=None, dmax=dmax, dmin=dmin,
         return (two, atomtwo)
 
 
-def _free_in_mem(universe, dmax=12.3, dmin=0.3, bond_extra=bond_extra):
+def _free_in_mem(universe, dmax=dmax, dmin=dmin, bond_extra=bond_extra):
     '''
     Free boundary condition two body properties computed in memory.
 
@@ -134,6 +134,7 @@ def _free_in_mem(universe, dmax=12.3, dmin=0.3, bond_extra=bond_extra):
     atom1 = np.empty((n, ), dtype='O')
     distance = np.empty((n, ), dtype='O')
     frames = np.empty((n, ), dtype='O')
+    # This loop could be parallelized (see the same comment below).
     for i, (frame, atom) in enumerate(atom_groups):
         df = DataFrame(atom)
         xyz = df._get_column_values('x', 'y', 'z')
@@ -202,7 +203,7 @@ def _periodic_from_unit_in_mem(universe, k=None, dmax=dmax, dmin=dmin, bond_extr
     raise NotImplementedError()
 
 
-def _periodic_from_projected_in_mem(universe, k=None, dmax=12.3, dmin=0.3, bond_extra=0.5):
+def _periodic_from_projected_in_mem(universe, k=None, dmax=dmax, dmin=dmin, bond_extra=bond_extra):
     '''
     '''
     k = universe.frame['atom_count'].max() if k is None else k
@@ -214,6 +215,9 @@ def _periodic_from_projected_in_mem(universe, k=None, dmax=12.3, dmin=0.3, bond_
     index1 = np.empty((n, nn), dtype='i8')
     index2 = np.empty((n, nn), dtype='i8')
     frames = np.empty((n, nn), dtype='i8')
+    # In principle this loop could be parallelized across many machines to reduce
+    # memory usage and computational time (since each computation is independent
+    # of all of the others)
     for i, (frame, prjd) in enumerate(prjd_grps):                    # Per frame, compute the distances,
         pxyz = DataFrame(prjd)._get_column_values('x', 'y', 'z')     # also saving the associated indices
         uxyz = DataFrame(unit_grps.get_group(frame))._get_column_values('x', 'y', 'z')
@@ -222,10 +226,6 @@ def _periodic_from_projected_in_mem(universe, k=None, dmax=12.3, dmin=0.3, bond_
         index1[i, :] = prjd.iloc[repeat_i8_array(idxs[:, 0], k)].index.values
         index2[i, :] = prjd.iloc[idxs.ravel()].index.values
         frames[i, :] = repeat_i8(frame, len(index1[i]))
-    #distances = np.concatenate(distances)
-    #index1 = np.concatenate(index1)
-    #index2 = np.concatenate(index2)
-    #frames = np.concatenate(frames)
     distances = distances.ravel()
     index1 = index1.ravel()
     index2 = index2.ravel()
@@ -249,10 +249,7 @@ def _periodic_from_projected_in_mem(universe, k=None, dmax=12.3, dmin=0.3, bond_
     two['bond'] = two['distance'] < two['mbl']
     del two['mbl']
     two.index.names = ['prjd_two']
-    #prjd_two = two.index.tolist() * 2
-    #prjd_atom = two['prjd_atom0'].tolist() + two['prjd_atom1'].tolist()
-    #atomtwo = pd.DataFrame.from_dict({'prjd_two': prjd_two, 'prjd_atom': prjd_atom})
-    #atomtwo = ProjectedAtomTwo.from_dict({'prjd_two': prjd_two, 'prjd_atom': prjd_atom})
-    atomtwo = None
+    prjd_two = two.index.tolist() * 2
+    prjd_atom = two['prjd_atom0'].tolist() + two['prjd_atom1'].tolist()
+    atomtwo = ProjectedAtomTwo.from_dict({'prjd_two': prjd_two, 'prjd_atom': prjd_atom})
     return two, atomtwo
-    #return ProjectedTwo(two), ProjectedAtomTwo(atomtwo)
