@@ -1,11 +1,4 @@
 # -*- coding: utf-8 -*-
-import sys as _sys                              # HACK for development
-import os as _os
-_sys.path.insert(0, _os.sep.join(
-    (_os.path.dirname(_os.path.realpath(__file__)), '..', '..', 'exa'))
-)
-
-
 __atomic_version__ = (0, 1, 0)                  # atomic VERSION NUMBER
 __version__ = '.'.join((str(v) for v in __atomic_version__))
 
