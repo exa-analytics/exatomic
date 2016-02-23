@@ -11,9 +11,5 @@ from exa.relational.constant import Constant
 from atomic.universe import Universe            # atomic imports
 from atomic.xyz import read_xyz
 from atomic import algorithms
-#from atomic.pdb import read_pdb, write_pdb
-#from atomic.cube import read_cubes
-#import atomic.tests
-#import atomic.algorithms.tests
 
 del universe, xyz, frame
