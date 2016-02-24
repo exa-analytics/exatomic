@@ -3,6 +3,7 @@ __atomic_version__ = (0, 1, 0)                  # atomic VERSION NUMBER
 __version__ = '.'.join((str(v) for v in __atomic_version__))
 
 
+from exa.config import Config
 from exa.relational.isotope import Isotope
 from exa.relational.unit import Length, Energy
 from exa.relational.constant import Constant
@@ -11,5 +12,12 @@ from exa.relational.constant import Constant
 from atomic.universe import Universe            # atomic imports
 from atomic.xyz import read_xyz
 from atomic import algorithms
+from atomic.formula import SimpleFormula
 
-del universe, xyz, frame
+if Config._temp:
+    from exa.relational import create_all
+    create_all()
+    del create_all
+
+
+del universe, xyz, frame, atom, two, Config
