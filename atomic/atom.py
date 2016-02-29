@@ -174,8 +174,8 @@ def _compute_projected_atom_static_cell(universe):
     df = project_coordinates(xyz, rxyz)
     df = pd.DataFrame(df, columns=('x', 'y', 'z'))
     df.index.names = ['prjd_atom']
-    df['frame'] = tile_i8(universe.atom['frame'].values, 27)
-    df['symbol'] = universe.atom['symbol'].tolist() * 27
+    df['frame'] = tile_i8(universe.atom['frame'].astype('i8').values, 27)
+    df['symbol'] = universe.atom['symbol'].astype('O').tolist() * 27
     df['symbol'] = df['symbol'].astype('category')
     df['atom'] = tile_i8(universe.atom.index.values, 27)
     return ProjectedAtom(df)
