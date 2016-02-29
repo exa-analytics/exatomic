@@ -8,6 +8,7 @@ from traitlets import Unicode, List
 from sqlalchemy import Column, Integer, ForeignKey, event
 from exa import Container
 from exa import _np as np
+from exa import _pd as pd
 from exa.config import Config
 from atomic.frame import Frame, minimal_frame, _min_frame_from_atom
 from atomic.atom import (Atom, UnitAtom, ProjectedAtom,
@@ -89,6 +90,23 @@ class Universe(Container):
         if inplace == True:
             self._update_bond_list()
         return df
+
+    def compute_bond_count(self, inplace=False):
+        '''
+        Compute the bond count
+        '''
+        s = self.two.compute_bond_count()
+        if inplace:
+            if self._prjd_atom is None:
+                self._atom['bond_count'] = s
+            elif len(self._prjd_atom) > 0:
+                self._prjd_atom['bond_count'] = s
+                s = pd.Series(s.index).map(self.projected_atom['atom'])
+                self._atom['bond_count'] = s
+            else:
+                self._atom['bond_count'] = s
+        else:
+            return s
 
     def compute_frame_mass(self, inplace=False):
         '''
