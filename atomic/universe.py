@@ -175,6 +175,17 @@ class Universe(Container):
             else:
                 return self._prjd_two
 
+    @property
+    def fieldmeta(self):
+        '''
+        '''
+        return self._fieldmeta
+
+    @property
+    def fields(self):
+        '''
+        '''
+        return self._fields
 
     def _update_traits(self):
         '''
@@ -225,7 +236,7 @@ class Universe(Container):
 
     def __init__(self, frame=None, atom=None, unit_atom=None, prjd_atom=None,
                  two=None, prjd_two=None, atomtwo=None, prjd_atomtwo=None,
-                 molecule=None, **kwargs):
+                 molecule=None, fieldmeta=None, fields=None, **kwargs):
         '''
         The universe container represents all of the atoms, bonds, molecules,
         orbital/densities, etc. present within an atomistic simulations. See
@@ -243,6 +254,8 @@ class Universe(Container):
         self._prjd_two = prjd_two
         self._atomtwo = atomtwo
         self._prjd_atomtwo = prjd_atomtwo
+        self._fieldmeta = fieldmeta
+        self._fields = fields
         #if Config.ipynb and len(self._frame) < 1000:    # TODO workup a better solution here!
         #    self._update_traits()
 
