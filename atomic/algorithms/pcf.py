@@ -39,7 +39,7 @@ def compute_radial_pair_correlation(universe, a, b, dr=0.05, start=None,
     nats = (universe.atom['symbol'].astype('O').value_counts() // m).astype(np.int64)
     na = nats[a]
     nb = nats[b]
-    rho = 2 * n / vol
+    rho = n / vol
     if a == b:
         rho /= 2
     nn = max((na, nb))
