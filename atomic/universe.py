@@ -142,12 +142,20 @@ class Universe(Container):
         else:
             return formulas
 
-    def pair_correlation_function(self, **kwargs):
+    def pair_correlation_function(self, *args, **kwargs):
         '''
+        Args:
+            a (str): First atom type
+            b (str): Second atom type
+            dr (float): Step size (default 0.1 au)
+            rr (float): Two body sample distance (default 11.3)
+
         See Also:
-            :func:`~atomic.algorithms.pcf.compute_radial_pair_correlation`
+            The compute function :func:`~atomic.algorithms.pcf.compute_radial_pair_correlation`
+            and the two body module :mod:`~atomic.two` are useful in
+            understanding how this function works.
         '''
-        return compute_radial_pair_correlation(self, **kwargs)
+        return compute_radial_pair_correlation(self, *args, **kwargs)
 
     # DataFrames are "obscured" from the user via properties
     @property

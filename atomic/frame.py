@@ -13,8 +13,8 @@ class Frame(DataFrame):
     The frame DataFrame contains non-atomic information about each snapshot
     of the :class:`~atomic.universe.Universe` object.
     '''
-    __pkeys = ['frame']
-    __traits = ['xi', 'xj', 'xk', 'yi', 'yj', 'yk', 'zi', 'zj', 'zk',
+    _pkeys = ['frame']
+    _traits = ['xi', 'xj', 'xk', 'yi', 'yj', 'yk', 'zi', 'zj', 'zk',
                 'rx', 'ry', 'rz', 'ox', 'oy', 'oz']
 
     def get_unit_cell_magnitudes(self, inplace=False):

@@ -18,7 +18,8 @@ import os
 import shlex
 #from recommonmark.parser import CommonMarkParser
 on_rtd = os.environ.get('READTHEDOCS', None) == 'True'
-sys.path.insert(0, os.path.abspath('../../'))
+sys.path.insert(0, os.path.abspath('../../'))         # HACK
+sys.path.insert(0, os.path.abspath('../../../exa'))   # HACK
 from atomic import __version__
 
 # If extensions (or modules to document with autodoc) are in another directory,

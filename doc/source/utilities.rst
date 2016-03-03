@@ -1,5 +1,11 @@
-Utility Functions
+Algorithms
 ===================
 
-.. automodule:: atomic.formula
+.. automodule:: atomic.algorithms.pcf
+    :members:
+
+.. automodule:: atomic.algorithms.nearest
+    :members:
+
+.. automodule:: atomic.algorithms.packing
     :members:
