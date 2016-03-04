@@ -62,18 +62,19 @@ def compute_radial_pair_correlation(universe, a, b, dr=0.1, rr=dmax, start=None,
     na = nats[a]
     nb = nats[b]
     rho = n / (4 / 3 * np.pi * (rr - 0.3)**3)
-    nn = max((na, nb)) // 2
     nn = na * nb // 2
-    if na == 1 or nb == 1:
-        nn = na * nb
-    elif a == b:
+    if a == b:
         nn = na * (na - 1) // 2
+    if na == 1 or nb == 1:
+        nn *= 2
     r3 = bins[1:]**3 - bins[:-1]**3
     g = hist / (4 / 3 * np.pi * r3 * rho)
     r = (bins[1:] + bins[:-1]) / 2
     r *= Length['au', unit]
     c = hist.cumsum().astype(np.int64) / n
-    c *= nn
+    v_cell = universe.frame['cell_volume'].values[0]
+    v_two = 4 / 3 * np.pi * (rr + 4 * dr)**3
+    c *= v_two / v_cell * nn
     n1 = 'Pair Correlation Function ({0}, {1})'.format(a, b)
     n2 = 'Distance ({0})'.format(unit)
     n3 = 'Pair Count ({0}, {1})'.format(a, b)
