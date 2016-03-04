@@ -18,16 +18,21 @@ require.config({
             deps: ['nbextensions/exa/atomic/lib/three.min'],
             exports: 'THREE.TrackballControls'
         },
+        'nbextensions/exa/atomic/marchingcubes': {
+            exports: 'MarchingCubes'
+        },
     },
 });
 
 
 define([
     'nbextensions/exa/atomic/lib/three.min',
-    'nbextensions/exa/atomic/lib/TrackballControls'
+    'nbextensions/exa/atomic/lib/TrackballControls',
+    'nbextensions/exa/atomic/marchingcubes'
 ], function(
     THREE,
-    TrackballControls
+    TrackballControls,
+    MarchingCubes
 ) {
     var vertex_shader = "\
         attribute float size;\
@@ -257,6 +262,65 @@ define([
         this.scene.remove(this.bond);
         this.bond = new THREE.LineSegments(geometry, material);
         this.scene.add(this.bond);
+    };
+
+    AtomicThreeJS.prototype.add_surface = function(field, dims, orig, scale, iso) {
+        var cpos = '#003399';
+        var cneg = '#FF9900';
+        var opac = 0.5;
+        var marched = MarchingCubes(field, dims, orig, scale, iso);
+        var verts = marched['vertices'];
+        var faces = marched['faces'];
+        var nverts = marched['nvertices'];
+        var nfaces = marched['nfaces']
+        var vs = verts.length;
+        var fs = faces.length;
+        var nvs = nverts.length;
+        var nfs = nfaces.length;
+
+        var geom = new THREE.Geometry();
+        var ngeom = new THREE.Geometry();
+        var mat = new THREE.MeshPhongMaterial({
+            'color': cpos, 'specular': cpos,
+            'transparent': true, 'opacity': opac,
+            'shininess': 30
+        });
+        var nmat = new THREE.MeshPhongMaterial({
+            'color': cneg, 'specular': cneg,
+            'transparent': true, 'opacity': opac,
+            'shininess': 30
+        });
+
+        for (var i = 0; i < vs; i++) {
+            geom.vertices.push(new THREE.Vector3(
+                verts[i][0], verts[i][1], verts[i][2]));
+        };
+        for (var i = 0; i < fs; i++) {
+            geom.faces.push(new THREE.Face3(
+                faces[i][0], faces[i][1], faces[i][2]));
+        };
+        for (var i = 0; i < nvs; i++) {
+            ngeom.vertices.push(new THREE.Vector3(
+                nverts[i][0], nverts[i][1], nverts[i][2]));
+        };
+        for (var i = 0; i < nfs; i++) {
+            ngeom.faces.push(new THREE.Face3(
+                nfaces[i][0], nfaces[i][1], nfaces[i][2]));
+        };
+
+        geom.mergeVertices();
+        geom.computeFaceNormals();
+        geom.computeVertexNormals();
+        ngeom.mergeVertices();
+        ngeom.computeFaceNormals();
+        ngeom.computeVertexNormals();
+        nmat.side = THREE.BackSide;
+        this.scene.remove(this.surf);
+        this.scene.remove(this.nsurf);
+        this.surf = new THREE.Mesh(geom, mat);
+        this.nsurf = new THREE.Mesh(ngeom, nmat);
+        this.scene.add(this.surf);
+        this.scene.add(this.nsurf);
     };
 
     AtomicThreeJS.prototype.update_cam_ctrl = function(center) {
