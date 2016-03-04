@@ -63,8 +63,11 @@ def compute_radial_pair_correlation(universe, a, b, dr=0.1, rr=dmax, start=None,
     nb = nats[b]
     rho = n / (4 / 3 * np.pi * (rr - 0.3)**3)
     nn = max((na, nb)) // 2
+    nn = na * nb // 2
     if na == 1 or nb == 1:
-        nn *= 2
+        nn = na * nb
+    elif a == b:
+        nn = na * (na - 1) // 2
     r3 = bins[1:]**3 - bins[:-1]**3
     g = hist / (4 / 3 * np.pi * r3 * rho)
     r = (bins[1:] + bins[:-1]) / 2
