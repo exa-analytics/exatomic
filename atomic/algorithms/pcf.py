@@ -6,7 +6,7 @@ Pair Correlation Functions
 from exa import _np as np
 from exa.frames import DataFrame
 from atomic import Length
-from atomic.two import dmax
+from atomic.two import dmax, dmin
 
 
 class PCF(DataFrame):
@@ -23,7 +23,8 @@ class PCF(DataFrame):
         return self.set_index(self.columns[0]).plot(**kwargs)
 
 
-def compute_radial_pair_correlation(universe, a, b, dr=0.1, rr=dmax, start=None, stop=None, unit='A'):
+def compute_radial_pair_correlation(universe, a, b, dr=0.1, rmax=dmax, rmin=dmin,
+                                    start=None, stop=None, unit='A'):
     '''
     Compute the angularly independent pair correlation function.
 
@@ -48,20 +49,19 @@ def compute_radial_pair_correlation(universe, a, b, dr=0.1, rr=dmax, start=None,
         above, divided by the normalization for the radial distance outward).
     '''
     distances = universe.two.ix[(universe.two['symbols'].isin([a + b, b + a])), 'distance']
-    dmin = distances.min()
-    dmax = distances.max()
-    start = dmin - 0.4 if start is None else start
-    stop = dmax - 0.2 if stop is None else stop
+    dist_min = distances.min()
+    dist_max = distances.max()
+    start = start if start else dist_min - 0.1
+    stop = stop if stop else dist_max - 0.1
     bins = np.arange(start, stop, dr)
     bins = np.append(bins, bins[-1] + dr)
     hist, bins = np.histogram(distances, bins)
     n = len(distances)
     m = len(universe)
-    f = universe._frame.index[0]
     nats = (universe.atom['symbol'].astype('O').value_counts() // m).astype(np.int64)
     na = nats[a]
     nb = nats[b]
-    rho = n / (4 / 3 * np.pi * (rr - 0.3)**3)
+    rho = n / (4 / 3 * np.pi * (rmax - rmin - 0.4)**3)
     nn = na * nb // 2
     if a == b:
         nn = na * (na - 1) // 2
@@ -73,7 +73,7 @@ def compute_radial_pair_correlation(universe, a, b, dr=0.1, rr=dmax, start=None,
     r *= Length['au', unit]
     c = hist.cumsum().astype(np.int64) / n
     v_cell = universe.frame['cell_volume'].values[0]
-    v_two = 4 / 3 * np.pi * (rr + 4 * dr)**3
+    v_two = 4 / 3 * np.pi * (rmax + rmin + 0.2)**3
     c *= v_two / v_cell * nn
     n1 = 'Pair Correlation Function ({0}, {1})'.format(a, b)
     n2 = 'Distance ({0})'.format(unit)
