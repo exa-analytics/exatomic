@@ -10,6 +10,7 @@ from exa.relational.constant import Constant
 
 
 from atomic.universe import Universe            # atomic imports
+from atomic.cube import read_cubes
 from atomic.xyz import read_xyz
 from atomic import algorithms
 from atomic.formula import SimpleFormula

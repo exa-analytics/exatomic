@@ -3,8 +3,8 @@
 Non-jitted
 =============
 '''
-from atomic import _np as np
-from atomic import _pd as pd
+from exa import _np as np
+from exa import _pd as pd
 
 
 def generate_minimal_framedf_from_onedf(onedf):
