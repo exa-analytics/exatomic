@@ -113,6 +113,25 @@ define([
             this.cell_oy = this.get_from_json_str('_frame_oy');
             this.cell_oz = this.get_from_json_str('_frame_oz');
             this.centers = this.get_from_json_str('_center');
+            this.field = 0;
+            this.fields = this.model.get('_fields');
+            this.fieldframes = this.model.get('_fieldframes');
+            this.nfields = this.fields.length;
+            this.field_ox = this.get_from_json_str('_fieldmeta_ox');
+            this.field_oy = this.get_from_json_str('_fieldmeta_oy');
+            this.field_oz = this.get_from_json_str('_fieldmeta_oz');
+            this.field_nx = this.get_from_json_str('_fieldmeta_nx');
+            this.field_ny = this.get_from_json_str('_fieldmeta_ny');
+            this.field_nz = this.get_from_json_str('_fieldmeta_nz');
+            this.field_dxi = this.get_from_json_str('_fieldmeta_dxi');
+            this.field_dxj = this.get_from_json_str('_fieldmeta_dxj');
+            this.field_dxk = this.get_from_json_str('_fieldmeta_dxk');
+            this.field_dyi = this.get_from_json_str('_fieldmeta_dyi');
+            this.field_dyj = this.get_from_json_str('_fieldmeta_dyj');
+            this.field_dyk = this.get_from_json_str('_fieldmeta_dyk');
+            this.field_dzi = this.get_from_json_str('_fieldmeta_dzi');
+            this.field_dzj = this.get_from_json_str('_fieldmeta_dzj');
+            this.field_dzk = this.get_from_json_str('_fieldmeta_dzk');
             this.filled = true;
             // Resizable container to house the threejs app canvas and gui
             this.container = $('<div/>').width(this.width).height(this.height).resizable({
@@ -200,8 +219,15 @@ define([
             this.f1 = {};
             this.f1['play'] = this.guif1.add(this.gui_f1, 'play');
             this.f1['frame'] = this.guif1.add(this.gui_f1, 'frame', this.framelist);
-            this.f1['index'] = this.guif1.add(this.gui_f1, 'index', 0, this.nframes - 1).step(1);
+            this.f1['index'] = this.guif1.add(this.gui_f1, 'index', 0, this.nframes - 1);
             this.f1['fps'] = this.guif1.add(this.gui_f1, 'fps', 1, 60, 1);
+            this.f1['frame'].onChange(function(frame) {
+                self.frame = frame;
+                self.update_atom(true);
+                if (self.bonds_length > 0) {
+                    self.update_bond(true);
+                };
+            });
             this.f1['index'].onChange(function(value) {
                 self.index = value;
                 self.frame = self.framelist[self.index];
@@ -240,6 +266,61 @@ define([
             this.f4['show'].onFinishChange(function(value) {
                 self.update_cell(value);
             });
+            this.gui_f5 = {
+                show: false,
+                frame: this.frame,
+                field: this.field,
+                opacity: 1,
+            };
+            this.f5 = {};
+            this.f5['show'] = this.guif5.add(this.gui_f5, 'show');
+            //this.f5['frame'] = this.guif5.add(this.gui_f5, 'frame', this.framelist);
+            this.f5['field'] = this.guif5.add(this.gui_f5, 'field', Object.keys(this.fields));
+            //this.f5['opacity'] = this.guif5.add(this.gui_f5, 'opacity', 0, 1);
+            this.f5['show'].onFinishChange(function(value) {
+                self.update_surface(value);
+            });
+            //this.f5['frame'].onFinishChange(function(value) {
+            //    console.log('inside gui frame change');
+            //    console.log(value);
+            //    self.frame = value;
+            //    self.update_surface(true);
+            //});
+            this.f5['field'].onFinishChange(function(value) {
+                console.log('inside gui field change');
+                console.log(value);
+                self.field = value;
+                self.update_surface(true);
+            });
+
+            //this.f5['opacity'].onFinishChange(function(value) {
+            //    this.gui_f5.opacity = value;
+            //    self.update_surface(true);
+            //});
+        },
+
+        update_surface: function(value) {
+            if (value == true) {
+                var fd = this.field;
+                var fr = this.fieldframes[fd];
+                this.f1.frame.setValue(fr);
+                var field = this.fields[fd];
+                var dims = [this.field_nx[fd],
+                            this.field_ny[fd],
+                            this.field_nz[fd]];
+                var orig = [this.field_ox[fd],
+                            this.field_oy[fd],
+                            this.field_oz[fd]];
+                var scale = [this.field_dxi[fd],
+                             this.field_dyj[fd],
+                             this.field_dzk[fd]];
+                var iso = 0.03;
+                this.app.add_surface(field, dims, orig, scale, iso);
+            } else {
+                this.app.scene.remove(this.app.surf);
+                this.app.scene.remove(this.app.nsurf);
+            }
+            this.app.render();
         },
 
         update_atom: function(value) {

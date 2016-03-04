@@ -19,4 +19,4 @@ class FieldMeta(DataFrame):
         'nz', 'dzi', 'dzj', 'dzk',
         'label', 'frame',
     ]
-    __groupby__ = 'frame'
+    #__groupby__ = 'frame'

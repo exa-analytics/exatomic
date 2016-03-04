@@ -10,6 +10,7 @@ from exa import Container
 from exa import _np as np
 from exa import _pd as pd
 from exa.config import Config
+from atomic.field import FieldMeta
 from atomic.frame import Frame, minimal_frame, _min_frame_from_atom
 from atomic.atom import (Atom, UnitAtom, ProjectedAtom,
                          get_unit_atom, get_projected_atom)
@@ -44,12 +45,15 @@ class Universe(Container):
     __mapper_args__ = {'polymorphic_identity': 'universe'}
     __dfclasses__ = {'_frame': Frame, '_atom': Atom, '_unit_atom': UnitAtom,
                      '_prjd_atom': ProjectedAtom, '_two': Two, '_prjd_two': ProjectedTwo,
-                     '_atomtwo': AtomTwo, '_prjd_atomtwo': ProjectedAtomTwo}
+                     '_atomtwo': AtomTwo, '_prjd_atomtwo': ProjectedAtomTwo,
+                     '_fieldmeta': FieldMeta}
 
     # DOMWidget settings
     _view_module = Unicode('nbextensions/exa/atomic/universe').tag(sync=True)
     _view_name = Unicode('UniverseView').tag(sync=True)
     _framelist = List().tag(sync=True)
+    _fields = List().tag(sync=True)
+    _fieldframes = List().tag(sync=True)
     _center = Unicode().tag(sync=True)
     _atom_type = Unicode('points').tag(sync=True)
     _bonds = Unicode().tag(sync=True)
@@ -195,14 +199,10 @@ class Universe(Container):
 
     @property
     def fieldmeta(self):
-        '''
-        '''
         return self._fieldmeta
 
     @property
     def fields(self):
-        '''
-        '''
         return self._fields
 
     def _update_traits(self):
@@ -254,10 +254,10 @@ class Universe(Container):
 
     def __init__(self, frame=None, atom=None, unit_atom=None, prjd_atom=None,
                  two=None, prjd_two=None, atomtwo=None, prjd_atomtwo=None,
-                 molecule=None, fieldmeta=None, fields=None, **kwargs):
+                 molecule=None, fieldmeta=None, fields=[], **kwargs):
         '''
         The universe container represents all of the atoms, bonds, molecules,
-        orbital/densities, etc. present within an atomistic simulations. See
+        orbital/densities, etc. present within an atomistic simulation. See
         documentation related to each data specific dataframe for more information.
         '''
         super().__init__(**kwargs)
@@ -273,6 +273,9 @@ class Universe(Container):
         self._atomtwo = atomtwo
         self._prjd_atomtwo = prjd_atomtwo
         self._fieldmeta = fieldmeta
+        self._fieldframes = []
+        if hasattr(self._fieldmeta, 'index'):
+            self._fieldframes = [int(obj) for obj in self._fieldmeta['frame'].values]
         self._fields = fields
         #if Config.ipynb and len(self._frame) < 1000:    # TODO workup a better solution here!
         #    self._update_traits()

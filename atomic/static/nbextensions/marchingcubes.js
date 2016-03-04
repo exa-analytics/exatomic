@@ -386,6 +386,7 @@ var MarchingCubes = function(data, dims, orig, scale, isolevel) {
 
     var nedges = new Int32Array(12);
 
+//var MarchingCubes = function(data, dims, orig, scale, isolevel) {
     //Iterate over each cube
     for(var nx = 0; nx < dims[0] - 1; nx++) {
         for(var ny = 0; ny < dims[1] - 1; ny++) {
