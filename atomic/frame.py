@@ -10,10 +10,12 @@ from exa.jitted.broadcasting import mag_3d
 
 class Frame(DataFrame):
     '''
+    The frame DataFrame contains non-atomic information about each snapshot
+    of the :class:`~atomic.universe.Universe` object.
     '''
-    __pk__ = ['frame']
-    __traits__ = ['xi', 'xj', 'xk', 'yi', 'yj', 'yk', 'zi', 'zj', 'zk',
-                  'rx', 'ry', 'rz', 'ox', 'oy', 'oz']
+    _pkeys = ['frame']
+    _traits = ['xi', 'xj', 'xk', 'yi', 'yj', 'yk', 'zi', 'zj', 'zk',
+                'rx', 'ry', 'rz', 'ox', 'oy', 'oz']
 
     def get_unit_cell_magnitudes(self, inplace=False):
         '''
@@ -44,11 +46,6 @@ class Frame(DataFrame):
             self['rz'] = rz
         else:
             return (rx, ry, rz)
-
-    def get_formulas(self, astype='list'):
-        '''
-        '''
-        raise NotImplementedError()
 
     def is_periodic(self):
         '''

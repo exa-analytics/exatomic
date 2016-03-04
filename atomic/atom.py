@@ -51,10 +51,10 @@ class AtomBase:
     '''
     Base class for :class:`~atomic.atom.Atom` and :class:`~atomic.atom.ProjectedAtom`.
     '''
-    __pk__ = ['atom']
-    __fk__ = ['frame']
-    __traits__ = ['x', 'y', 'z', 'radius', 'color']
-    __groupby__ = 'frame'
+    _pkeys = ['atom']
+    _fkeys = ['frame']
+    _traits = ['x', 'y', 'z', 'radius', 'color']
+    _groupbys = 'frame'
 
     def _prep_trait_values(self):
         '''
@@ -123,8 +123,8 @@ class ProjectedAtom(AtomBase, DataFrame):
     See Also:
         :class:`~atomic.atom.PrimitiveAtom`
     '''
-    __pk__ = ['prjd_atom']
-    __fk__ = ['atom']
+    _pkeys = ['prjd_atom']
+    _fkeys = ['atom']
 
 
 def get_unit_atom(universe, inplace=False):
@@ -174,8 +174,8 @@ def _compute_projected_atom_static_cell(universe):
     df = project_coordinates(xyz, rxyz)
     df = pd.DataFrame(df, columns=('x', 'y', 'z'))
     df.index.names = ['prjd_atom']
-    df['frame'] = tile_i8(universe.atom['frame'].values, 27)
-    df['symbol'] = universe.atom['symbol'].tolist() * 27
+    df['frame'] = tile_i8(universe.atom['frame'].astype('i8').values, 27)
+    df['symbol'] = universe.atom['symbol'].astype('O').tolist() * 27
     df['symbol'] = df['symbol'].astype('category')
     df['atom'] = tile_i8(universe.atom.index.values, 27)
     return ProjectedAtom(df)

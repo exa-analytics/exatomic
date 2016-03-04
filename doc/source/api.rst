@@ -6,5 +6,6 @@ API
 
     universe.rst
     dataframes.rst
+    algorithms.rst
     utilities.rst
     xyz.rst

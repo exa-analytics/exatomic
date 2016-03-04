@@ -28,9 +28,10 @@ dmax = 11.3
 class Two(DataFrame):
     '''
     '''
-    __pk__ = ['two']
-    __fk__ = ['frame', 'atom0', 'atom1']
-    __groupby__ = 'frame'
+    _metadata = ['_vol']
+    _pkeys = ['two']
+    _fkeys = ['frame', 'atom0', 'atom1']
+    _groupbys = ['frame']
 
     def compute_bond_count(self):
         '''
@@ -44,9 +45,10 @@ class Two(DataFrame):
 class ProjectedTwo(DataFrame):
     '''
     '''
-    __pk__ = ['prjd_two']
-    __fk__ = ['frame', 'prjd_atom0', 'prjd_atom1']
-    __groupby__ = 'frame'
+    _metadata = ['_vol']
+    _pkeys = ['prjd_two']
+    _fkeys = ['frame', 'prjd_atom0', 'prjd_atom1']
+    _groupbys = ['frame']
 
     def compute_bond_count(self):
         '''
@@ -60,13 +62,13 @@ class ProjectedTwo(DataFrame):
 class AtomTwo(ManyToMany):
     '''
     '''
-    __fks__ = ['atom', 'two']
+    _fkeys = ['atom', 'two']
 
 
 class ProjectedAtomTwo(ManyToMany):
     '''
     '''
-    __fks__ = ['prjd_atom', 'prjd_two']
+    _fkeys = ['prjd_atom', 'prjd_two']
 
 
 def get_two_body(universe, k=None, dmax=dmax, dmin=dmin,
