@@ -32,5 +32,6 @@ def einstein_relation(universe, length='cm', time='s'):
         The asymptotic value of the returned variable is the diffusion coefficient.
         The default units of the diffusion coefficient are :math:`\\frac{cm^{2}}{s}`.
     '''
+    msd = absolute_msd(universe).mean(axis=1)
     t = universe.frame['time'].values
     return msd / (6 * t) * Length['au', length]**2 / Time['au', time]

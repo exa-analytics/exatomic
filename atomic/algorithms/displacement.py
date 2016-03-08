@@ -20,12 +20,13 @@ def absolute_msd(universe, ref_frame=None):
     Returns
         df (:class:`~pandas.DataFrame`): Time dependent displacement per atom
     '''
+    index = 0
     if ref_frame is None:
-        ref_frame = 0
+        ref_frame = universe.frame.index[index]
     else:
-        frames = u.frame.index.values
+        frames = universe.frame.index.values
         ref_frame = np.where(frames == ref_frame)
-    coldata = u.atom.ix[u.atom['frame'] == 10, ['label', 'symbol']]
+    coldata = universe.atom.ix[universe.atom['frame'] == ref_frame, ['label', 'symbol']]
     coldata = (coldata['label'].astype(str) + '_' + coldata['symbol']).values
     groups = universe.atom.groupby('label')
     msd = np.empty((groups.ngroups, ), dtype='O')
