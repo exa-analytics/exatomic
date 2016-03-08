@@ -34,4 +34,5 @@ def einstein_relation(universe, length='cm', time='s'):
     '''
     msd = absolute_msd(universe).mean(axis=1)
     t = universe.frame['time'].values
-    return msd / (6 * t) * Length['au', length]**2 / Time['au', time]
+    return msd / (6 * t)
+    #return msd / (6 * t) * Length['au', length]**2 / Time['au', time]
