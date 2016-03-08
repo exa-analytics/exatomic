@@ -4,7 +4,7 @@ Field DataFrame
 ======================
 A dataframe storing scalar field data.
 '''
-from exa.frames import DataFrame
+from exa.frame import DataFrame
 
 class FieldMeta(DataFrame):
     '''

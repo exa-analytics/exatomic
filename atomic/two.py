@@ -8,7 +8,7 @@ from sklearn.neighbors import NearestNeighbors
 from exa import _np as np
 from exa import _pd as pd
 from exa.config import Config
-from exa.frames import DataFrame, ManyToMany
+from exa.frame import DataFrame, ManyToMany
 if Config.numba:
     from exa.jitted.iteration import repeat_i8, repeat_i8_array, pdist
     from exa.jitted.indexing import unordered_pairing_function

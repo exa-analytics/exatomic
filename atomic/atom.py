@@ -38,7 +38,7 @@ from scipy.spatial import cKDTree
 from exa import _np as np
 from exa import _pd as pd
 from exa.config import Config
-from exa.frames import DataFrame, Updater
+from exa.frame import DataFrame, Updater
 from atomic import Isotope
 if Config.numba:
     from exa.jitted.iteration import project_coordinates, tile_i8

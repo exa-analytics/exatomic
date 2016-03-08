@@ -4,7 +4,7 @@ Atomic Editor
 ====================================
 
 '''
-from exa import Editor
+from exa.editor import Editor
 
 
 class AtomicEditor(Editor):
@@ -16,11 +16,11 @@ class AtomicEditor(Editor):
         '''
         Create the atom dataframe from the editor.
         '''
-        raise NotImplementedError()
+        return self._parse_atom()
 
     @property
     def frame(self):
         '''
         Create the frame dataframe from the editor.
         '''
-        raise NotImplementedError()
+        return self._parse_frame()

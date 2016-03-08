@@ -4,7 +4,7 @@ Pair Correlation Functions
 ============================
 '''
 from exa import _np as np
-from exa.frames import DataFrame
+from exa.frame import DataFrame
 from atomic import Length
 from atomic.two import dmax, dmin
 

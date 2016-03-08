@@ -8,10 +8,14 @@ from exa import _pd as pd
 from exa import DataFrame
 
 
-def absolute_msd(universe, ref_frame=None):
+def absolute_squared_displacement(universe, ref_frame=None):
     '''
     Compute the mean squared displacement per atom per time with respect to the
     referenced position.
+
+    Computes the squared displacement using the :class:`~atomic.atom.Atom`
+    dataframe. In the case where this dataframe only contains the in unit cell
+    coordinates, this may not give desired results.
 
     Args:
         universe (:class:`~atomic.Universe`): The universe containing atomic positions
