@@ -12,15 +12,22 @@ from atomic.two import dmax, dmin
 class PCF(DataFrame):
     '''
     '''
-    def plot(self, count=True, **kwargs):
+    def plot(self, count=True, secondary_y=True, **kwargs):
         '''
         Note:
             Because we set_index before plotting, the "actual" plotting function
             called is that of :class:`~exa.frames.DataFrame`.
         '''
-        if 'secondary_y' not in kwargs and count:
+        if secondary_y:
             kwargs['secondary_y'] = self.columns[2]
-        return self.set_index(self.columns[0]).plot(**kwargs)
+        ax = self.set_index(self.columns[0]).plot(**kwargs)
+        patches1, labels1 = ax.get_legend_handles_labels()
+        patches2, labels2 = ax.right_ax.get_legend_handles_labels()
+        legend = ax.legend(patches1+patches2, labels1+labels2, loc='best', frameon=True)
+        frame = legend.get_frame()
+        frame.set_facecolor('white')
+        frame.set_edgecolor('black')
+        return ax
 
 
 def compute_radial_pair_correlation(universe, a, b, dr=0.1, rmax=dmax, rmin=dmin,
@@ -40,6 +47,10 @@ def compute_radial_pair_correlation(universe, a, b, dr=0.1, rmax=dmax, rmin=dmin
             &1\\ \\ if\\ r - \\frac{\Delta r}{2} \le \left|r_{a} - r_{b}\\right|\lt r + \\frac{\Delta r}{2} \\\\
             &0\\ \\ otherwise \\\\
         \\end{cases}
+
+    Args:
+        universe (:class:`~atomic.Universe`): The universe (with two body data)
+        a (str):
 
     Note:
         Depending on the type of two body computation (or data) used, the volume
