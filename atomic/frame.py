@@ -4,7 +4,7 @@ Atom DataFrame
 ==========================
 '''
 from exa import _np as np
-from exa.frames import DataFrame
+from exa.frame import DataFrame
 from exa.jitted.broadcasting import mag_3d
 
 

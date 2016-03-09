@@ -7,7 +7,7 @@ Various algorithms for computing diffusion coefficients are coded here.
 from exa import _np as np
 from exa import _pd as pd
 from atomic import Length, Time
-from atomic.algorithms.displacement import absolute_msd
+from atomic.algorithms.displacement import absolute_squared_displacement
 
 
 def einstein_relation(universe, length='cm', time='s'):
@@ -32,7 +32,6 @@ def einstein_relation(universe, length='cm', time='s'):
         The asymptotic value of the returned variable is the diffusion coefficient.
         The default units of the diffusion coefficient are :math:`\\frac{cm^{2}}{s}`.
     '''
-    msd = absolute_msd(universe).mean(axis=1)
+    msd = absolute_squared_displacement(universe).mean(axis=1)
     t = universe.frame['time'].values
     return msd / (6 * t)
-    #return msd / (6 * t) * Length['au', length]**2 / Time['au', time]
