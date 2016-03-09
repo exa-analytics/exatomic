@@ -30,8 +30,8 @@ class PCF(DataFrame):
         return ax
 
 
-def compute_radial_pair_correlation(universe, a, b, dr=0.1, rmax=dmax, rmin=dmin,
-                                    start=None, stop=None, unit='A'):
+def compute_radial_pair_correlation(universe, a, b, dr=0.05, vr=dmax,
+                                    start=None, stop=None, length_unit='A'):
     '''
     Compute the angularly independent pair correlation function.
 
@@ -50,7 +50,13 @@ def compute_radial_pair_correlation(universe, a, b, dr=0.1, rmax=dmax, rmin=dmin
 
     Args:
         universe (:class:`~atomic.Universe`): The universe (with two body data)
-        a (str):
+        a (str): First atom type
+        b (str): Second atom type
+        dr (float): Radial step size
+        vr (float): (Max) radius used during computation of two body properties
+        start (float): Starting radial point
+        stop (float): Stopping radial point
+        length_unit (str): Output unit of length
 
     Note:
         Depending on the type of two body computation (or data) used, the volume
@@ -59,34 +65,32 @@ def compute_radial_pair_correlation(universe, a, b, dr=0.1, rmax=dmax, rmin=dmin
         the number of properties used in the histogram (the triple summation
         above, divided by the normalization for the radial distance outward).
     '''
-    distances = universe.two.ix[(universe.two['symbols'].isin([a + b, b + a])), 'distance']
-    dist_min = distances.min()
-    dist_max = distances.max()
-    start = start if start else dist_min - 0.1
-    stop = stop if stop else dist_max - 0.1
-    bins = np.arange(start, stop, dr)
-    bins = np.append(bins, bins[-1] + dr)
+    distances = universe.two.ix[(universe.two['symbols'].isin([a + b, b + a])), 'distance']    # Collect distances of interest
+    start = start if start else distances.min() - 0.1
+    stop = stop if stop else distances.max() - 0.1
+    bins = np.arange(start, stop, dr)           # The summation over Q_m (see docstring)
+    bins = np.append(bins, bins[-1] + dr)       # is simply a histogram of the distances
     hist, bins = np.histogram(distances, bins)
     n = len(distances)
     m = len(universe)
     nats = (universe.atom['symbol'].astype('O').value_counts() // m).astype(np.int64)
     na = nats[a]
     nb = nats[b]
-    rho = n / (4 / 3 * np.pi * (rmax - rmin - 0.4)**3)
-    nn = na * nb // 2
+    v_two = 4 / 3 * np.pi * vr**3    # The volume used in computation of two body
+    rho = n / v_two                  # properties is part of the normalization factor
+    nn = na * nb // 2                # but not part of the pair count factor
     if a == b:
         nn = na * (na - 1) // 2
-    if na == 1 or nb == 1:
+    elif na == 1 or nb == 1:
         nn *= 2
-    r3 = bins[1:]**3 - bins[:-1]**3
-    g = hist / (4 / 3 * np.pi * r3 * rho)
+    r3 = bins[1:]**3 - bins[:-1]**3        # No need for approximations for the
+    g = hist / (4 / 3 * np.pi * r3 * rho)  # volume of a spherical shell
     r = (bins[1:] + bins[:-1]) / 2
-    r *= Length['au', unit]
+    r *= Length['au', length_unit]
     c = hist.cumsum().astype(np.int64) / n
     v_cell = universe.frame['cell_volume'].values[0]
-    v_two = 4 / 3 * np.pi * (rmax + rmin + 0.2)**3
     c *= v_two / v_cell * nn
     n1 = 'Pair Correlation Function ({0}, {1})'.format(a, b)
-    n2 = 'Distance ({0})'.format(unit)
+    n2 = 'Distance ({0})'.format(length_unit)
     n3 = 'Pair Count ({0}, {1})'.format(a, b)
     return PCF.from_dict({n1: g, n2: r, n3: c})

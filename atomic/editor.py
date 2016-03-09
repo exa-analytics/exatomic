@@ -5,22 +5,18 @@ Atomic Editor
 
 '''
 from exa.editor import Editor
+from atomic.universe import Universe
 
 
 class AtomicEditor(Editor):
     '''
     Editor specific to the atomic package.
     '''
-    @property
-    def atom(self):
+    def to_universe(self):
         '''
-        Create the atom dataframe from the editor.
+        Create a :class:`~atomic.universe.Universe` from the editor object.
         '''
-        return self._parse_atom()
-
-    @property
-    def frame(self):
-        '''
-        Create the frame dataframe from the editor.
-        '''
-        return self._parse_frame()
+        atom = self.atom
+        frame = self.frame
+        meta = self.meta
+        return Universe(frame=frame, atom=atom, meta=meta)

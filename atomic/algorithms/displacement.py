@@ -31,7 +31,7 @@ def absolute_squared_displacement(universe, ref_frame=None):
         frames = universe.frame.index.values
         ref_frame = np.where(frames == ref_frame)
     coldata = universe.atom.ix[universe.atom['frame'] == ref_frame, ['label', 'symbol']]
-    coldata = (coldata['label'].astype(str) + '_' + coldata['symbol']).values
+    coldata = (coldata['label'].astype(str) + '_' + coldata['symbol'].astype(str)).values
     groups = universe.atom.groupby('label')
     msd = np.empty((groups.ngroups, ), dtype='O')
     for i, (label, group) in enumerate(groups):
