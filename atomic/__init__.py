@@ -22,7 +22,3 @@ if Config._temp:
     update_config()
     create_all()
     install_notebook_widgets(Config.atomic['nbext'], Config.atomic['extensions'])
-    #del create_all, update_config
-
-
-#del universe, xyz, frame, atom, two, Config
