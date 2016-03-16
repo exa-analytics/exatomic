@@ -292,16 +292,16 @@ def concat(universes):
 def after_insert(*args, **kwargs):
     '''
     '''
-    print('after_insert')
-    print(args)
-    print(kwargs)
+    #print('after_insert')
+    #print(args)
+    #print(kwargs)
     return args
 
 @event.listens_for(Universe, 'after_update')
 def after_update(*args, **kwargs):
     '''
     '''
-    print('after_update')
-    print(args)
-    print(kwargs)
+    #print('after_update')
+    #print(args)
+    #print(kwargs)
     return args

@@ -105,13 +105,14 @@ def read_cubes(paths, frames=None, fieldxs=None,
             cur = atoms[i - 1]
             try:
                 if np.all(np.allclose(cur[['x', 'y', 'z']], atom[['x', 'y', 'z']])):
-                    frameidxs.append(frame)
+                    pass
                 else:
                     frame += 1
                     frameidxs.append(frame)
             except ValueError:
                 frame += 1
                 frameidxs.append(frame)
+        atoms = [atoms[i] for i in frameidxs]
         tmp = [i['label'] for i in atoms]
         unikws['atom'] = pd.concat(atoms).reset_index(drop=True)
         unikws['atom']['frame'] = [fidx for i, fidx in enumerate(frameidxs) for j in tmp[i]]
@@ -134,5 +135,5 @@ def _gen_atom(smdf, convert, fdx):
     atomdf['symbol'] = atomdf['symbol'].map(i.groupby(i.index).first())
     atomdf['frame'] = fdx
     atomdf['label'] = atomdf.index.values
-    print(atomdf)
+    #print(atomdf)
     return Atom(atomdf)
