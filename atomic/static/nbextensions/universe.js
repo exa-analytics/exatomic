@@ -160,6 +160,8 @@ define([
             JSON to Object
             ```````````````
             Custom getter for Python objects stored as json strings.
+            Special key == "-1" means that the value is the same for all
+            frames.
             */
             try {
                 return JSON.parse(this.model.get(name));
