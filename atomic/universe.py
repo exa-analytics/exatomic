@@ -12,11 +12,11 @@ correlation functional is the only object that changes between frames -
 the atomic coordinates are the same/similar between each frame - in this
 case the term frame refers to the dimension in functional chosen).
 '''
+import pandas as pd
+import numpy as np
 from traitlets import Unicode, List
 from sqlalchemy import Column, Integer, ForeignKey, event
 from exa import Container
-from exa import _np as np
-from exa import _pd as pd
 from exa.config import Config
 from atomic.field import FieldMeta
 from atomic.frame import Frame, minimal_frame, _min_frame_from_atom
