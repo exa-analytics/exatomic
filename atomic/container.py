@@ -1,16 +1,20 @@
 # -*- coding: utf-8 -*-
 '''
-Universe
-====================
-The atomic container object.
+Universe (Container)
+======================
+Like all secondary (meaning dependent on `exa`_) packages, atomic has a default,
+data aware container: the :class:`~atomic.container.Universe`.
 
-Conceptually a universe is the collection of time dependent particles. The
-term "frame" typically refers to a single snapshot in time, though this is
-not a requirement: a universe maybe be any space-dimension continuum (for
-example consider a study where the density functional theory (DFT) exchange-
-correlation functional is the only object that changes between frames -
-the atomic coordinates are the same/similar between each frame - in this
-case the term frame refers to the dimension in functional chosen).
+Conceptually, a universe is a collection of independent frames or state
+configurations of a given system. For example, a universe may contain only a
+single frame with the geometry of the molecule (system) of interest, a set of
+snapshot geometries obtained during the course of a geometry optimization (one
+per frame), the same molecule's optimized geometry with each frame containing a
+different level of theory, a properties calculation test set of small molecules
+with one molecule per frame, a molecular dynamics simulation with each frame
+corresponding to a snaphot in time, etc., without restrictions.
+
+.. _exa: http://exa-analytics.github.io/website
 '''
 import pandas as pd
 import numpy as np
