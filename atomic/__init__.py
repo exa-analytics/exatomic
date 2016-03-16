@@ -5,7 +5,7 @@ __version__ = '.'.join((str(v) for v in __atomic_version__))
 
 from exa.config import Config
 from exa.relational.isotope import Isotope
-from exa.relational.unit import Length, Energy
+from exa.relational.unit import Length, Energy, Time
 from exa.relational.constant import Constant
 
 
@@ -16,13 +16,13 @@ from atomic import algorithms
 from atomic.formula import SimpleFormula
 
 if Config._temp:
-    from exa.tools import install_notebook_widgets
+    from exa.install import install_notebook_widgets
     from exa.relational import create_all
-    from atomic.tools import update_config
+    from atomic.install import update_config
     update_config()
     create_all()
     install_notebook_widgets(Config.atomic['nbext'], Config.atomic['extensions'])
-    del create_all
+    #del create_all, update_config
 
 
-del universe, xyz, frame, atom, two, Config
+#del universe, xyz, frame, atom, two, Config

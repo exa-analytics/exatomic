@@ -3,6 +3,14 @@
 Universe
 ====================
 The atomic container object.
+
+Conceptually a universe is the collection of time dependent particles. The
+term "frame" typically refers to a single snapshot in time, though this is
+not a requirement: a universe maybe be any space-dimension continuum (for
+example consider a study where the density functional theory (DFT) exchange-
+correlation functional is the only object that changes between frames -
+the atomic coordinates are the same/similar between each frame - in this
+case the term frame refers to the dimension in functional chosen).
 '''
 from traitlets import Unicode, List
 from sqlalchemy import Column, Integer, ForeignKey, event
@@ -138,12 +146,20 @@ class Universe(Container):
         else:
             return formulas
 
-    def pair_correlation_function(self, **kwargs):
+    def pair_correlation_function(self, *args, **kwargs):
         '''
+        Args:
+            a (str): First atom type
+            b (str): Second atom type
+            dr (float): Step size (default 0.1 au)
+            rr (float): Two body sample distance (default 11.3)
+
         See Also:
-            :func:`~atomic.algorithms.pcf.compute_radial_pair_correlation`
+            The compute function :func:`~atomic.algorithms.pcf.compute_radial_pair_correlation`
+            and the two body module :mod:`~atomic.two` are useful in
+            understanding how this function works.
         '''
-        return compute_radial_pair_correlation(self, **kwargs)
+        return compute_radial_pair_correlation(self, *args, **kwargs)
 
     # DataFrames are "obscured" from the user via properties
     @property
