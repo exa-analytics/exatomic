@@ -1,6 +1,8 @@
 /*"""
 IPython Widget View of the Universe Container
 ````````````````````````````````````````````````
+An extension for the Jupyter notebook environment that allows for visualization
+of atomic's Universe class.
 */
 'use strict';
 

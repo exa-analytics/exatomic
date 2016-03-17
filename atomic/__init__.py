@@ -3,12 +3,17 @@ __atomic_version__ = (0, 2, 0)                  # atomic VERSION NUMBER
 __version__ = '.'.join((str(v) for v in __atomic_version__))
 
 
-from exa import _conf
 from exa.relational import Isotope, Length, Energy, Time, Amount, Constant
 
 
+from atomic._config import _conf
+from atomic.container import Universe
 from atomic import tests
-from atomic.universe import Universe
+
+
+if not _conf['exa_persistent']:
+    from atomic._install import install
+    install()
 
 #from atomic.universe import Universe            # atomic imports
 #from atomic.cube import read_cubes
