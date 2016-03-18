@@ -2,13 +2,12 @@
 '''
 Atomic Editor
 ====================================
-
 '''
-from exa.editor import Editor
+from exa.editor import Editor as _Editor
 from atomic.universe import Universe
 
 
-class AtomicEditor(Editor):
+class Editor(_Editor):
     '''
     Editor specific to the atomic package.
     '''

@@ -7,7 +7,10 @@ from exa.relational import Isotope, Length, Energy, Time, Amount, Constant
 
 
 from atomic._config import _conf
-from atomic.container import Universe
+from atomic.frame import Frame
+from atomic.atom import Atom
+from atomic.universe import Universe
+from atomic.editor import Editor
 from atomic import tests
 
 
