@@ -54,7 +54,7 @@ class AtomBase:
     _columns = ['x', 'y', 'z', 'symbol', 'frame']
     _traits = ['x', 'y', 'z', 'radius', 'color']
     _groupbys = ['frame']
-    _categories = {'frame': np.int64}
+    _categories = {'frame': np.int64, 'label': np.int64, 'symbol': str}
 
 
 class Atom(AtomBase, DataFrame):

@@ -10,8 +10,11 @@ Jupyter notebook environment. Visualization utilizes the three.js library.
 require.config({
     shim: {
         'nbextensions/exa/container': {
-            exports: 'Container'
+            exports: 'container'
         },
+        'nbextensions/exa/atomic/threejs': {
+            exports: 'AtomicThreeJS'
+        }
     },
 });
 
@@ -19,35 +22,97 @@ require.config({
 define([
     'widgets/js/widget',
     'nbextensions/exa/container'
-], function(widget, Container){
-    var ContainerView = Container['ContainerView'];
-
-
-    var UniverseView = ContainerView.extend({
+], function(widget, container){
+    var UniverseView = container.ContainerView.extend({
         /*"""
         UniverseView
         ``````````````````
         The UniverseView object is responsible for creating the necessary HTML
-        elements required for displaying the 3D representation of the Universe
-        container. It is also responsible for handling messages passed between
-        the JavaScript frontend and Python backend. Drawing and rendering
-        atoms, bonds, volumes, etc is handled by the atomic threejs application,
-        AtomicThreeJS (in threejs.js).
+        elements required for displaying the 3D representation of the universe
+        container.
         */
         init: function() {
             /*"""
-            Render
-            ````````````
-            This is the main entry point for UniverseView. For more information
-            see the documentation of Backbone.js. Here we create the widget
-            three.js viewport and gui controls.
+            init (universe)
+            ``````````````````
             */
-            var self = this;    // Alias the instance of the view for future ref.
-            console.log('universe');
-            console.log(self);
-            console.log(this.value_changed);
+            console.log('universe init');
+            this.init_vars();
+            this.init_atom();
+            this.init_gui();
+
+            this.on('displayed', function() {
+                console.log('displayed');
+            });
         },
+
+        init_gui: function() {
+            /*"""
+            init_gui
+            ----------
+            */
+            this.container = $('<div/>').width(this.width).height(this.height).resizable({
+                aspectRatio: false,
+                resize: function(event, ui) {
+                    self.width = ui.size.width;
+                    self.height = ui.size.height;
+                    self.model.set('width', self.width);
+                    self.model.set('height', self.height);
+                    self.canvas.width(self.width - 300);
+                    self.canvas.height(self.height);
+                    self.app.resize();
+                },
+                stop: function(event, ui) {
+                    self.app.render();
+                }
+            });
+            this.canvas = $('<canvas/>').width(this.width - this.gui_width).height(this.height);
+            this.canvas.css('position', 'absolute');
+            this.canvas.css('top', 0);
+            this.canvas.css('left', this.gui_width);
+
+            this.container.append(this.canvas);
+            this.setElement(this.container);
+        },
+
+        init_vars: function() {
+            /*"""
+            init_vars
+            ------------
+            */
+            this.meta_index = 0;    // Positional ref. to frame index values
+        },
+
+        init_atom: function() {
+            /*"""
+            init_atom
+            ---------------
+            Pulls in data from the atom dataframe
+            */
+            this.update_atom_x();
+            this.update_atom_y();
+            this.update_atom_z();
+            this.model.on('change:atom_x', this.update_atom_x, this);
+            this.model.on('change:atom_y', this.update_atom_y, this);
+            this.model.on('change:atom_z', this.update_atom_z, this);
+        },
+
+        update_atom_x: function() {
+            this.atom_x = this.get_trait('atom_x');
+            console.log(this.atom_x);
+        },
+
+        update_atom_y: function() {
+            this.atom_y = this.get_trait('atom_y');
+            console.log(this.atom_y);
+        },
+
+        update_atom_z: function() {
+            this.atom_z = this.get_trait('atom_z');
+            console.log(this.atom_z);
+        }
     });
+
 
     return {'UniverseView': UniverseView};
 });
