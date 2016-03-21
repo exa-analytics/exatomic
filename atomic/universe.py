@@ -51,11 +51,10 @@ class Universe(Container):
         return self._frame
 
     def __init__(self, frame=None, atom=None, fields=None, **kwargs):
-        super().__init__(**kwargs)
         self._frame = frame
         self._atom = atom
         self._fields = fields
-
+        super().__init__(**kwargs)
 
 #    def is_variable_cell(self):
 #        '''

@@ -11,8 +11,7 @@ from atomic.frame import Frame
 from atomic.atom import Atom
 from atomic.universe import Universe
 from atomic.editor import Editor
-from atomic.filetypes import XYZ, write_xyz
-from atomic.cube1 import read_cubes
+from atomic.filetypes import XYZ, write_xyz, Cube
 from atomic import tests
 
 

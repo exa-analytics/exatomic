@@ -41,7 +41,7 @@ See Also:
 import numpy as np
 import pandas as pd
 from traitlets import Dict
-from exa.structures import DataFrame
+from exa.numerical import DataFrame
 
 
 class AtomBase:
@@ -52,7 +52,7 @@ class AtomBase:
     color = Dict()
     _indices = ['atom']
     _columns = ['x', 'y', 'z', 'symbol', 'frame']
-    _traits = ['x', 'y', 'z', radius, color]
+    _traits = ['x', 'y', 'z', 'radius', 'color']
     _groupbys = ['frame']
     _categories = {'frame': np.int64}
 

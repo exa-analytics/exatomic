@@ -24,7 +24,7 @@ See Also:
 '''
 import numpy as np
 from traitlets import Float
-from exa.structures import DataFrame
+from exa.numerical import DataFrame
 
 
 class Frame(DataFrame):
@@ -46,7 +46,8 @@ class Frame(DataFrame):
     oz = Float()  # Static unit cell origin point z
     _indices = ['frame']
     _columns = ['nat']
-    _traits = [xi, xj, xk, yi, yj, yk, zi, zj, zk, ox, oy, oz]
+    _traits = ['xi', 'xj', 'xk', 'yi', 'yj', 'yk', 'zi', 'zj', 'zk',
+               'ox', 'oy', 'oz']
 
 
 def minimal_frame(atom):
