@@ -41,8 +41,7 @@ See Also:
 import numpy as np
 import pandas as pd
 from traitlets import Dict
-
-from exa.ndframe import DataFrame
+from exa.structures import DataFrame
 
 
 class AtomBase:

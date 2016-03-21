@@ -24,7 +24,7 @@ See Also:
 '''
 import numpy as np
 from traitlets import Float
-from exa.ndframe import DataFrame
+from exa.structures import DataFrame
 
 
 class Frame(DataFrame):
@@ -46,7 +46,17 @@ class Frame(DataFrame):
     oz = Float()  # Static unit cell origin point z
     _indices = ['frame']
     _columns = ['nat']
+    _traits = [xi, xj, xk, yi, yj, yk, zi, zj, zk, ox, oy, oz]
 
+
+def minimal_frame(atom):
+    '''
+    Create a minmal :class:`~atomic.frame.Frame` object from a
+    :class:`~atomic.atom.Atom` object.
+    '''
+    frame = atom.groupby('frame').count().ix[:, 0].to_frame()
+    frame.columns = ['nat']
+    return Frame(frame)
 
 
 #    _traits = ['xi', 'xj', 'xk', 'yi', 'yj', 'yk', 'zi', 'zj', 'zk',
@@ -131,11 +141,4 @@ class Frame(DataFrame):
 #        return df
 #
 #
-#def _min_frame_from_atom(atom):
-#    '''
-#    '''
-#    if atom is not None:
-#        df = atom.groupby('frame').count().iloc[:, 0].to_frame()
-#        df.columns = ['atom_count']
-#        return Frame(df)
 #

@@ -42,6 +42,20 @@ class Universe(Container):
     _widget_class = UniverseWidget
     __mapper_args__ = {'polymorphic_identity': 'universe'}
 
+    @property
+    def atom(self):
+        return self._atom
+
+    @property
+    def frame(self):
+        return self._frame
+
+    def __init__(self, frame=None, atom=None, fields=None, **kwargs):
+        super().__init__(**kwargs)
+        self._frame = frame
+        self._atom = atom
+        self._fields = fields
+
 
 #    def is_variable_cell(self):
 #        '''

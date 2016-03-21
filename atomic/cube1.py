@@ -4,14 +4,17 @@ Cube File Parsing and Composing
 =============================================
 
 '''
-from exa import _pd as pd
-from exa import _np as np
+import numpy as np
+import pandas as pd
 
-from atomic import Universe
-from atomic.atom import Atom
-from atomic.field import FieldMeta
+#from exa import _pd as pd
+#from exa import _np as np
+
 from atomic import Isotope, Length
-from atomic.frame import _min_frame_from_atom
+#from atomic import Universe
+#from atomic.atom import Atom
+#from atomic.field import FieldMeta
+#from atomic.frame import _min_frame_from_atom
 
 def read_cubes(paths, frames=None, fieldxs=None,
                labels=None, universe=None, metadata={},
@@ -118,8 +121,10 @@ def read_cubes(paths, frames=None, fieldxs=None,
         fmeta['frame'] = frameidxs
     else:
         unikws['atom'] = pd.concat(atoms).reset_index(drop=True)
-    unikws['fieldmeta'] = FieldMeta(fmeta)
+    #unikws['fieldmeta'] = FieldMeta(fmeta)
+    unikws['fieldmeta'] = fmeta
     unikws['fields'] = fields
+    return unikws
 
     return Universe(**unikws)
 
@@ -134,5 +139,6 @@ def _gen_atom(smdf, convert, fdx):
     atomdf['symbol'] = atomdf['symbol'].map(i.groupby(i.index).first())
     atomdf['frame'] = fdx
     atomdf['label'] = atomdf.index.values
-    print(atomdf)
-    return Atom(atomdf)
+    return atomdf
+    #print(atomdf)
+    #return Atom(atomdf)
