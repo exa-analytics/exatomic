@@ -8,29 +8,23 @@ Creates a 3D visualization of the atomic Universe container.
 
 require.config({
     shim: {
-        'nbextensions/exa/lib/three.min': {
-            exports: 'THREE'
-        },
-        'nbextensions/exa/lib/TrackballControls': {
-            deps: ['nbextensions/exa/atomic/lib/three.min'],
-            exports: 'THREE.TrackballControls'
-        },
-        'nbextensions/exa/lib/marchingcubes': {
-            exports: 'MarchingCubes'
+        'nbextensions/exa/threejs': {
+            exports: 'three'
         },
     },
 });
 
 
 define([
-    'nbextensions/exa/lib/three.min',
-    'nbextensions/exa/lib/TrackballControls',
-    'nbextensions/exa/lib/marchingcubes'
-], function(
-    THREE,
-    TrackballControls,
-    MarchingCubes
-) {
+    'nbextensions/exa/threejs'
+], function(three) {
+    var AtomicThreeJS = three.ThreeJS;
+    console.log(AtomicThreeJS);
+
+    return {'AtomicThreeJS': AtomicThreeJS};
+});
+
+/*
     var vertex_shader = "\
         attribute float size;\
         attribute vec3 color;\
@@ -72,7 +66,6 @@ define([
         ```````````````````````````````````````````````````
         Three.js application for rendering an atomic Universe as an IPython
         widget
-        */
         var self = this;
         this.c = canvas;
         this.width = this.c.width();
@@ -126,7 +119,6 @@ define([
         Resize
         ``````````````
         Allows for the renderer to be resized on canvas resize
-        */
         this.width = this.c.width();
         this.height = this.c.height();
         this.renderer.setSize(this.width, this.height);
@@ -140,7 +132,6 @@ define([
         /*"""
         Render the Three.js Scene
         ```````````````````````````
-        */
         this.renderer.render(this.scene, this.camera);
     };
 
@@ -148,14 +139,12 @@ define([
         /*"""
         Animate
         ```````````````````
-        */
         window.requestAnimationFrame(this.animate.bind(this));
         this.controls.update();
     };
 
     AtomicThreeJS.prototype.add_coordinate_axis = function() {
         /*"""
-        */
         var x_vec = new THREE.Vector3(1, 0, 0);
         var y_vec = new THREE.Vector3(0, 1, 0);
         var z_vec = new THREE.Vector3(0, 0, 1);
@@ -175,7 +164,6 @@ define([
         /*""""
         Create Unit Cell
         ````````````````````
-        */
         var geometry = new THREE.Geometry();
         geometry.vertices.push(new THREE.Vector3(xi, xj, xk));
         geometry.vertices.push(new THREE.Vector3(yi, yj, yk));
@@ -198,7 +186,6 @@ define([
         /*"""
         Add GL Points
         ````````````````````
-        */
         var material = new THREE.ShaderMaterial({
             vertexShader: vertex_shader,
             fog: true,
@@ -241,7 +228,6 @@ define([
         /*"""
         Add bonds
         `````````````
-        */
         var material = new THREE.LineBasicMaterial({
             color: 0x4d4d4d,
             linewidth: 5
@@ -322,7 +308,6 @@ define([
 
     AtomicThreeJS.prototype.update_cam_ctrl = function(center) {
         /*"""
-        */
         var center = new THREE.Vector3(center[0], center[1], center[2]);
         var cx = center[0] * 2 + 15;
         var cy = center[1] * 2 + 15;
@@ -338,7 +323,6 @@ define([
         /*"""
         Automatically Update Camera and Controls
         `````````````````````````````````````````````````
-        */
         this.atom.geometry.computeBoundingBox();
         var bbox = this.atom.geometry.boundingBox;
         var cx = (bbox.max.x - bbox.min.x) / 2;
@@ -360,4 +344,4 @@ define([
     };
 
     return AtomicThreeJS;
-});
+    */

@@ -12,8 +12,9 @@ require.config({
         'nbextensions/exa/container': {
             exports: 'container'
         },
+
         'nbextensions/exa/atomic/threejs': {
-            exports: 'AtomicThreeJS'
+            exports: 'three'
         }
     },
 });
@@ -21,8 +22,9 @@ require.config({
 
 define([
     'widgets/js/widget',
-    'nbextensions/exa/container'
-], function(widget, container){
+    'nbextensions/exa/container',
+    'nbextensions/exa/atomic/threejs'
+], function(widget, container, three){
     var UniverseView = container.ContainerView.extend({
         /*"""
         UniverseView
@@ -51,6 +53,7 @@ define([
             init_gui
             ----------
             */
+            var self = this;
             this.container = $('<div/>').width(this.width).height(this.height).resizable({
                 aspectRatio: false,
                 resize: function(event, ui) {
@@ -58,18 +61,21 @@ define([
                     self.height = ui.size.height;
                     self.model.set('width', self.width);
                     self.model.set('height', self.height);
-                    self.canvas.width(self.width - 300);
+                    self.canvas.width(self.width - self.gui_width);
                     self.canvas.height(self.height);
-                    self.app.resize();
+                    //self.app.resize();
                 },
                 stop: function(event, ui) {
-                    self.app.render();
+                    //self.app.render();
                 }
             });
             this.canvas = $('<canvas/>').width(this.width - this.gui_width).height(this.height);
             this.canvas.css('position', 'absolute');
             this.canvas.css('top', 0);
             this.canvas.css('left', this.gui_width);
+
+            this.viewer = new three.AtomicThreeJS(this.canvas);
+            console.log(this.viewer);
 
             this.container.append(this.canvas);
             this.setElement(this.container);
