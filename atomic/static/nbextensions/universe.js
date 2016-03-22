@@ -40,7 +40,10 @@ define([
             this.init_atom();
             this.init_gui();
 
+            this.viewer.render();
             this.on('displayed', function() {
+                this.viewer.animate();
+                this.viewer.controls.handleResize();
                 console.log('displayed');
             });
         },
@@ -60,10 +63,10 @@ define([
                     self.model.set('height', self.height);
                     self.canvas.width(self.width - self.gui_width);
                     self.canvas.height(self.height);
-                    //self.app.resize();
+                    self.viewer.resize();
                 },
                 stop: function(event, ui) {
-                    //self.app.render();
+                    self.viewer.render();
                 }
             });
             this.canvas = $('<canvas/>').width(this.width - this.gui_width).height(this.height);
@@ -72,14 +75,16 @@ define([
             this.canvas.css('left', this.gui_width);
 
             this.viewer = new app.ThreeJS(this.canvas);
-            this.gui = new app.GUI({autoPlace: false, width: this.gui_width});
+            console.log(this.viewer);
+            console.log(this.viewer.test_cube);
+            /*this.gui = new app.GUI({autoPlace: false, width: this.gui_width});
             this.gui._init(this);
             this.gui_style = document.createElement('style');
-            this.gui_style.innerHTML = app.gui_style;
+            this.gui_style.innerHTML = app.gui_style;*/
 
             this.container.append(this.canvas);
-            this.container.append(this.gui.domElement);
-            this.container.append(this.gui_style);
+            //this.container.append(this.gui.domElement);
+            //this.container.append(this.gui_style);
             this.setElement(this.container);
         },
 
