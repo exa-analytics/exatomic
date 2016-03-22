@@ -1,25 +1,49 @@
 /*"""
-UniverseView GUI Helper
+NBExtension Application
 ````````````````````````````````
-Helper functions and alues for the UniverseView's GUI.
+For visualization of the atomic container, the universe.
 */
 'use strict';
 
 
 require.config({
     shim: {
-        'nbextensions/exa/atomic/lib/dat.gui.min': {
+        'nbextensions/exa/threejs': {
+            deps: ['nbextensions/exa/lib/three.min'],
+            exports: 'three'
+        },
+
+        'nbextensions/exa/lib/dat.gui.min': {
             exports: 'dat'
+        },
+
+        'nbextensions/exa/lib/three.min': {
+            exports: 'THREE'
         },
     },
 });
 
 
 define([
-    'nbextensions/exa/atomic/lib/dat.gui.min'
-], function(dat) {
-    var GUI = {
-        style_str: ".dg {\
+    'nbextensions/exa/threejs',
+    'nbextensions/exa/lib/dat.gui.min',
+    'nbextensions/exa/lib/three.min'
+], function(three, dat, THREE) {
+    var ThreeJS = three.ThreeJS;
+    var GUI = dat.GUI;
+
+    GUI.prototype._init = function(view) {
+        this.view = view;
+        this.f1 = this.addFolder('animation');
+        this.f2 = this.addFolder('atoms');
+        this.f3 = this.addFolder('bonds');
+        this.f4 = this.addFolder('cell');
+        this.f5 = this.addFolder('surfaces');
+        this.f6 = this.addFolder('volumes');
+        console.log(this.view);
+    };
+
+    var style_str = ".dg {\
             color: black;\
             font: 400 13px Verdana, Arial, sans-serif;\
             text-shadow: white 0 0 0;\
@@ -130,8 +154,11 @@ define([
             outline-color: lightgrey;\
             outline-style: solid;\
             outline-width: 1.5px\
-        }",
+        }";
+
+    return {
+        'ThreeJS': ThreeJS,
+        'GUI': GUI,
+        'gui_style': style_str
     };
-    
-    return GUI;
-})
+});

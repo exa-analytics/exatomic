@@ -13,8 +13,8 @@ require.config({
             exports: 'container'
         },
 
-        'nbextensions/exa/atomic/threejs': {
-            exports: 'three'
+        'nbextensions/exa/atomic/app': {
+            exports: 'app'
         }
     },
 });
@@ -23,15 +23,12 @@ require.config({
 define([
     'widgets/js/widget',
     'nbextensions/exa/container',
-    'nbextensions/exa/atomic/threejs'
-], function(widget, container, three){
+    'nbextensions/exa/atomic/app',
+], function(widget, container, app){
     var UniverseView = container.ContainerView.extend({
         /*"""
         UniverseView
         ``````````````````
-        The UniverseView object is responsible for creating the necessary HTML
-        elements required for displaying the 3D representation of the universe
-        container.
         */
         init: function() {
             /*"""
@@ -74,10 +71,15 @@ define([
             this.canvas.css('top', 0);
             this.canvas.css('left', this.gui_width);
 
-            this.viewer = new three.AtomicThreeJS(this.canvas);
-            console.log(this.viewer);
+            this.viewer = new app.ThreeJS(this.canvas);
+            this.gui = new app.GUI({autoPlace: false, width: this.gui_width});
+            this.gui._init(this);
+            this.gui_style = document.createElement('style');
+            this.gui_style.innerHTML = app.gui_style;
 
             this.container.append(this.canvas);
+            this.container.append(this.gui.domElement);
+            this.container.append(this.gui_style);
             this.setElement(this.container);
         },
 
