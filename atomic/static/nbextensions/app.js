@@ -1,7 +1,8 @@
 /*"""
-NBExtension Application
-````````````````````````````````
-For visualization of the atomic container, the universe.
+===========================
+Universe Widget View
+===========================
+
 */
 'use strict';
 
