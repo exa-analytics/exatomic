@@ -28,6 +28,7 @@ define([
         /*"""
         UniverseView
         ====================
+        Frontend representation of an atomic universe instance.
         */
         render: function() {
             /*"""
