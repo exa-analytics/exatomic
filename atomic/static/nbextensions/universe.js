@@ -1,8 +1,7 @@
 /*"""
-IPython Widget for Visualization of the atomic Universe
-`````````````````````````````````````````````````````````
-This extension is allows for visualization of the atomc Universe within a
-Jupyter notebook environment. Visualization utilizes the three.js library.
+=========================================================
+Universe View
+=========================================================
 */
 'use strict';
 

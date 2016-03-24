@@ -1,8 +1,9 @@
 /*"""
 ===========================
-Universe Widget View
+Universe Application
 ===========================
-
+This module defines the JavaScript application that is loaded when a user
+requests the HTML representation of a universe data container.
 */
 'use strict';
 
