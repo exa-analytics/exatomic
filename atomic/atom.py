@@ -52,7 +52,7 @@ class AtomBase:
     color = Dict()
     _indices = ['atom']
     _columns = ['x', 'y', 'z', 'symbol', 'frame']
-    _traits = ['x', 'y', 'z', 'radius', 'color']
+    _traits = ['x y z', 'radius', 'color']
     _groupbys = ['frame']
     _categories = {'frame': np.int64, 'label': np.int64, 'symbol': str}
 
@@ -75,15 +75,16 @@ class Atom(AtomBase, DataFrame):
         '''
         Compute the simple formula for each frame.
         '''
+        raise NotImplementedError()
 
-    def _compute_unit_atom_static_cell(self, rxyz, oxyz):
-        '''
-        Given a static unit cell, compute the unit cell coordinates for each
-        atom.
-        '''
-        xyz = self[['x', 'y', 'z']]
-        unit = np.mod(xyz, rxyz) + oxyz
-        return UnitAtom(unit[unit != xyz].astype(np.float64).to_sparse())
+#    def _compute_unit_atom_static_cell(self, rxyz, oxyz):
+#        '''
+#        Given a static unit cell, compute the unit cell coordinates for each
+#        atom.
+#        '''
+#        xyz = self[['x', 'y', 'z']]
+#        unit = np.mod(xyz, rxyz) + oxyz
+#        return UnitAtom(unit[unit != xyz].astype(np.float64).to_sparse())
 
 
 #class UnitAtom(Updater):
