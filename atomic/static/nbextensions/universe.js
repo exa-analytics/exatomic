@@ -47,11 +47,6 @@ define([
             console.log(this.atom_x);
             console.log(this.atom_y);
             console.log(this.atom_z);
-            if (this.atom_z.length == undefined) {
-                console.log('true');
-            } else {
-                console.log('false');
-            };
         },
 
         update_atom_x: function() {
