@@ -38,7 +38,6 @@ define([
             */
             console.log('Initializing universe...');
             var self = this;
-            this.model.on('change:atom_xyz', this.update_)
         },
     });
 
