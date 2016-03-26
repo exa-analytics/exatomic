@@ -47,7 +47,7 @@ class Frame(DataFrame):
     _indices = ['frame']
     _columns = ['nat']
     _traits = ['xi', 'xj', 'xk', 'yi', 'yj', 'yk', 'zi', 'zj', 'zk',
-               'ox', 'oy', 'oz']
+               'ox', 'oy', 'oz', 'frame']
 
 
 def minimal_frame(atom):
@@ -55,8 +55,10 @@ def minimal_frame(atom):
     Create a minmal :class:`~atomic.frame.Frame` object from a
     :class:`~atomic.atom.Atom` object.
     '''
+    atom._revert_categories()
     frame = atom.groupby('frame').count().ix[:, 0].to_frame()
     frame.columns = ['nat']
+    atom._set_categories()
     return Frame(frame)
 
 

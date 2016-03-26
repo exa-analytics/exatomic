@@ -41,6 +41,10 @@ define([
             this.model.on('change:atom_x', this.update_x, this);
             this.model.on('change:atom_y', this.update_y, this);
             this.model.on('change:atom_z', this.update_z, this);
+            this.model.on('change:width', this.update_width, this);
+            this.model.on('change:height', this.update_height, this);
+            this.update_width();
+            this.update_height();
             this.update_atom_x();
             this.update_atom_y();
             this.update_atom_z();
@@ -48,15 +52,9 @@ define([
             this.init_container();
             this.init_canvas();
             this.init_3D();
-            console.log(this.atom_x);
-            console.log(this.atom_y);
-            console.log(this.atom_z);
             var x = this.get_value(this.atom_x, 0);
-            console.log(x);
             var y = this.get_value(this.atom_y, 0);
-            console.log(y);
             var z = this.get_value(this.atom_z, 0);
-            console.log(z);
             this.app.add_points(x, y, z);
 
             this.app.default_camera();
