@@ -43,6 +43,7 @@ define([
             this.model.on('change:atom_z', this.update_z, this);
             this.model.on('change:width', this.update_width, this);
             this.model.on('change:height', this.update_height, this);
+            this.model.on('change:frame_frame', this.update_frame, this);
             this.update_width();
             this.update_height();
             this.update_atom_x();
@@ -105,6 +106,14 @@ define([
             Updates z component of nuclear coordinates.
             */
             this.atom_z = this.get_trait('atom_z');
+        },
+
+        update_frame: function() {
+            /*"""
+            update_frame
+            ----------------
+            */
+            this.framelist = this.get_trait('frame_frame');
         },
     });
 
