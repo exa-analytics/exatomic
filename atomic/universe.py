@@ -43,6 +43,10 @@ class Universe(Container):
     __mapper_args__ = {'polymorphic_identity': 'universe'}
 
     @property
+    def periodic(self):
+        return self.frame.is_periodic()
+
+    @property
     def atom(self):
         return self._atom
 
@@ -50,10 +54,26 @@ class Universe(Container):
     def frame(self):
         return self._frame
 
-    def __init__(self, frame=None, atom=None, fields=None, **kwargs):
+    @property
+    def two(self):
+        if self._two is None:
+            self.compute_two_body()
+        return self._two
+
+    def compute_two_body(self, *args, **kwargs):
+        '''
+        Compute two body properties for the current universe.
+
+        For arguments see :func:`~atomic.two.get_two_body`. Note that this
+        operation (like all compute) operations are performed in place.
+        '''
+        self._two = get_two_body(self, *args, **kwargs)
+
+    def __init__(self, frame=None, atom=None, two=None, fields=None, **kwargs):
         self._frame = frame
         self._atom = atom
         self._fields = fields
+        self._two = two
         super().__init__(**kwargs)
 
 #    def is_variable_cell(self):
@@ -62,8 +82,6 @@ class Universe(Container):
 #        '''
 #        return self.frame.is_variable_cell()
 #
-#    def is_periodic(self):
-#        return self.frame.is_periodic()
 #
 #    def compute_minimal_frame(self, inplace=False):
 #        '''
@@ -85,13 +103,6 @@ class Universe(Container):
 #        '''
 #        return get_projected_atom(self, inplace)
 #
-#    def compute_two_body(self, inplace=False, **kwargs):
-#        '''
-#        '''
-#        df = get_two_body(self, inplace=inplace, **kwargs)
-#        if inplace == True:
-#            self._update_bond_list()
-#        return df
 #
 #    def compute_bond_count(self, inplace=False):
 #        '''

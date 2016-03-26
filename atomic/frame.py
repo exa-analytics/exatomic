@@ -49,6 +49,18 @@ class Frame(DataFrame):
     _traits = ['xi', 'xj', 'xk', 'yi', 'yj', 'yk', 'zi', 'zj', 'zk',
                'ox', 'oy', 'oz', 'frame']
 
+    def is_periodic(self):
+        '''
+        Check if (any) frame is/are periodic.
+
+        Returns:
+            result (bool): True if periodic false otherwise
+        '''
+        if 'periodic' in self.columns:
+            if np.any(self['periodic'] == True):
+                return True
+        return False
+
 
 def minimal_frame(atom):
     '''
@@ -62,9 +74,6 @@ def minimal_frame(atom):
     return Frame(frame)
 
 
-#    _traits = ['xi', 'xj', 'xk', 'yi', 'yj', 'yk', 'zi', 'zj', 'zk',
-#                'rx', 'ry', 'rz', 'ox', 'oy', 'oz']
-#
 #    def get_unit_cell_magnitudes(self, inplace=False):
 #        '''
 #        Compute the magnitudes of the unit cell vectors.

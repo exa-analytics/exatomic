@@ -2,11 +2,134 @@
 '''
 Two Body Properties DataFrame
 ===============================
-Two body properties are interatomic distances.
+This module provides various functions for computing two body properties (e.g.
+interatomic distances). While this may seem like a trivial calculation, it is
+not; it is a combinatorial problem and fast algorithms for it are an outstanding
+problem in computational science.
+
++-------------------+----------+-------------------------------------------+
+| Column            | Type     | Description                               |
++===================+==========+===========================================+
+| atom0             | integer  | foreign key to :class:`~atomic.atom.Atom` |                      |
++-------------------+----------+-------------------------------------------+
+| atom1             | integer  | foreign key to :class:`~atomic.atom.Atom` |                      |
++-------------------+----------+-------------------------------------------+
+| distance          | float    | distance between atom0 and atom1          |
++-------------------+----------+-------------------------------------------+
+| bond              | boolean  | True if bond                              |
++-------------------+----------+-------------------------------------------+
+| frame             | category | non-unique integer (req.)                 |
++-------------------+----------+-------------------------------------------+
+| symbols           | category | concatenated atomic symbols               |
++-------------------+----------+-------------------------------------------+
 '''
+from exa import DataFrame
+
+
+max_atoms = 5000
+bond_extra = 0.5
+dmin = 0.3
+dmax = 11.3
+
+
+class Two(DataFrame):
+    '''
+    The two body dataframe.
+    '''
+    _indices = ['two']
+    _columns = ['distance', 'atom0', 'atom1', 'frame']
+    _groupbys = ['frame']
+    _categories = {'frame': np.int64, 'symbols': str}
+
+    def _get_custom_traits(self):
+        '''
+        Generate sequential bond indices using atom labels.
+        '''
+        return {}
+
+
+def get_two_body(universe, k=None, dmax=dmax, dmin=dmin, bond_extra=bond_extra,
+                 compute_bonds=True, compute_symbols=True):
+    '''
+    Compute two body information given a universe.
+
+    Bonds are computed semi-empirically:
+
+    .. math::
+
+        distance(A, B) < covalent\_radius(A) + covalent\_radius(B) + bond\_extra
+
+    Args:
+        universe (:class:`~atomic.universe.Universe`): Chemical universe
+        k (int): Number of distances (per atom) to compute (optional)
+        dmax (float): Max distance of interest (larger distances are ignored)
+        dmin (float): Min distance of interest (smaller distances are ignored)
+        bond_extra (float): Extra distance to include when determining bonds (see above)
+        compute_bonds (bool): Compute bonds from distances (default True)
+        compute_symbols (bool): Compute symbol pairs (default True)
+
+    Returns:
+        df (:class:`~atomic.twobody.TwoBody`): Two body property table
+    '''
+    if universe.periodic:
+        raise NotImplementedError()
+    else:
+        if universe.frame['atom_count'].max() < max_atoms:
+            return _free_in_mem(universe, dmax=dmax, dmin=dmin, bond_extra=bond_extra,
+                                compute_bonds=compute_bonds, compute_symbols=compute_symbols)
+        else:
+            raise NotImplementedError()
+
+
+def _free_in_mem(universe, dmax, dmin, bond_extra, compute_symbols, compute_bonds):
+    '''
+    Free boundary condition two body properties computed in memory.
+
+    Args:
+        universe (:class:`~atomic.universe.Universe`): The atomic universe
+        dmax (float): Max distance of interest
+        dmin (float): Minimum distance of interest
+        bond_extra (float): Extra distance to add when determining bonds
+        compute_symbols
+
+    Returns:
+        twobody (:class:`~atomic.twobody.TwoBody`)
+    '''
+    atom_groups = universe.atom.groupby('frame')
+    n = atom_groups.ngroups
+    atom0 = np.empty((n, ), dtype='O')
+    atom1 = np.empty((n, ), dtype='O')
+    distance = np.empty((n, ), dtype='O')
+    frames = np.empty((n, ), dtype='O')
+    for i, (frame, atom) in enumerate(atom_groups):
+        xyz = atom[['x', 'y', 'z']]
+        dists, i0, i1 = pdist(xyz)
+        atom0[i] = df.iloc[i0].index.values
+        atom1[i] = df.iloc[i1].index.values
+        distance[i] = dists
+        frames[i] = [frame] * len(dists)
+    distance = np.concatenate(distance)
+    atom0 = np.concatenate(atom0)
+    atom1 = np.concatenate(atom1)
+    frames = np.concatenate(frames)
+    two = Two.from_dict({'atom0': atom0, 'atom1': atom1,
+                         'distance': distance, 'frame': frames})
+    two = two[(two['distance'] > dmin) & (two['distance'] < dmax)].reset_index(drop=True)
+    symbols = universe.atom['symbol'].astype(str)
+    two['symbol0'] = two['atom0'].map(symbols)
+    two['symbol1'] = two['atom1'].map(symbols)
+    del symbols
+    two['symbols'] = two['symbol0'] + two['symbol1']
+    two['symbols'] = two['symbols'].astype('category')
+    del two['symbol0']
+    del two['symbol1']
+    two['mbl'] = two['symbols'].astype(str).map(Isotope.symbols_to_radii_map)
+    two['mbl'] += bond_extra
+    two['bond'] = two['distance'] < two['mbl']
+    del two['mbl']
+    return two
+
 #from sklearn.neighbors import NearestNeighbors
-#from exa import _np as np
-#from exa import _pd as pd
 #from exa.config import Config
 #from exa.frame import DataFrame, ManyToMany
 #if Config.numba:
@@ -20,9 +143,6 @@ Two body properties are interatomic distances.
 #from atomic import Isotope
 #
 #
-#bond_extra = 0.5
-#dmin = 0.3
-#dmax = 11.3
 #
 #
 #class Two(DataFrame):
@@ -71,50 +191,6 @@ Two body properties are interatomic distances.
 #    _fkeys = ['prjd_atom', 'prjd_two']
 #
 #
-#def get_two_body(universe, k=None, dmax=dmax, dmin=dmin,
-#                 bond_extra=bond_extra, inplace=False):
-#    '''
-#    Compute two body information given a universe.
-#
-#    For non-periodic systems the only required argument is the table of atom
-#    positions and symbols. For periodic systems, at a minimum, the atoms and
-#    frames dataframes must be provided.
-#
-#    Bonds are computed semi-empirically and exist if:
-#
-#    .. math::
-#
-#        distance(A, B) < covalent\_radius(A) + covalent\_radius(B) + bond\_extra
-#
-#    Args:
-#        atoms (:class:`~atomic.atom.Atom`): Table of nuclear positions and symbols
-#        frames (:class:`~pandas.DataFrame`): DataFrame of periodic cell dimensions (or False if )
-#        k (int): Number of distances (per atom) to compute
-#        dmax (float): Max distance of interest (larger distances are ignored)
-#        dmin (float): Min distance of interest (smaller distances are ignored)
-#        bond_extra (float): Extra distance to include when determining bonds (see above)
-#
-#    Returns:
-#        df (:class:`~atomic.twobody.TwoBody`): Two body property table
-#    '''
-#    two = None
-#    atomtwo = None
-#    periodic = universe.is_periodic()
-#    if periodic:
-#        if len(universe.projected_atom) == 0:
-#            two, atomtwo = _periodic_from_unit_in_mem(universe, k, dmax, dmin, bond_extra)
-#        else:
-#            two, atomtwo = _periodic_from_projected_in_mem(universe, k, dmax, dmin, bond_extra)
-#    else:
-#        two = _free_in_mem(universe, dmax, dmin, bond_extra)
-#    if inplace and periodic:
-#        universe._prjd_two = two
-#        universe._prjd_atomtwo = atomtwo
-#    elif inplace:
-#        universe._two = two
-#        universe._atomtwo = atomtwo
-#    else:
-#        return (two, atomtwo)
 #
 #
 #def _free_in_mem(universe, dmax=dmax, dmin=dmin, bond_extra=bond_extra):

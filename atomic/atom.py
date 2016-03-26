@@ -40,27 +40,21 @@ See Also:
 '''
 import numpy as np
 import pandas as pd
-from traitlets import Dict
+from traitlets import Dict, Unicode
 from exa.numerical import DataFrame
+from atomic import Isotope
 
 
-class AtomBase:
-    '''
-    Base class for :class:`~atomic.atom.Atom` and :class:`~atomic.atom.ProjectedAtom`.
-    '''
-    radius = Dict()
-    color = Dict()
-    _indices = ['atom']
-    _columns = ['x', 'y', 'z', 'symbol', 'frame']
-    _traits = ['x', 'y', 'z', 'radius', 'color']
-    _groupbys = ['frame']
-    _categories = {'frame': np.int64, 'label': np.int64, 'symbol': str}
-
-
-class Atom(AtomBase, DataFrame):
+class Atom(DataFrame):
     '''
     Absolute positions of atoms and their symbol.
     '''
+    _indices = ['atom']
+    _columns = ['x', 'y', 'z', 'symbol', 'frame']
+    _traits = ['x', 'y', 'z']
+    _groupbys = ['frame']
+    _categories = {'frame': np.int64, 'label': np.int64, 'symbol': str}
+
     def get_element_mass(self, inplace=False):
         '''
         Retrieve the mass of each element in the atom dataframe.
@@ -76,6 +70,22 @@ class Atom(AtomBase, DataFrame):
         Compute the simple formula for each frame.
         '''
         raise NotImplementedError()
+
+    def _get_custom_traits(self):
+        '''
+        Creates four custom traits; radii, colors, symbols, and symbol codes.
+        '''
+        symbols = Unicode(self.groupby('frame').apply(
+            lambda x: x['symbol'].cat.codes.values
+        ).to_json(orient='values')).tag(sync=True)
+        symmap = {i: v for i, v in enumerate(self['symbol'].cat.categories)}
+        radii = Isotope.symbol_to_radius()[self['symbol'].unique()]
+        radii = Dict({i: radii[v] for i, v in symmap.items()}).tag(sync=True)
+        colors = Isotope.symbol_to_color()[self['symbol'].unique()]
+        colors = Dict({i: colors[v] for i, v in symmap.items()}).tag(sync=True)
+        return {'atom_symbols': symbols, 'atom_radii': radii,
+                'atom_colors': colors}
+
 
 #    def _compute_unit_atom_static_cell(self, rxyz, oxyz):
 #        '''
