@@ -67,7 +67,6 @@ define([
             this.init_3D();
             this.render_atoms(0);
 
-            this.app.default_camera();
             this.container.append(this.canvas);       // Lastly set the html
             this.setElement(this.container);          // objects and run.
             this.app.render();
@@ -91,6 +90,7 @@ define([
             var z = this.get_value(this.atom_z, this.index);
             this.app.scene.remove(this.points);
             this.points = this.app.add_points(x, y, z, colors, radii);
+            this.set_camera(x, y, z);
         },
 
         render_bonds: function(index) {
@@ -111,6 +111,26 @@ define([
             } else {
                 return value;
             };
+        },
+
+        set_camera: function(x, y, z) {
+            /*"""
+            set_camera
+            -------------
+            */
+            var n = x.length;
+            var sums = [0.0, 0.0, 0.0];
+            while (n--) {
+                sums[0] += x[n];
+                sums[1] += y[n];
+                sums[2] += z[n];
+            };
+            console.log(sums);
+            sums[0] /= n;
+            sums[1] /= n;
+            sums[2] /= n;
+            console.log(sums);
+            this.app.set_camera(100, 100, 100, sums[0], sums[1], sums[2]);
         },
 
         update_atom_x: function() {

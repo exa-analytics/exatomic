@@ -8,7 +8,7 @@ import numpy as np
 import pandas as pd
 from io import StringIO
 from exa.algorithms import arange1, arange2
-from atomic import Editor, Length
+from atomic import Editor, Length, Atom
 from atomic.frame import minimal_frame
 
 class XYZ(Editor):
@@ -51,7 +51,7 @@ class XYZ(Editor):
         df['x'] *= Length[unit, 'au']
         df['y'] *= Length[unit, 'au']
         df['z'] *= Length[unit, 'au']
-        self._atom = df
+        self._atom = Atom(df)
         self.meta['comments'] = {line: self._lines[line] for line in comments}
 
     def parse_frame(self):

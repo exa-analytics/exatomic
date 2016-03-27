@@ -21,14 +21,7 @@ import numpy as np
 from sqlalchemy import Column, Integer, ForeignKey
 from exa import Container, _conf
 from atomic.widget import UniverseWidget
-#from atomic.frame import Frame, minimal_frame, _min_frame_from_atom
-#from atomic.atom import (Atom, UnitAtom, ProjectedAtom,
-#                         get_unit_atom, get_projected_atom)
-#from atomic.two import (Two, ProjectedTwo, AtomTwo, ProjectedAtomTwo,
-#                        get_two_body)
-#from atomic.field import FieldMeta
-#from atomic.formula import dict_to_string
-#from atomic.algorithms.pcf import compute_radial_pair_correlation
+from atomic.two import compute_two_body as _ctb
 
 
 class Universe(Container):
@@ -67,7 +60,7 @@ class Universe(Container):
         For arguments see :func:`~atomic.two.get_two_body`. Note that this
         operation (like all compute) operations are performed in place.
         '''
-        self._two = get_two_body(self, *args, **kwargs)
+        self._two = _ctb(self, *args, **kwargs)
 
     def __init__(self, frame=None, atom=None, two=None, fields=None, **kwargs):
         self._frame = frame
@@ -75,6 +68,9 @@ class Universe(Container):
         self._fields = fields
         self._two = two
         super().__init__(**kwargs)
+        if len(self.atom) < 500:
+            self.compute_two_body()
+            self._update_traits()
 
 #    def is_variable_cell(self):
 #        '''

@@ -23,7 +23,11 @@ problem in computational science.
 | symbols           | category | concatenated atomic symbols               |
 +-------------------+----------+-------------------------------------------+
 '''
+import numpy as np
+import pandas as pd
 from exa import DataFrame
+from exa.algorithms import pdist
+from atomic import Isotope
 
 
 max_atoms = 5000
@@ -48,12 +52,12 @@ class Two(DataFrame):
         return {}
 
 
-def get_two_body(universe, k=None, dmax=dmax, dmin=dmin, bond_extra=bond_extra,
-                 compute_bonds=True, compute_symbols=True):
+def compute_two_body(universe, k=None, dmax=dmax, dmin=dmin, bond_extra=bond_extra,
+                     compute_bonds=True, compute_symbols=True):
     '''
     Compute two body information given a universe.
 
-    Bonds are computed semi-empirically:
+    Bonds are computed semi-empirically (if requested - default True):
 
     .. math::
 
@@ -74,7 +78,7 @@ def get_two_body(universe, k=None, dmax=dmax, dmin=dmin, bond_extra=bond_extra,
     if universe.periodic:
         raise NotImplementedError()
     else:
-        if universe.frame['atom_count'].max() < max_atoms:
+        if universe.frame['nat'].max() < max_atoms:
             return _free_in_mem(universe, dmax=dmax, dmin=dmin, bond_extra=bond_extra,
                                 compute_bonds=compute_bonds, compute_symbols=compute_symbols)
         else:
@@ -90,7 +94,8 @@ def _free_in_mem(universe, dmax, dmin, bond_extra, compute_symbols, compute_bond
         dmax (float): Max distance of interest
         dmin (float): Minimum distance of interest
         bond_extra (float): Extra distance to add when determining bonds
-        compute_symbols
+        compute_symbols (bool): Compute symbol pairs
+        compute_bonds (bool): Compute (semi-empirical) bonds
 
     Returns:
         twobody (:class:`~atomic.twobody.TwoBody`)
@@ -102,31 +107,35 @@ def _free_in_mem(universe, dmax, dmin, bond_extra, compute_symbols, compute_bond
     distance = np.empty((n, ), dtype='O')
     frames = np.empty((n, ), dtype='O')
     for i, (frame, atom) in enumerate(atom_groups):
-        xyz = atom[['x', 'y', 'z']]
+        xyz = atom[['x', 'y', 'z']].values
         dists, i0, i1 = pdist(xyz)
-        atom0[i] = df.iloc[i0].index.values
-        atom1[i] = df.iloc[i1].index.values
+        atom0[i] = atom.iloc[i0].index.values
+        atom1[i] = atom.iloc[i1].index.values
         distance[i] = dists
         frames[i] = [frame] * len(dists)
     distance = np.concatenate(distance)
     atom0 = np.concatenate(atom0)
     atom1 = np.concatenate(atom1)
     frames = np.concatenate(frames)
-    two = Two.from_dict({'atom0': atom0, 'atom1': atom1,
-                         'distance': distance, 'frame': frames})
+    two = DataFrame.from_dict({'atom0': atom0, 'atom1': atom1,
+                               'distance': distance, 'frame': frames})
+    two.index.names = ['two']
+    two = Two(two)
     two = two[(two['distance'] > dmin) & (two['distance'] < dmax)].reset_index(drop=True)
-    symbols = universe.atom['symbol'].astype(str)
-    two['symbol0'] = two['atom0'].map(symbols)
-    two['symbol1'] = two['atom1'].map(symbols)
-    del symbols
-    two['symbols'] = two['symbol0'] + two['symbol1']
-    two['symbols'] = two['symbols'].astype('category')
-    del two['symbol0']
-    del two['symbol1']
-    two['mbl'] = two['symbols'].astype(str).map(Isotope.symbols_to_radii_map)
-    two['mbl'] += bond_extra
-    two['bond'] = two['distance'] < two['mbl']
-    del two['mbl']
+    if compute_symbols:
+        symbols = universe.atom['symbol'].astype(str)
+        two['symbol0'] = two['atom0'].map(symbols)
+        two['symbol1'] = two['atom1'].map(symbols)
+        del symbols
+        two['symbols'] = two['symbol0'] + two['symbol1']
+        two['symbols'] = two['symbols'].astype('category')
+        del two['symbol0']
+        del two['symbol1']
+    if compute_bonds:
+        two['mbl'] = two['symbols'].astype(str).map(Isotope.symbols_to_radii_map)
+        two['mbl'] += bond_extra
+        two['bond'] = two['distance'] < two['mbl']
+        del two['mbl']
     return two
 
 #from sklearn.neighbors import NearestNeighbors
