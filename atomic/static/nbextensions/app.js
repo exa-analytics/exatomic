@@ -39,6 +39,8 @@ define([
         this.view = view;
         this.canvas = this.view.canvas;
         this.index = 0;
+        this.length = this.view.framelist.length;
+        this.last_frame_index = this.length - 1;
         this.app3d = new app3D.ThreeJSApp(this.canvas);
         this.gui = new dat.GUI({autoPlace: false, width: this.view.gui_width});
         this.gui_style = document.createElement('style');
@@ -49,14 +51,44 @@ define([
 
     AtomicApp.prototype.init_gui = function() {
         /*"""
+        init_gui
+        ----------------
+        Initialize the graphical user interface.
         */
         var self = this;
-        this.f1 = this.gui.addFolder('animation');
-        this.f2 = this.gui.addFolder('atoms');
-        this.f3 = this.gui.addFolder('bonds');
-        this.f4 = this.gui.addFolder('cell');
-        this.f5 = this.gui.addFolder('surfaces');
-        this.f6 = this.gui.addFolder('volumes');
+        this.f1f = this.gui.addFolder('animation');
+        this.f2f = this.gui.addFolder('atoms');
+        this.f3f = this.gui.addFolder('bonds');
+        this.f4f = this.gui.addFolder('cell');
+        this.f5f = this.gui.addFolder('surfaces');
+        this.f6f = this.gui.addFolder('volumes');
+
+        this.playing = false;
+        this.f1 = {
+            'pause': function() {
+                this.playing = false;
+                clearInterval(this._play_callback);
+            },
+            'play': function() {
+                if (this.playing == true) {
+                    this.pause();
+                } else {
+                    this.playing = true;
+                    if (self.index == self.last_frame_index) {
+                        self.index = 0;
+                        self.f1.index.setValue(self.index);
+                    };
+                    this._play_callback = setInterval(function() {
+                        if (self.index < self.last_frame_index) {
+                            self.index += 1;
+                            self.f1.index.setValue(self.index);
+                        } else {
+                            self.f1.pause();
+                        };
+                    }, 1000 / self.fps);
+                }
+            }
+        };
     };
 
     AtomicApp.prototype.resize = function() {
@@ -100,6 +132,18 @@ define([
         oxyz[0] /= n;
         oxyz[1] /= n;
         oxyz[2] /= n;
+        this.atoms.geometry.computeBoundingBox();
+        var bbox = this.atoms.geometry.boundingBox;
+        var x = Math.pow(bbox.max.x - bbox.min.x, 2);
+        var y = Math.pow(bbox.max.y - bbox.min.y, 2);
+        var z = Math.pow(bbox.max.z - bbox.min.z, 2);
+        var d = Math.sqrt(x + y + z);
+        console.log(d);
+        var xyz = bbox.max;
+        xyz.x += d;
+        xyz.y += d;
+        xyz.z += d;
+        console.log(xyz);
         this.app3d.set_camera(100, 100, 100, oxyz[0], oxyz[1], oxyz[2]);
     };
 

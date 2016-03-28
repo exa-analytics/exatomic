@@ -55,6 +55,7 @@ define([
             this.model.on('change:gui_width', this.update_gui_width, this);
             this.model.on('change:two_bond0', this.update_two_bond0, this);
             this.model.on('change:two_bond1', this.update_two_bond1, this);
+            this.model.on('change:fps', this.update_fps, this);
             this.update_width();
             this.update_height();
             this.update_atom_x();
@@ -67,6 +68,7 @@ define([
             this.update_gui_width();
             this.update_two_bond0();
             this.update_two_bond1();
+            this.update_fps();
 
             this.init_container();
             this.init_canvas(this.gui_width);
