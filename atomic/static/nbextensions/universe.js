@@ -117,21 +117,36 @@ define([
             this.fields = this.model.get('_fields');
             this.fieldframes = this.model.get('_fieldframes');
             this.nfields = this.fields.length;
-            this.field_ox = this.get_from_json_str('_fieldmeta_ox');
-            this.field_oy = this.get_from_json_str('_fieldmeta_oy');
-            this.field_oz = this.get_from_json_str('_fieldmeta_oz');
-            this.field_nx = this.get_from_json_str('_fieldmeta_nx');
-            this.field_ny = this.get_from_json_str('_fieldmeta_ny');
-            this.field_nz = this.get_from_json_str('_fieldmeta_nz');
-            this.field_dxi = this.get_from_json_str('_fieldmeta_dxi');
-            this.field_dxj = this.get_from_json_str('_fieldmeta_dxj');
-            this.field_dxk = this.get_from_json_str('_fieldmeta_dxk');
-            this.field_dyi = this.get_from_json_str('_fieldmeta_dyi');
-            this.field_dyj = this.get_from_json_str('_fieldmeta_dyj');
-            this.field_dyk = this.get_from_json_str('_fieldmeta_dyk');
-            this.field_dzi = this.get_from_json_str('_fieldmeta_dzi');
-            this.field_dzj = this.get_from_json_str('_fieldmeta_dzj');
-            this.field_dzk = this.get_from_json_str('_fieldmeta_dzk');
+            this.field_ox = this.get_from_json_str('_field_ox');
+            this.field_oy = this.get_from_json_str('_field_oy');
+            this.field_oz = this.get_from_json_str('_field_oz');
+            this.field_nx = this.get_from_json_str('_field_nx');
+            this.field_ny = this.get_from_json_str('_field_ny');
+            this.field_nz = this.get_from_json_str('_field_nz');
+            this.field_dxi = this.get_from_json_str('_field_xi');
+            this.field_dxj = this.get_from_json_str('_field_xj');
+            this.field_dxk = this.get_from_json_str('_field_xk');
+            this.field_dyi = this.get_from_json_str('_field_yi');
+            this.field_dyj = this.get_from_json_str('_field_yj');
+            this.field_dyk = this.get_from_json_str('_field_yk');
+            this.field_dzi = this.get_from_json_str('_field_zi');
+            this.field_dzj = this.get_from_json_str('_field_zj');
+            this.field_dzk = this.get_from_json_str('_field_zk');
+            console.log(this.x);
+            console.log(this.y);
+            console.log(this.z);
+            console.log(this.field);
+            console.log(this.fields);
+            console.log(this.fieldframes);
+            console.log(this.field_ox);
+            console.log(this.field_oy);
+            console.log(this.field_oz);
+            console.log(this.field_nx);
+            console.log(this.field_ny);
+            console.log(this.field_nz);
+            console.log(this.field_xi);
+            console.log(this.field_yj);
+            console.log(this.field_zk);
             this.filled = true;
             // Resizable container to house the threejs app canvas and gui
             this.container = $('<div/>').width(this.width).height(this.height).resizable({
@@ -300,10 +315,15 @@ define([
         },
 
         update_surface: function(value) {
+            console.log('Hit update surface');
             if (value == true) {
+                console.log('if is true');
                 var fd = this.field;
                 var fr = this.fieldframes[fd];
                 this.f1.frame.setValue(fr);
+                console.log(fd);
+                console.log(fr);
+                console.log(this.field_nx)
                 var field = this.fields[fd];
                 var dims = [this.field_nx[fd],
                             this.field_ny[fd],
@@ -317,6 +337,7 @@ define([
                 var iso = 0.03;
                 this.app.add_surface(field, dims, orig, scale, iso);
             } else {
+                console.log('else is true');
                 this.app.scene.remove(this.app.surf);
                 this.app.scene.remove(this.app.nsurf);
             }

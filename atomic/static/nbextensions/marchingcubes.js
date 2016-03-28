@@ -29,6 +29,16 @@
  */
 
 var MarchingCubes = function(data, dims, orig, scale, isolevel) {
+    console.log('field len');
+    console.log(data.length);
+    console.log('dims');
+    console.log(dims);
+    console.log('orig');
+    console.log(orig);
+    console.log('scale');
+    console.log(scale);
+    console.log('iso');
+    console.log(isolevel);
     var edgeTable= new Uint32Array([
         0x0  , 0x109, 0x203, 0x30a, 0x406, 0x50f, 0x605, 0x70c,
         0x80c, 0x905, 0xa0f, 0xb06, 0xc0a, 0xd03, 0xe09, 0xf00,

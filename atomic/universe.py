@@ -18,8 +18,9 @@ from exa import Container
 from exa import _np as np
 from exa import _pd as pd
 from exa.config import Config
-from atomic.field import FieldMeta
-from atomic.frame import Frame, minimal_frame, _min_frame_from_atom
+from exa.numerical import Field
+#from atomic.field import FieldMeta
+from atomic.frame import Frame, minimal_frame#, _min_frame_from_atom
 from atomic.atom import (Atom, UnitAtom, ProjectedAtom,
                          get_unit_atom, get_projected_atom)
 from atomic.two import (Two, ProjectedTwo, AtomTwo, ProjectedAtomTwo,
@@ -46,7 +47,7 @@ class Universe(Container):
     '''
     __slots__ = ['_frame', '_atom', '_two', '_prjd_atom', '_unit_atom',
                  '_prjd_two', '_atomtwo', '_prjd_atomtwo', 'molecule',
-                 '_trait_values']
+                 '_trait_values',]
     # Relational information
     cid = Column(Integer, ForeignKey('container.pkid'), primary_key=True)
     frame_count = Column(Integer)
@@ -54,7 +55,7 @@ class Universe(Container):
     __dfclasses__ = {'_frame': Frame, '_atom': Atom, '_unit_atom': UnitAtom,
                      '_prjd_atom': ProjectedAtom, '_two': Two, '_prjd_two': ProjectedTwo,
                      '_atomtwo': AtomTwo, '_prjd_atomtwo': ProjectedAtomTwo,
-                     '_fieldmeta': FieldMeta}
+                     '_field': Field}
 
     # DOMWidget settings
     _view_module = Unicode('nbextensions/exa/atomic/universe').tag(sync=True)
@@ -213,13 +214,16 @@ class Universe(Container):
             else:
                 return self._prjd_two
 
+    #@property
+    #def fieldmeta(self):
+    #    return self._fieldmeta
+    #
+    #@property
+    #def fields(self):
+    #    return self._fields
     @property
-    def fieldmeta(self):
-        return self._fieldmeta
-
-    @property
-    def fields(self):
-        return self._fields
+    def field(self):
+        return self._field
 
     def _update_traits(self):
         '''
@@ -239,6 +243,8 @@ class Universe(Container):
             st = dt.now()
             self._center = self.atom.groupby('frame').apply(lambda x: x[['x', 'y', 'z']].mean().values).to_json()
             print('center: ', (dt.now() - st).total_seconds())
+        if self._fields is not None:
+            self._fields = self._fields
 
     def _update_frame_list(self):
         '''
@@ -270,7 +276,7 @@ class Universe(Container):
 
     def __init__(self, frame=None, atom=None, unit_atom=None, prjd_atom=None,
                  two=None, prjd_two=None, atomtwo=None, prjd_atomtwo=None,
-                 molecule=None, fieldmeta=None, fields=[], **kwargs):
+                 molecule=None, field=None, **kwargs):
         '''
         The universe container represents all of the atoms, bonds, molecules,
         orbital/densities, etc. present within an atomistic simulation. See
@@ -279,7 +285,8 @@ class Universe(Container):
         super().__init__(**kwargs)
         self._atom = atom
         if frame is None:
-            self._frame = _min_frame_from_atom(self._atom)
+            #self._frame = _min_frame_from_atom(self._atom)
+            self._frame = minimal_frame(self._atom)
         else:
             self._frame = frame
         self._unit_atom = unit_atom
@@ -288,11 +295,12 @@ class Universe(Container):
         self._prjd_two = prjd_two
         self._atomtwo = atomtwo
         self._prjd_atomtwo = prjd_atomtwo
-        self._fieldmeta = fieldmeta
-        self._fieldframes = []
-        if hasattr(self._fieldmeta, 'index'):
-            self._fieldframes = [int(obj) for obj in self._fieldmeta['frame'].values]
-        self._fields = fields
+        self._field = field
+        #self._fieldmeta = fieldmeta
+        #self._fieldframes = []
+        #if hasattr(self._fieldmeta, 'index'):
+        #    self._fieldframes = [int(obj) for obj in self._fieldmeta['frame'].values]
+        #self._fields = fields
         #if Config.ipynb and len(self._frame) < 1000:    # TODO workup a better solution here!
         #    self._update_traits()
 

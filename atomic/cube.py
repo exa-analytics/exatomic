@@ -6,12 +6,14 @@ Cube File Parsing and Composing
 '''
 from exa import _pd as pd
 from exa import _np as np
+from exa.numerical import Field
+from exa.frame import DataFrame
 
 from atomic import Universe
 from atomic.atom import Atom
-from atomic.field import FieldMeta
+#from atomic.field import FieldMeta
 from atomic import Isotope, Length
-from atomic.frame import _min_frame_from_atom
+from atomic.frame import minimal_frame#_min_frame_from_atom
 
 def read_cubes(paths, frames=None, fieldxs=None,
                labels=None, universe=None, metadata={},
@@ -44,9 +46,9 @@ def read_cubes(paths, frames=None, fieldxs=None,
     atoms = []
     fmeta = np.zeros((nrcubes,), dtype=[
         ('ox', 'f8'), ('oy', 'f8'), ('oz', 'f8'),
-        ('nx', 'f8'), ('dxi', 'f8'), ('dxj', 'f8'), ('dxk', 'f8'),
-        ('ny', 'f8'), ('dyi', 'f8'), ('dyj', 'f8'), ('dyk', 'f8'),
-        ('nz', 'f8'), ('dzi', 'f8'), ('dzj', 'f8'), ('dzk', 'f8'),
+        ('nx', 'f8'), ('xi', 'f8'), ('xj', 'f8'), ('xk', 'f8'),
+        ('ny', 'f8'), ('yi', 'f8'), ('yj', 'f8'), ('yk', 'f8'),
+        ('nz', 'f8'), ('zi', 'f8'), ('zj', 'f8'), ('zk', 'f8'),
         ('label', 'U12'), ('frame', 'i8'), ('field', 'i8'),
     ])
 
@@ -97,6 +99,7 @@ def read_cubes(paths, frames=None, fieldxs=None,
         # Field data
         fields.append(df[nat + 4:].stack().dropna().reset_index(drop=True).tolist())
 
+    # Handle possible duplicates of Atom table
     if not trkfrm:
         frameidxs = [frame]
         for i, atom in enumerate(atoms):
@@ -119,9 +122,14 @@ def read_cubes(paths, frames=None, fieldxs=None,
         fmeta['frame'] = frameidxs
     else:
         unikws['atom'] = pd.concat(atoms).reset_index(drop=True)
-    unikws['fieldmeta'] = FieldMeta(fmeta)
-    unikws['fields'] = fields
-
+    df = DataFrame(fmeta)
+    df.index.names = ['field']
+    return Field(df, fields=fields)
+    unikws['field'] = Field(df, fields=fields)
+    #print(unikws['field'].fields)
+    #unikws['fields'] = fields
+    print(unikws['field'])
+    print(unikws['field'].fields)
     return Universe(**unikws)
 
 def _gen_atom(smdf, convert, fdx):

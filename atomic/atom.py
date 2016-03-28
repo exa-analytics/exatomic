@@ -45,16 +45,21 @@ if Config.numba:
 else:
     from exa.algorithms.iteration import project_coordinates
     from numpy import tile as tile_i8
+from traitlets import Dict
 
 
 class AtomBase:
     '''
     Base class for :class:`~atomic.atom.Atom` and :class:`~atomic.atom.ProjectedAtom`.
     '''
-    _pkeys = ['atom']
-    _fkeys = ['frame']
+    radius = Dict()
+    color = Dict()
+    _indices = ['atom']
+    #_fkeys = ['frame']
+    _columns = ['x', 'y', 'z', 'symbol', 'frame']
     _traits = ['x', 'y', 'z', 'radius', 'color']
-    _groupbys = 'frame'
+    _groupbys = ['frame']
+    _categories = {'frame': np.int64}
 
     def _prep_trait_values(self):
         '''

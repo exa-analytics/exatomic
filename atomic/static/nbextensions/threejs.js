@@ -277,6 +277,12 @@ define([
         var fs = faces.length;
         var nvs = nverts.length;
         var nfs = nfaces.length;
+        console.log('Verts and faces');
+        console.log(vs);
+        console.log(fs);
+        console.log('Negative verts and faces');
+        console.log(nvs);
+        console.log(nfs);
 
         var geom = new THREE.Geometry();
         var ngeom = new THREE.Geometry();
