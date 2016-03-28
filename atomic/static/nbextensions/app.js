@@ -38,20 +38,29 @@ define([
         var self = this;
         this.view = view;
         this.canvas = this.view.canvas;
-        this.app = new app3D.ThreeJSApp(this.canvas);
+        this.index = 0;
+        this.app3d = new app3D.ThreeJSApp(this.canvas);
         this.gui = new dat.GUI({autoPlace: false, width: this.view.gui_width});
         this.gui_style = document.createElement('style');
         this.gui_style.innerHTML = gui_style;
         this.init_gui();
-        this.render_atoms(0);
+        this.render_atoms(this.index);
     };
 
     AtomicApp.prototype.init_gui = function() {
-
+        /*"""
+        */
+        var self = this;
+        this.f1 = this.gui.addFolder('animation');
+        this.f2 = this.gui.addFolder('atoms');
+        this.f3 = this.gui.addFolder('bonds');
+        this.f4 = this.gui.addFolder('cell');
+        this.f5 = this.gui.addFolder('surfaces');
+        this.f6 = this.gui.addFolder('volumes');
     };
 
     AtomicApp.prototype.resize = function() {
-
+        this.app3d.resize();
     };
 
     AtomicApp.prototype.render_atoms =  function(index) {
@@ -66,8 +75,12 @@ define([
         var x = this.get_value(this.view.atom_x, this.index);
         var y = this.get_value(this.view.atom_y, this.index);
         var z = this.get_value(this.view.atom_z, this.index);
-        this.app.scene.remove(this.points);
-        this.points = this.app.add_points(x, y, z, colors, radii);
+        var v0 = this.get_value(this.view.two_bond0, this.index);
+        var v1 = this.get_value(this.view.two_bond1, this.index);
+        this.app3d.scene.remove(this.atoms);
+        this.atoms = this.app3d.add_points(x, y, z, colors, radii);
+        this.app3d.scene.remove(this.bonds);
+        this.bonds = this.app3d.add_lines(v0, v1, x, y, z, colors);
         this.set_camera(x, y, z);
     };
 
@@ -78,16 +91,16 @@ define([
         */
         var n = x.length;
         var i = n;
-        var sums = new Float32Array(3);
+        var oxyz = [0.0, 0.0, 0.0];
         while (i--) {
-            sums[0] += x[i];
-            sums[1] += y[i];
-            sums[2] += z[i];
+            oxyz[0] += x[i];
+            oxyz[1] += y[i];
+            oxyz[2] += z[i];
         };
-        var ox = sums[0] / n;
-        var oy = sums[1] / n;
-        var oz = sums[2] / n;
-        this.app.set_camera(100, 100, 100, ox, oy, oz);
+        oxyz[0] /= n;
+        oxyz[1] /= n;
+        oxyz[2] /= n;
+        this.app3d.set_camera(100, 100, 100, oxyz[0], oxyz[1], oxyz[2]);
     };
 
     AtomicApp.prototype.get_value = function(obj, index) {

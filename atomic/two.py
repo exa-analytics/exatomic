@@ -50,13 +50,14 @@ class Two(DataFrame):
     def _get_bond_traits(self, labels):
         '''
         '''
-        self['label0'] = self['atom0'].map(labels)
-        self['label1'] = self['atom1'].map(labels)
-        grps = self.groupby('frame')
-        bonds = grps.apply(lambda g: g[['label0', 'label1']].values).to_json(orient='values')
-        del self['label0']
-        del self['label1']
-        return {'two_bonds': Unicode(bonds).tag(sync=True)}
+        df = self[self['bond'] == True].copy()
+        df['label0'] = df['atom0'].map(labels)
+        df['label1'] = df['atom1'].map(labels)
+        grps = df.groupby('frame')
+        b0 = grps.apply(lambda g: g['label0'].astype(np.int64).values).to_json(orient='values')
+        b1 = grps.apply(lambda g: g['label1'].astype(np.int64).values).to_json(orient='values')
+        del grps, df
+        return {'two_bond0': Unicode(b0).tag(sync=True), 'two_bond1': Unicode(b1).tag(sync=True)}
 
 
 def compute_two_body(universe, k=None, dmax=dmax, dmin=dmin, bond_extra=bond_extra,

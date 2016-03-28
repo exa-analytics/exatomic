@@ -48,10 +48,13 @@ define([
             this.model.on('change:atom_z', this.update_z, this);
             this.model.on('change:width', this.update_width, this);
             this.model.on('change:height', this.update_height, this);
-            this.model.on('change:frame_frame', this.update_framelist, this);
-            this.model.on('change:atom_symbols', this.update_atom_symbols, this);
             this.model.on('change:atom_radii', this.update_atom_radii_dict, this);
             this.model.on('change:atom_colors', this.update_atom_colors_dict, this);
+            this.model.on('change:atom_symbols', this.update_atom_symbols, this);
+            this.model.on('change:frame_frame', this.update_framelist, this);
+            this.model.on('change:gui_width', this.update_gui_width, this);
+            this.model.on('change:two_bond0', this.update_two_bond0, this);
+            this.model.on('change:two_bond1', this.update_two_bond1, this);
             this.update_width();
             this.update_height();
             this.update_atom_x();
@@ -62,6 +65,8 @@ define([
             this.update_atom_symbols();
             this.update_framelist();
             this.update_gui_width();
+            this.update_two_bond0();
+            this.update_two_bond1();
 
             this.init_container();
             this.init_canvas(this.gui_width);
@@ -70,11 +75,11 @@ define([
             this.container.append(this.canvas);       // Lastly set the html
             this.container.append(this.app.gui.domElement);
             this.container.append(this.app.gui_style);
-            this.app.app.render();
             this.setElement(this.container);          // objects and run.
+            this.app.app3d.render();
             this.on('displayed', function() {
-                self.app.app.animate();
-                self.app.app.controls.handleResize();
+                self.app.app3d.animate();
+                self.app.app3d.controls.handleResize();
             });
         },
 
@@ -121,12 +126,12 @@ define([
             this.atom_colors_dict = this.get_trait('atom_colors');
         },
 
-        update_two_bonds: function() {
-            this.two_bonds = this.get_trait('two_bonds');
+        update_two_bond0: function() {
+            this.two_bond0 = this.get_trait('two_bond0');
         },
 
-        update_gui_width: function() {
-            this.gui_width = this.get_trait('gui_width');
+        update_two_bond1: function() {
+            this.two_bond1 = this.get_trait('two_bond1');
         },
     });
 
