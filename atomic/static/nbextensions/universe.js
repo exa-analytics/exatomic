@@ -119,18 +119,17 @@ define([
             -------------
             */
             var n = x.length;
-            var sums = [0.0, 0.0, 0.0];
-            while (n--) {
-                sums[0] += x[n];
-                sums[1] += y[n];
-                sums[2] += z[n];
+            var i = n;
+            var sums = new Float32Array(3);
+            while (i--) {
+                sums[0] += x[i];
+                sums[1] += y[i];
+                sums[2] += z[i];
             };
-            console.log(sums);
-            sums[0] /= n;
-            sums[1] /= n;
-            sums[2] /= n;
-            console.log(sums);
-            this.app.set_camera(100, 100, 100, sums[0], sums[1], sums[2]);
+            var ox = sums[0] / n;
+            var oy = sums[1] / n;
+            var oz = sums[2] / n;
+            this.app.set_camera(100, 100, 100, ox, oy, oz);
         },
 
         update_atom_x: function() {

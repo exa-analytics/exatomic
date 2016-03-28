@@ -68,7 +68,7 @@ class Universe(Container):
         self._fields = fields
         self._two = two
         super().__init__(**kwargs)
-        if len(self.atom) < 500:
+        if len(self.atom) < 5000:
             self.compute_two_body()
             self._update_traits()
 
