@@ -62,6 +62,15 @@ class Universe(Container):
         '''
         self._two = _ctb(self, *args, **kwargs)
 
+    def _custom_container_traits(self):
+        '''
+        Create custom traits using multiple (related) dataframes.
+        '''
+        traits = {}
+        if hasattr(self._two, '__len__'):
+            traits = self.two._get_bond_traits(self.atom['label'])
+        return traits
+
     def __init__(self, frame=None, atom=None, two=None, fields=None, **kwargs):
         self._frame = frame
         self._atom = atom

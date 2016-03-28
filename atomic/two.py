@@ -25,12 +25,14 @@ problem in computational science.
 '''
 import numpy as np
 import pandas as pd
+from traitlets import Unicode
 from exa import DataFrame
 from exa.algorithms import pdist
 from atomic import Isotope
 
 
-max_atoms = 5000
+max_atoms_per_frame = 2000
+max_frames = 50
 bond_extra = 0.5
 dmin = 0.3
 dmax = 11.3
@@ -45,11 +47,16 @@ class Two(DataFrame):
     _groupbys = ['frame']
     _categories = {'frame': np.int64, 'symbols': str}
 
-    def _get_custom_traits(self):
+    def _get_bond_traits(self, labels):
         '''
-        Generate sequential bond indices using atom labels.
         '''
-        return {}
+        self['label0'] = self['atom0'].map(labels)
+        self['label1'] = self['atom1'].map(labels)
+        grps = self.groupby('frame')
+        bonds = grps.apply(lambda g: g[['label0', 'label1']].values).to_json(orient='values')
+        del self['label0']
+        del self['label1']
+        return {'two_bonds': Unicode(bonds).tag(sync=True)}
 
 
 def compute_two_body(universe, k=None, dmax=dmax, dmin=dmin, bond_extra=bond_extra,
@@ -78,7 +85,9 @@ def compute_two_body(universe, k=None, dmax=dmax, dmin=dmin, bond_extra=bond_ext
     if universe.periodic:
         raise NotImplementedError()
     else:
-        if universe.frame['nat'].max() < max_atoms:
+        nat = universe.frame['nat'].max()
+        nf = len(universe.frame)
+        if nat < max_atoms_per_frame and nf < max_frames:
             return _free_in_mem(universe, dmax=dmax, dmin=dmin, bond_extra=bond_extra,
                                 compute_bonds=compute_bonds, compute_symbols=compute_symbols)
         else:
@@ -119,9 +128,8 @@ def _free_in_mem(universe, dmax, dmin, bond_extra, compute_symbols, compute_bond
     frames = np.concatenate(frames)
     two = DataFrame.from_dict({'atom0': atom0, 'atom1': atom1,
                                'distance': distance, 'frame': frames})
-    two.index.names = ['two']
-    two = Two(two)
     two = two[(two['distance'] > dmin) & (two['distance'] < dmax)].reset_index(drop=True)
+    two.index.names = ['two']
     if compute_symbols:
         symbols = universe.atom['symbol'].astype(str)
         two['symbol0'] = two['atom0'].map(symbols)
@@ -136,7 +144,7 @@ def _free_in_mem(universe, dmax, dmin, bond_extra, compute_symbols, compute_bond
         two['mbl'] += bond_extra
         two['bond'] = two['distance'] < two['mbl']
         del two['mbl']
-    return two
+    return Two(two)
 
 #from sklearn.neighbors import NearestNeighbors
 #from exa.config import Config

@@ -61,75 +61,21 @@ define([
             this.update_atom_colors_dict();
             this.update_atom_symbols();
             this.update_framelist();
+            this.update_gui_width();
 
             this.init_container();
-            this.init_canvas();
-            this.init_3D();
-            this.render_atoms(0);
+            this.init_canvas(this.gui_width);
+            this.app = new app.AtomicApp(this);
 
             this.container.append(this.canvas);       // Lastly set the html
+            this.container.append(this.app.gui.domElement);
+            this.container.append(this.app.gui_style);
+            this.app.app.render();
             this.setElement(this.container);          // objects and run.
-            this.app.render();
             this.on('displayed', function() {
-                self.app.animate();
-                self.app.controls.handleResize();
+                self.app.app.animate();
+                self.app.app.controls.handleResize();
             });
-        },
-
-        render_atoms: function(index) {
-            /*"""
-            render_frame
-            --------------
-            */
-            this.index = index;
-            var symbols = this.get_value(this.atom_symbols, this.index);
-            var radii = utility.mapper(symbols, this.atom_radii_dict);
-            var colors = utility.mapper(symbols, this.atom_colors_dict);
-            var x = this.get_value(this.atom_x, this.index);
-            var y = this.get_value(this.atom_y, this.index);
-            var z = this.get_value(this.atom_z, this.index);
-            this.app.scene.remove(this.points);
-            this.points = this.app.add_points(x, y, z, colors, radii);
-            this.set_camera(x, y, z);
-        },
-
-        render_bonds: function(index) {
-            /*"""
-            render_bonds
-            ---------------
-            */
-        },
-
-        get_value: function(obj, index) {
-            /*"""
-            get_value
-            --------------
-            */
-            var value = obj[index];
-            if (value == undefined) {
-                return obj;
-            } else {
-                return value;
-            };
-        },
-
-        set_camera: function(x, y, z) {
-            /*"""
-            set_camera
-            -------------
-            */
-            var n = x.length;
-            var i = n;
-            var sums = new Float32Array(3);
-            while (i--) {
-                sums[0] += x[i];
-                sums[1] += y[i];
-                sums[2] += z[i];
-            };
-            var ox = sums[0] / n;
-            var oy = sums[1] / n;
-            var oz = sums[2] / n;
-            this.app.set_camera(100, 100, 100, ox, oy, oz);
         },
 
         update_atom_x: function() {
@@ -173,6 +119,14 @@ define([
 
         update_atom_colors_dict: function() {
             this.atom_colors_dict = this.get_trait('atom_colors');
+        },
+
+        update_two_bonds: function() {
+            this.two_bonds = this.get_trait('two_bonds');
+        },
+
+        update_gui_width: function() {
+            this.gui_width = this.get_trait('gui_width');
         },
     });
 
