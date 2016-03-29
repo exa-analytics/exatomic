@@ -42,7 +42,10 @@ class Editor(_Editor):
         '''
         return Universe(frame=self.frame, atom=self.atom, meta=self.meta, **kwargs)
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args, atom=None, frame=None, two=None, field=None,
+                 **kwargs):
         super().__init__(*args, **kwargs)
-        self._atom = None
-        self._frame = None
+        self._atom = atom
+        self._frame = frame
+        self._two = two
+        self._field = field

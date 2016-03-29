@@ -61,9 +61,8 @@ define([
         this.f1f = this.gui.addFolder('animation');
         this.f2f = this.gui.addFolder('atoms');
         this.f3f = this.gui.addFolder('bonds');
-        this.f4f = this.gui.addFolder('cell');
-        this.f5f = this.gui.addFolder('surfaces');
-        this.f6f = this.gui.addFolder('volumes');
+        this.f4f = this.gui.addFolder('fields');
+        this.f5f = this.gui.addFolder('cells');
 
         this.playing = false;
         this.f1 = {
@@ -78,12 +77,16 @@ define([
                     this.playing = true;
                     if (self.index == self.last_frame_index) {
                         self.index = 0;
-                        self.f1.slider.setValue(self.index);
+                        self.frame = self.framelist[self.index];
+                        self.f1o.slider.setValue(self.index);
+                        self.f1p.framelist.setValue(self.frame);
                     };
                     this._play_callback = setInterval(function() {
                         if (self.index < self.last_frame_index) {
                             self.index += 1;
-                            self.f1.slider.setValue(self.index);
+                            self.frame = self.framelist[self.index];
+                            self.f1o.slider.setValue(self.index);
+                            self.f1p.framelist.setValue(self.frame);
                         } else {
                             self.f1.pause();
                         };
@@ -92,18 +95,33 @@ define([
             },
             index: this.index,
             frame: this.frame,
-            fps: this.fps
+            fps: this.fps,
+            track: false,
         };
 
         this.f1o = {
             'play': this.f1f.add(this.f1, 'play'),
             'slider': this.f1f.add(this.f1, 'index', 0, this.last_frame_index),
             'framelist': this.f1f.add(this.f1, 'frame', this.view.framelist),
-            'fps': this.f1f.add(this.f1, 'fps', 1, 60, 1)
+            'fps': this.f1f.add(this.f1, 'fps', 1, 60, 1),
+            'track': this.f1f.add(this.f1, 'track'),
         };
 
         this.f1o.framelist.onChange(function(frame) {
-            console.log(frame);
+            self.frame = frame;
+            self.index = self.framelist.indexOf(self.frame);
+            console.log('framelist onchange');
+        });
+
+        this.f1o.slider.onChange(function(index) {
+            self.index = index;
+            console.log('slider change');
+        });
+
+        this.f1o.slider.onFinishChange(function(index) {
+            self.index = index;
+            self.frame = self.framelist[self.index];
+            console.log('slider finish change');
         });
     };
 

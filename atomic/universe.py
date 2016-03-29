@@ -21,6 +21,7 @@ import numpy as np
 from sqlalchemy import Column, Integer, ForeignKey
 from exa import Container, _conf
 from atomic.widget import UniverseWidget
+from atomic.frame import minimal_frame
 from atomic.two import compute_two_body as _ctb
 
 
@@ -40,12 +41,19 @@ class Universe(Container):
         return self.frame.is_periodic()
 
     @property
+    def frame(self):
+        if self._frame is None:
+            if self.atom is not None:
+                self._frame = minimal_frame(self.atom)
+        return self._frame
+
+    @property
     def atom(self):
         return self._atom
 
     @property
-    def frame(self):
-        return self._frame
+    def field(self):
+        return self._field
 
     @property
     def two(self):
@@ -62,6 +70,19 @@ class Universe(Container):
         '''
         self._two = _ctb(self, *args, **kwargs)
 
+    def field_values(self, field):
+        '''
+        Retrieve values of a specific field.
+
+        Args:
+            field (int): Field index (corresponding to the fields dataframe)
+
+        Returns:
+            data: Series or dataframe object containing field values
+        '''
+        return self._field._fields[field]
+
+
     def _custom_container_traits(self):
         '''
         Create custom traits using multiple (related) dataframes.
@@ -71,10 +92,10 @@ class Universe(Container):
             traits = self.two._get_bond_traits(self.atom['label'])
         return traits
 
-    def __init__(self, frame=None, atom=None, two=None, fields=None, **kwargs):
+    def __init__(self, frame=None, atom=None, two=None, field=None, **kwargs):
         self._frame = frame
         self._atom = atom
-        self._fields = fields
+        self._field = field
         self._two = two
         super().__init__(**kwargs)
         if len(self.atom) < 5000:

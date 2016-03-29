@@ -2,12 +2,13 @@
 '''
 Cube File Support
 ====================
-
+Cube files contain an atomic geometry and scalar field values corresponding to
+a physical quantity.
 '''
 import numpy as np
 import pandas as pd
 from io import StringIO
-from exa import Series
+from exa import Series, Field
 from atomic import Isotope, Universe, Editor, Atom
 from atomic.frame import minimal_frame
 
@@ -19,19 +20,34 @@ class Cube(Editor):
     .. code-block:: python
 
         cube = Cube('my.cube')
-        cube.field               # Displays the scalar field as a 1-D array (column-ordered)
         cube.atom                # Displays the atom dataframe
+        cube.field               # Displays the field dataframe
+        cube.field_values        # Displayss the field values corresponding to field 0
         uni = cube.to_universe() # Converts the cube file editor to a universe
         uni                      # Renders the cube file
     '''
     @property
     def field(self):
+        '''
+        Display the field dataframe.
+        '''
         if not hasattr(self, '_field'):
             self.parse_field()
         return self._field
 
+    @property
+    def field_values(self):
+        '''
+        Display the values of the scalar field.
+        '''
+        return self.field._fields[0]
+
     def parse_atom(self):
         '''
+        Parse the :class:`~atomic.atom.Atom` object from the cube file in place.
+
+        See Also:
+            :py:attr:`~atomic.editor.Editor.atom`
         '''
         df = pd.read_csv(StringIO('\n'.join(self._lines[6:self._volume_data_start])), delim_whitespace=True,
                          header=None, names=('Z', 'nelectron', 'x', 'y', 'z'))
@@ -42,15 +58,32 @@ class Cube(Editor):
         df['label'] = df['label'].astype('category')
         del df['Z']
         del df['nelectron']
-        df.index.names = ['atom']
         self._atom = Atom(df)
 
     def parse_field(self):
         '''
+        Parse the :class:`~exa.numerical.Field` object from the cube filed in place.
+
+        Note:
+            The :class:`~exa.numerical.Field` object tracks both the field meta-
+            data (i.e. information about the discretization and shape of the
+            field's spatial points) as well as the field values (at each of
+            those points in space).
+
+        See Also:
+            :class:`~exa.numerical.Field`
         '''
         data = pd.read_csv(StringIO('\n'.join(self._lines[self._volume_data_start:])),
                            delim_whitespace=True, header=None).values.ravel()
-        self._field = Series(data[~np.isnan(data)])
+        df = pd.Series({'ox': self._ox, 'oy': self._oy, 'oz': self._oz,
+                        'nx': self._nx, 'ny': self._ny, 'nz': self._nz,
+                        'xi': self._xi, 'xj': self._xj, 'xk': self._xk,
+                        'yi': self._yi, 'yj': self._yj, 'yk': self._yk,
+                        'zi': self._zi, 'zj': self._zj, 'zk': self._zk,
+                        'frame': 0, 'label': self.label})
+        df = df.to_frame().T
+        fields = [Series(data[~np.isnan(data)])]
+        self._field = Field(df, fields=fields)
 
     def parse_frame(self):
         '''
@@ -63,9 +96,9 @@ class Cube(Editor):
             :func:`~atomic.editor.Editor.to_universe`
         '''
         return Universe(frame=self.frame, atom=self.atom, meta=self.meta,
-                        fields=[self.field], **kwargs)
+                        field=self.field, **kwargs)
 
-    def _init(self):
+    def _init(self, *args, label=None, **kwargs):
         '''
         Perform some preliminary parsing so that future parsing of atoms, etc.
         is easy. Also parse out metadata.
@@ -97,6 +130,7 @@ class Cube(Editor):
         self._zj = float(zj)
         self._zk = float(zk)
         self._volume_data_start = 6 + self._nat
+        self.label = label
         self.meta = {'comments': self[0:2]}
 
     def __init__(self, *args, **kwargs):
