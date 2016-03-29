@@ -31,7 +31,7 @@ class Cube(Editor):
         '''
         Display the field dataframe.
         '''
-        if not hasattr(self, '_field'):
+        if self._field is None:
             self.parse_field()
         return self._field
 

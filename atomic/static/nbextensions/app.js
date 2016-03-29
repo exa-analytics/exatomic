@@ -169,6 +169,7 @@ define([
         this.atoms.geometry.computeBoundingBox();
         var bbox = this.atoms.geometry.boundingBox;
         var xyz = bbox.max;
+        console.log(xyz);
         xyz.x *= 1.3;
         xyz.y *= 1.3;
         xyz.z *= 1.3;
