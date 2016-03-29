@@ -150,17 +150,11 @@ define([
         oxyz[2] /= n;
         this.atoms.geometry.computeBoundingBox();
         var bbox = this.atoms.geometry.boundingBox;
-        var x = Math.pow(bbox.max.x - bbox.min.x, 2);
-        var y = Math.pow(bbox.max.y - bbox.min.y, 2);
-        var z = Math.pow(bbox.max.z - bbox.min.z, 2);
-        var d = Math.sqrt(x + y + z);
-        console.log(d);
         var xyz = bbox.max;
-        xyz.x += d;
-        xyz.y += d;
-        xyz.z += d;
-        console.log(xyz);
-        this.app3d.set_camera(100, 100, 100, oxyz[0], oxyz[1], oxyz[2]);
+        xyz.x *= 1.3;
+        xyz.y *= 1.3;
+        xyz.z *= 1.3;
+        this.app3d.set_camera(xyz.x, xyz.y, xyz.z, oxyz[0], oxyz[1], oxyz[2]);
     };
 
     AtomicApp.prototype.get_value = function(obj, index) {
