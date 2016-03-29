@@ -41,6 +41,8 @@ define([
         this.index = 0;
         this.length = this.view.framelist.length;
         this.last_frame_index = this.length - 1;
+        this.frame = this.view.framelist[this.index];
+        this.fps = this.view.fps;
         this.app3d = new app3D.ThreeJSApp(this.canvas);
         this.gui = new dat.GUI({autoPlace: false, width: this.view.gui_width});
         this.gui_style = document.createElement('style');
@@ -65,30 +67,44 @@ define([
 
         this.playing = false;
         this.f1 = {
-            'pause': function() {
+            pause: function() {
                 this.playing = false;
                 clearInterval(this._play_callback);
             },
-            'play': function() {
+            play: function() {
                 if (this.playing == true) {
                     this.pause();
                 } else {
                     this.playing = true;
                     if (self.index == self.last_frame_index) {
                         self.index = 0;
-                        self.f1.index.setValue(self.index);
+                        self.f1.slider.setValue(self.index);
                     };
                     this._play_callback = setInterval(function() {
                         if (self.index < self.last_frame_index) {
                             self.index += 1;
-                            self.f1.index.setValue(self.index);
+                            self.f1.slider.setValue(self.index);
                         } else {
                             self.f1.pause();
                         };
                     }, 1000 / self.fps);
-                }
-            }
+                };
+            },
+            index: this.index,
+            frame: this.frame,
+            fps: this.fps
         };
+
+        this.f1o = {
+            'play': this.f1f.add(this.f1, 'play'),
+            'slider': this.f1f.add(this.f1, 'index', 0, this.last_frame_index),
+            'framelist': this.f1f.add(this.f1, 'frame', this.view.framelist),
+            'fps': this.f1f.add(this.f1, 'fps', 1, 60, 1)
+        };
+
+        this.f1o.framelist.onChange(function(frame) {
+            console.log(frame);
+        });
     };
 
     AtomicApp.prototype.resize = function() {
