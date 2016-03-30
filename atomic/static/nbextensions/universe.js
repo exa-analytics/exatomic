@@ -43,32 +43,10 @@ define([
             */
             console.log('Initializing universe...');
             var self = this;
-            this.model.on('change:atom_x', this.update_x, this);
-            this.model.on('change:atom_y', this.update_y, this);
-            this.model.on('change:atom_z', this.update_z, this);
-            this.model.on('change:width', this.update_width, this);
-            this.model.on('change:height', this.update_height, this);
-            this.model.on('change:atom_radii', this.update_atom_radii_dict, this);
-            this.model.on('change:atom_colors', this.update_atom_colors_dict, this);
-            this.model.on('change:atom_symbols', this.update_atom_symbols, this);
-            this.model.on('change:frame_frame', this.update_framelist, this);
-            this.model.on('change:gui_width', this.update_gui_width, this);
-            this.model.on('change:two_bond0', this.update_two_bond0, this);
-            this.model.on('change:two_bond1', this.update_two_bond1, this);
-            this.model.on('change:fps', this.update_fps, this);
-            this.update_width();
-            this.update_height();
-            this.update_atom_x();
-            this.update_atom_y();
-            this.update_atom_z();
-            this.update_atom_radii_dict();
-            this.update_atom_colors_dict();
-            this.update_atom_symbols();
-            this.update_framelist();
-            this.update_gui_width();
-            this.update_two_bond0();
-            this.update_two_bond1();
-            this.update_fps();
+            this.init_default_model_listeners();
+            this.init_listeners();
+            console.log(this.field_nx);
+            console.log(this.field_values);
 
             this.init_container();
             this.init_canvas(this.gui_width);
@@ -83,6 +61,32 @@ define([
                 self.app.app3d.animate();
                 self.app.app3d.controls.handleResize();
             });
+        },
+
+        init_listeners: function() {
+            /*"""
+            init_listeners
+            ---------------
+            Set up the frontend to listen for changes on the backend
+            */
+            this.update_atom_x();
+            this.update_atom_y();
+            this.update_atom_z();
+            this.update_atom_radii_dict();
+            this.update_atom_colors_dict();
+            this.update_atom_symbols();
+            this.update_framelist();
+            this.update_two_bond0();
+            this.update_two_bond1();
+            this.model.on('change:atom_x', this.update_x, this);
+            this.model.on('change:atom_y', this.update_y, this);
+            this.model.on('change:atom_z', this.update_z, this);
+            this.model.on('change:atom_radii', this.update_atom_radii_dict, this);
+            this.model.on('change:atom_colors', this.update_atom_colors_dict, this);
+            this.model.on('change:atom_symbols', this.update_atom_symbols, this);
+            this.model.on('change:frame_frame', this.update_framelist, this);
+            this.model.on('change:two_bond0', this.update_two_bond0, this);
+            this.model.on('change:two_bond1', this.update_two_bond1, this);
         },
 
         update_atom_x: function() {
