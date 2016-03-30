@@ -22,7 +22,7 @@ class Cube(Editor):
         cube = Cube('my.cube')
         cube.atom                # Displays the atom dataframe
         cube.field               # Displays the field dataframe
-        cube.field_values        # Displayss the field values corresponding to field 0
+        cube.field_values()      # Displayss the field values corresponding to field 0
         uni = cube.to_universe() # Converts the cube file editor to a universe
         uni                      # Renders the cube file
     '''
@@ -35,12 +35,11 @@ class Cube(Editor):
             self.parse_field()
         return self._field
 
-    @property
-    def field_values(self):
+    def field_values(self, key=0):
         '''
         Display the values of the scalar field.
         '''
-        return self.field._fields[0]
+        return self.field._fields[key]
 
     def parse_atom(self):
         '''

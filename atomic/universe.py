@@ -42,8 +42,8 @@ class Universe(Container):
 
     @property
     def frame(self):
-        if self._frame is None:
-            if self.atom is not None:
+        if not self._is('frame'):
+            if self._is('atom'):
                 self._frame = minimal_frame(self.atom)
         return self._frame
 
@@ -57,18 +57,9 @@ class Universe(Container):
 
     @property
     def two(self):
-        if self._two is None:
+        if not self._is('two'):
             self.compute_two_body()
         return self._two
-
-    def compute_two_body(self, *args, **kwargs):
-        '''
-        Compute two body properties for the current universe.
-
-        For arguments see :func:`~atomic.two.get_two_body`. Note that this
-        operation (like all compute) operations are performed in place.
-        '''
-        self._two = _ctb(self, *args, **kwargs)
 
     def field_values(self, field):
         '''
@@ -82,13 +73,21 @@ class Universe(Container):
         '''
         return self._field._fields[field]
 
+    def compute_two_body(self, *args, **kwargs):
+        '''
+        Compute two body properties for the current universe.
+
+        For arguments see :func:`~atomic.two.get_two_body`. Note that this
+        operation (like all compute) operations are performed in place.
+        '''
+        self._two = _ctb(self, *args, **kwargs)
 
     def _custom_container_traits(self):
         '''
         Create custom traits using multiple (related) dataframes.
         '''
         traits = {}
-        if hasattr(self._two, '__len__'):
+        if self._is('two'):
             traits = self.two._get_bond_traits(self.atom['label'])
         return traits
 
@@ -98,7 +97,7 @@ class Universe(Container):
         self._field = field
         self._two = two
         super().__init__(**kwargs)
-        if len(self.atom) < 5000:
+        if self.frame['atom_count'].max() < 2000 and len(self.frame) < 200:
             self.compute_two_body()
             self._update_traits()
 

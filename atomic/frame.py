@@ -9,7 +9,7 @@ structure, etc.
 +-------------------+----------+-------------------------------------------+
 | Column            | Type     | Description                               |
 +===================+==========+===========================================+
-| nat               | int      | non-unique integer (req.)                 |
+| atom_count        | int      | non-unique integer (req.)                 |
 +-------------------+----------+-------------------------------------------+
 | ox                | float    | unit cell origin point in x               |
 +-------------------+----------+-------------------------------------------+
@@ -45,7 +45,7 @@ class Frame(DataFrame):
     oy = Float()  # Static unit cell origin point y
     oz = Float()  # Static unit cell origin point z
     _indices = ['frame']
-    _columns = ['nat']
+    _columns = ['atom_count']
     _traits = ['xi', 'xj', 'xk', 'yi', 'yj', 'yk', 'zi', 'zj', 'zk',
                'ox', 'oy', 'oz', 'frame']
 
@@ -69,7 +69,7 @@ def minimal_frame(atom):
     '''
     atom._revert_categories()
     frame = atom.groupby('frame').count().ix[:, 0].to_frame()
-    frame.columns = ['nat']
+    frame.columns = ['atom_count']
     atom._set_categories()
     return Frame(frame)
 
