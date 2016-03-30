@@ -147,34 +147,9 @@ define([
         this.atoms = this.app3d.add_points(x, y, z, colors, radii);
         this.app3d.scene.remove(this.bonds);
         this.bonds = this.app3d.add_lines(v0, v1, x, y, z, colors);
-        this.set_camera(x, y, z);
+        this.app3d.set_camera_from_geometry(x, y, z, this.atoms.geometry, 4.0, 4.0, 4.0);
     };
 
-    AtomicApp.prototype.set_camera =  function(x, y, z) {
-        /*"""
-        set_camera
-        -------------
-        */
-        var n = x.length;
-        var i = n;
-        var oxyz = [0.0, 0.0, 0.0];
-        while (i--) {
-            oxyz[0] += x[i];
-            oxyz[1] += y[i];
-            oxyz[2] += z[i];
-        };
-        oxyz[0] /= n;
-        oxyz[1] /= n;
-        oxyz[2] /= n;
-        this.atoms.geometry.computeBoundingBox();
-        var bbox = this.atoms.geometry.boundingBox;
-        var xyz = bbox.max;
-        console.log(xyz);
-        xyz.x *= 1.3;
-        xyz.y *= 1.3;
-        xyz.z *= 1.3;
-        this.app3d.set_camera(xyz.x, xyz.y, xyz.z, oxyz[0], oxyz[1], oxyz[2]);
-    };
 
     AtomicApp.prototype.get_value = function(obj, index) {
         /*"""

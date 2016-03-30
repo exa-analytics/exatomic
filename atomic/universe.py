@@ -42,8 +42,8 @@ class Universe(Container):
 
     @property
     def frame(self):
-        if not self._is('frame'):
-            if self._is('atom'):
+        if not self._is('_frame'):
+            if self._is('_atom'):
                 self._frame = minimal_frame(self.atom)
         return self._frame
 
@@ -57,7 +57,7 @@ class Universe(Container):
 
     @property
     def two(self):
-        if not self._is('two'):
+        if not self._is('_two'):
             self.compute_two_body()
         return self._two
 
@@ -87,7 +87,7 @@ class Universe(Container):
         Create custom traits using multiple (related) dataframes.
         '''
         traits = {}
-        if self._is('two'):
+        if self._is('_two'):
             traits = self.two._get_bond_traits(self.atom['label'])
         return traits
 

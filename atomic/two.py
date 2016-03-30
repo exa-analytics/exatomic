@@ -86,7 +86,7 @@ def compute_two_body(universe, k=None, dmax=dmax, dmin=dmin, bond_extra=bond_ext
     if universe.periodic:
         raise NotImplementedError()
     else:
-        nat = universe.frame['nat'].max()
+        nat = universe.frame['atom_count'].max()
         nf = len(universe.frame)
         if nat < max_atoms_per_frame and nf < max_frames:
             return _free_in_mem(universe, dmax=dmax, dmin=dmin, bond_extra=bond_extra,
