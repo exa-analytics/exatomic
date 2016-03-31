@@ -45,8 +45,6 @@ define([
             var self = this;
             this.init_default_model_listeners();
             this.init_listeners();
-            console.log(this.field_nx);
-            console.log(this.field_values);
 
             this.init_container();
             this.init_canvas(this.gui_width);
