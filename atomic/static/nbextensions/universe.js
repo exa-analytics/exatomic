@@ -16,8 +16,8 @@ require.config({
             exports: 'app'
         },
 
-        'nbextensions/exa/utility': {
-            exports: 'utility'
+        'nbextensions/exa/atomic/test': {
+            exports: 'test'
         },
     },
 });
@@ -26,15 +26,21 @@ require.config({
 define([
     'widgets/js/widget',
     'nbextensions/exa/container',
-    'nbextensions/exa/atomic/app',
-    'nbextensions/exa/utility',
-], function(widget, container, app, utility){
-    var UniverseView = container.ContainerView.extend({
+    'nbextensions/exa/atomic/app'
+], function(widget, container, app){
+    class UniverseView extends container.ContainerView {
         /*"""
         UniverseView
-        ====================
-        Frontend representation of an atomic universe instance.
+        ================
         */
+        if_test() {
+            var check = this.get_trait('test');
+            if (check === true) {
+                console.log('Empty universe, displaying testing interface');
+                this.app = new test.TestApp(this);
+            };
+        };
+    };
         render: function() {
             /*"""
             render
