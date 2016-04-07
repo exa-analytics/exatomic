@@ -3,8 +3,8 @@
 Simple Formula
 ==========================
 '''
-from exa import _np as np
-from exa import _pd as pd
+import numpy as np
+import pandas as pd
 from atomic import Isotope
 
 

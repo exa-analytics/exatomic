@@ -1,12 +1,37 @@
 # -*- coding: utf-8 -*-
 '''
-Atom DataFrame
+Frame Dataframes
 ==========================
+A frame represents a single unique nuclear geometry. Frames are distinguishable
+by any type of information, time, level of theory, differences in atomic
+structure, etc.
+
++-------------------+----------+-------------------------------------------+
+| Column            | Type     | Description                               |
++===================+==========+===========================================+
+| atom_count        | int      | non-unique integer (req.)                 |
++-------------------+----------+-------------------------------------------+
+| ox                | float    | unit cell origin point in x               |
++-------------------+----------+-------------------------------------------+
+| oy                | float    | unit cell origin point in y               |
++-------------------+----------+-------------------------------------------+
+| oz                | float    | unit cell origin point in z               |
++-------------------+----------+-------------------------------------------+
+
+See Also:
+    More information on the :class:`~atomic.frame.Frame` concept can be
+    found in :mod:`~atomic.universe` module's documentation.
 '''
+<<<<<<< HEAD
 from exa import _np as np
 from exa.frame import DataFrame
 from traitlets import Float
 from exa.jitted.broadcasting import mag_3d
+=======
+import numpy as np
+from traitlets import Float
+from exa.numerical import DataFrame
+>>>>>>> e1c63898107afab00ca8980bda56aa619d3a0371
 
 
 class Frame(DataFrame):
@@ -27,23 +52,38 @@ class Frame(DataFrame):
     oy = Float()  # Static unit cell origin point y
     oz = Float()  # Static unit cell origin point z
     _indices = ['frame']
+<<<<<<< HEAD
     _columns = ['nat']
     _traits = ['xi', 'xj', 'xk', 'yi', 'yj', 'yk', 'zi', 'zj', 'zk',
                'ox', 'oy', 'oz']
+=======
+    _columns = ['atom_count']
+    _traits = ['xi', 'xj', 'xk', 'yi', 'yj', 'yk', 'zi', 'zj', 'zk',
+               'ox', 'oy', 'oz', 'frame']
+>>>>>>> e1c63898107afab00ca8980bda56aa619d3a0371
 
     def is_periodic(self):
         '''
+        Check if (any) frame is/are periodic.
+
+        Returns:
+            result (bool): True if periodic false otherwise
         '''
         if 'periodic' in self.columns:
             if np.any(self['periodic'] == True):
                 return True
         return False
 
+<<<<<<< HEAD
+=======
+
+>>>>>>> e1c63898107afab00ca8980bda56aa619d3a0371
 def minimal_frame(atom):
     '''
     Create a minmal :class:`~atomic.frame.Frame` object from a
     :class:`~atomic.atom.Atom` object.
     '''
+<<<<<<< HEAD
     frame = atom.groupby('frame').count().ix[:, 0].to_frame()
     frame.columns = ['nat']
     return Frame(frame)
@@ -57,6 +97,15 @@ def minimal_frame(atom):
 #    _traits = ['xi', 'xj', 'xk', 'yi', 'yj', 'yk', 'zi', 'zj', 'zk',
 #                'rx', 'ry', 'rz', 'ox', 'oy', 'oz']
 #
+=======
+    atom._revert_categories()
+    frame = atom.groupby('frame').count().ix[:, 0].to_frame()
+    frame.columns = ['atom_count']
+    atom._set_categories()
+    return Frame(frame)
+
+
+>>>>>>> e1c63898107afab00ca8980bda56aa619d3a0371
 #    def get_unit_cell_magnitudes(self, inplace=False):
 #        '''
 #        Compute the magnitudes of the unit cell vectors.
@@ -87,6 +136,16 @@ def minimal_frame(atom):
 #        else:
 #            return (rx, ry, rz)
 #
+<<<<<<< HEAD
+=======
+#    def is_periodic(self):
+#        '''
+#        '''
+#        if 'periodic' in self.columns:
+#            if np.any(self['periodic'] == True):
+#                return True
+#        return False
+>>>>>>> e1c63898107afab00ca8980bda56aa619d3a0371
 #
 #
 #    def is_variable_cell(self):
@@ -129,6 +188,7 @@ def minimal_frame(atom):
 #        return df
 #
 #
+<<<<<<< HEAD
 #def _min_frame_from_atom(atom):
 #    '''
 #    '''
@@ -136,3 +196,6 @@ def minimal_frame(atom):
 #        df = atom.groupby('frame').count().iloc[:, 0].to_frame()
 #        df.columns = ['atom_count']
 #        return Frame(df)
+=======
+#
+>>>>>>> e1c63898107afab00ca8980bda56aa619d3a0371

@@ -1,20 +1,24 @@
 # -*- coding: utf-8 -*-
 '''
-Atom DataFrame
+Atom Dataframes
 ==========================
-A specialized dataframe for storing and manipulating information about atomic
-nuclei.
+A dataframe containing the nuclear positions, forces, velocities, symbols, etc.
+Examples of data that may exist in this dataframe are given below (note that
+the dataframe is not limited to only these record types - rather this provides
+a guide for what type of data is required and can be expected).
 
-The following are columns that can be expected in the dataframes provided by
-this module:
 +-------------------+----------+-------------------------------------------+
 | Column            | Type     | Description                               |
 +===================+==========+===========================================+
-| x                 | float    | position in x                             |
+| x                 | float    | position in x (req.)                      |
 +-------------------+----------+-------------------------------------------+
-| y                 | float    | position in y                             |
+| y                 | float    | position in y (req.)                      |
 +-------------------+----------+-------------------------------------------+
-| z                 | float    | position in z                             |
+| z                 | float    | position in z (req.)                      |
++-------------------+----------+-------------------------------------------+
+| frame             | category | non-unique integer (req.)                 |
++-------------------+----------+-------------------------------------------+
+| symbol            | category | element symbol (req.)                     |
 +-------------------+----------+-------------------------------------------+
 | fx                | float    | force in x                                |
 +-------------------+----------+-------------------------------------------+
@@ -28,61 +32,29 @@ this module:
 +-------------------+----------+-------------------------------------------+
 | vz                | float    | velocity in z                             |
 +-------------------+----------+-------------------------------------------+
-| symbol            | object   | element symbol                            |
+| label             | category | non-unique integer                        |
 +-------------------+----------+-------------------------------------------+
-| label             | int      | non-unique integer label                  |
-+-------------------+----------+-------------------------------------------+
+
+See Also:
+    :class:`~atomic.universe.Universe`
 '''
-from itertools import combinations
-from scipy.spatial import cKDTree
-from exa import _np as np
-from exa import _pd as pd
-from exa.config import Config
-from exa.frame import DataFrame, Updater
+import numpy as np
+import pandas as pd
+from traitlets import Dict, Unicode
+from exa.numerical import DataFrame
 from atomic import Isotope
-if Config.numba:
-    from exa.jitted.iteration import project_coordinates, tile_i8
-else:
-    from exa.algorithms.iteration import project_coordinates
-    from numpy import tile as tile_i8
-from traitlets import Dict
 
 
-class AtomBase:
-    '''
-    Base class for :class:`~atomic.atom.Atom` and :class:`~atomic.atom.ProjectedAtom`.
-    '''
-    radius = Dict()
-    color = Dict()
-    _indices = ['atom']
-    #_fkeys = ['frame']
-    _columns = ['x', 'y', 'z', 'symbol', 'frame']
-    _traits = ['x', 'y', 'z', 'radius', 'color']
-    _groupbys = ['frame']
-    _categories = {'frame': np.int64}
-
-    def _prep_trait_values(self):
-        '''
-        Maps the covalent radii and colors (for rendering the atoms).
-        '''
-        if 'radius' not in self.columns:
-            self['radius'] = self['symbol'].astype('O').map(Isotope.symbol_to_radius_map)
-        if 'color' not in self.columns:
-            self['color'] = self['symbol'].astype('O').map(Isotope.symbol_to_color_map)
-
-    def _post_trait_values(self):
-        '''
-        Cleans up the mapped covalent radii and colors after generating the
-        (JavaScript) traits.
-        '''
-        del self['radius']
-        del self['color']
-
-
-class Atom(AtomBase, DataFrame):
+class Atom(DataFrame):
     '''
     Absolute positions of atoms and their symbol.
     '''
+    _indices = ['atom']
+    _columns = ['x', 'y', 'z', 'symbol', 'frame']
+    _traits = ['x', 'y', 'z']
+    _groupbys = ['frame']
+    _categories = {'frame': np.int64, 'label': np.int64, 'symbol': str}
+
     def get_element_mass(self, inplace=False):
         '''
         Retrieve the mass of each element in the atom dataframe.
@@ -97,90 +69,108 @@ class Atom(AtomBase, DataFrame):
         '''
         Compute the simple formula for each frame.
         '''
-
-    def _compute_unit_atom_static_cell(self, rxyz, oxyz):
-        '''
-        Given a static unit cell, compute the unit cell coordinates for each
-        atom.
-        '''
-        xyz = self[['x', 'y', 'z']]
-        unit = np.mod(xyz, rxyz) + oxyz
-        return UnitAtom(unit[unit != xyz].astype(np.float64).to_sparse())
-
-
-class UnitAtom(Updater):
-    '''
-    '''
-    __key__ = ['atom']
-
-
-class VisualAtom(DataFrame):
-    '''
-    Special positions for atoms used to generate coherent animations.
-    '''
-    pass
-
-
-class ProjectedAtom(AtomBase, DataFrame):
-    '''
-    A 3 x 3 x 3 super cell generate using the primitive cell positions.
-
-    See Also:
-        :class:`~atomic.atom.PrimitiveAtom`
-    '''
-    _pkeys = ['prjd_atom']
-    _fkeys = ['atom']
-
-
-def get_unit_atom(universe, inplace=False):
-    '''
-    Compute the :class:`~atomic.atom.UnitAtom` for a given
-    :class:`~atomic.universe.Universe`.
-    '''
-    df = None
-    if universe.is_periodic():
-        if universe.is_variable_cell():
-            raise NotImplementedError()
-        else:
-            df = _compute_unit_atom_static_cell(universe)
-    if inplace:
-        universe._unit_atom = df
-    else:
-        return df
-
-
-def _compute_unit_atom_static_cell(universe):
-    '''
-    '''
-    rxyz = universe.frame._get_min_values('rx', 'ry', 'rz')
-    oxyz = universe.frame._get_min_values('ox', 'oy', 'oz')
-    return universe.atom._compute_unit_atom_static_cell(rxyz, oxyz)
-
-
-def get_projected_atom(universe, inplace=False):
-    '''
-    '''
-    prjd_atom = None
-    if universe.is_variable_cell():
         raise NotImplementedError()
-    else:
-        prjd_atom = _compute_projected_atom_static_cell(universe)
-    if inplace:
-        universe._prjd_atom = prjd_atom
-    else:
-        return prjd_atom
+
+    def _get_custom_traits(self):
+        '''
+        Creates four custom traits; radii, colors, symbols, and symbol codes.
+        '''
+        symbols = Unicode(self.groupby('frame').apply(
+            lambda x: x['symbol'].cat.codes.values
+        ).to_json(orient='values')).tag(sync=True)
+        symmap = {i: v for i, v in enumerate(self['symbol'].cat.categories)}
+        radii = Isotope.symbol_to_radius()[self['symbol'].unique()]
+        radii = Dict({i: radii[v] for i, v in symmap.items()}).tag(sync=True)
+        colors = Isotope.symbol_to_color()[self['symbol'].unique()]
+        colors = Dict({i: colors[v] for i, v in symmap.items()}).tag(sync=True)
+        return {'atom_symbols': symbols, 'atom_radii': radii,
+                'atom_colors': colors}
 
 
-def _compute_projected_atom_static_cell(universe):
-    '''
-    '''
-    rxyz = universe.frame._get_min_values('rx', 'ry', 'rz')
-    xyz = universe.unit_atom._get_column_values('x', 'y', 'z')
-    df = project_coordinates(xyz, rxyz)
-    df = pd.DataFrame(df, columns=('x', 'y', 'z'))
-    df.index.names = ['prjd_atom']
-    df['frame'] = tile_i8(universe.atom['frame'].astype('i8').values, 27)
-    df['symbol'] = universe.atom['symbol'].astype('O').tolist() * 27
-    df['symbol'] = df['symbol'].astype('category')
-    df['atom'] = tile_i8(universe.atom.index.values, 27)
-    return ProjectedAtom(df)
+#    def _compute_unit_atom_static_cell(self, rxyz, oxyz):
+#        '''
+#        Given a static unit cell, compute the unit cell coordinates for each
+#        atom.
+#        '''
+#        xyz = self[['x', 'y', 'z']]
+#        unit = np.mod(xyz, rxyz) + oxyz
+#        return UnitAtom(unit[unit != xyz].astype(np.float64).to_sparse())
+
+
+#class UnitAtom(Updater):
+#    '''
+#    '''
+#    __key__ = ['atom']
+#
+#
+#class VisualAtom(DataFrame):
+#    '''
+#    Special positions for atoms used to generate coherent animations.
+#    '''
+#    pass
+#
+#
+#class ProjectedAtom(AtomBase, DataFrame):
+#    '''
+#    A 3 x 3 x 3 super cell generate using the primitive cell positions.
+#
+#    See Also:
+#        :class:`~atomic.atom.PrimitiveAtom`
+#    '''
+#    _pkeys = ['prjd_atom']
+#    _fkeys = ['atom']
+#
+#
+#def get_unit_atom(universe, inplace=False):
+#    '''
+#    Compute the :class:`~atomic.atom.UnitAtom` for a given
+#    :class:`~atomic.universe.Universe`.
+#    '''
+#    df = None
+#    if universe.is_periodic():
+#        if universe.is_variable_cell():
+#            raise NotImplementedError()
+#        else:
+#            df = _compute_unit_atom_static_cell(universe)
+#    if inplace:
+#        universe._unit_atom = df
+#    else:
+#        return df
+#
+#
+#def _compute_unit_atom_static_cell(universe):
+#    '''
+#    '''
+#    rxyz = universe.frame._get_min_values('rx', 'ry', 'rz')
+#    oxyz = universe.frame._get_min_values('ox', 'oy', 'oz')
+#    return universe.atom._compute_unit_atom_static_cell(rxyz, oxyz)
+#
+#
+#def get_projected_atom(universe, inplace=False):
+#    '''
+#    '''
+#    prjd_atom = None
+#    if universe.is_variable_cell():
+#        raise NotImplementedError()
+#    else:
+#        prjd_atom = _compute_projected_atom_static_cell(universe)
+#    if inplace:
+#        universe._prjd_atom = prjd_atom
+#    else:
+#        return prjd_atom
+#
+#
+#def _compute_projected_atom_static_cell(universe):
+#    '''
+#    '''
+#    rxyz = universe.frame._get_min_values('rx', 'ry', 'rz')
+#    xyz = universe.unit_atom._get_column_values('x', 'y', 'z')
+#    df = project_coordinates(xyz, rxyz)
+#    df = pd.DataFrame(df, columns=('x', 'y', 'z'))
+#    df.index.names = ['prjd_atom']
+#    df['frame'] = tile_i8(universe.atom['frame'].astype('i8').values, 27)
+#    df['symbol'] = universe.atom['symbol'].astype('O').tolist() * 27
+#    df['symbol'] = df['symbol'].astype('category')
+#    df['atom'] = tile_i8(universe.atom.index.values, 27)
+#    return ProjectedAtom(df)
+#
