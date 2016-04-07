@@ -22,7 +22,10 @@ from sqlalchemy import Column, Integer, ForeignKey
 from exa import Container, _conf
 from atomic.widget import UniverseWidget
 from atomic.frame import minimal_frame
+from atomic.atom import compute_unit_atom as _cua
+from atomic.atom import compute_projected_atom as _cpa
 from atomic.two import compute_two_body as _ctb
+
 
 
 class Universe(Container):
@@ -37,8 +40,12 @@ class Universe(Container):
     __mapper_args__ = {'polymorphic_identity': 'universe'}
 
     @property
-    def periodic(self):
-        return self.frame.is_periodic()
+    def is_periodic(self):
+        return self.frame.is_periodic
+
+    @property
+    def is_variable_cell(self):
+        return self.frame.is_variable_cell
 
     @property
     def frame(self):
@@ -50,6 +57,26 @@ class Universe(Container):
     @property
     def atom(self):
         return self._atom
+
+    @property
+    def unit_atom(self):
+        '''
+        Updated atom table using only in-unit-cell positions.
+        '''
+        if not self._is('_unit_atom'):
+            self.compute_unit_atom()
+        atom = self.atom.copy()
+        atom.update(self._unit_atom)
+        return atom
+
+    @property
+    def projected_atom(self):
+        '''
+        Projected (unit) atom positions into a 3x3x3 supercell.
+        '''
+        if self._projected_atom is None:
+            self.compute_projected_atom()
+        return self._projected_atom
 
     @property
     def field(self):
@@ -73,14 +100,17 @@ class Universe(Container):
         '''
         return self._field._fields[field]
 
-    def compute_two_body(self, *args, **kwargs):
+    def compute_unit_atom(self):
         '''
-        Compute two body properties for the current universe.
+        Compute the sparse unit atom dataframe.
+        '''
+        self._unit_atom = _cua(self)
 
-        For arguments see :func:`~atomic.two.get_two_body`. Note that this
-        operation (like all compute) operations are performed in place.
+    def compute_projected_atom(self):
         '''
-        self._two = _ctb(self, *args, **kwargs)
+        Compute the projected supercell from the unit atom coordinates.
+        '''
+        self._projected_atom = _cpa(self)
 
     def _custom_container_traits(self):
         '''
@@ -91,21 +121,37 @@ class Universe(Container):
             traits = self.two._get_bond_traits(self.atom['label'])
         return traits
 
-    def __init__(self, frame=None, atom=None, two=None, field=None, **kwargs):
+    def compute_two_body(self, *args, **kwargs):
+        '''
+        Compute two body properties for the current universe.
+
+        For arguments see :func:`~atomic.two.get_two_body`. Note that this
+        operation (like all compute) operations are performed in place.
+        '''
+        self._two = _ctb(self, *args, **kwargs)
+
+    def __len__(self):
+        return len(self.frame) if self._is('_frame') else 0
+
+    def __init__(self, frame=None, atom=None, two=None, field=None,
+                 unit_atom=None, projected_atom=None, **kwargs):
         self._frame = frame
         self._atom = atom
         self._field = field
         self._two = two
+        self._unit_atom = unit_atom
+        self._projected_atom = projected_atom
         super().__init__(**kwargs)
-        if self.frame['atom_count'].max() < 2000 and len(self.frame) < 200:
+        mnpf = self.frame['atom_count'].max() if self._is('_frame') else 0
+        nf = len(self)
+        if mnpf == 0 and nf == 0:
+            self._test = True
+            self.name = 'TestUniverse'
+            self._update_traits()
+        elif mnpf < 2000 and nf < 200 and self._is('_atom'):
             self.compute_two_body()
             self._update_traits()
 
-#    def is_variable_cell(self):
-#        '''
-#        Variable cell universe?
-#        '''
-#        return self.frame.is_variable_cell()
 #
 #
 #    def compute_minimal_frame(self, inplace=False):
@@ -123,10 +169,6 @@ class Universe(Container):
 #        '''
 #        return get_unit_atom(self, inplace)
 #
-#    def compute_projected_atom(self, inplace=False):
-#        '''
-#        '''
-#        return get_projected_atom(self, inplace)
 #
 #
 #    def compute_bond_count(self, inplace=False):
@@ -212,14 +254,6 @@ class Universe(Container):
 #            atom['prjd_atom'] = self._unit_atom['prjd_atom']
 #        return Atom(atom.to_dense())
 #
-#    @property
-#    def projected_atom(self):
-#        '''
-#        Projected unit atom coordinates generating a 3x3x3 super cell.
-#        '''
-#        if self._prjd_atom is None:
-#            self.compute_projected_atom(inplace=True)
-#        return self._prjd_atom
 #
 #    @property
 #    def two(self):

@@ -1,36 +1,83 @@
 /*"""
-===============
-test.js
-===============
-Tests for universe.js
+==================
+test.universe.js
+==================
+Test visualization application for the universe container (atomic package).
 */
 'use strict';
 
 
 require.config({
     shim: {
-        'nbextensions/exa/app.three': {
-            exports: 'app3d'
-        },
-        'nbextensions/exa/app.gui': {
-            exports: 'gui'
+        'nbextensions/exa/apps/app3d': {
+            exports: 'App3D'
         },
 
-        'nbextensions/exa/field': {
-            exports: 'field'
+        'nbextensions/exa/apps/gui': {
+            exports: 'ContainerGUI'
         },
     },
 });
 
 
 define([
+    'nbextensions/exa/apps/app3d',
+    'nbextensions/exa/apps/gui'
+], function(App3D, ContainerGUI) {
+    class TestUniverse {
+        /*"""
+        TestUniverse
+        ==============
+        A test application for the universe container (atomic package).
+        */
+        constructor(view) {
+            /*"""
+            constructor
+            --------------
+            Args:
+                view: Backbone.js view (DOMWidgetView container representation)
+            */
+            this.view = view;
+            this.view.create_canvas();
+            this.meshes = [];
+            this.app3d = new App3D(this.view.canvas);
+            this.create_gui();
+            this.view.container.append(this.gui.domElement);
+            this.view.container.append(this.gui.custom_css);
+            this.view.container.append(this.view.canvas);
+            var view_self = this.view;
+            this.view.on('displayed', function() {
+                view_self.app.app3d.animate();
+                view_self.app.app3d.controls.handleResize();
+            });
+        };
+
+        create_gui() {
+            /*"""
+            create_gui
+            --------------
+            Creates the standard style container gui instance and populates
+            with relevant controls for this application.
+            */
+            var self = this;
+            this.gui = new ContainerGUI(this.view.gui_width);
+        };
+
+        resize() {
+            this.app3d.resize();
+        };
+    };
+
+    return TestUniverse;
+});
+
+/*
+define([
     'nbextensions/exa/app.three',
     'nbextensions/exa/app.gui',
     'nbextensions/exa/field'
 ], function(app3d, gui, field) {
     class TestGUI extends gui.ContainerGUI {
-        /*"""
-        */
         init() {
             var self = this;
             this.buttons = {
@@ -85,7 +132,7 @@ define([
                 };
             };
             this.points = this.app3d.add_points(x, y, z, 1, 0.3);
-            this.app3d.set_camera_from_mesh(this.points);*/
+            this.app3d.set_camera_from_mesh(this.points);
             console.log(Math.min(...this.field.values));
             console.log(Math.max(...this.field.values));
             console.log(this.isovalue);
@@ -116,7 +163,7 @@ define([
             console.log(results.faces.length);
             console.log(results.nfaces.length);
             console.log(results);
-            console.log(meshes);*/
+            console.log(meshes);
             this.app3d.set_camera();
             //this.app3d.set_camera_from_mesh(this.field_mesh);
             console.log(this.obj);
@@ -137,3 +184,4 @@ define([
 
     return {TestApp: TestApp};
 });
+*/

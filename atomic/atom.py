@@ -42,6 +42,7 @@ import numpy as np
 import pandas as pd
 from traitlets import Dict, Unicode
 from exa.numerical import DataFrame
+from exa.algorithms import supercell3
 from atomic import Isotope
 
 
@@ -86,91 +87,68 @@ class Atom(DataFrame):
         return {'atom_symbols': symbols, 'atom_radii': radii,
                 'atom_colors': colors}
 
+    def _compute_unit_atom_static_cell(self, rxyz, oxyz):
+        '''
+        Given a static unit cell, compute the unit cell coordinates for each
+        atom.
 
-#    def _compute_unit_atom_static_cell(self, rxyz, oxyz):
-#        '''
-#        Given a static unit cell, compute the unit cell coordinates for each
-#        atom.
-#        '''
-#        xyz = self[['x', 'y', 'z']]
-#        unit = np.mod(xyz, rxyz) + oxyz
-#        return UnitAtom(unit[unit != xyz].astype(np.float64).to_sparse())
+        Args:
+            rxyz (:class:`~numpy.ndarray`): Unit cell magnitudes
+            oxyz (:class:`~numpy.ndarray`): Unit cell origin
+
+        Returns:
+            sparse_df (:pandas:`~pandas.SparseDataFrame`): Sparse dataframe of in unit cell positions
+        '''
+        xyz = self[['x', 'y', 'z']]
+        unit = np.mod(xyz, rxyz) + oxyz
+        return unit[unit != xyz].astype(np.float64).to_sparse()
 
 
-#class UnitAtom(Updater):
-#    '''
-#    '''
-#    __key__ = ['atom']
-#
-#
-#class VisualAtom(DataFrame):
-#    '''
-#    Special positions for atoms used to generate coherent animations.
-#    '''
-#    pass
-#
-#
-#class ProjectedAtom(AtomBase, DataFrame):
-#    '''
-#    A 3 x 3 x 3 super cell generate using the primitive cell positions.
-#
-#    See Also:
-#        :class:`~atomic.atom.PrimitiveAtom`
-#    '''
-#    _pkeys = ['prjd_atom']
-#    _fkeys = ['atom']
-#
-#
-#def get_unit_atom(universe, inplace=False):
-#    '''
-#    Compute the :class:`~atomic.atom.UnitAtom` for a given
-#    :class:`~atomic.universe.Universe`.
-#    '''
-#    df = None
-#    if universe.is_periodic():
-#        if universe.is_variable_cell():
-#            raise NotImplementedError()
-#        else:
-#            df = _compute_unit_atom_static_cell(universe)
-#    if inplace:
-#        universe._unit_atom = df
-#    else:
-#        return df
-#
-#
-#def _compute_unit_atom_static_cell(universe):
-#    '''
-#    '''
-#    rxyz = universe.frame._get_min_values('rx', 'ry', 'rz')
-#    oxyz = universe.frame._get_min_values('ox', 'oy', 'oz')
-#    return universe.atom._compute_unit_atom_static_cell(rxyz, oxyz)
-#
-#
-#def get_projected_atom(universe, inplace=False):
-#    '''
-#    '''
-#    prjd_atom = None
-#    if universe.is_variable_cell():
-#        raise NotImplementedError()
-#    else:
-#        prjd_atom = _compute_projected_atom_static_cell(universe)
-#    if inplace:
-#        universe._prjd_atom = prjd_atom
-#    else:
-#        return prjd_atom
-#
-#
-#def _compute_projected_atom_static_cell(universe):
-#    '''
-#    '''
-#    rxyz = universe.frame._get_min_values('rx', 'ry', 'rz')
-#    xyz = universe.unit_atom._get_column_values('x', 'y', 'z')
-#    df = project_coordinates(xyz, rxyz)
-#    df = pd.DataFrame(df, columns=('x', 'y', 'z'))
-#    df.index.names = ['prjd_atom']
-#    df['frame'] = tile_i8(universe.atom['frame'].astype('i8').values, 27)
-#    df['symbol'] = universe.atom['symbol'].astype('O').tolist() * 27
-#    df['symbol'] = df['symbol'].astype('category')
-#    df['atom'] = tile_i8(universe.atom.index.values, 27)
-#    return ProjectedAtom(df)
-#
+def compute_unit_atom(universe):
+    '''
+    Compute the unit cell coordinates of the atoms.
+
+    Args:
+        universe (:class:`~atomic.universe.Universe`): Atomic universe
+
+    Returns:
+        sparse_df (:pandas:`~pandas.SparseDataFrame`): Sparse dataframe of in unit cell positions
+    '''
+    if not universe.is_periodic:
+        raise TypeError('Is this a periodic universe? Check frame for periodic column.')
+    if universe.is_variable_cell:
+        raise NotImplementedError('Variable cell simulations not yet supported')
+    first = universe.frame.index[0]
+    rxyz = universe.frame.ix[0, ['rx', 'ry', 'rz']].values
+    oxyz = universe.frame.ix[0, ['ox', 'oy', 'oz']].values
+    return universe.atom._compute_unit_atom_static_cell(rxyz, oxyz)
+
+
+def compute_projected_atom(universe):
+    '''
+    Computes the 3x3x3 supercell coordinates from the unit cell coordinates.
+    '''
+    if not universe.is_periodic:
+        raise TypeError('Is this a periodic universe? Check frame for periodic column.')
+    if universe.is_variable_cell:
+        raise NotImplementedError('Variable cell simulations not yet supported')
+    return _compute_projected_static(universe)
+
+
+def _compute_projected_static(universe):
+    '''
+    Compute the 3x3x3 supercell coordinates given a static unit cell
+    '''
+    first = universe.frame.index[0]
+    x = universe.unit_atom['x'].values
+    y = universe.unit_atom['y'].values
+    z = universe.unit_atom['z'].values
+    rx = universe.frame.ix[first, 'rx']
+    ry = universe.frame.ix[first, 'ry']
+    rz = universe.frame.ix[first, 'rz']
+    x, y, z = supercell3(x, y, z, rx, ry, rz)
+    df = pd.DataFrame.from_dict({'x': x, 'y': y, 'z': z})
+    df['frame'] = universe.atom['frame'].astype(np.int64).values.tolist() * 27
+    df['symbol'] = universe.atom['symbol'].astype(str).values.tolist() * 27
+    df['atom'] = pd.Series(universe.atom.index.values.tolist() * 27, dtype='category')
+    return df

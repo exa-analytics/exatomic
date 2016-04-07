@@ -10,12 +10,12 @@ requests the HTML representation of a universe data container.
 
 require.config({
     shim: {
-        'nbextensions/exa/lib/dat.gui.min': {
-            exports: 'dat'
+        'nbextensions/exa/apps/gui': {
+            exports: 'ContainerGUI'
         },
 
-        'nbextensions/exa/three.app': {
-            exports: 'app3D'
+        'nbextensions/exa/apps/app3d': {
+            exports: 'App3D'
         },
 
         'nbextensions/exa/utility': {
@@ -26,10 +26,10 @@ require.config({
 
 
 define([
-    'nbextensions/exa/lib/dat.gui.min',
-    'nbextensions/exa/three.app',
+    'nbextensions/exa/apps/gui',
+    'nbextensions/exa/apps/app3d',
     'nbextensions/exa/utility',
-], function(dat, app3D, utility) {
+], function(ContainerGUI, App3D, utility) {
     var AtomicApp = function(view) {
         /*"""
         AtomicApp
