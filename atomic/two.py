@@ -10,9 +10,9 @@ problem in computational science.
 +-------------------+----------+-------------------------------------------+
 | Column            | Type     | Description                               |
 +===================+==========+===========================================+
-| atom0             | integer  | foreign key to :class:`~atomic.atom.Atom` |                      |
+| atom0             | integer  | foreign key to :class:`~atomic.atom.Atom` |
 +-------------------+----------+-------------------------------------------+
-| atom1             | integer  | foreign key to :class:`~atomic.atom.Atom` |                      |
+| atom1             | integer  | foreign key to :class:`~atomic.atom.Atom` |
 +-------------------+----------+-------------------------------------------+
 | distance          | float    | distance between atom0 and atom1          |
 +-------------------+----------+-------------------------------------------+
@@ -25,10 +25,9 @@ problem in computational science.
 '''
 import numpy as np
 import pandas as pd
-from traitlets import Unicode
 from sklearn.neighbors import NearestNeighbors
 from exa import DataFrame
-from exa.algorithms import pdist
+from exa.algorithms import pdist, unordered_pairing
 from atomic import Isotope
 
 
@@ -43,7 +42,6 @@ class Two(DataFrame):
     '''
     The two body property dataframe includes interatomic distances and bonds.
     '''
-    _boundary_type = 0
     _indices = ['two']
     _columns = ['distance', 'atom0', 'atom1', 'frame']
     _groupbys = ['frame']
@@ -75,6 +73,14 @@ class Two(DataFrame):
         return b0.add(b1, fill_value=0)
 
 
+class ProjectedTwo(Two):
+    '''
+    The two body property dataframe but computed using the periodic algorithm.
+    '''
+    _indices = ['prjdtwo']
+    _columns = ['distance', 'prjdatom0', 'prjdatom1', 'frame']
+
+
 def compute_two_body(universe, k=None, dmax=dmax, dmin=dmin, bond_extra=bond_extra,
                      compute_bonds=True, compute_symbols=True):
     '''
@@ -102,25 +108,25 @@ def compute_two_body(universe, k=None, dmax=dmax, dmin=dmin, bond_extra=bond_ext
     nf = len(universe.frame)
     if universe.is_periodic:
         if nat < max_atoms_per_frame and nf < max_frames:
-            return _periodic_in_mem()
+            k = k if k else nat - 1
+            return _periodic_in_mem(universe, k, dmin, dmax, bond_extra, compute_symbols, compute_bonds)
         else:
             raise NotImplementedError('Out of core two body not implemented')
     else:
         if nat < max_atoms_per_frame and nf < max_frames:
-            return _free_in_mem(universe, dmax=dmax, dmin=dmin, bond_extra=bond_extra,
-                                compute_bonds=compute_bonds, compute_symbols=compute_symbols)
+            return _free_in_mem(universe, dmin, dmax, bond_extra, compute_symbols, compute_bonds)
         else:
             raise NotImplementedError('Out of core two body not implemented')
 
 
-def _free_in_mem(universe, dmax, dmin, bond_extra, compute_symbols, compute_bonds):
+def _free_in_mem(universe, dmin, dmax, bond_extra, compute_symbols, compute_bonds):
     '''
     Free boundary condition two body properties computed in memory.
 
     Args:
         universe (:class:`~atomic.universe.Universe`): The atomic universe
-        dmax (float): Max distance of interest
         dmin (float): Minimum distance of interest
+        dmax (float): Max distance of interest
         bond_extra (float): Extra distance to add when determining bonds
         compute_symbols (bool): Compute symbol pairs
         compute_bonds (bool): Compute (semi-empirical) bonds
@@ -166,15 +172,15 @@ def _free_in_mem(universe, dmax, dmin, bond_extra, compute_symbols, compute_bond
     return Two(two)
 
 
-def _periodic_in_mem(universe, k, dmax, dmin, bond_extra, compute_symbols, compute_bonds):
+def _periodic_in_mem(universe, k, dmin, dmax, bond_extra, compute_symbols, compute_bonds):
     '''
     Periodic boundary condition two body properties computed in memory.
 
     Args:
         universe (:class:`~atomic.universe.Universe`): The atomic universe
         k (int): Number of distances to compute
-        dmax (float): Max distance of interest
         dmin (float): Minimum distance of interest
+        dmax (float): Max distance of interest
         bond_extra (float): Extra distance to add when determining bonds
         compute_symbols (bool): Compute symbol pairs
         compute_bonds (bool): Compute (semi-empirical) bonds
@@ -182,48 +188,43 @@ def _periodic_in_mem(universe, k, dmax, dmin, bond_extra, compute_symbols, compu
     Returns:
         two (:class:`~atomic.two.Two`): Two body property dataframe
     '''
-    k = k if k else universe.frame['atom_count'].max() - 1
     prjd_grps = universe.projected_atom.groupby('frame')
     unit_grps = universe.unit_atom.groupby('frame')
     n = prjd_grps.ngroups
-    nn = k**2
-    distances = np.empty((n, nn), dtype=np.float64)
-    index1 = np.empty((n, nn), dtype=np.float64)
-    index2 = np.empty((n, nn), dtype=np.float64)
-    frames = np.empty((n, nn), dtype=np.float64)
+    distances = np.empty((n, ), dtype='O')
+    index1 = np.empty((n, ), dtype='O')
+    index2 = np.empty((n, ), dtype='O')
+    frames = np.empty((n, ), dtype='O')
     for i, (frame, prjd) in enumerate(prjd_grps):
         pxyz = prjd[['x', 'y', 'z']]
         uxyz = unit_grps.get_group(frame)[['x', 'y', 'z']]
-        nn = NearestNeighbors(n_neighbors=k, metric='euclidean')    # k-d tree search
-        dists, idxs = nn.fit(pxyz).kneighbors(uxyz)
-        distances[i, :] = dists.ravel()
-        index1[i, :] = prjd.iloc[np.tile(idxs[:, 0], k)].index.values
-        index2[i, :] = prjd.iloc[idxs.ravel()].index.values
-        frames[i, :] = np.repeat(frame, len(index1[i]))
-    distances = distances.ravel()
-    index1 = index1.ravel()
-    index2 = index2.ravel()
-    frames = frames.ravel()
-    two = ProjectedTwo.from_dict({'distance': distances, 'frame': frames,
-                                  'prjd_atom0': index1, 'prjd_atom1': index2})  # We will use prjd_atom0/2 to deduplicate data
-    two = two[(two['distance'] > dmin) & (two['distance'] < dmax)]
-    two['id'] = unordered_pairing_function(two['prjd_atom0'].values, two['prjd_atom1'].values)
-    two = two.drop_duplicates('id').reset_index(drop=True)
-    del two['id']
-    symbols = universe.projected_atom['symbol']
-    two['symbol1'] = two['prjd_atom0'].map(symbols)
-    two['symbol2'] = two['prjd_atom1'].map(symbols)
-    del symbols
-    two['symbols'] = two['symbol1'].astype('O') + two['symbol2'].astype('O')
-    two['symbols'] = two['symbols'].astype('category')
-    del two['symbol1']
-    del two['symbol2']
-    two['mbl'] = two['symbols'].map(Isotope.symbols_to_radii_map)
-    two['mbl'] += bond_extra
-    two['bond'] = two['distance'] < two['mbl']
-    del two['mbl']
-    two.index.names = ['prjd_two']
-    prjd_two = two.index.tolist() * 2
-    prjd_atom = two['prjd_atom0'].tolist() + two['prjd_atom1'].tolist()
-    atomtwo = ProjectedAtomTwo.from_dict({'prjd_two': prjd_two, 'prjd_atom': prjd_atom})
-    return two, atomtwo
+        nn = NearestNeighbors(n_neighbors=k, metric='euclidean')    # k-d tree nearest neighbor
+        dists, idxs = nn.fit(pxyz).kneighbors(uxyz)                 # search is used instead of pdist
+        distances[i] = dists.ravel()
+        index1[i] = prjd.iloc[np.tile(idxs[:, 0], k)].index.values
+        index2[i] = prjd.iloc[idxs.ravel()].index.values
+        frames[i] = np.repeat(frame, len(index1[i]))
+    distances = np.concatenate(distances)
+    index1 = np.concatenate(index1)
+    index2 = np.concatenate(index2)
+    frames = np.concatenate(frames)
+    df = pd.DataFrame.from_dict({'distance': distances, 'frame': frames,
+                                  'prjdatom0': index1, 'prjdatom1': index2})  # We will use prjd_atom0/2 to deduplicate data
+    df = df[(df['distance'] > dmin) & (df['distance'] < dmax)]
+    df['id'] = unordered_pairing(df['prjdatom0'].values, df['prjdatom1'].values)
+    df = df.drop_duplicates('id').reset_index(drop=True)
+    del df['id']
+    df['mbl'] = df['symbols'].map(Isotope.symbols_to_radii_map)
+    df['mbl'] += bond_extra
+    df['bond'] = df['distance'] < df['mbl']
+    del df['mbl']
+    if compute_symbols:
+        symbols = universe.projected_atom['symbol']
+        df['symbol1'] = df['prjd_atom0'].map(symbols)
+        df['symbol2'] = df['prjd_atom1'].map(symbols)
+        del symbols
+        df['symbols'] = df['symbol1'].astype('O') + df['symbol2'].astype('O')
+        df['symbols'] = df['symbols'].astype('category')
+        del df['symbol1']
+        del df['symbol2']
+    return ProjectedTwo(df)

@@ -62,6 +62,9 @@ class Universe(Container):
     def unit_atom(self):
         '''
         Updated atom table using only in-unit-cell positions.
+
+        Note:
+            This function returns a standard :class:`~pandas.DataFrame`
         '''
         if not self._is('_unit_atom'):
             self.compute_unit_atom()
@@ -130,8 +133,19 @@ class Universe(Container):
         '''
         self._two = _ctb(self, *args, **kwargs)
 
+    def __getitem__(self, key):
+        '''
+        
+        '''
+
     def __len__(self):
         return len(self.frame) if self._is('_frame') else 0
+
+    def __delitem__(self, frame):
+        '''
+        Deletes all dataframe corresponding to a specified frame index.
+        '''
+        raise NotImplementedError()
 
     def __init__(self, frame=None, atom=None, two=None, field=None,
                  unit_atom=None, projected_atom=None, **kwargs):
@@ -152,25 +166,6 @@ class Universe(Container):
             self.compute_two_body()
             self._update_traits()
 
-#
-#
-#    def compute_minimal_frame(self, inplace=False):
-#        '''
-#        '''
-#        return minimal_frame(self.atom, inplace)
-#
-#    def compute_cell_magnitudes(self, inplace=False):
-#        '''
-#        '''
-#        return self._frame.get_unit_cell_magnitudes(inplace)
-#
-#    def compute_unit_atom(self, inplace=False):
-#        '''
-#        '''
-#        return get_unit_atom(self, inplace)
-#
-#
-#
 #    def compute_bond_count(self, inplace=False):
 #        '''
 #        Compute the bond count
@@ -229,31 +224,6 @@ class Universe(Container):
 #        '''
 #        return compute_radial_pair_correlation(self, *args, **kwargs)
 #
-#    # DataFrames are "obscured" from the user via properties
-#    @property
-#    def frame(self):
-#        if self._frame is None:
-#            self.compute_minimal_frame(inplace=True)
-#            self._framelist = self._frame.index.tolist()
-#        return self._frame
-#
-#    @property
-#    def atom(self):
-#        return self._atom
-#
-#    @property
-#    def unit_atom(self):
-#        '''
-#        Primitive atom positions.
-#        '''
-#        if self._unit_atom is None:
-#            self.compute_unit_atom(inplace=True)
-#        atom = self.atom.copy()
-#        atom.update(self._unit_atom)
-#        if 'prjd_atom' in self._unit_atom.columns:
-#            atom['prjd_atom'] = self._unit_atom['prjd_atom']
-#        return Atom(atom.to_dense())
-#
 #
 #    @property
 #    def two(self):
@@ -272,113 +242,3 @@ class Universe(Container):
 #                return self._two
 #            else:
 #                return self._prjd_two
-#
-#    @property
-#    def fieldmeta(self):
-#        return self._fieldmeta
-#
-#    @property
-#    def fields(self):
-#        return self._fields
-#
-#    def _update_traits(self):
-#        '''
-#        '''
-#        st = dt.now()
-#        self._update_df_traits()
-#        print('df: ', (dt.now() - st).total_seconds())
-#        if self.frame is not None:
-#            st = dt.now()
-#            self._update_frame_list()
-#            print('frame: ', (dt.now() - st).total_seconds())
-#        if self._two is not None:
-#            st = dt.now()
-#            self._update_bond_list()
-#            print('blist: ', (dt.now() - st).total_seconds())
-#        if self._atom is not None:
-#            st = dt.now()
-#            self._center = self.atom.groupby('frame').apply(lambda x: x[['x', 'y', 'z']].mean().values).to_json()
-#            print('center: ', (dt.now() - st).total_seconds())
-#
-#    def _update_frame_list(self):
-#        '''
-#        '''
-#        self._framelist = [int(f) for f in self._frame.index.values]
-#
-#    def _update_bond_list(self):
-#        '''
-#        Retrieve a Series containing tuples of bonded atom labels
-#        '''
-#        if self.is_periodic() and len(self.projected_atom) > 0:
-#            mapper1 = self.projected_atom['atom']
-#            mapper2 = self.atom['label']
-#            df = self.two.ix[(self.two['bond'] == True), ['frame', 'prjd_atom0', 'prjd_atom1']]
-#            df['atom0'] = df['prjd_atom0'].map(mapper1)
-#            df['atom1'] = df['prjd_atom1'].map(mapper1)
-#            df['label0'] = df['atom0'].map(mapper2)
-#            df['label1'] = df['atom1'].map(mapper2)
-#            self._bonds = df.groupby('frame').apply(lambda x: x[['label0', 'label1']].values.astype(np.int64)).to_json()
-#        else:
-#            mapper = self.atom['label']
-#            df = self.two.ix[(self.two['bond'] == True), ['frame', 'atom0', 'atom1']]
-#            df['label0'] = df['atom0'].map(mapper)
-#            df['label1'] = df['atom1'].map(mapper)
-#            self._bonds = df.groupby('frame').apply(lambda x: x[['label0', 'label1']].values.astype(np.int64)).to_json()
-#
-#    def __len__(self):
-#        return len(self.frame)
-#
-#    def __init__(self, frame=None, atom=None, unit_atom=None, prjd_atom=None,
-#                 two=None, prjd_two=None, atomtwo=None, prjd_atomtwo=None,
-#                 molecule=None, fieldmeta=None, fields=[], **kwargs):
-#        '''
-#        The universe container represents all of the atoms, bonds, molecules,
-#        orbital/densities, etc. present within an atomistic simulation. See
-#        documentation related to each data specific dataframe for more information.
-#        '''
-#        super().__init__(**kwargs)
-#        self._atom = atom
-#        if frame is None:
-#            self._frame = _min_frame_from_atom(self._atom)
-#        else:
-#            self._frame = frame
-#        self._unit_atom = unit_atom
-#        self._prjd_atom = prjd_atom
-#        self._two = two
-#        self._prjd_two = prjd_two
-#        self._atomtwo = atomtwo
-#        self._prjd_atomtwo = prjd_atomtwo
-#        self._fieldmeta = fieldmeta
-#        self._fieldframes = []
-#        if hasattr(self._fieldmeta, 'index'):
-#            self._fieldframes = [int(obj) for obj in self._fieldmeta['frame'].values]
-#        self._fields = fields
-#        #if Config.ipynb and len(self._frame) < 1000:    # TODO workup a better solution here!
-#        #    self._update_traits()
-#
-#
-#def concat(universes):
-#    '''
-#    Concatenate a collection of universes.
-#    '''
-#    raise NotImplementedError()
-#
-#
-#@event.listens_for(Universe, 'after_insert')
-#def after_insert(*args, **kwargs):
-#    '''
-#    '''
-#    print('after_insert')
-#    print(args)
-#    print(kwargs)
-#    return args
-#
-#@event.listens_for(Universe, 'after_update')
-#def after_update(*args, **kwargs):
-#    '''
-#    '''
-#    print('after_update')
-#    print(args)
-#    print(kwargs)
-#    return args
-#
