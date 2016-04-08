@@ -87,8 +87,10 @@ class Universe(Container):
 
     @property
     def two(self):
-        if not self._is('_two'):
+        if not self._is('_two') and not self._is('_periodic_two'):
             self.compute_two_body()
+        elif self._is('_periodic_two'):
+            return self._periodic_two
         return self._two
 
     def field_values(self, field):
@@ -131,30 +133,24 @@ class Universe(Container):
         For arguments see :func:`~atomic.two.get_two_body`. Note that this
         operation (like all compute) operations are performed in place.
         '''
-        self._two = _ctb(self, *args, **kwargs)
-
-    def __getitem__(self, key):
-        '''
-        
-        '''
+        if self.is_periodic:
+            self._periodic_two = _ctb(self, *args, **kwargs)
+        else:
+            self._two = _ctb(self, *args, **kwargs)
 
     def __len__(self):
         return len(self.frame) if self._is('_frame') else 0
 
-    def __delitem__(self, frame):
-        '''
-        Deletes all dataframe corresponding to a specified frame index.
-        '''
-        raise NotImplementedError()
-
     def __init__(self, frame=None, atom=None, two=None, field=None,
-                 unit_atom=None, projected_atom=None, **kwargs):
+                 unit_atom=None, projected_atom=None, periodic_two=None,
+                 **kwargs):
         self._frame = frame
         self._atom = atom
         self._field = field
         self._two = two
         self._unit_atom = unit_atom
         self._projected_atom = projected_atom
+        self._periodic_two = periodic_two
         super().__init__(**kwargs)
         mnpf = self.frame['atom_count'].max() if self._is('_frame') else 0
         nf = len(self)
@@ -163,7 +159,8 @@ class Universe(Container):
             self.name = 'TestUniverse'
             self._update_traits()
         elif mnpf < 2000 and nf < 200 and self._is('_atom'):
-            self.compute_two_body()
+            if self._two is None and self._periodic_two is None:
+                self.compute_two_body()
             self._update_traits()
 
 #    def compute_bond_count(self, inplace=False):

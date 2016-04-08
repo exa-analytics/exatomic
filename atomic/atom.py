@@ -123,11 +123,12 @@ class ProjectedAtom(BaseAtom):
     Projected atom coordinates (e.g. on 3x3x3 supercell). These coordinates are
     typically associated with their corresponding indices in another dataframe.
     '''
-    _indices = ['prjdatom']
+    _indices = ['prjd_atom']
     _columns = ['x', 'y', 'z', 'symbol', 'frame', 'atom']
     _traits = ['x', 'y', 'z']
     _groupbys = ['frame']
-    _categories = {'atom': np.int64, 'frame': np.int64, 'label': np.int64, 'symbol': str}
+    _categories = {'atom': np.int64, 'frame': np.int64, 'label': np.int64,
+                   'symbol': str}
 
 
 def compute_unit_atom(universe):
@@ -174,7 +175,8 @@ def _compute_projected_static(universe):
     rz = universe.frame.ix[first, 'rz']
     x, y, z = supercell3(x, y, z, rx, ry, rz)
     df = pd.DataFrame.from_dict({'x': x, 'y': y, 'z': z})
-    df['frame'] = universe.atom['frame'].astype(np.int64).values.tolist() * 27
-    df['symbol'] = universe.atom['symbol'].astype(str).values.tolist() * 27
+    df['frame'] = pd.Series(universe.atom['frame'].astype(np.int64).values.tolist() * 27, dtype='category')
+    df['symbol'] = pd.Series(universe.atom['symbol'].astype(str).values.tolist() * 27, dtype='category')
     df['atom'] = pd.Series(universe.atom.index.values.tolist() * 27, dtype='category')
+    df['label'] = pd.Series(universe.atom['label'].astype(np.int64).values.tolist() * 27, dtype='category')
     return ProjectedAtom(df)

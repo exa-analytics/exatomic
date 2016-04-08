@@ -42,6 +42,7 @@ class Two(DataFrame):
     '''
     The two body property dataframe includes interatomic distances and bonds.
     '''
+    _index_prefix = 'atom'
     _indices = ['two']
     _columns = ['distance', 'atom0', 'atom1', 'frame']
     _groupbys = ['frame']
@@ -52,11 +53,11 @@ class Two(DataFrame):
         Generate bond traits for the notebook widget.
         '''
         df = self[self['bond'] == True].copy()
-        df['label0'] = df['atom0'].map(labels)
-        df['label1'] = df['atom1'].map(labels)
+        df['label0'] = df[self._index_prefix + '0'].map(labels)
+        df['label1'] = df[self._index_prefix + '1'].map(labels)
         grps = df.groupby('frame')
-        b0 = grps.apply(lambda g: g['label0'].astype(np.int64).values).to_json(orient='values')
-        b1 = grps.apply(lambda g: g['label1'].astype(np.int64).values).to_json(orient='values')
+        b0 = grps.apply(lambda g: g['label0'].astype(np.int32).values).to_json(orient='values')
+        b1 = grps.apply(lambda g: g['label1'].astype(np.int32).values).to_json(orient='values')
         del grps, df
         return {'two_bond0': Unicode(b0).tag(sync=True), 'two_bond1': Unicode(b1).tag(sync=True)}
 
@@ -73,12 +74,14 @@ class Two(DataFrame):
         return b0.add(b1, fill_value=0)
 
 
-class ProjectedTwo(Two):
+class PeriodicTwo(Two):
     '''
     The two body property dataframe but computed using the periodic algorithm.
+    The atom indices match those present in the projected atom dataframe.
     '''
-    _indices = ['prjdtwo']
-    _columns = ['distance', 'prjdatom0', 'prjdatom1', 'frame']
+    _index_prefix = 'prjd_atom'
+    _indices = ['pbtwo']
+    _columns = ['distance', 'prjd_atom0', 'prjd_atom1', 'frame']
 
 
 def compute_two_body(universe, k=None, dmax=dmax, dmin=dmin, bond_extra=bond_extra,
@@ -86,7 +89,7 @@ def compute_two_body(universe, k=None, dmax=dmax, dmin=dmin, bond_extra=bond_ext
     '''
     Compute two body information given a universe.
 
-    Bonds are computed semi-empirically (if requested - default True):
+    Bonds are computed semi-empirically (if requested - default true):
 
     .. math::
 
@@ -98,8 +101,8 @@ def compute_two_body(universe, k=None, dmax=dmax, dmin=dmin, bond_extra=bond_ext
         dmax (float): Max distance of interest (larger distances are ignored)
         dmin (float): Min distance of interest (smaller distances are ignored)
         bond_extra (float): Extra distance to include when determining bonds (see above)
-        compute_bonds (bool): Compute bonds from distances (default True)
-        compute_symbols (bool): Compute symbol pairs (default True)
+        compute_bonds (bool): Compute bonds from distances (default: true)
+        compute_symbols (bool): Compute symbol pairs (default: true)
 
     Returns:
         df (:class:`~atomic.twobody.TwoBody`): Two body property table
@@ -109,17 +112,20 @@ def compute_two_body(universe, k=None, dmax=dmax, dmin=dmin, bond_extra=bond_ext
     if universe.is_periodic:
         if nat < max_atoms_per_frame and nf < max_frames:
             k = k if k else nat - 1
-            return _periodic_in_mem(universe, k, dmin, dmax, bond_extra, compute_symbols, compute_bonds)
+            return _periodic_in_mem(universe, k, dmin, dmax, bond_extra, compute_symbols,
+                                    compute_bonds)
         else:
             raise NotImplementedError('Out of core two body not implemented')
     else:
         if nat < max_atoms_per_frame and nf < max_frames:
-            return _free_in_mem(universe, dmin, dmax, bond_extra, compute_symbols, compute_bonds)
+            return _free_in_mem(universe, dmin, dmax, bond_extra, compute_symbols,
+                                compute_bonds)
         else:
             raise NotImplementedError('Out of core two body not implemented')
 
 
-def _free_in_mem(universe, dmin, dmax, bond_extra, compute_symbols, compute_bonds):
+def _free_in_mem(universe, dmin, dmax, bond_extra, compute_symbols,
+                 compute_bonds):
     '''
     Free boundary condition two body properties computed in memory.
 
@@ -151,28 +157,29 @@ def _free_in_mem(universe, dmin, dmax, bond_extra, compute_symbols, compute_bond
     atom0 = np.concatenate(atom0)
     atom1 = np.concatenate(atom1)
     frames = np.concatenate(frames)
-    two = DataFrame.from_dict({'atom0': atom0, 'atom1': atom1,
+    df = pd.DataFrame.from_dict({'atom0': atom0, 'atom1': atom1,
                                'distance': distance, 'frame': frames})
-    two = two[(two['distance'] > dmin) & (two['distance'] < dmax)].reset_index(drop=True)
-    two.index.names = ['two']
+    df = df[(df['distance'] > dmin) & (df['distance'] < dmax)].reset_index(drop=True)
+    df.index.names = ['df']
     if compute_symbols:
         symbols = universe.atom['symbol'].astype(str)
-        two['symbol0'] = two['atom0'].map(symbols)
-        two['symbol1'] = two['atom1'].map(symbols)
+        df['symbol0'] = df['atom0'].map(symbols)
+        df['symbol1'] = df['atom1'].map(symbols)
         del symbols
-        two['symbols'] = two['symbol0'] + two['symbol1']
-        two['symbols'] = two['symbols'].astype('category')
-        del two['symbol0']
-        del two['symbol1']
+        df['symbols'] = df['symbol0'] + df['symbol1']
+        df['symbols'] = df['symbols'].astype('category')
+        del df['symbol0']
+        del df['symbol1']
     if compute_bonds:
-        two['mbl'] = two['symbols'].astype(str).map(Isotope.symbols_to_radii_map)
-        two['mbl'] += bond_extra
-        two['bond'] = two['distance'] < two['mbl']
-        del two['mbl']
-    return Two(two)
+        df['mbl'] = df['symbols'].astype(str).map(Isotope.symbols_to_radii_map)
+        df['mbl'] += bond_extra
+        df['bond'] = df['distance'] < df['mbl']
+        del df['mbl']
+    return Two(df)
 
 
-def _periodic_in_mem(universe, k, dmin, dmax, bond_extra, compute_symbols, compute_bonds):
+def _periodic_in_mem(universe, k, dmin, dmax, bond_extra, compute_symbols,
+                     compute_bonds):
     '''
     Periodic boundary condition two body properties computed in memory.
 
@@ -209,22 +216,24 @@ def _periodic_in_mem(universe, k, dmin, dmax, bond_extra, compute_symbols, compu
     index2 = np.concatenate(index2)
     frames = np.concatenate(frames)
     df = pd.DataFrame.from_dict({'distance': distances, 'frame': frames,
-                                  'prjdatom0': index1, 'prjdatom1': index2})  # We will use prjd_atom0/2 to deduplicate data
+                                  'prjd_atom0': index1, 'prjd_atom1': index2})  # We will use prjd_atom0/2 to deduplicate data
     df = df[(df['distance'] > dmin) & (df['distance'] < dmax)]
-    df['id'] = unordered_pairing(df['prjdatom0'].values, df['prjdatom1'].values)
+    df['id'] = unordered_pairing(df['prjd_atom0'].values, df['prjd_atom1'].values)
     df = df.drop_duplicates('id').reset_index(drop=True)
     del df['id']
+    symbols = universe.projected_atom['symbol']
+    df['symbol1'] = df['prjd_atom0'].map(symbols)
+    df['symbol2'] = df['prjd_atom1'].map(symbols)
+    del symbols
+    df['symbols'] = df['symbol1'].astype(str) + df['symbol2'].astype(str)
+    del df['symbol1']
+    del df['symbol2']
+    df['symbols'] = df['symbols'].astype('category')
     df['mbl'] = df['symbols'].map(Isotope.symbols_to_radii_map)
+    if not compute_symbols:
+        del df['symbols']
     df['mbl'] += bond_extra
-    df['bond'] = df['distance'] < df['mbl']
+    if compute_bonds:
+        df['bond'] = df['distance'] < df['mbl']
     del df['mbl']
-    if compute_symbols:
-        symbols = universe.projected_atom['symbol']
-        df['symbol1'] = df['prjd_atom0'].map(symbols)
-        df['symbol2'] = df['prjd_atom1'].map(symbols)
-        del symbols
-        df['symbols'] = df['symbol1'].astype('O') + df['symbol2'].astype('O')
-        df['symbols'] = df['symbols'].astype('category')
-        del df['symbol1']
-        del df['symbol2']
-    return ProjectedTwo(df)
+    return PeriodicTwo(df)
