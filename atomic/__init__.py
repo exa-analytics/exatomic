@@ -18,6 +18,3 @@ from atomic import tests
 if not _conf['exa_persistent']:
     from atomic._install import install
     install()
-
-
-boundary_types = {0: 'free', 1: 'static periodic', 2: 'variable periodic'}

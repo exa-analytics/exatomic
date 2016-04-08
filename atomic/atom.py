@@ -41,36 +41,20 @@ See Also:
 import numpy as np
 import pandas as pd
 from traitlets import Dict, Unicode
-from exa.numerical import DataFrame
+from exa import DataFrame, SparseDataFrame
 from exa.algorithms import supercell3
 from atomic import Isotope
 
 
-class Atom(DataFrame):
+class BaseAtom(DataFrame):
     '''
-    Absolute positions of atoms and their symbol.
+    Base atom and related datframe.
     '''
     _indices = ['atom']
     _columns = ['x', 'y', 'z', 'symbol', 'frame']
     _traits = ['x', 'y', 'z']
     _groupbys = ['frame']
     _categories = {'frame': np.int64, 'label': np.int64, 'symbol': str}
-
-    def get_element_mass(self, inplace=False):
-        '''
-        Retrieve the mass of each element in the atom dataframe.
-        '''
-        masses = self['symbol'].astype('O').map(Isotope.symbol_to_mass())
-        if inplace:
-            self['mass'] = masses
-        else:
-            return masses
-
-    def compute_simple_formula(self):
-        '''
-        Compute the simple formula for each frame.
-        '''
-        raise NotImplementedError()
 
     def _get_custom_traits(self):
         '''
@@ -87,6 +71,27 @@ class Atom(DataFrame):
         return {'atom_symbols': symbols, 'atom_radii': radii,
                 'atom_colors': colors}
 
+
+class Atom(BaseAtom):
+    '''
+    Absolute positions of atoms and their symbol.
+    '''
+    def get_element_mass(self, inplace=False):
+        '''
+        Retrieve the mass of each element in the atom dataframe.
+        '''
+        masses = self['symbol'].astype('O').map(Isotope.symbol_to_mass())
+        if inplace:
+            self['mass'] = masses
+        else:
+            return masses
+
+    def compute_simple_formula(self):
+        '''
+        Compute the simple formula for each frame.
+        '''
+        raise NotImplementedError()
+
     def _compute_unit_atom_static_cell(self, rxyz, oxyz):
         '''
         Given a static unit cell, compute the unit cell coordinates for each
@@ -101,7 +106,28 @@ class Atom(DataFrame):
         '''
         xyz = self[['x', 'y', 'z']]
         unit = np.mod(xyz, rxyz) + oxyz
-        return unit[unit != xyz].astype(np.float64).to_sparse()
+        return UnitAtom(unit[unit != xyz].astype(np.float64).to_sparse())
+
+
+class UnitAtom(SparseDataFrame):
+    '''
+    In unit cell coordinates (sparse) for periodic systems. These coordinates
+    are used to update the corresponding :class:`~atomic.atom.Atom` object
+    '''
+    _indices = ['atom']
+    _columns = ['x', 'y', 'z']
+
+
+class ProjectedAtom(BaseAtom):
+    '''
+    Projected atom coordinates (e.g. on 3x3x3 supercell). These coordinates are
+    typically associated with their corresponding indices in another dataframe.
+    '''
+    _indices = ['prjdatom']
+    _columns = ['x', 'y', 'z', 'symbol', 'frame', 'atom']
+    _traits = ['x', 'y', 'z']
+    _groupbys = ['frame']
+    _categories = {'atom': np.int64, 'frame': np.int64, 'label': np.int64, 'symbol': str}
 
 
 def compute_unit_atom(universe):
@@ -151,4 +177,4 @@ def _compute_projected_static(universe):
     df['frame'] = universe.atom['frame'].astype(np.int64).values.tolist() * 27
     df['symbol'] = universe.atom['symbol'].astype(str).values.tolist() * 27
     df['atom'] = pd.Series(universe.atom.index.values.tolist() * 27, dtype='category')
-    return df
+    return ProjectedAtom(df)
