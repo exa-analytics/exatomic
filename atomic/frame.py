@@ -45,7 +45,6 @@ class Frame(DataFrame):
     ox = Float()  # Static unit cell origin point x
     oy = Float()  # Static unit cell origin point y
     oz = Float()  # Static unit cell origin point z
-    _boundary_type = 0
     _indices = ['frame']
     _columns = ['atom_count']
     _traits = ['xi', 'xj', 'xk', 'yi', 'yj', 'yk', 'zi', 'zj', 'zk',

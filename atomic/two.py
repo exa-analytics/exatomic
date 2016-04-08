@@ -25,6 +25,7 @@ problem in computational science.
 '''
 import numpy as np
 import pandas as pd
+from traitlets import Unicode
 from sklearn.neighbors import NearestNeighbors
 from exa import DataFrame
 from exa.algorithms import pdist, unordered_pairing
@@ -32,7 +33,7 @@ from atomic import Isotope
 
 
 max_atoms_per_frame = 2000
-max_frames = 50
+max_frames = 100
 bond_extra = 0.5
 dmin = 0.3
 dmax = 11.3

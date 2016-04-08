@@ -50,13 +50,12 @@ class Cube(Editor):
         '''
         df = pd.read_csv(StringIO('\n'.join(self._lines[6:self._volume_data_start])), delim_whitespace=True,
                          header=None, names=('Z', 'nelectron', 'x', 'y', 'z'))
+        del df['nelectron']
         df['symbol'] = df['Z'].map(Isotope.Z_to_symbol()).astype('category')
+        del df['Z']
         df['frame'] = 0
         df['frame'] = df['frame'].astype('category')
-        df['label'] = range(self._nat)
-        df['label'] = df['label'].astype('category')
-        del df['Z']
-        del df['nelectron']
+        df['label'] = pd.Series(range(self._nat), dtype='category')
         self._atom = Atom(df)
 
     def parse_field(self):

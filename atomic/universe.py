@@ -24,8 +24,8 @@ from atomic.widget import UniverseWidget
 from atomic.frame import minimal_frame
 from atomic.atom import compute_unit_atom as _cua
 from atomic.atom import compute_projected_atom as _cpa
+from atomic.two import max_frames, max_atoms_per_frame
 from atomic.two import compute_two_body as _ctb
-
 
 
 class Universe(Container):
@@ -141,13 +141,14 @@ class Universe(Container):
     def __len__(self):
         return len(self.frame) if self._is('_frame') else 0
 
-    def __init__(self, frame=None, atom=None, two=None, field=None,
+    def __init__(self, frame=None, atom=None, two=None, field=None, fields=None,
                  unit_atom=None, projected_atom=None, periodic_two=None,
                  **kwargs):
         self._frame = frame
         self._atom = atom
-        self._field = field
-        self._two = two
+        self._field = field        # Dataframe containing field dimensions.
+        self._fields = fields      # List of field values (Series or DataFrame
+        self._two = two            # objects), with index corresponding to _field.
         self._unit_atom = unit_atom
         self._projected_atom = projected_atom
         self._periodic_two = periodic_two
@@ -158,7 +159,7 @@ class Universe(Container):
             self._test = True
             self.name = 'TestUniverse'
             self._update_traits()
-        elif mnpf < 2000 and nf < 200 and self._is('_atom'):
+        elif mnpf < max_atoms_per_frame and nf < max_frames and self._is('_atom'):
             if self._two is None and self._periodic_two is None:
                 self.compute_two_body()
             self._update_traits()

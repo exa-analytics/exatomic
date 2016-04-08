@@ -145,9 +145,9 @@ def compute_unit_atom(universe):
         raise TypeError('Is this a periodic universe? Check frame for periodic column.')
     if universe.is_variable_cell:
         raise NotImplementedError('Variable cell simulations not yet supported')
-    first = universe.frame.index[0]
-    rxyz = universe.frame.ix[0, ['rx', 'ry', 'rz']].values
-    oxyz = universe.frame.ix[0, ['ox', 'oy', 'oz']].values
+    idx = universe.frame.index[0]
+    rxyz = universe.frame.ix[idx, ['rx', 'ry', 'rz']].values
+    oxyz = universe.frame.ix[idx, ['ox', 'oy', 'oz']].values
     return universe.atom._compute_unit_atom_static_cell(rxyz, oxyz)
 
 
@@ -166,13 +166,13 @@ def _compute_projected_static(universe):
     '''
     Compute the 3x3x3 supercell coordinates given a static unit cell
     '''
-    first = universe.frame.index[0]
+    idx = universe.frame.index[0]
     x = universe.unit_atom['x'].values
     y = universe.unit_atom['y'].values
     z = universe.unit_atom['z'].values
-    rx = universe.frame.ix[first, 'rx']
-    ry = universe.frame.ix[first, 'ry']
-    rz = universe.frame.ix[first, 'rz']
+    rx = universe.frame.ix[idx, 'rx']
+    ry = universe.frame.ix[idx, 'ry']
+    rz = universe.frame.ix[idx, 'rz']
     x, y, z = supercell3(x, y, z, rx, ry, rz)
     df = pd.DataFrame.from_dict({'x': x, 'y': y, 'z': z})
     df['frame'] = pd.Series(universe.atom['frame'].astype(np.int64).values.tolist() * 27, dtype='category')
