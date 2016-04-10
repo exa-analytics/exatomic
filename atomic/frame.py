@@ -97,9 +97,9 @@ class Frame(DataFrame):
         zi = self['zi'].values
         zj = self['zj'].values
         zk = self['zk'].values
-        self['rx'] = vmag3(xi, xj, xk)
-        self['ry'] = vmag3(yi, yj, yk)
-        self['rz'] = vmag3(zi, zj, zk)
+        self['rx'] = vmag3(xi, xj, xk)**0.5
+        self['ry'] = vmag3(yi, yj, yk)**0.5
+        self['rz'] = vmag3(zi, zj, zk)**0.5
 
 
 def minimal_frame(atom):
