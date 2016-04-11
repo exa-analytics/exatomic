@@ -1,6 +1,6 @@
 /*"""
 ==================
-test.universe.js
+test.js
 ==================
 Test visualization application for the universe container (atomic package).
 */
@@ -16,14 +16,19 @@ require.config({
         'nbextensions/exa/apps/gui': {
             exports: 'ContainerGUI'
         },
+
+        'nbextensions/exa/atomic/ao': {
+            exports: 'AO'
+        },
     },
 });
 
 
 define([
     'nbextensions/exa/apps/app3d',
-    'nbextensions/exa/apps/gui'
-], function(App3D, ContainerGUI) {
+    'nbextensions/exa/apps/gui',
+    'nbextensions/exa/atomic/ao'
+], function(App3D, ContainerGUI, AO) {
     class UniverseTestApp {
         /*"""
         UniverseTestApp
@@ -40,8 +45,9 @@ define([
             console.log('here11');
             this.view = view;
             this.view.create_canvas();
-            this.meshes = [];
-            this.app3d = new App3D(this.view.canvas);
+            this.axis = [];
+            this.active_objs = [];
+            this.create_app3d();
             this.create_gui();
             this.view.container.append(this.gui.domElement);
             this.view.container.append(this.gui.custom_css);
@@ -53,6 +59,24 @@ define([
             });
         };
 
+        create_app3d() {
+            this.app3d = new App3D(this.view.canvas);
+            this.axis = this.app3d.add_unit_axis();
+            this.dimensions = {
+                'xmin': -20.0,
+                'xmax': 20.0,
+                'ymin': -20.0,
+                'ymax': 20.0,
+                'zmin': -20.0,
+                'zmax': 20.0,
+                'dx': 0.5,
+                'dy': 0.5,
+                'dz': 0.5
+            };
+            this.render_orbital();
+            this.app3d.set_camera({x: 5.5, y: 5.5, z: 5.5});
+        };
+
         create_gui() {
             /*"""
             create_gui
@@ -60,10 +84,56 @@ define([
             Creates the standard style container gui instance and populates
             with relevant controls for this application.
             */
-            console.log('here22');
             var self = this;
             this.gui = new ContainerGUI(this.view.gui_width);
-            this.level0 = this.gui.addFolder('stuff and things');
+
+            this.top_level = {
+                'demo': 'atomic orbitals',
+                'demos': ['atomic orbitals', 'cube file', 'md trajectory'],
+                'play': function() {
+                    console.log('pushed play');
+                },
+                'fps': 24,
+            };
+            this.top_level['demo_dropdown'] = this.gui.add(this.top_level, 'demo', this.top_level['demos']);
+            this.top_level['play_button'] = this.gui.add(this.top_level, 'play');
+            this.top_level['fps_slider'] = this.gui.add(this.top_level, 'fps', 1, 60);
+            this.atorb = {
+                'which': '1s',
+                'orbitals': ['1s', '2s', '2px', '2py', '2pz',
+                             '3s', '3px', '3py', '3pz',
+                             '3dz2', '3dxz', '3dyz', '3dx2-y2', '3dxy'],
+                'isovalue': 0.005
+            };
+            this.surf = this.gui.addFolder('isosurface');
+            this.atorb['which_dropdown'] = this.surf.add(this.atorb, 'which', this.atorb['orbitals']);
+            this.atorb['isovalue_slider'] = this.surf.add(this.atorb, 'isovalue', 0.0, 0.4);
+            this.surf.open();
+
+            this.atorb['isovalue_slider'].onFinishChange(function(value) {
+                self.atorb['isovalue'] = value;
+                self.render_orbital();
+            });
+
+            this.atorb['which_dropdown'].onFinishChange(function(value) {
+                self.atorb['which'] = value;
+                self.render_orbital();
+            });
+        };
+
+        render_orbital() {
+            var iso = 0.005;
+            var which = '1s';
+            if (this.atorb !== undefined) {
+                iso = this.atorb['isovalue'];
+                which = this.atorb['which'];
+            };
+            this.field = new AO(this.dimensions, which);
+            this.app3d.remove_meshes(this.active_objs);
+            this.active_objs = this.app3d.add_scalar_field(this.field, iso, 2);
+        };
+
+        remove_surface() {
         };
 
         resize() {
