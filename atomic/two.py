@@ -26,7 +26,7 @@ problem in computational science.
 import numpy as np
 import pandas as pd
 from traitlets import Unicode
-from sklearn.neighbors import NearestNeighbors
+from scipy.spatial import cKDTree
 from exa import DataFrame
 from exa.algorithms import pdist, unordered_pairing
 from atomic import Isotope
@@ -88,7 +88,7 @@ class PeriodicTwo(Two):
 
 
 def compute_two_body(universe, k=None, dmax=dmax, dmin=dmin, bond_extra=bond_extra,
-                     compute_bonds=True, compute_symbols=True):
+                     compute_bonds=True, compute_symbols=True, in_mem=False):
     '''
     Compute two body information given a universe.
 
@@ -113,14 +113,14 @@ def compute_two_body(universe, k=None, dmax=dmax, dmin=dmin, bond_extra=bond_ext
     nat = universe.frame['atom_count'].max()
     nf = len(universe.frame)
     if universe.is_periodic:
-        if nat < max_atoms_per_frame and nf < max_frames:
+        if (nat < max_atoms_per_frame and nf < max_frames) or in_mem:
             k = k if k else nat - 1
             return _periodic_in_mem(universe, k, dmin, dmax, bond_extra, compute_symbols,
                                     compute_bonds)
         else:
             raise NotImplementedError('Out of core two body not implemented')
     else:
-        if nat < max_atoms_per_frame and nf < max_frames:
+        if (nat < max_atoms_per_frame and nf < max_frames) or in_mem:
             return _free_in_mem(universe, dmin, dmax, bond_extra, compute_symbols,
                                 compute_bonds)
         else:
@@ -208,8 +208,7 @@ def _periodic_in_mem(universe, k, dmin, dmax, bond_extra, compute_symbols,
     for i, (frame, prjd) in enumerate(prjd_grps):
         pxyz = prjd[['x', 'y', 'z']]
         uxyz = unit_grps.get_group(frame)[['x', 'y', 'z']]
-        nn = NearestNeighbors(n_neighbors=k, metric='euclidean')    # k-d tree nearest neighbor
-        dists, idxs = nn.fit(pxyz).kneighbors(uxyz)                 # search is used instead of pdist
+        dists, idxs = cKDTree(pxyz).query(uxyz, k=k)    # Distances computed using k-d tree
         distances[i] = dists.ravel()
         index1[i] = prjd.iloc[np.tile(idxs[:, 0], k)].index.values
         index2[i] = prjd.iloc[idxs.ravel()].index.values

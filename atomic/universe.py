@@ -19,9 +19,12 @@ corresponding to a snaphot in time, etc., without restrictions.
 import pandas as pd
 import numpy as np
 from sqlalchemy import Column, Integer, ForeignKey
-from exa import Container, _conf
+from exa import Container, _conf, Field3D
 from atomic.widget import UniverseWidget
-from atomic.frame import minimal_frame
+from atomic.frame import minimal_frame, Frame
+from atomic.atom import Atom, ProjectedAtom, UnitAtom
+from atomic.two import Two, PeriodicTwo
+from atomic.field import UniverseField3D
 from atomic.atom import compute_unit_atom as _cua
 from atomic.atom import compute_projected_atom as _cpa
 from atomic.two import max_frames_periodic as mfp
@@ -41,6 +44,10 @@ class Universe(Container):
     frame_count = Column(Integer)
     _widget_class = UniverseWidget
     __mapper_args__ = {'polymorphic_identity': 'universe'}
+    # The arguments here should match those of init (for dataframes)
+    _df_types = {'frame': Frame, 'atom': Atom, 'projected_atom': ProjectedAtom,
+                 'periodic_two': PeriodicTwo, 'field': UniverseField3D,
+                 'unit_atom': UnitAtom}
 
     @property
     def is_periodic(self):
@@ -85,10 +92,6 @@ class Universe(Container):
         return self._projected_atom
 
     @property
-    def field(self):
-        return self._field
-
-    @property
     def two(self):
         if not self._is('_two') and not self._is('_periodic_two'):
             self.compute_two_body()
@@ -96,7 +99,12 @@ class Universe(Container):
             return self._periodic_two
         return self._two
 
-    def field_values(self, field):
+    @property
+    def field(self):
+        return self._field
+
+    @property
+    def field_values(self):
         '''
         Retrieve values of a specific field.
 
@@ -106,7 +114,7 @@ class Universe(Container):
         Returns:
             data: Series or dataframe object containing field values
         '''
-        return self._field._fields[field]
+        return self._field.field_values
 
     def compute_unit_atom(self):
         '''
@@ -129,7 +137,7 @@ class Universe(Container):
             traits = self.two._get_bond_traits(self.atom['label'])
         return traits
 
-    def compute_two_body(self, *args, truncate_projected=True, **kwargs):
+    def compute_two_body(self, *args, truncate_projected=True, in_mem=False, **kwargs):
         '''
         Compute two body properties for the current universe.
 
@@ -138,14 +146,17 @@ class Universe(Container):
 
         Args:
             truncate_projected (bool): Applicable to periodic universes - decreases the size of the projected atom table
+            in_mem (bool): If false, will follow defaults, if true, will force in memory algorithms
         '''
         if self.is_periodic:
             self._periodic_two = _ctb(self, *args, **kwargs)
             if truncate_projected:
                 idx0 = self._periodic_two['prjd_atom0']
                 idx1 = self._periodic_two['prjd_atom1']
-                self._projected_atom = self._projected_atom[self._projected_atom.index.isin(idx0) |
-                                                            self._projected_atom.index.isin(idx1)]
+                cls = self._projected_atom.__class__
+                df = self._projected_atom[self._projected_atom.index.isin(idx0) |
+                                          self._projected_atom.index.isin(idx1)]
+                self._projected_atom = cls(df)
         else:
             self._two = _ctb(self, *args, **kwargs)
 
@@ -155,14 +166,20 @@ class Universe(Container):
     def __init__(self, frame=None, atom=None, two=None, field=None, fields=None,
                  unit_atom=None, projected_atom=None, periodic_two=None,
                  **kwargs):
-        self._frame = frame
-        self._atom = atom
-        self._field = field        # Dataframe containing field dimensions.
-        self._fields = fields      # List of field values (Series or DataFrame
-        self._two = two            # objects), with index corresponding to _field.
-        self._unit_atom = unit_atom
-        self._projected_atom = projected_atom
-        self._periodic_two = periodic_two
+        '''
+        Args:
+            frame: Total energies, temperature, cell dimension, ...
+            atom: Atomic coordinates, forces, velocties, ...
+            two: Interatomic distances, bonds, ...
+            field: Field data
+        '''
+        self._frame = self._enforce_df_type('frame', frame)
+        self._atom = self._enforce_df_type('atom', atom)
+        self._field = self._reconstruct_field('field', field, fields)
+        self._two = self._enforce_df_type('two', two)
+        self._unit_atom = self._enforce_df_type('unit_atom', unit_atom)
+        self._projected_atom = self._enforce_df_type('projected_atom', projected_atom)
+        self._periodic_two = self._enforce_df_type('periodic_two', periodic_two)
         super().__init__(**kwargs)
         ma = self.frame['atom_count'].max() if self._is('_frame') else 0
         nf = len(self)
@@ -171,91 +188,13 @@ class Universe(Container):
             self.name = 'TestUniverse'
             self._update_traits()
             self._traits_need_update = False
-        elif self.is_periodic and ma < mapfp and nf < mfp:
+        elif self.is_periodic and ma < mapfp and nf < mfp and self._atom is not None:
             if self._periodic_two is None:
                 self.compute_two_body()
             self._update_traits()
             self._traits_need_update = False
-        elif not self.is_periodic and ma < mapf and nf < mf:
+        elif not self.is_periodic and ma < mapf and nf < mf and self._atom is not None:
             if self._two is None:
                 self.compute_two_body()
             self._update_traits()
             self._traits_need_update = False
-
-
-#    def compute_bond_count(self, inplace=False):
-#        '''
-#        Compute the bond count
-#        '''
-#        s = self.two.compute_bond_count()
-#        if inplace:
-#            if self._prjd_atom is None:
-#                self._atom['bond_count'] = s
-#            elif len(self._prjd_atom) > 0:
-#                self._prjd_atom['bond_count'] = s
-#                s = pd.Series(s.index).map(self.projected_atom['atom'])
-#                self._atom['bond_count'] = s
-#            else:
-#                self._atom['bond_count'] = s
-#        else:
-#            return s
-#
-#    def compute_frame_mass(self, inplace=False):
-#        '''
-#        Compute the mass (of atoms) in each frame and store it in the frame
-#        dataframe.
-#        '''
-#        self.atom.get_element_mass(inplace=True)
-#        mass = self.atom.groupby('frame').apply(lambda frame: frame['mass'].sum())
-#        del self._atom['mass']
-#        if inplace:
-#            self._frame['mass'] = mass
-#        else:
-#            return mass
-#
-#    def compute_frame_formula(self, inplace=False):
-#        '''
-#        Compute the (simple) formula of each frame and store it in the frame
-#        dataframe.
-#        '''
-#        def convert(frame):
-#            return dict_to_string(frame['symbol'].value_counts().to_dict())
-#        formulas = self.atom.groupby('frame').apply(convert)
-#        if inplace:
-#            self._frame['simple_formula'] = formulas
-#        else:
-#            return formulas
-#
-#    def pair_correlation_function(self, *args, **kwargs):
-#        '''
-#        Args:
-#            a (str): First atom type
-#            b (str): Second atom type
-#            dr (float): Step size (default 0.1 au)
-#            rr (float): Two body sample distance (default 11.3)
-#
-#        See Also:
-#            The compute function :func:`~atomic.algorithms.pcf.compute_radial_pair_correlation`
-#            and the two body module :mod:`~atomic.two` are useful in
-#            understanding how this function works.
-#        '''
-#        return compute_radial_pair_correlation(self, *args, **kwargs)
-#
-#
-#    @property
-#    def two(self):
-#        '''
-#        '''
-#        if self._two is None and self._prjd_two is None and self._atom is not None:
-#            self.compute_two_body(inplace=True)
-#            self._traits_need_update = True
-#        if self._two is None:                  # TEMPORARY HACK UNTIL NONE v empty DF decided
-#            if len(self._prjd_two) > 0:
-#                return self._prjd_two
-#            else:
-#                return self._two
-#        else:
-#            if len(self._two) > 0:
-#                return self._two
-#            else:
-#                return self._prjd_two

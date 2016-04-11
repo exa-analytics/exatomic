@@ -17,10 +17,6 @@ require.config({
         'nbextensions/exa/apps/app3d': {
             exports: 'App3D'
         },
-
-        'nbextensions/exa/utility': {
-            exports: 'utility'
-        },
     },
 });
 
@@ -28,27 +24,50 @@ require.config({
 define([
     'nbextensions/exa/apps/gui',
     'nbextensions/exa/apps/app3d',
-    'nbextensions/exa/utility',
-], function(ContainerGUI, App3D, utility) {
-    var AtomicApp = function(view) {
+], function(ContainerGUI, App3D) {
+    class UniverseApp {
         /*"""
-        AtomicApp
-        ============
+        UniverseApp
+        =============
+        Notebook widget application for visualization of the universe container.
         */
-        var self = this;
-        this.view = view;
-        this.canvas = this.view.canvas;
-        this.index = 0;
-        this.length = this.view.framelist.length;
-        this.last_frame_index = this.length - 1;
-        this.frame = this.view.framelist[this.index];
-        this.fps = this.view.fps;
-        this.app3d = new app3D.ThreeJSApp(this.canvas);
-        this.gui = new dat.GUI({autoPlace: false, width: this.view.gui_width});
-        this.gui_style = document.createElement('style');
-        this.gui_style.innerHTML = gui_style;
-        this.init_gui();
-        this.render_atoms(this.index);
+        constructor(view) {
+            this.view = view;
+            this.view.create_canvas();
+            this.frame_index = 0;
+            this.num_frames = this.view.framelist.length;
+            this.last_index = this.num_frames - 1;
+            this.current_frame = this.view.framelist[this.frame_index];
+            this.app3d = new app3D.ThreeJSApp(this.view.canvas);
+            this.create_gui();
+            this.view.container.append(this.gui.domElement);
+            this.view.container.append(this.gui.custom_css);
+            this.view.container.append(this.view.canvas);
+            var view_self = this.view;
+            this.app3d.render();
+            this.view.on('displayed', function() {
+                view_self.app.app3d.animate();
+                view_self.app.app3d.controls.handleResize();
+            });
+        };
+
+        create_gui() {
+            /*"""
+            create_gui
+            ------------------
+            Create the application's control set.
+            */
+            var self = this;
+            this.gui = new ContainerGUI(this.view.gui_width);
+            this.level0 = {
+                'play': function() {
+                    console.log('clicked play');
+                },
+                'frame': this.current_frame
+            };
+            this.display = this.gui.addFolder('display');
+            this.fields = this.gui.addFolder('fields');
+        };
     };
 
     AtomicApp.prototype.init_gui = function() {
@@ -164,118 +183,5 @@ define([
         };
     };
 
-    var gui_style = ".dg {\
-        color: black;\
-        font: 400 13px Verdana, Arial, sans-serif;\
-        text-shadow: white 0 0 0;\
-    }\
-    .hue-field {\
-        width: 10;\
-    }\
-    .dg .c .slider {\
-        background: white\
-    }\
-    .dg .c .slider:hover {\
-        background: white\
-    }\
-    .dg .c input[type=text] {\
-        background: white;\
-        border-color: lightgrey;\
-        border-radius: 2px;\
-        border-style: solid;\
-        border-width: 1.1px;\
-        color: black\
-    }\
-    .dg .c input[type=text]:active {\
-        background: white;\
-        color: black;\
-        outline-color: lightgrey;\
-        outline-style: solid;\
-        outline-width: 1.5px\
-    }\
-    .dg .c input[type=text]:focus {\
-        background: white;\
-        color: black;\
-        outline-color: lightgrey;\
-        outline-style: solid;\
-        outline-width: 1.5px\
-    }\
-    .dg .c input[type=text]:hover {\
-        background: white;\
-        color: black;\
-        outline-color: lightgrey;\
-        outline-style: solid;\
-        outline-width: 1.5px\
-    }\
-    .dg .closed li.title {\
-        background: -moz-linear-gradient(center top, #ededed 34%, #dfdfdf 71%);\
-        background: -ms-linear-gradient(top, #ededed 34%, #dfdfdf 71%);\
-        background: -webkit-gradient(linear, left top, left bottom, color-stop(34%, #ededed),\
-                     color-stop(71%, #dfdfdf));\
-        background-color: #ededed;\
-        border: 1px solid #dcdcdc;\
-        border-radius: 2px;\
-        box-shadow: inset 1px 0 9px 0 white;\
-        color: #777;\
-        text-shadow: 1px 0 0 white\
-    }\
-    .dg .cr.boolean:hover {\
-        background: white;\
-        border-bottom: 1px solid white;\
-        border-right: 1px solid white\
-    }\
-    .dg .cr.function:hover {\
-        background: white;\
-        border-bottom: 1px solid white;\
-        border-right: 1px solid white\
-    }\
-    .dg li.cr {\
-        background: #fafafa;\
-        border-bottom: 1px solid white;\
-        border-right: 1px solid white\
-    }\
-    .dg li.cr:hover {\
-        background: white;\
-        border-bottom: 1px solid white;\
-        border-right: 1px solid white\
-    }\
-    .dg li.title, .dg closed {\
-        background: -moz-linear-gradient(center top, #ededed 34%, #dfdfdf 71%);\
-        background: -ms-linear-gradient(top, #ededed 34%, #dfdfdf 71%);\
-        background: -webkit-gradient(linear, left top, left bottom, color-stop(34%, #ededed),\
-                     color-stop(71%, #dfdfdf));\
-        background-color: #ededed;\
-        border: 1px solid #dcdcdc;\
-        border-radius: 2px;\
-        box-shadow: inset 1px 0 9px 0 white;\
-        color: black;\
-        text-shadow: 1px 0 0 white\
-    }\
-    .dg li.title:hover {\
-        outline-color: lightgrey;\
-        outline-style: solid;\
-        outline-width: 1.5px\
-    }\
-    .dg.main .close-button {\
-        background: -moz-linear-gradient(center top, #ededed 34%, #dfdfdf 71%);\
-        background: -ms-linear-gradient(top, #ededed 34%, #dfdfdf 71%);\
-        background: -webkit-gradient(linear, left top, left bottom, color-stop(34%, #ededed),\
-                     color-stop(71%, #dfdfdf));\
-        background-color: #ededed;\
-        border: 1px solid #dcdcdc;\
-        border-radius: 2px;\
-        box-shadow: inset 1px 0 9px 0 white;\
-        color: black;\
-        height: 27px;\
-        line-height: 27px;\
-        text-align: center;\
-        text-shadow: 1px 0 0 white\
-    }\
-    .dg.main .close-button:hover {\
-        outline-color: lightgrey;\
-        outline-style: solid;\
-        outline-width: 1.5px\
-    }";
-
-    return {'AtomicApp': AtomicApp, 'gui_style': gui_style};
+    return UniverseApp;
 });

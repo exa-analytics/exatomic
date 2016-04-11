@@ -24,10 +24,10 @@ define([
     'nbextensions/exa/apps/app3d',
     'nbextensions/exa/apps/gui'
 ], function(App3D, ContainerGUI) {
-    class TestUniverse {
+    class UniverseTestApp {
         /*"""
-        TestUniverse
-        ==============
+        UniverseTestApp
+        ==================
         A test application for the universe container (atomic package).
         */
         constructor(view) {
@@ -37,6 +37,7 @@ define([
             Args:
                 view: Backbone.js view (DOMWidgetView container representation)
             */
+            console.log('here11');
             this.view = view;
             this.view.create_canvas();
             this.meshes = [];
@@ -59,8 +60,10 @@ define([
             Creates the standard style container gui instance and populates
             with relevant controls for this application.
             */
+            console.log('here22');
             var self = this;
             this.gui = new ContainerGUI(this.view.gui_width);
+            this.level0 = this.gui.addFolder('stuff and things');
         };
 
         resize() {
@@ -68,7 +71,7 @@ define([
         };
     };
 
-    return TestUniverse;
+    return UniverseTestApp;
 });
 
 /*
@@ -103,7 +106,7 @@ define([
         };
     };
 
-    class TestApp {
+    class UniverseTestApp {
         constructor(view) {
             this.view = view;
             this.app3d = new app3d.ThreeJSApp(this.view.canvas);
@@ -180,8 +183,8 @@ define([
         };
     };
 
-    TestApp.prototype.obj = 42;
+    UniverseTestApp.prototype.obj = 42;
 
-    return {TestApp: TestApp};
+    return {UniverseTestApp: UniverseTestApp};
 });
 */

@@ -8,7 +8,7 @@ a physical quantity.
 import numpy as np
 import pandas as pd
 from io import StringIO
-from exa import Series, Field
+from exa import Series, Field3D
 from atomic import Isotope, Universe, Editor, Atom
 from atomic.frame import minimal_frame
 
@@ -80,8 +80,10 @@ class Cube(Editor):
                         'zi': self._zi, 'zj': self._zj, 'zk': self._zk,
                         'frame': 0, 'label': self.label})
         df = df.to_frame().T
+        df['frame'] = df['frame'].astype(np.int64)
+        df['frame'] = df['frame'].astype('category')
         fields = [Series(data[~np.isnan(data)])]
-        self._field = Field(df, fields=fields)
+        self._field = Field3D(fields, df)
 
     def parse_frame(self):
         '''

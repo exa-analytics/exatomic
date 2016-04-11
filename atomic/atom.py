@@ -125,7 +125,7 @@ class ProjectedAtom(BaseAtom):
     '''
     _indices = ['prjd_atom']
     _columns = ['x', 'y', 'z', 'symbol', 'frame', 'atom']
-    _traits = ['x', 'y', 'z']
+    _traits = []
     _groupbys = ['frame']
     _categories = {'atom': np.int64, 'frame': np.int64, 'label': np.int64,
                    'symbol': str}
@@ -178,6 +178,4 @@ def _compute_projected_static(universe):
     df['frame'] = pd.Series(universe.atom['frame'].astype(np.int64).values.tolist() * 27, dtype='category')
     df['symbol'] = pd.Series(universe.atom['symbol'].astype(str).values.tolist() * 27, dtype='category')
     df['atom'] = pd.Series(universe.atom.index.values.tolist() * 27, dtype='category')
-    #df['label'] = pd.Series(universe.atom['label'].astype(np.int64).values.tolist() * 27, dtype='category')
-    return df
-    #return ProjectedAtom(df)
+    return ProjectedAtom(df)

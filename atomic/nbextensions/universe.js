@@ -16,8 +16,8 @@ require.config({
             exports: 'AtomicApp'
         },*/
 
-        'nbextensions/exa/atomic/test.universe': {
-            exports: 'TestUniverse'
+        'nbextensions/exa/atomic/test': {
+            exports: 'UniverseTestApp'
         },
     },
 });
@@ -25,9 +25,9 @@ require.config({
 
 define([
     'nbextensions/exa/container',
-    'nbextensions/exa/atomic/test.universe',
+    'nbextensions/exa/atomic/test',
     //'nbextensions/exa/atomic/app'
-], function(base, TestUniverse) { //, AtomicApp, TestUniverse){
+], function(base, UniverseTestApp) {
     class UniverseView extends base.ContainerView {
         /*"""
         UniverseView
@@ -42,12 +42,12 @@ define([
             /*"""
             if_empty
             ----------
-            Create a TestUniverse application?
+            Create a UniverseTestApp application?
             */
             var check = this.get_trait('test');
             if (check === true) {
                 console.log('Empty universe, displaying test interface!');
-                this.app = new TestUniverse(this);
+                this.app = new UniverseTestApp(this);
             };
         };
 
