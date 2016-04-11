@@ -178,5 +178,6 @@ def _compute_projected_static(universe):
     df['frame'] = pd.Series(universe.atom['frame'].astype(np.int64).values.tolist() * 27, dtype='category')
     df['symbol'] = pd.Series(universe.atom['symbol'].astype(str).values.tolist() * 27, dtype='category')
     df['atom'] = pd.Series(universe.atom.index.values.tolist() * 27, dtype='category')
-    df['label'] = pd.Series(universe.atom['label'].astype(np.int64).values.tolist() * 27, dtype='category')
-    return ProjectedAtom(df)
+    #df['label'] = pd.Series(universe.atom['label'].astype(np.int64).values.tolist() * 27, dtype='category')
+    return df
+    #return ProjectedAtom(df)

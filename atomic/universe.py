@@ -24,7 +24,10 @@ from atomic.widget import UniverseWidget
 from atomic.frame import minimal_frame
 from atomic.atom import compute_unit_atom as _cua
 from atomic.atom import compute_projected_atom as _cpa
-from atomic.two import max_frames, max_atoms_per_frame
+from atomic.two import max_frames_periodic as mfp
+from atomic.two import max_atoms_per_frame_periodic as mapfp
+from atomic.two import max_frames as mf
+from atomic.two import max_atoms_per_frame as mapf
 from atomic.two import compute_two_body as _ctb
 
 
@@ -126,15 +129,23 @@ class Universe(Container):
             traits = self.two._get_bond_traits(self.atom['label'])
         return traits
 
-    def compute_two_body(self, *args, **kwargs):
+    def compute_two_body(self, *args, truncate_projected=True, **kwargs):
         '''
         Compute two body properties for the current universe.
 
         For arguments see :func:`~atomic.two.get_two_body`. Note that this
         operation (like all compute) operations are performed in place.
+
+        Args:
+            truncate_projected (bool): Applicable to periodic universes - decreases the size of the projected atom table
         '''
         if self.is_periodic:
             self._periodic_two = _ctb(self, *args, **kwargs)
+            if truncate_projected:
+                idx0 = self._periodic_two['prjd_atom0']
+                idx1 = self._periodic_two['prjd_atom1']
+                self._projected_atom = self._projected_atom[self._projected_atom.index.isin(idx0) |
+                                                            self._projected_atom.index.isin(idx1)]
         else:
             self._two = _ctb(self, *args, **kwargs)
 
@@ -153,16 +164,24 @@ class Universe(Container):
         self._projected_atom = projected_atom
         self._periodic_two = periodic_two
         super().__init__(**kwargs)
-        mnpf = self.frame['atom_count'].max() if self._is('_frame') else 0
+        ma = self.frame['atom_count'].max() if self._is('_frame') else 0
         nf = len(self)
-        if mnpf == 0 and nf == 0:
+        if ma == 0 and nf == 0:
             self._test = True
             self.name = 'TestUniverse'
             self._update_traits()
-        elif mnpf < max_atoms_per_frame and nf < max_frames and self._is('_atom'):
-            if self._two is None and self._periodic_two is None:
+            self._traits_need_update = False
+        elif self.is_periodic and ma < mapfp and nf < mfp:
+            if self._periodic_two is None:
                 self.compute_two_body()
             self._update_traits()
+            self._traits_need_update = False
+        elif not self.is_periodic and ma < mapf and nf < mf:
+            if self._two is None:
+                self.compute_two_body()
+            self._update_traits()
+            self._traits_need_update = False
+
 
 #    def compute_bond_count(self, inplace=False):
 #        '''
