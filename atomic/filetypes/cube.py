@@ -8,9 +8,10 @@ a physical quantity.
 import numpy as np
 import pandas as pd
 from io import StringIO
-from exa import Series, Field3D
+from exa import Series
 from atomic import Isotope, Universe, Editor, Atom
 from atomic.frame import minimal_frame
+from atomic.field import UField3D
 
 
 class Cube(Editor):
@@ -22,54 +23,42 @@ class Cube(Editor):
         cube = Cube('my.cube')
         cube.atom                # Displays the atom dataframe
         cube.field               # Displays the field dataframe
-        cube.field_values()      # Displayss the field values corresponding to field 0
+        cube.field_values        # Displays the list of field values
         uni = cube.to_universe() # Converts the cube file editor to a universe
         uni                      # Renders the cube file
     '''
     @property
     def field(self):
-        '''
-        Display the field dataframe.
-        '''
         if self._field is None:
             self.parse_field()
         return self._field
 
-    def field_values(self, key=0):
-        '''
-        Display the values of the scalar field.
-        '''
-        return self.field._fields[key]
+    @property
+    def field_values(self):
+        return self.field.field_values
 
     def parse_atom(self):
         '''
         Parse the :class:`~atomic.atom.Atom` object from the cube file in place.
-
-        See Also:
-            :py:attr:`~atomic.editor.Editor.atom`
         '''
         df = pd.read_csv(StringIO('\n'.join(self._lines[6:self._volume_data_start])), delim_whitespace=True,
                          header=None, names=('Z', 'nelectron', 'x', 'y', 'z'))
         del df['nelectron']
         df['symbol'] = df['Z'].map(Isotope.Z_to_symbol()).astype('category')
         del df['Z']
-        df['frame'] = 0
-        df['frame'] = df['frame'].astype('category')
+        df['frame'] = pd.Series([0] * len(df), dtype='category')
         df['label'] = pd.Series(range(self._nat), dtype='category')
         self._atom = Atom(df)
 
     def parse_field(self):
         '''
-        Parse the :class:`~exa.numerical.Field` object from the cube filed in place.
+        Parse the scalar field into a trait aware object.
 
         Note:
-            The :class:`~exa.numerical.Field` object tracks both the field meta-
-            data (i.e. information about the discretization and shape of the
-            field's spatial points) as well as the field values (at each of
+            The :class:`~atomic.field.UField3D` object tracks both the
+            field data (i.e. information about the discretization and shape of
+            the field's spatial points) as well as the field values (at each of
             those points in space).
-
-        See Also:
-            :class:`~exa.numerical.Field`
         '''
         data = pd.read_csv(StringIO('\n'.join(self._lines[self._volume_data_start:])),
                            delim_whitespace=True, header=None).values.ravel()
@@ -83,17 +72,18 @@ class Cube(Editor):
         df['frame'] = df['frame'].astype(np.int64)
         df['frame'] = df['frame'].astype('category')
         fields = [Series(data[~np.isnan(data)])]
-        self._field = Field3D(fields, df)
+        self._field = UField3D(fields, df)
 
     def parse_frame(self):
         '''
+        Create the :class:`~atomic.frame.Frame` from the atom dataframe.
         '''
         self._frame = minimal_frame(self.atom)
 
     def to_universe(self, **kwargs):
         '''
         See Also:
-            :func:`~atomic.editor.Editor.to_universe`
+            See :class:`~atomic.universe.Universe` for additional arguments.
         '''
         return Universe(frame=self.frame, atom=self.atom, meta=self.meta,
                         field=self.field, **kwargs)
@@ -101,7 +91,7 @@ class Cube(Editor):
     def _init(self, *args, label=None, **kwargs):
         '''
         Perform some preliminary parsing so that future parsing of atoms, etc.
-        is easy. Also parse out metadata.
+        is easy. Also parse out metadata (comments).
         '''
         nat, ox, oy, oz = self[2].split()
         nx, xi, xj, xk = self[3].split()

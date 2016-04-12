@@ -60,9 +60,9 @@ class BaseAtom(DataFrame):
         '''
         Creates four custom traits; radii, colors, symbols, and symbol codes.
         '''
-        symbols = Unicode(self.groupby('frame').apply(
-            lambda x: x['symbol'].cat.codes.values
-        ).to_json(orient='values')).tag(sync=True)
+        grps = self.groupby('frame')
+        symbols = grps.apply(lambda g: g['symbol'].cat.codes)
+        symbols = Unicode(symbols.to_json(orient='values')).tag(sync=True)
         symmap = {i: v for i, v in enumerate(self['symbol'].cat.categories)}
         radii = Isotope.symbol_to_radius()[self['symbol'].unique()]
         radii = Dict({i: radii[v] for i, v in symmap.items()}).tag(sync=True)
@@ -167,15 +167,16 @@ def _compute_projected_static(universe):
     Compute the 3x3x3 supercell coordinates given a static unit cell
     '''
     idx = universe.frame.index[0]
-    x = universe.unit_atom['x'].values
-    y = universe.unit_atom['y'].values
-    z = universe.unit_atom['z'].values
+    ua = universe.unit_atom
+    x = ua['x'].values
+    y = ua['y'].values
+    z = ua['z'].values
     rx = universe.frame.ix[idx, 'rx']
     ry = universe.frame.ix[idx, 'ry']
     rz = universe.frame.ix[idx, 'rz']
     x, y, z = supercell3(x, y, z, rx, ry, rz)
     df = pd.DataFrame.from_dict({'x': x, 'y': y, 'z': z})
-    df['frame'] = pd.Series(universe.atom['frame'].astype(np.int64).values.tolist() * 27, dtype='category')
-    df['symbol'] = pd.Series(universe.atom['symbol'].astype(str).values.tolist() * 27, dtype='category')
-    df['atom'] = pd.Series(universe.atom.index.values.tolist() * 27, dtype='category')
+    df['frame'] = pd.Series(ua['frame'].astype(np.int64).values.tolist() * 27, dtype='category')
+    df['symbol'] = pd.Series(ua['symbol'].astype(str).values.tolist() * 27, dtype='category')
+    df['atom'] = pd.Series(ua.index.values.tolist() * 27, dtype='category')
     return ProjectedAtom(df)
