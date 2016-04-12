@@ -1,9 +1,9 @@
 # -*- coding: utf-8 -*-
 '''
-Widget (Universe)
-======================
+Universe Notebook Widget
+=============================
 '''
-from traitlets import Integer, Unicode
+from traitlets import Unicode
 from exa.widget import ContainerWidget
 
 
@@ -13,4 +13,3 @@ class UniverseWidget(ContainerWidget):
     '''
     _view_module = Unicode('nbextensions/exa/atomic/universe').tag(sync=True)
     _view_name = Unicode('UniverseView').tag(sync=True)
-    gui_width = Integer(250).tag(sync=True)

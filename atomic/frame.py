@@ -25,6 +25,7 @@ See Also:
 import numpy as np
 from traitlets import Float
 from exa.numerical import DataFrame
+from exa.algorithms import vmag3
 
 
 class Frame(DataFrame):
@@ -49,6 +50,7 @@ class Frame(DataFrame):
     _traits = ['xi', 'xj', 'xk', 'yi', 'yj', 'yk', 'zi', 'zj', 'zk',
                'ox', 'oy', 'oz', 'frame']
 
+    @property
     def is_periodic(self):
         '''
         Check if (any) frame is/are periodic.
@@ -61,6 +63,44 @@ class Frame(DataFrame):
                 return True
         return False
 
+    @property
+    def is_variable_cell(self):
+        '''
+        Check if this is a variable unit cell simulation.
+
+        Note:
+            Returns false if not periodic
+        '''
+        if self.is_periodic:
+            if 'rx' not in self.columns:
+                self.compute_cell_magnitudes()
+            rx = self['rx'].min()
+            ry = self['ry'].min()
+            rz = self['rz'].min()
+            if np.all(self['rx'] == rx) and np.all(self['ry'] == ry) and np.all(self['rz'] == rz):
+                return False
+            else:
+                return True
+        return False
+
+
+    def compute_cell_magnitudes(self):
+        '''
+        Compute the magnitudes of the unit cell vectors (rx, ry, rz).
+        '''
+        xi = self['xi'].values    # Vector component variables are denoted by
+        xj = self['xj'].values    # their basis vector ending: _i, _j, _k
+        xk = self['xk'].values
+        yi = self['yi'].values
+        yj = self['yj'].values
+        yk = self['yk'].values
+        zi = self['zi'].values
+        zj = self['zj'].values
+        zk = self['zk'].values
+        self['rx'] = vmag3(xi, xj, xk)**0.5
+        self['ry'] = vmag3(yi, yj, yk)**0.5
+        self['rz'] = vmag3(zi, zj, zk)**0.5
+
 
 def minimal_frame(atom):
     '''
@@ -72,85 +112,3 @@ def minimal_frame(atom):
     frame.columns = ['atom_count']
     atom._set_categories()
     return Frame(frame)
-
-
-#    def get_unit_cell_magnitudes(self, inplace=False):
-#        '''
-#        Compute the magnitudes of the unit cell vectors.
-#
-#        Note that this computation adds three new column to the dataframe;
-#        'rx', 'ry', and 'rz'.
-#        '''
-#        req_cols = ['xi', 'xj', 'xk', 'yi', 'yj', 'yk', 'zi', 'zj', 'zk']
-#        missing_req = set(req_cols).difference(self.columns)
-#        if missing_req:           # Check that we have cell dimensions
-#            raise ColumnError(missing_req, self)
-#        xi = self['xi'].values    # Vector component variables are denoted by
-#        xj = self['xj'].values    # their basis vector ending: _i, _j, _k
-#        xk = self['xk'].values
-#        yi = self['yi'].values
-#        yj = self['yj'].values
-#        yk = self['yk'].values
-#        zi = self['zi'].values
-#        zj = self['zj'].values
-#        zk = self['zk'].values
-#        rx = mag_3d(xi, xj, xk)
-#        ry = mag_3d(yi, yj, yk)
-#        rz = mag_3d(zi, zj, zk)
-#        if inplace:
-#            self['rx'] = rx
-#            self['ry'] = ry
-#            self['rz'] = rz
-#        else:
-#            return (rx, ry, rz)
-#
-#    def is_periodic(self):
-#        '''
-#        '''
-#        if 'periodic' in self.columns:
-#            if np.any(self['periodic'] == True):
-#                return True
-#        return False
-#
-#
-#    def is_variable_cell(self):
-#        '''
-#        Does the unit cell vary.
-#
-#        Returns:
-#            is_vc (bool): True if variable cell dimension
-#        '''
-#        if 'rx' not in self.columns:
-#            self.get_unit_cell_magnitudes(inplace=True)
-#        rx = self['rx'].min()
-#        ry = self['ry'].min()
-#        rz = self['rz'].min()
-#        if np.all(self['rx'] == rx) and np.all(self['ry'] == ry) and np.all(self['rz'] == rz):
-#            return False
-#        else:
-#            return True
-#
-#
-#def minimal_frame(universe, inplace=False):
-#    '''
-#    Generate the minimal :class:`~atomic.frame.Frame` dataframe given a
-#    :class:`~atomic.universe.Universe` with a :class:`~atomic.atom.Atom` dataframe.
-#
-#    Args:
-#        universe (:class:`~atomic.universe.Universe`): Universe with atoms
-#        inplace (bool): Attach the frame dataframe to the universe.
-#
-#    Returns:
-#        frame (:class:`~atomic.frame.Frame`): None if inplace is true
-#    '''
-#    df = Frame()
-#    if universe.atom is not None:
-#        if 'frame' in universe.atom.columns:
-#            df = _min_frame_from_atom(universe.atom)
-#    if inplace:
-#        universe['_frame'] = df
-#    else:
-#        return df
-#
-#
-#
