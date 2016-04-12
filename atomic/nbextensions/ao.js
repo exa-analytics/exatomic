@@ -1,8 +1,7 @@
 /*"""
 ==================
-test.js
+ao.js
 ==================
-Test visualization application for the universe container (atomic package).
 */
 'use strict';
 

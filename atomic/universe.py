@@ -186,6 +186,8 @@ class Universe(Container):
         if ma == 0 and nf == 0:
             self._test = True
             self.name = 'TestUniverse'
+            self._widget.width = 950
+            self._widget.gui_width = 350
             self._update_traits()
             self._traits_need_update = False
         elif self.is_periodic and ma < mapfp and nf < mfp and self._atom is not None:
