@@ -18,18 +18,3 @@ from atomic import tests
 if not _conf['exa_persistent']:
     from atomic._install import install
     install()
-
-#from atomic.universe import Universe            # atomic imports
-#from atomic.cube import read_cubes
-#from atomic.xyz import read_xyz
-#from atomic import algorithms
-#from atomic.formula import SimpleFormula
-#
-#if Config._temp:
-#    from exa.install import install_notebook_widgets
-#    from exa.relational import create_all
-#    from atomic.install import update_config
-#    update_config()
-#    create_all()
-#    install_notebook_widgets(Config.atomic['nbext'], Config.atomic['extensions'])
-#

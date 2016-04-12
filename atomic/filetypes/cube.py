@@ -8,7 +8,7 @@ a physical quantity.
 import numpy as np
 import pandas as pd
 from io import StringIO
-from exa import Series, Field
+from exa import Series, Field3D
 from atomic import Isotope, Universe, Editor, Atom
 from atomic.frame import minimal_frame
 
@@ -50,13 +50,12 @@ class Cube(Editor):
         '''
         df = pd.read_csv(StringIO('\n'.join(self._lines[6:self._volume_data_start])), delim_whitespace=True,
                          header=None, names=('Z', 'nelectron', 'x', 'y', 'z'))
+        del df['nelectron']
         df['symbol'] = df['Z'].map(Isotope.Z_to_symbol()).astype('category')
+        del df['Z']
         df['frame'] = 0
         df['frame'] = df['frame'].astype('category')
-        df['label'] = range(self._nat)
-        df['label'] = df['label'].astype('category')
-        del df['Z']
-        del df['nelectron']
+        df['label'] = pd.Series(range(self._nat), dtype='category')
         self._atom = Atom(df)
 
     def parse_field(self):
@@ -81,8 +80,10 @@ class Cube(Editor):
                         'zi': self._zi, 'zj': self._zj, 'zk': self._zk,
                         'frame': 0, 'label': self.label})
         df = df.to_frame().T
+        df['frame'] = df['frame'].astype(np.int64)
+        df['frame'] = df['frame'].astype('category')
         fields = [Series(data[~np.isnan(data)])]
-        self._field = Field(df, fields=fields)
+        self._field = Field3D(fields, df)
 
     def parse_frame(self):
         '''

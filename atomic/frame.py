@@ -22,16 +22,10 @@ See Also:
     More information on the :class:`~atomic.frame.Frame` concept can be
     found in :mod:`~atomic.universe` module's documentation.
 '''
-<<<<<<< HEAD
-from exa import _np as np
-from exa.frame import DataFrame
-from traitlets import Float
-from exa.jitted.broadcasting import mag_3d
-=======
 import numpy as np
 from traitlets import Float
 from exa.numerical import DataFrame
->>>>>>> e1c63898107afab00ca8980bda56aa619d3a0371
+from exa.algorithms import vmag3
 
 
 class Frame(DataFrame):
@@ -52,16 +46,11 @@ class Frame(DataFrame):
     oy = Float()  # Static unit cell origin point y
     oz = Float()  # Static unit cell origin point z
     _indices = ['frame']
-<<<<<<< HEAD
-    _columns = ['nat']
-    _traits = ['xi', 'xj', 'xk', 'yi', 'yj', 'yk', 'zi', 'zj', 'zk',
-               'ox', 'oy', 'oz']
-=======
     _columns = ['atom_count']
     _traits = ['xi', 'xj', 'xk', 'yi', 'yj', 'yk', 'zi', 'zj', 'zk',
                'ox', 'oy', 'oz', 'frame']
->>>>>>> e1c63898107afab00ca8980bda56aa619d3a0371
 
+    @property
     def is_periodic(self):
         '''
         Check if (any) frame is/are periodic.
@@ -74,30 +63,50 @@ class Frame(DataFrame):
                 return True
         return False
 
-<<<<<<< HEAD
-=======
+    @property
+    def is_variable_cell(self):
+        '''
+        Check if this is a variable unit cell simulation.
 
->>>>>>> e1c63898107afab00ca8980bda56aa619d3a0371
+        Note:
+            Returns false if not periodic
+        '''
+        if self.is_periodic:
+            if 'rx' not in self.columns:
+                self.compute_cell_magnitudes()
+            rx = self['rx'].min()
+            ry = self['ry'].min()
+            rz = self['rz'].min()
+            if np.all(self['rx'] == rx) and np.all(self['ry'] == ry) and np.all(self['rz'] == rz):
+                return False
+            else:
+                return True
+        return False
+
+
+    def compute_cell_magnitudes(self):
+        '''
+        Compute the magnitudes of the unit cell vectors (rx, ry, rz).
+        '''
+        xi = self['xi'].values    # Vector component variables are denoted by
+        xj = self['xj'].values    # their basis vector ending: _i, _j, _k
+        xk = self['xk'].values
+        yi = self['yi'].values
+        yj = self['yj'].values
+        yk = self['yk'].values
+        zi = self['zi'].values
+        zj = self['zj'].values
+        zk = self['zk'].values
+        self['rx'] = vmag3(xi, xj, xk)**0.5
+        self['ry'] = vmag3(yi, yj, yk)**0.5
+        self['rz'] = vmag3(zi, zj, zk)**0.5
+
+
 def minimal_frame(atom):
     '''
     Create a minmal :class:`~atomic.frame.Frame` object from a
     :class:`~atomic.atom.Atom` object.
     '''
-<<<<<<< HEAD
-    frame = atom.groupby('frame').count().ix[:, 0].to_frame()
-    frame.columns = ['nat']
-    return Frame(frame)
-
-#class Frame(DataFrame):
-#    '''
-#    The frame DataFrame contains non-atomic information about each snapshot
-#    of the :class:`~atomic.universe.Universe` object.
-#    '''
-#    _pkeys = ['frame']
-#    _traits = ['xi', 'xj', 'xk', 'yi', 'yj', 'yk', 'zi', 'zj', 'zk',
-#                'rx', 'ry', 'rz', 'ox', 'oy', 'oz']
-#
-=======
     atom._revert_categories()
     frame = atom.groupby('frame').count().ix[:, 0].to_frame()
     frame.columns = ['atom_count']
@@ -105,7 +114,6 @@ def minimal_frame(atom):
     return Frame(frame)
 
 
->>>>>>> e1c63898107afab00ca8980bda56aa619d3a0371
 #    def get_unit_cell_magnitudes(self, inplace=False):
 #        '''
 #        Compute the magnitudes of the unit cell vectors.
@@ -136,8 +144,6 @@ def minimal_frame(atom):
 #        else:
 #            return (rx, ry, rz)
 #
-<<<<<<< HEAD
-=======
 #    def is_periodic(self):
 #        '''
 #        '''
@@ -145,7 +151,6 @@ def minimal_frame(atom):
 #            if np.any(self['periodic'] == True):
 #                return True
 #        return False
->>>>>>> e1c63898107afab00ca8980bda56aa619d3a0371
 #
 #
 #    def is_variable_cell(self):
@@ -188,7 +193,6 @@ def minimal_frame(atom):
 #        return df
 #
 #
-<<<<<<< HEAD
 #def _min_frame_from_atom(atom):
 #    '''
 #    '''
@@ -196,6 +200,4 @@ def minimal_frame(atom):
 #        df = atom.groupby('frame').count().iloc[:, 0].to_frame()
 #        df.columns = ['atom_count']
 #        return Frame(df)
-=======
 #
->>>>>>> e1c63898107afab00ca8980bda56aa619d3a0371

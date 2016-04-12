@@ -19,9 +19,18 @@ corresponding to a snaphot in time, etc., without restrictions.
 import pandas as pd
 import numpy as np
 from sqlalchemy import Column, Integer, ForeignKey
-from exa import Container, _conf
+from exa import Container, _conf, Field3D
 from atomic.widget import UniverseWidget
-from atomic.frame import minimal_frame
+from atomic.frame import minimal_frame, Frame
+from atomic.atom import Atom, ProjectedAtom, UnitAtom
+from atomic.two import Two, PeriodicTwo
+from atomic.field import UniverseField3D
+from atomic.atom import compute_unit_atom as _cua
+from atomic.atom import compute_projected_atom as _cpa
+from atomic.two import max_frames_periodic as mfp
+from atomic.two import max_atoms_per_frame_periodic as mapfp
+from atomic.two import max_frames as mf
+from atomic.two import max_atoms_per_frame as mapf
 from atomic.two import compute_two_body as _ctb
 
 
@@ -35,10 +44,18 @@ class Universe(Container):
     frame_count = Column(Integer)
     _widget_class = UniverseWidget
     __mapper_args__ = {'polymorphic_identity': 'universe'}
+    # The arguments here should match those of init (for dataframes)
+    _df_types = {'frame': Frame, 'atom': Atom, 'projected_atom': ProjectedAtom,
+                 'periodic_two': PeriodicTwo, 'field': UniverseField3D,
+                 'unit_atom': UnitAtom}
 
     @property
-    def periodic(self):
-        return self.frame.is_periodic()
+    def is_periodic(self):
+        return self.frame.is_periodic
+
+    @property
+    def is_variable_cell(self):
+        return self.frame.is_variable_cell
 
     @property
     def frame(self):
@@ -52,16 +69,42 @@ class Universe(Container):
         return self._atom
 
     @property
+    def unit_atom(self):
+        '''
+        Updated atom table using only in-unit-cell positions.
+
+        Note:
+            This function returns a standard :class:`~pandas.DataFrame`
+        '''
+        if not self._is('_unit_atom'):
+            self.compute_unit_atom()
+        atom = self.atom.copy()
+        atom.update(self._unit_atom)
+        return atom
+
+    @property
+    def projected_atom(self):
+        '''
+        Projected (unit) atom positions into a 3x3x3 supercell.
+        '''
+        if self._projected_atom is None:
+            self.compute_projected_atom()
+        return self._projected_atom
+
+    @property
+    def two(self):
+        if not self._is('_two') and not self._is('_periodic_two'):
+            self.compute_two_body()
+        elif self._is('_periodic_two'):
+            return self._periodic_two
+        return self._two
+
+    @property
     def field(self):
         return self._field
 
     @property
-    def two(self):
-        if not self._is('_two'):
-            self.compute_two_body()
-        return self._two
-
-    def field_values(self, field):
+    def field_values(self):
         '''
         Retrieve values of a specific field.
 
@@ -71,16 +114,19 @@ class Universe(Container):
         Returns:
             data: Series or dataframe object containing field values
         '''
-        return self._field._fields[field]
+        return self._field.field_values
 
-    def compute_two_body(self, *args, **kwargs):
+    def compute_unit_atom(self):
         '''
-        Compute two body properties for the current universe.
+        Compute the sparse unit atom dataframe.
+        '''
+        self._unit_atom = _cua(self)
 
-        For arguments see :func:`~atomic.two.get_two_body`. Note that this
-        operation (like all compute) operations are performed in place.
+    def compute_projected_atom(self):
         '''
-        self._two = _ctb(self, *args, **kwargs)
+        Compute the projected supercell from the unit atom coordinates.
+        '''
+        self._projected_atom = _cpa(self)
 
     def _custom_container_traits(self):
         '''
@@ -91,260 +137,66 @@ class Universe(Container):
             traits = self.two._get_bond_traits(self.atom['label'])
         return traits
 
-    def __init__(self, frame=None, atom=None, two=None, field=None, **kwargs):
-        self._frame = frame
-        self._atom = atom
-        self._field = field
-        self._two = two
-        super().__init__(**kwargs)
-        if self.frame['atom_count'].max() < 2000 and len(self.frame) < 200:
-            self.compute_two_body()
-            self._update_traits()
+    def compute_two_body(self, *args, truncate_projected=True, in_mem=False, **kwargs):
+        '''
+        Compute two body properties for the current universe.
 
-#    def is_variable_cell(self):
-#        '''
-#        Variable cell universe?
-#        '''
-#        return self.frame.is_variable_cell()
-#
-#
-#    def compute_minimal_frame(self, inplace=False):
-#        '''
-#        '''
-#        return minimal_frame(self.atom, inplace)
-#
-#    def compute_cell_magnitudes(self, inplace=False):
-#        '''
-#        '''
-#        return self._frame.get_unit_cell_magnitudes(inplace)
-#
-#    def compute_unit_atom(self, inplace=False):
-#        '''
-#        '''
-#        return get_unit_atom(self, inplace)
-#
-#    def compute_projected_atom(self, inplace=False):
-#        '''
-#        '''
-#        return get_projected_atom(self, inplace)
-#
-#
-#    def compute_bond_count(self, inplace=False):
-#        '''
-#        Compute the bond count
-#        '''
-#        s = self.two.compute_bond_count()
-#        if inplace:
-#            if self._prjd_atom is None:
-#                self._atom['bond_count'] = s
-#            elif len(self._prjd_atom) > 0:
-#                self._prjd_atom['bond_count'] = s
-#                s = pd.Series(s.index).map(self.projected_atom['atom'])
-#                self._atom['bond_count'] = s
-#            else:
-#                self._atom['bond_count'] = s
-#        else:
-#            return s
-#
-#    def compute_frame_mass(self, inplace=False):
-#        '''
-#        Compute the mass (of atoms) in each frame and store it in the frame
-#        dataframe.
-#        '''
-#        self.atom.get_element_mass(inplace=True)
-#        mass = self.atom.groupby('frame').apply(lambda frame: frame['mass'].sum())
-#        del self._atom['mass']
-#        if inplace:
-#            self._frame['mass'] = mass
-#        else:
-#            return mass
-#
-#    def compute_frame_formula(self, inplace=False):
-#        '''
-#        Compute the (simple) formula of each frame and store it in the frame
-#        dataframe.
-#        '''
-#        def convert(frame):
-#            return dict_to_string(frame['symbol'].value_counts().to_dict())
-#        formulas = self.atom.groupby('frame').apply(convert)
-#        if inplace:
-#            self._frame['simple_formula'] = formulas
-#        else:
-#            return formulas
-#
-#    def pair_correlation_function(self, *args, **kwargs):
-#        '''
-#        Args:
-#            a (str): First atom type
-#            b (str): Second atom type
-#            dr (float): Step size (default 0.1 au)
-#            rr (float): Two body sample distance (default 11.3)
-#
-#        See Also:
-#            The compute function :func:`~atomic.algorithms.pcf.compute_radial_pair_correlation`
-#            and the two body module :mod:`~atomic.two` are useful in
-#            understanding how this function works.
-#        '''
-#        return compute_radial_pair_correlation(self, *args, **kwargs)
-#
-#    # DataFrames are "obscured" from the user via properties
-#    @property
-#    def frame(self):
-#        if self._frame is None:
-#            self.compute_minimal_frame(inplace=True)
-#            self._framelist = self._frame.index.tolist()
-#        return self._frame
-#
-#    @property
-#    def atom(self):
-#        return self._atom
-#
-#    @property
-#    def unit_atom(self):
-#        '''
-#        Primitive atom positions.
-#        '''
-#        if self._unit_atom is None:
-#            self.compute_unit_atom(inplace=True)
-#        atom = self.atom.copy()
-#        atom.update(self._unit_atom)
-#        if 'prjd_atom' in self._unit_atom.columns:
-#            atom['prjd_atom'] = self._unit_atom['prjd_atom']
-#        return Atom(atom.to_dense())
-#
-#    @property
-#    def projected_atom(self):
-#        '''
-#        Projected unit atom coordinates generating a 3x3x3 super cell.
-#        '''
-#        if self._prjd_atom is None:
-#            self.compute_projected_atom(inplace=True)
-#        return self._prjd_atom
-#
-#    @property
-#    def two(self):
-#        '''
-#        '''
-#        if self._two is None and self._prjd_two is None and self._atom is not None:
-#            self.compute_two_body(inplace=True)
-#            self._traits_need_update = True
-#        if self._two is None:                  # TEMPORARY HACK UNTIL NONE v empty DF decided
-#            if len(self._prjd_two) > 0:
-#                return self._prjd_two
-#            else:
-#                return self._two
-#        else:
-#            if len(self._two) > 0:
-#                return self._two
-#            else:
-#                return self._prjd_two
-#
-#    @property
-#    def fieldmeta(self):
-#        return self._fieldmeta
-#
-#    @property
-#    def fields(self):
-#        return self._fields
-#
-#    def _update_traits(self):
-#        '''
-#        '''
-#        st = dt.now()
-#        self._update_df_traits()
-#        print('df: ', (dt.now() - st).total_seconds())
-#        if self.frame is not None:
-#            st = dt.now()
-#            self._update_frame_list()
-#            print('frame: ', (dt.now() - st).total_seconds())
-#        if self._two is not None:
-#            st = dt.now()
-#            self._update_bond_list()
-#            print('blist: ', (dt.now() - st).total_seconds())
-#        if self._atom is not None:
-#            st = dt.now()
-#            self._center = self.atom.groupby('frame').apply(lambda x: x[['x', 'y', 'z']].mean().values).to_json()
-#            print('center: ', (dt.now() - st).total_seconds())
-#
-#    def _update_frame_list(self):
-#        '''
-#        '''
-#        self._framelist = [int(f) for f in self._frame.index.values]
-#
-#    def _update_bond_list(self):
-#        '''
-#        Retrieve a Series containing tuples of bonded atom labels
-#        '''
-#        if self.is_periodic() and len(self.projected_atom) > 0:
-#            mapper1 = self.projected_atom['atom']
-#            mapper2 = self.atom['label']
-#            df = self.two.ix[(self.two['bond'] == True), ['frame', 'prjd_atom0', 'prjd_atom1']]
-#            df['atom0'] = df['prjd_atom0'].map(mapper1)
-#            df['atom1'] = df['prjd_atom1'].map(mapper1)
-#            df['label0'] = df['atom0'].map(mapper2)
-#            df['label1'] = df['atom1'].map(mapper2)
-#            self._bonds = df.groupby('frame').apply(lambda x: x[['label0', 'label1']].values.astype(np.int64)).to_json()
-#        else:
-#            mapper = self.atom['label']
-#            df = self.two.ix[(self.two['bond'] == True), ['frame', 'atom0', 'atom1']]
-#            df['label0'] = df['atom0'].map(mapper)
-#            df['label1'] = df['atom1'].map(mapper)
-#            self._bonds = df.groupby('frame').apply(lambda x: x[['label0', 'label1']].values.astype(np.int64)).to_json()
-#
-#    def __len__(self):
-#        return len(self.frame)
-#
-#    def __init__(self, frame=None, atom=None, unit_atom=None, prjd_atom=None,
-#                 two=None, prjd_two=None, atomtwo=None, prjd_atomtwo=None,
-#                 molecule=None, fieldmeta=None, fields=[], **kwargs):
-#        '''
-#        The universe container represents all of the atoms, bonds, molecules,
-#        orbital/densities, etc. present within an atomistic simulation. See
-#        documentation related to each data specific dataframe for more information.
-#        '''
-#        super().__init__(**kwargs)
-#        self._atom = atom
-#        if frame is None:
-#            self._frame = _min_frame_from_atom(self._atom)
-#        else:
-#            self._frame = frame
-#        self._unit_atom = unit_atom
-#        self._prjd_atom = prjd_atom
-#        self._two = two
-#        self._prjd_two = prjd_two
-#        self._atomtwo = atomtwo
-#        self._prjd_atomtwo = prjd_atomtwo
-#        self._fieldmeta = fieldmeta
-#        self._fieldframes = []
-#        if hasattr(self._fieldmeta, 'index'):
-#            self._fieldframes = [int(obj) for obj in self._fieldmeta['frame'].values]
-#        self._fields = fields
-#        #if Config.ipynb and len(self._frame) < 1000:    # TODO workup a better solution here!
-#        #    self._update_traits()
-#
-#
-#def concat(universes):
-#    '''
-#    Concatenate a collection of universes.
-#    '''
-#    raise NotImplementedError()
-#
-#
-#@event.listens_for(Universe, 'after_insert')
-#def after_insert(*args, **kwargs):
-#    '''
-#    '''
-#    print('after_insert')
-#    print(args)
-#    print(kwargs)
-#    return args
-#
-#@event.listens_for(Universe, 'after_update')
-#def after_update(*args, **kwargs):
-#    '''
-#    '''
-#    print('after_update')
-#    print(args)
-#    print(kwargs)
-#    return args
-#
+        For arguments see :func:`~atomic.two.get_two_body`. Note that this
+        operation (like all compute) operations are performed in place.
+
+        Args:
+            truncate_projected (bool): Applicable to periodic universes - decreases the size of the projected atom table
+            in_mem (bool): If false, will follow defaults, if true, will force in memory algorithms
+        '''
+        if self.is_periodic:
+            self._periodic_two = _ctb(self, *args, **kwargs)
+            if truncate_projected:
+                idx0 = self._periodic_two['prjd_atom0']
+                idx1 = self._periodic_two['prjd_atom1']
+                cls = self._projected_atom.__class__
+                df = self._projected_atom[self._projected_atom.index.isin(idx0) |
+                                          self._projected_atom.index.isin(idx1)]
+                self._projected_atom = cls(df)
+        else:
+            self._two = _ctb(self, *args, **kwargs)
+
+    def __len__(self):
+        return len(self.frame) if self._is('_frame') else 0
+
+    def __init__(self, frame=None, atom=None, two=None, field=None, fields=None,
+                 unit_atom=None, projected_atom=None, periodic_two=None,
+                 **kwargs):
+        '''
+        Args:
+            frame: Total energies, temperature, cell dimension, ...
+            atom: Atomic coordinates, forces, velocties, ...
+            two: Interatomic distances, bonds, ...
+            field: Field data
+        '''
+        self._frame = self._enforce_df_type('frame', frame)
+        self._atom = self._enforce_df_type('atom', atom)
+        self._field = self._reconstruct_field('field', field, fields)
+        self._two = self._enforce_df_type('two', two)
+        self._unit_atom = self._enforce_df_type('unit_atom', unit_atom)
+        self._projected_atom = self._enforce_df_type('projected_atom', projected_atom)
+        self._periodic_two = self._enforce_df_type('periodic_two', periodic_two)
+        super().__init__(**kwargs)
+        ma = self.frame['atom_count'].max() if self._is('_frame') else 0
+        nf = len(self)
+        if ma == 0 and nf == 0:
+            self._test = True
+            self.name = 'TestUniverse'
+            self._widget.width = 950
+            self._widget.gui_width = 350
+            self._update_traits()
+            self._traits_need_update = False
+        elif self.is_periodic and ma < mapfp and nf < mfp and self._atom is not None:
+            if self._periodic_two is None:
+                self.compute_two_body()
+            self._update_traits()
+            self._traits_need_update = False
+        elif not self.is_periodic and ma < mapf and nf < mf and self._atom is not None:
+            if self._two is None:
+                self.compute_two_body()
+            self._update_traits()
+            self._traits_need_update = False

@@ -10,5 +10,5 @@ from exa.utility import mkp
 
 
 pkg = os.path.dirname(__file__)
-_conf['atomic_nbext_localdir'] = mkp(pkg, 'static', 'nbextensions')
+_conf['atomic_nbext_localdir'] = mkp(pkg, 'nbextensions')
 _conf['atomic_nbext_sysdir'] = mkp(_conf['nbext_sysdir'], 'atomic')
