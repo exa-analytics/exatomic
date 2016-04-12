@@ -66,12 +66,11 @@ define([
             ---------------
             Helper function for retrieving data from the view.
             */
-            try {
-                var value = obj[index];
-                return value;
-            } catch (err) {
-                console.log(err);
+            var value = obj[index];
+            if (value === undefined) {
                 return obj;
+            } else {
+                return value;
             };
         };
 
