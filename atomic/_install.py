@@ -3,8 +3,8 @@
 Installer
 ====================
 '''
-from exa.utility import _install_notebook_widgets
 from exa.relational.base import _create_all
+from exa._install import _install_notebook_widgets
 from atomic import _conf
 
 

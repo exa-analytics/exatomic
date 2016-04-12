@@ -16,11 +16,10 @@ try:
         url='https://exa-analytics.github.io/atomic',
         packages=find_packages(),
         package_data={'atomic': ['static/*']},
-        include_package_data=True
+        include_package_data=True,
+        license='Apache License Version 2.0'
     )
+    from atomic._install import install
+    #install...
 except:
     raise
-finally:
-    print('atomic requires exa >= 0.1.0, please make sure it is installed!')
-    from atomic.tools import finalize_install
-    finalize_install()

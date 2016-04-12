@@ -9,59 +9,49 @@ Universe View
 require.config({
     shim: {
         'nbextensions/exa/container': {
-            exports: 'container'
+            exports: 'base'
         },
 
-        'nbextensions/exa/atomic/app': {
-            exports: 'app'
-        },
+/*        'nbextensions/exa/atomic/app': {
+            exports: 'AtomicApp'
+        },*/
 
-        'nbextensions/exa/utility': {
-            exports: 'utility'
+        'nbextensions/exa/atomic/test': {
+            exports: 'UniverseTestApp'
         },
     },
 });
 
 
 define([
-    'widgets/js/widget',
     'nbextensions/exa/container',
-    'nbextensions/exa/atomic/app',
-    'nbextensions/exa/utility',
-], function(widget, container, app, utility){
-    var UniverseView = container.ContainerView.extend({
+    'nbextensions/exa/atomic/test',
+    //'nbextensions/exa/atomic/app'
+], function(base, UniverseTestApp) {
+    class UniverseView extends base.ContainerView {
         /*"""
         UniverseView
-        ====================
-        Frontend representation of an atomic universe instance.
+        ================
         */
-        render: function() {
-            /*"""
-            render
-            --------------
-            Main entry point for the universe container frontend.
-            */
-            console.log('Initializing universe...');
-            var self = this;
-            this.init_default_model_listeners();
+        init() {
             this.init_listeners();
+            this.if_empty();
+        };
 
-            this.init_container();
-            this.init_canvas(this.gui_width);
-            this.app = new app.AtomicApp(this);
+        if_empty() {
+            /*"""
+            if_empty
+            ----------
+            Create a UniverseTestApp application?
+            */
+            var check = this.get_trait('test');
+            if (check === true) {
+                console.log('Empty universe, displaying test interface!');
+                this.app = new UniverseTestApp(this);
+            };
+        };
 
-            this.container.append(this.canvas);       // Lastly set the html
-            this.container.append(this.app.gui.domElement);
-            this.container.append(this.app.gui_style);
-            this.setElement(this.container);          // objects and run.
-            this.app.app3d.render();
-            this.on('displayed', function() {
-                self.app.app3d.animate();
-                self.app.app3d.controls.handleResize();
-            });
-        },
-
-        init_listeners: function() {
+        init_listeners() {
             /*"""
             init_listeners
             ---------------
@@ -85,59 +75,59 @@ define([
             this.model.on('change:frame_frame', this.update_framelist, this);
             this.model.on('change:two_bond0', this.update_two_bond0, this);
             this.model.on('change:two_bond1', this.update_two_bond1, this);
-        },
+        };
 
-        update_atom_x: function() {
+        update_atom_x() {
             /*"""
             update_atom_x
             -----------
             Updates x component of nuclear coordinates.
             */
             this.atom_x = this.get_trait('atom_x');
-        },
+        };
 
-        update_atom_y: function() {
+        update_atom_y() {
             /*"""
             update_atom_y
             -----------
             Updates y component of nuclear coordinates.
             */
             this.atom_y = this.get_trait('atom_y');
-        },
+        };
 
-        update_atom_z: function() {
+        update_atom_z() {
             /*"""
             update_atom_z
             -----------
             Updates z component of nuclear coordinates.
             */
             this.atom_z = this.get_trait('atom_z');
-        },
+        };
 
-        update_framelist: function() {
+        update_framelist() {
             this.framelist = this.get_trait('frame_frame');
-        },
+        };
 
-        update_atom_symbols: function() {
+        update_atom_symbols() {
             this.atom_symbols = this.get_trait('atom_symbols');
-        },
+        };
 
-        update_atom_radii_dict: function() {
+        update_atom_radii_dict() {
             this.atom_radii_dict = this.get_trait('atom_radii');
-        },
+        };
 
-        update_atom_colors_dict: function() {
+        update_atom_colors_dict() {
             this.atom_colors_dict = this.get_trait('atom_colors');
-        },
+        };
 
-        update_two_bond0: function() {
+        update_two_bond0() {
             this.two_bond0 = this.get_trait('two_bond0');
-        },
+        };
 
-        update_two_bond1: function() {
+        update_two_bond1() {
             this.two_bond1 = this.get_trait('two_bond1');
-        },
-    });
+        };
+    };
 
-    return {'UniverseView': UniverseView};
+    return {UniverseView: UniverseView};
 });
