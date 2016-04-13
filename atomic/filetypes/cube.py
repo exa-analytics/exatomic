@@ -89,7 +89,7 @@ class Cube(Editor):
             See :class:`~atomic.universe.Universe` for additional arguments.
         '''
         return Universe(frame=self.frame, atom=self.atom, meta=self.meta,
-                        field=self.field, **kwargs)
+                        field=self.field, fields=self.field.field_values, **kwargs)
 
     def _init(self, *args, label=None, **kwargs):
         '''
