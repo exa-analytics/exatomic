@@ -18,13 +18,15 @@ corresponding to a snaphot in time, etc., without restrictions.
 '''
 import pandas as pd
 import numpy as np
+from collections import OrderedDict
 from sqlalchemy import Column, Integer, ForeignKey
-from exa import Container, _conf, Field3D
+from exa import Container, _conf
+from exa.numerical import Field
 from atomic.widget import UniverseWidget
 from atomic.frame import minimal_frame, Frame
 from atomic.atom import Atom, ProjectedAtom, UnitAtom
 from atomic.two import Two, PeriodicTwo
-from atomic.field import UniverseField3D
+from atomic.field import UField3D
 from atomic.atom import compute_unit_atom as _cua
 from atomic.atom import compute_projected_atom as _cpa
 from atomic.two import max_frames_periodic as mfp
@@ -45,9 +47,9 @@ class Universe(Container):
     _widget_class = UniverseWidget
     __mapper_args__ = {'polymorphic_identity': 'universe'}
     # The arguments here should match those of init (for dataframes)
-    _df_types = {'frame': Frame, 'atom': Atom, 'projected_atom': ProjectedAtom,
-                 'periodic_two': PeriodicTwo, 'field': UniverseField3D,
-                 'unit_atom': UnitAtom}
+    _df_types = OrderedDict([('frame', Frame), ('atom', Atom), ('two', Two),
+                             ('unit_atom', UnitAtom), ('projected_atom', ProjectedAtom),
+                             ('periodic_two', PeriodicTwo), ('field', UField3D)])
 
     @property
     def is_periodic(self):
@@ -100,6 +102,12 @@ class Universe(Container):
         return self._two
 
     @property
+    def periodic_two(self):
+        if not self._is('_periodic_two'):
+            self.compute_two_body()
+        return self._periodic_two
+
+    @property
     def field(self):
         return self._field
 
@@ -127,6 +135,32 @@ class Universe(Container):
         Compute the projected supercell from the unit atom coordinates.
         '''
         self._projected_atom = _cpa(self)
+
+    def add_field(self, field, frame=None, field_values=None):
+        '''
+        Add (insert/concat) field to the current universe.
+
+        Args:
+            field: Complete field (instance of :class:`~exa.numerical.Field`) to add or field dimensions dataframe
+            frame (int): Frame index where to insert/concat
+            field_values: Field values list (if field is incomplete)
+        '''
+        if isinstance(frame, int) or isinstance(frame, np.int64) or isinstance(frame, np.int32):
+            if frame not in self.frame.index:
+                raise IndexError('frame {} does not exist in the universe?'.format(frame))
+            field['frame'] = frame
+        df = self._reconstruct_field('field', field, field_values)
+        if self._field is None:
+            self._field = df
+        else:
+            cls = self._df_types['field']
+            values = self._field.field_values + df.field_values
+            self._field._revert_categories()
+            df._revert_categories()
+            df = pd.concat((pd.DataFrame(self._field), pd.DataFrame(df)), ignore_index=True)
+            df.reset_index(inplace=True, drop=True)
+            self._field = cls(values, df)
+            self._field._set_categories()
 
     def _custom_container_traits(self):
         '''
@@ -163,19 +197,24 @@ class Universe(Container):
     def __len__(self):
         return len(self.frame) if self._is('_frame') else 0
 
-    def __init__(self, frame=None, atom=None, two=None, field=None, fields=None,
-                 unit_atom=None, projected_atom=None, periodic_two=None,
-                 **kwargs):
+    def __init__(self, frame=None, atom=None, two=None, field=None,
+                 field_values=None, unit_atom=None, projected_atom=None,
+                 periodic_two=None, **kwargs):
         '''
-        Args:
-            frame: Total energies, temperature, cell dimension, ...
-            atom: Atomic coordinates, forces, velocties, ...
-            two: Interatomic distances, bonds, ...
-            field: Field data
+        The arguments field and field_values are paired: field is the dataframe
+        containing all of the dimensions of the scalar or vector fields and
+        field_values is the list of series or dataframe objects that contain
+        the magnitudes with list position corresponding to the field dataframe
+        index.
+
+        The above approach is only used when loading a universe from a file; in
+        general only the (appropriately typed) field argument (already
+        containing the field_values - see :mod:`~atomic.field`) is needed to
+        correctly attach fields.
         '''
         self._frame = self._enforce_df_type('frame', frame)
         self._atom = self._enforce_df_type('atom', atom)
-        self._field = self._reconstruct_field('field', field, fields)
+        self._field = self._reconstruct_field('field', field, field_values)
         self._two = self._enforce_df_type('two', two)
         self._unit_atom = self._enforce_df_type('unit_atom', unit_atom)
         self._projected_atom = self._enforce_df_type('projected_atom', projected_atom)

@@ -83,7 +83,7 @@ class PeriodicTwo(Two):
     The atom indices match those present in the projected atom dataframe.
     '''
     _index_prefix = 'prjd_atom'
-    _indices = ['pbtwo']
+    _indices = ['pbc_two']
     _columns = ['distance', 'prjd_atom0', 'prjd_atom1', 'frame']
 
 
