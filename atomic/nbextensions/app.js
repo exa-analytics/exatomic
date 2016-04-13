@@ -70,7 +70,7 @@ define([
             try {
                 value = obj[index];
             } catch(err) {
-                console.log(err)
+                //console.log(err);
             };
             return value;
         };
@@ -82,14 +82,14 @@ define([
             Set up some application variables.
             */
             // frame
-            this.idx = 0;
-            this.last_index = this.num_frames - 1;
             if (typeof this.view.framelist === 'number') {
                 this.framelist = [this.view.framelist];
             } else {
                 this.framelist = this.view.framelist;
             };
+            this.idx = 0;
             this.num_frames = this.framelist.length;
+            this.last_index = this.num_frames - 1;
             this.current_frame = this.framelist[this.idx];
             this.fps = this.view.fps;
         };
@@ -106,17 +106,13 @@ define([
 
             this.top = {
                 'pause': function() {
-                    console.log('pausing');
                     this.playing = false;
                     clearInterval(this._play_callback_id);
                 },
                 'play': function() {
-                    console.log('playing');
                     if (this.playing === true) {
-                        console.log('here1');
                         self.top.pause()
                     } else {
-                        console.log('here2');
                         this.playing = true;
                         if (self.idx === self.last_index) {
                             self.top.index_slider.setValue(0);
@@ -130,18 +126,17 @@ define([
                         }, 1000 / self.fps);
                     };
                 },
-                'index': this.idx,
+                'index': 0,
                 'frame': this.current_frame,
                 'fps': this.fps,
             };
 
             this.top['play_button'] = this.gui.add(this.top, 'play');
-            this.top['index_slider'] = this.gui.add(this.top, 'index', 0, this.last_index, 1);
+            this.top['index_slider'] = this.gui.add(this.top, 'index', 0, this.last_index);
             this.top['frame_dropdown'] = this.gui.add(this.top, 'frame', this.framelist);
-            this.top['fps'] = this.gui.add(this.top, 'fps', 0, 60);
+            this.top['fps_slider'] = this.gui.add(this.top, 'fps', 0, 480);
 
             this.top.index_slider.onChange(function(index) {
-                console.log(index);
                 self.idx = index;
                 self.current_frame = self.framelist[self.idx];
                 self.top['index'] = self.idx;
@@ -150,13 +145,28 @@ define([
                 self.render_current_frame();
             });
 
+            this.top.fps_slider.onFinishChange(function(value) {
+                self.top.fps = value;
+            });
+
             this.fields = {
                 'isovalue': 0.03,
                 'field': 0,
             };
+
             this.fields['folder'] = this.gui.addFolder('fields');
 
-            this.display = this.gui.addFolder('display');
+            this.display = {
+                'cell': false,
+            };
+            this.display['folder'] = this.gui.addFolder('display');
+            this.display['cell_checkbox'] = this.gui.add(this.display, 'cell');
+
+            this.display.cell_checkbox.onFinishChange(function(value) {
+                console.log(value);
+                self.display.cell = value;
+                self.render_current_frame();
+            });
         };
 
         render_current_frame() {
@@ -177,10 +187,37 @@ define([
             this.atoms = this.app3d.add_points(x, y, z, colors, radii);
             this.app3d.scene.remove(this.bonds);
             if (v0 !== undefined && v1 !== undefined) {
+                this.app3d.scene.remove(this.bonds);
                 this.bonds = this.app3d.add_lines(v0, v1, x, y, z, colors);
             };
-            this.app3d.set_camera_from_mesh(this.atoms, 4.0, 4.0, 4.0);
+            if (this.display.cell === true) {
+                this.app3d.scene.remove(this.cell);
+                this.cell = this.add_cell();
+            };
+            if (this.idx === 0) {
+                this.app3d.set_camera_from_mesh(this.atoms, 4.0, 4.0, 4.0);
+            };
         };
+
+        add_cell() {
+            /*"""
+            add_cell
+            -----------
+            Custom rendering function that adds the unit cell.
+            */
+            var ox = this.gv(this.view.frame_ox, this.idx);
+            if (ox === undefined) {
+                return;
+            };
+            var oy = this.gv(this.view.frame_oy, this.idx);
+            var oz = this.gv(this.view.frame_oz, this.idx);
+            var xi = this.gv(this.view.frame_xi, this.idx);
+            var xj = this.gv(this.view.frame_xj, this.idx);
+            var xk = this.gv(this.view.frame_xk, this.idx);
+            var yi = this.gv(this.view.frame_yi, this.idx);
+            var yj = this.gv(this.view.frame_yj, this.idx);
+            var yk = this.gv(this.view.frame_yk, this.idx);
+        }
     };
 
 /*    AtomicApp.prototype.init_gui = function() {
