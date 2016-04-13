@@ -17,6 +17,10 @@ require.config({
         'nbextensions/exa/apps/app3d': {
             exports: 'App3D'
         },
+
+        'nbextensions/exa/utility': {
+            exports: 'utility'
+        },
     },
 });
 
@@ -24,7 +28,8 @@ require.config({
 define([
     'nbextensions/exa/apps/gui',
     'nbextensions/exa/apps/app3d',
-], function(ContainerGUI, App3D) {
+    'nbextensions/exa/utility'
+], function(ContainerGUI, App3D, utility) {
     class UniverseApp {
         /*"""
         UniverseApp
@@ -34,12 +39,12 @@ define([
         constructor(view) {
             this.view = view;
             this.view.create_canvas();
-            this.frame_index = 0;
-            this.num_frames = this.view.framelist.length;
-            this.last_index = this.num_frames - 1;
-            this.current_frame = this.view.framelist[this.frame_index];
-            this.app3d = new app3D.ThreeJSApp(this.view.canvas);
+            this.update_vars();
+            this.app3d = new App3D(this.view.canvas);
             this.create_gui();
+
+            this.render_current_frame();
+
             this.view.container.append(this.gui.domElement);
             this.view.container.append(this.gui.custom_css);
             this.view.container.append(this.view.canvas);
@@ -51,6 +56,44 @@ define([
             });
         };
 
+        resize() {
+            this.app3d.resize();
+        };
+
+        gv(obj, index) {
+            /*"""
+            gv
+            ---------------
+            Helper function for retrieving data from the view.
+            */
+            var value = undefined;
+            try {
+                value = obj[index];
+            } catch(err) {
+                console.log(err)
+            };
+            return value;
+        };
+
+        update_vars() {
+            /*"""
+            init_vars
+            ----------------
+            Set up some application variables.
+            */
+            // frame
+            this.idx = 0;
+            this.last_index = this.num_frames - 1;
+            if (typeof this.view.framelist === 'number') {
+                this.framelist = [this.view.framelist];
+            } else {
+                this.framelist = this.view.framelist;
+            };
+            this.num_frames = this.framelist.length;
+            this.current_frame = this.framelist[this.idx];
+            this.fps = this.view.fps;
+        };
+
         create_gui() {
             /*"""
             create_gui
@@ -59,23 +102,59 @@ define([
             */
             var self = this;
             this.gui = new ContainerGUI(this.view.gui_width);
-            this.level0 = {
+
+            this.top = {
                 'play': function() {
                     console.log('clicked play');
                 },
-                'frame': this.current_frame
+                'playbar': this.idx,
+                'frame': this.current_frame,
+                'fps': this.fps,
             };
+
+            this.top['play_button'] = this.gui.add(this.top, 'play');
+            this.top['playbar_slider'] = this.gui.add(this.top, 'playbar', 0, this.last_index, 1);
+            this.top['frame_dropdown'] = this.gui.add(this.top, 'frame', this.framelist);
+            this.top['fps'] = this.gui.add(this.top, 'fps', 0, 60);
+
+            this.top.playbar_slider.onChange(function(index) {
+                console.log(index);
+            });
+
+            this.fields = {
+                'isovalue': 0.03,
+                'field': 0,
+            };
+            this.fields['folder'] = this.gui.addFolder('fields');
+
             this.display = this.gui.addFolder('display');
-            this.fields = this.gui.addFolder('fields');
+        };
+
+        render_current_frame() {
+            /*"""
+            render_current_frame
+            -----------------------
+            Renders atoms and bonds in the current frame (using the frame index).
+            */
+            var symbols = this.gv(this.view.atom_symbols, this.idx);
+            var radii = utility.mapper(symbols, this.view.atom_radii_dict);
+            var colors = utility.mapper(symbols, this.view.atom_colors_dict);
+            var x = this.gv(this.view.atom_x, this.idx);
+            var y = this.gv(this.view.atom_y, this.idx);
+            var z = this.gv(this.view.atom_z, this.idx);
+            var v0 = this.gv(this.view.two_bond0, this.idx);
+            var v1 = this.gv(this.view.two_bond1, this.idx);
+            this.app3d.scene.remove(this.atoms);
+            this.atoms = this.app3d.add_points(x, y, z, colors, radii);
+            this.app3d.scene.remove(this.bonds);
+            if (v0 !== undefined && v1 !== undefined) {
+                this.bonds = this.app3d.add_lines(v0, v1, x, y, z, colors);
+            };
+            this.app3d.set_camera_from_mesh(this.atoms, 4.0, 4.0, 4.0);
         };
     };
 
-    AtomicApp.prototype.init_gui = function() {
-        /*"""
-        init_gui
-        ----------------
-        Initialize the graphical user interface.
-        */
+/*    AtomicApp.prototype.init_gui = function() {
         var self = this;
         this.f1f = this.gui.addFolder('animation');
         this.f2f = this.gui.addFolder('atoms');
@@ -144,15 +223,8 @@ define([
         });
     };
 
-    AtomicApp.prototype.resize = function() {
-        this.app3d.resize();
-    };
 
     AtomicApp.prototype.render_atoms =  function(index) {
-        /*"""
-        render_frame
-        --------------
-        */
         this.index = index;
         var symbols = this.get_value(this.view.atom_symbols, this.index);
         var radii = utility.mapper(symbols, this.view.atom_radii_dict);
@@ -171,17 +243,13 @@ define([
 
 
     AtomicApp.prototype.get_value = function(obj, index) {
-        /*"""
-        get_value
-        --------------
-        */
         var value = obj[index];
         if (value == undefined) {
             return obj;
         } else {
             return value;
         };
-    };
+    };*/
 
     return UniverseApp;
 });
