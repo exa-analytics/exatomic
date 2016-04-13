@@ -23,6 +23,7 @@ define([
         */
         constructor(dimensions, which) {
             super(dimensions, primitives[which]);
+            this.function = which;
         };
     };
 
