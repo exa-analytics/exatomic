@@ -101,24 +101,53 @@ define([
             Create the application's control set.
             */
             var self = this;
+            this.playing = false;
             this.gui = new ContainerGUI(this.view.gui_width);
 
             this.top = {
-                'play': function() {
-                    console.log('clicked play');
+                'pause': function() {
+                    console.log('pausing');
+                    this.playing = false;
+                    clearInterval(this._play_callback_id);
                 },
-                'playbar': this.idx,
+                'play': function() {
+                    console.log('playing');
+                    if (this.playing === true) {
+                        console.log('here1');
+                        self.top.pause()
+                    } else {
+                        console.log('here2');
+                        this.playing = true;
+                        if (self.idx === self.last_index) {
+                            self.top.index_slider.setValue(0);
+                        };
+                        this._play_callback_id = setInterval(function() {
+                            if (self.idx < self.last_index) {
+                                self.top.index_slider.setValue(self.idx+1);
+                            } else {
+                                self.top.pause();
+                            };
+                        }, 1000 / self.fps);
+                    };
+                },
+                'index': this.idx,
                 'frame': this.current_frame,
                 'fps': this.fps,
             };
 
             this.top['play_button'] = this.gui.add(this.top, 'play');
-            this.top['playbar_slider'] = this.gui.add(this.top, 'playbar', 0, this.last_index, 1);
+            this.top['index_slider'] = this.gui.add(this.top, 'index', 0, this.last_index, 1);
             this.top['frame_dropdown'] = this.gui.add(this.top, 'frame', this.framelist);
             this.top['fps'] = this.gui.add(this.top, 'fps', 0, 60);
 
-            this.top.playbar_slider.onChange(function(index) {
+            this.top.index_slider.onChange(function(index) {
                 console.log(index);
+                self.idx = index;
+                self.current_frame = self.framelist[self.idx];
+                self.top['index'] = self.idx;
+                self.top['frame'] = self.current_frame;
+                self.top.frame_dropdown.setValue(self.current_frame);
+                self.render_current_frame();
             });
 
             this.fields = {

@@ -74,6 +74,18 @@ class Cube(Editor):
         df['nx'] = df['nx'].astype(np.int64)
         df['ny'] = df['ny'].astype(np.int64)
         df['nz'] = df['nz'].astype(np.int64)
+        df['ox'] = df['ox'].astype(np.float64)
+        df['oy'] = df['oy'].astype(np.float64)
+        df['oz'] = df['oz'].astype(np.float64)
+        df['xi'] = df['xi'].astype(np.float64)
+        df['xj'] = df['xj'].astype(np.float64)
+        df['xk'] = df['xk'].astype(np.float64)
+        df['yi'] = df['yi'].astype(np.float64)
+        df['yj'] = df['yj'].astype(np.float64)
+        df['yk'] = df['yk'].astype(np.float64)
+        df['zi'] = df['zi'].astype(np.float64)
+        df['zj'] = df['zj'].astype(np.float64)
+        df['zk'] = df['zk'].astype(np.float64)
         fields = [Series(data[~np.isnan(data)])]
         self._field = UField3D(fields, df)
 
@@ -91,7 +103,7 @@ class Cube(Editor):
         return Universe(frame=self.frame, atom=self.atom, meta=self.meta,
                         field=self.field, **kwargs)
 
-    def _init(self, *args, label=None, **kwargs):
+    def _init(self):
         '''
         Perform some preliminary parsing so that future parsing of atoms, etc.
         is easy. Also parse out metadata (comments).
@@ -123,11 +135,11 @@ class Cube(Editor):
         self._zj = float(zj)
         self._zk = float(zk)
         self._volume_data_start = 6 + self._nat
-        self.label = label
         self.meta = {'comments': self[0:2]}
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args, label=None, **kwargs):
         super().__init__(*args, **kwargs)
+        self.label = label
         self._init()
 
 
