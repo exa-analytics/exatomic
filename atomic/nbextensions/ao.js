@@ -25,6 +25,7 @@ define([
         */
         constructor(dimensions, which) {
             super(dimensions, hydrogen[which]);
+            this.function = which;
         };
     };
 
