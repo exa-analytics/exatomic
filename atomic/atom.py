@@ -61,7 +61,7 @@ class BaseAtom(DataFrame):
         Creates four custom traits; radii, colors, symbols, and symbol codes.
         '''
         grps = self.groupby('frame')
-        symbols = grps.apply(lambda g: g['symbol'].cat.codes)
+        symbols = grps.apply(lambda g: g['symbol'].cat.codes.values)
         symbols = Unicode(symbols.to_json(orient='values')).tag(sync=True)
         symmap = {i: v for i, v in enumerate(self['symbol'].cat.categories)}
         radii = Isotope.symbol_to_radius()[self['symbol'].unique()]

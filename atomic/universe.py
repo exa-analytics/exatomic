@@ -21,6 +21,7 @@ import numpy as np
 from collections import OrderedDict
 from sqlalchemy import Column, Integer, ForeignKey
 from exa import Container, _conf
+from exa.numerical import Field
 from atomic.widget import UniverseWidget
 from atomic.frame import minimal_frame, Frame
 from atomic.atom import Atom, ProjectedAtom, UnitAtom
@@ -134,6 +135,32 @@ class Universe(Container):
         Compute the projected supercell from the unit atom coordinates.
         '''
         self._projected_atom = _cpa(self)
+
+    def add_field(self, field, frame=None, field_values=None):
+        '''
+        Add (insert/concat) field to the current universe.
+
+        Args:
+            field: Complete field (instance of :class:`~exa.numerical.Field`) to add or field dimensions dataframe
+            frame (int): Frame index where to insert/concat
+            field_values: Field values list (if field is incomplete)
+        '''
+        if isinstance(frame, int) or isinstance(frame, np.int64) or isinstance(frame, np.int32):
+            if frame not in self.frame.index:
+                raise IndexError('frame {} does not exist in the universe?'.format(frame))
+            field['frame'] = frame
+        df = self._reconstruct_field('field', field, field_values)
+        if self._field is None:
+            self._field = df
+        else:
+            cls = self._df_types['field']
+            values = self._field.field_values + df.field_values
+            self._field._revert_categories()
+            df._revert_categories()
+            df = pd.concat((pd.DataFrame(self._field), pd.DataFrame(df)), ignore_index=True)
+            df.reset_index(inplace=True, drop=True)
+            self._field = cls(values, df)
+            self._field._set_categories()
 
     def _custom_container_traits(self):
         '''
