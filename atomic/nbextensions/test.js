@@ -124,8 +124,8 @@ define([
             this.gto = {
                 'function': '1s',
                 'functions': ['1s', '2s', '2px', '2py', '2pz',
-                                  '3s', '3px', '3py', '3pz',
-                                  '3dz2', '3dxz', '3dyz', '3dx2-y2', '3dxy'],
+                              '3s', '3px', '3py', '3pz',
+                              '3dz2', '3dxz', '3dyz', '3dx2-y2', '3dxy'],
                 'isovalue': 0.01
             };
 

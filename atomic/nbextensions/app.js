@@ -143,9 +143,6 @@ define([
             var z = this.gv(this.view.atom_z, this.idx);
             var v0 = this.gv(this.view.two_bond0, this.idx);
             var v1 = this.gv(this.view.two_bond1, this.idx);
-            console.log(x);
-            console.log(y);
-            console.log(z);
             this.app3d.scene.remove(this.atoms);
             this.atoms = this.app3d.add_points(x, y, z, colors, radii);
             this.app3d.scene.remove(this.bonds);

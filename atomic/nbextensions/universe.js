@@ -34,7 +34,6 @@ define([
         ================
         */
         init() {
-            console.log(UniverseApp);
             this.init_listeners();
             this.if_empty();
         };
