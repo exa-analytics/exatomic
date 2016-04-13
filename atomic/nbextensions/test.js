@@ -62,9 +62,9 @@ define([
                 'ymax': 24.0,
                 'zmin': -24.0,
                 'zmax': 24.0,
-                'dx': 0.5,
-                'dy': 0.5,
-                'dz': 0.5
+                'dx': 2.0,
+                'dy': 2.0,
+                'dz': 2.0
             };
             this.render_ao();
             this.ao.folder.open();
@@ -87,6 +87,7 @@ define([
             with relevant controls for this application.
             */
             var self = this;
+            self.return = false;
             this.gui = new ContainerGUI(this.view.gui_width);
 
             this.top = {
@@ -113,12 +114,12 @@ define([
 
             this.ao['isovalue_slider'].onFinishChange(function(value) {
                 self.ao['isovalue'] = value;
-                self.render_ao();
+                self.render_ao(false);
             });
 
             this.ao['func_dropdown'].onFinishChange(function(value) {
                 self.ao['function'] = value;
-                self.render_ao();
+                self.render_ao(self.return);
             });
 
             this.gto = {
@@ -135,31 +136,68 @@ define([
 
             this.gto['isovalue_slider'].onFinishChange(function(value) {
                 self.gto['isovalue'] = value;
-                self.render_gto();
+                self.render_gto(false);
             });
 
             this.gto['func_dropdown'].onFinishChange(function(value) {
                 self.gto['function'] = value;
-                self.render_gto();
+                self.render_gto(self.return);
             });
+
+            this.save = {
+                'return': false,
+            }
+            this.save['folder'] = this.gui.addFolder('Return field to python');
+            this.save['return'] = this.save.folder.add(this.save, 'return');
+            this.save['return'].onFinishChange(function(value) {
+                self.return = value;
+          });
         };
 
-        render_ao() {
+        render_ao(tosend) {
             this.field = new AO(this.dimensions, this.ao['function']);
+            if (tosend === true) {
+                var field = {
+                    'ox': this.field.xmin, 'oy': this.field.ymin, 'oz': this.field.zmin,
+                    'dx': this.field.dx, 'dy': this.field.dy, 'dz': this.field.dz,
+                    'nx': this.field.nx, 'ny': this.field.ny, 'nz': this.field.nz,
+                    'values': this.field.values
+                }
+                console.log(field);
+                console.log(field['values']);
+                this.view.send({'type': 'field', 'name': this.ao['function'], 'data': field})
+            };
             this.app3d.remove_meshes(this.active_objs);
             this.active_objs = this.app3d.add_scalar_field(this.field, this.ao['isovalue'], 2);
         };
 
-        render_gto() {
+        render_gto(tosend) {
             this.field = new GTO(this.dimensions, this.gto['function']);
+            if (tosend === true) {
+                var field = {
+                    'ox': this.field.xmin, 'oy': this.field.ymin, 'oz': this.field.zmin,
+                    'dx': this.field.dx, 'dy': this.field.dy, 'dz': this.field.dz,
+                    'nx': this.field.nx, 'ny': this.field.ny, 'nz': this.field.nz,
+                    'values': this.field.values
+                }
+                console.log(field);
+                console.log(field['values']);
+                this.view.send({'type': 'field', 'name': this.ao['function'], 'data': field})
+            };
             this.app3d.remove_meshes(this.active_objs);
             this.active_objs = this.app3d.add_scalar_field(this.field, this.gto['isovalue'], 2);
         };
+
+        send_to_python() {
+            console.log(this.app3d);
+            console.log(this.active_objs);
+        }
 
         resize() {
             this.app3d.resize();
         };
     };
+
 
     return UniverseTestApp;
 });

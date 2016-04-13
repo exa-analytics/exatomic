@@ -96,7 +96,7 @@ class Cube(Editor):
             :func:`~atomic.editor.Editor.to_universe`
         '''
         return Universe(frame=self.frame, atom=self.atom, meta=self.meta,
-                        field=self.field, **kwargs)
+                        field=self.field, fields=self.field.field_values, **kwargs)
 
     def _init(self, *args, label=None, **kwargs):
         '''
