@@ -127,8 +127,10 @@ class ProjectedAtom(BaseAtom):
     _columns = ['x', 'y', 'z', 'symbol', 'frame', 'atom']
     _traits = []
     _groupbys = ['frame']
-    _categories = {'atom': np.int64, 'frame': np.int64, 'label': np.int64,
-                   'symbol': str}
+    _categories = {'atom': np.int64, 'frame': np.int64, 'label': np.int64, 'symbol': str}
+
+    def _get_custom_traits(self):
+        return {}
 
 
 class VisAtom(SparseDataFrame):
@@ -140,6 +142,9 @@ class VisAtom(SparseDataFrame):
     '''
     _indices = ['atom']
     _columns = ['x', 'y', 'z']
+
+    def _get_custom_traits(self):
+        return {}
 
 
 def compute_unit_atom(universe):
