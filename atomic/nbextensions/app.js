@@ -21,6 +21,10 @@ require.config({
         'nbextensions/exa/utility': {
             exports: 'utility'
         },
+
+        'nbextensions/exa/atomic/field': {
+            exports: 'CubeField'
+        }
     },
 });
 
@@ -28,8 +32,9 @@ require.config({
 define([
     'nbextensions/exa/apps/gui',
     'nbextensions/exa/apps/app3d',
-    'nbextensions/exa/utility'
-], function(ContainerGUI, App3D, utility) {
+    'nbextensions/exa/utility',
+    'nbextensions/exa/atomic/field'
+], function(ContainerGUI, App3D, utility, CubeField) {
     class UniverseApp {
         /*"""
         UniverseApp
@@ -43,6 +48,7 @@ define([
             this.app3d = new App3D(this.view.canvas);
             this.create_gui();
 
+            this.update_fields();
             this.render_current_frame();
 
             this.view.container.append(this.gui.domElement);
@@ -66,13 +72,15 @@ define([
             ---------------
             Helper function for retrieving data from the view.
             */
-            var value = undefined;
-            try {
-                value = obj[index];
-            } catch(err) {
-                console.log(err)
+            if (obj === undefined) {
+                return undefined;
+            } else {
+                var value = obj[index];
+                if (value === undefined) {
+                    return obj;
+                };
+                return value;
             };
-            return value;
         };
 
         update_vars() {
@@ -82,16 +90,20 @@ define([
             Set up some application variables.
             */
             // frame
-            this.idx = 0;
-            this.last_index = this.num_frames - 1;
             if (typeof this.view.framelist === 'number') {
                 this.framelist = [this.view.framelist];
             } else {
                 this.framelist = this.view.framelist;
             };
+            this.idx = 0;
             this.num_frames = this.framelist.length;
+            this.last_index = this.num_frames - 1;
             this.current_frame = this.framelist[this.idx];
-            this.fps = this.view.fps;
+
+            this.atoms_meshes = [];
+            this.bonds_meshes = [];
+            this.cell_meshes = [];
+            this.field_meshes = [];
         };
 
         create_gui() {
@@ -101,33 +113,130 @@ define([
             Create the application's control set.
             */
             var self = this;
+            this.playing = false;
+            this.play_id = undefined;
             this.gui = new ContainerGUI(this.view.gui_width);
 
             this.top = {
-                'play': function() {
-                    console.log('clicked play');
+                'pause': function() {
+                    self.playing = false;
+                    clearInterval(self.play_id);
                 },
-                'playbar': this.idx,
+                'play': function() {
+                    if (self.playing === true) {
+                        self.top.pause()
+                    } else {
+                        self.playing = true;
+                        if (self.idx === self.last_index) {
+                            self.top.index_slider.setValue(0);
+                        };
+                        self.play_id = setInterval(function() {
+                            if (self.idx < self.last_index) {
+                                self.top.index_slider.setValue(self.idx+1);
+                            } else {
+                                self.top.pause();
+                            };
+                        }, 1000 / self.top.fps);
+                    };
+                },
+                'index': 0,
                 'frame': this.current_frame,
-                'fps': this.fps,
+                'fps': this.view.fps,
             };
-
             this.top['play_button'] = this.gui.add(this.top, 'play');
-            this.top['playbar_slider'] = this.gui.add(this.top, 'playbar', 0, this.last_index, 1);
+            this.top['index_slider'] = this.gui.add(this.top, 'index', 0, this.last_index);
             this.top['frame_dropdown'] = this.gui.add(this.top, 'frame', this.framelist);
-            this.top['fps'] = this.gui.add(this.top, 'fps', 0, 60);
+            this.top['fps_slider'] = this.gui.add(this.top, 'fps').min(0).max(240).step(1);
+            this.top.index_slider.onChange(function(index) {
+                self.idx = index;
+                self.current_frame = self.framelist[self.idx];
+                self.top['index'] = self.idx;
+                self.top['frame'] = self.current_frame;
+                self.top.frame_dropdown.setValue(self.current_frame);
+                self.update_fields();
+                self.render_current_frame();
+            });
+            this.top.index_slider.onFinishChange(function(index) {
+                self.update_fields();
+            });
+            this.top.fps_slider.onFinishChange(function(value) {
+                self.top.fps = value;
+            });
 
-            this.top.playbar_slider.onChange(function(index) {
-                console.log(index);
+            this.display = {
+                'cell': false,
+            };
+            this.display['folder'] = this.gui.addFolder('display');
+            this.display['cell_checkbox'] = this.display.folder.add(this.display, 'cell');
+
+            this.display.cell_checkbox.onFinishChange(function(value) {
+                self.display.cell = value;
+                self.render_cell();
             });
 
             this.fields = {
                 'isovalue': 0.03,
-                'field': 0,
+                'field': '',
+                'cur_fields': []
             };
-            this.fields['folder'] = this.gui.addFolder('fields');
 
-            this.display = this.gui.addFolder('display');
+            this.fields['folder'] = this.gui.addFolder('fields');
+            this.fields['isovalue_slider'] = this.fields.folder.add(this.fields, 'isovalue', 0.0001, 0.5);
+            this.fields['field_dropdown'] = this.fields.folder.add(this.fields, 'field', this.fields['cur_fields']);
+            this.fields.field_dropdown.onFinishChange(function(field_index) {
+                self.fields['field'] = field_index;
+                console.log(field_index);
+                self.render_field();
+            });
+            this.fields.isovalue_slider.onFinishChange(function(value) {
+                self.fields.isovalue = value;
+                self.render_field();
+            });
+        };
+
+        update_fields() {
+            /*"""
+            update_fields
+            ---------------
+            Updates available fields for the given frame and selection
+            */
+            var self = this;
+            console.log('update_fields');
+            var field_indices = this.gv(this.view.field_indices, this.idx);
+            this.fields['cur_fields'] = field_indices;
+            this.fields.folder.__controllers[1].remove();
+            this.fields['field_dropdown'] = this.fields.folder.add(this.fields, 'field', this.fields['cur_fields']);
+            this.fields.field_dropdown.onFinishChange(function(field_index) {
+                self.fields['field'] = field_index;
+                self.render_field();
+            });
+        };
+
+        render_field() {
+            /*"""
+            render_field
+            --------------
+            */
+            console.log('render_field');
+            var nx = this.gv(this.view.ufield3d_nx, this.idx);
+            var ny = this.gv(this.view.ufield3d_ny, this.idx);
+            var nz = this.gv(this.view.ufield3d_nz, this.idx);
+            var ox = this.gv(this.view.ufield3d_ox, this.idx);
+            var oy = this.gv(this.view.ufield3d_oy, this.idx);
+            var oz = this.gv(this.view.ufield3d_oz, this.idx);
+            var xi = this.gv(this.view.ufield3d_xi, this.idx);
+            var xj = this.gv(this.view.ufield3d_xj, this.idx);
+            var xk = this.gv(this.view.ufield3d_xk, this.idx);
+            var yi = this.gv(this.view.ufield3d_yi, this.idx);
+            var yj = this.gv(this.view.ufield3d_yj, this.idx);
+            var yk = this.gv(this.view.ufield3d_yk, this.idx);
+            var zi = this.gv(this.view.ufield3d_zi, this.idx);
+            var zj = this.gv(this.view.ufield3d_zj, this.idx);
+            var zk = this.gv(this.view.ufield3d_zk, this.idx);
+            var values = this.gv(this.view.field_values, this.fields['field']);
+            this.cube_field = new CubeField(ox, oy, oz, nx, ny, nz, xi, xj, xk, yi, yj, yk, zi, zj, zk, values);
+            this.app3d.remove_meshes(this.cube_field_mesh);
+            this.cube_field_mesh = this.app3d.add_scalar_field(this.cube_field, this.fields.isovalue, 2);
         };
 
         render_current_frame() {
@@ -144,13 +253,45 @@ define([
             var z = this.gv(this.view.atom_z, this.idx);
             var v0 = this.gv(this.view.two_bond0, this.idx);
             var v1 = this.gv(this.view.two_bond1, this.idx);
-            this.app3d.scene.remove(this.atoms);
-            this.atoms = this.app3d.add_points(x, y, z, colors, radii);
-            this.app3d.scene.remove(this.bonds);
+            this.app3d.scene.remove(this.atom_meshes);
+            this.atom_meshes = this.app3d.add_points(x, y, z, colors, radii);
             if (v0 !== undefined && v1 !== undefined) {
-                this.bonds = this.app3d.add_lines(v0, v1, x, y, z, colors);
+                this.app3d.scene.remove(this.bond_meshes);
+                this.bond_meshes = this.app3d.add_lines(v0, v1, x, y, z, colors);
             };
-            this.app3d.set_camera_from_mesh(this.atoms, 4.0, 4.0, 4.0);
+            if (this.idx === 0) {
+                this.app3d.set_camera_from_mesh(this.atom_meshes[0], 4.0, 4.0, 4.0);
+            };
+        };
+
+        render_cell() {
+            /*"""
+            render_cell
+            -----------
+            Custom rendering function that adds the unit cell.
+            */
+            var ox = this.gv(this.view.frame_ox, this.idx);
+            if (ox === undefined) {
+                return;
+            };
+            var oy = this.gv(this.view.frame_oy, this.idx);
+            var oz = this.gv(this.view.frame_oz, this.idx);
+            var xi = this.gv(this.view.frame_xi, this.idx);
+            var xj = this.gv(this.view.frame_xj, this.idx);
+            var xk = this.gv(this.view.frame_xk, this.idx);
+            var yi = this.gv(this.view.frame_yi, this.idx);
+            var yj = this.gv(this.view.frame_yj, this.idx);
+            var yk = this.gv(this.view.frame_yk, this.idx);
+            var zi = this.gv(this.view.frame_zi, this.idx);
+            var zj = this.gv(this.view.frame_zj, this.idx);
+            var zk = this.gv(this.view.frame_zk, this.idx);
+            var vertices = [];
+            vertices.push([ox, oy, oz]);
+            vertices.push([xi, xj, xk]);
+            vertices.push([yi, yj, yk]);
+            vertices.push([zi, zj, zk]);
+            this.app3d.scene.remove(this.cell_meshes);
+            this.cell_meshes = this.app3d.add_wireframe(vertices);
         };
     };
 

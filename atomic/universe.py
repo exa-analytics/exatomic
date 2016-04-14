@@ -161,6 +161,7 @@ class Universe(Container):
             df.reset_index(inplace=True, drop=True)
             self._field = cls(values, df)
             self._field._set_categories()
+        self._traits_need_update = True
 
     def _custom_container_traits(self):
         '''
