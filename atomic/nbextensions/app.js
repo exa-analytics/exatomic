@@ -99,6 +99,11 @@ define([
             this.num_frames = this.framelist.length;
             this.last_index = this.num_frames - 1;
             this.current_frame = this.framelist[this.idx];
+
+            this.atoms_meshes = [];
+            this.bonds_meshes = [];
+            this.cell_meshes = [];
+            this.field_meshes = [];
         };
 
         create_gui() {
@@ -228,9 +233,9 @@ define([
             var zi = this.gv(this.view.ufield3d_zi, this.idx);
             var zj = this.gv(this.view.ufield3d_zj, this.idx);
             var zk = this.gv(this.view.ufield3d_zk, this.idx);
-            this.cube_field = new CubeField(ox, oy, oz, nx, ny, nz, xi, xj, xk, yi, yj, yk, zi, zj, zk);
+            var values = this.gv(this.view.field_values, this.fields['field']);
+            this.cube_field = new CubeField(ox, oy, oz, nx, ny, nz, xi, xj, xk, yi, yj, yk, zi, zj, zk, values);
             this.app3d.remove_meshes(this.cube_field_mesh);
-            console.log(this.fields.isovalue);
             this.cube_field_mesh = this.app3d.add_scalar_field(this.cube_field, this.fields.isovalue, 2);
         };
 
@@ -248,15 +253,14 @@ define([
             var z = this.gv(this.view.atom_z, this.idx);
             var v0 = this.gv(this.view.two_bond0, this.idx);
             var v1 = this.gv(this.view.two_bond1, this.idx);
-            this.app3d.scene.remove(this.atoms);
-            this.atoms = this.app3d.add_points(x, y, z, colors, radii);
-            this.app3d.scene.remove(this.bonds);
+            this.app3d.scene.remove(this.atom_meshes);
+            this.atom_meshes = this.app3d.add_points(x, y, z, colors, radii);
             if (v0 !== undefined && v1 !== undefined) {
-                this.app3d.scene.remove(this.bonds);
-                this.bonds = this.app3d.add_lines(v0, v1, x, y, z, colors);
+                this.app3d.scene.remove(this.bond_meshes);
+                this.bond_meshes = this.app3d.add_lines(v0, v1, x, y, z, colors);
             };
             if (this.idx === 0) {
-                this.app3d.set_camera_from_mesh(this.atoms, 4.0, 4.0, 4.0);
+                this.app3d.set_camera_from_mesh(this.atom_meshes[0], 4.0, 4.0, 4.0);
             };
         };
 
@@ -286,8 +290,8 @@ define([
             vertices.push([xi, xj, xk]);
             vertices.push([yi, yj, yk]);
             vertices.push([zi, zj, zk]);
-            this.app3d.scene.remove(this.cell);
-            this.cell = this.app3d.add_wireframe(vertices);
+            this.app3d.scene.remove(this.cell_meshes);
+            this.cell_meshes = this.app3d.add_wireframe(vertices);
         };
     };
 
