@@ -67,10 +67,12 @@ class Cube(Editor):
                         'xi': self._xi, 'xj': self._xj, 'xk': self._xk,
                         'yi': self._yi, 'yj': self._yj, 'yk': self._yk,
                         'zi': self._zi, 'zj': self._zj, 'zk': self._zk,
-                        'frame': 0, 'label': self.label})
+                        'frame': 0, 'label': self.label, 'field_type': self.field_type})
         df = df.to_frame().T
         df['frame'] = df['frame'].astype(np.int64)
         df['frame'] = df['frame'].astype('category')
+        df['label'] = df['label'].astype('category')
+        df['field_type'] = df['field_type'].astype('category')
         df['nx'] = df['nx'].astype(np.int64)
         df['ny'] = df['ny'].astype(np.int64)
         df['nz'] = df['nz'].astype(np.int64)
@@ -109,37 +111,54 @@ class Cube(Editor):
         is easy. Also parse out metadata (comments).
         '''
         nat, ox, oy, oz = self[2].split()
-        nx, xi, xj, xk = self[3].split()
-        ny, yi, yj, yk = self[4].split()
-        nz, zi, zj, zk = self[5].split()
-        self._nat = int(nat)
-        self._nx = int(nx)
-        self._ny = int(ny)
-        self._nz = int(nz)
+        nx, dxi, dxj, dxk = self[3].split()
+        ny, dyi, dyj, dyk = self[4].split()
+        nz, dzi, dzj, dzk = self[5].split()
+        nx = int(nx)
+        ny = int(ny)
+        nz = int(nz)
+        nat = int(nat)
+        ox = float(ox)
+        oy = float(oy)
+        oz = float(oz)
+        dxi = float(dxi)
+        dxj = float(dxj)
+        dxk = float(dxk)
+        dyi = float(dyi)
+        dyj = float(dyj)
+        dyk = float(dyk)
+        dzi = float(dzi)
+        dzj = float(dzj)
+        dzk = float(dzk)
+        self._nat = nat
+        self._nx = nx
+        self._ny = ny
+        self._nz = nz
+        self._ox = ox
+        self._oy = oy
+        self._oz = oz
         self._unit = 'au'
         if self._nx < 0 or self._ny < 0 or self._nz < 0:
             self._unit = 'A'
             self._nx = abs(self._nx)
             self._ny = abs(self._ny)
             self._nz = abs(self._nz)
-        self._ox = float(ox)
-        self._oy = float(oy)
-        self._oz = float(oz)
-        self._xi = float(xi)
-        self._xj = float(xj)
-        self._xk = float(xk)
-        self._yi = float(yi)
-        self._yj = float(yj)
-        self._yk = float(yk)
-        self._zi = float(zi)
-        self._zj = float(zj)
-        self._zk = float(zk)
+        self._xi = ox + nx * dxi
+        self._xj = nx * dxj
+        self._xk = nx * dxk
+        self._yi = ny * dyi
+        self._yj = oy + ny * dyj
+        self._yk = ny * dyk
+        self._zi = nz * dzi
+        self._zj = nz * dzj
+        self._zk = oz + nz * dzk
         self._volume_data_start = 6 + self._nat
         self.meta = {'comments': self[0:2]}
 
-    def __init__(self, *args, label=None, **kwargs):
+    def __init__(self, *args, label=None, field_type=None, **kwargs):
         super().__init__(*args, **kwargs)
         self.label = label
+        self.field_type = field_type
         self._init()
 
 

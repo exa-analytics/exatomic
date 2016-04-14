@@ -131,6 +131,17 @@ class ProjectedAtom(BaseAtom):
                    'symbol': str}
 
 
+class VisAtom(SparseDataFrame):
+    '''
+    Akin to :class:`~atomic.atom.UnitAtom`, this class is used to store a special
+    set of coordinates used specifically for visualization. Typically these coordinates
+    are the unit cell coordinates of a periodic system with select atoms translated
+    so as not to break apart molecules across the periodic boundary.
+    '''
+    _indices = ['atom']
+    _columns = ['x', 'y', 'z']
+
+
 def compute_unit_atom(universe):
     '''
     Compute the unit cell coordinates of the atoms.
