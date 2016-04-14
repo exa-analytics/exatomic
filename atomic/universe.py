@@ -168,7 +168,7 @@ class Universe(Container):
         Create custom traits using multiple (related) dataframes.
         '''
         traits = {}
-        if self._is('_two'):
+        if self._is('_two') or self._is('_periodic_two'):
             traits = self.two._get_bond_traits(self.atom['label'])
         return traits
 

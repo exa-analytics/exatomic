@@ -71,8 +71,8 @@ class Cube(Editor):
         df = df.to_frame().T
         df['frame'] = df['frame'].astype(np.int64)
         df['frame'] = df['frame'].astype('category')
-        df['label'] = df['label'].astype('category')
-        df['field_type'] = df['field_type'].astype('category')
+        #df['label'] = df['label'].astype('category')
+        #df['field_type'] = df['field_type'].astype('category')
         df['nx'] = df['nx'].astype(np.int64)
         df['ny'] = df['ny'].astype(np.int64)
         df['nz'] = df['nz'].astype(np.int64)
