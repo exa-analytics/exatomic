@@ -220,12 +220,18 @@ def _periodic_in_mem(universe, k, dmin, dmax, bond_extra, compute_symbols,
     frames = np.concatenate(frames)
     df = pd.DataFrame.from_dict({'distance': distances, 'frame': frames,
                                   'prjd_atom0': index1, 'prjd_atom1': index2})
-    df = df[(df['distance'] > dmin) & (df['distance'] < dmax)]
-    df['id'] = unordered_pairing(df['prjd_atom0'].values, df['prjd_atom1'].values)
-    df = df.drop_duplicates('id').reset_index(drop=True)
     df['prjd_atom0'] = df['prjd_atom0'].astype('category')
     df['prjd_atom1'] = df['prjd_atom1'].astype('category')
+    df = df[(df['distance'] > dmin) & (df['distance'] < dmax)]
+    atom = universe.projected_atom['atom']
+    df['atom0'] = df['prjd_atom0'].map(atom)
+    df['atom1'] = df['prjd_atom1'].map(atom)
+    del atom
+    df['id'] = unordered_pairing(df['atom0'].values, df['atom1'].values)
+    df = df.drop_duplicates('id').reset_index(drop=True)
     del df['id']
+    del df['atom0']
+    del df['atom1']
     symbols = universe.projected_atom['symbol']
     df['symbol1'] = df['prjd_atom0'].map(symbols)
     df['symbol2'] = df['prjd_atom1'].map(symbols)
