@@ -97,7 +97,7 @@ class Universe(Container):
     def two(self):
         if not self._is('_two') and not self._is('_periodic_two'):
             self.compute_two_body()
-        elif self._is('_periodic_two'):
+        if self._is('_periodic_two'):
             return self._periodic_two
         return self._two
 
@@ -168,8 +168,11 @@ class Universe(Container):
         Create custom traits using multiple (related) dataframes.
         '''
         traits = {}
-        if self._is('_two') or self._is('_periodic_two'):
+        if self._is('_two'):
             traits = self.two._get_bond_traits(self.atom['label'])
+        elif self._is('_periodic_two'):
+            label = self.projected_atom['atom'].map(self.atom['label'])
+            traits = self.two._get_bond_traits(label)
         return traits
 
     def compute_two_body(self, *args, truncate_projected=True, in_mem=False, **kwargs):

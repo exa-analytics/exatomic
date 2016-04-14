@@ -89,17 +89,7 @@ define([
             ----------------
             Set up some application variables.
             */
-            // frame
-            if (typeof this.view.framelist === 'number') {
-                this.framelist = [this.view.framelist];
-            } else {
-                this.framelist = this.view.framelist;
-            };
-            this.idx = 0;
-            this.num_frames = this.framelist.length;
-            this.last_index = this.num_frames - 1;
-            this.current_frame = this.framelist[this.idx];
-
+            this.last_index = this.view.framelist.length - 1;
             this.atoms_meshes = [];
             this.bonds_meshes = [];
             this.cell_meshes = [];
@@ -121,18 +111,19 @@ define([
                 'pause': function() {
                     self.playing = false;
                     clearInterval(self.play_id);
+                    self.top.frame_dropdown.setValue(self.view.framelist[self.top.index]);
                 },
                 'play': function() {
                     if (self.playing === true) {
                         self.top.pause()
                     } else {
                         self.playing = true;
-                        if (self.idx === self.last_index) {
+                        if (self.top.index === self.last_index) {
                             self.top.index_slider.setValue(0);
                         };
                         self.play_id = setInterval(function() {
-                            if (self.idx < self.last_index) {
-                                self.top.index_slider.setValue(self.idx+1);
+                            if (self.top.index < self.last_index) {
+                                self.top.index_slider.setValue(self.top.index+1);
                             } else {
                                 self.top.pause();
                             };
@@ -140,27 +131,31 @@ define([
                     };
                 },
                 'index': 0,
-                'frame': this.current_frame,
+                'frame': this.view.framelist[0],
                 'fps': this.view.fps,
             };
             this.top['play_button'] = this.gui.add(this.top, 'play');
-            this.top['index_slider'] = this.gui.add(this.top, 'index', 0, this.last_index);
-            this.top['frame_dropdown'] = this.gui.add(this.top, 'frame', this.framelist);
+            this.top['index_slider'] = this.gui.add(this.top, 'index').min(0).max(this.last_index).step(1);
+            this.top['frame_dropdown'] = this.gui.add(this.top, 'frame', this.view.framelist);
             this.top['fps_slider'] = this.gui.add(this.top, 'fps').min(0).max(240).step(1);
             this.top.index_slider.onChange(function(index) {
-                self.idx = index;
-                self.current_frame = self.framelist[self.idx];
-                self.top['index'] = self.idx;
-                self.top['frame'] = self.current_frame;
-                self.top.frame_dropdown.setValue(self.current_frame);
+                self.top.index = index;
+                self.top.frame = self.view.framelist[self.top.index];
                 self.update_fields();
                 self.render_current_frame();
             });
             this.top.index_slider.onFinishChange(function(index) {
-                self.update_fields();
-            });
+                self.top.index = index;
+                self.top.frame = self.view.framelist[self.top.index];
+                self.top.frame_dropdown.setValue(self.top.frame);
+            })
             this.top.fps_slider.onFinishChange(function(value) {
                 self.top.fps = value;
+            });
+            this.top.frame_dropdown.onFinishChange(function(value) {
+                self.top.frame = value;
+                self.top.index = self.view.framelist.indexOf(self.top.frame);
+                self.top.index_slider.setValue(self.top.index);
             });
 
             this.display = {
@@ -185,7 +180,6 @@ define([
             this.fields['field_dropdown'] = this.fields.folder.add(this.fields, 'field', this.fields['cur_fields']);
             this.fields.field_dropdown.onFinishChange(function(field_index) {
                 self.fields['field'] = field_index;
-                console.log(field_index);
                 self.render_field();
             });
             this.fields.isovalue_slider.onFinishChange(function(value) {
@@ -201,8 +195,7 @@ define([
             Updates available fields for the given frame and selection
             */
             var self = this;
-            console.log('update_fields');
-            var field_indices = this.gv(this.view.field_indices, this.idx);
+            var field_indices = this.gv(this.view.field_indices, this.top.index);
             this.fields['cur_fields'] = field_indices;
             this.fields.folder.__controllers[1].remove();
             this.fields['field_dropdown'] = this.fields.folder.add(this.fields, 'field', this.fields['cur_fields']);
@@ -217,22 +210,21 @@ define([
             render_field
             --------------
             */
-            console.log('render_field');
-            var nx = this.gv(this.view.ufield3d_nx, this.idx);
-            var ny = this.gv(this.view.ufield3d_ny, this.idx);
-            var nz = this.gv(this.view.ufield3d_nz, this.idx);
-            var ox = this.gv(this.view.ufield3d_ox, this.idx);
-            var oy = this.gv(this.view.ufield3d_oy, this.idx);
-            var oz = this.gv(this.view.ufield3d_oz, this.idx);
-            var xi = this.gv(this.view.ufield3d_xi, this.idx);
-            var xj = this.gv(this.view.ufield3d_xj, this.idx);
-            var xk = this.gv(this.view.ufield3d_xk, this.idx);
-            var yi = this.gv(this.view.ufield3d_yi, this.idx);
-            var yj = this.gv(this.view.ufield3d_yj, this.idx);
-            var yk = this.gv(this.view.ufield3d_yk, this.idx);
-            var zi = this.gv(this.view.ufield3d_zi, this.idx);
-            var zj = this.gv(this.view.ufield3d_zj, this.idx);
-            var zk = this.gv(this.view.ufield3d_zk, this.idx);
+            var nx = this.gv(this.view.ufield3d_nx, this.top.index);
+            var ny = this.gv(this.view.ufield3d_ny, this.top.index);
+            var nz = this.gv(this.view.ufield3d_nz, this.top.index);
+            var ox = this.gv(this.view.ufield3d_ox, this.top.index);
+            var oy = this.gv(this.view.ufield3d_oy, this.top.index);
+            var oz = this.gv(this.view.ufield3d_oz, this.top.index);
+            var xi = this.gv(this.view.ufield3d_xi, this.top.index);
+            var xj = this.gv(this.view.ufield3d_xj, this.top.index);
+            var xk = this.gv(this.view.ufield3d_xk, this.top.index);
+            var yi = this.gv(this.view.ufield3d_yi, this.top.index);
+            var yj = this.gv(this.view.ufield3d_yj, this.top.index);
+            var yk = this.gv(this.view.ufield3d_yk, this.top.index);
+            var zi = this.gv(this.view.ufield3d_zi, this.top.index);
+            var zj = this.gv(this.view.ufield3d_zj, this.top.index);
+            var zk = this.gv(this.view.ufield3d_zk, this.top.index);
             var values = this.gv(this.view.field_values, this.fields['field']);
             this.cube_field = new CubeField(ox, oy, oz, nx, ny, nz, xi, xj, xk, yi, yj, yk, zi, zj, zk, values);
             this.app3d.remove_meshes(this.cube_field_mesh);
@@ -245,21 +237,21 @@ define([
             -----------------------
             Renders atoms and bonds in the current frame (using the frame index).
             */
-            var symbols = this.gv(this.view.atom_symbols, this.idx);
+            var symbols = this.gv(this.view.atom_symbols, this.top.index);
             var radii = utility.mapper(symbols, this.view.atom_radii_dict);
             var colors = utility.mapper(symbols, this.view.atom_colors_dict);
-            var x = this.gv(this.view.atom_x, this.idx);
-            var y = this.gv(this.view.atom_y, this.idx);
-            var z = this.gv(this.view.atom_z, this.idx);
-            var v0 = this.gv(this.view.two_bond0, this.idx);
-            var v1 = this.gv(this.view.two_bond1, this.idx);
-            this.app3d.scene.remove(this.atom_meshes);
+            var x = this.gv(this.view.atom_x, this.top.index);
+            var y = this.gv(this.view.atom_y, this.top.index);
+            var z = this.gv(this.view.atom_z, this.top.index);
+            var v0 = this.gv(this.view.two_bond0, this.top.index);
+            var v1 = this.gv(this.view.two_bond1, this.top.index);
+            this.app3d.remove_meshes(this.atom_meshes);
             this.atom_meshes = this.app3d.add_points(x, y, z, colors, radii);
             if (v0 !== undefined && v1 !== undefined) {
-                this.app3d.scene.remove(this.bond_meshes);
+                this.app3d.remove_meshes(this.bond_meshes);
                 this.bond_meshes = this.app3d.add_lines(v0, v1, x, y, z, colors);
             };
-            if (this.idx === 0) {
+            if (this.top.index === 0) {
                 this.app3d.set_camera_from_mesh(this.atom_meshes[0], 4.0, 4.0, 4.0);
             };
         };
@@ -270,127 +262,30 @@ define([
             -----------
             Custom rendering function that adds the unit cell.
             */
-            var ox = this.gv(this.view.frame_ox, this.idx);
+            var ox = this.gv(this.view.frame_ox, this.top.index);
             if (ox === undefined) {
                 return;
             };
-            var oy = this.gv(this.view.frame_oy, this.idx);
-            var oz = this.gv(this.view.frame_oz, this.idx);
-            var xi = this.gv(this.view.frame_xi, this.idx);
-            var xj = this.gv(this.view.frame_xj, this.idx);
-            var xk = this.gv(this.view.frame_xk, this.idx);
-            var yi = this.gv(this.view.frame_yi, this.idx);
-            var yj = this.gv(this.view.frame_yj, this.idx);
-            var yk = this.gv(this.view.frame_yk, this.idx);
-            var zi = this.gv(this.view.frame_zi, this.idx);
-            var zj = this.gv(this.view.frame_zj, this.idx);
-            var zk = this.gv(this.view.frame_zk, this.idx);
+            var oy = this.gv(this.view.frame_oy, this.top.index);
+            var oz = this.gv(this.view.frame_oz, this.top.index);
+            var xi = this.gv(this.view.frame_xi, this.top.index);
+            var xj = this.gv(this.view.frame_xj, this.top.index);
+            var xk = this.gv(this.view.frame_xk, this.top.index);
+            var yi = this.gv(this.view.frame_yi, this.top.index);
+            var yj = this.gv(this.view.frame_yj, this.top.index);
+            var yk = this.gv(this.view.frame_yk, this.top.index);
+            var zi = this.gv(this.view.frame_zi, this.top.index);
+            var zj = this.gv(this.view.frame_zj, this.top.index);
+            var zk = this.gv(this.view.frame_zk, this.top.index);
             var vertices = [];
             vertices.push([ox, oy, oz]);
             vertices.push([xi, xj, xk]);
             vertices.push([yi, yj, yk]);
             vertices.push([zi, zj, zk]);
-            this.app3d.scene.remove(this.cell_meshes);
+            this.app3d.remove_meshes(this.cell_meshes);
             this.cell_meshes = this.app3d.add_wireframe(vertices);
         };
     };
-
-/*    AtomicApp.prototype.init_gui = function() {
-        var self = this;
-        this.f1f = this.gui.addFolder('animation');
-        this.f2f = this.gui.addFolder('atoms');
-        this.f3f = this.gui.addFolder('bonds');
-        this.f4f = this.gui.addFolder('fields');
-        this.f5f = this.gui.addFolder('cells');
-
-        this.playing = false;
-        this.f1 = {
-            pause: function() {
-                this.playing = false;
-                clearInterval(this._play_callback);
-            },
-            play: function() {
-                if (this.playing == true) {
-                    this.pause();
-                } else {
-                    this.playing = true;
-                    if (self.index == self.last_frame_index) {
-                        self.index = 0;
-                        self.frame = self.framelist[self.index];
-                        self.f1o.slider.setValue(self.index);
-                        self.f1p.framelist.setValue(self.frame);
-                    };
-                    this._play_callback = setInterval(function() {
-                        if (self.index < self.last_frame_index) {
-                            self.index += 1;
-                            self.frame = self.framelist[self.index];
-                            self.f1o.slider.setValue(self.index);
-                            self.f1p.framelist.setValue(self.frame);
-                        } else {
-                            self.f1.pause();
-                        };
-                    }, 1000 / self.fps);
-                };
-            },
-            index: this.index,
-            frame: this.frame,
-            fps: this.fps,
-            track: false,
-        };
-
-        this.f1o = {
-            'play': this.f1f.add(this.f1, 'play'),
-            'slider': this.f1f.add(this.f1, 'index', 0, this.last_frame_index),
-            'framelist': this.f1f.add(this.f1, 'frame', this.view.framelist),
-            'fps': this.f1f.add(this.f1, 'fps', 1, 60, 1),
-            'track': this.f1f.add(this.f1, 'track'),
-        };
-
-        this.f1o.framelist.onChange(function(frame) {
-            self.frame = frame;
-            self.index = self.framelist.indexOf(self.frame);
-            console.log('framelist onchange');
-        });
-
-        this.f1o.slider.onChange(function(index) {
-            self.index = index;
-            console.log('slider change');
-        });
-
-        this.f1o.slider.onFinishChange(function(index) {
-            self.index = index;
-            self.frame = self.framelist[self.index];
-            console.log('slider finish change');
-        });
-    };
-
-
-    AtomicApp.prototype.render_atoms =  function(index) {
-        this.index = index;
-        var symbols = this.get_value(this.view.atom_symbols, this.index);
-        var radii = utility.mapper(symbols, this.view.atom_radii_dict);
-        var colors = utility.mapper(symbols, this.view.atom_colors_dict);
-        var x = this.get_value(this.view.atom_x, this.index);
-        var y = this.get_value(this.view.atom_y, this.index);
-        var z = this.get_value(this.view.atom_z, this.index);
-        var v0 = this.get_value(this.view.two_bond0, this.index);
-        var v1 = this.get_value(this.view.two_bond1, this.index);
-        this.app3d.scene.remove(this.atoms);
-        this.atoms = this.app3d.add_points(x, y, z, colors, radii);
-        this.app3d.scene.remove(this.bonds);
-        this.bonds = this.app3d.add_lines(v0, v1, x, y, z, colors);
-        this.app3d.set_camera_from_geometry(x, y, z, this.atoms.geometry, 4.0, 4.0, 4.0);
-    };
-
-
-    AtomicApp.prototype.get_value = function(obj, index) {
-        var value = obj[index];
-        if (value == undefined) {
-            return obj;
-        } else {
-            return value;
-        };
-    };*/
 
     return UniverseApp;
 });

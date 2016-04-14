@@ -59,8 +59,8 @@ class Two(DataFrame):
         df['label0'] = df[self._index_prefix + '0'].map(labels)
         df['label1'] = df[self._index_prefix + '1'].map(labels)
         grps = df.groupby('frame')
-        b0 = grps.apply(lambda g: g['label0'].astype(np.int32).values).to_json(orient='values')
-        b1 = grps.apply(lambda g: g['label1'].astype(np.int32).values).to_json(orient='values')
+        b0 = grps.apply(lambda g: g['label0'].values).to_json(orient='values')
+        b1 = grps.apply(lambda g: g['label1'].values).to_json(orient='values')
         del grps, df
         return {'two_bond0': Unicode(b0).tag(sync=True), 'two_bond1': Unicode(b1).tag(sync=True)}
 
@@ -210,7 +210,7 @@ def _periodic_in_mem(universe, k, dmin, dmax, bond_extra, compute_symbols,
         uxyz = unit_grps.get_group(frame)[['x', 'y', 'z']]
         dists, idxs = cKDTree(pxyz).query(uxyz, k=k)    # Distances computed using k-d tree
         distances[i] = dists.ravel()
-        index1[i] = prjd.iloc[np.tile(idxs[:, 0], k)].index.values
+        index1[i] = prjd.iloc[np.repeat(idxs[:, 0], k)].index.values
         index2[i] = prjd.iloc[idxs.ravel()].index.values
         frames[i] = np.repeat(frame, len(index1[i]))
     distances = np.concatenate(distances)
@@ -218,7 +218,7 @@ def _periodic_in_mem(universe, k, dmin, dmax, bond_extra, compute_symbols,
     index2 = np.concatenate(index2)
     frames = np.concatenate(frames)
     df = pd.DataFrame.from_dict({'distance': distances, 'frame': frames,
-                                  'prjd_atom0': index1, 'prjd_atom1': index2})  # We will use prjd_atom0/2 to deduplicate data
+                                  'prjd_atom0': index1, 'prjd_atom1': index2})
     df = df[(df['distance'] > dmin) & (df['distance'] < dmax)]
     df['id'] = unordered_pairing(df['prjd_atom0'].values, df['prjd_atom1'].values)
     df = df.drop_duplicates('id').reset_index(drop=True)
