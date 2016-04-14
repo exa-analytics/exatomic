@@ -59,8 +59,8 @@ class Two(DataFrame):
         df['label0'] = df[self._index_prefix + '0'].map(labels)
         df['label1'] = df[self._index_prefix + '1'].map(labels)
         grps = df.groupby('frame')
-        b0 = grps.apply(lambda g: g['label0'].values).to_json(orient='values')
-        b1 = grps.apply(lambda g: g['label1'].values).to_json(orient='values')
+        b0 = grps.apply(lambda g: g['label0'].astype(np.int64).values).to_json(orient='values')
+        b1 = grps.apply(lambda g: g['label1'].astype(np.int64).values).to_json(orient='values')
         del grps, df
         return {'two_bond0': Unicode(b0).tag(sync=True), 'two_bond1': Unicode(b1).tag(sync=True)}
 
@@ -163,7 +163,8 @@ def _free_in_mem(universe, dmin, dmax, bond_extra, compute_symbols,
     df = pd.DataFrame.from_dict({'atom0': atom0, 'atom1': atom1,
                                'distance': distance, 'frame': frames})
     df = df[(df['distance'] > dmin) & (df['distance'] < dmax)].reset_index(drop=True)
-    df.index.names = ['df']
+    df['atom0'] = df['atom0'].astype('category')
+    df['atom1'] = df['atom1'].astype('category')
     if compute_symbols:
         symbols = universe.atom['symbol'].astype(str)
         df['symbol0'] = df['atom0'].map(symbols)
@@ -174,7 +175,7 @@ def _free_in_mem(universe, dmin, dmax, bond_extra, compute_symbols,
         del df['symbol0']
         del df['symbol1']
     if compute_bonds:
-        df['mbl'] = df['symbols'].astype(str).map(Isotope.symbols_to_radii_map)
+        df['mbl'] = df['symbols'].astype(str).map(Isotope.symbols_to_radii())
         df['mbl'] += bond_extra
         df['bond'] = df['distance'] < df['mbl']
         del df['mbl']
@@ -222,6 +223,8 @@ def _periodic_in_mem(universe, k, dmin, dmax, bond_extra, compute_symbols,
     df = df[(df['distance'] > dmin) & (df['distance'] < dmax)]
     df['id'] = unordered_pairing(df['prjd_atom0'].values, df['prjd_atom1'].values)
     df = df.drop_duplicates('id').reset_index(drop=True)
+    df['prjd_atom0'] = df['prjd_atom0'].astype('category')
+    df['prjd_atom1'] = df['prjd_atom1'].astype('category')
     del df['id']
     symbols = universe.projected_atom['symbol']
     df['symbol1'] = df['prjd_atom0'].map(symbols)
@@ -231,7 +234,7 @@ def _periodic_in_mem(universe, k, dmin, dmax, bond_extra, compute_symbols,
     del df['symbol1']
     del df['symbol2']
     df['symbols'] = df['symbols'].astype('category')
-    df['mbl'] = df['symbols'].map(Isotope.symbols_to_radii_map)
+    df['mbl'] = df['symbols'].map(Isotope.symbols_to_radii())
     if not compute_symbols:
         del df['symbols']
     df['mbl'] += bond_extra
