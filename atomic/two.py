@@ -36,7 +36,7 @@ max_atoms_per_frame = 500
 max_frames = 4000
 max_atoms_per_frame_periodic = 800
 max_frames_periodic = 500
-bond_extra = 0.5
+bond_extra = 0.25
 dmin = 0.3
 dmax = 11.3
 
@@ -248,3 +248,38 @@ def _periodic_in_mem(universe, k, dmin, dmax, bond_extra, compute_symbols,
         df['bond'] = df['distance'] < df['mbl']
     del df['mbl']
     return PeriodicTwo(df)
+
+
+def compute_bond_count(universe):
+    '''
+    Computes bond count (number of bonds associated with a given atom index).
+
+    Args:
+        universe (:class:`~atomic.universe.Universe`): Atomic universe
+
+    Returns:
+        counts (:class:`~numpy.ndarray`): Bond counts
+
+    Note:
+        If counting bonds of a periodic universe the returned counts correspond
+        to the projected atom table, otherwise the returned counts corrspond
+        to the atom table.
+    '''
+    if universe.is_periodic:
+        bonds = universe.two[universe.two['bond'] == True]
+        proj_bond_count = bonds['prjd_atom0'].astype(np.int64).value_counts()
+        other = bonds['prjd_atom1'].astype(np.int64).value_counts()
+        proj_bond_count = proj_bond_count.add(other, fill_value=0).astype(np.int64)
+        proj_bond_count = proj_bond_count.to_frame().reset_index()
+        proj_bond_count.columns = ['prjd_atom', 'bond_count']
+        proj_bond_count.set_index('prjd_atom', inplace=True)
+        return proj_bond_count['bond_count']
+    else:
+        bonds = universe.two[universe.two['bond'] == True]
+        atom_bond_count = bonds['atom0'].astype(np.int64).value_counts()
+        other = bonds['atom1'].astype(np.int64).value_counts()
+        atom_bond_count = atom_bond_count.add(other, fill_value=0).astype(np.int64)
+        atom_bond_count = atom_bond_count.to_frame().reset_index()
+        atom_bond_count.columns = ['atom', 'bond_count']
+        atom_bond_count.set_index('atom', inplace=True)
+        return atom_bond_count['bond_count']

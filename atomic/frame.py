@@ -17,6 +17,8 @@ structure, etc.
 +-------------------+----------+-------------------------------------------+
 | oz                | float    | unit cell origin point in z               |
 +-------------------+----------+-------------------------------------------+
+| periodic          | bool     | periodic frame?                           |
++-------------------+----------+-------------------------------------------+
 
 See Also:
     More information on the :class:`~atomic.frame.Frame` concept can be
@@ -97,9 +99,9 @@ class Frame(DataFrame):
         zi = self['zi'].values
         zj = self['zj'].values
         zk = self['zk'].values
-        self['rx'] = vmag3(xi, xj, xk)**0.5
-        self['ry'] = vmag3(yi, yj, yk)**0.5
-        self['rz'] = vmag3(zi, zj, zk)**0.5
+        self['rx'] = vmag3(xi, yi, zi)**0.5
+        self['ry'] = vmag3(xj, yj, zj)**0.5
+        self['rz'] = vmag3(xk, yk, zk)**0.5
 
 
 def minimal_frame(atom):
