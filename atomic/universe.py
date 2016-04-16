@@ -212,7 +212,7 @@ class Universe(Container):
             traits = self.two._get_bond_traits(label)
         return traits
 
-    def compute_two_body(self, *args, truncate_projected=True, in_mem=False, **kwargs):
+    def compute_two_body(self, *args, truncate_projected=True, **kwargs):
         '''
         Compute two body properties for the current universe.
 
@@ -221,7 +221,6 @@ class Universe(Container):
 
         Args:
             truncate_projected (bool): Applicable to periodic universes - decreases the size of the projected atom table
-            in_mem (bool): If false, will follow defaults, if true, will force in memory algorithms
         '''
         if self.is_periodic:
             self._periodic_two = _ctb(self, *args, **kwargs)
