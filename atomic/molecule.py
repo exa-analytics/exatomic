@@ -89,6 +89,10 @@ def _compute_periodic_molecule(universe):
     del universe.projected_atom['xm']
     del universe.projected_atom['ym']
     del universe.projected_atom['zm']
+    frame = universe.atom[['molecule', 'frame']].drop_duplicates('molecule')
+    frame = frame.set_index('molecule')['frame']
+    frame[-1] = -1
+    molecule['frame'] = frame
     return Molecule(molecule)
 
 
@@ -127,4 +131,7 @@ def _compute_free_molecule(universe):
     del universe.atom['xm']
     del universe.atom['ym']
     del universe.atom['zm']
+    frame = universe.atom[['molecule', 'frame']].drop_duplicates('molecule')
+    frame = frame.set_index('molecule')['frame']
+    molecule['frame'] = frame
     return Molecule(molecule)

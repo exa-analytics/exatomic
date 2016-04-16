@@ -14,19 +14,13 @@ class SimpleFormula(pd.Series):
     A simple way of storing a chemical formula that contains no structural
     information. Element symbols are in alphabetical order (e.g. 'B', 'C', 'Cl', 'Uuo')
 
-        >>> water = 'H(2)O(1)'
-        >>> argon = 'Ar(1)'
         >>> water = SimpleFormula('H(2)O(1)')
-
+        >>> naoh = SimpleFormula('Na(1)O(1)H(1)')
+        >>> naoh
+        SimpleFormula('H(1)Na(1)O(1)')
     '''
-    def get_string(self):
-        '''
-        Returns:
-            formula (str): String representation of the chemical formula.
-        '''
-        return ''.join(('{0}({1})'.format(key.title(), self[key]) for key in sorted(self.index)))
-
-    def get_mass(self):
+    @property
+    def mass(self):
         '''
         Returns:
             mass (float): Mass (in atomic units) of the associated formula
@@ -35,6 +29,13 @@ class SimpleFormula(pd.Series):
         df['mass'] = df.index.map(Isotope.symbol_to_mass())
         return (df['mass'] * df['count']).sum()
 
+    def as_string(self):
+        '''
+        Returns:
+            formula (str): String representation of the chemical formula.
+        '''
+        return ''.join(('{0}({1})'.format(key.title(), self[key]) for key in sorted(self.index)))
+
     def __init__(self, data):
         if isinstance(data, str):
             data = string_to_dict(data)
@@ -42,7 +43,7 @@ class SimpleFormula(pd.Series):
         self.index.names = ['symbol']
 
     def __repr__(self):
-        return '{}({})'.format(self.__class__.__name__, self.get_string())
+        return "{}('{}')".format(self.__class__.__name__, self.get_string())
 
     def __str__(self):
         return self.__repr__()
