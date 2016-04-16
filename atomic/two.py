@@ -113,7 +113,7 @@ def compute_two_body(universe, k=None, dmax=dmax, dmin=dmin, bond_extra=bond_ext
     nat = universe.frame['atom_count'].max()
     nf = len(universe.frame)
     if universe.is_periodic:
-        if (nat < max_atoms_per_frame and nf < max_frames) or in_mem:
+        if (nat < max_atoms_per_frame_periodic and nf < max_frames_periodic) or in_mem:
             k = k if k else nat - 1
             return _periodic_in_mem(universe, k, dmin, dmax, bond_extra, compute_symbols,
                                     compute_bonds)
