@@ -156,11 +156,14 @@ class Universe(Container):
             meaning not applicable or not calculated.
         '''
         bc = _cbc(self)
-        return bc
         if self.is_periodic:
             self.projected_atom['bond_count'] = bc
             self.projected_atom['bond_count'].fillna(-1, inplace=True)
-            bc = self.projected_atom[self.projected_atom['bond_count'] > 0].set_index('atom')['bond_count']
+            self.projected_atom['bond_count'] = self.projected_atom['bond_count'].astype(np.int64)
+            bc = bc.to_frame().reset_index()
+            bc['atom'] = bc['prjd_atom'].map(self.projected_atom['atom'])
+            bc.sort_values('bond_count', ascending=False, inplace=True)
+            bc = bc.drop_duplicates('atom').set_index('atom')['bond_count']
         self.atom['bond_count'] = 0
         self.atom['bond_count'] = self.atom['bond_count'].add(bc, fill_value=0).astype(np.int64)
 
