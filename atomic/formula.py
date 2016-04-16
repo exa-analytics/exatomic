@@ -6,19 +6,18 @@ Simple Formula
 import numpy as np
 import pandas as pd
 from atomic import Isotope
+from atomic.error import StringFormulaError
 
 
 class SimpleFormula(pd.Series):
     '''
     A simple way of storing a chemical formula that contains no structural
-    information.
+    information. Element symbols are in alphabetical order (e.g. 'B', 'C', 'Cl', 'Uuo')
 
-    Element symbols are in alphabetical order (e.g. 'B', 'C', 'Cl', 'Uuo')
+        >>> water = 'H(2)O(1)'
+        >>> argon = 'Ar(1)'
+        >>> water = SimpleFormula('H(2)O(1)')
 
-    .. code-block: bash
-
-        'H(2)O(1)'
-        'C(6)H(6)'
     '''
     def get_string(self):
         '''
@@ -36,17 +35,17 @@ class SimpleFormula(pd.Series):
         df['mass'] = df.index.map(Isotope.symbol_to_mass())
         return (df['mass'] * df['count']).sum()
 
-    @classmethod
-    def from_string(cls, formula):
-        '''
-        '''
-        return cls(string_to_dict(formula))
-
-    def __init__(self, *args, **kwargs):
-        kwargs['dtype'] = np.int64
-        super().__init__(*args, **kwargs)
+    def __init__(self, data):
+        if isinstance(data, str):
+            data = string_to_dict(data)
+        super().__init__(data=data, dtype=np.int64, name='count')
         self.index.names = ['symbol']
-        self.name = 'count'
+
+    def __repr__(self):
+        return '{}({})'.format(self.__class__.__name__, self.get_string())
+
+    def __str__(self):
+        return self.__repr__()
 
 
 def string_to_dict(formula):
@@ -60,6 +59,10 @@ def string_to_dict(formula):
         fdict (dict): Dictionary formula representation
     '''
     obj = []
+    if ')' not in formula and len(formula) <= 3 and all((not char.isdigit() for char in formula)):
+        return {formula: 1}
+    elif ')' not in formula:
+        raise StringFormulaError(formula)
     for s in formula.split(')'):
         if s != '':
             symbol, count = s.split('(')

@@ -32,11 +32,11 @@ from exa.algorithms import pdist, unordered_pairing
 from atomic import Isotope
 
 
-max_atoms_per_frame = 500
-max_frames = 4000
-max_atoms_per_frame_periodic = 800
-max_frames_periodic = 500
-bond_extra = 0.25
+max_atoms_per_frame = 1000
+max_frames = 2000
+max_atoms_per_frame_periodic = 500
+max_frames_periodic = 1000
+bond_extra = 0.35
 dmin = 0.3
 dmax = 11.3
 
@@ -88,7 +88,7 @@ class PeriodicTwo(Two):
 
 
 def compute_two_body(universe, k=None, dmax=dmax, dmin=dmin, bond_extra=bond_extra,
-                     compute_bonds=True, compute_symbols=True, in_mem=False):
+                     compute_bonds=True, compute_symbols=True, in_mem=False):    # in_mem is undocumented on purpose...
     '''
     Compute two body information given a universe.
 
