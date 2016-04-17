@@ -34,6 +34,9 @@ from atomic.two import max_atoms_per_frame_periodic as mapfp
 from atomic.two import max_frames as mf
 from atomic.two import max_atoms_per_frame as mapf
 from atomic.two import compute_two_body as _ctb
+from atomic.two import compute_bond_count as _cbc
+from atomic.molecule import Molecule
+from atomic.molecule import compute_molecule as _cm
 
 
 class Universe(Container):
@@ -49,7 +52,8 @@ class Universe(Container):
     # The arguments here should match those of init (for dataframes)
     _df_types = OrderedDict([('frame', Frame), ('atom', Atom), ('two', Two),
                              ('unit_atom', UnitAtom), ('projected_atom', ProjectedAtom),
-                             ('periodic_two', PeriodicTwo), ('field', UField3D)])
+                             ('periodic_two', PeriodicTwo), ('molecule', Molecule),
+                             ('field', UField3D)])
 
     @property
     def is_periodic(self):
@@ -108,6 +112,12 @@ class Universe(Container):
         return self._periodic_two
 
     @property
+    def molecule(self):
+        if not self._is('_molecule'):
+            self.compute_molecule()
+        return self._molecule
+
+    @property
     def field(self):
         return self._field
 
@@ -135,6 +145,33 @@ class Universe(Container):
         Compute the projected supercell from the unit atom coordinates.
         '''
         self._projected_atom = _cpa(self)
+
+    def compute_bond_count(self):
+        '''
+        Compute the bond count and update the atom table.
+
+        Note:
+            If working with a periodic universe, the projected atom table will
+            also be updated; an index of minus takes the usual convention of
+            meaning not applicable or not calculated.
+        '''
+        bc = _cbc(self)
+        if self.is_periodic:
+            self.projected_atom['bond_count'] = bc
+            self.projected_atom['bond_count'].fillna(-1, inplace=True)
+            self.projected_atom['bond_count'] = self.projected_atom['bond_count'].astype(np.int64)
+            bc = bc.to_frame().reset_index()
+            bc['atom'] = bc['prjd_atom'].map(self.projected_atom['atom'])
+            bc.sort_values('bond_count', ascending=False, inplace=True)
+            bc = bc.drop_duplicates('atom').set_index('atom')['bond_count']
+        self.atom['bond_count'] = 0
+        self.atom['bond_count'] = self.atom['bond_count'].add(bc, fill_value=0).astype(np.int64)
+
+    def compute_molecule(self):
+        '''
+        Compute the molecule table.
+        '''
+        self._molecule = _cm(self)
 
     def add_field(self, field, frame=None, field_values=None):
         '''
@@ -175,7 +212,7 @@ class Universe(Container):
             traits = self.two._get_bond_traits(label)
         return traits
 
-    def compute_two_body(self, *args, truncate_projected=True, in_mem=False, **kwargs):
+    def compute_two_body(self, *args, truncate_projected=True, **kwargs):
         '''
         Compute two body properties for the current universe.
 
@@ -184,7 +221,6 @@ class Universe(Container):
 
         Args:
             truncate_projected (bool): Applicable to periodic universes - decreases the size of the projected atom table
-            in_mem (bool): If false, will follow defaults, if true, will force in memory algorithms
         '''
         if self.is_periodic:
             self._periodic_two = _ctb(self, *args, **kwargs)
@@ -203,7 +239,7 @@ class Universe(Container):
 
     def __init__(self, frame=None, atom=None, two=None, field=None,
                  field_values=None, unit_atom=None, projected_atom=None,
-                 periodic_two=None, **kwargs):
+                 periodic_two=None, molecule=None, **kwargs):
         '''
         The arguments field and field_values are paired: field is the dataframe
         containing all of the dimensions of the scalar or vector fields and
@@ -223,6 +259,7 @@ class Universe(Container):
         self._unit_atom = self._enforce_df_type('unit_atom', unit_atom)
         self._projected_atom = self._enforce_df_type('projected_atom', projected_atom)
         self._periodic_two = self._enforce_df_type('periodic_two', periodic_two)
+        self._molecule = self._enforce_df_type('molecule', molecule)
         super().__init__(**kwargs)
         ma = self.frame['atom_count'].max() if self._is('_frame') else 0
         nf = len(self)

@@ -71,6 +71,13 @@ class BaseAtom(DataFrame):
         return {'atom_symbols': symbols, 'atom_radii': radii,
                 'atom_colors': colors}
 
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self._revert_categories()
+        self.ix[self['symbol'].isin(['nan', 'NaN', 'none', 'None']), 'symbol'] = None
+        self['symbol'].fillna('Dga', inplace=True)
+        self._set_categories()
+
 
 class Atom(BaseAtom):
     '''
