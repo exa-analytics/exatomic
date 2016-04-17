@@ -90,9 +90,9 @@ def _compute_periodic_molecule(universe):
     del universe.projected_atom['ym']
     del universe.projected_atom['zm']
     frame = universe.atom[['molecule', 'frame']].drop_duplicates('molecule')
-    frame = frame.set_index('molecule')['frame']
+    frame = frame.set_index('molecule')['frame'].astype(np.int64)
     frame[-1] = -1
-    molecule['frame'] = frame
+    molecule['frame'] = frame.astype('category')
     return Molecule(molecule)
 
 
