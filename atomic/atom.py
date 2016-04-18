@@ -93,6 +93,15 @@ class Atom(BaseAtom):
         else:
             return masses
 
+    def reset_label(self):
+        '''
+        Reset the label column
+        '''
+        if 'label' in self.columns:
+            del self['label']
+        nats = self.groupby('frame').apply(lambda g: len(g)).values
+        self['label'] = [i for nat in nats for i in range(nat)]
+
     def compute_simple_formula(self):
         '''
         Compute the simple formula for each frame.
@@ -177,6 +186,12 @@ def compute_unit_atom(universe):
 def compute_projected_atom(universe):
     '''
     Computes the 3x3x3 supercell coordinates from the unit cell coordinates.
+
+    Args:
+        universe (:class:`~atomic.universe.Universe`): The atomic universe
+
+    Returns:
+        two (:class:`~atomic.two.PeriodicTwo`): Two body distances
     '''
     if not universe.is_periodic:
         raise TypeError('Is this a periodic universe? Check frame for periodic column.')

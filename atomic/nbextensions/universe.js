@@ -114,30 +114,30 @@ define([
             this.get_ufield3d_nx();
             this.get_ufield3d_ny();
             this.get_ufield3d_nz();
-            this.get_ufield3d_xi();
-            this.get_ufield3d_xj();
-            this.get_ufield3d_xk();
-            this.get_ufield3d_yi();
-            this.get_ufield3d_yj();
-            this.get_ufield3d_yk();
-            this.get_ufield3d_zi();
-            this.get_ufield3d_zj();
-            this.get_ufield3d_zk();
+            this.get_ufield3d_dxi();
+            this.get_ufield3d_dxj();
+            this.get_ufield3d_dxk();
+            this.get_ufield3d_dyi();
+            this.get_ufield3d_dyj();
+            this.get_ufield3d_dyk();
+            this.get_ufield3d_dzi();
+            this.get_ufield3d_dzj();
+            this.get_ufield3d_dzk();
             this.model.on('change:ufield3d_ox', this.get_ufield3d_ox, this);
             this.model.on('change:ufield3d_oy', this.get_ufield3d_ox, this);
             this.model.on('change:ufield3d_oz', this.get_ufield3d_ox, this);
             this.model.on('change:ufield3d_nx', this.get_ufield3d_ox, this);
             this.model.on('change:ufield3d_ny', this.get_ufield3d_ox, this);
             this.model.on('change:ufield3d_nz', this.get_ufield3d_ox, this);
-            this.model.on('change:ufield3d_xi', this.get_ufield3d_ox, this);
-            this.model.on('change:ufield3d_xj', this.get_ufield3d_ox, this);
-            this.model.on('change:ufield3d_xk', this.get_ufield3d_ox, this);
-            this.model.on('change:ufield3d_yi', this.get_ufield3d_ox, this);
-            this.model.on('change:ufield3d_yj', this.get_ufield3d_ox, this);
-            this.model.on('change:ufield3d_yk', this.get_ufield3d_ox, this);
-            this.model.on('change:ufield3d_zi', this.get_ufield3d_ox, this);
-            this.model.on('change:ufield3d_zj', this.get_ufield3d_ox, this);
-            this.model.on('change:ufield3d_zk', this.get_ufield3d_ox, this);
+            this.model.on('change:ufield3d_dxi', this.get_ufield3d_ox, this);
+            this.model.on('change:ufield3d_dxj', this.get_ufield3d_ox, this);
+            this.model.on('change:ufield3d_dxk', this.get_ufield3d_ox, this);
+            this.model.on('change:ufield3d_dyi', this.get_ufield3d_ox, this);
+            this.model.on('change:ufield3d_dyj', this.get_ufield3d_ox, this);
+            this.model.on('change:ufield3d_dyk', this.get_ufield3d_ox, this);
+            this.model.on('change:ufield3d_dzi', this.get_ufield3d_ox, this);
+            this.model.on('change:ufield3d_dzj', this.get_ufield3d_ox, this);
+            this.model.on('change:ufield3d_dzk', this.get_ufield3d_ox, this);
         };
 
         get_atom_x() {
@@ -231,32 +231,32 @@ define([
         get_ufield3d_nz() {
             this.ufield3d_nz = this.get_trait('ufield3d_nz');
         };
-        get_ufield3d_xi() {
-            this.ufield3d_xi = this.get_trait('ufield3d_xi');
+        get_ufield3d_dxi() {
+            this.ufield3d_dxi = this.get_trait('ufield3d_dxi');
         };
-        get_ufield3d_xj() {
-            this.ufield3d_xj = this.get_trait('ufield3d_xj');
+        get_ufield3d_dxj() {
+            this.ufield3d_dxj = this.get_trait('ufield3d_dxj');
         };
-        get_ufield3d_xk() {
-            this.ufield3d_xk = this.get_trait('ufield3d_xk');
+        get_ufield3d_dxk() {
+            this.ufield3d_dxk = this.get_trait('ufield3d_dxk');
         };
-        get_ufield3d_yi() {
-            this.ufield3d_yi = this.get_trait('ufield3d_yi');
+        get_ufield3d_dyi() {
+            this.ufield3d_dyi = this.get_trait('ufield3d_dyi');
         };
-        get_ufield3d_yj() {
-            this.ufield3d_yj = this.get_trait('ufield3d_yj');
+        get_ufield3d_dyj() {
+            this.ufield3d_dyj = this.get_trait('ufield3d_dyj');
         };
-        get_ufield3d_yk() {
-            this.ufield3d_yk = this.get_trait('ufield3d_yk');
+        get_ufield3d_dyk() {
+            this.ufield3d_dyk = this.get_trait('ufield3d_dyk');
         };
-        get_ufield3d_zi() {
-            this.ufield3d_zi = this.get_trait('ufield3d_zi');
+        get_ufield3d_dzi() {
+            this.ufield3d_dzi = this.get_trait('ufield3d_dzi');
         };
-        get_ufield3d_zj() {
-            this.ufield3d_zj = this.get_trait('ufield3d_zj');
+        get_ufield3d_dzj() {
+            this.ufield3d_dzj = this.get_trait('ufield3d_dzj');
         };
-        get_ufield3d_zk() {
-            this.ufield3d_zk = this.get_trait('ufield3d_zk');
+        get_ufield3d_dzk() {
+            this.ufield3d_dzk = this.get_trait('ufield3d_dzk');
         };
     };
 

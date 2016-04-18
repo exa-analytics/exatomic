@@ -64,30 +64,28 @@ class Cube(Editor):
                            delim_whitespace=True, header=None).values.ravel()
         df = pd.Series({'ox': self._ox, 'oy': self._oy, 'oz': self._oz,
                         'nx': self._nx, 'ny': self._ny, 'nz': self._nz,
-                        'xi': self._xi, 'xj': self._xj, 'xk': self._xk,
-                        'yi': self._yi, 'yj': self._yj, 'yk': self._yk,
-                        'zi': self._zi, 'zj': self._zj, 'zk': self._zk,
+                        'dxi': self._dxi, 'dxj': self._dxj, 'dxk': self._dxk,
+                        'dyi': self._dyi, 'dyj': self._dyj, 'dyk': self._dyk,
+                        'dzi': self._dzi, 'dzj': self._dzj, 'dzk': self._dzk,
                         'frame': 0, 'label': self.label, 'field_type': self.field_type})
         df = df.to_frame().T
         df['frame'] = df['frame'].astype(np.int64)
         df['frame'] = df['frame'].astype('category')
-        #df['label'] = df['label'].astype('category')
-        #df['field_type'] = df['field_type'].astype('category')
         df['nx'] = df['nx'].astype(np.int64)
         df['ny'] = df['ny'].astype(np.int64)
         df['nz'] = df['nz'].astype(np.int64)
         df['ox'] = df['ox'].astype(np.float64)
         df['oy'] = df['oy'].astype(np.float64)
         df['oz'] = df['oz'].astype(np.float64)
-        df['xi'] = df['xi'].astype(np.float64)
-        df['xj'] = df['xj'].astype(np.float64)
-        df['xk'] = df['xk'].astype(np.float64)
-        df['yi'] = df['yi'].astype(np.float64)
-        df['yj'] = df['yj'].astype(np.float64)
-        df['yk'] = df['yk'].astype(np.float64)
-        df['zi'] = df['zi'].astype(np.float64)
-        df['zj'] = df['zj'].astype(np.float64)
-        df['zk'] = df['zk'].astype(np.float64)
+        df['dxi'] = df['dxi'].astype(np.float64)
+        df['dxj'] = df['dxj'].astype(np.float64)
+        df['dxk'] = df['dxk'].astype(np.float64)
+        df['dyi'] = df['dyi'].astype(np.float64)
+        df['dyj'] = df['dyj'].astype(np.float64)
+        df['dyk'] = df['dyk'].astype(np.float64)
+        df['dzi'] = df['dzi'].astype(np.float64)
+        df['dzj'] = df['dzj'].astype(np.float64)
+        df['dzk'] = df['dzk'].astype(np.float64)
         fields = [Series(data[~np.isnan(data)])]
         self._field = UField3D(fields, df)
 
@@ -121,15 +119,15 @@ class Cube(Editor):
         ox = float(ox)
         oy = float(oy)
         oz = float(oz)
-        dxi = float(dxi)
-        dxj = float(dxj)
-        dxk = float(dxk)
-        dyi = float(dyi)
-        dyj = float(dyj)
-        dyk = float(dyk)
-        dzi = float(dzi)
-        dzj = float(dzj)
-        dzk = float(dzk)
+        self._dxi = float(dxi)
+        self._dxj = float(dxj)
+        self._dxk = float(dxk)
+        self._dyi = float(dyi)
+        self._dyj = float(dyj)
+        self._dyk = float(dyk)
+        self._dzi = float(dzi)
+        self._dzj = float(dzj)
+        self._dzk = float(dzk)
         self._nat = nat
         self._nx = nx
         self._ny = ny
@@ -143,15 +141,6 @@ class Cube(Editor):
             self._nx = abs(self._nx)
             self._ny = abs(self._ny)
             self._nz = abs(self._nz)
-        self._xi = ox + nx * dxi
-        self._xj = nx * dxj
-        self._xk = nx * dxk
-        self._yi = ny * dyi
-        self._yj = oy + ny * dyj
-        self._yk = ny * dyk
-        self._zi = nz * dzi
-        self._zj = nz * dzj
-        self._zk = oz + nz * dzk
         self._volume_data_start = 6 + self._nat
         self.meta = {'comments': self[0:2]}
 

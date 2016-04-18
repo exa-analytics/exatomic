@@ -172,7 +172,7 @@ define([
             this.fields = {
                 'isovalue': 0.03,
                 'field': '',
-                'cur_fields': []
+                'cur_fields': [null]
             };
 
             this.fields['folder'] = this.gui.addFolder('fields');
@@ -196,6 +196,10 @@ define([
             */
             var self = this;
             var field_indices = this.gv(this.view.field_indices, this.top.index);
+            if (field_indices === undefined) {
+                field_indices = [];
+            };
+            field_indices.push(null);
             this.fields['cur_fields'] = field_indices;
             this.fields.folder.__controllers[1].remove();
             this.fields['field_dropdown'] = this.fields.folder.add(this.fields, 'field', this.fields['cur_fields']);
@@ -216,17 +220,18 @@ define([
             var ox = this.gv(this.view.ufield3d_ox, this.top.index);
             var oy = this.gv(this.view.ufield3d_oy, this.top.index);
             var oz = this.gv(this.view.ufield3d_oz, this.top.index);
-            var xi = this.gv(this.view.ufield3d_xi, this.top.index);
-            var xj = this.gv(this.view.ufield3d_xj, this.top.index);
-            var xk = this.gv(this.view.ufield3d_xk, this.top.index);
-            var yi = this.gv(this.view.ufield3d_yi, this.top.index);
-            var yj = this.gv(this.view.ufield3d_yj, this.top.index);
-            var yk = this.gv(this.view.ufield3d_yk, this.top.index);
-            var zi = this.gv(this.view.ufield3d_zi, this.top.index);
-            var zj = this.gv(this.view.ufield3d_zj, this.top.index);
-            var zk = this.gv(this.view.ufield3d_zk, this.top.index);
+            var dxi = this.gv(this.view.ufield3d_dxi, this.top.index);
+            var dxj = this.gv(this.view.ufield3d_dxj, this.top.index);
+            var dxk = this.gv(this.view.ufield3d_dxk, this.top.index);
+            var dyi = this.gv(this.view.ufield3d_dyi, this.top.index);
+            var dyj = this.gv(this.view.ufield3d_dyj, this.top.index);
+            var dyk = this.gv(this.view.ufield3d_dyk, this.top.index);
+            var dzi = this.gv(this.view.ufield3d_dzi, this.top.index);
+            var dzj = this.gv(this.view.ufield3d_dzj, this.top.index);
+            var dzk = this.gv(this.view.ufield3d_dzk, this.top.index);
             var values = this.gv(this.view.field_values, this.fields['field']);
-            this.cube_field = new CubeField(ox, oy, oz, nx, ny, nz, xi, xj, xk, yi, yj, yk, zi, zj, zk, values);
+            this.cube_field = new CubeField(ox, oy, oz, nx, ny, nz, dxi, dxj, dxk,
+                                            dyi, dyj, dyk, dzi, dzj, dzk, values);
             this.app3d.remove_meshes(this.cube_field_mesh);
             this.cube_field_mesh = this.app3d.add_scalar_field(this.cube_field, this.fields.isovalue, 2);
         };

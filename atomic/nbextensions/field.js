@@ -25,20 +25,30 @@ define([
         =============
         JS repr. of .cube file field values and dimensions.
         */
-        constructor(ox, oy, oz, nx, ny, nz, xi, xj, xk, yi, yj, yk, zi, zj, zk, values) {
+        constructor(ox, oy, oz, nx, ny, nz, dxi, dxj, dxk, dyi, dyj, dyk, dzi, dzj, dzk, values) {
+            console.log(ox);
+            console.log(nx);
+            console.log(dxi);
+            console.log(dyj);
+            console.log(dzk);
             var dimensions = {
-                'xmin': ox,
-                'ymin': oy,
-                'zmin': oz,
-                'xmax': Math.sqrt(xi*xi + xj*xj + xk*xk),
-                'ymax': Math.sqrt(yi*yi + yj*yj + yk*yk),
-                'zmax': Math.sqrt(zi*zi + zj*zj + zk*zk),
-                'nx': nx,
-                'ny': ny,
-                'nz': nz
+                'x': gen_array(nx, ox, dxi, dyi, dzi),
+                'y': gen_array(ny, oy, dxj, dyj, dzj),
+                'z': gen_array(nz, oz, dxk, dyk, dzk)
             };
+            console.log(dimensions);
             super(dimensions, values);
         };
+
+    };
+
+    var gen_array = function(nr, or, dx, dy, dz) {
+        var r = new Float32Array(nr);
+        r[0] = or;
+        for (let i=1; i<nr; i++) {
+            r[i] = r[i-1] + dx + dy + dz;
+        };
+        return r;
     };
 
     return CubeField;

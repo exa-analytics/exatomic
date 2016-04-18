@@ -43,7 +43,7 @@ class SimpleFormula(pd.Series):
         self.index.names = ['symbol']
 
     def __repr__(self):
-        return "{}('{}')".format(self.__class__.__name__, self.get_string())
+        return "{}('{}')".format(self.__class__.__name__, self.as_string())
 
     def __str__(self):
         return self.__repr__()
