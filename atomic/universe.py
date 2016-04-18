@@ -264,7 +264,6 @@ class Universe(Container):
         ma = self.frame['atom_count'].max() if self._is('_frame') else 0
         nf = len(self)
         if ma == 0 and nf == 0:
-            self._test = True
             self.name = 'TestUniverse'
             self._widget.width = 950
             self._widget.gui_width = 350

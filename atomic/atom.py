@@ -56,6 +56,15 @@ class BaseAtom(DataFrame):
     _groupbys = ['frame']
     _categories = {'frame': np.int64, 'label': np.int64, 'symbol': str}
 
+    def reset_label(self):
+        '''
+        Reset the label column
+        '''
+        if 'label' in self.columns:
+            del self['label']
+        nats = self.groupby('frame').apply(lambda g: len(g)).values
+        self['label'] = [i for nat in nats for i in range(nat)]
+
     def _get_custom_traits(self):
         '''
         Creates four custom traits; radii, colors, symbols, and symbol codes.
@@ -135,6 +144,11 @@ class ProjectedAtom(BaseAtom):
     _traits = []
     _groupbys = ['frame']
     _categories = {'atom': np.int64, 'frame': np.int64, 'label': np.int64, 'symbol': str}
+
+    def reset_label(self, atom_labels):
+        '''
+        '''
+        self['label'] = self['atom'].map(atom_labels)
 
     def _get_custom_traits(self):
         return {}
