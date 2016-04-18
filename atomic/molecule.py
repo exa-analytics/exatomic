@@ -7,6 +7,7 @@ import numpy as np
 import pandas as pd
 from networkx import Graph
 from networkx.algorithms.components import connected_components
+from itertools import combinations
 from exa import DataFrame
 from atomic import Isotope
 from atomic.formula import dict_to_string
@@ -55,9 +56,19 @@ def _compute_periodic_molecule(universe):
     '''
     Compute the molecule table and indices for a periodic universe.
     '''
-    bonded = universe.two[universe.two['bond'] == True]
+    bonded = universe.two[universe.two['bond'] == True].copy()
+    bonded['atom0'] = bonded['prjd_atom0'].map(universe.projected_atom['atom'])
+    bonded['atom1'] = bonded['prjd_atom1'].map(universe.projected_atom['atom'])
+    df = bonded[['prjd_atom0', 'prjd_atom1']].stack().reset_index(drop=True).to_frame()
+    df['atom'] = bonded[['atom0', 'atom1']].stack().values
+    image_edges = df.groupby('atom').apply(lambda g: list(combinations(g[0], 2))).values
+    del df
+    image_edges = [pair for pairs in image_edges for pair in pairs]
+    bond_edges = bonded[['prjd_atom0', 'prjd_atom1']].values
+    del bonded
     graph = Graph()
-    graph.add_edges_from(bonded[['prjd_atom0', 'prjd_atom1']].values)
+    graph.add_edges_from(image_edges)
+    graph.add_edges_from(bond_edges)
     mapper = {}
     for i, molecule in enumerate(connected_components(graph)):
         for atom in molecule:

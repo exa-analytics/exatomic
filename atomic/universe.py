@@ -150,22 +150,22 @@ class Universe(Container):
         '''
         Compute the bond count and update the atom table.
 
+        Returns:
+            bc (:class:`~pandas.Series`): :class:`~atomic.atom.Atom` bond counts
+            pbc (:class:`~pandas.Series`): :class:`~atomic.atom.PeriodicAtom` bond counts
+
         Note:
             If working with a periodic universe, the projected atom table will
             also be updated; an index of minus takes the usual convention of
             meaning not applicable or not calculated.
         '''
-        bc = _cbc(self)
+        bcs = _cbc(self)
+        bc = bcs[0]
+        self.atom['bond_count'] = bc
         if self.is_periodic:
+            bc = bcs[1]
             self.projected_atom['bond_count'] = bc
             self.projected_atom['bond_count'].fillna(-1, inplace=True)
-            self.projected_atom['bond_count'] = self.projected_atom['bond_count'].astype(np.int64)
-            bc = bc.to_frame().reset_index()
-            bc['atom'] = bc['prjd_atom'].map(self.projected_atom['atom'])
-            bc.sort_values('bond_count', ascending=False, inplace=True)
-            bc = bc.drop_duplicates('atom').set_index('atom')['bond_count']
-        self.atom['bond_count'] = 0
-        self.atom['bond_count'] = self.atom['bond_count'].add(bc, fill_value=0).astype(np.int64)
 
     def compute_molecule(self):
         '''

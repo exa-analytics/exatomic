@@ -36,7 +36,7 @@ max_atoms_per_frame = 1000
 max_frames = 2000
 max_atoms_per_frame_periodic = 500
 max_frames_periodic = 1000
-bond_extra = 0.35
+bond_extra = 0.40
 dmin = 0.3
 dmax = 11.3
 
@@ -55,7 +55,7 @@ class Two(DataFrame):
         '''
         Generate bond traits for the notebook widget.
         '''
-        df = self[self['bond'] == True].copy()
+        df = self.ix[(self['bond'] == True), [self._index_prefix + '0', self._index_prefix + '1', 'frame']].copy()
         df['label0'] = df[self._index_prefix + '0'].map(labels)
         df['label1'] = df[self._index_prefix + '1'].map(labels)
         grps = df.groupby('frame')
@@ -63,18 +63,6 @@ class Two(DataFrame):
         b1 = grps.apply(lambda g: g['label1'].astype(np.int64).values).to_json(orient='values')
         del grps, df
         return {'two_bond0': Unicode(b0).tag(sync=True), 'two_bond1': Unicode(b1).tag(sync=True)}
-
-    def compute_bond_count(self):
-        '''
-        Compute the bond count for each atom.
-
-        Returns:
-            s (:class:`~pandas.Series`): Bond counts for each atom index
-        '''
-        bonded = self[self['bond'] == True]
-        b0 = bonded.groupby('prjd_atom0').size()
-        b1 = bonded.groupby('prjd_atom1').size()
-        return b0.add(b1, fill_value=0)
 
 
 class PeriodicTwo(Two):
@@ -266,20 +254,18 @@ def compute_bond_count(universe):
         to the atom table.
     '''
     if universe.is_periodic:
-        bonds = universe.two[universe.two['bond'] == True]
-        proj_bond_count = bonds['prjd_atom0'].astype(np.int64).value_counts()
-        other = bonds['prjd_atom1'].astype(np.int64).value_counts()
-        proj_bond_count = proj_bond_count.add(other, fill_value=0).astype(np.int64)
-        proj_bond_count = proj_bond_count.to_frame().reset_index()
-        proj_bond_count.columns = ['prjd_atom', 'bond_count']
-        proj_bond_count.set_index('prjd_atom', inplace=True)
-        return proj_bond_count['bond_count']
+        bonds = universe.two[universe.two['bond'] == True].copy()
+        bonds['atom0'] = bonds['prjd_atom0'].map(universe.projected_atom['atom'])
+        bonds['atom1'] = bonds['prjd_atom1'].map(universe.projected_atom['atom'])
+        pb0 = bonds.groupby('prjd_atom0').size()
+        pb1 = bonds.groupby('prjd_atom1').size()
+        pbc = pb0.add(pb1, fill_value=0).astype(np.int64)
+        b0 = bonds.groupby('atom0').size()
+        b1 = bonds.groupby('atom1').size()
+        bc = b0.add(b1, fill_value=0).astype(np.int64)
+        return bc, pbc
     else:
         bonds = universe.two[universe.two['bond'] == True]
-        atom_bond_count = bonds['atom0'].astype(np.int64).value_counts()
-        other = bonds['atom1'].astype(np.int64).value_counts()
-        atom_bond_count = atom_bond_count.add(other, fill_value=0).astype(np.int64)
-        atom_bond_count = atom_bond_count.to_frame().reset_index()
-        atom_bond_count.columns = ['atom', 'bond_count']
-        atom_bond_count.set_index('atom', inplace=True)
-        return atom_bond_count['bond_count']
+        b0 = bonds.groupby('atom0').size()    # Faster than bonds['atom0'].value_counts()
+        b1 = bonds.groupby('atom1').size()
+        return b0.add(b1, fill_value=0).astype(np.int64), None
