@@ -9,7 +9,7 @@ import numpy as np
 import pandas as pd
 from io import StringIO
 from exa import Series
-from atomic import Isotope, Universe, Editor, Atom
+from atomic import Isotope, Universe, Editor, Atom, Length
 from atomic.frame import minimal_frame
 from atomic.field import UField3D
 
@@ -26,6 +26,9 @@ class Cube(Editor):
         cube.field_values        # Displays the list of field values
         uni = cube.to_universe() # Converts the cube file editor to a universe
         uni                      # Renders the cube file
+
+    Warning:
+        Be sure your cube is in atomic units.
     '''
     @property
     def field(self):
@@ -128,19 +131,13 @@ class Cube(Editor):
         self._dzi = float(dzi)
         self._dzj = float(dzj)
         self._dzk = float(dzk)
-        self._nat = nat
-        self._nx = nx
-        self._ny = ny
-        self._nz = nz
+        self._nat = abs(nat)
+        self._nx = abs(nx)
+        self._ny = abs(ny)
+        self._nz = abs(nz)
         self._ox = ox
         self._oy = oy
         self._oz = oz
-        self._unit = 'au'
-        if self._nx < 0 or self._ny < 0 or self._nz < 0:
-            self._unit = 'A'
-            self._nx = abs(self._nx)
-            self._ny = abs(self._ny)
-            self._nz = abs(self._nz)
         self._volume_data_start = 6 + self._nat
         self.meta = {'comments': self[0:2]}
 
