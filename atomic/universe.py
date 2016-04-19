@@ -67,7 +67,7 @@ class Universe(Container):
     def frame(self):
         if not self._is('_frame'):
             if self._is('_atom'):
-                self._frame = minimal_frame(self.atom)
+                self.compute_minimal_frame()
         return self._frame
 
     @property
@@ -133,6 +133,12 @@ class Universe(Container):
             data: Series or dataframe object containing field values
         '''
         return self._field.field_values
+
+    def compute_minimal_frame(self):
+        '''
+        Create a minimal frame using the atom table.
+        '''
+        self._frame = minimal_frame(self.atom)
 
     def compute_unit_atom(self):
         '''

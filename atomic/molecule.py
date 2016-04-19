@@ -42,16 +42,17 @@ def compute_molecule(universe):
     '''
     if 'bond_count' not in universe.atom:    # The bond count is used to find single atoms;
         universe.compute_bond_count()        # single atoms are treated as molecules.
-    bonded = None
+    b0 = None
+    b1 = None
     if universe.is_periodic:
-        bonded = universe.two[universe.two['bond'] == True].copy()
-        bonded['atom0'] = bonded['prjd_atom0'].map(universe.projected_atom['atom'])
-        bonded['atom1'] = bonded['prjd_atom1'].map(universe.projected_atom['atom'])
+        mapper = universe.projected_atom['atom']
+        b0 = bonds['prjd_atom0'].map(mapper)
+        b1 = bonds['prjd_atom1'].map(mapper)
     else:
-        bonded = universe.two[universe.two['bond']]
-    bond_edges = bonded[['atom0', 'atom1']].values
+        b0 = bonds['atom0']
+        b1 = bonds['atom1']
     graph = Graph()
-    graph.add_edges_from(bond_edges)
+    graph.add_edges_from(zip(b0.values, b1.values))
     mapper = {}
     for i, molecule in enumerate(connected_components(graph)):
         for atom in molecule:

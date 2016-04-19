@@ -36,7 +36,7 @@ max_atoms_per_frame = 1000
 max_frames = 2000
 max_atoms_per_frame_periodic = 500
 max_frames_periodic = 1000
-bond_extra = 0.20
+bond_extra = 0.25
 dmin = 0.3
 dmax = 11.3
 
@@ -73,6 +73,23 @@ class PeriodicTwo(Two):
     _index_prefix = 'prjd_atom'
     _indices = ['pbc_two']
     _columns = ['distance', 'prjd_atom0', 'prjd_atom1', 'frame']
+
+    def mapped_atom(self, mapper):
+        '''
+        Maps the projected atom columns back onto their atom indices using a
+        mapper.
+
+        Args:
+            mapper (:class:`~pandas.Series`): Projected atom mapper
+
+        Returns:
+            tup: Tuple of two series objects corresponding to prjd_atom0 and prjd_atom1
+        '''
+        self._revert_categories()
+        b0 = bonds['prjd_atom0'].map(mapper)
+        b1 = bonds['prjd_atom1'].map(mapper)
+        self._set_categories()
+        return b0, b1
 
 
 def compute_two_body(universe, k=None, dmax=dmax, dmin=dmin, bond_extra=bond_extra,
@@ -253,13 +270,16 @@ def compute_bond_count(universe):
         atom indexed. Counts for projected atoms have no meaning/are not
         computed during two body property calculation.
     '''
+    universe.two._revert_categories()
     bonds = universe.two[universe.two['bond'] == True]
     if universe.is_periodic:
-        b0 = bonds['prjd_atom0'].map(universe.projected_atom['atom']).groupby(0).size()
-        b1 = bonds['prjd_atom1'].map(universe.projected_atom['atom']).groupby(0).size()
+        mapper = universe.projected_atom['atom']
+        b0 = bonds['prjd_atom0'].map(mapper).value_counts()
+        b1 = bonds['prjd_atom1'].map(mapper).value_counts()
     else:
         b0 = bonds.groupby('atom0').size()
         b1 = bonds.groupby('atom1').size()
     bc = b0.add(b1, fill_value=0).astype(np.int64)
     bc.index.names = ['atom']
+    universe.two._set_categories()
     return bc
