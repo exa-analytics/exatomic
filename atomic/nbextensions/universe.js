@@ -106,38 +106,40 @@ define([
             this.get_two_bond1();
             this.model.on('change:two_bond0', this.get_two_bond0, this);
             this.model.on('change:two_bond1', this.get_two_bond1, this);
+            console.log(this.two_bond0);
+            console.log(this.two_bond1);
 
             //UField3D
-            this.get_ufield3d_ox();
-            this.get_ufield3d_oy();
-            this.get_ufield3d_oz();
-            this.get_ufield3d_nx();
-            this.get_ufield3d_ny();
-            this.get_ufield3d_nz();
-            this.get_ufield3d_dxi();
-            this.get_ufield3d_dxj();
-            this.get_ufield3d_dxk();
-            this.get_ufield3d_dyi();
-            this.get_ufield3d_dyj();
-            this.get_ufield3d_dyk();
-            this.get_ufield3d_dzi();
-            this.get_ufield3d_dzj();
-            this.get_ufield3d_dzk();
-            this.model.on('change:ufield3d_ox', this.get_ufield3d_ox, this);
-            this.model.on('change:ufield3d_oy', this.get_ufield3d_ox, this);
-            this.model.on('change:ufield3d_oz', this.get_ufield3d_ox, this);
-            this.model.on('change:ufield3d_nx', this.get_ufield3d_ox, this);
-            this.model.on('change:ufield3d_ny', this.get_ufield3d_ox, this);
-            this.model.on('change:ufield3d_nz', this.get_ufield3d_ox, this);
-            this.model.on('change:ufield3d_dxi', this.get_ufield3d_ox, this);
-            this.model.on('change:ufield3d_dxj', this.get_ufield3d_ox, this);
-            this.model.on('change:ufield3d_dxk', this.get_ufield3d_ox, this);
-            this.model.on('change:ufield3d_dyi', this.get_ufield3d_ox, this);
-            this.model.on('change:ufield3d_dyj', this.get_ufield3d_ox, this);
-            this.model.on('change:ufield3d_dyk', this.get_ufield3d_ox, this);
-            this.model.on('change:ufield3d_dzi', this.get_ufield3d_ox, this);
-            this.model.on('change:ufield3d_dzj', this.get_ufield3d_ox, this);
-            this.model.on('change:ufield3d_dzk', this.get_ufield3d_ox, this);
+            this.get_atomicfield_ox();
+            this.get_atomicfield_oy();
+            this.get_atomicfield_oz();
+            this.get_atomicfield_nx();
+            this.get_atomicfield_ny();
+            this.get_atomicfield_nz();
+            this.get_atomicfield_dxi();
+            this.get_atomicfield_dxj();
+            this.get_atomicfield_dxk();
+            this.get_atomicfield_dyi();
+            this.get_atomicfield_dyj();
+            this.get_atomicfield_dyk();
+            this.get_atomicfield_dzi();
+            this.get_atomicfield_dzj();
+            this.get_atomicfield_dzk();
+            this.model.on('change:atomicfield_ox', this.get_atomicfield_ox, this);
+            this.model.on('change:atomicfield_oy', this.get_atomicfield_ox, this);
+            this.model.on('change:atomicfield_oz', this.get_atomicfield_ox, this);
+            this.model.on('change:atomicfield_nx', this.get_atomicfield_ox, this);
+            this.model.on('change:atomicfield_ny', this.get_atomicfield_ox, this);
+            this.model.on('change:atomicfield_nz', this.get_atomicfield_ox, this);
+            this.model.on('change:atomicfield_dxi', this.get_atomicfield_ox, this);
+            this.model.on('change:atomicfield_dxj', this.get_atomicfield_ox, this);
+            this.model.on('change:atomicfield_dxk', this.get_atomicfield_ox, this);
+            this.model.on('change:atomicfield_dyi', this.get_atomicfield_ox, this);
+            this.model.on('change:atomicfield_dyj', this.get_atomicfield_ox, this);
+            this.model.on('change:atomicfield_dyk', this.get_atomicfield_ox, this);
+            this.model.on('change:atomicfield_dzi', this.get_atomicfield_ox, this);
+            this.model.on('change:atomicfield_dzj', this.get_atomicfield_ox, this);
+            this.model.on('change:atomicfield_dzk', this.get_atomicfield_ox, this);
         };
 
         get_atom_x() {
@@ -213,50 +215,50 @@ define([
             this.frame_zk = this.get_trait('frame_zk');
         };
 
-        get_ufield3d_ox() {
-            this.ufield3d_ox = this.get_trait('ufield3d_ox');
+        get_atomicfield_ox() {
+            this.atomicfield_ox = this.get_trait('atomicfield_ox');
         };
-        get_ufield3d_oy() {
-            this.ufield3d_oy = this.get_trait('ufield3d_oy');
+        get_atomicfield_oy() {
+            this.atomicfield_oy = this.get_trait('atomicfield_oy');
         };
-        get_ufield3d_oz() {
-            this.ufield3d_oz = this.get_trait('ufield3d_oz');
+        get_atomicfield_oz() {
+            this.atomicfield_oz = this.get_trait('atomicfield_oz');
         };
-        get_ufield3d_nx() {
-            this.ufield3d_nx = this.get_trait('ufield3d_nx');
+        get_atomicfield_nx() {
+            this.atomicfield_nx = this.get_trait('atomicfield_nx');
         };
-        get_ufield3d_ny() {
-            this.ufield3d_ny = this.get_trait('ufield3d_ny');
+        get_atomicfield_ny() {
+            this.atomicfield_ny = this.get_trait('atomicfield_ny');
         };
-        get_ufield3d_nz() {
-            this.ufield3d_nz = this.get_trait('ufield3d_nz');
+        get_atomicfield_nz() {
+            this.atomicfield_nz = this.get_trait('atomicfield_nz');
         };
-        get_ufield3d_dxi() {
-            this.ufield3d_dxi = this.get_trait('ufield3d_dxi');
+        get_atomicfield_dxi() {
+            this.atomicfield_dxi = this.get_trait('atomicfield_dxi');
         };
-        get_ufield3d_dxj() {
-            this.ufield3d_dxj = this.get_trait('ufield3d_dxj');
+        get_atomicfield_dxj() {
+            this.atomicfield_dxj = this.get_trait('atomicfield_dxj');
         };
-        get_ufield3d_dxk() {
-            this.ufield3d_dxk = this.get_trait('ufield3d_dxk');
+        get_atomicfield_dxk() {
+            this.atomicfield_dxk = this.get_trait('atomicfield_dxk');
         };
-        get_ufield3d_dyi() {
-            this.ufield3d_dyi = this.get_trait('ufield3d_dyi');
+        get_atomicfield_dyi() {
+            this.atomicfield_dyi = this.get_trait('atomicfield_dyi');
         };
-        get_ufield3d_dyj() {
-            this.ufield3d_dyj = this.get_trait('ufield3d_dyj');
+        get_atomicfield_dyj() {
+            this.atomicfield_dyj = this.get_trait('atomicfield_dyj');
         };
-        get_ufield3d_dyk() {
-            this.ufield3d_dyk = this.get_trait('ufield3d_dyk');
+        get_atomicfield_dyk() {
+            this.atomicfield_dyk = this.get_trait('atomicfield_dyk');
         };
-        get_ufield3d_dzi() {
-            this.ufield3d_dzi = this.get_trait('ufield3d_dzi');
+        get_atomicfield_dzi() {
+            this.atomicfield_dzi = this.get_trait('atomicfield_dzi');
         };
-        get_ufield3d_dzj() {
-            this.ufield3d_dzj = this.get_trait('ufield3d_dzj');
+        get_atomicfield_dzj() {
+            this.atomicfield_dzj = this.get_trait('atomicfield_dzj');
         };
-        get_ufield3d_dzk() {
-            this.ufield3d_dzk = this.get_trait('ufield3d_dzk');
+        get_atomicfield_dzk() {
+            this.atomicfield_dzk = this.get_trait('atomicfield_dzk');
         };
     };
 

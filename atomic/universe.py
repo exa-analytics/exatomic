@@ -26,7 +26,7 @@ from atomic.widget import UniverseWidget
 from atomic.frame import minimal_frame, Frame
 from atomic.atom import Atom, ProjectedAtom, UnitAtom
 from atomic.two import Two, PeriodicTwo
-from atomic.field import UField3D
+from atomic.field import AtomicField
 from atomic.atom import compute_unit_atom as _cua
 from atomic.atom import compute_projected_atom as _cpa
 from atomic.two import max_frames_periodic as mfp
@@ -53,7 +53,7 @@ class Universe(Container):
     _df_types = OrderedDict([('frame', Frame), ('atom', Atom), ('two', Two),
                              ('unit_atom', UnitAtom), ('projected_atom', ProjectedAtom),
                              ('periodic_two', PeriodicTwo), ('molecule', Molecule),
-                             ('field', UField3D)])
+                             ('field', AtomicField)])
 
     @property
     def is_periodic(self):
@@ -200,16 +200,28 @@ class Universe(Container):
             self._field._set_categories()
         self._traits_need_update = True
 
+    def slice_by_molecules(self, identifier):
+        '''
+        String, list of string, index, list of indices, slice
+        '''
+        raise NotImplementedError()
+
+    def _slice_by_mids(self, molecule_indices):
+        '''
+        '''
+        raise NotImplementedError()
+
     def _custom_container_traits(self):
         '''
         Create custom traits using multiple (related) dataframes.
         '''
         traits = {}
         if self._is('_two'):
-            traits = self.two._get_bond_traits(self.atom['label'])
+            traits = self.two._get_bond_traits(self.atom)
         elif self._is('_periodic_two'):
-            label = self.projected_atom['atom'].map(self.atom['label'])
-            traits = self.two._get_bond_traits(label)
+            self.projected_atom['label'] = self.projected_atom['atom'].map(self.atom['label'])
+            traits = self.two._get_bond_traits(self.projected_atom)
+            del self.projected_atom['label']
         return traits
 
     def compute_two_body(self, *args, truncate_projected=True, **kwargs):
@@ -261,7 +273,7 @@ class Universe(Container):
         self._periodic_two = self._enforce_df_type('periodic_two', periodic_two)
         self._molecule = self._enforce_df_type('molecule', molecule)
         super().__init__(**kwargs)
-        ma = self.frame['atom_count'].max() if self._is('_frame') else 0
+        ma = self.frame['atom_count'].max() if self._is('_atom') else 0
         nf = len(self)
         if ma == 0 and nf == 0:
             self.name = 'TestUniverse'

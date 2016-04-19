@@ -4,13 +4,16 @@ Field
 ============
 '''
 import numpy as np
-from exa import Field3D
+from exa.numerical import Field
 
 
-class UField3D(Field3D):
+class AtomicField(Field):
     '''
     Class for storing atomic cube data (scalar field of 3D space). Note that
     this class follows the pattern established by the `cube file format`_.
+
+    Note:
+        Supports any shape "cube".
 
     .. _cube file format: http://paulbourke.net/dataformats/cube/
     '''

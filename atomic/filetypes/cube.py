@@ -11,7 +11,7 @@ from io import StringIO
 from exa import Series
 from atomic import Isotope, Universe, Editor, Atom
 from atomic.frame import minimal_frame
-from atomic.field import UField3D
+from atomic.field import AtomicField
 
 
 class Cube(Editor):
@@ -55,7 +55,7 @@ class Cube(Editor):
         Parse the scalar field into a trait aware object.
 
         Note:
-            The :class:`~atomic.field.UField3D` object tracks both the
+            The :class:`~atomic.field.AtomicField` object tracks both the
             field data (i.e. information about the discretization and shape of
             the field's spatial points) as well as the field values (at each of
             those points in space).
@@ -87,7 +87,7 @@ class Cube(Editor):
         df['dzj'] = df['dzj'].astype(np.float64)
         df['dzk'] = df['dzk'].astype(np.float64)
         fields = [Series(data[~np.isnan(data)])]
-        self._field = UField3D(fields, df)
+        self._field = AtomicField(fields, df)
 
     def parse_frame(self):
         '''

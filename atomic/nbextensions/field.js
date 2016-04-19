@@ -19,7 +19,7 @@ require.config({
 define([
     'nbextensions/exa/field'
 ], function(field) {
-    class CubeField extends field.ScalarField {
+    class AtomicField extends field.ScalarField {
         /*"""
         CubeField
         =============
@@ -43,6 +43,13 @@ define([
     };
 
     var gen_array = function(nr, or, dx, dy, dz) {
+        /*"""
+        gen_array
+        =============
+        Generates discrete spatial points in a given basis. Used to generate
+        x, y, z spatial values for the cube field. In most cases, for the x
+        basis vector, dy and dz are zero ("cube-like").
+        */
         var r = new Float32Array(nr);
         r[0] = or;
         for (let i=1; i<nr; i++) {
@@ -51,5 +58,5 @@ define([
         return r;
     };
 
-    return CubeField;
+    return AtomicField;
 });

@@ -97,7 +97,7 @@ class Atom(BaseAtom):
         '''
         Reset the label column
         '''
-        if 'label' in self.columns:
+        if 'label' in self:
             del self['label']
         nats = self.groupby('frame').apply(lambda g: len(g)).values
         self['label'] = [i for nat in nats for i in range(nat)]
@@ -147,6 +147,13 @@ class ProjectedAtom(BaseAtom):
 
     def _get_custom_traits(self):
         return {}
+
+    def reset_label(self, atom_label):
+        '''
+        '''
+        if 'label' in self:
+            del self['label']
+        self['label'] = self['atom'].map(atom_label)
 
 
 class VisAtom(SparseDataFrame):
