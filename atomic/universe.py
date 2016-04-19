@@ -291,3 +291,7 @@ class Universe(Container):
                 self.compute_two_body()
             self._update_traits()
             self._traits_need_update = False
+        if self._is('_atom') and not self._is('_molecule'):
+            if len(self) < 10 and self.frame['atom_count'].max() < 100:
+                pass
+                #self.compute_molecule()

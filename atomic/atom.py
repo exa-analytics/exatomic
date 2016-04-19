@@ -50,6 +50,7 @@ class BaseAtom(DataFrame):
     '''
     Base atom and related datframe.
     '''
+    _precision = 2
     _indices = ['atom']
     _columns = ['x', 'y', 'z', 'symbol', 'frame']
     _traits = ['x', 'y', 'z']

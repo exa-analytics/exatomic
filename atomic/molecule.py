@@ -10,7 +10,6 @@ from networkx.algorithms.components import connected_components
 from itertools import combinations
 from exa import DataFrame
 from atomic import Isotope
-from atomic.formula import dict_to_string
 
 
 class Molecule(DataFrame):
@@ -70,9 +69,8 @@ def compute_molecule(universe):
     universe.atom['ym'] = universe.atom['y'].mul(universe.atom['mass'])
     universe.atom['zm'] = universe.atom['z'].mul(universe.atom['mass'])
     molecules = universe.atom.groupby('molecule')
-    molecule = molecules['symbol'].apply(_molecule_formula).to_frame() # formula column
-    molecule.columns = ['formula']
-    molecule['formula'] = molecule['formula'].astype('category')
+    molecule = molecules['symbol'].value_counts().unstack().fillna(0).astype(np.int64)
+    molecule.columns.name = None
     molecule['mass'] = molecules['mass'].sum()
     molecule['cx'] = molecules['xm'].sum() / molecule['mass']
     molecule['cy'] = molecules['ym'].sum() / molecule['mass']
@@ -85,11 +83,3 @@ def compute_molecule(universe):
     frame = frame.set_index('molecule')['frame'].astype(np.int64)
     molecule['frame'] = frame.astype('category')
     return Molecule(molecule)
-
-
-def _molecule_formula(group):
-    '''
-    Wrapper function around :func:`~atomic.formula.dict_to_string` supporting
-    passing a categorical (series) as an argument.
-    '''
-    return dict_to_string(group.astype(str).value_counts().to_dict())
