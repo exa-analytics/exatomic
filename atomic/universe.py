@@ -159,13 +159,7 @@ class Universe(Container):
             also be updated; an index of minus takes the usual convention of
             meaning not applicable or not calculated.
         '''
-        bcs = _cbc(self)
-        bc = bcs[0]
-        self.atom['bond_count'] = bc
-        if self.is_periodic:
-            bc = bcs[1]
-            self.projected_atom['bond_count'] = bc
-            self.projected_atom['bond_count'].fillna(-1, inplace=True)
+        self.atom['bond_count'] = _cbc(self)
 
     def compute_molecule(self):
         '''

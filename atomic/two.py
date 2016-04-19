@@ -36,7 +36,7 @@ max_atoms_per_frame = 1000
 max_frames = 2000
 max_atoms_per_frame_periodic = 500
 max_frames_periodic = 1000
-bond_extra = 0.40
+bond_extra = 0.20
 dmin = 0.3
 dmax = 11.3
 
@@ -249,23 +249,17 @@ def compute_bond_count(universe):
         counts (:class:`~numpy.ndarray`): Bond counts
 
     Note:
-        If counting bonds of a periodic universe the returned counts correspond
-        to the projected atom table, otherwise the returned counts corrspond
-        to the atom table.
+        For both periodic and non-periodic universes, counts returned are
+        atom indexed. Counts for projected atoms have no meaning/are not
+        computed during two body property calculation.
     '''
+    bonds = universe.two[universe.two['bond'] == True]
     if universe.is_periodic:
-        bonds = universe.two[universe.two['bond'] == True].copy()
-        bonds['atom0'] = bonds['prjd_atom0'].map(universe.projected_atom['atom'])
-        bonds['atom1'] = bonds['prjd_atom1'].map(universe.projected_atom['atom'])
-        pb0 = bonds.groupby('prjd_atom0').size()
-        pb1 = bonds.groupby('prjd_atom1').size()
-        pbc = pb0.add(pb1, fill_value=0).astype(np.int64)
+        b0 = bonds['prjd_atom0'].map(universe.projected_atom['atom']).groupby(0).size()
+        b1 = bonds['prjd_atom1'].map(universe.projected_atom['atom']).groupby(0).size()
+    else:
         b0 = bonds.groupby('atom0').size()
         b1 = bonds.groupby('atom1').size()
-        bc = b0.add(b1, fill_value=0).astype(np.int64)
-        return bc, pbc
-    else:
-        bonds = universe.two[universe.two['bond'] == True]
-        b0 = bonds.groupby('atom0').size()    # Faster than bonds['atom0'].value_counts()
-        b1 = bonds.groupby('atom1').size()
-        return b0.add(b1, fill_value=0).astype(np.int64), None
+    bc = b0.add(b1, fill_value=0).astype(np.int64)
+    bc.index.names = ['atom']
+    return bc

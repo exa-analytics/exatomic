@@ -9,7 +9,10 @@ from exa import Field3D
 
 class UField3D(Field3D):
     '''
-    Class for storing atomic cube data (scalar field of 3D space).
+    Class for storing atomic cube data (scalar field of 3D space). Note that
+    this class follows the pattern established by the `cube file format`_.
+
+    .. _cube file format: http://paulbourke.net/dataformats/cube/
     '''
     _precision = 6
     _groupbys = ['frame']

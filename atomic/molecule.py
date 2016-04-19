@@ -19,8 +19,7 @@ class Molecule(DataFrame):
     '''
     _index = ['molecule']
     _groupbys = ['frame']
-    _categories = {'frame': np.int64}
-
+    _categories = {'frame': np.int64, 'formula': str}
 
 
 def compute_molecule(universe):
@@ -43,52 +42,32 @@ def compute_molecule(universe):
     '''
     if 'bond_count' not in universe.atom:    # The bond count is used to find single atoms;
         universe.compute_bond_count()        # single atoms are treated as molecules.
+    bonded = None
     if universe.is_periodic:
-        return _compute_periodic_molecule(universe)
-    return _compute_free_molecule(universe)
-
-
-def _molecule_formula(group):
-    return dict_to_string(group.astype(str).value_counts().to_dict())
-
-
-def _compute_periodic_molecule(universe):
-    '''
-    Compute the molecule table and indices for a periodic universe.
-    '''
-    bonded = universe.two[universe.two['bond'] == True].copy()
-    bonded['atom0'] = bonded['prjd_atom0'].map(universe.projected_atom['atom'])
-    bonded['atom1'] = bonded['prjd_atom1'].map(universe.projected_atom['atom'])
-    df = bonded[['prjd_atom0', 'prjd_atom1']].stack().reset_index(drop=True).to_frame()
-    df['atom'] = bonded[['atom0', 'atom1']].stack().values
-    image_edges = df.groupby('atom').apply(lambda g: list(combinations(g[0], 2))).values
-    del df
-    image_edges = [pair for pairs in image_edges for pair in pairs]
-    bond_edges = bonded[['prjd_atom0', 'prjd_atom1']].values
-    del bonded
+        bonded = universe.two[universe.two['bond'] == True].copy()
+        bonded['atom0'] = bonded['prjd_atom0'].map(universe.projected_atom['atom'])
+        bonded['atom1'] = bonded['prjd_atom1'].map(universe.projected_atom['atom'])
+    else:
+        bonded = universe.two[universe.two['bond']]
+    bond_edges = bonded[['atom0', 'atom1']].values
     graph = Graph()
-    graph.add_edges_from(image_edges)
     graph.add_edges_from(bond_edges)
     mapper = {}
     for i, molecule in enumerate(connected_components(graph)):
         for atom in molecule:
             mapper[atom] = i
     n = max(mapper.values()) + 1
-    idxs = universe.projected_atom[universe.projected_atom['bond_count'] == 0].index
+    idxs = universe.atom[universe.atom['bond_count'] == 0].index
     for i, index in enumerate(idxs):
         mapper[index] = i + n
-    # Set the molecule indices on the atom and projected_atom tables
-    universe.projected_atom['molecule'] = universe.projected_atom.index.map(lambda idx: mapper[idx] if idx in mapper else -1)
-    del mapper
-    atom_mid_map = universe.projected_atom[universe.projected_atom['molecule'] > -1].set_index('atom')['molecule'].to_dict()
-    universe.atom['molecule'] = universe.atom.index.map(lambda x: atom_mid_map[x] if x in atom_mid_map else -1)
-    del atom_mid_map
+    # Set the molecule indices
+    universe.atom['molecule'] = universe.atom.index.map(lambda idx: mapper[idx])
     # Now compute molecule table
-    universe.projected_atom['mass'] = universe.projected_atom['symbol'].map(Isotope.symbol_to_mass())
-    universe.projected_atom['xm'] = universe.projected_atom['x'].mul(universe.projected_atom['mass'])
-    universe.projected_atom['ym'] = universe.projected_atom['y'].mul(universe.projected_atom['mass'])
-    universe.projected_atom['zm'] = universe.projected_atom['z'].mul(universe.projected_atom['mass'])
-    molecules = universe.projected_atom[universe.projected_atom['molecule'] > -1].groupby('molecule')
+    universe.atom['mass'] = universe.atom['symbol'].map(Isotope.symbol_to_mass())
+    universe.atom['xm'] = universe.atom['x'].mul(universe.atom['mass'])
+    universe.atom['ym'] = universe.atom['y'].mul(universe.atom['mass'])
+    universe.atom['zm'] = universe.atom['z'].mul(universe.atom['mass'])
+    molecules = universe.atom.groupby('molecule')
     molecule = molecules['symbol'].apply(_molecule_formula).to_frame() # formula column
     molecule.columns = ['formula']
     molecule['formula'] = molecule['formula'].astype('category')
@@ -96,15 +75,43 @@ def _compute_periodic_molecule(universe):
     molecule['cx'] = molecules['xm'].sum() / molecule['mass']
     molecule['cy'] = molecules['ym'].sum() / molecule['mass']
     molecule['cz'] = molecules['zm'].sum() / molecule['mass']
-    del universe.projected_atom['mass']
-    del universe.projected_atom['xm']
-    del universe.projected_atom['ym']
-    del universe.projected_atom['zm']
+    del universe.atom['mass']
+    del universe.atom['xm']
+    del universe.atom['ym']
+    del universe.atom['zm']
     frame = universe.atom[['molecule', 'frame']].drop_duplicates('molecule')
     frame = frame.set_index('molecule')['frame'].astype(np.int64)
-    frame[-1] = -1
     molecule['frame'] = frame.astype('category')
     return Molecule(molecule)
+
+
+    if universe.is_periodic:
+        return _compute_periodic_molecule(universe)
+    return _compute_free_molecule(universe)
+
+
+def _molecule_formula(group):
+    '''
+    Wrapper function around :func:`~atomic.formula.dict_to_string` supporting
+    passing a categorical (series) as an argument.
+    '''
+    return dict_to_string(group.astype(str).value_counts().to_dict())
+
+
+def _compute_periodic_molecule(universe):
+    '''
+    Compute the molecule table and indices for a periodic universe.
+
+    Args:
+        universe (:class:`~atomic.universe.Universe`): Atomic universe
+
+    Returns:
+        molecule (:class:`~atomic.molecule.Molecule`): Molecule table
+
+    Note:
+        The universe's atom table will be modified! A new field called
+        "molecule" will be added containing the molecule index for each atom.
+    '''
 
 
 def _compute_free_molecule(universe):
