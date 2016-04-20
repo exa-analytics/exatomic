@@ -10,6 +10,7 @@ from networkx.algorithms.components import connected_components
 from itertools import combinations
 from exa import DataFrame
 from atomic import Isotope
+from atomic.formula import string_to_dict
 
 
 class Molecule(DataFrame):
@@ -18,7 +19,44 @@ class Molecule(DataFrame):
     '''
     _index = ['molecule']
     _groupbys = ['frame']
-    _categories = {'frame': np.int64, 'formula': str}
+    _categories = {'frame': np.int64, 'formula': str, 'classification': object}
+
+    def add_classification(self, *classifiers, overwrite=False):
+        '''
+        Create a "class" column with labels such as "solute" and "solvent".
+
+        .. code-block:: Python
+
+            u.molecule.add_classification(('Na', 'solute'), ('H(2)O(1)', 'solvent'))
+
+        Args:
+            classifiers: Any number of tuples of the form ("identifier", "label", exact)
+            overwrite (bool): If true, overwrite existing ClassificationError
+
+        Note:
+            Creates/modifies the "classification" column in the molecule table (self). Anything is
+            a valid label, though it helps to use meaningful strings or integers. The default
+            classification is None (selected by .isnull()).
+        '''
+        self._revert_categories()
+        for c in classifiers:
+            n = len(c)
+            if n != 3 and n != 2:
+                raise ClassificationError()
+        if 'classification' not in self:
+            self['classification'] = None
+        for classifier in classifiers:
+            identifier = string_to_dict(classifier[0])
+            classification = classifier[1]
+            exact = classifier[2] if len(classifier) == 3 else False
+            this = self if overwrite else self[self['classification'].isnull()]
+            for symbol, count in identifier.items():
+                this = this[this[symbol] == count] if exact else this[this[symbol] >= 1]
+            if len(this) > 0:
+                self.ix[self.index.isin(this.index), 'classification'] = classification
+            else:
+                raise KeyError('No records found for {}, with identifier {}.'.format(classification, identifier))
+        self._set_categories()
 
 
 def compute_molecule(universe):

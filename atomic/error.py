@@ -20,3 +20,11 @@ class StringFormulaError(AtomicException):
     def __init__(self, formula):
         msg = self._msg.format(formula)
         super().__init__(msg)
+
+
+class ClassificationError(AtomicException):
+    '''
+    Raised when a classifier for :func:`~atomic.molecule.Molecule.add_classification` used
+    incorrectly.
+    '''
+    _msg = 'Classifier must be a tuple of the form ("identifier", "label", exact).'
