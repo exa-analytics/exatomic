@@ -100,8 +100,9 @@ class Atom(BaseAtom):
         '''
         if 'label' in self:
             del self['label']
-        nats = self.groupby('frame').apply(lambda g: len(g)).values
+        nats = self.groupby('frame').size().values
         self['label'] = [i for nat in nats for i in range(nat)]
+        self['label'] = self['label'].astype('category')
 
     def compute_simple_formula(self):
         '''
@@ -124,6 +125,11 @@ class Atom(BaseAtom):
         xyz = self[['x', 'y', 'z']]
         unit = np.mod(xyz, rxyz) + oxyz
         return UnitAtom(unit[unit != xyz].astype(np.float64).to_sparse())
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        if 'label' not in self.columns:
+            self.reset_label()
 
 
 class UnitAtom(SparseDataFrame):

@@ -43,7 +43,23 @@ class Universe(Container):
     '''
     A container for working with computational chemistry data.
 
-    For a conceptual description of the universe, see the module's docstring.
+    .. code-block:: Python
+
+        u = Universe()               # Demo universe
+        atom = XYZ('myfile.xyz')
+        u = atom.to_universe()       # Universe from XYZ file
+        u                            # Render universe
+        atom = pd.read_csv('somefile.xyz', names=('symbol', 'x', 'y', 'z'))
+        u = Universe(atom=atom)
+        u.frame                      # Displays the universe's Frame dataframe
+        small_uni = large_uni[::200] # Selects every 200th frame from the large_uni
+        first_frame = large_uni[0]   # Create a universe for only the first frame
+        last_frame = large_uni[-1]   # Create a universe for only the last frame
+        specific = large_uni[[0, 10, 20]] # Create universe for 0th, 10th, and 20th frames (positional index)
+
+
+    See Also:
+        For a conceptual description of the universe, see the module's docstring.
     '''
     unid = Column(Integer, ForeignKey('container.pkid'), primary_key=True)
     frame_count = Column(Integer)
@@ -295,3 +311,39 @@ class Universe(Container):
             if len(self) < 10 and self.frame['atom_count'].max() < 100:
                 pass
                 #self.compute_molecule()
+
+#def slice_by_molecules(universe, mids):
+#    '''
+#    '''
+#    kwargs = {}
+#    molecule = universe.molecule[universe.molecule.index.isin(mids)]
+#    molecule = atomic.Molecule(molecule.copy())
+#    kwargs['molecule'] = molecule
+#    atom = universe.atom[universe.atom['molecule'].isin(mids)]
+#    atom = atomic.Atom(atom.copy())
+#    atom.reset_label()
+#    kwargs['atom'] = atom
+#    frame = universe.frame[universe.frame.index.isin(atom['frame'])]
+#    frame = atomic.Frame(frame.copy())
+#    kwargs['frame'] = frame
+#    if universe.field:
+#        kwargs['field'] = atomic.field.AtomicField(universe.field_values, universe.field.copy())
+#    if universe.is_periodic:
+#        unit_atom = universe._unit_atom[universe._unit_atom.index.isin(atom.index)]
+#        unit_atom = atomic.atom.UnitAtom(unit_atom.copy())
+#        kwargs['unit_atom'] = unit_atom
+#        projected_atom = universe.projected_atom[universe.projected_atom['atom'].isin(atom.index)]
+#        projected_atom = atomic.atom.ProjectedAtom(projected_atom.copy())
+#        kwargs['projected_atom'] = projected_atom
+#        two = universe.two[(universe.two['prjd_atom0'].isin(projected_atom.index) &
+#                            universe.two['prjd_atom1'].isin(projected_atom.index)) |
+#                           (universe.two['prjd_atom1'].isin(projected_atom.index) &
+#                            universe.two['prjd_atom0'].isin(projected_atom.index))]
+#        two = atomic.two.PeriodicTwo(two.copy())
+#        kwargs['periodic_two'] = two
+#    else:
+#        two = universe.two[universe.two['atom0'].isin(atom.index) &
+#                           universe.two['atom1'].isin(atom.index)]
+#        two = atomic.two.Two(two.copy())
+#        kwargs['two'] = two
+#    return atomic.Universe(**kwargs)

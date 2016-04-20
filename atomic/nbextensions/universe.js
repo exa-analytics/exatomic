@@ -106,8 +106,6 @@ define([
             this.get_two_bond1();
             this.model.on('change:two_bond0', this.get_two_bond0, this);
             this.model.on('change:two_bond1', this.get_two_bond1, this);
-            console.log(this.two_bond0);
-            console.log(this.two_bond1);
 
             //UField3D
             this.get_atomicfield_ox();

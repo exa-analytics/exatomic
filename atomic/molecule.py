@@ -21,24 +21,29 @@ class Molecule(DataFrame):
     _groupbys = ['frame']
     _categories = {'frame': np.int64, 'formula': str, 'classification': object}
 
-    def add_classification(self, *classifiers, overwrite=False):
+    def classify(self, *classifiers, overwrite=False):
         '''
-        Create a "class" column with labels such as "solute" and "solvent".
+        Classify molecules into arbitrary categories.
 
         .. code-block:: Python
 
-            u.molecule.add_classification(('Na', 'solute'), ('H(2)O(1)', 'solvent'))
+            u.molecule.classify(('Na', 'solute'), ('H(2)O(1)', 'solvent'))
 
         Args:
-            classifiers: Any number of tuples of the form ("identifier", "label", exact)
+            classifiers: Any number of tuples of the form ("identifier", "label", exact) (see below)
             overwrite (bool): If true, overwrite existing ClassificationError
 
         Note:
-            Creates/modifies the "classification" column in the molecule table (self). Anything is
-            a valid label, though it helps to use meaningful strings or integers. The default
-            classification is None (selected by .isnull()).
+            A classifier has 3 parts, "identifier", e.g. "H(2)O(1)", "label", e.g.
+            "solvent", and exact (true or false). If exact is false (default),
+            classification is greedy and (in this example) molecules with formulas
+            "H(1)O(1)", "H(3)O(1)", etc. would get classified as "solvent". If,
+            instead, exact were set to true, those molecules would remain
+            unclassified.
+
+        See Also:
+            :func:`~atomic.algorithms.nearest.compute_nearest_molecules`
         '''
-        self._revert_categories()
         for c in classifiers:
             n = len(c)
             if n != 3 and n != 2:
@@ -56,7 +61,7 @@ class Molecule(DataFrame):
                 self.ix[self.index.isin(this.index), 'classification'] = classification
             else:
                 raise KeyError('No records found for {}, with identifier {}.'.format(classification, identifier))
-        self._set_categories()
+        self['classification'] = self['classification'].astype('category')
 
 
 def compute_molecule(universe):
@@ -103,20 +108,21 @@ def compute_molecule(universe):
     universe.atom['molecule'] = universe.atom.index.map(lambda idx: mapper[idx])
     # Now compute molecule table
     universe.atom['mass'] = universe.atom['symbol'].map(Isotope.symbol_to_mass())
-    universe.atom['xm'] = universe.atom['x'].mul(universe.atom['mass'])
-    universe.atom['ym'] = universe.atom['y'].mul(universe.atom['mass'])
-    universe.atom['zm'] = universe.atom['z'].mul(universe.atom['mass'])
+    #universe.atom['xm'] = universe.atom['x'].mul(universe.atom['mass'])
+    #universe.atom['ym'] = universe.atom['y'].mul(universe.atom['mass'])
+    #universe.atom['zm'] = universe.atom['z'].mul(universe.atom['mass'])
     molecules = universe.atom.groupby('molecule')
     molecule = molecules['symbol'].value_counts().unstack().fillna(0).astype(np.int64)
     molecule.columns.name = None
+    molecule['frame'] = universe.atom.drop_duplicates('molecule').set_index('molecule')['frame']
     molecule['mass'] = molecules['mass'].sum()
-    molecule['cx'] = molecules['xm'].sum() / molecule['mass']
-    molecule['cy'] = molecules['ym'].sum() / molecule['mass']
-    molecule['cz'] = molecules['zm'].sum() / molecule['mass']
+    #molecule['cx'] = molecules['xm'].sum() / molecule['mass']
+    #molecule['cy'] = molecules['ym'].sum() / molecule['mass']
+    #molecule['cz'] = molecules['zm'].sum() / molecule['mass']
     del universe.atom['mass']
-    del universe.atom['xm']
-    del universe.atom['ym']
-    del universe.atom['zm']
+    #del universe.atom['xm']
+    #del universe.atom['ym']
+    #del universe.atom['zm']
     frame = universe.atom[['molecule', 'frame']].drop_duplicates('molecule')
     frame = frame.set_index('molecule')['frame'].astype(np.int64)
     molecule['frame'] = frame.astype('category')
