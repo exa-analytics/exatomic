@@ -277,7 +277,8 @@ class Universe(Container):
         '''
         Create visually pleasing coordinates (useful for periodic universes).
         '''
-        self._visual_atom = _cva(self)
+        pass
+#        self._visual_atom = _cva(self)
 
     def _slice_by_mids(self, molecule_indices):
         '''

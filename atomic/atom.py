@@ -251,19 +251,40 @@ def compute_visual_atom(universe):
     def process(grp):
         if len(grp) > 0:
             if not np.all(grp['bond_count'] == grp.iloc[0, -1]):
-                return grp.iloc[0, :]
+                diff = -grp['prjd_atom'].diff().values[-1]
+                cp = grp.iloc[0, :].copy()
+                cp['bond_count'] = diff
+                return cp
+
+    def process2(row):
+        diff = row['bond_count']
+        original = row['prjd_atom'] - diff
+        others = bonded[(bonded['prjd_atom0'] == original) |
+                        (bonded['prjd_atom1'] == original)].stack()
+        others = others[others != original]
+        return others + diff
 
     if not universe.is_periodic:
         raise TypeError('Is this a periodic universe? Check frame for periodic column.')
     universe.compute_projected_bond_count()
-    updater = universe.two.ix[universe.two['bond'] == True, ['prjd_atom0', 'prjd_atom1']].stack()
-    updater = universe.projected_atom[universe.projected_atom.index.isin(updater.values)]
+    bonded = universe.two.ix[universe.two['bond'] == True, ['prjd_atom0', 'prjd_atom1']]
+    updater = universe.projected_atom[universe.projected_atom.index.isin(bonded.stack().values)]
     dup = updater[updater['atom'].duplicated()]
-    dup = updater[updater['atom'].isin(dup['atom'])].sort_values('bond_count', ascending=False)
-    updater = updater[~updater.index.isin(dup.index)]
-    ddup = dup.groupby('atom').apply(process).dropna()[['x', 'y', 'z']]
-    updater = updater.set_index('atom')[['x', 'y', 'z']]
-    updater = pd.concat((updater, ddup))
+    others = None
+    if len(dup) > 0:
+        dup = updater[updater['atom'].isin(dup['atom'])].sort_values('bond_count', ascending=False)
+        updater = updater[~updater.index.isin(dup.index)]
+        ddup = dup.reset_index().groupby('atom').apply(process).dropna()
+        others = ddup.apply(process2, axis=1)
+        others = np.concatenate(others.values).astype(np.int64)
+        ddup = ddup[['x', 'y', 'z']]
+        others = universe.projected_atom[universe.projected_atom.index.isin(others)]
+        others = others.set_index('atom')[['x', 'y', 'z']]
+        updater = updater.set_index('atom')[['x', 'y', 'z']]
+        updater = pd.concat((updater, ddup))
+        updater.update(others)
+    else:
+        updater = updater.set_index('atom')[['x', 'y', 'z']]
     vis = universe._unit_atom.copy()
     vis.update(updater)
     return VisualAtom(vis)

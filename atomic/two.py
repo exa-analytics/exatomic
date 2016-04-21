@@ -36,7 +36,7 @@ max_atoms_per_frame = 1000
 max_frames = 2000
 max_atoms_per_frame_periodic = 500
 max_frames_periodic = 1000
-bond_extra = 0.25
+bond_extra = 0.45
 dmin = 0.3
 dmax = 11.3
 
