@@ -244,16 +244,15 @@ def _periodic_in_mem(universe, k, dmin, dmax, bond_extra, compute_symbols,
     df['prjd_atom0'] = df['prjd_atom0'].astype('category')
     df['prjd_atom1'] = df['prjd_atom1'].astype('category')
     df = df[(df['distance'] > dmin) & (df['distance'] < dmax)]#.sort_values('distance')
-    #atom = universe.projected_atom['atom']
-    #df['atom0'] = df['prjd_atom0'].map(atom)
-    #df['atom1'] = df['prjd_atom1'].map(atom)
-    #del atom
-    #df['id'] = unordered_pairing(df['atom0'].values, df['atom1'].values)
-    df['id'] = unordered_pairing(df['prjd_atom0'].values, df['prjd_atom1'].values)
-    #df = df.drop_duplicates('id').reset_index(drop=True)
+    atom = universe.projected_atom['atom']
+    df['atom0'] = df['prjd_atom0'].map(atom)
+    df['atom1'] = df['prjd_atom1'].map(atom)
+    del atom
+    df['id'] = unordered_pairing(df['atom0'].values, df['atom1'].values)
+    df = df.drop_duplicates('id').reset_index(drop=True)
     del df['id']
-    #del df['atom0']
-    #del df['atom1']
+    del df['atom0']
+    del df['atom1']
     symbols = universe.projected_atom['symbol']
     df['symbol1'] = df['prjd_atom0'].map(symbols)
     df['symbol2'] = df['prjd_atom1'].map(symbols)
@@ -297,4 +296,18 @@ def compute_bond_count(universe):
         b1 = bonds.groupby('atom1').size()
     bc = b0.add(b1, fill_value=0).astype(np.int64)
     bc.index.names = ['atom']
+    return bc
+
+
+def compute_projected_bond_count(universe):
+    '''
+    The projected bond count doesn't have physical meaning but can be useful
+    in certain cases (e.g. visual atom selection).
+    '''
+    if not universe.is_periodic:
+        raise TypeError('Is this a periodic universe? Check frame for periodic column.')
+    bonds = universe.two[universe.two['bond'] == True]
+    b0 = bonds.groupby('prjd_atom0').size()
+    b1 = bonds.groupby('prjd_atom1').size()
+    bc = b0.add(b1, fill_value=0).astype(np.int64)
     return bc

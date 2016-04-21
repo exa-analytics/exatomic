@@ -53,13 +53,13 @@ class BaseAtom(DataFrame):
     _precision = 2
     _indices = ['atom']
     _columns = ['x', 'y', 'z', 'symbol', 'frame']
-    _traits = ['x', 'y', 'z']
     _groupbys = ['frame']
     _categories = {'frame': np.int64, 'label': np.int64, 'symbol': str}
 
-    def _get_custom_traits(self):
+    def _custom_trait_creator(self):
         '''
-        Creates four custom traits; radii, colors, symbols, and symbol codes.
+        Custom trait creator function because traits from the atom table are
+        not automatically created via exa.numerical.
         '''
         grps = self.groupby('frame')
         symbols = grps.apply(lambda g: g['symbol'].cat.codes.values)
@@ -69,8 +69,14 @@ class BaseAtom(DataFrame):
         radii = Dict({i: radii[v] for i, v in symmap.items()}).tag(sync=True)
         colors = Isotope.symbol_to_color()[self['symbol'].unique()]
         colors = Dict({i: colors[v] for i, v in symmap.items()}).tag(sync=True)
-        return {'atom_symbols': symbols, 'atom_radii': radii,
-                'atom_colors': colors}
+        atom_x = grps.apply(lambda g: g['x'].values).to_json(orient='values', double_precision=self._precision)
+        atom_x = Unicode(atom_x).tag(sync=True)
+        atom_y = grps.apply(lambda g: g['y'].values).to_json(orient='values', double_precision=self._precision)
+        atom_y = Unicode(atom_y).tag(sync=True)
+        atom_z = grps.apply(lambda g: g['z'].values).to_json(orient='values', double_precision=self._precision)
+        atom_z = Unicode(atom_z).tag(sync=True)
+        return {'atom_symbols': symbols, 'atom_radii': radii, 'atom_colors': colors,
+                'atom_x': atom_x, 'atom_y': atom_y, 'atom_z': atom_z}
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -163,7 +169,7 @@ class ProjectedAtom(BaseAtom):
         self['label'] = self['atom'].map(atom_label)
 
 
-class VisAtom(SparseDataFrame):
+class VisualAtom(SparseDataFrame):
     '''
     Akin to :class:`~atomic.atom.UnitAtom`, this class is used to store a special
     set of coordinates used specifically for visualization. Typically these coordinates
@@ -232,3 +238,32 @@ def _compute_projected_static(universe):
     df['symbol'] = pd.Series(ua['symbol'].astype(str).values.tolist() * 27, dtype='category')
     df['atom'] = pd.Series(ua.index.values.tolist() * 27, dtype='category')
     return ProjectedAtom(df)
+
+
+def compute_visual_atom(universe):
+    '''
+    Creates visually pleasing atomic coordinates (useful for periodic
+    systems).
+
+    See Also:
+        :func:`~atomic.universe.Universe.compute_vis_atom`
+    '''
+    def process(grp):
+        if len(grp) > 0:
+            if not np.all(grp['bond_count'] == grp.iloc[0, -1]):
+                return grp.iloc[0, :]
+
+    if not universe.is_periodic:
+        raise TypeError('Is this a periodic universe? Check frame for periodic column.')
+    universe.compute_projected_bond_count()
+    updater = universe.two.ix[universe.two['bond'] == True, ['prjd_atom0', 'prjd_atom1']].stack()
+    updater = universe.projected_atom[universe.projected_atom.index.isin(updater.values)]
+    dup = updater[updater['atom'].duplicated()]
+    dup = updater[updater['atom'].isin(dup['atom'])].sort_values('bond_count', ascending=False)
+    updater = updater[~updater.index.isin(dup.index)]
+    ddup = dup.groupby('atom').apply(process).dropna()[['x', 'y', 'z']]
+    updater = updater.set_index('atom')[['x', 'y', 'z']]
+    updater = pd.concat((updater, ddup))
+    vis = universe._unit_atom.copy()
+    vis.update(updater)
+    return VisualAtom(vis)
