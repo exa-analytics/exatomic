@@ -46,7 +46,6 @@ define([
             this.view.create_canvas();
             this.update_vars();
             this.app3d = new App3D(this.view.canvas);
-            this.app3d.add_unit_axis();
             this.create_gui();
 
             this.update_fields();
@@ -95,6 +94,7 @@ define([
             this.bonds_meshes = [];
             this.cell_meshes = [];
             this.field_meshes = [];
+            this.axis_meshes = [];
         };
 
         create_gui() {
@@ -161,9 +161,11 @@ define([
 
             this.display = {
                 'cell': false,
+                'axis': false
             };
             this.display['folder'] = this.gui.addFolder('display');
             this.display['cell_checkbox'] = this.display.folder.add(this.display, 'cell');
+            this.display['axis_checkbox'] = this.display.folder.add(this.display, 'axis');
 
             this.display.cell_checkbox.onFinishChange(function(value) {
                 self.display.cell = value;
@@ -171,6 +173,14 @@ define([
                     self.app3d.remove_meshes(self.cell_meshes);
                 } else {
                     self.render_cell();
+                };
+            });
+            this.display.axis_checkbox.onFinishChange(function(value) {
+                self.display.axis = value;
+                if (value === false) {
+                    self.app3d.remove_meshes(self.axis_meshes);
+                } else {
+                    self.axis_meshes = self.app3d.add_unit_axis();
                 };
             });
 

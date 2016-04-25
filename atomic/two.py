@@ -129,6 +129,11 @@ def compute_two_body(universe, k=None, dmax=dmax, dmin=dmin, bond_extra=bond_ext
 
     Returns:
         df (:class:`~atomic.twobody.TwoBody`): Two body property table
+
+    Warning:
+        Computing periodic distances can use a large amount of memory (>16 GB)
+        and take up to 5 minutes (on a modern machine, with universes of more
+        than a few thousand frames)!
     '''
     nat = universe.frame['atom_count'].max()
     nf = len(universe.frame)

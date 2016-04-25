@@ -8,7 +8,7 @@ slicing by selection of nearest neighbors.
 '''
 import numpy as np
 import pandas as pd
-
+from atomic import Universe, Atom
 
 def nearest_molecules(universe, n, sources, others=None, symbols=None,
                               by='atom', exact=False, convert=True):
@@ -86,7 +86,11 @@ def _periodic_byatom(uni, n, sources, others, symbols, convert):
     if len(smolecules) == 0:
         raise KeyError('No source molecules using classification(s) {}.'.format(sources))
     if n == 0:
-        return smolecules.index.values.astype(np.int64)
+        atom = uni.visual_atom[uni.visual_atom['molecule'].isin(smolecules.index)].copy()
+        atom = Atom(atom)
+        atom.reset_label()
+        u = Universe(atom=atom)
+        return u
     omolecules = uni.molecule[uni.molecule['classification'].isin(others)]
     if len(omolecules) == 0:
         raise KeyError('No other molecules using classification(s) {}.'.format(others))
@@ -137,17 +141,17 @@ def _periodic_byatom(uni, n, sources, others, symbols, convert):
     # By virtue of the selection process, this returns a system
     # in free boundary conditions; this is typically what the user
     # because it is hard to visually inspect periodic nearest neighbors.
-    return mids, fullstack
+    #return mids, fullstack
     updater = uni.projected_atom[uni.projected_atom.index.isin(fullstack['prjd_atom'])]
     updater = updater.set_index('atom')[['x', 'y', 'z']]
 
     atom = uni.visual_atom[uni.visual_atom['molecule'].isin(mids)].copy()
-    print(atom.shape)
-    print(updater.shape)
+    #print(atom.shape)
+    #print(updater.shape)
     atom.update(updater)
-    atom = atomic.Atom(atom)
+    atom = Atom(atom)
     atom.reset_label()
-    u = atomic.Universe(atom=atom)
+    u = Universe(atom=atom)
     return u
 
 

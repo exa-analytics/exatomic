@@ -39,6 +39,7 @@ from atomic.two import compute_bond_count as _cbc
 from atomic.two import compute_projected_bond_count as _cpbc
 from atomic.molecule import Molecule
 from atomic.molecule import compute_molecule as _cm
+from atomic.molecule import compute_molecule_com as _cmcom
 
 
 class Universe(Container):
@@ -207,11 +208,16 @@ class Universe(Container):
         self.projected_atom['bond_count'] = _cpbc(self)
         self.projected_atom['bond_count'] = self.projected_atom['bond_count'].fillna(-1).astype(np.int64)
 
-    def compute_molecule(self):
+    def compute_molecule(self, com=False):
         '''
         Compute the molecule table.
         '''
-        self._molecule = _cm(self)
+        if com:
+            self._molecule = _cm(self)
+            self.compute_visual_atom()
+            self._molecule = Molecule(pd.concat((self._molecule, _cmcom(self)), axis=1))
+        else:
+            self._molecule = _cm(self)
 
     def add_field(self, field, frame=None, field_values=None):
         '''
@@ -263,8 +269,7 @@ class Universe(Container):
         '''
         raise NotImplementedError()
 
-    def compute_two_body(self, *args, truncate_projected=True,
-                         create_vis=True, **kwargs):
+    def compute_two_body(self, *args, truncate_projected=True, **kwargs):
         '''
         Compute two body properties for the current universe.
 
@@ -278,8 +283,6 @@ class Universe(Container):
             self._periodic_two = _ctb(self, *args, **kwargs)
             if truncate_projected:
                 self.truncate_projected_atom()
-            if create_vis:
-                self.compute_visual_atom()
         else:
             self._two = _ctb(self, *args, **kwargs)
 
@@ -298,8 +301,7 @@ class Universe(Container):
         '''
         Create visually pleasing coordinates (useful for periodic universes).
         '''
-        pass
-        #self._visual_atom = _cva(self)
+        self._visual_atom = _cva(self)
 
     def _slice_by_mids(self, molecule_indices):
         '''

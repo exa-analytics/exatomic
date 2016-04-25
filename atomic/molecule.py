@@ -110,22 +110,34 @@ def compute_molecule(universe):
     universe.atom['mass'] = universe.atom['symbol'].map(Isotope.symbol_to_mass())
     # The coordinates of visual_atom represent grouped molecules for
     # periodic calculations and absolute coordinates for free boundary conditions.
-    universe.atom['xm'] = universe.visual_atom['x'].mul(universe.atom['mass'])
-    universe.atom['ym'] = universe.visual_atom['y'].mul(universe.atom['mass'])
-    universe.atom['zm'] = universe.visual_atom['z'].mul(universe.atom['mass'])
     molecules = universe.atom.groupby('molecule')
     molecule = molecules['symbol'].value_counts().unstack().fillna(0).astype(np.int64)
     molecule.columns.name = None
     molecule['frame'] = universe.atom.drop_duplicates('molecule').set_index('molecule')['frame']
     molecule['mass'] = molecules['mass'].sum()
-    molecule['cx'] = molecules['xm'].sum() / molecule['mass']
-    molecule['cy'] = molecules['ym'].sum() / molecule['mass']
-    molecule['cz'] = molecules['zm'].sum() / molecule['mass']
     del universe.atom['mass']
-    del universe.atom['xm']
-    del universe.atom['ym']
-    del universe.atom['zm']
     frame = universe.atom[['molecule', 'frame']].drop_duplicates('molecule')
     frame = frame.set_index('molecule')['frame'].astype(np.int64)
     molecule['frame'] = frame.astype('category')
     return Molecule(molecule)
+
+
+def compute_molecule_com(universe):
+    '''
+    Compute molecules' center of mass.
+    '''
+    universe.atom['mass'] = universe.atom['symbol'].map(Isotope.symbol_to_mass())
+    universe.atom['xm'] = universe.visual_atom['x'].mul(universe.atom['mass'])
+    universe.atom['ym'] = universe.visual_atom['y'].mul(universe.atom['mass'])
+    universe.atom['zm'] = universe.visual_atom['z'].mul(universe.atom['mass'])
+    molecules = universe.atom.groupby('molecule')
+    molecule = (molecules['xm'].sum() / universe.molecule['mass']).to_frame()
+    molecule.index.names = ['molecule']
+    molecule.columns = ['cx']
+    molecule['cy'] = molecules['ym'].sum() / universe.molecule['mass']
+    molecule['cz'] = molecules['zm'].sum() / universe.molecule['mass']
+    del universe.atom['xm']
+    del universe.atom['ym']
+    del universe.atom['zm']
+    del universe.atom['mass']
+    return molecule

@@ -14,7 +14,7 @@ from atomic.universe import Universe
 from atomic.editor import Editor
 from atomic.formula import SimpleFormula
 from atomic.filetypes import XYZ, write_xyz, Cube
-from atomic.algorithms import compute_nearest_molecules, einstein_relation
+from atomic.algorithms import nearest_molecules, einstein_relation, radial_pair_correlation
 from atomic import tests
 
 
