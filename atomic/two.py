@@ -286,17 +286,14 @@ def compute_bond_count(universe):
         atom indexed. Counts for projected atoms have no meaning/are not
         computed during two body property calculation.
     '''
-    bonds = universe.two[universe.two['bond'] == True]
     if universe.is_periodic:
         mapper = universe.projected_atom['atom']
-        b0 = bonds['prjd_atom0'].map(mapper).value_counts()
-        b1 = bonds['prjd_atom1'].map(mapper).value_counts()
+        bonds = universe.two.ix[(universe.two['bond'] == True), ['prjd_atom0', 'prjd_atom1']].stack().astype(np.int64)
+        bonds = bonds.map(mapper)
+        return bonds.value_counts()
     else:
-        b0 = bonds.groupby('atom0').size()
-        b1 = bonds.groupby('atom1').size()
-    bc = b0.add(b1, fill_value=0).astype(np.int64)
-    bc.index.names = ['atom']
-    return bc
+        bonds = universe.two.ix[(universe.two['bond'] == True), ['atom0', 'atom1']].stack().value_counts()
+        return bonds
 
 
 def compute_projected_bond_count(universe):
@@ -306,8 +303,5 @@ def compute_projected_bond_count(universe):
     '''
     if not universe.is_periodic:
         raise TypeError('Is this a periodic universe? Check frame for periodic column.')
-    bonds = universe.two[universe.two['bond'] == True]
-    b0 = bonds.groupby('prjd_atom0').size()
-    b1 = bonds.groupby('prjd_atom1').size()
-    bc = b0.add(b1, fill_value=0).astype(np.int64)
-    return bc
+    bc = universe.two.ix[(universe.two['bond'] == True), ['prjd_atom0', 'prjd_atom1']].stack().value_counts()
+    return bc.astype(np.int64)

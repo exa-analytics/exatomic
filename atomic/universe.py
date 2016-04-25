@@ -205,6 +205,7 @@ class Universe(Container):
             :func:`~atomic.two.compute_projected_bond_count`
         '''
         self.projected_atom['bond_count'] = _cpbc(self)
+        self.projected_atom['bond_count'] = self.projected_atom['bond_count'].fillna(-1).astype(np.int64)
 
     def compute_molecule(self):
         '''
@@ -297,7 +298,8 @@ class Universe(Container):
         '''
         Create visually pleasing coordinates (useful for periodic universes).
         '''
-        self._visual_atom = _cva(self)
+        pass
+        #self._visual_atom = _cva(self)
 
     def _slice_by_mids(self, molecule_indices):
         '''

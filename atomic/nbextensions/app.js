@@ -46,6 +46,7 @@ define([
             this.view.create_canvas();
             this.update_vars();
             this.app3d = new App3D(this.view.canvas);
+            this.app3d.add_unit_axis();
             this.create_gui();
 
             this.update_fields();
@@ -166,7 +167,11 @@ define([
 
             this.display.cell_checkbox.onFinishChange(function(value) {
                 self.display.cell = value;
-                self.render_cell();
+                if (value === false) {
+                    self.app3d.remove_meshes(self.cell_meshes);
+                } else {
+                    self.render_cell();
+                };
             });
 
             this.fields = {

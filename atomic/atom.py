@@ -130,7 +130,7 @@ class Atom(BaseAtom):
         '''
         xyz = self[['x', 'y', 'z']]
         unit = np.mod(xyz, rxyz) + oxyz
-        return UnitAtom(unit[unit != xyz].astype(np.float64).to_sparse())
+        return UnitAtom(unit[unit != xyz].astype(np.float64).dropna(how='all').to_sparse())
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -248,41 +248,84 @@ def compute_visual_atom(universe):
     See Also:
         :func:`~atomic.universe.Universe.compute_vis_atom`
     '''
+#    if not universe.is_periodic:
+#        raise TypeError('Is this a periodic universe? Check frame for periodic column.')
+#    if 'bond_count' not in universe.projected_atom:
+#        universe.compute_projected_bond_count()
+#    bonded = universe.two.ix[(universe.two['bond'] == True), ['prjd_atom0', 'prjd_atom1']]
+#    updater = universe.projected_atom[universe.projected_atom.index.isin(bonded.stack())]
+#    dup_atom = updater.ix[updater['atom'].duplicated(), 'atom']
+#    if len(dup_atom) > 0:
+#        dup = updater[updater['atom'].isin(dup_atom)].sort_values('bond_count')
+
+
+
+
+#    dup = updater[updater['atom'].duplicated()]
+#    dup = updater[updater['atom'].isin(dup['atom'])].sort_values('bond_count', ascending=False)
+#    updater = updater[~updater.index.isin(dup.index)]
+#    dup = dup.reset_index()
+#    dup['atom'] = dup['atom'].astype(np.int64)
+#    nat27 = universe.frame['atom_count'].max() * 27
+#    grps = dup.groupby('atom')
+#    indices = np.empty((grps.ngroups, ), dtype='O')
+#    for i, (atom, grp) in enumerate(grps):
+#        if not np.all(grp['bond_count'] == grp.iloc[0, -1]):
+#            diff = grp['prjd_atom'].diff().values[-1].astype(np.int64)
+#            original = grp.iloc[0, 0]
+#            others = bonded[(bonded['prjd_atom0'] == original) |
+#                            (bonded['prjd_atom1'] == original)].stack()
+#            others = others.astype(np.int64).drop_duplicates().values + diff
+#            indices[i] = others
+#        else:
+#            indices[i] = []
+#    indices = np.concatenate(indices)
+#    others = universe.projected_atom[universe.projected_atom.index.isin(indices)]
+#    others = others.set_index('atom')[['x', 'y', 'z']]
+#    updater = updater.set_index('atom')[['x', 'y', 'z']]
+#    updater = pd.concat((others, updater))
+#    updater.reset_index(inplace=True)
+#    updater.drop_duplicates('atom', inplace=True)
+#    updater.set_index('atom', inplace=True)
+#    _visual_atom = universe._unit_atom.copy()
+#    _visual_atom.update(updater)
+#    return VisualAtom(_visual_atom.dropna(how='all'))
+
+
+    universe.projected_atom._revert_categories()
     def process(grp):
         if len(grp) > 0:
             if not np.all(grp['bond_count'] == grp.iloc[0, -1]):
-                diff = -grp['prjd_atom'].diff().values[-1]
+                diff = -grp['prjd_atom'].diff().values[-1].astype(np.int64)
                 cp = grp.iloc[0, :].copy()
                 cp['bond_count'] = diff
                 return cp
 
     def process2(row):
-        diff = row['bond_count']
-        original = row['prjd_atom'] - diff
+        diff = np.int64(row['bond_count'])
+        original = np.int64(row['prjd_atom'] + diff)
         others = bonded[(bonded['prjd_atom0'] == original) |
                         (bonded['prjd_atom1'] == original)].stack()
-        others = others[others != original]
+        others = others[others != original].values
         return others + diff
 
-    if not universe.is_periodic:
-        raise TypeError('Is this a periodic universe? Check frame for periodic column.')
     universe.compute_projected_bond_count()
     bonded = universe.two.ix[universe.two['bond'] == True, ['prjd_atom0', 'prjd_atom1']]
-    updater = universe.projected_atom[universe.projected_atom.index.isin(bonded.stack().values)]
+    updater = universe.projected_atom[universe.projected_atom.index.isin(bonded.stack())]
     dup = updater[updater['atom'].duplicated()]
     others = None
     if len(dup) > 0:
         dup = updater[updater['atom'].isin(dup['atom'])].sort_values('bond_count', ascending=False)
         updater = updater[~updater.index.isin(dup.index)]
         ddup = dup.reset_index().groupby('atom').apply(process).dropna()
-        others = ddup.apply(process2, axis=1)
-        others = np.concatenate(others.values).astype(np.int64)
+        others = ddup.apply(process2, axis=1)['prjd_atom'].values.astype(np.int64)
         ddup = ddup[['x', 'y', 'z']]
         others = universe.projected_atom[universe.projected_atom.index.isin(others)]
-        others = others.set_index('atom')[['x', 'y', 'z']]
         updater = updater.set_index('atom')[['x', 'y', 'z']]
         updater = pd.concat((updater, ddup))
-        updater.update(others)
+        if len(others) > 0:
+            others = others.set_index('atom')[['x', 'y', 'z']]
+            updater.update(others)
     else:
         updater = updater.set_index('atom')[['x', 'y', 'z']]
     vis = universe._unit_atom.copy()
