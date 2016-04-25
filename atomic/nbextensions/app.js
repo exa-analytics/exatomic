@@ -137,7 +137,7 @@ define([
             this.top['play_button'] = this.gui.add(this.top, 'play');
             this.top['index_slider'] = this.gui.add(this.top, 'index').min(0).max(this.last_index).step(1);
             this.top['frame_dropdown'] = this.gui.add(this.top, 'frame', this.view.framelist);
-            this.top['fps_slider'] = this.gui.add(this.top, 'fps').min(0).max(240).step(1);
+            this.top['fps_slider'] = this.gui.add(this.top, 'fps').min(1).max(240).step(1);
             this.top.index_slider.onChange(function(index) {
                 self.top.index = index;
                 self.top.frame = self.view.framelist[self.top.index];

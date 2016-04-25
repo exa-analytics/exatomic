@@ -111,11 +111,14 @@ class Universe(Container):
         '''
         Visually pleasing atomic coordinates (useful for periodic universes).
         '''
-        if self._visual_atom is None:
-            self.compute_visual_atom()
-        atom = self.atom.copy()
-        atom.update(self._visual_atom)
-        return Atom(atom)
+        if self.is_periodic:
+            if self._visual_atom is None:
+                self.compute_visual_atom()
+            atom = self.atom.copy()
+            atom.update(self._visual_atom)
+            return atom
+        else:
+            return self.atom
 
     @property
     def projected_atom(self):
@@ -236,6 +239,23 @@ class Universe(Container):
             self._field._set_categories()
         self._traits_need_update = True
 
+    def classify_molecules(self, *args, **kwargs):
+        '''
+        Add classifications (of any form) for molecules.
+
+        .. code-block:: Python
+
+            universe.classify_molecules(('Na', 'solute'), ('H(2)O(1)', 'solvent'))
+
+        Args:
+            \*classifiers: ('identifier', 'classification', exact)
+
+
+        Warning:
+            Will attempt to compute molecules if they haven't been computed.
+        '''
+        self.molecule.classify(*args, **kwargs)
+
     def slice_by_molecules(self, identifier):
         '''
         String, list of string, index, list of indices, slice
@@ -277,8 +297,7 @@ class Universe(Container):
         '''
         Create visually pleasing coordinates (useful for periodic universes).
         '''
-        pass
-#        self._visual_atom = _cva(self)
+        self._visual_atom = _cva(self)
 
     def _slice_by_mids(self, molecule_indices):
         '''
@@ -364,39 +383,3 @@ class Universe(Container):
             if len(self) < 10 and self.frame['atom_count'].max() < 100:
                 pass
                 #self.compute_molecule()
-
-#def slice_by_molecules(universe, mids):
-#    '''
-#    '''
-#    kwargs = {}
-#    molecule = universe.molecule[universe.molecule.index.isin(mids)]
-#    molecule = atomic.Molecule(molecule.copy())
-#    kwargs['molecule'] = molecule
-#    atom = universe.atom[universe.atom['molecule'].isin(mids)]
-#    atom = atomic.Atom(atom.copy())
-#    atom.reset_label()
-#    kwargs['atom'] = atom
-#    frame = universe.frame[universe.frame.index.isin(atom['frame'])]
-#    frame = atomic.Frame(frame.copy())
-#    kwargs['frame'] = frame
-#    if universe.field:
-#        kwargs['field'] = atomic.field.AtomicField(universe.field_values, universe.field.copy())
-#    if universe.is_periodic:
-#        unit_atom = universe._unit_atom[universe._unit_atom.index.isin(atom.index)]
-#        unit_atom = atomic.atom.UnitAtom(unit_atom.copy())
-#        kwargs['unit_atom'] = unit_atom
-#        projected_atom = universe.projected_atom[universe.projected_atom['atom'].isin(atom.index)]
-#        projected_atom = atomic.atom.ProjectedAtom(projected_atom.copy())
-#        kwargs['projected_atom'] = projected_atom
-#        two = universe.two[(universe.two['prjd_atom0'].isin(projected_atom.index) &
-#                            universe.two['prjd_atom1'].isin(projected_atom.index)) |
-#                           (universe.two['prjd_atom1'].isin(projected_atom.index) &
-#                            universe.two['prjd_atom0'].isin(projected_atom.index))]
-#        two = atomic.two.PeriodicTwo(two.copy())
-#        kwargs['periodic_two'] = two
-#    else:
-#        two = universe.two[universe.two['atom0'].isin(atom.index) &
-#                           universe.two['atom1'].isin(atom.index)]
-#        two = atomic.two.Two(two.copy())
-#        kwargs['two'] = two
-#    return atomic.Universe(**kwargs)
