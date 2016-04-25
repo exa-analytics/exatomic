@@ -3,9 +3,8 @@
 Computation of Displacement
 =============================
 '''
-from exa import _np as np
-from exa import _pd as pd
-from exa import DataFrame
+import numpy as np
+import pandas as pd
 
 
 def absolute_squared_displacement(universe, ref_frame=None):
@@ -37,7 +36,7 @@ def absolute_squared_displacement(universe, ref_frame=None):
     for i, (label, group) in enumerate(groups):
         xyz = group[['x', 'y', 'z']].values
         msd[i] = ((xyz - xyz[0])**2).sum(axis=1)
-    df = DataFrame.from_records(msd).T
+    df = pd.DataFrame.from_records(msd).T
     df.index = universe.frame.index.copy()
     df.columns = coldata
     return df

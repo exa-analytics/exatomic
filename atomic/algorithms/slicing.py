@@ -10,7 +10,7 @@ import numpy as np
 import pandas as pd
 
 
-def compute_nearest_molecules(universe, n, sources, others=None, symbols=None,
+def nearest_molecules(universe, n, sources, others=None, symbols=None,
                               by='atom', exact=False, convert=True):
     '''
     Get nearest n neighbor molecules/atoms to (each - if multiple source molecules/atoms

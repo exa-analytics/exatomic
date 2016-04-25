@@ -311,8 +311,9 @@ class Universe(Container):
         Field values are not captured by the df_bytes so add them here.
         '''
         field_bytes = 0
-        for field_value in self.field_values:
-            field_bytes += field_value.memory_usage()
+        if self._is('_field'):
+            for field_value in self.field_values:
+                field_bytes += field_value.memory_usage()
         return field_bytes
 
     def _custom_container_traits(self):

@@ -3,13 +3,13 @@
 Pair Correlation Functions
 ============================
 '''
-from exa import _np as np
-from exa.frame import DataFrame
+import numpy as np
+import pandas as pd
 from atomic import Length
 from atomic.two import dmax, dmin
 
 
-class PCF(DataFrame):
+class PCF(pd.DataFrame):
     '''
     '''
     def plot(self, count=True, secondary_y=True, **kwargs):
@@ -30,7 +30,7 @@ class PCF(DataFrame):
         return ax
 
 
-def compute_radial_pair_correlation(universe, a, b, dr=0.05, vr=dmax,
+def radial_pair_correlation(universe, a, b, dr=0.05, vr=dmax,
                                     start=None, stop=None, length_unit='A'):
     '''
     Compute the angularly independent pair correlation function.
