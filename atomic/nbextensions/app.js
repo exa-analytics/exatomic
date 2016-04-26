@@ -268,6 +268,10 @@ define([
             */
             var symbols = this.gv(this.view.atom_symbols, this.top.index);
             var radii = utility.mapper(symbols, this.view.atom_radii_dict);
+            var n = radii.length;
+            for (let i=0; i<n; i++) {
+                radii[i] *= 0.5;
+            };
             var colors = utility.mapper(symbols, this.view.atom_colors_dict);
             var x = this.gv(this.view.atom_x, this.top.index);
             var y = this.gv(this.view.atom_y, this.top.index);
@@ -282,7 +286,11 @@ define([
             };
             if (v0 !== undefined && v1 !== undefined) {
                 this.app3d.remove_meshes(this.bond_meshes);
-                this.bond_meshes = this.app3d.add_lines(v0, v1, x, y, z, colors);
+                if (this.display.spheres === true) {
+                    this.bond_meshes = this.app3d.add_cylinders(v0, v1, x, y, z, colors, 0.2);
+                } else {
+                    this.bond_meshes = this.app3d.add_lines(v0, v1, x, y, z, colors);
+                };
             };
             if (this.top.index === 0 && this.display.spheres === false) {
                 this.app3d.set_camera_from_mesh(this.atom_meshes[0], 4.0, 4.0, 4.0);
