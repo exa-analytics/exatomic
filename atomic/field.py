@@ -23,7 +23,7 @@ class AtomicField(Field):
     _traits = ['nx', 'ny', 'nz', 'ox', 'oy', 'oz', 'dxi', 'dxj', 'dxk',
                'dyi', 'dyj', 'dyk', 'dzi', 'dzj', 'dzk']
     _columns = ['nx', 'ny', 'nz', 'ox', 'oy', 'oz', 'dxi', 'dxj', 'dxk',
-                'dyi', 'dyj', 'dyk', 'dzi', 'dzj', 'dzk', 'frame', 'label', 'field_type']
+                'dyi', 'dyj', 'dyk', 'dzi', 'dzj', 'dzk', 'frame', 'label']
 
     def compute_dv(self):
         raise NotImplementedError()
