@@ -19,7 +19,6 @@ try:
         include_package_data=True,
         license='Apache License Version 2.0'
     )
-    from atomic._install import install
     #install...
 except:
     raise
