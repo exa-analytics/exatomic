@@ -101,7 +101,7 @@ define([
                 'save field': function() {
                     var field = {
                         'ox': self.field.xmin, 'oy': self.field.ymin, 'oz': self.field.zmin,
-                        'xi': self.field.dx, 'yj': self.field.dy, 'zk': self.field.dz,
+                        'dxi': self.field.dx, 'dyj': self.field.dy, 'dzk': self.field.dz,
                         'nx': self.field.nx, 'ny': self.field.ny, 'nz': self.field.nz,
                         'values': JSON.stringify(self.field.values),
                         'label': self.field.function

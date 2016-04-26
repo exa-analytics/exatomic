@@ -131,11 +131,23 @@ define([
                         }, 1000 / self.top.fps);
                     };
                 },
+                'save image': function() {
+                    self.app3d.renderer.setSize(1920, 1080);
+                    self.app3d.camera.aspect = 1920 / 1080;
+                    self.app3d.camera.updateProjectionMatrix();
+                    self.app3d.render();
+                    var imgdat = self.app3d.renderer.domElement.toDataURL('image/png');
+                    self.view.send({'type': 'image', 'data': imgdat});
+                    self.app3d.renderer.setSize(self.app3d.width, self.app3d.height);
+                    self.app3d.camera.aspect = self.app3d.width / self.app3d.height;
+                    self.app3d.camera.updateProjectionMatrix();
+                },
                 'index': 0,
                 'frame': this.view.framelist[0],
                 'fps': this.view.fps,
             };
             this.top['play_button'] = this.gui.add(this.top, 'play');
+            this.top['save_image'] = this.gui.add(this.top, 'save image');
             this.top['index_slider'] = this.gui.add(this.top, 'index').min(0).max(this.last_index).step(1);
             this.top['frame_dropdown'] = this.gui.add(this.top, 'frame', this.view.framelist);
             this.top['fps_slider'] = this.gui.add(this.top, 'fps').min(1).max(240).step(1);
