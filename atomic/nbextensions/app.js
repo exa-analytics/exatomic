@@ -23,7 +23,7 @@ require.config({
         },
 
         'nbextensions/exa/atomic/field': {
-            exports: 'CubeField'
+            exports: 'AtomicField'
         }
     },
 });
@@ -34,7 +34,7 @@ define([
     'nbextensions/exa/apps/app3d',
     'nbextensions/exa/utility',
     'nbextensions/exa/atomic/field'
-], function(ContainerGUI, App3D, utility, CubeField) {
+], function(ContainerGUI, App3D, utility, AtomicField) {
     class UniverseApp {
         /*"""
         UniverseApp
@@ -94,6 +94,7 @@ define([
             this.bonds_meshes = [];
             this.cell_meshes = [];
             this.field_meshes = [];
+            this.axis_meshes = [];
         };
 
         create_gui() {
@@ -137,7 +138,7 @@ define([
             this.top['play_button'] = this.gui.add(this.top, 'play');
             this.top['index_slider'] = this.gui.add(this.top, 'index').min(0).max(this.last_index).step(1);
             this.top['frame_dropdown'] = this.gui.add(this.top, 'frame', this.view.framelist);
-            this.top['fps_slider'] = this.gui.add(this.top, 'fps').min(0).max(240).step(1);
+            this.top['fps_slider'] = this.gui.add(this.top, 'fps').min(1).max(240).step(1);
             this.top.index_slider.onChange(function(index) {
                 self.top.index = index;
                 self.top.frame = self.view.framelist[self.top.index];
@@ -160,13 +161,27 @@ define([
 
             this.display = {
                 'cell': false,
+                'axis': false
             };
             this.display['folder'] = this.gui.addFolder('display');
             this.display['cell_checkbox'] = this.display.folder.add(this.display, 'cell');
+            this.display['axis_checkbox'] = this.display.folder.add(this.display, 'axis');
 
             this.display.cell_checkbox.onFinishChange(function(value) {
                 self.display.cell = value;
-                self.render_cell();
+                if (value === false) {
+                    self.app3d.remove_meshes(self.cell_meshes);
+                } else {
+                    self.render_cell();
+                };
+            });
+            this.display.axis_checkbox.onFinishChange(function(value) {
+                self.display.axis = value;
+                if (value === false) {
+                    self.app3d.remove_meshes(self.axis_meshes);
+                } else {
+                    self.axis_meshes = self.app3d.add_unit_axis();
+                };
             });
 
             this.fields = {
@@ -214,23 +229,23 @@ define([
             render_field
             --------------
             */
-            var nx = this.gv(this.view.ufield3d_nx, this.top.index);
-            var ny = this.gv(this.view.ufield3d_ny, this.top.index);
-            var nz = this.gv(this.view.ufield3d_nz, this.top.index);
-            var ox = this.gv(this.view.ufield3d_ox, this.top.index);
-            var oy = this.gv(this.view.ufield3d_oy, this.top.index);
-            var oz = this.gv(this.view.ufield3d_oz, this.top.index);
-            var dxi = this.gv(this.view.ufield3d_dxi, this.top.index);
-            var dxj = this.gv(this.view.ufield3d_dxj, this.top.index);
-            var dxk = this.gv(this.view.ufield3d_dxk, this.top.index);
-            var dyi = this.gv(this.view.ufield3d_dyi, this.top.index);
-            var dyj = this.gv(this.view.ufield3d_dyj, this.top.index);
-            var dyk = this.gv(this.view.ufield3d_dyk, this.top.index);
-            var dzi = this.gv(this.view.ufield3d_dzi, this.top.index);
-            var dzj = this.gv(this.view.ufield3d_dzj, this.top.index);
-            var dzk = this.gv(this.view.ufield3d_dzk, this.top.index);
+            var nx = this.gv(this.view.atomicfield_nx, this.top.index);
+            var ny = this.gv(this.view.atomicfield_ny, this.top.index);
+            var nz = this.gv(this.view.atomicfield_nz, this.top.index);
+            var ox = this.gv(this.view.atomicfield_ox, this.top.index);
+            var oy = this.gv(this.view.atomicfield_oy, this.top.index);
+            var oz = this.gv(this.view.atomicfield_oz, this.top.index);
+            var dxi = this.gv(this.view.atomicfield_dxi, this.top.index);
+            var dxj = this.gv(this.view.atomicfield_dxj, this.top.index);
+            var dxk = this.gv(this.view.atomicfield_dxk, this.top.index);
+            var dyi = this.gv(this.view.atomicfield_dyi, this.top.index);
+            var dyj = this.gv(this.view.atomicfield_dyj, this.top.index);
+            var dyk = this.gv(this.view.atomicfield_dyk, this.top.index);
+            var dzi = this.gv(this.view.atomicfield_dzi, this.top.index);
+            var dzj = this.gv(this.view.atomicfield_dzj, this.top.index);
+            var dzk = this.gv(this.view.atomicfield_dzk, this.top.index);
             var values = this.gv(this.view.field_values, this.fields['field']);
-            this.cube_field = new CubeField(ox, oy, oz, nx, ny, nz, dxi, dxj, dxk,
+            this.cube_field = new AtomicField(ox, oy, oz, nx, ny, nz, dxi, dxj, dxk,
                                             dyi, dyj, dyk, dzi, dzj, dzk, values);
             this.app3d.remove_meshes(this.cube_field_mesh);
             this.cube_field_mesh = this.app3d.add_scalar_field(this.cube_field, this.fields.isovalue, 2);

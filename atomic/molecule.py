@@ -10,7 +10,7 @@ from networkx.algorithms.components import connected_components
 from itertools import combinations
 from exa import DataFrame
 from atomic import Isotope
-from atomic.formula import dict_to_string
+from atomic.formula import string_to_dict
 
 
 class Molecule(DataFrame):
@@ -19,8 +19,49 @@ class Molecule(DataFrame):
     '''
     _index = ['molecule']
     _groupbys = ['frame']
-    _categories = {'frame': np.int64}
+    _categories = {'frame': np.int64, 'formula': str, 'classification': object}
 
+    def classify(self, *classifiers, overwrite=False):
+        '''
+        Classify molecules into arbitrary categories.
+
+        .. code-block:: Python
+
+            u.molecule.classify(('Na', 'solute'), ('H(2)O(1)', 'solvent'))
+
+        Args:
+            classifiers: Any number of tuples of the form ("identifier", "label", exact) (see below)
+            overwrite (bool): If true, overwrite existing ClassificationError
+
+        Note:
+            A classifier has 3 parts, "identifier", e.g. "H(2)O(1)", "label", e.g.
+            "solvent", and exact (true or false). If exact is false (default),
+            classification is greedy and (in this example) molecules with formulas
+            "H(1)O(1)", "H(3)O(1)", etc. would get classified as "solvent". If,
+            instead, exact were set to true, those molecules would remain
+            unclassified.
+
+        See Also:
+            :func:`~atomic.algorithms.nearest.compute_nearest_molecules`
+        '''
+        for c in classifiers:
+            n = len(c)
+            if n != 3 and n != 2:
+                raise ClassificationError()
+        if 'classification' not in self:
+            self['classification'] = None
+        for classifier in classifiers:
+            identifier = string_to_dict(classifier[0])
+            classification = classifier[1]
+            exact = classifier[2] if len(classifier) == 3 else False
+            this = self if overwrite else self[self['classification'].isnull()]
+            for symbol, count in identifier.items():
+                this = this[this[symbol] == count] if exact else this[this[symbol] >= 1]
+            if len(this) > 0:
+                self.ix[self.index.isin(this.index), 'classification'] = classification
+            else:
+                raise KeyError('No records found for {}, with identifier {}.'.format(classification, identifier))
+        self['classification'] = self['classification'].astype('category')
 
 
 def compute_molecule(universe):
@@ -43,77 +84,18 @@ def compute_molecule(universe):
     '''
     if 'bond_count' not in universe.atom:    # The bond count is used to find single atoms;
         universe.compute_bond_count()        # single atoms are treated as molecules.
-    if universe.is_periodic:
-        return _compute_periodic_molecule(universe)
-    return _compute_free_molecule(universe)
-
-
-def _molecule_formula(group):
-    return dict_to_string(group.astype(str).value_counts().to_dict())
-
-
-def _compute_periodic_molecule(universe):
-    '''
-    Compute the molecule table and indices for a periodic universe.
-    '''
-    bonded = universe.two[universe.two['bond'] == True].copy()
-    bonded['atom0'] = bonded['prjd_atom0'].map(universe.projected_atom['atom'])
-    bonded['atom1'] = bonded['prjd_atom1'].map(universe.projected_atom['atom'])
-    df = bonded[['prjd_atom0', 'prjd_atom1']].stack().reset_index(drop=True).to_frame()
-    df['atom'] = bonded[['atom0', 'atom1']].stack().values
-    image_edges = df.groupby('atom').apply(lambda g: list(combinations(g[0], 2))).values
-    del df
-    image_edges = [pair for pairs in image_edges for pair in pairs]
-    bond_edges = bonded[['prjd_atom0', 'prjd_atom1']].values
-    del bonded
-    graph = Graph()
-    graph.add_edges_from(image_edges)
-    graph.add_edges_from(bond_edges)
-    mapper = {}
-    for i, molecule in enumerate(connected_components(graph)):
-        for atom in molecule:
-            mapper[atom] = i
-    n = max(mapper.values()) + 1
-    idxs = universe.projected_atom[universe.projected_atom['bond_count'] == 0].index
-    for i, index in enumerate(idxs):
-        mapper[index] = i + n
-    # Set the molecule indices on the atom and projected_atom tables
-    universe.projected_atom['molecule'] = universe.projected_atom.index.map(lambda idx: mapper[idx] if idx in mapper else -1)
-    del mapper
-    atom_mid_map = universe.projected_atom[universe.projected_atom['molecule'] > -1].set_index('atom')['molecule'].to_dict()
-    universe.atom['molecule'] = universe.atom.index.map(lambda x: atom_mid_map[x] if x in atom_mid_map else -1)
-    del atom_mid_map
-    # Now compute molecule table
-    universe.projected_atom['mass'] = universe.projected_atom['symbol'].map(Isotope.symbol_to_mass())
-    universe.projected_atom['xm'] = universe.projected_atom['x'].mul(universe.projected_atom['mass'])
-    universe.projected_atom['ym'] = universe.projected_atom['y'].mul(universe.projected_atom['mass'])
-    universe.projected_atom['zm'] = universe.projected_atom['z'].mul(universe.projected_atom['mass'])
-    molecules = universe.projected_atom[universe.projected_atom['molecule'] > -1].groupby('molecule')
-    molecule = molecules['symbol'].apply(_molecule_formula).to_frame() # formula column
-    molecule.columns = ['formula']
-    molecule['formula'] = molecule['formula'].astype('category')
-    molecule['mass'] = molecules['mass'].sum()
-    molecule['cx'] = molecules['xm'].sum() / molecule['mass']
-    molecule['cy'] = molecules['ym'].sum() / molecule['mass']
-    molecule['cz'] = molecules['zm'].sum() / molecule['mass']
-    del universe.projected_atom['mass']
-    del universe.projected_atom['xm']
-    del universe.projected_atom['ym']
-    del universe.projected_atom['zm']
-    frame = universe.atom[['molecule', 'frame']].drop_duplicates('molecule')
-    frame = frame.set_index('molecule')['frame'].astype(np.int64)
-    frame[-1] = -1
-    molecule['frame'] = frame.astype('category')
-    return Molecule(molecule)
-
-
-def _compute_free_molecule(universe):
-    '''
-    Compute the molecule table and indices for a periodic universe.
-    '''
+    b0 = None
+    b1 = None
     bonded = universe.two[universe.two['bond'] == True]
+    if universe.is_periodic:
+        mapper = universe.projected_atom['atom']
+        b0 = bonded['prjd_atom0'].map(mapper)
+        b1 = bonded['prjd_atom1'].map(mapper)
+    else:
+        b0 = bonded['atom0']
+        b1 = bonded['atom1']
     graph = Graph()
-    graph.add_edges_from(bonded[['atom0', 'atom1']].values)
+    graph.add_edges_from(zip(b0.values, b1.values))
     mapper = {}
     for i, molecule in enumerate(connected_components(graph)):
         for atom in molecule:
@@ -122,27 +104,40 @@ def _compute_free_molecule(universe):
     idxs = universe.atom[universe.atom['bond_count'] == 0].index
     for i, index in enumerate(idxs):
         mapper[index] = i + n
-    # Set the molecule indices on the atom and projected_atom tables
-    universe.atom['molecule'] = universe.atom.index.map(lambda idx: mapper[idx] if idx in mapper else -1)
-    del mapper
+    # Set the molecule indices
+    universe.atom['molecule'] = universe.atom.index.map(lambda idx: mapper[idx])
     # Now compute molecule table
     universe.atom['mass'] = universe.atom['symbol'].map(Isotope.symbol_to_mass())
-    universe.atom['xm'] = universe.atom['x'].mul(universe.atom['mass'])
-    universe.atom['ym'] = universe.atom['y'].mul(universe.atom['mass'])
-    universe.atom['zm'] = universe.atom['z'].mul(universe.atom['mass'])
-    molecules = universe.atom[universe.atom['molecule'] > -1].groupby('molecule')
-    molecule = molecules['symbol'].apply(_molecule_formula).to_frame() # formula column
-    molecule.columns = ['formula']
-    molecule['formula'] = molecule['formula'].astype('category')
+    # The coordinates of visual_atom represent grouped molecules for
+    # periodic calculations and absolute coordinates for free boundary conditions.
+    molecules = universe.atom.groupby('molecule')
+    molecule = molecules['symbol'].value_counts().unstack().fillna(0).astype(np.int64)
+    molecule.columns.name = None
+    molecule['frame'] = universe.atom.drop_duplicates('molecule').set_index('molecule')['frame']
     molecule['mass'] = molecules['mass'].sum()
-    molecule['cx'] = molecules['xm'].sum() / molecule['mass']
-    molecule['cy'] = molecules['ym'].sum() / molecule['mass']
-    molecule['cz'] = molecules['zm'].sum() / molecule['mass']
     del universe.atom['mass']
+    frame = universe.atom[['molecule', 'frame']].drop_duplicates('molecule')
+    frame = frame.set_index('molecule')['frame'].astype(np.int64)
+    molecule['frame'] = frame.astype('category')
+    return Molecule(molecule)
+
+
+def compute_molecule_com(universe):
+    '''
+    Compute molecules' center of mass.
+    '''
+    universe.atom['mass'] = universe.atom['symbol'].map(Isotope.symbol_to_mass())
+    universe.atom['xm'] = universe.visual_atom['x'].mul(universe.atom['mass'])
+    universe.atom['ym'] = universe.visual_atom['y'].mul(universe.atom['mass'])
+    universe.atom['zm'] = universe.visual_atom['z'].mul(universe.atom['mass'])
+    molecules = universe.atom.groupby('molecule')
+    molecule = (molecules['xm'].sum() / universe.molecule['mass']).to_frame()
+    molecule.index.names = ['molecule']
+    molecule.columns = ['cx']
+    molecule['cy'] = molecules['ym'].sum() / universe.molecule['mass']
+    molecule['cz'] = molecules['zm'].sum() / universe.molecule['mass']
     del universe.atom['xm']
     del universe.atom['ym']
     del universe.atom['zm']
-    frame = universe.atom[['molecule', 'frame']].drop_duplicates('molecule')
-    frame = frame.set_index('molecule')['frame']
-    molecule['frame'] = frame
-    return Molecule(molecule)
+    del universe.atom['mass']
+    return molecule

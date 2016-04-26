@@ -50,15 +50,16 @@ class BaseAtom(DataFrame):
     '''
     Base atom and related datframe.
     '''
+    _precision = 2
     _indices = ['atom']
     _columns = ['x', 'y', 'z', 'symbol', 'frame']
-    _traits = ['x', 'y', 'z']
     _groupbys = ['frame']
     _categories = {'frame': np.int64, 'label': np.int64, 'symbol': str}
 
-    def _get_custom_traits(self):
+    def _custom_trait_creator(self):
         '''
-        Creates four custom traits; radii, colors, symbols, and symbol codes.
+        Custom trait creator function because traits from the atom table are
+        not automatically created via exa.numerical.
         '''
         grps = self.groupby('frame')
         symbols = grps.apply(lambda g: g['symbol'].cat.codes.values)
@@ -68,8 +69,14 @@ class BaseAtom(DataFrame):
         radii = Dict({i: radii[v] for i, v in symmap.items()}).tag(sync=True)
         colors = Isotope.symbol_to_color()[self['symbol'].unique()]
         colors = Dict({i: colors[v] for i, v in symmap.items()}).tag(sync=True)
-        return {'atom_symbols': symbols, 'atom_radii': radii,
-                'atom_colors': colors}
+        atom_x = grps.apply(lambda g: g['x'].values).to_json(orient='values', double_precision=self._precision)
+        atom_x = Unicode(atom_x).tag(sync=True)
+        atom_y = grps.apply(lambda g: g['y'].values).to_json(orient='values', double_precision=self._precision)
+        atom_y = Unicode(atom_y).tag(sync=True)
+        atom_z = grps.apply(lambda g: g['z'].values).to_json(orient='values', double_precision=self._precision)
+        atom_z = Unicode(atom_z).tag(sync=True)
+        return {'atom_symbols': symbols, 'atom_radii': radii, 'atom_colors': colors,
+                'atom_x': atom_x, 'atom_y': atom_y, 'atom_z': atom_z}
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -97,10 +104,11 @@ class Atom(BaseAtom):
         '''
         Reset the label column
         '''
-        if 'label' in self.columns:
+        if 'label' in self:
             del self['label']
-        nats = self.groupby('frame').apply(lambda g: len(g)).values
+        nats = self.groupby('frame').size().values
         self['label'] = [i for nat in nats for i in range(nat)]
+        self['label'] = self['label'].astype('category')
 
     def compute_simple_formula(self):
         '''
@@ -122,7 +130,12 @@ class Atom(BaseAtom):
         '''
         xyz = self[['x', 'y', 'z']]
         unit = np.mod(xyz, rxyz) + oxyz
-        return UnitAtom(unit[unit != xyz].astype(np.float64).to_sparse())
+        return UnitAtom(unit[unit != xyz].astype(np.float64).dropna(how='all').to_sparse())
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        if 'label' not in self.columns:
+            self.reset_label()
 
 
 class UnitAtom(SparseDataFrame):
@@ -148,8 +161,15 @@ class ProjectedAtom(BaseAtom):
     def _get_custom_traits(self):
         return {}
 
+    def reset_label(self, atom_label):
+        '''
+        '''
+        if 'label' in self:
+            del self['label']
+        self['label'] = self['atom'].map(atom_label)
 
-class VisAtom(SparseDataFrame):
+
+class VisualAtom(SparseDataFrame):
     '''
     Akin to :class:`~atomic.atom.UnitAtom`, this class is used to store a special
     set of coordinates used specifically for visualization. Typically these coordinates
@@ -218,3 +238,61 @@ def _compute_projected_static(universe):
     df['symbol'] = pd.Series(ua['symbol'].astype(str).values.tolist() * 27, dtype='category')
     df['atom'] = pd.Series(ua.index.values.tolist() * 27, dtype='category')
     return ProjectedAtom(df)
+
+
+def compute_visual_atom(universe):
+    '''
+    Creates visually pleasing atomic coordinates (useful for periodic
+    systems).
+
+    See Also:
+        :func:`~atomic.universe.Universe.compute_vis_atom`
+    '''
+    if not universe.is_periodic:
+        raise TypeError('Is this a periodic universe? Check frame for periodic column.')
+    if 'bond_count' not in universe.projected_atom:
+        universe.compute_projected_bond_count()
+    if not universe._is('molecule'):
+        universe.compute_molecule()
+
+    bonded = universe.two.ix[(universe.two['bond'] == True), ['prjd_atom0', 'prjd_atom1']]
+    updater = universe.projected_atom[universe.projected_atom.index.isin(bonded.stack())]
+    dup_atom = updater.ix[updater['atom'].duplicated(), 'atom']
+    if len(dup_atom) > 0:
+        dup = updater[updater['atom'].isin(dup_atom)].sort_values('bond_count', ascending=False)
+        updater = updater[~updater.index.isin(dup.index)]
+        updater = updater.set_index('atom')[['x', 'y', 'z']]
+        grps = dup.groupby('atom')
+        indices = np.empty((grps.ngroups, ), dtype='O')
+        for i, (atom, grp) in enumerate(grps):
+            if len(grp) > 0:
+                m = universe.atom.ix[atom, 'molecule']
+                diff = grp.index[1] - grp.index[0]
+                atom_m = universe.atom[universe.atom['molecule'] == m]
+                prjd = universe.projected_atom[universe.projected_atom['atom'].isin(atom_m.index)]
+                notidx = grp.index[1]
+                if grp['bond_count'].diff().values[-1] == 0:
+                    updater = pd.concat((atom_m[['x', 'y', 'z']], updater))
+                    updater = updater.reset_index().drop_duplicates('atom').set_index('atom')
+                    indices[i] = []
+                else:
+                    mol = bonded[bonded['prjd_atom0'].isin(prjd.index) |
+                                 bonded['prjd_atom1'].isin(prjd.index)].stack().values
+                    mol = mol[mol != notidx]
+                    mol += diff
+                    indices[i] = mol.tolist() + [grp.index[1]]
+            else:
+                indices[i] = []
+        indices = np.concatenate(indices).astype(np.int64)
+        up = universe.projected_atom[universe.projected_atom.index.isin(indices)]
+        up = up.set_index('atom')[['x', 'y', 'z']]
+        if len(up) > 0:
+            updater = pd.concat((up, updater))
+            updater = updater.reset_index().drop_duplicates('atom').set_index('atom')
+    else:
+        updater = updater.set_index('atom')[['x', 'y', 'z']]
+    vis = universe.atom.copy()[['x', 'y', 'z']]
+    vis.update(updater)
+    vis = vis[vis != universe.atom[['x', 'y', 'z']]].dropna(how='all')
+    vis = VisualAtom(vis.to_sparse())
+    return vis
