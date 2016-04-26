@@ -161,11 +161,13 @@ define([
 
             this.display = {
                 'cell': false,
-                'axis': false
+                'axis': false,
+                'spheres': false,
             };
             this.display['folder'] = this.gui.addFolder('display');
             this.display['cell_checkbox'] = this.display.folder.add(this.display, 'cell');
             this.display['axis_checkbox'] = this.display.folder.add(this.display, 'axis');
+            this.display['spheres_checkbox'] = this.display.folder.add(this.display, 'spheres');
 
             this.display.cell_checkbox.onFinishChange(function(value) {
                 self.display.cell = value;
@@ -182,6 +184,10 @@ define([
                 } else {
                     self.axis_meshes = self.app3d.add_unit_axis();
                 };
+            });
+            this.display.spheres_checkbox.onFinishChange(function(value) {
+                self.display.spheres = value;
+                self.render_current_frame();
             });
 
             this.fields = {
@@ -256,6 +262,9 @@ define([
             render_current_frame
             -----------------------
             Renders atoms and bonds in the current frame (using the frame index).
+
+            Args:
+                spheres (bool): True for sphere geometries rather than points (default)
             */
             var symbols = this.gv(this.view.atom_symbols, this.top.index);
             var radii = utility.mapper(symbols, this.view.atom_radii_dict);
@@ -266,13 +275,19 @@ define([
             var v0 = this.gv(this.view.two_bond0, this.top.index);
             var v1 = this.gv(this.view.two_bond1, this.top.index);
             this.app3d.remove_meshes(this.atom_meshes);
-            this.atom_meshes = this.app3d.add_points(x, y, z, colors, radii);
+            if (this.display.spheres === true) {
+                this.atom_meshes = this.app3d.add_spheres(x, y, z, colors, radii);
+            } else {
+                this.atom_meshes = this.app3d.add_points(x, y, z, colors, radii);
+            };
             if (v0 !== undefined && v1 !== undefined) {
                 this.app3d.remove_meshes(this.bond_meshes);
                 this.bond_meshes = this.app3d.add_lines(v0, v1, x, y, z, colors);
             };
-            if (this.top.index === 0) {
+            if (this.top.index === 0 && this.display.spheres === false) {
                 this.app3d.set_camera_from_mesh(this.atom_meshes[0], 4.0, 4.0, 4.0);
+            } else {
+                this.app3d.set_camera_from_scene();
             };
         };
 
