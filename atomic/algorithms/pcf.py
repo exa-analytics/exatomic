@@ -31,7 +31,7 @@ class PCF(pd.DataFrame):
 
 
 def radial_pair_correlation(universe, a, b, dr=0.05, vr=dmax,
-                                    start=None, stop=None, length_unit='A'):
+                            start=None, stop=None, length_unit='A'):
     '''
     Compute the angularly independent pair correlation function.
 

@@ -264,7 +264,6 @@ def compute_visual_atom(universe):
         updater = updater.set_index('atom')[['x', 'y', 'z']]
         grps = dup.groupby('atom')
         indices = np.empty((grps.ngroups, ), dtype='O')
-
         for i, (atom, grp) in enumerate(grps):
             if len(grp) > 0:
                 m = universe.atom.ix[atom, 'molecule']
@@ -287,13 +286,11 @@ def compute_visual_atom(universe):
         indices = np.concatenate(indices).astype(np.int64)
         up = universe.projected_atom[universe.projected_atom.index.isin(indices)]
         up = up.set_index('atom')[['x', 'y', 'z']]
-
         if len(up) > 0:
             updater = pd.concat((up, updater))
             updater = updater.reset_index().drop_duplicates('atom').set_index('atom')
     else:
         updater = updater.set_index('atom')[['x', 'y', 'z']]
-
     vis = universe.atom.copy()[['x', 'y', 'z']]
     vis.update(updater)
     vis = vis[vis != universe.atom[['x', 'y', 'z']]].dropna(how='all')
