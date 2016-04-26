@@ -264,7 +264,7 @@ define([
             var dzk = this.gv(this.view.atomicfield_dzk, this.top.index);
             var values = this.gv(this.view.field_values, this.fields['field']);
             this.cube_field = new AtomicField(ox, oy, oz, nx, ny, nz, dxi, dxj, dxk,
-                                            dyi, dyj, dyk, dzi, dzj, dzk, values);
+                                              dyi, dyj, dyk, dzi, dzj, dzk, values);
             this.app3d.remove_meshes(this.cube_field_mesh);
             this.cube_field_mesh = this.app3d.add_scalar_field(this.cube_field, this.fields.isovalue, 2);
         };
@@ -290,24 +290,26 @@ define([
             var z = this.gv(this.view.atom_z, this.top.index);
             var v0 = this.gv(this.view.two_bond0, this.top.index);
             var v1 = this.gv(this.view.two_bond1, this.top.index);
+            this.app3d.remove_meshes(this.bond_meshes);
+            if (v0 !== undefined && v1 !== undefined) {
+                if (this.display.spheres === true) {
+                    this.bond_meshes = this.app3d.add_cylinders(v0, v1, x, y, z, colors, 0.12);
+                } else {
+                    this.bond_meshes = this.app3d.add_lines(v0, v1, x, y, z, colors);
+                };
+            };
             this.app3d.remove_meshes(this.atom_meshes);
             if (this.display.spheres === true) {
                 this.atom_meshes = this.app3d.add_spheres(x, y, z, colors, radii);
             } else {
                 this.atom_meshes = this.app3d.add_points(x, y, z, colors, radii);
             };
-            if (v0 !== undefined && v1 !== undefined) {
-                this.app3d.remove_meshes(this.bond_meshes);
+            if (this.top.index === 0) {
                 if (this.display.spheres === true) {
-                    this.bond_meshes = this.app3d.add_cylinders(v0, v1, x, y, z, colors, 0.2);
+                    this.app3d.set_camera_from_scene();
                 } else {
-                    this.bond_meshes = this.app3d.add_lines(v0, v1, x, y, z, colors);
+                    this.app3d.set_camera_from_mesh(this.atom_meshes[0], 4.0, 4.0, 4.0);
                 };
-            };
-            if (this.top.index === 0 && this.display.spheres === false) {
-                this.app3d.set_camera_from_mesh(this.atom_meshes[0], 4.0, 4.0, 4.0);
-            } else {
-                this.app3d.set_camera_from_scene();
             };
         };
 
