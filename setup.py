@@ -15,7 +15,7 @@ try:
         author_email='exa.data.analytics@gmail.com',
         url='https://exa-analytics.github.io/atomic',
         packages=find_packages(),
-        package_data={'atomic': ['static/*']},
+        package_data={'atomic': ['nbextensions/*.js']},
         include_package_data=True,
         license='Apache License Version 2.0'
     )
