@@ -10,8 +10,9 @@ import numpy as np
 import pandas as pd
 from atomic import Universe, Atom
 
-def nearest_molecules(universe, n, sources, others=None, symbols=None,
-                              by='atom', exact=False, convert=True):
+
+def nearest_molecules(universe, n, sources, others=None, source_symbols=None,
+                      other_symbols=None, by='atom', exact=False, convert=True):
     '''
     Get nearest n neighbor molecules/atoms to (each - if multiple source molecules/atoms
     exist per frame) other molecule/atom.
@@ -21,7 +22,7 @@ def nearest_molecules(universe, n, sources, others=None, symbols=None,
         # Get 5 nearest anything to solute
         compute_nearest_molecules(universe, 5, 'solute')
         # Get 5 nearest anything to solute's Na atom(s)
-        compute_nearest_molecules(universe, 5, 'solute', symbols='Na')
+        compute_nearest_molecules(universe, 5, 'solute', source_symbols='Na')
         # Get 5 nearest solvent to solute
         compute_nearest_molecules(universe, 5, 'solute', 'solvent')
         # Get 5 nearest solvent/hydroxide to solute
@@ -34,7 +35,8 @@ def nearest_molecules(universe, n, sources, others=None, symbols=None,
         n (int): Number of neighbors to find
         sources (str or list): Molecules/atoms to search from
         others (str or list): Molecules/atoms to select
-        symbols (str or list): Specific atoms of the source(s) to look from
+        source_symbols (str or list): Specific atoms of the source(s) to look from
+        other_symbols (str or list): Specific atom/formula of the others to count
         by (str): Search criteria, default 'atom': atom to atom distance, 'com': center of mass
         exact (bool): If false (default), include unclassified in partialverse, w/o counting
         convert (bool): If periodic universe, convert to free boundary conditions (default)
@@ -43,6 +45,8 @@ def nearest_molecules(universe, n, sources, others=None, symbols=None,
         partialverse (:class:`~atomic.universe.Universe): Partial universe with only nearest neighbors
 
     '''
+    if other_symbols is not None:
+        raise NotImplementedError()
     # Check arguments
     if 'classification' not in universe.molecule:
         raise TypeError('Please classify the molecules.')
@@ -58,27 +62,27 @@ def nearest_molecules(universe, n, sources, others=None, symbols=None,
         others = list(set(universe.molecule['classification'].cat.categories).difference(sources))
         if not exact:
             others += [np.nan]
-    if isinstance(symbols, str):
-        symbols = [symbols]
-    elif not isinstance(symbols, list) and symbols is not None:
-        raise TypeError('symbols must be str, list, or None')
+    if isinstance(source_symbols, str):
+        source_symbols = [source_symbols]
+    elif not isinstance(source_symbols, list) and source_symbols is not None:
+        raise TypeError('source_symbols must be str, list, or None')
     # Determine grouping algorithm
     if by == 'atom' and universe.is_periodic:
-        return _periodic_byatom(universe, n, sources, others, symbols, convert)
+        return _periodic_byatom(universe, n, sources, others, source_symbols, convert)
     elif by == 'atom' and not universe.is_periodic:
         raise NotImplementedError()
     elif by == 'com':
         raise NotImplementedError()
 
 
-def _periodic_byatom(uni, n, sources, others, symbols, convert):
+def _periodic_byatom(uni, n, sources, others, source_symbols, convert):
     '''
     Args:
         uni (:class:`~atomic.universe.Universe): Atomic universe
         n (int): Number of nearest molecules
         sources (list): List of source identifiers
         others (list): List of other identifiers
-        symbols (list): List of source symbols to look from
+        source_symbols (list): List of source symbols to look from
         convert (bool): Whether to convert to free boundary conditions or not
     '''
     # Select molecules using the classifications provided
@@ -97,8 +101,8 @@ def _periodic_byatom(uni, n, sources, others, symbols, convert):
 
     # Converting molecule indices into atom indices to search two body data
     satoms = uni.atom[uni.atom['molecule'].isin(smolecules.index)]
-    if isinstance(symbols, list):
-        satoms = satoms[satoms['symbol'].isin(symbols)]
+    if isinstance(source_symbols, list):
+        satoms = satoms[satoms['symbol'].isin(source_symbols)]
     oatoms = uni.atom[uni.atom['molecule'].isin(omolecules.index)]
     spa_idx = uni.projected_atom[uni.projected_atom['atom'].isin(satoms.index)].index
     opa_idx = uni.projected_atom[uni.projected_atom['atom'].isin(oatoms.index)].index

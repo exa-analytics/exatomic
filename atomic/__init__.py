@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-__atomic_version__ = (0, 2, 0)                  # atomic VERSION NUMBER
+__atomic_version__ = (0, 2, 1)                  # atomic VERSION NUMBER
 __version__ = '.'.join((str(v) for v in __atomic_version__))
 
 
