@@ -11,6 +11,11 @@ from exa.algorithms import arange1, arange2
 from atomic import Editor, Length, Atom
 from atomic.frame import minimal_frame
 
+
+header = '{nat}\n{comment}\n'
+comment = 'frame: {frame}'
+
+
 class XYZ(Editor):
     '''
     An editor for programmatically manipulating xyz and xyz-like files.
@@ -64,14 +69,38 @@ class XYZ(Editor):
         self._frame = minimal_frame(self.atom)
 
 
-def write_xyz(cls_or_string, path, unit='angstrom', traj=False):
+def write_xyz(uni_or_string, path, unit='angstrom', traj=False):
     '''
     Write an xyz file, set of xyz files, or xyz trajectory file.
 
     Args:
-        cls_or_string: One of :class:`~atomic.universe.Universe`, :class:`~atomic.filetypes.xyz.XYZ`, or string text
+        uni_or_string: One of :class:`~atomic.universe.Universe`, :class:`~atomic.filetypes.xyz.XYZ`, or string text
         path (str): Full file path or directory path
         unit (str): Output length unit (default angstrom)
         traj (bool): Write a trajectory file (default False)
     '''
-    raise NotImplementedError()
+    if isinstance(uni_or_string, Universe):
+        write_xyz_from_universe(uni_or_string.atom, path, unit, traj)
+    else:
+        raise NotImplementedError()
+
+
+def write_xyz_from_atom(atom, path, unit='angstrom', traj=True):
+    '''
+    Write an xyz file from a universe.
+
+    Args:
+        atom (:class:`~atomic.atom.Atom`): Atom dataframe
+        path (str): Directory path (traj=False) or file path (traj=True)
+        unit (str): Output length unit (Angstrom default)
+        traj (bool): If true, output xyz trajectory file, otherwise write xyz for every frame
+    '''
+    grps = atom.groupby('frame')
+    with open('xyz', 'w') as f:
+        for frame, atom in grps:
+            n = len(atom)
+            c = comment.format(frame=frame)
+            f.write(header.format(nat=n, comment=c))
+            atom.to_csv(f, header=False, index=False, sep=' ', float_format='%   .8f',
+                        columns=('symbol', 'x', 'y', 'z'), quoting=csv.QUOTE_NONE,
+                        escapechar=' ')

@@ -281,7 +281,7 @@ define([
             var symbols = this.gv(this.view.atom_symbols, this.top.index);
             var radii = utility.mapper(symbols, this.view.atom_radii_dict);
             var n = radii.length;
-            for (let i=0; i<n; i++) {
+            for (var i=0; i<n; i++) {
                 radii[i] *= 0.5;
             };
             var colors = utility.mapper(symbols, this.view.atom_colors_dict);

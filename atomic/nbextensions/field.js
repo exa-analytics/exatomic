@@ -52,7 +52,7 @@ define([
         */
         var r = new Float32Array(nr);
         r[0] = or;
-        for (let i=1; i<nr; i++) {
+        for (var i=1; i<nr; i++) {
             r[i] = r[i-1] + dx + dy + dz;
         };
         return r;
