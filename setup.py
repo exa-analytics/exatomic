@@ -1,7 +1,4 @@
 #!/usr/bin/env python
-import sys
-if sys.version_info < (3, 4):
-    raise Exception('exa requires Python 3.4+')
 from setuptools import setup, find_packages
 from atomic import __version__
 
