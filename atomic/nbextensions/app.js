@@ -166,7 +166,7 @@ define([
                 self.top.fps = value;
             });
             this.top.frame_dropdown.onFinishChange(function(value) {
-                self.top.frame = value;
+                self.top.frame = parseInt(value);
                 self.top.index = self.view.framelist.indexOf(self.top.frame);
                 self.top.index_slider.setValue(self.top.index);
             });
@@ -204,7 +204,7 @@ define([
 
             this.fields = {
                 'isovalue': 0.03,
-                'field': '',
+                'field': null,
                 'cur_fields': [null]
             };
 
@@ -233,6 +233,7 @@ define([
                 field_indices = [];
             };
             field_indices.push(null);
+            this.fields['field'] = null;
             this.fields['cur_fields'] = field_indices;
             this.fields.folder.__controllers[1].remove();
             this.fields['field_dropdown'] = this.fields.folder.add(this.fields, 'field', this.fields['cur_fields']);
@@ -281,7 +282,7 @@ define([
             var symbols = this.gv(this.view.atom_symbols, this.top.index);
             var radii = utility.mapper(symbols, this.view.atom_radii_dict);
             var n = radii.length;
-            for (let i=0; i<n; i++) {
+            for (var i=0; i<n; i++) {
                 radii[i] *= 0.5;
             };
             var colors = utility.mapper(symbols, this.view.atom_colors_dict);
