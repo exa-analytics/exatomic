@@ -23,12 +23,9 @@ class XYZ(Editor):
     Provides convenience methods for transforming an xyz like file on disk into a
     :class:`~atomic.universe.Universe`.
     '''
-    def parse_atom(self, unit=None):
+    def parse_atom(self):
         '''
         Extract the :class:`~atomic.atom.Atom` dataframe from the file.
-
-        Args:
-            unit (str): Can be enforced otherwise inferred from the file data.
 
         Note:
             This method will add a key "comments" to the meta attribute.
@@ -52,10 +49,9 @@ class XYZ(Editor):
         df['frame'] = df['frame'].astype('category')
         df.reset_index(drop=True, inplace=True)
         df.index.names = ['atom']
-        unit = unit if unit else 'A'
-        df['x'] *= Length[unit, 'au']
-        df['y'] *= Length[unit, 'au']
-        df['z'] *= Length[unit, 'au']
+        df['x'] *= Length[self.unit, 'au']
+        df['y'] *= Length[self.unit, 'au']
+        df['z'] *= Length[self.unit, 'au']
         self._atom = Atom(df)
         self.meta['comments'] = {line: self._lines[line] for line in comments}
 
@@ -67,6 +63,10 @@ class XYZ(Editor):
         :class:`~atomic.atom.Atom` if it doesn't already exist.
         '''
         self._frame = minimal_frame(self.atom)
+
+    def __init__(self, *args, unit='A', **kwargs):
+        super().__init__(*args, **kwargs)
+        self.unit = unit
 
 
 def write_xyz(uni_or_string, path, unit='angstrom', traj=False):
