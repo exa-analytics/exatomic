@@ -5,6 +5,7 @@ Atomic Editor
 '''
 from exa.editor import Editor as _Editor
 from atomic.universe import Universe
+from atomic.frame import minimal_frame
 
 
 class Editor(_Editor):
@@ -28,6 +29,12 @@ class Editor(_Editor):
         if self._atom is None:
             self.parse_atom()
         return self._atom
+
+    def parse_frame(self):
+        '''
+        By default, generate a minimal frame from the atom dataframe.
+        '''
+        self._frame = minimal_frame(self.atom)
 
     def to_universe(self, **kwargs):
         '''
