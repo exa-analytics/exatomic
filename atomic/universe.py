@@ -155,6 +155,14 @@ class Universe(Container):
         return self._field
 
     @property
+    def mocoef(self):
+        return self._mocoef
+
+    @property
+    def orbital(self):
+        return self._orbital
+
+    @property
     def field_values(self):
         '''
         Retrieve values of a specific field.
@@ -342,7 +350,8 @@ class Universe(Container):
 
     def __init__(self, frame=None, atom=None, two=None, field=None,
                  field_values=None, unit_atom=None, projected_atom=None,
-                 periodic_two=None, molecule=None, visual_atom=None, **kwargs):
+                 periodic_two=None, molecule=None, visual_atom=None,
+                 mocoef=None, orbital=None, **kwargs):
         '''
         The arguments field and field_values are paired: field is the dataframe
         containing all of the dimensions of the scalar or vector fields and
@@ -364,6 +373,8 @@ class Universe(Container):
         self._periodic_two = self._enforce_df_type('periodic_two', periodic_two)
         self._molecule = self._enforce_df_type('molecule', molecule)
         self._visual_atom = self._enforce_df_type('visual_atom', visual_atom)
+        self._mocoef = mocoef
+        self._orbital = orbital
         super().__init__(**kwargs)
         self.display = {'atom_table': 'atom'}
         ma = self.frame['atom_count'].max() if self._is('_atom') else 0
