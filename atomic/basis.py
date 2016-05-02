@@ -50,7 +50,7 @@ def cartesian_gaussian_ijk(l):
         for j in range(m):
             for k in range(m):
                 if i + j + k == l:
-                    values[h] = (k, j, i)
+                    values[h] = [k, j, i]
                     h += 1
     return values
 
@@ -72,28 +72,13 @@ def symbolic_gtfs(atom, basis):
         rz = ez - z
         r2 = rx**2 + ry**2 + rz**2
         for f, grp in bas:
-            function = 0
-            for alpha, c, shell in zip(grp['alpha'], grp['c'], grp['shell']):
-                l = lmap[shell.lower()]
-                for i, j, k in cartesian_gaussian_ijk(l):
-                    function += c * rx**i * ry**j * rz**k * sy.exp(-alpha * r2)
-            functions.append(function)
+            l = lmap[grp['shell'].values[0]]
+            for i, j, k in cartesian_gaussian_ijk(l):
+                function = 0
+                for alpha, c in zip(grp['alpha'], grp['c']):
+                    function += c * rx**int(i) * ry**int(j) * rz**int(k) * sy.exp(-alpha * r2)
+                functions.append(function)
     return functions
-
-
-def compute_molecular_orbitals(orbital_coefficient, basis_functions):
-    '''
-    Args:
-        orbital_coefficient (:class:`~atomic.orbital.Orbital`)
-        basis_functions (list): List of symbolic functions
-    '''
-    orbitals = []
-    for i, orbital in orbital_coefficient.groupby('orbital'):
-        function = 0
-        for c, f in zip(orbital['coefficient'], orbital['basis_function']):
-            function += c * basis_functions[f]
-        orbitals.append(function)
-    return orbitals
 
 
 if _conf['pkg_numba']:

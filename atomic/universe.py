@@ -40,7 +40,7 @@ from atomic.two import compute_projected_bond_count as _cpbc
 from atomic.molecule import Molecule
 from atomic.molecule import compute_molecule as _cm
 from atomic.molecule import compute_molecule_com as _cmcom
-from atomic.orbital import Orbital, OrbitalCoefficient
+from atomic.orbital import Orbital, MOMatrix
 from atomic.basis import Basis
 
 
@@ -75,7 +75,7 @@ class Universe(Container):
                              ('unit_atom', UnitAtom), ('projected_atom', ProjectedAtom),
                              ('periodic_two', PeriodicTwo), ('molecule', Molecule),
                              ('visual_atom', VisualAtom), ('field', AtomicField),
-                             ('orbital', Orbital), ('orbital_coefficient', OrbitalCoefficient),
+                             ('orbital', Orbital), ('momatrix', MOMatrix),
                              ('basis', Basis)])
 
     @property
@@ -159,8 +159,8 @@ class Universe(Container):
         return self._basis
 
     @property
-    def orbital_coefficient(self):
-        return self._orbital_coefficient
+    def momatrix(self):
+        return self._momatrix
 
     @property
     def is_periodic(self):
@@ -346,7 +346,7 @@ class Universe(Container):
     def __init__(self, frame=None, atom=None, two=None, field=None,
                  field_values=None, unit_atom=None, projected_atom=None,
                  periodic_two=None, molecule=None, visual_atom=None, orbital=None,
-                 orbital_coefficient=None, basis=None, **kwargs):
+                 momatrix=None, basis=None, **kwargs):
         '''
         The arguments field and field_values are paired: field is the dataframe
         containing all of the dimensions of the scalar or vector fields and
@@ -369,7 +369,7 @@ class Universe(Container):
         self._molecule = self._enforce_df_type('molecule', molecule)
         self._visual_atom = self._enforce_df_type('visual_atom', visual_atom)
         self._orbital = self._enforce_df_type('orbital', orbital)
-        self._orbital_coefficient = self._enforce_df_type('orbital_coefficient', orbital_coefficient)
+        self._momatrix = self._enforce_df_type('momatrix', momatrix)
         self._basis = self._enforce_df_type('basis', basis)
         super().__init__(**kwargs)
         self.display = {'atom_table': 'atom'}

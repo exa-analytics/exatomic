@@ -77,10 +77,10 @@ class Editor(ExaEditor):
         return self._orbital
 
     @property
-    def orbital_coefficient(self):
-        if self._orbital_coefficient is None:
-            self.parse_orbital_coefficient()
-        return self._orbital_coefficient
+    def momatrix(self):
+        if self._momatrix is None:
+            self.parse_momatrix()
+        return self._momatrix
 
     @property
     def field(self):
@@ -125,7 +125,7 @@ class Editor(ExaEditor):
     def parse_visual_atom(self):
         return
 
-    def parse_orbital_coefficient(self):
+    def parse_momatrix(self):
         return
 
     def to_universe(self, **kwargs):
@@ -142,7 +142,7 @@ class Editor(ExaEditor):
         return Universe(frame=self.frame, atom=self.atom, meta=self.meta, field=self.field,
                         orbital=self.orbital, basis=self.basis, molecule=self.molecule,
                         two=self.two, periodic_two=self.periodic_two, unit_atom=self.unit_atom,
-                        orbital_coefficient=None, **kwargs)
+                        momatrix=self.momatrix, **kwargs)
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -150,7 +150,7 @@ class Editor(ExaEditor):
         self._frame = None
         self._field = None
         self._orbital = None
-        self._orbital_coefficient = None
+        self._momatrix = None
         self._field = None
         self._two = None
         self._periodic_two = None
