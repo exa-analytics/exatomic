@@ -40,6 +40,8 @@ from atomic.two import compute_projected_bond_count as _cpbc
 from atomic.molecule import Molecule
 from atomic.molecule import compute_molecule as _cm
 from atomic.molecule import compute_molecule_com as _cmcom
+from atomic.orbital import Orbital, OrbitalCoefficient
+from atomic.basis import Basis
 
 
 class Universe(Container):
@@ -72,15 +74,9 @@ class Universe(Container):
     _df_types = OrderedDict([('frame', Frame), ('atom', Atom), ('two', Two),
                              ('unit_atom', UnitAtom), ('projected_atom', ProjectedAtom),
                              ('periodic_two', PeriodicTwo), ('molecule', Molecule),
-                             ('visual_atom', VisualAtom), ('field', AtomicField)])
-
-    @property
-    def is_periodic(self):
-        return self.frame.is_periodic
-
-    @property
-    def is_variable_cell(self):
-        return self.frame.is_variable_cell
+                             ('visual_atom', VisualAtom), ('field', AtomicField),
+                             ('orbital', Orbital), ('orbital_coefficient', OrbitalCoefficient),
+                             ('basis', Basis)])
 
     @property
     def frame(self):
@@ -155,17 +151,24 @@ class Universe(Container):
         return self._field
 
     @property
-    def field_values(self):
-        '''
-        Retrieve values of a specific field.
+    def orbital(self):
+        return self._orbital
 
-        Args:
-            field (int): Field index (corresponding to the fields dataframe)
+    @property
+    def basis(self):
+        return self._basis
 
-        Returns:
-            data: Series or dataframe object containing field values
-        '''
-        return self._field.field_values
+    @property
+    def orbital_coefficient(self):
+        return self._orbital_coefficient
+
+    @property
+    def is_periodic(self):
+        return self.frame.is_periodic
+
+    @property
+    def is_variable_cell(self):
+        return self.frame.is_variable_cell
 
     def compute_minimal_frame(self):
         '''
@@ -342,7 +345,8 @@ class Universe(Container):
 
     def __init__(self, frame=None, atom=None, two=None, field=None,
                  field_values=None, unit_atom=None, projected_atom=None,
-                 periodic_two=None, molecule=None, visual_atom=None, **kwargs):
+                 periodic_two=None, molecule=None, visual_atom=None, orbital=None,
+                 orbital_coefficient=None, basis=None, **kwargs):
         '''
         The arguments field and field_values are paired: field is the dataframe
         containing all of the dimensions of the scalar or vector fields and
@@ -364,6 +368,9 @@ class Universe(Container):
         self._periodic_two = self._enforce_df_type('periodic_two', periodic_two)
         self._molecule = self._enforce_df_type('molecule', molecule)
         self._visual_atom = self._enforce_df_type('visual_atom', visual_atom)
+        self._orbital = self._enforce_df_type('orbital', orbital)
+        self._orbital_coefficient = self._enforce_df_type('orbital_coefficient', orbital_coefficient)
+        self._basis = self._enforce_df_type('basis', basis)
         super().__init__(**kwargs)
         self.display = {'atom_table': 'atom'}
         ma = self.frame['atom_count'].max() if self._is('_atom') else 0
@@ -386,5 +393,4 @@ class Universe(Container):
             self._traits_need_update = False
         if self._is('_atom') and not self._is('_molecule'):
             if len(self) < 10 and self.frame['atom_count'].max() < 100:
-                pass
-                #self.compute_molecule()
+                self.compute_molecule()

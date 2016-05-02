@@ -9,7 +9,6 @@ import pandas as pd
 from io import StringIO
 from exa.algorithms import arange1, arange2
 from atomic import Editor, Length, Atom
-from atomic.frame import minimal_frame
 
 
 header = '{nat}\n{comment}\n'
@@ -54,15 +53,6 @@ class XYZ(Editor):
         df['z'] *= Length[self.unit, 'au']
         self._atom = Atom(df)
         self.meta['comments'] = {line: self._lines[line] for line in comments}
-
-    def parse_frame(self):
-        '''
-        Create a :class:`~atomic.frame.Frame` from the xyz file lines.
-
-        Wrapper around :func:`~atomic.frame.minimal_frame`; will create an
-        :class:`~atomic.atom.Atom` if it doesn't already exist.
-        '''
-        self._frame = minimal_frame(self.atom)
 
     def __init__(self, *args, unit='A', **kwargs):
         super().__init__(*args, **kwargs)

@@ -7,6 +7,7 @@ from exa.relational import Isotope, Length, Energy, Time, Amount, Constant
 
 
 from atomic._config import _conf
+from atomic.basis import Basis
 from atomic.frame import Frame
 from atomic.atom import Atom
 from atomic.molecule import Molecule

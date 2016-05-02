@@ -1,5 +1,5 @@
 Utilities
------------------------
+=================
 .. automodule:: atomic.formula
     :members:
 

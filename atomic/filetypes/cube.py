@@ -10,7 +10,6 @@ import pandas as pd
 from io import StringIO
 from exa import Series
 from atomic import Isotope, Universe, Editor, Atom, Length
-from atomic.frame import minimal_frame
 from atomic.field import AtomicField
 
 
@@ -30,16 +29,6 @@ class Cube(Editor):
     Warning:
         Be sure your cube is in atomic units.
     '''
-    @property
-    def field(self):
-        if self._field is None:
-            self.parse_field()
-        return self._field
-
-    @property
-    def field_values(self):
-        return self.field.field_values
-
     def parse_atom(self):
         '''
         Parse the :class:`~atomic.atom.Atom` object from the cube file in place.
@@ -91,20 +80,6 @@ class Cube(Editor):
         df['dzk'] = df['dzk'].astype(np.float64)
         fields = [Series(data[~np.isnan(data)])]
         self._field = AtomicField(fields, df)
-
-    def parse_frame(self):
-        '''
-        Create the :class:`~atomic.frame.Frame` from the atom dataframe.
-        '''
-        self._frame = minimal_frame(self.atom)
-
-    def to_universe(self, **kwargs):
-        '''
-        See Also:
-            See :class:`~atomic.universe.Universe` for additional arguments.
-        '''
-        return Universe(frame=self.frame, atom=self.atom, meta=self.meta,
-                        field=self.field, **kwargs)
 
     def _init(self):
         '''

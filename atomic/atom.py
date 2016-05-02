@@ -42,7 +42,7 @@ import numpy as np
 import pandas as pd
 from traitlets import Dict, Unicode
 from exa import DataFrame, SparseDataFrame
-from exa.algorithms import supercell3
+from exa.algorithms import supercell3d
 from atomic import Isotope
 
 
@@ -232,7 +232,7 @@ def _compute_projected_static(universe):
     rx = universe.frame.ix[idx, 'rx']
     ry = universe.frame.ix[idx, 'ry']
     rz = universe.frame.ix[idx, 'rz']
-    x, y, z = supercell3(x, y, z, rx, ry, rz)
+    x, y, z = supercell3d(x, y, z, rx, ry, rz)
     df = pd.DataFrame.from_dict({'x': x, 'y': y, 'z': z})
     df['frame'] = pd.Series(ua['frame'].astype(np.int64).values.tolist() * 27, dtype='category')
     df['symbol'] = pd.Series(ua['symbol'].astype(str).values.tolist() * 27, dtype='category')
