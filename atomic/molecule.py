@@ -100,8 +100,13 @@ def compute_molecule(universe):
     for i, molecule in enumerate(connected_components(graph)):
         for atom in molecule:
             mapper[atom] = i
-    n = max(mapper.values()) + 1
+    n = 1
+    if len(mapper.values()) > 0:
+        n += max(mapper.values())
+    else:
+        n -= 1
     idxs = universe.atom[universe.atom['bond_count'] == 0].index
+    print(idxs)
     for i, index in enumerate(idxs):
         mapper[index] = i + n
     # Set the molecule indices

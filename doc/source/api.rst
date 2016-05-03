@@ -19,6 +19,9 @@ Python
     modules/frame.rst
     modules/atom.rst
     modules/two.rst
+    modules/basis.rst
+    modules/orbital.rst
+    modules/field.rst
     modules/universe.rst
     modules/editor.rst
     modules/utility.rst
