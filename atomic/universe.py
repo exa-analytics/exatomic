@@ -202,6 +202,8 @@ class Universe(Container):
             meaning not applicable or not calculated.
         '''
         self.atom['bond_count'] = _cbc(self)
+        self.atom['bond_count'] = self.atom['bond_count'].fillna(0).astype(np.int64)
+        self.atom['bond_count'] = self.atom['bond_count'].astype('category')
 
     def compute_projected_bond_count(self):
         '''
@@ -210,6 +212,7 @@ class Universe(Container):
         '''
         self.projected_atom['bond_count'] = _cpbc(self)
         self.projected_atom['bond_count'] = self.projected_atom['bond_count'].fillna(-1).astype(np.int64)
+        self.projected_atom['bond_count'] = self.projected_atom['bond_count'].astype('category')
 
     def compute_molecule(self, com=False):
         '''
@@ -393,4 +396,5 @@ class Universe(Container):
             self._traits_need_update = False
         if self._is('_atom') and not self._is('_molecule'):
             if len(self) < 10 and self.frame['atom_count'].max() < 100:
-                self.compute_molecule()
+                pass
+                #self.compute_molecule()

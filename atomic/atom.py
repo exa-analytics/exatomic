@@ -54,7 +54,8 @@ class BaseAtom(DataFrame):
     _indices = ['atom']
     _columns = ['x', 'y', 'z', 'symbol', 'frame']
     _groupbys = ['frame']
-    _categories = {'frame': np.int64, 'label': np.int64, 'symbol': str}
+    _categories = {'frame': np.int64, 'label': np.int64, 'symbol': str,
+                   'bond_count': np.int64}
 
     def _custom_trait_creator(self):
         '''
@@ -156,7 +157,8 @@ class ProjectedAtom(BaseAtom):
     _columns = ['x', 'y', 'z', 'symbol', 'frame', 'atom']
     _traits = []
     _groupbys = ['frame']
-    _categories = {'atom': np.int64, 'frame': np.int64, 'label': np.int64, 'symbol': str}
+    _categories = {'atom': np.int64, 'frame': np.int64, 'label': np.int64,
+                   'symbol': str, 'bond_count': np.int64}
 
     def _get_custom_traits(self):
         return {}

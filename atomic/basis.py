@@ -12,9 +12,10 @@ from exa.numerical import DataFrame
 
 
 ex, ey, ez = sy.symbols('x, y, z', imaginary=False)
-lmap = {'s': 0, 'p': 1, 'd': 2, 'f': 3, 'g': 4,
-        'h': 5, 'i': 6, 'j': 7, 'k': 8, 'l': 9,
-        'm': 10, 'px': 1, 'py': 1, 'pz': 1}
+lmap = {'s': 0, 'p': 1, 'd': 2, 'f': 3, 'g': 4, 'h': 5, 'i': 6, 'k': 7, 'l': 8,
+        'm': 9, 'px': 1, 'py': 1, 'pz': 1}
+ml_count = {'s': 1, 'p': 3, 'd': 5, 'f': 7, 'g': 9, 'h': 11, 'i': 13, 'k': 15,
+            'l': 17, 'm': 19}
 
 
 class SymbolicBasis(Symbolic, DataFrame):
@@ -55,17 +56,22 @@ def cartesian_gaussian_ijk(l):
     return values
 
 
-def symbolic_gtfs(atom, basis):
+def _symbolic_cartesian_gtfs(universe):
     '''
     Generate symbolic Gaussian basis functions.
 
     Args:
-        atom (:class:`~atomic.atom.Atom`): Atom dataframe
-        basis (:class:`~atomic.basis.Basis`): Basis dataframe
+        universe (:class:`~atomic.unvierse.Universe`): Universe with basis dataframe
+
+    Returns:
+        basis_funcs (list): List of basis functions in atom, function order
+
+    Warning:
+        The functions returned are not normalized.
     '''
     functions = []
-    bases = basis.groupby('symbol')
-    for symbol, x, y, z in zip(atom['symbol'], atom['x'], atom['y'], atom['z']):
+    bases = universe.basis.groupby('symbol')
+    for symbol, x, y, z in zip(universe.atom['symbol'], universe.atom['x'], universe.atom['y'], universe.atom['z']):
         bas = bases.get_group(symbol).groupby('function')
         rx = ex - x
         ry = ey - y
