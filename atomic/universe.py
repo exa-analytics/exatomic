@@ -170,6 +170,13 @@ class Universe(Container):
     def is_variable_cell(self):
         return self.frame.is_variable_cell
 
+    @property
+    def basis_count(self):
+        '''
+        Returns:
+            nbasis (int): Number of basis functions (contracted in the case of Gaussians)
+        '''
+
     def compute_minimal_frame(self):
         '''
         Create a minimal frame using the atom table.
@@ -224,6 +231,7 @@ class Universe(Container):
             self._molecule = Molecule(pd.concat((self._molecule, _cmcom(self)), axis=1))
         else:
             self._molecule = _cm(self)
+
 
     def add_field(self, field, frame=None, field_values=None):
         '''
