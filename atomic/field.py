@@ -25,8 +25,21 @@ class AtomicField(Field):
     _columns = ['nx', 'ny', 'nz', 'ox', 'oy', 'oz', 'dxi', 'dxj', 'dxk',
                 'dyi', 'dyj', 'dyk', 'dzi', 'dzj', 'dzk', 'frame', 'label']
 
-    def compute_dv(self):
-        raise NotImplementedError()
+    def _compute_dv(self, index):
+        '''
+        Warning
+            Only implemented for cubic cubes currently.
+        '''
+        data = self.ix[[index]]
+        u = (data.dxi, data.dxj, data.dxk)
+        v = (data.dyi, data.dyj, data.dyk)
+        w = (data.dzi, data.dzj, data.dzk)
+        return np.dot(u, np.cross(v, w))
+
+    def _integrate(self, index):
+        #data = self.ix[[index]]
+        dv = self._compute_dv(index)
+        return (self.field_values[index] * dv).sum()
 
     def rotate(self, first, second, angle):
         '''
@@ -41,10 +54,11 @@ class AtomicField(Field):
             second (int): Index of second field
         '''
         # First check that the field have the same dimensions
-        raise NotImplementedError()
+        data0 = self.ix[[first]]
+        data1 = self.ix[[second]]
+        #raise NotImplementedError()
         f0 = self.field_values[first]
         f1 = self.field_values[second]
-        data = self.ix[[first]]
-        dv = data['dv']   # See compute_dv above
+        #dv = data['dv']   # See compute_dv above
         values = np.cos(angle) * f0 + np.sin(angle) * f1
-        return self.__class__(values, data)
+        return self.__class__(values, data0)
