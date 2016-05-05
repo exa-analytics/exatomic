@@ -62,6 +62,12 @@ define([
             });
         };
 
+        update_display_params() {
+            console.log('Inside update_display_params');
+            console.log(this);
+            console.log(self);
+        };
+
         resize() {
             this.app3d.resize();
         };
@@ -135,6 +141,7 @@ define([
                     self.app3d.renderer.setSize(1920, 1080);
                     self.app3d.camera.aspect = 1920 / 1080;
                     self.app3d.camera.updateProjectionMatrix();
+                    //self.app3d.add_unit_axis();
                     self.app3d.render();
                     var imgdat = self.app3d.renderer.domElement.toDataURL('image/png');
                     self.view.send({'type': 'image', 'data': imgdat});
@@ -199,6 +206,7 @@ define([
             });
             this.display.spheres_checkbox.onFinishChange(function(value) {
                 self.display.spheres = value;
+                self.update_display_params();
                 self.render_current_frame();
             });
 
@@ -291,6 +299,11 @@ define([
             var z = this.gv(this.view.atom_z, this.top.index);
             var v0 = this.gv(this.view.two_bond0, this.top.index);
             var v1 = this.gv(this.view.two_bond1, this.top.index);
+            console.log(this.cube_field);
+            if (this.cube_field !== undefined) {
+                this.app3d.remove_meshes(this.cube_field_mesh);
+                this.cube_field_mesh = this.app3d.add_scalar_field(this.cube_field, this.fields.isovalue, 2);
+            };
             this.app3d.remove_meshes(this.bond_meshes);
             if (v0 !== undefined && v1 !== undefined) {
                 if (this.display.spheres === true) {
