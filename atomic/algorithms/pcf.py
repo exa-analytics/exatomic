@@ -6,36 +6,26 @@ Pair Correlation Functions
 import numpy as np
 import pandas as pd
 from atomic import Length
-from atomic.two import dmax, dmin
 
 
-class PCF(pd.DataFrame):
-    '''
-    '''
-    def plot(self, count=True, secondary_y=True, **kwargs):
-        '''
-        Note:
-            Because we set_index before plotting, the "actual" plotting function
-            called is that of :class:`~exa.frames.DataFrame`.
-        '''
-        if secondary_y:
-            kwargs['secondary_y'] = self.columns[2]
-        ax = self.set_index(self.columns[0]).plot(**kwargs)
-        patches1, labels1 = ax.get_legend_handles_labels()
-        patches2, labels2 = ax.right_ax.get_legend_handles_labels()
-        legend = ax.legend(patches1+patches2, labels1+labels2, loc='best', frameon=True)
-        frame = legend.get_frame()
-        frame.set_facecolor('white')
-        frame.set_edgecolor('black')
-        return ax
-
-
-def radial_pair_correlation(universe, a, b, dr=0.05, vr=dmax,
-                            start=None, stop=None, length_unit='A'):
+def radial_pair_correlation(universe, a, b, dr=0.05, start=None, stop=None,
+                            output_length_unit='au', window=None):
     '''
     Compute the angularly independent pair correlation function.
 
-    This function is sometimes called the radial distribution function.
+    This function is sometimes called the pair radial distribution function. The
+    quality of the result depends strongly on the amount of two body distances
+    computed (see :func:`~atomic.two.compute_two_body`) in the case of a
+    periodic unvierse. Furthermore, the result can be skewed if only a single
+    atom a (or b) exists in each frame. In these situations one can use the
+    **window** and **dr** parameter to adjust the result accordingly. Reasonable
+    values for **dr** range from 0.1 to 0.01 and reasonable values for **window**
+    range from 1 to 5 (default is 1 - no smoothing).
+
+    .. code-block:: Python
+
+        pcf = radial_pair_correlation(universe, 'O', 'O')
+        pcf.plot(secondary_y='Pair Count')
 
     .. math::
 
@@ -53,10 +43,13 @@ def radial_pair_correlation(universe, a, b, dr=0.05, vr=dmax,
         a (str): First atom type
         b (str): Second atom type
         dr (float): Radial step size
-        vr (float): (Max) radius used during computation of two body properties
         start (float): Starting radial point
         stop (float): Stopping radial point
-        length_unit (str): Output unit of length
+        output_length_unit (str): Output unit of length
+        window (int): Smoothen data (useful when only a single a or b exist)
+
+    Returns:
+        pcf (:class:`~pandas.DataFrame`): Pair correlation distribution and count
 
     Note:
         Depending on the type of two body computation (or data) used, the volume
@@ -65,32 +58,48 @@ def radial_pair_correlation(universe, a, b, dr=0.05, vr=dmax,
         the number of properties used in the histogram (the triple summation
         above, divided by the normalization for the radial distance outward).
     '''
-    distances = universe.two.ix[(universe.two['symbols'].isin([a + b, b + a])), 'distance']    # Collect distances of interest
-    start = start if start else distances.min() - 0.1
-    stop = stop if stop else distances.max() - 0.1
-    bins = np.arange(start, stop, dr)           # The summation over Q_m (see docstring)
-    bins = np.append(bins, bins[-1] + dr)       # is simply a histogram of the distances
-    hist, bins = np.histogram(distances, bins)
-    n = len(distances)
-    m = len(universe)
-    nats = (universe.atom['symbol'].astype('O').value_counts() // m).astype(np.int64)
-    na = nats[a]
-    nb = nats[b]
-    v_two = 4 / 3 * np.pi * vr**3    # The volume used in computation of two body
-    rho = n / v_two                  # properties is part of the normalization factor
-    nn = na * nb // 2                # but not part of the pair count factor
+    if universe.is_variable_cell:
+        raise NotImplementedError('No support for variable cell PCFs')
+    # Filter relevant distances from the two body table and get some data
+    distances = universe.two.ix[universe.two['symbols'].isin([a+b, b+a]), 'distance']
+    vc = universe.atom['symbol'].value_counts()
+    vc.index = vc.index.astype(str)
+    n = vc[a] / len(universe)
+    m = vc[b] / len(universe)
     if a == b:
-        nn = na * (na - 1) // 2
-    elif na == 1 or nb == 1:
-        nn *= 2
-    r3 = bins[1:]**3 - bins[:-1]**3        # No need for approximations for the
-    g = hist / (4 / 3 * np.pi * r3 * rho)  # volume of a spherical shell
+        m -= 1    # Can't be paired with self
+        if window is None:
+            window = 2
+    if window is None:
+        window = 1
+    npairs = n * m // 2 # Total number of pairs per each entire frame
+    # Select appropriate defaults
+    start = distances.min() - 0.3
+    stop = distances.max()
+    bins = np.arange(start, stop, dr)
+    # and compute the histogram (triple summation)
+    hist, bins = np.histogram(distances, bins)
+    r3 = bins[1:]**3 - bins[:-1]**3    # Exact spherical shell volume
     r = (bins[1:] + bins[:-1]) / 2
-    r *= Length['au', length_unit]
-    c = hist.cumsum().astype(np.int64) / n
-    v_cell = universe.frame['cell_volume'].values[0]
-    c *= v_two / v_cell * nn
-    n1 = 'Pair Correlation Function ({0}, {1})'.format(a, b)
-    n2 = 'Distance ({0})'.format(length_unit)
-    n3 = 'Pair Count ({0}, {1})'.format(a, b)
-    return PCF.from_dict({n1: g, n2: r, n3: c})
+    nn = hist.sum()                    # Actual number of distances considered
+    g = hist * stop**3 / (r3 * nn)
+    count = hist.cumsum() * npairs / nn
+    if a == b:
+        count *= stop**3 / universe.frame['cell_volume'].max()
+    elif n == 1 or m == 1:
+        count *= 2 * stop / universe.frame['rx'].max()
+    df = pd.DataFrame.from_dict({'g$_{\mathrm{' + a + b + '}}$($r$)': g, 'Pair Count': count})
+    # Normalize for the fact that frames may have variable effective "stop" values
+    df.iloc[:, 1] *= (df.iloc[-4:, 1]**-1).mean()
+    # Smoothen if requested, necessary when n == 1 or m == 1, see note in docstring
+    df.iloc[:, 1] = df.iloc[:, 1].rolling(window=window).mean()
+    df.index = r
+    df.dropna(inplace=True)
+    if output_length_unit in Length.aliases:
+        output_length_unit = Length.aliases[output_length_unit]
+    df.index *= Length['au', output_length_unit]
+    if output_length_unit == 'A':
+        df.index.name = r'$r$ ($\mathrm{\AA}$)'
+    else:
+        df.index.name = r'$r$ ({})'.format(output_length_unit)
+    return df
