@@ -166,20 +166,38 @@ def add_cubic_field_from_mo(universe, rmin, rmax, nr, vector=None):
     values = [Series(v) for v in values.tolist()]
     return values, data
 
+def spherical_solid_harmonics(l, return_all=False):
+    '''
+    Generate a set of spherical solid harmonic functions for a given angular
+    momentum.
 
-def compute_molecular_orbitals(momatrix, basis_functions):
-    '''
+    .. code:: Python
+
+        spherical_solid_harmonics(1)
+
     Args:
-        momatrix (:class:`~atomic.orbital.MOMatrix`): Molecular orbital matrix
-        basis_functions (list): List of symbolic functions
     '''
-    x, y, z = sy.symbols('x, y, z', imaginary=False)
-    orbitals = []
-    for i, orbital in momatrix.groupby('vector'):
-        function = 0
-        for c, f in zip(orbital['coefficient'], orbital['basis_function']):
-            function += c * basis_functions[f]
-        #integral = sy.integrate(function**2, (x, -sy.oo, sy.oo), (y, -sy.oo, sy.oo), (z, -sy.oo, sy.oo))
-        #function /= sy.sqrt(integral)
-        orbitals.append(function)
-    return orbitals
+    desired_l = l
+    S = {(0,0): 1}
+    for l in range(1, desired_l + 1):
+        lminus1 = l - 1 if l >= 1 else 0
+        negl = -lminus1 if lminus1 != 0 else 0
+        # top
+        S[(l, l)] = sy.sqrt(2**kr(lminus1, 0) * (2 * lminus1 + 1) / (2 * lminus1 + 2)) * \
+                    (x * S[(lminus1, lminus1)] - (1 - kr(lminus1, 0)) * y * S[(lminus1, negl)])
+        # bottom
+        S[(l, negl - 1)] = sy.sqrt(2**kr(lminus1, 0) * (2 * lminus1 + 1) / (2 * lminus1 + 2)) * \
+                           (y * S[(lminus1, lminus1)] + (1 - kr(lminus1, 0)) * x * S[(lminus1, negl)])
+        for m in range(-l, l + 1)[1:-1]:
+            lminus2 = lminus1 - 1 if lminus1 - 1 >= 0 else 0
+            S_lminus2_m = 0
+            if (lminus2, m) in S:
+                S_lminus2_m = S[(lminus2, m)]
+            S[(l, m)] = ((2 * lminus1 + 1) * z * S[(lminus1, m)] - sy.sqrt((lminus1 + m) * (lminus1 - m)) * \
+                         r2 * S_lminus2_m) / sy.sqrt((lminus1 + m + 1) * (lminus1 - m + 1))
+    for key in S:
+        S[key] = sy.simplify(S[key])
+    if return_all:
+        return S
+    else:
+        return {key: value for key, value in S.items() if key[0] == desired_l}

@@ -19,29 +19,6 @@ class Editor(ExaEditor):
     (such :class:`~atomic.atom.ProjectedAtom`) are available after creating a unvierse
     (:func:`~atomic.editor.Editor.to_universe`).
     '''
-    # Hidden bound methods for simple API
-    def _last_num_from_regex(self, regex, typ=int):
-        return typ(list(regex.items())[0][1].split()[-1])
-
-    def _last_nums_from_regex(self, regex, typ=float):
-        return [typ(i[1].split()[-1]) for i in list(regex.items())]
-
-    def _lineno_from_regex(self, regex):
-        return list(regex.items())[0][0]
-
-    def _linenos_from_regex(self, regex):
-        return [i[0] for i in list(regex.items())]
-
-    def _pandas_csv(self, flslice, ncol):
-        return pd.read_csv(flslice, delim_whitespace=True, 
-                           names=range(ncol)).stack().values   
-
-    def _patterned_array(self, regex, dim, ncols):
-        first = self._lineno_from_regex(regex) + 1
-        last = first + int(np.ceil(dim / ncols))
-        return self._pandas_csv(StringIO('\n'.join(self[first:last])), ncols)
-                                        
-
     @property
     def frame(self):
         '''
@@ -169,6 +146,27 @@ class Editor(ExaEditor):
                         orbital=self.orbital, basis=self.basis, molecule=self.molecule,
                         two=self.two, periodic_two=self.periodic_two, unit_atom=self.unit_atom,
                         momatrix=self.momatrix, **kwargs)
+
+    def _last_num_from_regex(self, regex, typ=int):
+        return typ(list(regex.items())[0][1].split()[-1])
+
+    def _last_nums_from_regex(self, regex, typ=float):
+        return [typ(i[1].split()[-1]) for i in list(regex.items())]
+
+    def _lineno_from_regex(self, regex):
+        return list(regex.items())[0][0]
+
+    def _linenos_from_regex(self, regex):
+        return [i[0] for i in list(regex.items())]
+
+    def _pandas_csv(self, flslice, ncol):
+        return pd.read_csv(flslice, delim_whitespace=True,
+                           names=range(ncol)).stack().values
+
+    def _patterned_array(self, regex, dim, ncols):
+        first = self._lineno_from_regex(regex) + 1
+        last = first + int(np.ceil(dim / ncols))
+        return self._pandas_csv(StringIO('\n'.join(self[first:last])), ncols)
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)

@@ -6,6 +6,7 @@ Representations of commonly used basis functions
 '''
 import numpy as np
 import sympy as sy
+from collections import OrderedDict
 from exa import _conf
 from exa.analytical import Symbolic
 from exa.numerical import DataFrame
@@ -27,9 +28,19 @@ class SymbolicBasis(Symbolic, DataFrame):
 class Basis(DataFrame):
     '''
     '''
+    _default_shell_order = cartesian_gaussian_ijk
     _columns = ['alpha', 'c', 'function', 'shell', 'symbol']
     _indices = ['basis']
     _categories = {'symbol': str, 'shell': str, 'name': str}
+
+    def __init__(self, *args, shell_order, **kwargs):
+        super().__init__(*args, **kwargs)
+        if isinstance(shell_order, int):
+            self.shell_order = cartesian_gaussian_ijk(shell_order)
+        elif isinstance(shell_order, list):
+            self.shell_order = shell_order
+        else:
+            raise TypeError()
 
 
 def cartesian_gaussian_ijk(l):
@@ -51,7 +62,7 @@ def cartesian_gaussian_ijk(l):
         for j in range(m):
             for k in range(m):
                 if i + j + k == l:
-                    values[h] = [k, j, i]
+                    values[h] = [i, j, k]
                     h += 1
     return values
 
