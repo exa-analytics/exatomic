@@ -183,4 +183,3 @@ def compute_molecular_orbitals(momatrix, basis_functions):
         #function /= sy.sqrt(integral)
         orbitals.append(function)
     return orbitals
->>>>>>> a4a3f87575fa5b6d4b984c4cf4ec7f91c643f46e
