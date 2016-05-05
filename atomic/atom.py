@@ -42,7 +42,7 @@ import numpy as np
 import pandas as pd
 from traitlets import Dict, Unicode
 from exa import DataFrame, SparseDataFrame
-from exa.algorithms import supercell3
+from exa.algorithms import supercell3d
 from atomic import Isotope
 
 
@@ -54,7 +54,8 @@ class BaseAtom(DataFrame):
     _indices = ['atom']
     _columns = ['x', 'y', 'z', 'symbol', 'frame']
     _groupbys = ['frame']
-    _categories = {'frame': np.int64, 'label': np.int64, 'symbol': str}
+    _categories = {'frame': np.int64, 'label': np.int64, 'symbol': str,
+                   'bond_count': np.int64}
 
     def _custom_trait_creator(self):
         '''
@@ -156,7 +157,8 @@ class ProjectedAtom(BaseAtom):
     _columns = ['x', 'y', 'z', 'symbol', 'frame', 'atom']
     _traits = []
     _groupbys = ['frame']
-    _categories = {'atom': np.int64, 'frame': np.int64, 'label': np.int64, 'symbol': str}
+    _categories = {'atom': np.int64, 'frame': np.int64, 'label': np.int64,
+                   'symbol': str, 'bond_count': np.int64}
 
     def _get_custom_traits(self):
         return {}
@@ -232,7 +234,7 @@ def _compute_projected_static(universe):
     rx = universe.frame.ix[idx, 'rx']
     ry = universe.frame.ix[idx, 'ry']
     rz = universe.frame.ix[idx, 'rz']
-    x, y, z = supercell3(x, y, z, rx, ry, rz)
+    x, y, z = supercell3d(x, y, z, rx, ry, rz)
     df = pd.DataFrame.from_dict({'x': x, 'y': y, 'z': z})
     df['frame'] = pd.Series(ua['frame'].astype(np.int64).values.tolist() * 27, dtype='category')
     df['symbol'] = pd.Series(ua['symbol'].astype(str).values.tolist() * 27, dtype='category')

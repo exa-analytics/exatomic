@@ -1,7 +1,4 @@
 #!/usr/bin/env python
-import sys
-if sys.version_info < (3, 4):
-    raise Exception('exa requires Python 3.4+')
 from setuptools import setup, find_packages
 from atomic import __version__
 
@@ -15,7 +12,7 @@ try:
         author_email='exa.data.analytics@gmail.com',
         url='https://exa-analytics.github.io/atomic',
         packages=find_packages(),
-        package_data={'atomic': ['static/*']},
+        package_data={'atomic': ['nbextensions/*.js']},
         include_package_data=True,
         license='Apache License Version 2.0'
     )
