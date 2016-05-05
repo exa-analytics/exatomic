@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-__atomic_version__ = (0, 2, 0)                  # atomic VERSION NUMBER
+__atomic_version__ = (0, 2, 1)                  # atomic VERSION NUMBER
 __version__ = '.'.join((str(v) for v in __atomic_version__))
 
 
@@ -7,6 +7,7 @@ from exa.relational import Isotope, Length, Energy, Time, Amount, Constant
 
 
 from atomic._config import _conf
+from atomic.basis import Basis
 from atomic.frame import Frame
 from atomic.atom import Atom
 from atomic.molecule import Molecule

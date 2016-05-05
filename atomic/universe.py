@@ -40,6 +40,8 @@ from atomic.two import compute_projected_bond_count as _cpbc
 from atomic.molecule import Molecule
 from atomic.molecule import compute_molecule as _cm
 from atomic.molecule import compute_molecule_com as _cmcom
+from atomic.orbital import Orbital, MOMatrix
+from atomic.basis import Basis
 
 
 class Universe(Container):
@@ -72,15 +74,9 @@ class Universe(Container):
     _df_types = OrderedDict([('frame', Frame), ('atom', Atom), ('two', Two),
                              ('unit_atom', UnitAtom), ('projected_atom', ProjectedAtom),
                              ('periodic_two', PeriodicTwo), ('molecule', Molecule),
-                             ('visual_atom', VisualAtom), ('field', AtomicField)])
-
-    @property
-    def is_periodic(self):
-        return self.frame.is_periodic
-
-    @property
-    def is_variable_cell(self):
-        return self.frame.is_variable_cell
+                             ('visual_atom', VisualAtom), ('field', AtomicField),
+                             ('orbital', Orbital), ('momatrix', MOMatrix),
+                             ('basis', Basis)])
 
     @property
     def frame(self):
@@ -155,25 +151,24 @@ class Universe(Container):
         return self._field
 
     @property
-    def mocoef(self):
-        return self._mocoef
-
-    @property
     def orbital(self):
         return self._orbital
 
     @property
-    def field_values(self):
-        '''
-        Retrieve values of a specific field.
+    def basis(self):
+        return self._basis
 
-        Args:
-            field (int): Field index (corresponding to the fields dataframe)
+    @property
+    def momatrix(self):
+        return self._momatrix
 
-        Returns:
-            data: Series or dataframe object containing field values
-        '''
-        return self._field.field_values
+    @property
+    def is_periodic(self):
+        return self.frame.is_periodic
+
+    @property
+    def is_variable_cell(self):
+        return self.frame.is_variable_cell
 
     def compute_minimal_frame(self):
         '''
@@ -207,6 +202,8 @@ class Universe(Container):
             meaning not applicable or not calculated.
         '''
         self.atom['bond_count'] = _cbc(self)
+        self.atom['bond_count'] = self.atom['bond_count'].fillna(0).astype(np.int64)
+        self.atom['bond_count'] = self.atom['bond_count'].astype('category')
 
     def compute_projected_bond_count(self):
         '''
@@ -215,6 +212,7 @@ class Universe(Container):
         '''
         self.projected_atom['bond_count'] = _cpbc(self)
         self.projected_atom['bond_count'] = self.projected_atom['bond_count'].fillna(-1).astype(np.int64)
+        self.projected_atom['bond_count'] = self.projected_atom['bond_count'].astype('category')
 
     def compute_molecule(self, com=False):
         '''
@@ -350,8 +348,8 @@ class Universe(Container):
 
     def __init__(self, frame=None, atom=None, two=None, field=None,
                  field_values=None, unit_atom=None, projected_atom=None,
-                 periodic_two=None, molecule=None, visual_atom=None,
-                 mocoef=None, orbital=None, **kwargs):
+                 periodic_two=None, molecule=None, visual_atom=None, orbital=None,
+                 momatrix=None, basis=None, **kwargs):
         '''
         The arguments field and field_values are paired: field is the dataframe
         containing all of the dimensions of the scalar or vector fields and
@@ -373,8 +371,9 @@ class Universe(Container):
         self._periodic_two = self._enforce_df_type('periodic_two', periodic_two)
         self._molecule = self._enforce_df_type('molecule', molecule)
         self._visual_atom = self._enforce_df_type('visual_atom', visual_atom)
-        self._mocoef = mocoef
-        self._orbital = orbital
+        self._orbital = self._enforce_df_type('orbital', orbital)
+        self._momatrix = self._enforce_df_type('momatrix', momatrix)
+        self._basis = self._enforce_df_type('basis', basis)
         super().__init__(**kwargs)
         self.display = {'atom_table': 'atom'}
         ma = self.frame['atom_count'].max() if self._is('_atom') else 0

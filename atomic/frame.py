@@ -109,8 +109,7 @@ def minimal_frame(atom):
     Create a minmal :class:`~atomic.frame.Frame` object from a
     :class:`~atomic.atom.Atom` object.
     '''
-    atom._revert_categories()
-    frame = atom.groupby('frame').count().ix[:, 0].to_frame()
+    frame = atom.groupby('frame').size().to_frame()
+    frame.index = frame.index.astype(np.int64)
     frame.columns = ['atom_count']
-    atom._set_categories()
     return Frame(frame)

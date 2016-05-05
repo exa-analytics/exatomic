@@ -49,7 +49,8 @@ class Two(DataFrame):
     _indices = ['two']
     _columns = ['distance', 'atom0', 'atom1', 'frame']
     _groupbys = ['frame']
-    _categories = {'frame': np.int64, 'symbols': str}
+    _categories = {'frame': np.int64, 'symbols': str, 'atom0': np.int64,
+                   'atom1': np.int64}
 
     def _get_bond_traits(self, atom):
         '''
@@ -88,6 +89,8 @@ class PeriodicTwo(Two):
     _index_prefix = 'prjd_atom'
     _indices = ['pbc_two']
     _columns = ['distance', 'prjd_atom0', 'prjd_atom1', 'frame']
+    _categories = {'frame': np.int64, 'symbols': str, 'prjd_atom0': np.int64,
+                   'prjd_atom1': np.int64}
 
     def mapped_atom(self, mapper):
         '''

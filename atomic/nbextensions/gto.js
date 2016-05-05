@@ -28,12 +28,12 @@ define([
     };
 
     var primitives = {
-        '1s': function(x, y, z) {
+        '1s': function(x, y, z, c, alpha) {
             var x2 = x*x;
             var y2 = y*y;
             var z2 = z*z;
             var r2 = x2 + y2 + z2;
-            return Math.exp(-r2);
+            return c * Math.exp(-alpha * r2);
         },
 
         '2s': function(x, y, z) {
