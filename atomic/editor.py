@@ -3,6 +3,9 @@
 Atomic Editor
 ====================================
 '''
+import numpy as np
+import pandas as pd
+from io import StringIO
 from exa.editor import Editor as _Editor
 from atomic.universe import Universe
 
@@ -12,11 +15,17 @@ class Editor(_Editor):
     Editor specific to the atomic package.
     '''
     # Hidden bound methods for simple API
-    def _last_num_from_regex(self, regex):
-        return int(list(regex.items())[0][1].split()[-1])
+    def _last_num_from_regex(self, regex, typ=int):
+        return typ(list(regex.items())[0][1].split()[-1])
+
+    def _last_nums_from_regex(self, regex, typ=float):
+        return [typ(i[1].split()[-1]) for i in list(regex.items())]
 
     def _lineno_from_regex(self, regex):
         return list(regex.items())[0][0]
+
+    def _linenos_from_regex(self, regex):
+        return [i[0] for i in list(regex.items())]
 
     def _pandas_csv(self, flslice, ncol):
         return pd.read_csv(flslice, delim_whitespace=True, 
