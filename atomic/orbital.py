@@ -7,9 +7,17 @@ Orbital information such as centers and energies.
 +-------------------+----------+-------------------------------------------+
 | Column            | Type     | Description                               |
 +===================+==========+===========================================+
-| frame             | int      | associated frame index                    |
+| frame             | category | non-unique integer (req.)                 |
 +-------------------+----------+-------------------------------------------+
-| energy            | float    | orbital energy                            |
+| orbital           | int      | vector of MO coefficient matrix           |
++-------------------+----------+-------------------------------------------+
+| label             | int      | label of orbital                          |
++-------------------+----------+-------------------------------------------+
+| occupation        | float    | population of orbital                     |
++-------------------+----------+-------------------------------------------+
+| energy            | float    | eigenvalue of orbital eigenvector         |
++-------------------+----------+-------------------------------------------+
+| symmetry          | str      | symmetry designation (if applicable)      |
 +-------------------+----------+-------------------------------------------+
 | x                 | float    | orbital center in x                       |
 +-------------------+----------+-------------------------------------------+
