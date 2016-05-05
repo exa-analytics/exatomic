@@ -32,10 +32,10 @@ from exa.algorithms import pdist, unordered_pairing
 from atomic import Isotope
 
 
-max_atoms_per_frame = 400
-max_frames = 1000
-max_atoms_per_frame_periodic = 400
-max_frames_periodic = 800
+max_atoms_per_frame = 300
+max_frames = 500
+max_atoms_per_frame_periodic = 200
+max_frames_periodic = 300
 bond_extra = 0.45
 dmin = 0.3
 dmax = 11.3

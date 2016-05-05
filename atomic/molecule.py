@@ -106,7 +106,6 @@ def compute_molecule(universe):
     else:
         n -= 1
     idxs = universe.atom[universe.atom['bond_count'] == 0].index
-    print(idxs)
     for i, index in enumerate(idxs):
         mapper[index] = i + n
     # Set the molecule indices
