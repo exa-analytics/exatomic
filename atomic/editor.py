@@ -9,6 +9,7 @@ from io import StringIO
 from exa.editor import Editor as ExaEditor
 from atomic.universe import Universe
 from atomic.frame import minimal_frame
+from atomic.basis import shell_order
 
 
 class Editor(ExaEditor):
@@ -19,6 +20,8 @@ class Editor(ExaEditor):
     (such :class:`~atomic.atom.ProjectedAtom`) are available after creating a unvierse
     (:func:`~atomic.editor.Editor.to_universe`).
     '''
+    shell_order = shell_order
+
     @property
     def frame(self):
         '''
@@ -145,7 +148,7 @@ class Editor(ExaEditor):
         return Universe(frame=self.frame, atom=self.atom, meta=self.meta, field=self.field,
                         orbital=self.orbital, basis=self.basis, molecule=self.molecule,
                         two=self.two, periodic_two=self.periodic_two, unit_atom=self.unit_atom,
-                        momatrix=self.momatrix, **kwargs)
+                        momatrix=self.momatrix, shell_order=shell_order, **kwargs)
 
     def _last_num_from_regex(self, regex, typ=int):
         return typ(list(regex.items())[0][1].split()[-1])

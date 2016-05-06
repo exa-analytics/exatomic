@@ -32,29 +32,22 @@ class Basis(DataFrame):
     _indices = ['basis']
     _categories = {'symbol': str, 'shell': str, 'name': str}
 
-    def __init__(self, *args, shell_order, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.shell_order = shell_order
 
-
-def cartesian_gaussian_ijk(l):
+def shell_order(l):
     '''
-    Generate coefficients for cartesian Gaussian type functions.
+    Generate coefficients for cartesian Gaussian type functions in NWChem specific order.
 
     Note:
         These coefficients result in linearly dependent Gaussian
         type functions.
-
-    Warning:
-        This function returns column-major (Fortran) order!
     '''
     m = l + 1
     n = (m + 1) * m // 2
     values = np.empty((n, 3), dtype=np.int64)
     h = 0
-    for i in range(m):
-        for j in range(m):
-            for k in range(m):
+    for i in range(l, -1, -1):
+        for j in range(l, -1, -1):
+            for k in range(l, -1, -1):
                 if i + j + k == l:
                     values[h] = [i, j, k]
                     h += 1
@@ -84,7 +77,7 @@ def _symbolic_cartesian_gtfs(universe):
         r2 = rx**2 + ry**2 + rz**2
         for f, grp in bas:
             l = lmap[grp['shell'].values[0]]
-            for i, j, k in cartesian_gaussian_ijk(l):
+            for i, j, k in universe.basis.shell_order(l):
                 function = 0
                 for alpha, c in zip(grp['alpha'], grp['c']):
                     function += c * rx**int(i) * ry**int(j) * rz**int(k) * sy.exp(-alpha * r2)
@@ -94,4 +87,4 @@ def _symbolic_cartesian_gtfs(universe):
 
 if _conf['pkg_numba']:
     from numba import jit
-    cartesian_gaussian_ijk = jit(nopython=True, cache=True)(cartesian_gaussian_ijk)
+    shell_order = jit(nopython=True, cache=True)(shell_order)

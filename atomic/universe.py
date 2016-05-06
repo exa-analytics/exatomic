@@ -357,7 +357,7 @@ class Universe(Container):
     def __init__(self, frame=None, atom=None, two=None, field=None,
                  field_values=None, unit_atom=None, projected_atom=None,
                  periodic_two=None, molecule=None, visual_atom=None, orbital=None,
-                 momatrix=None, basis=None, **kwargs):
+                 momatrix=None, basis=None, shell_order=None, **kwargs):
         '''
         The arguments field and field_values are paired: field is the dataframe
         containing all of the dimensions of the scalar or vector fields and
@@ -382,6 +382,7 @@ class Universe(Container):
         self._orbital = self._enforce_df_type('orbital', orbital)
         self._momatrix = self._enforce_df_type('momatrix', momatrix)
         self._basis = self._enforce_df_type('basis', basis)
+        self.shell_order = shell_order
         super().__init__(**kwargs)
         self.display = {'atom_table': 'atom'}
         ma = self.frame['atom_count'].max() if self._is('_atom') else 0
