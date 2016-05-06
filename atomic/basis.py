@@ -28,19 +28,13 @@ class SymbolicBasis(Symbolic, DataFrame):
 class Basis(DataFrame):
     '''
     '''
-    _default_shell_order = cartesian_gaussian_ijk
     _columns = ['alpha', 'c', 'function', 'shell', 'symbol']
     _indices = ['basis']
     _categories = {'symbol': str, 'shell': str, 'name': str}
 
     def __init__(self, *args, shell_order, **kwargs):
         super().__init__(*args, **kwargs)
-        if isinstance(shell_order, int):
-            self.shell_order = cartesian_gaussian_ijk(shell_order)
-        elif isinstance(shell_order, list):
-            self.shell_order = shell_order
-        else:
-            raise TypeError()
+        self.shell_order = shell_order
 
 
 def cartesian_gaussian_ijk(l):
