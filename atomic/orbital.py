@@ -26,12 +26,16 @@ Orbital information such as centers and energies.
 | z                 | float    | orbital center in z                       |
 +-------------------+----------+-------------------------------------------+
 '''
+import re
 import numpy as np
 import pandas as pd
 import sympy as sy
+from sympy.parsing.sympy_parser import parse_expr
+from sympy.physics.secondquant import KroneckerDelta as kr
 from exa import DataFrame, _conf, Series
 from exa.algorithms import meshgrid3d
-from atomic.basis import _symbolic_cartesian_gtfs
+from atomic.field import AtomicField
+from atomic.basis import _cartesian_ordering_function, lmap
 
 
 class Orbital(DataFrame):
@@ -80,6 +84,113 @@ class MOMatrix(DataFrame):
         return df.pivot('vector', 'basis_function', 'coefficient').to_sparse().values
 
 
+def solid_harmonics(l, return_all=False, standard_symbols=True):
+    '''
+    Generate a set of spherical solid harmonic functions for a given angular
+    momentum.
+
+        >>> solid_harmonics(0)
+        {(0, 0): 1}
+        >>> solid_harmonics(1, True)
+        {(0, 0): 1, (1, -1): y, (1, 0): z, (1, 1): x}
+
+    These are the real solutions to the :math:`L^{2}` and :math:`L_{z}`
+    operator's eignevalue problems (the complex solutions are called spherical
+    harmonics).
+
+    Args:
+        l (int): Orbital angular moment
+        return_all (bool): If true, return all computed solid harmonics
+        standard_symbols (bool): Convert to standard symbol notation (e.g. x*y => xy)
+
+    Returns:
+        functions (dict): Dictionary of (l, ml) keys and symbolic function values
+    '''
+    x, y, z = sy.symbols('x y z', imaginary=False)
+    r2 = x**2 + y**2 + z**2
+    desired_l = l
+    s = {(0,0): 1}
+    for l in range(1, desired_l + 1):
+        lminus1 = l - 1 if l >= 1 else 0
+        negl = -lminus1 if lminus1 != 0 else 0
+        # top
+        s[(l, l)] = sy.sqrt(2**kr(lminus1, 0) * (2 * lminus1 + 1) / (2 * lminus1 + 2)) * \
+                    (x * s[(lminus1, lminus1)] - (1 - kr(lminus1, 0)) * y * s[(lminus1, negl)])
+        # bottom
+        s[(l, negl - 1)] = sy.sqrt(2**kr(lminus1, 0) * (2 * lminus1 + 1) / (2 * lminus1 + 2)) * \
+                           (y * s[(lminus1, lminus1)] + (1 - kr(lminus1, 0)) * x * s[(lminus1, negl)])
+        for m in range(-l, l + 1)[1:-1]:
+            lminus2 = lminus1 - 1 if lminus1 - 1 >= 0 else 0
+            s_lminus2_m = 0
+            if (lminus2, m) in s:
+                s_lminus2_m = s[(lminus2, m)]
+            s[(l, m)] = ((2 * lminus1 + 1) * z * s[(lminus1, m)] - sy.sqrt((lminus1 + m) * (lminus1 - m)) * \
+                         r2 * s_lminus2_m) / sy.sqrt((lminus1 + m + 1) * (lminus1 - m + 1))
+    # If true, transform the symbolic notation of things like x*y (which represents dxy)
+    # to simply xy (which is also a symbol and therefore possible to manipulate
+    # with .subs({})).
+    if standard_symbols:
+        for i in range(2, desired_l + 1):
+            match0 = r'\*'.join(['([xyz])'] * i)
+            replace0 = r''.join(['\\' + str(j) for j in range(1, i + 1)])
+            match1 = r'([xyz])\*\*(\d+)'
+            for k, v in s.items():
+                if k[0] == i:
+                    expr = re.sub(match0, replace0, str(v.expand()))
+                    for arg, count in re.findall(r'([xyz])\*\*(\d+)', expr):
+                        count = int(count)
+                        f = r''.join([arg[0], ''.join([r'\*'] * count), str(count)])
+                        r = r''.join([arg[0]] * count)
+                        expr = re.sub(f, r, expr)
+                    s[k] = parse_expr(expr)
+    if return_all:
+        return s
+    return {key: value for key, value in s.items() if key[0] == desired_l}
+
+
+def _spherical_gtfs(universe):
+    '''
+    Generate symbolic ordered spherical (in cartesian coordinates)
+    Gaussian type function basis for the given universe.
+
+    Note:
+        This function exists here because the resultant functions are orbital
+        approximations.
+    '''
+    ex, ey, ez = sy.symbols('x y z', imaginary=False)
+    ordered_spherical_gtf_basis = []
+    bases = universe.basis.groupby('symbol')
+    lmax = universe.basis['shell'].map(lmap).max()
+    sh = solid_harmonics(lmax, True)
+    for symbol, x, y, z in zip(universe.atom['symbol'], universe.atom['x'],
+                               universe.atom['y'], universe.atom['z']):
+        bas = bases.get_group(symbol).groupby('function')
+        rx = ex - x
+        ry = ey - y
+        rz = ez - z
+        r2 = rx**2 + ry**2 + rz**2
+        for f, grp in bas:
+            l = lmap[grp['shell'].values[0]]
+            shell_functions = {}
+            for i, j, k in _cartesian_ordering_function(l):
+                function = 0
+                for alpha, c in zip(grp['alpha'], grp['c']):
+                    function += c * rx**int(i) * ry**int(j) * rz**int(k) * sy.exp(-alpha * r2)
+                shell_functions['x' * i + 'y' * j + 'z' * k] = function
+            # Reduce the linearly dependent cartesian basis
+            # to a linearly independent spherical basis.
+            if l == 0:
+                ordered_spherical_gtf_basis.append(shell_functions[''])
+            elif l == 1:
+                for lv, ml in universe.spherical_gtf_order.symbolic_keys(l):
+                    key = str(sh[(lv, ml)])
+                    ordered_spherical_gtf_basis.append(shell_functions[key])
+            else:
+                for lv, ml in universe.spherical_gtf_order.symbolic_keys(l):
+                    ordered_spherical_gtf_basis.append(sh[(lv, ml)].subs(shell_functions))
+    return ordered_spherical_gtf_basis
+
+
 def add_cubic_field_from_mo(universe, rmin, rmax, nr, vector=None):
     '''
     Create a cubic field from a given vector (molecular orbital).
@@ -109,7 +220,7 @@ def add_cubic_field_from_mo(universe, rmin, rmax, nr, vector=None):
     dzk = z[1] - z[0]
     dv = dxi * dyj * dzk
     x, y, z = meshgrid3d(x, y, z)
-    basis_funcs = _symbolic_cartesian_gtfs(universe)
+    basis_funcs = _spherical_gtfs(universe)
     basis_funcs = [sy.lambdify(('x', 'y', 'z'), func, 'numpy') for func in basis_funcs]
     if _conf['pkg_numba']:
         from numba import vectorize, float64
@@ -126,8 +237,6 @@ def add_cubic_field_from_mo(universe, rmin, rmax, nr, vector=None):
         v = basis_funcs[i](x, y, z)
         v /= np.sqrt((v**2 * dv).sum())
         bf_values[i, :] = v
-    # Transform from cartesian to spherical
-
     # Finally, add basis function values to form vectors
     # (normalized molecular orbitals).
     values = np.empty((n, nr**3), dtype=np.float64)
@@ -164,40 +273,4 @@ def add_cubic_field_from_mo(universe, rmin, rmax, nr, vector=None):
                                    'dzk': dzk, 'nx': nx, 'ny': ny, 'nz': nz, 'label': label,
                                    'ox': ox, 'oy': oy, 'oz': oz, 'frame': frame})
     values = [Series(v) for v in values.tolist()]
-    return values, data
-
-def spherical_solid_harmonics(l, return_all=False):
-    '''
-    Generate a set of spherical solid harmonic functions for a given angular
-    momentum.
-
-    .. code:: Python
-
-        spherical_solid_harmonics(1)
-
-    Args:
-    '''
-    desired_l = l
-    S = {(0,0): 1}
-    for l in range(1, desired_l + 1):
-        lminus1 = l - 1 if l >= 1 else 0
-        negl = -lminus1 if lminus1 != 0 else 0
-        # top
-        S[(l, l)] = sy.sqrt(2**kr(lminus1, 0) * (2 * lminus1 + 1) / (2 * lminus1 + 2)) * \
-                    (x * S[(lminus1, lminus1)] - (1 - kr(lminus1, 0)) * y * S[(lminus1, negl)])
-        # bottom
-        S[(l, negl - 1)] = sy.sqrt(2**kr(lminus1, 0) * (2 * lminus1 + 1) / (2 * lminus1 + 2)) * \
-                           (y * S[(lminus1, lminus1)] + (1 - kr(lminus1, 0)) * x * S[(lminus1, negl)])
-        for m in range(-l, l + 1)[1:-1]:
-            lminus2 = lminus1 - 1 if lminus1 - 1 >= 0 else 0
-            S_lminus2_m = 0
-            if (lminus2, m) in S:
-                S_lminus2_m = S[(lminus2, m)]
-            S[(l, m)] = ((2 * lminus1 + 1) * z * S[(lminus1, m)] - sy.sqrt((lminus1 + m) * (lminus1 - m)) * \
-                         r2 * S_lminus2_m) / sy.sqrt((lminus1 + m + 1) * (lminus1 - m + 1))
-    for key in S:
-        S[key] = sy.simplify(S[key])
-    if return_all:
-        return S
-    else:
-        return {key: value for key, value in S.items() if key[0] == desired_l}
+    return AtomicField(values, data)

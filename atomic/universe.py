@@ -41,7 +41,7 @@ from atomic.molecule import Molecule
 from atomic.molecule import compute_molecule as _cm
 from atomic.molecule import compute_molecule_com as _cmcom
 from atomic.orbital import Orbital, MOMatrix
-from atomic.basis import Basis
+from atomic.basis import Basis, SphericalGTFOrder, CartesianGTFOrder, lmap
 
 
 class Universe(Container):
@@ -76,8 +76,10 @@ class Universe(Container):
                              ('periodic_two', PeriodicTwo), ('molecule', Molecule),
                              ('visual_atom', VisualAtom), ('field', AtomicField),
                              ('orbital', Orbital), ('momatrix', MOMatrix),
-                             ('basis', Basis)])
-
+                             ('basis', Basis), ('spherical_gtf_order', SphericalGTFOrder),
+                             ('cartesian_gtf_order', CartesianGTFOrder)])
+    # Properties are used to mask function calls; this enables lazy
+    # lazy computation.
     @property
     def frame(self):
         if not self._is('_frame'):
@@ -171,11 +173,26 @@ class Universe(Container):
         return self.frame.is_variable_cell
 
     @property
+    def spherical_gtf_order(self):
+        if self._is('_spherical_gtf_order'):
+            return self._spherical_gtf_order
+        else:
+            raise Exception('Compute spherical_gtf_order first!')
+
+    @property
+    def cartesian_gtf_order(self):
+        if self._is('_cartesian_gtf_order'):
+            return self._cartesian_gtf_order
+        else:
+            raise Exception('Compute cartesian_gtf_order first!')
+
+    @property
     def basis_count(self):
         '''
         Returns:
             nbasis (int): Number of basis functions (contracted in the case of Gaussians)
         '''
+        raise NotImplementedError()
 
     def compute_minimal_frame(self):
         '''
@@ -232,6 +249,19 @@ class Universe(Container):
         else:
             self._molecule = _cm(self)
 
+    def compute_spherical_gtf_order(self, ordering_func):
+        '''
+        Compute the spherical Gaussian type function ordering dataframe.
+        '''
+        lmax = universe.basis['shell'].map(lmap).max()
+        self._spherical_gtf_order = SphericalGTFOrder.from_lmax_order(lmax, ordering_func)
+
+    def compute_cartesian_gtf_order(self, ordering_func):
+        '''
+        Compute the cartesian Gaussian type function ordering dataframe.
+        '''
+        lmax = universe.basis['shell'].map(lmap).max()
+        self._cartesian_gtf_order = SphericalGTFOrder.from_lmax_order(lmax, ordering_func)
 
     def add_field(self, field, frame=None, field_values=None):
         '''
@@ -357,7 +387,8 @@ class Universe(Container):
     def __init__(self, frame=None, atom=None, two=None, field=None,
                  field_values=None, unit_atom=None, projected_atom=None,
                  periodic_two=None, molecule=None, visual_atom=None, orbital=None,
-                 momatrix=None, basis=None, shell_order=None, **kwargs):
+                 momatrix=None, basis=None, spherical_gtf_order=None,
+                 cartesian_gtf_order=None, **kwargs):
         '''
         The arguments field and field_values are paired: field is the dataframe
         containing all of the dimensions of the scalar or vector fields and
@@ -382,7 +413,8 @@ class Universe(Container):
         self._orbital = self._enforce_df_type('orbital', orbital)
         self._momatrix = self._enforce_df_type('momatrix', momatrix)
         self._basis = self._enforce_df_type('basis', basis)
-        self.shell_order = shell_order
+        self._spherical_gtf_order = self._enforce_df_type('spherical_gtf_order', spherical_gtf_order)
+        self._cartesian_gtf_order = self._enforce_df_type('cartesian_gtf_order', cartesian_gtf_order)
         super().__init__(**kwargs)
         self.display = {'atom_table': 'atom'}
         ma = self.frame['atom_count'].max() if self._is('_atom') else 0

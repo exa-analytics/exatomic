@@ -9,7 +9,7 @@ from io import StringIO
 from exa.editor import Editor as ExaEditor
 from atomic.universe import Universe
 from atomic.frame import minimal_frame
-from atomic.basis import shell_order
+from atomic.basis import CartesianGTFOrder, SphericalGTFOrder, lmap
 
 
 class Editor(ExaEditor):
@@ -20,8 +20,6 @@ class Editor(ExaEditor):
     (such :class:`~atomic.atom.ProjectedAtom`) are available after creating a unvierse
     (:func:`~atomic.editor.Editor.to_universe`).
     '''
-    shell_order = shell_order
-
     @property
     def frame(self):
         '''
@@ -145,10 +143,19 @@ class Editor(ExaEditor):
             run the parsing functions "parse_*" again. This will only affect
             the editor object; it will not affect the universe object.
         '''
+        spherical_gtf_order = None
+        cartesian_gtf_order = None
+        if self._sgtfo_func is not None:
+            lmax = self.basis['shell'].map(lmap).max()
+            spherical_gtf_order = SphericalGTFOrder.from_lmax_order(lmax, self._sgtfo_func)
+        if self._cgtfo_func is not None:
+            lmax = self.basis['shell'].map(lmap).max()
+            cartesian_gtf_order = CartesianGTFOrder.from_lmax_order(lmax, self._cgtfo_func)
         return Universe(frame=self.frame, atom=self.atom, meta=self.meta, field=self.field,
                         orbital=self.orbital, basis=self.basis, molecule=self.molecule,
                         two=self.two, periodic_two=self.periodic_two, unit_atom=self.unit_atom,
-                        momatrix=self.momatrix, shell_order=shell_order, **kwargs)
+                        momatrix=self.momatrix, spherical_gtf_order=spherical_gtf_order,
+                        cartesian_gtf_order=cartesian_gtf_order, **kwargs)
 
     def _last_num_from_regex(self, regex, typ=int):
         return typ(list(regex.items())[0][1].split()[-1])
@@ -171,8 +178,9 @@ class Editor(ExaEditor):
         last = first + int(np.ceil(dim / ncols))
         return self._pandas_csv(StringIO('\n'.join(self[first:last])), ncols)
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args, sgtfo_func=None, cgtfo_func=None, **kwargs):
         super().__init__(*args, **kwargs)
+        self.meta = {'program': None}
         self._atom = None
         self._frame = None
         self._field = None
@@ -185,3 +193,5 @@ class Editor(ExaEditor):
         self._visual_atom = None
         self._molecule = None
         self._basis = None
+        self._sgtfo_func = sgtfo_func
+        self._cgtfo_func = cgtfo_func
