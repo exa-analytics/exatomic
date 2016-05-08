@@ -14,6 +14,19 @@ from sympy.physics.secondquant import KroneckerDelta as kr
 from exa import _conf
 
 
+class SolidHarmonic:
+    '''
+    Representation of a solid harmonic function.
+    '''
+
+
+class SolidHarmonics:
+    '''
+    Store a collection of solid harmonic functions.
+    '''
+
+
+
 def solid_harmonics(l, return_all=False, vectorize=False, standard_symbols=True):
     '''
     Generate a set of spherical solid harmonic functions for a given angular

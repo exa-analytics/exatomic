@@ -41,7 +41,7 @@ from atomic.molecule import Molecule
 from atomic.molecule import compute_molecule as _cm
 from atomic.molecule import compute_molecule_com as _cmcom
 from atomic.orbital import Orbital, MOMatrix
-from atomic.basis import Basis, SphericalGTFOrder, CartesianGTFOrder, lmap
+from atomic.basis import Basis, SphericalGTFOrder, CartesianGTFOrder
 
 
 class Universe(Container):
