@@ -4,6 +4,7 @@ Basis Function Manipulation
 ===============================
 Functions for managing and manipulating basis set data.
 '''
+import numpy as np
 from exa import _conf
 
 
@@ -13,16 +14,25 @@ ml_count = {'s': 1, 'p': 3, 'd': 5, 'f': 7, 'g': 9, 'h': 11, 'i': 13, 'k': 15,
             'l': 17, 'm': 19}
 
 
-def _cartesian_ordering_function(l):
+
+
+
+def cartesian_gtf_exponents(l):
     '''
-    Generic function for generating (linearly dependent) sets of cartesian
-    Gaussian type functions.
+    Generic generation of cartesian Gaussian type function exponents.
+
+    Generates the linearly dependent, :math:`i`, :math:`j`, :math:`k`, values for the Gaussian
+    type functions of the form:
+
+    .. math::
+
+        f(x, y, z) = x^{i}y^{j}z^{k}e^{-\alpha r^{2}}
 
     Args:
         l (int): Orbital angular momentum
 
     Returns:
-        array: Array of powers of x, y, z for cartesian Gaussian type functions
+        array: Array of i, j, k values for cartesian Gaussian type functions
 
     Note:
         This returns the linearly dependent indices (array) in arbitrary
@@ -43,4 +53,4 @@ def _cartesian_ordering_function(l):
 
 if _conf['pkg_numba']:
     from numba import jit
-    _cartesian_ordering_function = jit(nopython=True, cache=True)(_cartesian_ordering_function)
+    cartesian_gtf_exponents = jit(nopython=True, cache=True)(cartesian_gtf_exponents)

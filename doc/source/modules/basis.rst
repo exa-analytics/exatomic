@@ -1,4 +1,4 @@
-Basis Functions
-================
+Basis Set Representations
+=============================
 .. automodule:: atomic.basis
     :members:

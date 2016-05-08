@@ -2,37 +2,96 @@
 '''
 Basis Set Representations
 =============================
-Class that support representations of various basis sets.
+This module provides classes that support representations of various basis sets. There are a handful
+of basis sets in computational chemistry, the most common of which are Gaussian type functions, Slater type
+functions, and plane waves. The classes provided by this module support not only storage of basis
+set data, but also analytical and discrete manipulations of the basis set.
 
 See Also:
-    :mod:`~atomic.algorithms.basis`
+    For symbolic and discrete manipulations see :mod:`~atomic.algorithms.basis`.
 '''
 import pandas as pd
 import numpy as np
 from collections import OrderedDict
-from exa.numerical import DataFrame
+from exa import Symbolic, DataFrame
 
 
-class Basis(DataFrame):
+lmap = {'s': 0, 'p': 1, 'd': 2, 'f': 3, 'g': 4, 'h': 5, 'i': 6, 'k': 7, 'l': 8,
+        'm': 9, 'px': 1, 'py': 1, 'pz': 1}
+ml_count = {'s': 1, 'p': 3, 'd': 5, 'f': 7, 'g': 9, 'h': 11, 'i': 13, 'k': 15,
+            'l': 17, 'm': 19}
+
+
+class BasisSet(DataFrame):
     '''
-    Base class for storing basis set data.
+    Base class for description of a basis set.
     '''
-    def per_symbol_counts(self):
-        '''
-        Compute the number of basis functions per atomic symbolic.
-
-        Returns:
-            counts (:class:`~pandas.Series`): Per symbol/symbol+label basis sets.
-        '''
+    pass
 
 
-class GTFBasis(Basis):
+class SlaterBasisSet(BasisSet):
+    '''
+    Stores information about a Slater type basis set.
+
+    .. math::
+
+        r = \\left(\\left(x - A_{x}\\right)^{2} + \\left(x - A_{y}\\right)^{2} + \\left(z - A_{z}\\right)^{2}\\right)^{\\frac{1}{2}} \\\\
+        f\\left(x, y, z\\right) = \\left(x - A_{x}\\right)^{i}\\left(x - A_{y}\\right)^{j}\left(z - A_{z}\\right)^{k}r^{m}e^{-\\alpha r}
+    '''
+    pass
+
+
+class GaussianBasisSet(BasisSet):
     '''
     Stores information about a Gaussian type basis set.
+
+    A Gaussian type basis set is described by primitive Gaussian functions :math:`f\\left(x, y, z\\right)`
+    of the form:
+
+    .. math::
+
+        r^{2} = \\left(x - A_{x}\\right)^{2} + \\left(x - A_{y}\\right)^{2} + \\left(z - A_{z}\\right)^{2} \\\\
+        f\\left(x, y, z\\right) = \\left(x - A_{x}\\right)^{l}\\left(x - A_{y}\\right)^{m}\\left(z - A_{z}\\right)^{n}e^{-\\alpha r^{2}}
+
+    Note that :math:`l`, :math:`m`, and :math:`n` are not quantum numbers but positive integers
+    (including zero) whose sum defines the orbital angular momentum of the primitive function.
+    Each primitive function is centered on a given atom with coordinates :math:`\\left(A_{x}, A_{y}, A_{z}\\right)`.
+    A basis function in this basis set is a sum of one or more primitive functions:
+
+    .. math::
+
+        g_{i}\\left(x, y, z\\right) = \\sum_{j=1}^{N_{i}}c_{ij}f_{ij}\\left(x, y, z\\right)
+
+    Each primitive function :math:`f_{ij}` is parameterically dependent on its associated atom's
+    nuclear coordinates and specific values of :math:`\\alpha`, :math:`l`, :math:`m`, and :math:`n`.
+    For convenience in data storage, each primitive function record contains its value of
+    :math:`\\alpha` and coefficient (typically called the contraction coefficient) :math:`c`.
+
+    Attributes:
+        alpha (float): Value of :math:`\\alpha`
+        contraction_coefficient (float): Value of :math:`c`
+        nucleus:
     '''
-    _columns = ['alpha', 'c', 'function', 'shell', 'symbol']
-    _indices = ['basis']
-    _categories = {'symbol': str, 'shell': str, 'name': str}
+    _columns = ['alpha', 'c', 'basis_function', 'shell', 'basis_set']
+    _indices = ['primitive']
+    _categories = {'nucleus': 'O', 'shell': str, 'name': str, 'basis_function': np.int64}
+
+    def basis_count(self):
+        '''
+        Number of basis functions (:math:`g_{i}`) per symbol or label type.
+
+        Returns:
+            counts (:class:`~pandas.Series`)
+        '''
+        return self.groupby('symbol').apply(lambda g: g.groupby('function').apply(
+                                            lambda g: (g['shell'].map(ml_count)).values[0]).sum())
+
+
+class PlanewaveBasisSet(BasisSet):
+    '''
+    '''
+    pass
+
 
 
 class CartesianGTFOrder(DataFrame):

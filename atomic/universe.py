@@ -41,7 +41,8 @@ from atomic.molecule import Molecule
 from atomic.molecule import compute_molecule as _cm
 from atomic.molecule import compute_molecule_com as _cmcom
 from atomic.orbital import Orbital, MOMatrix
-from atomic.basis import Basis, SphericalGTFOrder, CartesianGTFOrder
+from atomic.basis import SphericalGTFOrder, CartesianGTFOrder
+from atomic.basis import lmap
 
 
 class Universe(Container):
@@ -76,7 +77,7 @@ class Universe(Container):
                              ('periodic_two', PeriodicTwo), ('molecule', Molecule),
                              ('visual_atom', VisualAtom), ('field', AtomicField),
                              ('orbital', Orbital), ('momatrix', MOMatrix),
-                             ('basis', Basis), ('spherical_gtf_order', SphericalGTFOrder),
+                             ('spherical_gtf_order', SphericalGTFOrder),
                              ('cartesian_gtf_order', CartesianGTFOrder)])
     # Properties are used to mask function calls; this enables lazy
     # lazy computation.
@@ -189,10 +190,27 @@ class Universe(Container):
     @property
     def basis_count(self):
         '''
+        Number of basis functions per atom type (typically symbol or label).
+
         Returns:
-            nbasis (int): Number of basis functions (contracted in the case of Gaussians)
+            basis_counts (:class:`~pandas.Series`): Basis function counts (per each symbol/label)
         '''
-        raise NotImplementedError()
+        return self.basis.function_counts()
+
+    @property
+    def total_basis_count(self):
+        '''
+        Total number of basis functions (per symbol/label per frame).
+
+        This is :func:`~atomic.universe.Universe.basis_count` multiplied by the
+        number of atoms of a given symbol/label.
+
+        Returns:
+            basis_counts (:class:`~pandas.Series`): Total basis function counts (per symbol/label)
+        '''
+        symbol_counts = self.atom['symbol'].value_counts() // len(self)
+        function_counts = self.basis.function_counts()
+        return symbol_counts * function_counts
 
     def compute_minimal_frame(self):
         '''
@@ -412,7 +430,7 @@ class Universe(Container):
         self._visual_atom = self._enforce_df_type('visual_atom', visual_atom)
         self._orbital = self._enforce_df_type('orbital', orbital)
         self._momatrix = self._enforce_df_type('momatrix', momatrix)
-        self._basis = self._enforce_df_type('basis', basis)
+        self._basis = basis
         self._spherical_gtf_order = self._enforce_df_type('spherical_gtf_order', spherical_gtf_order)
         self._cartesian_gtf_order = self._enforce_df_type('cartesian_gtf_order', cartesian_gtf_order)
         super().__init__(**kwargs)
