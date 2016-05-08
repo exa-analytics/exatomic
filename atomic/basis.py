@@ -22,9 +22,19 @@ ml_count = {'s': 1, 'p': 3, 'd': 5, 'f': 7, 'g': 9, 'h': 11, 'i': 13, 'k': 15,
             'l': 17, 'm': 19}
 
 
+class BasisSetSummary(DataFrame):
+    '''
+    Stores a summary of the basis set(s) used in the universe.
+    '''
+    _columns = ['id', 'name', 'function_count']
+    _indices = ['basis_set']
+    _categories = {'name': str}
+
+
 class BasisSet(DataFrame):
     '''
-    Base class for description of a basis set.
+    Base class for description of a basis set. Stores the parameters of the
+    individual (sometimes called primitive) functions used in the basis.
     '''
     pass
 
