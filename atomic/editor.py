@@ -99,6 +99,12 @@ class Editor(ExaEditor):
         if self._field is not None:
             return self.field.field_values
 
+    @property
+    def basis_set_summary(self):
+        if self._basis_set_summary is None:
+            self.parse_basis_set_summary()
+        return self._basis_set_summary
+
     # Placeholder functions; all parsing functions follow the same template as for frame:
     # self.frame is a property returns self._frame
     # self.parse_frame() sets self._frame, returns nothing
@@ -130,6 +136,9 @@ class Editor(ExaEditor):
         return
 
     def parse_momatrix(self):
+        return
+
+    def parse_basis_set_summary(self):
         return
 
     def to_universe(self, **kwargs):
@@ -167,7 +176,8 @@ class Editor(ExaEditor):
         return list(regex.items())[0][0]
 
     def _linenos_from_regex(self, regex):
-        return [i[0] for i in list(regex.items())]
+        return list(regex.keys())
+        #return [i[0] for i in list(regex.items())]
 
     def _pandas_csv(self, flslice, ncol):
         return pd.read_csv(flslice, delim_whitespace=True,
@@ -193,5 +203,6 @@ class Editor(ExaEditor):
         self._visual_atom = None
         self._molecule = None
         self._basis = None
+        self._basis_set_summary = None
         self._sgtfo_func = sgtfo_func
         self._cgtfo_func = cgtfo_func

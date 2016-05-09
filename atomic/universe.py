@@ -41,7 +41,7 @@ from atomic.molecule import Molecule
 from atomic.molecule import compute_molecule as _cm
 from atomic.molecule import compute_molecule_com as _cmcom
 from atomic.orbital import Orbital, MOMatrix
-from atomic.basis import SphericalGTFOrder, CartesianGTFOrder
+from atomic.basis import SphericalGTFOrder, CartesianGTFOrder, BasisSetSummary
 from atomic.basis import lmap
 
 
@@ -78,9 +78,10 @@ class Universe(Container):
                              ('visual_atom', VisualAtom), ('field', AtomicField),
                              ('orbital', Orbital), ('momatrix', MOMatrix),
                              ('spherical_gtf_order', SphericalGTFOrder),
-                             ('cartesian_gtf_order', CartesianGTFOrder)])
-    # Properties are used to mask function calls; this enables lazy
-    # lazy computation.
+                             ('cartesian_gtf_order', CartesianGTFOrder),
+                             ('basis_set_summary', BasisSetSummary)])
+    # Properties are used to mask function calls; this enables lazy and
+    # convenient computation.
     @property
     def frame(self):
         if not self._is('_frame'):
@@ -172,6 +173,10 @@ class Universe(Container):
     @property
     def is_variable_cell(self):
         return self.frame.is_variable_cell
+
+    @property
+    def basis_set_summary(self):
+        return self._basis_set_summary
 
     @property
     def spherical_gtf_order(self):
@@ -406,7 +411,7 @@ class Universe(Container):
                  field_values=None, unit_atom=None, projected_atom=None,
                  periodic_two=None, molecule=None, visual_atom=None, orbital=None,
                  momatrix=None, basis=None, spherical_gtf_order=None,
-                 cartesian_gtf_order=None, **kwargs):
+                 cartesian_gtf_order=None, basis_set_summary=None, **kwargs):
         '''
         The arguments field and field_values are paired: field is the dataframe
         containing all of the dimensions of the scalar or vector fields and
@@ -430,9 +435,10 @@ class Universe(Container):
         self._visual_atom = self._enforce_df_type('visual_atom', visual_atom)
         self._orbital = self._enforce_df_type('orbital', orbital)
         self._momatrix = self._enforce_df_type('momatrix', momatrix)
-        self._basis = basis
         self._spherical_gtf_order = self._enforce_df_type('spherical_gtf_order', spherical_gtf_order)
         self._cartesian_gtf_order = self._enforce_df_type('cartesian_gtf_order', cartesian_gtf_order)
+        self._basis_set_summary = self._enforce_df_type('basis_set_summary', basis_set_summary)
+        self._basis = basis
         super().__init__(**kwargs)
         self.display = {'atom_table': 'atom'}
         ma = self.frame['atom_count'].max() if self._is('_atom') else 0

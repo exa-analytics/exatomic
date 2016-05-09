@@ -55,7 +55,7 @@ class BaseAtom(DataFrame):
     _columns = ['x', 'y', 'z', 'symbol', 'frame']
     _groupbys = ['frame']
     _categories = {'frame': np.int64, 'label': np.int64, 'symbol': str,
-                   'bond_count': np.int64}
+                   'bond_count': np.int64, 'basis_set': np.int64}
 
     def _custom_trait_creator(self):
         '''
