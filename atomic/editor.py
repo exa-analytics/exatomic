@@ -69,10 +69,10 @@ class Editor(ExaEditor):
         return self._molecule
 
     @property
-    def basis(self):
-        if self._basis is None:
-            self.parse_basis()
-        return self._basis
+    def basis_set(self):
+        if self._basis_set is None:
+            self.parse_basis_set()
+        return self._basis_set
 
     @property
     def orbital(self):
@@ -123,7 +123,7 @@ class Editor(ExaEditor):
     def parse_field(self):
         return
 
-    def parse_basis(self):
+    def parse_basis_set(self):
         return
 
     def parse_orbital(self):
@@ -155,16 +155,17 @@ class Editor(ExaEditor):
         spherical_gtf_order = None
         cartesian_gtf_order = None
         if self._sgtfo_func is not None:
-            lmax = self.basis['shell'].map(lmap).max()
+            lmax = self.basis_set['shell'].map(lmap).max()
             spherical_gtf_order = SphericalGTFOrder.from_lmax_order(lmax, self._sgtfo_func)
         if self._cgtfo_func is not None:
-            lmax = self.basis['shell'].map(lmap).max()
+            lmax = self.basis_set['shell'].map(lmap).max()
             cartesian_gtf_order = CartesianGTFOrder.from_lmax_order(lmax, self._cgtfo_func)
         return Universe(frame=self.frame, atom=self.atom, meta=self.meta, field=self.field,
-                        orbital=self.orbital, basis=self.basis, molecule=self.molecule,
+                        orbital=self.orbital, basis_set=self.basis_set, molecule=self.molecule,
                         two=self.two, periodic_two=self.periodic_two, unit_atom=self.unit_atom,
                         momatrix=self.momatrix, spherical_gtf_order=spherical_gtf_order,
-                        cartesian_gtf_order=cartesian_gtf_order, **kwargs)
+                        cartesian_gtf_order=cartesian_gtf_order,
+                        basis_set_summary=self._basis_set_summary, **kwargs)
 
     def _last_num_from_regex(self, regex, typ=int):
         return typ(list(regex.items())[0][1].split()[-1])
@@ -202,7 +203,7 @@ class Editor(ExaEditor):
         self._unit_atom = None
         self._visual_atom = None
         self._molecule = None
-        self._basis = None
+        self._basis_set = None
         self._basis_set_summary = None
         self._sgtfo_func = sgtfo_func
         self._cgtfo_func = cgtfo_func

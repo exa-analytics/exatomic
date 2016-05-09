@@ -2,10 +2,11 @@
 '''
 Basis Set Representations
 =============================
-This module provides classes that support representations of various basis sets. There are a handful
-of basis sets in computational chemistry, the most common of which are Gaussian type functions, Slater type
-functions, and plane waves. The classes provided by this module support not only storage of basis
-set data, but also analytical and discrete manipulations of the basis set.
+This module provides classes that support representations of various basis sets.
+There are a handful of basis sets in computational chemistry, the most common of
+which are Gaussian type functions, Slater type functions, and plane waves. The
+classes provided by this module support not only storage of basis set data, but
+also analytical and discrete manipulations of the basis set.
 
 See Also:
     For symbolic and discrete manipulations see :mod:`~atomic.algorithms.basis`.
@@ -25,6 +26,22 @@ ml_count = {'s': 1, 'p': 3, 'd': 5, 'f': 7, 'g': 9, 'h': 11, 'i': 13, 'k': 15,
 class BasisSetSummary(DataFrame):
     '''
     Stores a summary of the basis set(s) used in the universe.
+
+    +-------------------+----------+-------------------------------------------+
+    | Column            | Type     | Description                               |
+    +===================+==========+===========================================+
+    | id                | str/cat  | code specific identifier                  |
+    +-------------------+----------+-------------------------------------------+
+    | name              | str/cat  | common basis set name/description         |
+    +-------------------+----------+-------------------------------------------+
+    | function_count    | int      | total number of basis functions           |
+    +-------------------+----------+-------------------------------------------+
+
+    Note:
+        The function count corresponds to the number of linearly independent
+        basis functions as provided by the basis set definition and used within
+        the code in solving the quantum mechanical eigenvalue problem (e.g.
+        s = 1, p = 3, d = 5, etc.).
     '''
     _columns = ['id', 'name', 'function_count']
     _indices = ['basis_set']
@@ -77,14 +94,23 @@ class GaussianBasisSet(BasisSet):
     For convenience in data storage, each primitive function record contains its value of
     :math:`\\alpha` and coefficient (typically called the contraction coefficient) :math:`c`.
 
-    Attributes:
-        alpha (float): Value of :math:`\\alpha`
-        contraction_coefficient (float): Value of :math:`c`
-        nucleus:
+    +-------------------+----------+-------------------------------------------+
+    | Column            | Type     | Description                               |
+    +===================+==========+===========================================+
+    | alpha             | float    | value of :math:`\\alpha`                  |
+    +-------------------+----------+-------------------------------------------+
+    | c                 | float    | value of the contraction coefficient      |
+    +-------------------+----------+-------------------------------------------+
+    | basis_function    | int/cat  | basis function group identifier           |
+    +-------------------+----------+-------------------------------------------+
+    | shell             | str/cat  | chemists' notation orbital shell          |
+    +-------------------+----------+-------------------------------------------+
+    | basis_set         | int/cat  | basis set identifier                      |
+    +-------------------+----------+-------------------------------------------+
     '''
     _columns = ['alpha', 'c', 'basis_function', 'shell', 'basis_set']
     _indices = ['primitive']
-    _categories = {'nucleus': 'O', 'shell': str, 'name': str, 'basis_function': np.int64}
+    _categories = {'basis_set': np.int64, 'shell': str, 'name': str, 'basis_function': np.int64}
 
     def basis_count(self):
         '''
@@ -107,6 +133,16 @@ class PlanewaveBasisSet(BasisSet):
 class CartesianGTFOrder(DataFrame):
     '''
     Stores cartesian basis function order with respect to basis function label.
+
+    +-------------------+----------+-------------------------------------------+
+    | Column            | Type     | Description                               |
+    +===================+==========+===========================================+
+    | x                 | int      | power of x                                |
+    +-------------------+----------+-------------------------------------------+
+    | y                 | int      | power of y                                |
+    +-------------------+----------+-------------------------------------------+
+    | z                 | int      | power of z                                |
+    +-------------------+----------+-------------------------------------------+
     '''
     _columns = ['x', 'y', 'z']
     _indices = ['order']

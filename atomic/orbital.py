@@ -63,24 +63,6 @@ class MOMatrix(DataFrame):
     _groupbys = ['orbital']
     _categories = {'orbital': np.int64, 'basis_function': np.int64, 'spin': np.int64}
 
-    def as_matrix(self, spin=0):
-        '''
-        Generate a sparse matrix of molecular orbital coefficients.
-
-        To fill nan values:
-
-        .. code-block:: Python
-
-            C = mo_matrix.as_matrix()
-            C.fillna(0, inplace=True)
-        '''
-        df = self
-        if 'spin' in self:
-            df = df[df['spin'] == spin]
-        return df.pivot('vector', 'basis_function', 'coefficient').to_sparse().values
-
-
-
 
 def _voluminate_cartesian_gtfs(universe, xx, yy, zz):
     '''

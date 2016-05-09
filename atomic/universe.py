@@ -2,17 +2,22 @@
 '''
 Universe (Container)
 ======================
-Like all secondary (meaning dependent on `exa`_) packages, atomic has a default,
-data aware container: the :class:`~atomic.container.Universe`.
-
 Conceptually, a universe is a collection of independent (or related) frames
 of a given system. For example, a universe may contain only a
-single frame with the geometry of the molecule (system) of interest, a set of
+single frame with the geometry of the molecule of interest, a set of
 snapshot geometries obtained during the course of a geometry optimization (one
 per frame), the same molecule's optimized geometry with each frame containing a
-different level of theory, a properties calculation test set of small molecules
-with one molecule per frame, a molecular dynamics simulation with each frame
-corresponding to a snaphot in time, etc., without restrictions.
+different level of theory, a properties calculation where each frame contains a
+different small molecule, a molecular dynamics simulation with each frame
+corresponding to a snaphot in time, etc.
+
+The data architecture (see :func:`~atomic.universe.Universe.data_architecture`)
+is composed of a collection of dataframes that represent properties in terms of
+concepts familiar to a computational chemist, such as atomic coordinates
+(:class:`~atomic.atom.Atom`), orbital energies (:class:`~atomic.orbital.Orbital`),
+orbital coefficients, basis set information, and fields (i.e. cube
+files). Furthermore, aggregate data such as two body properties (bonds) and
+atom collections (molecules) are available.
 
 .. _exa: http://exa-analytics.github.io/website
 '''
@@ -52,6 +57,7 @@ class Universe(Container):
     .. code-block:: Python
 
         u = Universe()               # Demo universe
+        u.data_architecture()        # Universe's dataframes
         atom = XYZ('myfile.xyz')
         u = atom.to_universe()       # Universe from XYZ file
         u                            # Render universe
@@ -62,7 +68,6 @@ class Universe(Container):
         first_frame = large_uni[0]   # Create a universe for only the first frame
         last_frame = large_uni[-1]   # Create a universe for only the last frame
         specific = large_uni[[0, 10, 20]] # Create universe for 0th, 10th, and 20th frames (positional index)
-
 
     See Also:
         For a conceptual description of the universe, see the module's docstring.
@@ -80,8 +85,11 @@ class Universe(Container):
                              ('spherical_gtf_order', SphericalGTFOrder),
                              ('cartesian_gtf_order', CartesianGTFOrder),
                              ('basis_set_summary', BasisSetSummary)])
-    # Properties are used to mask function calls; this enables lazy and
-    # convenient computation.
+    # Properties
+    # ============
+    # These are used to enable a simple API for performing (sometimes) complex
+    # operations; it also facilitates lazy computation (computation only
+    # when required)
     @property
     def frame(self):
         if not self._is('_frame'):
@@ -159,8 +167,8 @@ class Universe(Container):
         return self._orbital
 
     @property
-    def basis(self):
-        return self._basis
+    def basis_set(self):
+        return self._basis_set
 
     @property
     def momatrix(self):
@@ -192,31 +200,9 @@ class Universe(Container):
         else:
             raise Exception('Compute cartesian_gtf_order first!')
 
-    @property
-    def basis_count(self):
-        '''
-        Number of basis functions per atom type (typically symbol or label).
-
-        Returns:
-            basis_counts (:class:`~pandas.Series`): Basis function counts (per each symbol/label)
-        '''
-        return self.basis.function_counts()
-
-    @property
-    def total_basis_count(self):
-        '''
-        Total number of basis functions (per symbol/label per frame).
-
-        This is :func:`~atomic.universe.Universe.basis_count` multiplied by the
-        number of atoms of a given symbol/label.
-
-        Returns:
-            basis_counts (:class:`~pandas.Series`): Total basis function counts (per symbol/label)
-        '''
-        symbol_counts = self.atom['symbol'].value_counts() // len(self)
-        function_counts = self.basis.function_counts()
-        return symbol_counts * function_counts
-
+    # Compute
+    # ==============
+    # Compute methods create and attach new dataframe objects to the container
     def compute_minimal_frame(self):
         '''
         Create a minimal frame using the atom table.
@@ -276,19 +262,49 @@ class Universe(Container):
         '''
         Compute the spherical Gaussian type function ordering dataframe.
         '''
-        lmax = universe.basis['shell'].map(lmap).max()
+        lmax = universe.basis_set['shell'].map(lmap).max()
         self._spherical_gtf_order = SphericalGTFOrder.from_lmax_order(lmax, ordering_func)
 
     def compute_cartesian_gtf_order(self, ordering_func):
         '''
         Compute the cartesian Gaussian type function ordering dataframe.
         '''
-        lmax = universe.basis['shell'].map(lmap).max()
+        lmax = universe.basis_set['shell'].map(lmap).max()
         self._cartesian_gtf_order = SphericalGTFOrder.from_lmax_order(lmax, ordering_func)
 
-    def add_field(self, field, frame=None, field_values=None):
+    def compute_two_body(self, *args, truncate_projected=True, **kwargs):
         '''
-        Add (insert/concat) field to the current universe.
+        Compute two body properties for the current universe.
+
+        For arguments see :func:`~atomic.two.get_two_body`. Note that this
+        operation (like all compute) operations are performed in place.
+
+        Args:
+            truncate_projected (bool): Applicable to periodic universes - decreases the size of the projected atom table
+        '''
+        if self.is_periodic:
+            self._periodic_two = _ctb(self, *args, **kwargs)
+            if truncate_projected:
+                self.truncate_projected_atom()
+        else:
+            self._two = _ctb(self, *args, **kwargs)
+
+    def compute_visual_atom(self):
+        '''
+        Create visually pleasing coordinates (useful for periodic universes).
+        '''
+        self._visual_atom = _cva(self)
+
+    def append_dataframe(self, df):
+        '''
+        Attach a new dataframe or append the data of a given dataframe to the
+        appropriate existing dataframe.
+        '''
+        raise NotImplementedError()
+
+    def append_field(self, field, frame=None, field_values=None):
+        '''
+        Add (insert/concat) field dataframe to the current universe.
 
         Args:
             field: Complete field (instance of :class:`~exa.numerical.Field`) to add or field dimensions dataframe
@@ -336,39 +352,17 @@ class Universe(Container):
         '''
         raise NotImplementedError()
 
-    def compute_two_body(self, *args, truncate_projected=True, **kwargs):
-        '''
-        Compute two body properties for the current universe.
-
-        For arguments see :func:`~atomic.two.get_two_body`. Note that this
-        operation (like all compute) operations are performed in place.
-
-        Args:
-            truncate_projected (bool): Applicable to periodic universes - decreases the size of the projected atom table
-        '''
-        if self.is_periodic:
-            self._periodic_two = _ctb(self, *args, **kwargs)
-            if truncate_projected:
-                self.truncate_projected_atom()
-        else:
-            self._two = _ctb(self, *args, **kwargs)
-
     def truncate_projected_atom(self):
         '''
-        When generate, this table contains many atomic coordinates that are not
-        used when computing two body properties. This function will truncate
-        this table, keeping only useful coordinates. Projected coordinates
-        can always be generated using :func:`~atomic.atom.compute_projected_atom`.
+        When first generated, the projected_atom table contains many atomic
+        coordinates that are not used when computing two body properties. This
+        function will truncate this table, keeping only useful coordinates.
+        Projected coordinates can always be generated using
+        :func:`~atomic.atom.compute_projected_atom`.
         '''
         pa = self.periodic_two['prjd_atom0'].astype(np.int64)
         pa = pa.append(self.periodic_two['prjd_atom1'].astype(np.int64))
         self._projected_atom = ProjectedAtom(self._projected_atom[self._projected_atom.index.isin(pa)])
-
-    def compute_visual_atom(self):
-        '''
-        Create visually pleasing coordinates (useful for periodic universes).
-        '''
-        self._visual_atom = _cva(self)
 
     def _slice_by_mids(self, molecule_indices):
         '''
@@ -410,7 +404,7 @@ class Universe(Container):
     def __init__(self, frame=None, atom=None, two=None, field=None,
                  field_values=None, unit_atom=None, projected_atom=None,
                  periodic_two=None, molecule=None, visual_atom=None, orbital=None,
-                 momatrix=None, basis=None, spherical_gtf_order=None,
+                 momatrix=None, basis_set=None, spherical_gtf_order=None,
                  cartesian_gtf_order=None, basis_set_summary=None, **kwargs):
         '''
         The arguments field and field_values are paired: field is the dataframe
@@ -438,8 +432,11 @@ class Universe(Container):
         self._spherical_gtf_order = self._enforce_df_type('spherical_gtf_order', spherical_gtf_order)
         self._cartesian_gtf_order = self._enforce_df_type('cartesian_gtf_order', cartesian_gtf_order)
         self._basis_set_summary = self._enforce_df_type('basis_set_summary', basis_set_summary)
-        self._basis = basis
+        self._basis_set = basis_set
         super().__init__(**kwargs)
+        # For smaller systems it is advantageous (for visualization purposes)
+        # to compute two body properties (i.e. bonds). This is an exception to
+        # the lazy computation philsophy.
         self.display = {'atom_table': 'atom'}
         ma = self.frame['atom_count'].max() if self._is('_atom') else 0
         nf = len(self)
@@ -459,6 +456,3 @@ class Universe(Container):
                 self.compute_two_body()
             self._update_traits()
             self._traits_need_update = False
-        if self._is('_atom') and not self._is('_molecule'):
-            if len(self) < 10 and self.frame['atom_count'].max() < 100:
-                self.compute_molecule()

@@ -35,9 +35,6 @@ class AtomicField(Field):
         .. math::
 
             v = \\left|\\mathbf{a}\\cdot\\left(\\mathbf{b}\\times\\mathbf{c}\\right)\\right|
-
-        Warning:
-            Assumes parallelpiped (only type of field supported).
         '''
         def _dv(row):
             '''
@@ -58,7 +55,7 @@ class AtomicField(Field):
 
         .. math::
 
-            \\int\\left|phi_{i}\\right|^{2}dV
+            \\int\\left|\\phi_{i}\\right|^{2}dV \equiv 1
         '''
         if 'dv' not in self:
             self.compute_dv()
