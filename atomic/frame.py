@@ -27,7 +27,7 @@ See Also:
 import numpy as np
 from traitlets import Float
 from exa.numerical import DataFrame
-#from exa.algorithms import vmag3
+from exa.algorithms import vmag3
 
 
 class Frame(DataFrame):

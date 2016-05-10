@@ -30,7 +30,7 @@ class BasisSetSummary(DataFrame):
     +-------------------+----------+-------------------------------------------+
     | Column            | Type     | Description                               |
     +===================+==========+===========================================+
-    | id                | str/cat  | code specific identifier                  |
+    | id                | str/cat  | code specific identifier (e.g. tag)       |
     +-------------------+----------+-------------------------------------------+
     | name              | str/cat  | common basis set name/description         |
     +-------------------+----------+-------------------------------------------+
@@ -45,7 +45,7 @@ class BasisSetSummary(DataFrame):
     '''
     _columns = ['id', 'name', 'function_count']
     _indices = ['basis_set']
-    _categories = {'name': str}
+    _categories = {'name': str, 'id': str}
 
 
 class BasisSet(DataFrame):

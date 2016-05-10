@@ -80,6 +80,12 @@ class Two(DataFrame):
         b1 = pd.Series(b1).to_json(orient='values')
         return {'two_bond0': Unicode(b0).tag(sync=True), 'two_bond1': Unicode(b1).tag(sync=True)}
 
+    def bond_summary(self, length='au'):
+        '''
+        Generate a summary table of bond lengths
+        '''
+        bonded = self[self['bond'] == True].groupby('symbols')
+
 
 class PeriodicTwo(Two):
     '''
@@ -256,7 +262,8 @@ def _periodic_in_mem(universe, k, dmin, dmax, bond_extra, compute_symbols,
     df['atom0'] = df['prjd_atom0'].map(atom)
     df['atom1'] = df['prjd_atom1'].map(atom)
     del atom
-    df['id'] = unordered_pairing(df['atom0'].values, df['atom1'].values)
+    df['id'] = unordered_pairing(df['atom0'].values.astype(np.int64),
+                                 df['atom1'].values.astype(np.int64))
     df = df.drop_duplicates('id').reset_index(drop=True)
     del df['id']
     del df['atom0']

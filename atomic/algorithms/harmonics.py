@@ -41,7 +41,7 @@ def solid_harmonics(l, return_all=False, vectorize=False, standard_symbols=True)
         l (int): Orbital angular moment
         return_all (bool): If true, return all computed solid harmonics
         vectorize (bool): If true, return vectorized functions (for numerical methods)
-        standard_symbols (bool): Convert to standard symbol notation (e.g. x*y => xy)
+        standard_symbols (bool): If true (default), convert to standard symbol notation (e.g. x*y => xy)
 
     Returns:
         functions (dict): Dictionary of (l, ml) keys and symbolic function values
@@ -49,6 +49,7 @@ def solid_harmonics(l, return_all=False, vectorize=False, standard_symbols=True)
     x, y, z = sy.symbols('x y z', imaginary=False)
     r2 = x**2 + y**2 + z**2
     desired_l = l
+    # Recursion relations come from Molecular Electronic Structure, Helgaker 2nd ed.
     s = {(0,0): 1}
     for l in range(1, desired_l + 1):
         lminus1 = l - 1 if l >= 1 else 0
@@ -90,17 +91,22 @@ def solid_harmonics(l, return_all=False, vectorize=False, standard_symbols=True)
                     expr = re.sub(match0, replace0, expr)
                 s[k] = parse_expr(expr)
     if vectorize:
-        if _conf['pkg_numba']:
-            from numba import float64, vectorize
-            for key, func in ((key, func) for key, func in s.items() if key[0] > 1):
-                args = [str(arg) for arg in func.free_symbols]
-                j = vectorize(['float64({})'.format(','.join(['float64'] * len(args)))], nopython=True)
-                lamfunc = sy.lambdify([str(arg) for arg in func.free_symbols], func, 'numpy')
-                s[key] = j(lamfunc)
-        else:
-            for key, func in ((key, func) for key, func in s.items() if key[0] > 1):
-                lamfunc = sy.lambdify([str(arg) for arg in func.free_symbols], func, 'numpy')
-                s[key] = np.vectorize(lamfunc)
+        funcs = {}
+        for key in s:
+            if isinstance(s[key], int):
+                funcs[key] = ([None], lambda r: r)
+            else:
+                symbols = sorted([str(sym) for sym in s[key].free_symbols])
+                if symbols == ['x'] or symbols == ['y'] or symbols == ['z']:
+                    funcs[key] = (symbols, lambda r: r)
+                else:
+                    f = sy.lambdify(symbols, s[key], 'numpy')
+                    if _conf['pkg_numba']:
+                        from numba import vectorize
+                        vec = vectorize(['float64({})'.format(', '.join(['float64'] * len(symbols)))], nopython=True)
+                        f = vec(f)
+                    funcs[key] = (symbols, f)
+        s = funcs
     if return_all:
         return s
     return {key: value for key, value in s.items() if key[0] == desired_l}
