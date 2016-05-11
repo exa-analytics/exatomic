@@ -29,7 +29,7 @@ from traitlets import Unicode
 from scipy.spatial import cKDTree
 from exa import DataFrame
 from exa.algorithms import pdist, unordered_pairing
-from atomic import Isotope
+from atomic import Isotope, Length
 
 
 max_atoms_per_frame = 300
@@ -84,7 +84,7 @@ class Two(DataFrame):
         '''
         Generate a summary table of bond lengths
         '''
-        bonded = self[self['bond'] == True].groupby('symbols')
+        return self[self['bond'] == True].groupby('symbols')['distance'].mean().dropna() * Length['au', length]
 
 
 class PeriodicTwo(Two):
@@ -320,3 +320,98 @@ def compute_projected_bond_count(universe):
         raise TypeError('Is this a periodic universe? Check frame for periodic column.')
     bc = universe.two.ix[(universe.two['bond'] == True), ['prjd_atom0', 'prjd_atom1']].stack().value_counts()
     return bc.astype(np.int64)
+
+
+def bond_summary_by_label_pairs(universe, *labels, length='A', stdev=False,
+                                stderr=False, variance=False, ncount=False):
+    '''
+    Compute a summary of bond lengths by label pairs
+
+    Args:
+        universe: The atomic container
+        \*labels: Any number of label pairs (e.g. ...paris(uni, (0, 1), (1, 0), ...))
+        length (str): Output length unit (default Angstrom)
+        stdev (bool): Compute the standard deviation of the mean (default false)
+        stderr (bool): Compute the standard error in the mean (default false)
+        variance (bool): Compute the variance in the mean (default false)
+        ncount (bool): Include the data point count (default false)
+
+    Returns:
+        summary (:class:`~pandas.DataFrame`): Bond length dataframe
+    '''
+    l0, l1 = list(zip(*labels))
+    l0 = np.array(l0, dtype=np.int64)
+    l1 = np.array(l1, dtype=np.int64)
+    ids = unordered_pairing(l0, l1)
+    bonded = universe.two[universe.two['bond'] == True].copy()
+    if universe.is_periodic:
+        bonded['atom0'] = bonded['prjd_atom0'].map(universe.projected_atom['atom'])
+        bonded['atom1'] = bonded['prjd_atom1'].map(universe.projected_atom['atom'])
+    bonded['label0'] = bonded['atom0'].map(universe.atom['label'])
+    bonded['label1'] = bonded['atom1'].map(universe.atom['label'])
+    bonded['id'] = unordered_pairing(bonded['label0'].values.astype(np.int64),
+                                     bonded['label1'].values.astype(np.int64))
+    grps = bonded[bonded['id'].isin(ids)].groupby('id')
+    df = grps['distance'].mean().reset_index()
+    if variance:
+        df['variance'] = grps['distance'].var().reset_index()['distance']
+        df['variance'] *= Length['au', length]
+    if stderr:
+        df['stderr'] = grps['distance'].std().reset_index()['distance']
+        df['stderr'] /= np.sqrt(grps['distance'].size().values[0])
+        df['stderr'] *= Length['au', length]
+    if stdev:
+        df['stdev'] = grps['distance'].std().reset_index()['distance']
+        df['stdev'] *= Length['au', length]
+    if ncount:
+        df['count'] = grps['distance'].size().reset_index()[0]
+    mapper = bonded.drop_duplicates('id').set_index('id')
+    df['symbols'] = df['id'].map(mapper['symbols'])
+    df['distance'] *= Length['au', length]
+    df['label0'] = df['id'].map(mapper['label0'])
+    df['label1'] = df['id'].map(mapper['label1'])
+    del df['id']
+    return df
+
+
+def n_nearest_distances_by_symbols(universe, a, b, n, length='A', stdev=False,
+                                   stderr=False, variance=False, ncount=False):
+    '''
+    Compute a distance summary of the n nearest pairs of symbols, (a, b).
+
+    Args:
+        universe: The atomic universe
+        a (str): Symbol string
+        b (str): Symbol string
+        n (int): Number of distances to include
+        stdev (bool): Compute the standard deviation of the mean (default false)
+        stderr (bool): Compute the standard error in the mean (default false)
+        variance (bool): Compute the variance in the mean (default false)
+        ncount (bool): Include the data point count (default false)
+
+    Returns:
+        summary (:class:`~pandas.DataFrame`): Distance summary dataframe
+    '''
+    def compute(group):
+        return group.sort_values('distance').iloc[:n]
+
+    df = universe.two[universe.two['symbols'].isin([a+b, b+a])]
+    df = df.groupby('frame').apply(compute)
+    df['pair'] = list(range(n)) * (len(df) // n)
+    pvd = df.pivot('frame', 'pair', 'distance')
+    df = pvd.mean(0).reset_index()
+    df.columns = ['pair', 'distance']
+    df['distance'] *= Length['au', length]
+    if stdev:
+        df['stdev'] = pvd.std().reset_index()[0]
+        df['stdev'] *= Length['au', length]
+    if stderr:
+        df['stderr'] = pvd.std().reset_index()[0]
+        df['stderr'] /= np.sqrt(len(pvd))
+        df['stderr'] *= Length['au', length]
+    if variance:
+        df['variance'] = pvd.var().reset_index()[0]
+        df['variance'] *= Length['au', length]
+    if ncount:
+        df['count'] = pvd.shape[0]
+    return df

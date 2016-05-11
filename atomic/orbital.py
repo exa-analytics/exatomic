@@ -60,7 +60,7 @@ class MOMatrix(DataFrame):
     '''
     _columns = ['coefficient', 'basis_function', 'orbital']
     _indices = ['momatrix']
-    _groupbys = ['orbital']
+    _groupbys = ['orbital', 'basis_function']
     _categories = {'orbital': np.int64, 'basis_function': np.int64, 'spin': np.int64}
 
 
@@ -102,6 +102,7 @@ def _voluminate_cartesian_gtfs(universe, xx, yy, zz):
                 if _conf['pkg_numba']:
                     from numba import vectorize, float64
                 shell_functions['x' * i + 'y' * j + 'z' * k] = function
+            # now reduce cart shell functions to spherical funcs
             # Reduce the linearly dependent cartesian basis
             # to a linearly independent spherical basis.
             if l == 0:
