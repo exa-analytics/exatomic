@@ -24,6 +24,14 @@ require.config({
         'nbextensions/exa/atomic/gto': {
             exports: 'GTO'
         },
+
+        'nbextensions/exa/atomic/solid_harmonic': {
+            exports: 'SolidHarmonic'
+        },
+
+        'nbextensions/exa/num': {
+            exports: 'num'
+        },
     },
 });
 
@@ -31,9 +39,11 @@ require.config({
 define([
     'nbextensions/exa/apps/app3d',
     'nbextensions/exa/apps/gui',
+    'nbextensions/exa/num',
     'nbextensions/exa/atomic/ao',
-    'nbextensions/exa/atomic/gto'
-], function(App3D, ContainerGUI, AO, GTO) {
+    'nbextensions/exa/atomic/gto',
+    'nbextensions/exa/atomic/solid_harmonic'
+], function(App3D, ContainerGUI, num, AO, GTO, SolidHarmonic) {
     class UniverseTestApp {
         /*"""
         UniverseTestApp
@@ -47,21 +57,20 @@ define([
             Args:
                 view: Backbone.js view (DOMWidgetView container representation)
             */
-            console.log('here11');
             this.view = view;
             this.view.create_canvas();
             this.axis = [];
             this.active_objs = [];
             this.dimensions = {
-                'xmin': -24.0,
-                'xmax': 24.0,
-                'ymin': -24.0,
-                'ymax': 24.0,
-                'zmin': -24.0,
-                'zmax': 24.0,
-                'dx': 2.0,
-                'dy': 2.0,
-                'dz': 2.0
+                'xmin': -15.0,
+                'xmax': 15.0,
+                'ymin': -15.0,
+                'ymax': 15.0,
+                'zmin': -15.0,
+                'zmax': 15.0,
+                'nx': 61,
+                'ny': 61,
+                'nz': 61
             };
             this.field = new AO(this.dimensions, '1s');
             this.app3d = new App3D(this.view.canvas);
@@ -155,6 +164,59 @@ define([
                 self.gto['function'] = value;
                 self.render_gto();
             });
+
+            // Solid harmonics controls
+            this.sh = {
+                'isovalue': 0.03,
+                'l': 0,
+                'ml': 0
+            };
+            this.sh['folder'] = this.gui.addFolder('Solid Harmonics');
+            this.sh['isovalue_slider'] = this.sh.folder.add(this.sh, 'isovalue').min(0.001).max(1.0);
+            this.sh['l_slider'] = this.sh.folder.add(this.sh, 'l').min(0).max(3).step(1);
+            this.sh['ml_slider'] = this.sh.folder.add(this.sh, 'ml').min(0).max(0).step(1);
+            this.sh['isovalue_slider'].onFinishChange(function(value) {
+                self.sh['isovalue'] = value;
+                self.render_sh();
+            });
+            this.sh['l_slider'].onFinishChange(function(value) {
+                self.sh['l'] = parseInt(value);
+                console.log(self.sh.l);
+                self.update_ml();
+                self.render_sh();
+            });
+
+            this.sh['ml_slider'].onFinishChange(function(value) {
+                self.sh['ml'] = parseInt(value);
+                console.log(self.sh.ml);
+                self.render_sh();
+            });
+        };
+
+        update_ml() {
+            var self = this;
+            this.sh.ml = 0;
+            console.log(this.sh.l);
+            this.sh.folder.__controllers[2].remove();
+            if (this.sh.l === 0) {
+                this.sh['ml_slider'] = this.sh.folder.add(this.sh, 'ml').min(0).max(0).step(1);
+            } else {
+                this.sh['ml_slider'] = this.sh.folder.add(this.sh, 'ml').min(-this.sh.l).max(this.sh.l).step(1);
+            };
+            this.sh['ml_slider'].onFinishChange(function(value) {
+                self.sh['ml'] = parseInt(value);
+                console.log(self.sh.ml);
+                self.render_sh();
+            });
+        };
+
+        render_sh() {
+            /*"""
+            */
+            console.log('render_sh');
+            this.field = new SolidHarmonic(this.dimensions, this.sh.l, this.sh.ml);
+            this.app3d.remove_meshes(this.active_objs);
+            this.active_objs = this.app3d.add_scalar_field(this.field, this.sh['isovalue'], 2);
         };
 
         render_ao() {
