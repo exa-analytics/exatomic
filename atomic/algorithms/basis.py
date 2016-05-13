@@ -14,9 +14,6 @@ ml_count = {'s': 1, 'p': 3, 'd': 5, 'f': 7, 'g': 9, 'h': 11, 'i': 13, 'k': 15,
             'l': 17, 'm': 19}
 
 
-
-
-
 def cartesian_gtf_exponents(l):
     '''
     Generic generation of cartesian Gaussian type function exponents.
