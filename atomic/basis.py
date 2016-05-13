@@ -30,7 +30,7 @@ class BasisSetSummary(DataFrame):
     +-------------------+----------+-------------------------------------------+
     | Column            | Type     | Description                               |
     +===================+==========+===========================================+
-    | id                | str/cat  | code specific identifier                  |
+    | id                | str/cat  | code specific identifier (e.g. tag)       |
     +-------------------+----------+-------------------------------------------+
     | name              | str/cat  | common basis set name/description         |
     +-------------------+----------+-------------------------------------------+
@@ -45,7 +45,7 @@ class BasisSetSummary(DataFrame):
     '''
     _columns = ['id', 'name', 'function_count']
     _indices = ['basis_set']
-    _categories = {'name': str}
+    _categories = {'name': str, 'id': str}
 
 
 class BasisSet(DataFrame):
@@ -110,6 +110,7 @@ class GaussianBasisSet(BasisSet):
     '''
     _columns = ['alpha', 'c', 'basis_function', 'shell', 'basis_set']
     _indices = ['primitive']
+    _groupbys = ['basis_function']
     _categories = {'basis_set': np.int64, 'shell': str, 'name': str, 'basis_function': np.int64}
 
     def basis_count(self):
@@ -145,7 +146,7 @@ class CartesianGTFOrder(DataFrame):
     +-------------------+----------+-------------------------------------------+
     '''
     _columns = ['x', 'y', 'z']
-    _indices = ['order']
+    _indices = ['cart_order']
 
     @classmethod
     def from_lmax_order(cls, lmax, ordering_function):
@@ -177,7 +178,7 @@ class SphericalGTFOrder(DataFrame):
     Stores order of spherical basis functions with respect to angular momenta.
     '''
     _columns = ['l', 'ml']
-    _indices = ['order']
+    _indices = ['spherical_order']
 
     @classmethod
     def from_lmax_order(cls, lmax, ordering_function):

@@ -15,6 +15,9 @@ require.config({
         'nbextensions/exa/apps/gui': {
             exports: 'ContainerGUI'
         },
+        'nbextensions/exa/num': {
+            exports: 'num'
+        },
         'nbextensions/exa/atomic/ao': {
             exports: 'AO'
         },
@@ -26,7 +29,6 @@ require.config({
         },
         'nbextensions/exa/atomic/harmonics': {
             exports: 'sh'
-        },
     },
 });
 
@@ -34,11 +36,12 @@ require.config({
 define([
     'nbextensions/exa/apps/app3d',
     'nbextensions/exa/apps/gui',
+    'nbextensions/exa/num',
     'nbextensions/exa/atomic/ao',
     'nbextensions/exa/atomic/gto',
     'nbextensions/exa/atomic/gaussian',
     'nbextensions/exa/atomic/harmonics'
-], function(App3D, ContainerGUI, AO, GTO, gaussian, sh) {
+], function(App3D, ContainerGUI, num, AO, GTO, gaussian, sh) {
     class UniverseTestApp {
         /*"""
         UniverseTestApp
@@ -52,7 +55,6 @@ define([
             Args:
                 view: Backbone.js view (DOMWidgetView container representation)
             */
-            console.log('here11');
             this.view = view;
             this.view.create_canvas();
             this.axis = [];
