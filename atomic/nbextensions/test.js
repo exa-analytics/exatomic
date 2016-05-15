@@ -29,6 +29,7 @@ require.config({
         },
         'nbextensions/exa/atomic/harmonics': {
             exports: 'sh'
+        },
     },
 });
 
