@@ -254,7 +254,7 @@ def _periodic_in_mem(universe, k, dmin, dmax, bond_extra, compute_symbols,
     index2 = np.concatenate(index2)
     frames = np.concatenate(frames)
     df = pd.DataFrame.from_dict({'distance': distances, 'frame': frames,
-                                  'prjd_atom0': index1, 'prjd_atom1': index2})
+                                 'prjd_atom0': index1, 'prjd_atom1': index2})
     df['prjd_atom0'] = df['prjd_atom0'].astype('category')
     df['prjd_atom1'] = df['prjd_atom1'].astype('category')
     df = df[(df['distance'] > dmin) & (df['distance'] < dmax)]#.sort_values('distance')

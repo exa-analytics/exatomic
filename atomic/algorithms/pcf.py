@@ -9,7 +9,7 @@ from atomic import Length
 
 
 def radial_pair_correlation(universe, a, b, dr=0.05, start=None, stop=None,
-                            output_length_unit='au', window=None):
+                            output_length_unit='au', window=1):
     '''
     Compute the angularly independent pair correlation function.
 
@@ -46,7 +46,7 @@ def radial_pair_correlation(universe, a, b, dr=0.05, start=None, stop=None,
         start (float): Starting radial point
         stop (float): Stopping radial point
         output_length_unit (str): Output unit of length
-        window (int): Smoothen data (useful when only a single a or b exist)
+        window (int): Smoothen data (useful when only a single a or b exist, default no smoothing)
 
     Returns:
         pcf (:class:`~pandas.DataFrame`): Pair correlation distribution and count
@@ -68,31 +68,25 @@ def radial_pair_correlation(universe, a, b, dr=0.05, start=None, stop=None,
     m = vc[b] / len(universe)
     if a == b:
         m -= 1    # Can't be paired with self
-        if window is None:
-            window = 2
-    if window is None:
-        window = 1
     npairs = n * m // 2 # Total number of pairs per each entire frame
     # Select appropriate defaults
     start = distances.min() - 0.3
     stop = distances.max()
+    if stop > universe.frame['cell_volume'].max()**(1/3):
+        stop = universe.frame['cell_volume'].max()**(1/3)
     bins = np.arange(start, stop, dr)
     # and compute the histogram (triple summation)
     hist, bins = np.histogram(distances, bins)
     r3 = bins[1:]**3 - bins[:-1]**3    # Exact spherical shell volume
-    r = (bins[1:] + bins[:-1]) / 2
+    r = (bins[1:] + bins[:-1])/2
     nn = hist.sum()                    # Actual number of distances considered
-    g = hist * stop**3 / (r3 * nn)
-    count = hist.cumsum() * npairs / nn
-    if a == b:
-        count *= stop**3 / universe.frame['cell_volume'].max()
-    elif n == 1 or m == 1:
-        count *= 2 * stop / universe.frame['rx'].max()
-    df = pd.DataFrame.from_dict({'g$_{\mathrm{' + a + b + '}}$($r$)': g, 'Pair Count': count})
-    # Normalize for the fact that frames may have variable effective "stop" values
-    df.iloc[:, 1] *= (df.iloc[-4:, 1]**-1).mean()
+    g = hist * stop**3/(r3*nn)
+    count = hist.cumsum()*npairs/nn*stop**3/universe.frame['cell_volume'].max()
+    if n == 1 or m == 1:
+        count *= 2 / stop**2 * universe.frame['cell_volume'].max()**(2/3)
+    df = pd.DataFrame.from_dict({'$g_{\mathrm{' + a + b + '}}$($r$)': g, 'Pair Count': count})
     # Smoothen if requested, necessary when n == 1 or m == 1, see note in docstring
-    df.iloc[:, 1] = df.iloc[:, 1].rolling(window=window).mean()
+    df.iloc[:, 0] = df.iloc[:, 0].rolling(window=window).mean()
     df.index = r
     df.dropna(inplace=True)
     if output_length_unit in Length.aliases:
