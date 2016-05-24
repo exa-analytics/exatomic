@@ -448,11 +448,12 @@ class Universe(Container):
             self._traits_need_update = False
         elif self.is_periodic and ma < mapfp and nf < mfp and self._atom is not None:
             if self._periodic_two is None:
-                self.compute_two_body()
-            self._update_traits()
+                pass
+#                self.compute_two_body()
+#            self._update_traits()
             self._traits_need_update = False
         elif not self.is_periodic and ma < mapf and nf < mf and self._atom is not None:
-            if self._two is None:
-                self.compute_two_body()
-            self._update_traits()
+#            if self._two is None:
+#                self.compute_two_body()
+#            self._update_traits()
             self._traits_need_update = False

@@ -4,7 +4,7 @@ Field
 ============
 '''
 import numpy as np
-from exa.numerical import Field
+from exa.numerical import Field, Series
 
 
 class AtomicField(Field):
@@ -80,9 +80,8 @@ class AtomicField(Field):
         Return:
             newfield (:class:`~atomic.field.AtomicField`): Rotated field values and data
         '''
-        d0 = self.ix[a]
-        d1 = self.ix[b]
+        d0 = self.ix[[a]]
         f0 = self.field_values[a]
         f1 = self.field_values[b]
-        f = exa.Series(np.cos(angle) * f0 + np.sin(angle) * f1)
-        return self.__class__(f, d0)
+        f = Series(np.cos(angle) * f0 + np.sin(angle) * f1)
+        return AtomicField([f], d0)
