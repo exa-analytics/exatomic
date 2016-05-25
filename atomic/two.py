@@ -351,6 +351,7 @@ def bond_summary_by_label_pairs(universe, *labels, length='A', stdev=False,
     bonded['label1'] = bonded['atom1'].map(universe.atom['label'])
     bonded['id'] = unordered_pairing(bonded['label0'].values.astype(np.int64),
                                      bonded['label1'].values.astype(np.int64))
+    return bonded[bonded['id'].isin(ids)]
     grps = bonded[bonded['id'].isin(ids)].groupby('id')
     df = grps['distance'].mean().reset_index()
     if variance:

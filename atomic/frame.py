@@ -53,20 +53,27 @@ class Frame(DataFrame):
                'ox', 'oy', 'oz', 'frame']
 
     @property
-    def is_periodic(self):
+    def is_periodic(self, how='all'):
         '''
-        Check if (any) frame is/are periodic.
+        Check if any/all frames are periodic.
+
+        Args:
+            how (str): Either any (default) or all
 
         Returns:
-            result (bool): True if periodic false otherwise
+            result (bool): True if any/all frame are periodic
         '''
-        if 'periodic' in self.columns:
-            if np.any(self['periodic'] == True):
-                return True
+        if 'periodic' in self:
+            if how == 'all':
+                if np.all(self['periodic'] == True):
+                    return True
+            elif how == 'any':
+                if np.any(self['periodic'] == True):
+                    return True
         return False
 
     @property
-    def is_variable_cell(self):
+    def is_vc(self, how='all'):
         '''
         Check if this is a variable unit cell simulation.
 
