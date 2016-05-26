@@ -4,11 +4,12 @@ XYZ File Support
 ====================
 
 '''
+import csv
 import numpy as np
 import pandas as pd
 from io import StringIO
 from exa.algorithms import arange1, arange2
-from atomic import Editor, Length, Atom
+from atomic import Editor, Length, Atom, Universe, Editor
 
 
 header = '{nat}\n{comment}\n'
@@ -59,21 +60,51 @@ class XYZ(Editor):
         self.unit = unit
 
 
-def write_xyz(uni_or_string, path, unit='angstrom', traj=False):
+def write_xyz(uni_or_editor, path, unit='angstrom', trj=False, precision=8):
     '''
     Write an xyz file, set of xyz files, or xyz trajectory file.
 
     Args:
-        uni_or_string: One of :class:`~atomic.universe.Universe`, :class:`~atomic.filetypes.xyz.XYZ`, or string text
+        uni_or_string: One of :class:`~atomic.universe.Universe`, :class:`~atomic.editor.Editor`, or string text
         path (str): Full file path or directory path
         unit (str): Output length unit (default angstrom)
-        traj (bool): Write a trajectory file (default False)
+        trj (bool): Write a trajectory file (default False)
     '''
-    if isinstance(uni_or_string, Universe):
-        write_xyz_from_universe(uni_or_string.atom, path, unit, traj)
-    else:
-        raise NotImplementedError()
+    ffmt = r'% .{}f'.format(precision)
+    if isinstance(uni_or_editor, Universe):
+        grps = uni_or_editor.atom.groupby('frame')
+        if trj:
+            _write_trj_from_uni(grps, path, unit, ffmt)
+        else:
+            _write_xyz_from_uni(grps, path, unit, ffmt)
+    elif isinstance(uni_or_editor, AtomicEditor):
+        if trj:
+            _write_trj_from_editor(uni_or_editor, path, unit, ffmt)
+        else:
+            _write_xyz_from_editor(uni_or_editor, path, unit, ffmt)
 
+
+def _write_trj_from_uni(grps, path, unit, ffmt):
+    '''
+    Write an XYZ trajectory file from a given universe.
+    '''
+    with open(path, 'w') as f:
+        for frame, atom in grps:
+            n = len(atom)
+            c = comment.format(frame=frame)
+            f.write(header.format(nat=n, comment=c))
+            atom_ = atom[['symbol', 'x', 'y', 'z']].copy()
+            atom_['x'] *= Length['au', 'A']
+            atom_['y'] *= Length['au', 'A']
+            atom_['z'] *= Length['au', 'A']
+            atom_.to_csv(f, header=False, index=False, sep=' ', float_format=ffmt,
+                         quoting=csv.QUOTE_NONE, escapechar=' ')
+
+def _write_xyz_from_uni(grps, path, unit, ffmt):
+    '''
+    '''
+    if traj:
+        _wrtie
 
 def write_xyz_from_atom(atom, path, unit='angstrom', traj=True):
     '''

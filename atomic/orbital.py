@@ -26,12 +26,12 @@ Orbital information such as centers and energies.
 | z                 | float    | orbital center in z                       |
 +-------------------+----------+-------------------------------------------+
 '''
+import re
 import numpy as np
 import pandas as pd
-import sympy as sy
 from exa import DataFrame, _conf, Series
 from exa.algorithms import meshgrid3d
-from atomic.basis import _symbolic_cartesian_gtfs
+from atomic.field import AtomicField
 
 
 class Orbital(DataFrame):
@@ -60,24 +60,61 @@ class MOMatrix(DataFrame):
     '''
     _columns = ['coefficient', 'basis_function', 'orbital']
     _indices = ['momatrix']
-    _groupbys = ['orbital']
+    _groupbys = ['orbital', 'basis_function']
     _categories = {'orbital': np.int64, 'basis_function': np.int64, 'spin': np.int64}
 
-    def as_matrix(self, spin=0):
-        '''
-        Generate a sparse matrix of molecular orbital coefficients.
 
-        To fill nan values:
+def _voluminate_cartesian_gtfs(universe, xx, yy, zz):
+    '''
+    Generate symbolic ordered spherical (in cartesian coordinates)
+    Gaussian type function basis for the given universe.
 
-        .. code-block:: Python
+    Args:
+        universe: Atomic universe
+        xx (array): Discrete values of x
+        yy (array): Discrete values of y
+        zz (array): Discrete values of z
 
-            C = mo_matrix.as_matrix()
-            C.fillna(0, inplace=True)
-        '''
-        df = self
-        if 'spin' in self:
-            df = df[df['spin'] == spin]
-        return df.pivot('vector', 'basis_function', 'coefficient').to_sparse().values
+    Note:
+        This function exists here because the resultant functions are orbital
+        approximations.
+    '''
+    ex, ey, ez = sy.symbols('x y z', imaginary=False)
+    ordered_spherical_gtf_basis = []
+    bases = universe.basis.groupby('symbol')
+    lmax = universe.basis['shell'].map(lmap).max()
+    sh = solid_harmonics(lmax, True, True)
+    for symbol, x, y, z in zip(universe.atom['symbol'], universe.atom['x'],
+                               universe.atom['y'], universe.atom['z']):
+        bas = bases.get_group(symbol).groupby('function')
+        rx = ex - x
+        ry = ey - y
+        rz = ez - z
+        r2 = rx**2 + ry**2 + rz**2
+        for f, grp in bas:
+            l = lmap[grp['shell'].values[0]]
+            shell_functions = {}
+            for i, j, k in _cartesian_ordering_function(l):
+                function = 0
+                for alpha, c in zip(grp['alpha'], grp['c']):
+                    function += c * rx**int(i) * ry**int(j) * rz**int(k) * sy.exp(-alpha * r2)
+                function = sy.lambdify(('x', 'y', 'z'), function, 'numpy')
+                if _conf['pkg_numba']:
+                    from numba import vectorize, float64
+                shell_functions['x' * i + 'y' * j + 'z' * k] = function
+            # now reduce cart shell functions to spherical funcs
+            # Reduce the linearly dependent cartesian basis
+            # to a linearly independent spherical basis.
+            if l == 0:
+                ordered_spherical_gtf_basis.append(shell_functions[''])
+            elif l == 1:
+                for lv, ml in universe.spherical_gtf_order.symbolic_keys(l):
+                    key = str(sh[(lv, ml)])
+                    ordered_spherical_gtf_basis.append(shell_functions[key])
+            else:
+                for lv, ml in universe.spherical_gtf_order.symbolic_keys(l):
+                    ordered_spherical_gtf_basis.append(sh[(lv, ml)].subs(shell_functions))
+    return ordered_spherical_gtf_basis
 
 
 def add_cubic_field_from_mo(universe, rmin, rmax, nr, vector=None):
@@ -109,7 +146,7 @@ def add_cubic_field_from_mo(universe, rmin, rmax, nr, vector=None):
     dzk = z[1] - z[0]
     dv = dxi * dyj * dzk
     x, y, z = meshgrid3d(x, y, z)
-    basis_funcs = _symbolic_cartesian_gtfs(universe)
+    basis_funcs = _spherical_gtfs(universe)
     basis_funcs = [sy.lambdify(('x', 'y', 'z'), func, 'numpy') for func in basis_funcs]
     if _conf['pkg_numba']:
         from numba import vectorize, float64
@@ -126,8 +163,6 @@ def add_cubic_field_from_mo(universe, rmin, rmax, nr, vector=None):
         v = basis_funcs[i](x, y, z)
         v /= np.sqrt((v**2 * dv).sum())
         bf_values[i, :] = v
-    # Transform from cartesian to spherical
-
     # Finally, add basis function values to form vectors
     # (normalized molecular orbitals).
     values = np.empty((n, nr**3), dtype=np.float64)
@@ -164,22 +199,4 @@ def add_cubic_field_from_mo(universe, rmin, rmax, nr, vector=None):
                                    'dzk': dzk, 'nx': nx, 'ny': ny, 'nz': nz, 'label': label,
                                    'ox': ox, 'oy': oy, 'oz': oz, 'frame': frame})
     values = [Series(v) for v in values.tolist()]
-    return values, data
-
-
-def compute_molecular_orbitals(momatrix, basis_functions):
-    '''
-    Args:
-        momatrix (:class:`~atomic.orbital.MOMatrix`): Molecular orbital matrix
-        basis_functions (list): List of symbolic functions
-    '''
-    x, y, z = sy.symbols('x, y, z', imaginary=False)
-    orbitals = []
-    for i, orbital in momatrix.groupby('vector'):
-        function = 0
-        for c, f in zip(orbital['coefficient'], orbital['basis_function']):
-            function += c * basis_functions[f]
-        #integral = sy.integrate(function**2, (x, -sy.oo, sy.oo), (y, -sy.oo, sy.oo), (z, -sy.oo, sy.oo))
-        #function /= sy.sqrt(integral)
-        orbitals.append(function)
-    return orbitals
+    return AtomicField(values, data)

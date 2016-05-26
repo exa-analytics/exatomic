@@ -55,7 +55,7 @@ class BaseAtom(DataFrame):
     _columns = ['x', 'y', 'z', 'symbol', 'frame']
     _groupbys = ['frame']
     _categories = {'frame': np.int64, 'label': np.int64, 'symbol': str,
-                   'bond_count': np.int64}
+                   'bond_count': np.int64, 'basis_set': np.int64}
 
     def _custom_trait_creator(self):
         '''
@@ -117,7 +117,7 @@ class Atom(BaseAtom):
         '''
         raise NotImplementedError()
 
-    def _compute_unit_atom_static_cell(self, rxyz, oxyz):
+    def OLD_compute_unit_atom_static_cell(self, rxyz, oxyz):
         '''
         Given a static unit cell, compute the unit cell coordinates for each
         atom.
@@ -186,6 +186,24 @@ class VisualAtom(SparseDataFrame):
 
 
 def compute_unit_atom(universe):
+    '''
+    Compute the in-unit-cell atomic coordiations of a periodic universe.
+
+    Args:
+        universe: Periodic atomic universe
+
+    Returns:
+        unit_atom (:class:`~atomic.atom.UnitAtom`): Sparse dataframe of coordinations
+
+    Note:
+        The returned coordinate dataframe is sparse and is used to update the
+        atom dataframe as needed. Note that updating the atom dataframe overwrites
+        the data there, so typically one updates a copy of the atom dataframe.
+    '''
+    if not universe.is_periodic:
+        raise TypeError('Is this a periodic universe? Check frame for periodic column.')
+
+def OLD_compute_unit_atom(universe):
     '''
     Compute the unit cell coordinates of the atoms.
 

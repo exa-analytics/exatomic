@@ -7,10 +7,10 @@ from exa.relational import Isotope, Length, Energy, Time, Amount, Constant
 
 
 from atomic._config import _conf
-from atomic.basis import Basis
 from atomic.frame import Frame
 from atomic.atom import Atom
 from atomic.molecule import Molecule
+from atomic.basis import PlanewaveBasisSet, GaussianBasisSet, SlaterBasisSet
 from atomic.universe import Universe
 from atomic.editor import Editor
 from atomic.formula import SimpleFormula

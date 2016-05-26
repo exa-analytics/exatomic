@@ -12,17 +12,23 @@ require.config({
         'nbextensions/exa/apps/app3d': {
             exports: 'App3D'
         },
-
         'nbextensions/exa/apps/gui': {
             exports: 'ContainerGUI'
         },
-
+        'nbextensions/exa/num': {
+            exports: 'num'
+        },
         'nbextensions/exa/atomic/ao': {
             exports: 'AO'
         },
-
         'nbextensions/exa/atomic/gto': {
             exports: 'GTO'
+        },
+        'nbextensions/exa/atomic/gaussian': {
+            exports: 'gaussian'
+        },
+        'nbextensions/exa/atomic/harmonics': {
+            exports: 'sh'
         },
     },
 });
@@ -31,9 +37,12 @@ require.config({
 define([
     'nbextensions/exa/apps/app3d',
     'nbextensions/exa/apps/gui',
+    'nbextensions/exa/num',
     'nbextensions/exa/atomic/ao',
-    'nbextensions/exa/atomic/gto'
-], function(App3D, ContainerGUI, AO, GTO) {
+    'nbextensions/exa/atomic/gto',
+    'nbextensions/exa/atomic/gaussian',
+    'nbextensions/exa/atomic/harmonics'
+], function(App3D, ContainerGUI, num, AO, GTO, gaussian, sh) {
     class UniverseTestApp {
         /*"""
         UniverseTestApp
@@ -47,21 +56,20 @@ define([
             Args:
                 view: Backbone.js view (DOMWidgetView container representation)
             */
-            console.log('here11');
             this.view = view;
             this.view.create_canvas();
             this.axis = [];
             this.active_objs = [];
             this.dimensions = {
-                'xmin': -24.0,
-                'xmax': 24.0,
-                'ymin': -24.0,
-                'ymax': 24.0,
-                'zmin': -24.0,
-                'zmax': 24.0,
-                'dx': 2.0,
-                'dy': 2.0,
-                'dz': 2.0
+                'xmin': -25.0,
+                'xmax': 25.0,
+                'ymin': -25.0,
+                'ymax': 25.0,
+                'zmin': -25.0,
+                'zmax': 25.0,
+                'nx': 51,
+                'ny': 51,
+                'nz': 51
             };
             this.field = new AO(this.dimensions, '1s');
             this.app3d = new App3D(this.view.canvas);
@@ -155,6 +163,44 @@ define([
                 self.gto['function'] = value;
                 self.render_gto();
             });
+
+            this.sh = {
+                'l': 0,
+                'm': 0,
+                'isovalue': 0.03
+            };
+            this.sh['folder'] = this.gui.addFolder('Solid Harmonics');
+            this.sh['isovalue_slider'] = this.sh.folder.add(this.sh, 'isovalue', 0.0001, 1.0);
+            this.sh['l_slider'] = this.sh.folder.add(this.sh, 'l').min(0).max(7).step(1);
+            this.sh['ml_slider'] = this.sh.folder.add(this.sh, 'm').min(0).max(0).step(1);
+            this.sh.l_slider.onFinishChange(function(value) {
+                self.sh.l = parseInt(value);
+                self.update_m();
+                self.render_spherical_gtf();
+            });
+        };
+
+        update_m() {
+            var self = this;
+            this.sh.folder.__controllers[2].remove();
+            this.sh.m = 0;
+            if (this.sh.l === 0) {
+                this.sh.m_slider = this.sh.folder.add(this.sh, 'm').min(0).max(0).step(1);
+            } else {
+                this.sh.m_slider = this.sh.folder.add(this.sh, 'm').min(-this.sh.l).max(this.sh.l).step(1);
+            };
+            this.sh.m_slider.onFinishChange(function(value) {
+                self.sh.m = parseInt(value);
+                self.render_spherical_gtf();
+            });
+        };
+
+        render_spherical_gtf() {
+            console.log('render spherical gtf');
+            this.field = new sh.SolidHarmonic(this.sh.l, this.sh.m, this.dimensions);
+            console.log(this.field);
+            this.app3d.remove_meshes(this.active_objs);
+            this.active_objs = this.app3d.add_scalar_field(this.field, this.sh.isovalue, 2);
         };
 
         render_ao() {

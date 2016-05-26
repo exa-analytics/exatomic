@@ -34,3 +34,4 @@ JavaScript
     :maxdepth: 2
 
     js/atomic.rst
+    js/basis.rst

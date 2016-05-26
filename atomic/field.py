@@ -4,7 +4,7 @@ Field
 ============
 '''
 import numpy as np
-from exa.numerical import Field
+from exa.numerical import Field, Series
 
 
 class AtomicField(Field):
@@ -25,40 +25,63 @@ class AtomicField(Field):
     _columns = ['nx', 'ny', 'nz', 'ox', 'oy', 'oz', 'dxi', 'dxj', 'dxk',
                 'dyi', 'dyj', 'dyk', 'dzi', 'dzj', 'dzk', 'frame', 'label']
 
-    def _compute_dv(self, index):
+    def compute_dv(self):
         '''
-        Warning
-            Only implemented for cubic cubes currently.
+        Compute the volume element for each field.
+
+        Volume of a parallelpiped whose dimensions are :math:`\mathbf{a}`,
+        :math:`\mathbf{b}`, :math:`\mathbf{c}` is given by:
+
+        .. math::
+
+            v = \\left|\\mathbf{a}\\cdot\\left(\\mathbf{b}\\times\\mathbf{c}\\right)\\right|
         '''
-        data = self.ix[[index]]
-        u = (data.dxi, data.dxj, data.dxk)
-        v = (data.dyi, data.dyj, data.dyk)
-        w = (data.dzi, data.dzj, data.dzk)
-        return np.dot(u, np.cross(v, w))
+        def _dv(row):
+            '''
+            Helper function that performs the operation above.
+            '''
+            a = row[['dxi', 'dxj', 'dxk']].values.astype(np.float64)
+            b = row[['dyi', 'dyj', 'dyk']].values.astype(np.float64)
+            c = row[['dzi', 'dzj', 'dzk']].values.astype(np.float64)
+            return np.dot(a, np.cross(b, c))
+        self['dv'] = self.apply(_dv, axis=1)
 
-    def _integrate(self, index):
-        #data = self.ix[[index]]
-        dv = self._compute_dv(index)
-        return (self.field_values[index] * dv).sum()
+    def integration(self):
+        '''
+        Check that field values are normalized.
 
-    def rotate(self, first, second, angle):
+        Computes the integral of the field values. For normalized fields (e.g
+        orbitals), the result should be 1.
+
+        .. math::
+
+            \\int\\left|\\phi_{i}\\right|^{2}dV \equiv 1
+        '''
+        if 'dv' not in self:
+            self.compute_dv()
+        self['sums'] = [np.sum(fv**2) for fv in self.field_values]
+        norm = self['dv'] * self['sums']
+        del self['sums']
+        return norm
+
+    def rotate(self, a, b, angle):
         '''
         Unitary transformation of the discrete field.
 
         .. code-block:: Python
 
-            myfield.rotate(0, 1, np.pi / 2)
+            newfield = myfield.rotate(0, 1, np.pi / 2)
 
         Args:
-            first (int): Index of first field
-            second (int): Index of second field
+            a (int): Index of first field
+            b (int): Index of second field
+            angle (float): Angle of rotation
+
+        Return:
+            newfield (:class:`~atomic.field.AtomicField`): Rotated field values and data
         '''
-        # First check that the field have the same dimensions
-        data0 = self.ix[[first]]
-        data1 = self.ix[[second]]
-        #raise NotImplementedError()
-        f0 = self.field_values[first]
-        f1 = self.field_values[second]
-        #dv = data['dv']   # See compute_dv above
-        values = np.cos(angle) * f0 + np.sin(angle) * f1
-        return self.__class__(values, data0)
+        d0 = self.ix[[a]]
+        f0 = self.field_values[a]
+        f1 = self.field_values[b]
+        f = Series(np.cos(angle) * f0 + np.sin(angle) * f1)
+        return AtomicField([f], d0)

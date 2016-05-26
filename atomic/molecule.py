@@ -63,6 +63,13 @@ class Molecule(DataFrame):
                 raise KeyError('No records found for {}, with identifier {}.'.format(classification, identifier))
         self['classification'] = self['classification'].astype('category')
 
+    def compute_atom_count(self):
+        '''
+        Compute the molecular atom count.
+        '''
+        symbols = [col for col in self.columns if len(col) < 3 and col[0].istitle()]
+        self['atom_count'] = self[symbols].sum(axis=1)
+
 
 def compute_molecule(universe):
     '''
@@ -106,7 +113,6 @@ def compute_molecule(universe):
     else:
         n -= 1
     idxs = universe.atom[universe.atom['bond_count'] == 0].index
-    print(idxs)
     for i, index in enumerate(idxs):
         mapper[index] = i + n
     # Set the molecule indices
