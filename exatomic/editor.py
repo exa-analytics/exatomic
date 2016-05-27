@@ -7,9 +7,9 @@ import numpy as np
 import pandas as pd
 from io import StringIO
 from exa.editor import Editor as ExaEditor
-from atomic.universe import Universe
-from atomic.frame import minimal_frame
-from atomic.basis import CartesianGTFOrder, SphericalGTFOrder, lmap
+from exatomic.universe import Universe
+from exatomic.frame import minimal_frame
+from exatomic.basis import CartesianGTFOrder, SphericalGTFOrder, lmap
 
 
 class Editor(ExaEditor):

@@ -9,8 +9,8 @@ import numpy as np
 import pandas as pd
 from io import StringIO
 from exa import Series
-from atomic import Isotope, Universe, Editor, Atom, Length
-from atomic.field import AtomicField
+from exatomic import Isotope, Universe, Editor, Atom, Length
+from exatomic.field import AtomicField
 
 
 class Cube(Editor):

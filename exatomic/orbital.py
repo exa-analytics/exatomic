@@ -29,9 +29,9 @@ Orbital information such as centers and energies.
 import re
 import numpy as np
 import pandas as pd
-from exa import DataFrame, _conf, Series
+from exa import DataFrame, global_config, Series
 from exa.algorithms import meshgrid3d
-from atomic.field import AtomicField
+from exatomic.field import AtomicField
 
 
 class Orbital(DataFrame):
@@ -99,7 +99,7 @@ def _voluminate_cartesian_gtfs(universe, xx, yy, zz):
                 for alpha, c in zip(grp['alpha'], grp['c']):
                     function += c * rx**int(i) * ry**int(j) * rz**int(k) * sy.exp(-alpha * r2)
                 function = sy.lambdify(('x', 'y', 'z'), function, 'numpy')
-                if _conf['pkg_numba']:
+                if global_config['pkg_numba']:
                     from numba import vectorize, float64
                 shell_functions['x' * i + 'y' * j + 'z' * k] = function
             # now reduce cart shell functions to spherical funcs
@@ -148,7 +148,7 @@ def add_cubic_field_from_mo(universe, rmin, rmax, nr, vector=None):
     x, y, z = meshgrid3d(x, y, z)
     basis_funcs = _spherical_gtfs(universe)
     basis_funcs = [sy.lambdify(('x', 'y', 'z'), func, 'numpy') for func in basis_funcs]
-    if _conf['pkg_numba']:
+    if global_config['pkg_numba']:
         from numba import vectorize, float64
         nb = vectorize([float64(float64, float64, float64)], nopython=True)
         basis_funcs = [nb(func) for func in basis_funcs]

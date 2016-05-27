@@ -5,8 +5,8 @@ Diffusion Coefficients
 Various algorithms for computing diffusion coefficients are coded here.
 '''
 import numpy as np
-from atomic import Length, Time
-from atomic.algorithms.displacement import absolute_squared_displacement
+from exatomic import Length, Time
+from exatomic.algorithms.displacement import absolute_squared_displacement
 
 
 def einstein_relation(universe, length='cm', time='s'):

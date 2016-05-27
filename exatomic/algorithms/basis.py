@@ -5,7 +5,7 @@ Basis Function Manipulation
 Functions for managing and manipulating basis set data.
 '''
 import numpy as np
-from exa import _conf
+from exa import global_config
 
 
 lmap = {'s': 0, 'p': 1, 'd': 2, 'f': 3, 'g': 4, 'h': 5, 'i': 6, 'k': 7, 'l': 8,
@@ -48,6 +48,6 @@ def cartesian_gtf_exponents(l):
     return values
 
 
-if _conf['pkg_numba']:
+if global_config['pkg_numba']:
     from numba import jit
     cartesian_gtf_exponents = jit(nopython=True, cache=True)(cartesian_gtf_exponents)

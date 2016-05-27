@@ -5,8 +5,8 @@ Tests for :mod:`~atomic.xyz`
 '''
 from io import StringIO
 from exa.testers import UnitTester
-from atomic.xyz import read_xyz
-from atomic import _np as np
+from exatomic.xyz import read_xyz
+from exatomic import _np as np
 
 
 xyzfl = '''3

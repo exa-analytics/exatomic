@@ -5,7 +5,7 @@ Pair Correlation Functions
 '''
 import numpy as np
 import pandas as pd
-from atomic import Length
+from exatomic import Length
 
 
 def radial_pair_correlation(universe, a, b, dr=0.05, start=None, stop=None,

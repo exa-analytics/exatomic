@@ -9,7 +9,7 @@ import numpy as np
 import pandas as pd
 from io import StringIO
 from exa.algorithms import arange1, arange2
-from atomic import Editor, Length, Atom, Universe, Editor
+from exatomic import Editor, Length, Atom, Universe, Editor
 
 
 header = '{nat}\n{comment}\n'

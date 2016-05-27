@@ -11,10 +11,10 @@ different level of theory, a properties calculation where each frame contains a
 different small molecule, a molecular dynamics simulation with each frame
 corresponding to a snaphot in time, etc.
 
-The data architecture (see :func:`~atomic.universe.Universe.data_architecture`)
+The data architecture (see :func:`~exatomic.universe.Universe.data_architecture`)
 is composed of a collection of dataframes that represent properties in terms of
 concepts familiar to a computational chemist, such as atomic coordinates
-(:class:`~atomic.atom.Atom`), orbital energies (:class:`~atomic.orbital.Orbital`),
+(:class:`~exatomic.atom.Atom`), orbital energies (:class:`~exatomic.orbital.Orbital`),
 orbital coefficients, basis set information, and fields (i.e. cube
 files). Furthermore, aggregate data such as two body properties (bonds) and
 atom collections (molecules) are available.
@@ -25,29 +25,29 @@ import pandas as pd
 import numpy as np
 from collections import OrderedDict
 from sqlalchemy import Column, Integer, ForeignKey
-from exa import Container, _conf
+from exa import Container
 from exa.numerical import Field
-from atomic.widget import UniverseWidget
-from atomic.frame import minimal_frame, Frame
-from atomic.atom import Atom, ProjectedAtom, UnitAtom, VisualAtom
-from atomic.two import Two, PeriodicTwo
-from atomic.field import AtomicField
-from atomic.atom import compute_unit_atom as _cua
-from atomic.atom import compute_projected_atom as _cpa
-from atomic.atom import compute_visual_atom as _cva
-from atomic.two import max_frames_periodic as mfp
-from atomic.two import max_atoms_per_frame_periodic as mapfp
-from atomic.two import max_frames as mf
-from atomic.two import max_atoms_per_frame as mapf
-from atomic.two import compute_two_body as _ctb
-from atomic.two import compute_bond_count as _cbc
-from atomic.two import compute_projected_bond_count as _cpbc
-from atomic.molecule import Molecule
-from atomic.molecule import compute_molecule as _cm
-from atomic.molecule import compute_molecule_com as _cmcom
-from atomic.orbital import Orbital, MOMatrix
-from atomic.basis import SphericalGTFOrder, CartesianGTFOrder, BasisSetSummary
-from atomic.basis import lmap
+from exatomic.widget import UniverseWidget
+from exatomic.frame import minimal_frame, Frame
+from exatomic.atom import Atom, ProjectedAtom, UnitAtom, VisualAtom
+from exatomic.two import Two, PeriodicTwo
+from exatomic.field import AtomicField
+from exatomic.atom import compute_unit_atom as _cua
+from exatomic.atom import compute_projected_atom as _cpa
+from exatomic.atom import compute_visual_atom as _cva
+from exatomic.two import max_frames_periodic as mfp
+from exatomic.two import max_atoms_per_frame_periodic as mapfp
+from exatomic.two import max_frames as mf
+from exatomic.two import max_atoms_per_frame as mapf
+from exatomic.two import compute_two_body as _ctb
+from exatomic.two import compute_bond_count as _cbc
+from exatomic.two import compute_projected_bond_count as _cpbc
+from exatomic.molecule import Molecule
+from exatomic.molecule import compute_molecule as _cm
+from exatomic.molecule import compute_molecule_com as _cmcom
+from exatomic.orbital import Orbital, MOMatrix
+from exatomic.basis import SphericalGTFOrder, CartesianGTFOrder, BasisSetSummary
+from exatomic.basis import lmap
 
 
 class Universe(Container):
@@ -226,8 +226,8 @@ class Universe(Container):
         Compute the bond count and update the atom table.
 
         Returns:
-            bc (:class:`~pandas.Series`): :class:`~atomic.atom.Atom` bond counts
-            pbc (:class:`~pandas.Series`): :class:`~atomic.atom.PeriodicAtom` bond counts
+            bc (:class:`~pandas.Series`): :class:`~exatomic.atom.Atom` bond counts
+            pbc (:class:`~pandas.Series`): :class:`~exatomic.atom.PeriodicAtom` bond counts
 
         Note:
             If working with a periodic universe, the projected atom table will
@@ -241,7 +241,7 @@ class Universe(Container):
     def compute_projected_bond_count(self):
         '''
         See Also:
-            :func:`~atomic.two.compute_projected_bond_count`
+            :func:`~exatomic.two.compute_projected_bond_count`
         '''
         self.projected_atom['bond_count'] = _cpbc(self)
         self.projected_atom['bond_count'] = self.projected_atom['bond_count'].fillna(-1).astype(np.int64)
@@ -276,7 +276,7 @@ class Universe(Container):
         '''
         Compute two body properties for the current universe.
 
-        For arguments see :func:`~atomic.two.get_two_body`. Note that this
+        For arguments see :func:`~exatomic.two.get_two_body`. Note that this
         operation (like all compute) operations are performed in place.
 
         Args:
@@ -358,7 +358,7 @@ class Universe(Container):
         coordinates that are not used when computing two body properties. This
         function will truncate this table, keeping only useful coordinates.
         Projected coordinates can always be generated using
-        :func:`~atomic.atom.compute_projected_atom`.
+        :func:`~exatomic.atom.compute_projected_atom`.
         '''
         pa = self.periodic_two['prjd_atom0'].astype(np.int64)
         pa = pa.append(self.periodic_two['prjd_atom1'].astype(np.int64))
@@ -415,7 +415,7 @@ class Universe(Container):
 
         The above approach is only used when loading a universe from a file; in
         general only the (appropriately typed) field argument (already
-        containing the field_values - see :mod:`~atomic.field`) is needed to
+        containing the field_values - see :mod:`~exatomic.field`) is needed to
         correctly attach fields.
         '''
         self._frame = self._enforce_df_type('frame', frame)

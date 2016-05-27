@@ -5,8 +5,8 @@ Simple Formula
 '''
 import numpy as np
 import pandas as pd
-from atomic import Isotope
-from atomic.error import StringFormulaError
+from exatomic import Isotope
+from exatomic.error import StringFormulaError
 
 
 class SimpleFormula(pd.Series):

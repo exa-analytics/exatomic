@@ -29,7 +29,7 @@ from traitlets import Unicode
 from scipy.spatial import cKDTree
 from exa import DataFrame
 from exa.algorithms import pdist, unordered_pairing
-from atomic import Isotope, Length
+from exatomic import Isotope, Length
 
 
 max_atoms_per_frame = 300

@@ -7,15 +7,15 @@ from requests import get as _get
 from json import load
 from warnings import warn as _warn
 from exa.utils import mkpath
-from atomic import _os as os
-from atomic import _pd as pd
-from atomic import _np as np
-from atomic import _sys as sys
-from atomic.algorithms.nonjitted import generate_minimal_framedf_from_onedf as _gen_fdf
+from exatomic import _os as os
+from exatomic import _pd as pd
+from exatomic import _np as np
+from exatomic import _sys as sys
+from exatomic.algorithms.nonjitted import generate_minimal_framedf_from_onedf as _gen_fdf
 try:
-    from atomic.algorithms.jitted import expand as _expand
+    from exatomic.algorithms.jitted import expand as _expand
 except ImportError:
-    from atomic.algorithms.nonjitted import expand as _expand
+    from exatomic.algorithms.nonjitted import expand as _expand
 
 
 _selfpath = os.path.abspath(__file__).replace('pdb.py', '')

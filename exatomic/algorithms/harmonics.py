@@ -11,7 +11,7 @@ import pandas as pd
 import sympy as sy
 from sympy.parsing.sympy_parser import parse_expr
 from sympy.physics.secondquant import KroneckerDelta as kr
-from exa import _conf
+from exa import global_config
 
 
 class SolidHarmonic:
@@ -101,7 +101,7 @@ def solid_harmonics(l, return_all=False, vectorize=False, standard_symbols=True)
                     funcs[key] = (symbols, lambda r: r)
                 else:
                     f = sy.lambdify(symbols, s[key], 'numpy')
-                    if _conf['pkg_numba']:
+                    if global_config['pkg_numba']:
                         from numba import vectorize
                         vec = vectorize(['float64({})'.format(', '.join(['float64'] * len(symbols)))], nopython=True)
                         f = vec(f)

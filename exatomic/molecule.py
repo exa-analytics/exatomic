@@ -9,8 +9,8 @@ from networkx import Graph
 from networkx.algorithms.components import connected_components
 from itertools import combinations
 from exa import DataFrame
-from atomic import Isotope
-from atomic.formula import string_to_dict
+from exatomic import Isotope
+from exatomic.formula import string_to_dict
 
 
 class Molecule(DataFrame):
