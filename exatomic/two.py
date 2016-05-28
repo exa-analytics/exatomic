@@ -29,7 +29,8 @@ from traitlets import Unicode
 from scipy.spatial import cKDTree
 from exa import DataFrame
 from exa.algorithms import pdist, unordered_pairing
-from exatomic import Isotope, Length
+from exa.relational.isotope import symbols_to_radii
+from exatomic import Length
 
 
 max_atoms_per_frame = 300
@@ -210,7 +211,7 @@ def _free_in_mem(universe, dmin, dmax, bond_extra, compute_symbols,
         del df['symbol0']
         del df['symbol1']
     if compute_bonds:
-        df['mbl'] = df['symbols'].astype(str).map(Isotope.symbols_to_radii())
+        df['mbl'] = df['symbols'].astype(str).map(symbols_to_radii)
         df['mbl'] += bond_extra
         df['bond'] = df['distance'] < df['mbl']
         del df['mbl']
@@ -276,7 +277,7 @@ def _periodic_in_mem(universe, k, dmin, dmax, bond_extra, compute_symbols,
     del df['symbol1']
     del df['symbol2']
     df['symbols'] = df['symbols'].astype('category')
-    df['mbl'] = df['symbols'].map(Isotope.symbols_to_radii())
+    df['mbl'] = df['symbols'].map(symbols_to_radii)
     if not compute_symbols:
         del df['symbols']
     df['mbl'] += bond_extra
