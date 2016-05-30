@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 '''
 Atom Dataframes
-==========================
+############################
 A dataframe containing the nuclear positions, forces, velocities, symbols, etc.
 Examples of data that may exist in this dataframe are given below (note that
 the dataframe is not limited to only these record types - rather this provides
