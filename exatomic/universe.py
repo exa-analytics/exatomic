@@ -179,8 +179,8 @@ class Universe(Container):
         return self.frame.is_periodic
 
     @property
-    def is_variable_cell(self):
-        return self.frame.is_variable_cell
+    def is_vc(self):
+        return self.frame.is_vc
 
     @property
     def basis_set_summary(self):

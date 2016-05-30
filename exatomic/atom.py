@@ -215,7 +215,7 @@ def OLD_compute_unit_atom(universe):
     '''
     if not universe.is_periodic:
         raise TypeError('Is this a periodic universe? Check frame for periodic column.')
-    if universe.is_variable_cell:
+    if universe.is_vc:
         raise NotImplementedError('Variable cell simulations not yet supported')
     idx = universe.frame.index[0]
     rxyz = universe.frame.ix[idx, ['rx', 'ry', 'rz']].values
@@ -235,7 +235,7 @@ def compute_projected_atom(universe):
     '''
     if not universe.is_periodic:
         raise TypeError('Is this a periodic universe? Check frame for periodic column.')
-    if universe.is_variable_cell:
+    if universe.is_vc:
         raise NotImplementedError('Variable cell simulations not yet supported')
     return _compute_projected_static(universe)
 
