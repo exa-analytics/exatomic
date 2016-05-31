@@ -58,7 +58,7 @@ def radial_pair_correlation(universe, a, b, dr=0.05, start=None, stop=None,
         the number of properties used in the histogram (the triple summation
         above, divided by the normalization for the radial distance outward).
     '''
-    if universe.is_variable_cell:
+    if universe.is_vc:
         raise NotImplementedError('No support for variable cell PCFs')
     # Filter relevant distances from the two body table and get some data
     distances = universe.two.ix[universe.two['symbols'].isin([a+b, b+a]), 'distance']
