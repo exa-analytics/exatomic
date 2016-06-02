@@ -23,112 +23,59 @@ ml_count = {'s': 1, 'p': 3, 'd': 5, 'f': 7, 'g': 9, 'h': 11, 'i': 13, 'k': 15,
             'l': 17, 'm': 19}
 
 
-class BasisSetSummary(DataFrame):
+class BasisSet(DataFrame):
     '''
-    Stores a summary of the basis set(s) used in the universe.
+    Description of the basis set name, number of functions, and function types.
 
     +-------------------+----------+-------------------------------------------+
     | Column            | Type     | Description                               |
     +===================+==========+===========================================+
-    | id                | str/cat  | code specific identifier (e.g. tag)       |
+    | tag                | str/cat  | code specific identifier (e.g. tag)      |
     +-------------------+----------+-------------------------------------------+
     | name              | str/cat  | common basis set name/description         |
     +-------------------+----------+-------------------------------------------+
     | function_count    | int      | total number of basis functions           |
     +-------------------+----------+-------------------------------------------+
-
-    Note:
-        The function count corresponds to the number of linearly independent
-        basis functions as provided by the basis set definition and used within
-        the code in solving the quantum mechanical eigenvalue problem (e.g.
-        s = 1, p = 3, d = 5, etc.).
     '''
-    _columns = ['id', 'name', 'function_count']
-    _indices = ['basis_set']
-    _categories = {'name': str, 'id': str}
+    _columns = ['tag', 'name', 'function_count']
+    _indices = ['set']
 
 
-class BasisSet(DataFrame):
+class BasisFunction(DataFrame):
     '''
-    Base class for description of a basis set. Stores the parameters of the
-    individual (sometimes called primitive) functions used in the basis.
+    Definition of individual basis functions used in a given universe.
     '''
     pass
 
 
-class SlaterBasisSet(BasisSet):
+class GaussianBasis(BasisFunction):
     '''
-    Stores information about a Slater type basis set.
+    Description of primitive functions used to construct a (contracted)
+    Gaussian basis set.
+
+    A real contracted Gaussian basis function, in cartesian space, is defined:
 
     .. math::
 
-        r = \\left(\\left(x - A_{x}\\right)^{2} + \\left(x - A_{y}\\right)^{2} + \\left(z - A_{z}\\right)^{2}\\right)^{\\frac{1}{2}} \\\\
-        f\\left(x, y, z\\right) = \\left(x - A_{x}\\right)^{i}\\left(x - A_{y}\\right)^{j}\left(z - A_{z}\\right)^{k}r^{m}e^{-\\alpha r}
-    '''
-    pass
-
-
-class GaussianBasisSet(BasisSet):
-    '''
-    Stores information about a Gaussian type basis set.
-
-    A Gaussian type basis set is described by primitive Gaussian functions :math:`f\\left(x, y, z\\right)`
-    of the form:
-
-    .. math::
-
-        r^{2} = \\left(x - A_{x}\\right)^{2} + \\left(x - A_{y}\\right)^{2} + \\left(z - A_{z}\\right)^{2} \\\\
-        f\\left(x, y, z\\right) = \\left(x - A_{x}\\right)^{l}\\left(x - A_{y}\\right)^{m}\\left(z - A_{z}\\right)^{n}e^{-\\alpha r^{2}}
-
-    Note that :math:`l`, :math:`m`, and :math:`n` are not quantum numbers but positive integers
-    (including zero) whose sum defines the orbital angular momentum of the primitive function.
-    Each primitive function is centered on a given atom with coordinates :math:`\\left(A_{x}, A_{y}, A_{z}\\right)`.
-    A basis function in this basis set is a sum of one or more primitive functions:
-
-    .. math::
-
-        g_{i}\\left(x, y, z\\right) = \\sum_{j=1}^{N_{i}}c_{ij}f_{ij}\\left(x, y, z\\right)
-
-    Each primitive function :math:`f_{ij}` is parameterically dependent on its associated atom's
-    nuclear coordinates and specific values of :math:`\\alpha`, :math:`l`, :math:`m`, and :math:`n`.
-    For convenience in data storage, each primitive function record contains its value of
-    :math:`\\alpha` and coefficient (typically called the contraction coefficient) :math:`c`.
+        \\Chi_{j} = \\sum_{k=1}^{K}d_{jk}NPe^{-\\alpha r^{2}}
 
     +-------------------+----------+-------------------------------------------+
     | Column            | Type     | Description                               |
     +===================+==========+===========================================+
     | alpha             | float    | value of :math:`\\alpha`                  |
     +-------------------+----------+-------------------------------------------+
-    | c                 | float    | value of the contraction coefficient      |
+    | d                 | float    | contraction coefficient                   |
     +-------------------+----------+-------------------------------------------+
-    | basis_function    | int/cat  | basis function group identifier           |
+    | j                 | int/cat  | basis function identifier                 |
     +-------------------+----------+-------------------------------------------+
-    | shell             | str/cat  | chemists' notation orbital shell          |
+    | l                 | str/cat  | orbital angular momentum                  |
     +-------------------+----------+-------------------------------------------+
-    | basis_set         | int/cat  | basis set identifier                      |
+    | set               | int/cat  | basis set index                           |
     +-------------------+----------+-------------------------------------------+
     '''
-    _columns = ['alpha', 'c', 'basis_function', 'shell', 'basis_set']
-    _indices = ['primitive']
-    _groupbys = ['basis_function']
-    _categories = {'basis_set': np.int64, 'shell': str, 'name': str, 'basis_function': np.int64}
-
-    def basis_count(self):
-        '''
-        Number of basis functions (:math:`g_{i}`) per symbol or label type.
-
-        Returns:
-            counts (:class:`~pandas.Series`)
-        '''
-        return self.groupby('symbol').apply(lambda g: g.groupby('function').apply(
-                                            lambda g: (g['shell'].map(ml_count)).values[0]).sum())
-
-
-class PlanewaveBasisSet(BasisSet):
-    '''
-    '''
-    pass
-
+    _columns = ['alpha', 'd', 'j', 'l', 'set']
+    _indices = ['index']
+    _groupbys = ['set', 'j']
 
 
 class CartesianGTFOrder(DataFrame):

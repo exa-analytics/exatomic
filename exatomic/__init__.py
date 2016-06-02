@@ -12,7 +12,6 @@ from exatomic._config import global_config
 from exatomic.frame import Frame
 from exatomic.atom import Atom
 from exatomic.molecule import Molecule
-from exatomic.basis import PlanewaveBasisSet, GaussianBasisSet, SlaterBasisSet
 from exatomic.universe import Universe
 from exatomic.editor import Editor
 from exatomic.formula import SimpleFormula
