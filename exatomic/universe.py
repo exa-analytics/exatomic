@@ -1,33 +1,19 @@
 # -*- coding: utf-8 -*-
 '''
-Universe (Container)
-======================
-Conceptually, a universe is a collection of independent (or related) frames
-of a given system. For example, a universe may contain only a
-single frame with the geometry of the molecule of interest, a set of
-snapshot geometries obtained during the course of a geometry optimization (one
-per frame), the same molecule's optimized geometry with each frame containing a
-different level of theory, a properties calculation where each frame contains a
-different small molecule, a molecular dynamics simulation with each frame
-corresponding to a snaphot in time, etc.
-
-The data architecture (see :func:`~exatomic.universe.Universe.data_architecture`)
-is composed of a collection of dataframes that represent properties in terms of
-concepts familiar to a computational chemist, such as atomic coordinates
-(:class:`~exatomic.atom.Atom`), orbital energies (:class:`~exatomic.orbital.Orbital`),
-orbital coefficients, basis set information, and fields (i.e. cube
-files). Furthermore, aggregate data such as two body properties (bonds) and
-atom collections (molecules) are available.
-
-.. _exa: http://exa-analytics.github.io/website
+The Atomic Universe
+#########################
+Conceptually, a universe is a collection of related (or independent) frames
+of a given system. A frame represents an instant in time (or another coordinate)
+for which the geometry (and other properties) of the system are known. The
+canonical example of a universe is a geometry optimization where the frame
+coordinate corresponds to step number (in the optimization).
 '''
 import pandas as pd
 import numpy as np
 from collections import OrderedDict
 from sqlalchemy import Column, Integer, ForeignKey
-from exa import Container
 from exa.numerical import Field
-from exa.relational.container import Meta
+from exa.relational.container import Container, TypedRelationalMeta
 from exatomic.widget import UniverseWidget
 from exatomic.frame import minimal_frame, Frame
 from exatomic.atom import Atom, ProjectedAtom, UnitAtom, VisualAtom
@@ -51,9 +37,9 @@ from exatomic.basis import SphericalGTFOrder, CartesianGTFOrder, BasisSet
 from exatomic.basis import lmap
 
 
-class UniMeta(Meta):
+class Meta(TypedRelationalMeta):
     '''
-    This class defines the statically typed attributes (dataframes and series)
+    This class defines the statically typed attributes (dataframes, series, etc.)
     of :class:`~exatomic.universe.Universe`.
     '''
     frame = Frame
@@ -62,7 +48,7 @@ class UniMeta(Meta):
     two_periodic = PeriodicTwo
 
 
-class Universe(Container, metaclass=UniMeta):
+class Universe(Container, metaclass=Meta):
     '''
     A container for working with computational chemistry data.
 
@@ -94,30 +80,6 @@ class Universe(Container, metaclass=UniMeta):
         if self.is_periodic:
             return self.two_periodic
         return self.two_free
-    # The arguments here should match those of init (for dataframes)
-#    _df_types = OrderedDict([('frame', Frame), ('atom', Atom), ('two', Two),
-#                             ('unit_atom', UnitAtom), ('projected_atom', ProjectedAtom),
-#                             ('periodic_two', PeriodicTwo), ('molecule', Molecule),
-#                             ('visual_atom', VisualAtom), ('field', AtomicField),
-#                             ('orbital', Orbital), ('momatrix', MOMatrix),
-#                             ('spherical_gtf_order', SphericalGTFOrder),
-#                             ('cartesian_gtf_order', CartesianGTFOrder),
-#                             ('basis_set_summary', BasisSet)])
-    # Properties
-    # ============
-    # These are used to enable a simple API for performing (sometimes) complex
-    # operations; it also facilitates lazy computation (computation only
-    # when required)
-#    @property
-#    def frame(self):
-#        if not self._is('_frame'):
-#            if self._is('_atom'):
-#                self.compute_minimal_frame()
-#        return self._frame
-#
-#    @property
-#    def atom(self):
-#        return self._atom
 
     @property
     def unit_atom(self):
@@ -155,20 +117,6 @@ class Universe(Container, metaclass=UniMeta):
         if self._projected_atom is None:
             self.compute_projected_atom()
         return self._projected_atom
-
-#    @property
-#    def two(self):
-#        if not self._is('_two') and not self._is('_periodic_two'):
-#            self.compute_two_body()
-#        if self._is('_periodic_two'):
-#            return self._periodic_two
-#        return self._two
-#
-#    @property
-#    def periodic_two(self):
-#        if not self._is('_periodic_two'):
-#            self.compute_two_body()
-#        return self._periodic_two
 
     @property
     def molecule(self):
@@ -424,6 +372,19 @@ class Universe(Container, metaclass=UniMeta):
 
     def __len__(self):
         return len(self.frame) if self._is('_frame') else 0
+
+
+    def __init__(self, *args, **kwargs):
+        '''
+        '''
+        super().__init__(*args, **kwargs)
+        if self._test:
+            self.name = 'TestUniverse'
+            self._widget.width = 950
+            self._widget.gui_width = 350
+            self._update_traits()
+            self._traits_need_update = False
+
 
 #    def __init__(self, frame=None, atom=None, two=None, field=None,
 #                 field_values=None, unit_atom=None, projected_atom=None,
