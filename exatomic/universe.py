@@ -351,6 +351,11 @@ class Universe(Container, metaclass=Meta):
                 field_bytes += field_value.memory_usage()
         return field_bytes
 
+    def _is(self, x):
+        if hasattr(self, x):
+            return True
+        return False
+        
     def _custom_container_traits(self):
         '''
         Create custom traits using multiple (related) dataframes.
