@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 '''
 Basis Set Representations
-=============================
+##############################
 This module provides classes that support representations of various basis sets.
 There are a handful of basis sets in computational chemistry, the most common of
 which are Gaussian type functions, Slater type functions, and plane waves. The
