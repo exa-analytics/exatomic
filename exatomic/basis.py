@@ -14,7 +14,7 @@ See Also:
 import pandas as pd
 import numpy as np
 from collections import OrderedDict
-from exa import Symbolic, DataFrame
+from exa import DataFrame
 
 
 lmap = {'s': 0, 'p': 1, 'd': 2, 'f': 3, 'g': 4, 'h': 5, 'i': 6, 'k': 7, 'l': 8,
