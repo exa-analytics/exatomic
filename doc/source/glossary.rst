@@ -5,4 +5,4 @@ Glossary
     :sorted:
 
     notebook
-        Web interface for interaction with atomic
+        Web interface for interaction with exatomic
