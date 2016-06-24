@@ -106,16 +106,18 @@ define([
         },
 
         '3d0': function(x, y, z) {
+            var x2 = x * x;
+            var y2 = y * y;
             var z2 = z * z;
-            var r = Math.sqrt(x * x + y * y + z2);
-            var r2 = r * r;
+            var r2 = x2 + y2 + z2;
+            var r = Math.sqrt(r2);
             var Z = 1;
             var sigma = Z * r;
-            var ynorm = Math.sqrt(5 / (16 * Math.PI));
-            var ybody = (3 * z2 / r2 - 1);
             var rnorm = 1 / Math.sqrt(2430);
             var rbody = Math.pow(Z, 3 / 2) * Math.pow(2 / 3 * sigma, 2) * Math.exp(-sigma / 3);
-            return ynorm * rnorm * ybody * rbody;
+            var ynorm = 1 / 4 * Math.sqrt(5 / Math.PI);
+            var ybody = (-x2 -y2 + 2 * z2) / r2;
+            return ynorm * ybody * rnorm * rbody;
         },
 
         '3d+1': function(x, y, z) {
@@ -126,11 +128,11 @@ define([
             var r = Math.sqrt(r2);
             var Z = 1;
             var sigma = Z * r;
-            var ynorm = -Math.sqrt(15 / (8 * Math.PI));
-            var ymix = 2 / Math.sqrt(2) * z / r * Math.sqrt(1 - z2 / r2) * y / (x * Math.sqrt(y2 / x2 + 1));
             var rnorm = 1 / Math.sqrt(2430);
             var rbody = Math.pow(Z, 3 / 2) * Math.pow(2 / 3 * sigma, 2) * Math.exp(-sigma / 3);
-            return ynorm * rnorm * ymix * rbody;
+            var ynorm = 1 / 2 * Math.sqrt(15 / Math.PI);
+            var ybody = z * x / r2;
+            return ynorm * ybody * rnorm * rbody;
         },
 
         '3d-1': function(x, y, z) {
@@ -142,15 +144,14 @@ define([
             var r = Math.sqrt(r2);
             var Z = 1;
             var sigma = Z * r;
-            var ynorm = Math.sqrt(15 / (8 * Math.PI));
-            var ymix = -2 / Math.sqrt(2) * z / r * Math.sqrt(1 - (z2/(r2))) * 1 / Math.sqrt(x2/y2 + 1);
             var rnorm = 1 / Math.sqrt(2430);
             var rbody = Math.pow(Z, 3 / 2) * Math.pow(2 / 3 * sigma, 2) * Math.exp(-sigma / 3);
-            return ynorm * rnorm * ymix * rbody;
+            var ynorm = 1 / 2 * Math.sqrt(15 / Math.PI);
+            var ybody = y * z / r2;
+            return rnorm * rbody * ynorm * ybody;
         },
 
         '3d+2': function(x, y, z) {
-            var sigma = Z * r;
             var x2 = x * x;
             var y2 = y * y;
             var z2 = z * z;
@@ -158,11 +159,11 @@ define([
             var r = Math.sqrt(r2);
             var Z = 1;
             var sigma = Z * r;
-            var ynorm = Math.sqrt(15 / (32 * Math.PI));
-            var ymix = 2 / Math.sqrt(2) * (1 - z2/r2) * (x2 - y2)/(x2 + y2);
             var rnorm = 1 / Math.sqrt(2430);
             var rbody = Math.pow(Z, 3 / 2) * Math.pow(2 / 3 * sigma, 2) * Math.exp(-sigma / 3);
-            return ynorm * rnorm * ymix * rbody;
+            var ynorm = 1 / 4 * Math.sqrt(15 / Math.PI);
+            var ybody = (x2 - y2) / r2;
+            return rnorm * rbody * ynorm * ybody;
         },
 
         '3d-2': function(x, y, z) {
@@ -173,11 +174,11 @@ define([
             var r = Math.sqrt(r2);
             var Z = 1;
             var sigma = Z * r;
-            var ynorm = Math.sqrt(15 / (32 * Math.PI));
-            var ymix = 2 / Math.sqrt(2) * (1 - z2/r2) * 2 * x * y / (x2 + y2);
             var rnorm = 1 / Math.sqrt(2430);
             var rbody = Math.pow(Z, 3 / 2) * Math.pow(sigma, 2) * Math.exp(-sigma / 3);
-            return ynorm * rnorm * ymix * rbody;
+            var ynorm = 1 / 2 * Math.sqrt(15 / Math.PI);
+            var ybody = x * y / r2;
+            return rnorm * rbody * ynorm * ybody;
         },
 
         '3dz2': function(x, y, z) {
