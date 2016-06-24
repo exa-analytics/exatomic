@@ -113,6 +113,65 @@ define([
             var prefac = Math.pow(sigma, 2) * (3 * Math.pow(z / r, 2) - 1);
             return norm * prefac * Math.exp(-sigma / 3);
         },
+        
+        '3d0': function(x, y, z) {
+            var r = Math.sqrt(x * x + y * y + z * z);
+            var Z = 1;
+            var ynorm = Math.sqrt(5 / (16 * Math.PI));
+            var ybody = (3 * (z * z) / (r * r) - 1);
+//            var rnorm = 1 / Math.sqrt(2430);
+            var rbody = Math.pow(Z, 3 / 2) * (Z * r) * Math.exp(-Z * r / 3);
+//            return ynorm * rnorm * ybody * rbody;
+            return ynorm * ybody * rbody;
+        },
+
+        '3d+1': function(x, y, z) {
+            var r = Math.sqrt(x * x + y * y + z * z);
+            var Z = 1;
+            var ynorm = -Math.sqrt(15 / (8 * Math.PI));
+            var ymix = z/r * Math.sqrt(1 - z*z/(r*r)) * 1 / Math.sqrt(2) * 2 * y / (x * Math.sqrt(y*y/(x*x) + 1));
+//            var ybody = (z/r) * Math.sqrt(1 - (z/r)*(z/r)) * 1 / Math.sqrt(x*x/(y*y) + 1);
+//            var rnorm = 1 / Math.sqrt(2430);
+            var rbody = Math.pow(Z, 3 / 2) * (Z * r) * Math.exp(-Z * r / 3);
+//            return ynorm * rnorm * ybody * rbody;
+            return ynorm * ymix * rbody;
+        },
+
+        '3d-1': function(x, y, z) {
+            var r = Math.sqrt(x * x + y * y + z * z);
+            var Z = 1;
+            var ynorm = Math.sqrt(15 / (8 * Math.PI));
+            var ymix = -2 / Math.sqrt(2) * z / r * Math.sqrt(1 - (z*z/(r*r))) * 1 / Math.sqrt(x*x/(y*y) + 1);
+//            var ybody = (z/r) * Math.sqrt(1 - (z/r)*(z/r)) * 1 / Math.sqrt(x*x/(y*y) + 1);
+//            var rnorm = 1 / Math.sqrt(2430);
+            var rbody = Math.pow(Z, 3 / 2) * (Z * r) * Math.exp(-Z * r / 3);
+//            return ynorm * rnorm * ybody * rbody;
+            return ynorm * ymix * rbody;
+        },
+
+        '3d+2': function(x, y, z) {
+            var r = Math.sqrt(x * x + y * y + z * z);
+            var Z = 1;
+            var ynorm = Math.sqrt(15 / (32 * Math.PI));
+            var ybody = (1 - z*z / (r*r)) * (x*x - y*y/(x*x + y*y));
+            var ymix = 2 / Math.sqrt(2) * (1 - z*z/(r*r)) * (x*x - y*y)/(x*x + y*y);
+//            var rnorm = 1 / Math.sqrt(2430);
+            var rbody = Math.pow(Z, 3 / 2) * (Z * r) * Math.exp(-Z * r / 3);
+//            return ynorm * rnorm * ybody * rbody;
+            return ynorm * ymix * rbody;
+        },
+
+        '3d-2': function(x, y, z) {
+            var r = Math.sqrt(x * x + y * y + z * z);
+            var Z = 1;
+            var ynorm = Math.sqrt(15 / (32 * Math.PI));
+            var ybody = (1 - z*z / (r*r)) * (x*x - y*y/(x*x + y*y));
+            var ymix = 2 / Math.sqrt(2) * (1 - z*z/(r*r)) * 2 * x * y / (x*x + y*y);
+//            var rnorm = 1 / Math.sqrt(2430);
+            var rbody = Math.pow(Z, 3 / 2) * (Z * r) * Math.exp(-Z * r / 3);
+//            return ynorm * rnorm * ybody * rbody;
+            return ynorm * ymix * rbody;
+        },
 
         '3dxz': function(x, y, z) {
             var x2 = x * x;

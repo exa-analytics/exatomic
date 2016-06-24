@@ -21,5 +21,4 @@ from exatomic import tests
 
 if not _conf['exa_persistent']:
     from exatomic._install import install
-    print('exatomic is installing nbextensions')
     install()
