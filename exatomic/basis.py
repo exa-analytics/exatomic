@@ -15,12 +15,13 @@ import pandas as pd
 import numpy as np
 from collections import OrderedDict
 from exa import DataFrame
+#from exatomic.algorithms.basis import spher_ml_count, cart_ml_count
 
 
 lmap = {'s': 0, 'p': 1, 'd': 2, 'f': 3, 'g': 4, 'h': 5, 'i': 6, 'k': 7, 'l': 8,
         'm': 9, 'px': 1, 'py': 1, 'pz': 1}
-ml_count = {'s': 1, 'p': 3, 'd': 5, 'f': 7, 'g': 9, 'h': 11, 'i': 13, 'k': 15,
-            'l': 17, 'm': 19}
+spher_ml_count = {'s': 1, 'p': 3, 'd': 5, 'f': 7, 'g': 9, 'h': 11, 'i': 13, 'k': 15,
+                  'l': 17, 'm': 19}
 
 
 class BasisSetSummary(DataFrame):
@@ -30,11 +31,21 @@ class BasisSetSummary(DataFrame):
     +-------------------+----------+-------------------------------------------+
     | Column            | Type     | Description                               |
     +===================+==========+===========================================+
-    | id                | str/cat  | code specific identifier (e.g. tag)       |
+    | tag               | str/cat  | code specific basis set identifier        |
     +-------------------+----------+-------------------------------------------+
     | name              | str/cat  | common basis set name/description         |
     +-------------------+----------+-------------------------------------------+
     | function_count    | int      | total number of basis functions           |
+    +-------------------+----------+-------------------------------------------+
+    | symbol            | str/cat  | atomic label                              |
+    +-------------------+----------+-------------------------------------------+
+    | prim_per_atom     | int      | primitive functions per atom              |
+    +-------------------+----------+-------------------------------------------+
+    | func_per_atom     | int      | basis functions per atom                  |
+    +-------------------+----------+-------------------------------------------+
+    | primitive_count   | int      | total primitive functions                 |
+    +-------------------+----------+-------------------------------------------+
+    | function_count    | int      | total basis functions                     |
     +-------------------+----------+-------------------------------------------+
 
     Note:
@@ -99,16 +110,22 @@ class GaussianBasisSet(BasisSet):
     +===================+==========+===========================================+
     | alpha             | float    | value of :math:`\\alpha`                  |
     +-------------------+----------+-------------------------------------------+
-    | c                 | float    | value of the contraction coefficient      |
+    | d                 | float    | value of the contraction coefficient      |
     +-------------------+----------+-------------------------------------------+
     | basis_function    | int/cat  | basis function group identifier           |
     +-------------------+----------+-------------------------------------------+
     | shell             | str/cat  | chemists' notation orbital shell          |
     +-------------------+----------+-------------------------------------------+
-    | basis_set         | int/cat  | basis set identifier                      |
+    
+    Other useful columns can be added to increase compatibility with other functionality.
+
+    +-------------------+----------+-------------------------------------------+
+    | Column            | Type     | Description                               |
+    +===================+==========+===========================================+
+    | index             | int/cat  | basis set identifier                      |
     +-------------------+----------+-------------------------------------------+
     '''
-    _columns = ['alpha', 'c', 'basis_function', 'shell', 'basis_set']
+    _columns = ['alpha', 'd', 'basis_function', 'shell']
     _indices = ['primitive']
     _groupbys = ['basis_function']
     _categories = {'basis_set': np.int64, 'shell': str, 'name': str, 'basis_function': np.int64}
@@ -121,7 +138,56 @@ class GaussianBasisSet(BasisSet):
             counts (:class:`~pandas.Series`)
         '''
         return self.groupby('symbol').apply(lambda g: g.groupby('function').apply(
-                                            lambda g: (g['shell'].map(ml_count)).values[0]).sum())
+                                            lambda g: (g['shell'].map(spher_ml_count)).values[0]).sum())
+
+class BasisSetOrder(BasisSet):
+    '''
+    BasisSetOrder uniquely determines the basis function ordering scheme for 
+    a given :class:`~exatomic.universe.Universe`. shell_function is used instead
+    of basis_function in the following table to emphasize that it includes the
+    degeneracy from the quantum number :math:`m_{l}`. 
+    +-------------------+----------+-------------------------------------------+
+    | Column            | Type     | Description                               |
+    +===================+==========+===========================================+
+    | shell_function    | int      | shell function index                      |
+    +-------------------+----------+-------------------------------------------+
+    | symbol            | str      | symbolic atomic center                    |
+    +-------------------+----------+-------------------------------------------+
+    | center            | int      | numeric atomic center (1-based)           |
+    +-------------------+----------+-------------------------------------------+
+    | type              | str      | identifier equivalent to (l, ml)          |
+    +-------------------+----------+-------------------------------------------+
+    '''
+    _columns = ['shell_function', 'symbol', 'center', 'type']
+    _indices = ['order']
+    _categories = {'symbol': str, 'center': np.int64, 'type': str, 'basis_function': np.int64}
+
+class BasisSetMap(BasisSet):
+    '''
+    BasisSetMap provides the auxiliary information about relational mapping 
+    between the complete uncontracted primitive basis set and the resultant
+    contracted basis set within an :class:`~exatomic.universe.Universe`. 
+
+    +-------------------+----------+-------------------------------------------+
+    | Column            | Type     | Description                               |
+    +===================+==========+===========================================+
+    | symbol            | str      | symbolic atomic center                    |
+    +-------------------+----------+-------------------------------------------+
+    | shell             | str      | string of quantum number l                |
+    +-------------------+----------+-------------------------------------------+
+    | nprim             | int      | number of primitives within shell         |
+    +-------------------+----------+-------------------------------------------+
+    | nbasis            | int      | number of basis functions within shell    |
+    +-------------------+----------+-------------------------------------------+
+    | cartesian         | bool     | shell is cartesian                        |
+    +-------------------+----------+-------------------------------------------+
+    | spherical         | bool     | shell is spherical                        |
+    +-------------------+----------+-------------------------------------------+
+    '''
+    _columns = ['symbol', 'shell', 'nprim', 'nbasis', 'cartesian', 'spherical']
+    _indices = ['index']
+    _categories = {'symbol': str, 'shell': str, 'nprim': np.int64, 
+                   'nbasis': np.int64, 'cartesian': bool, 'spherical': bool}
 
 
 class PlanewaveBasisSet(BasisSet):

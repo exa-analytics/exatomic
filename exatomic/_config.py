@@ -5,7 +5,7 @@ Configuration for exatomic
 Additional configuration required for the exatomic package.
 '''
 import os
-from exa import _conf
+from exa import global_config as _conf
 from exa.utility import mkp
 
 

@@ -11,7 +11,7 @@ import pandas as pd
 import sympy as sy
 from sympy.parsing.sympy_parser import parse_expr
 from sympy.physics.secondquant import KroneckerDelta as kr
-from exa import _conf
+from exatomic import _conf
 
 
 class SolidHarmonic:

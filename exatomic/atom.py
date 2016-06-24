@@ -41,7 +41,8 @@ See Also:
 import numpy as np
 import pandas as pd
 from traitlets import Dict, Unicode
-from exa import DataFrame, SparseDataFrame
+from exa import DataFrame
+from exa.numerical import SparseDataFrame
 from exa.algorithms import supercell3d
 from exatomic import Isotope
 
