@@ -145,7 +145,10 @@ class BasisSetOrder(BasisSet):
     BasisSetOrder uniquely determines the basis function ordering scheme for 
     a given :class:`~exatomic.universe.Universe`. shell_function is used instead
     of basis_function in the following table to emphasize that it includes the
-    degeneracy from the quantum number :math:`m_{l}`. 
+    degeneracy from the quantum number :math:`m_{l}`, which may change. This 
+    table should be used if the ordering scheme cannot be determined 
+    programmatically.
+
     +-------------------+----------+-------------------------------------------+
     | Column            | Type     | Description                               |
     +===================+==========+===========================================+
