@@ -313,14 +313,11 @@ class Universe(Container, metaclass=Meta):
             self._field = df
         else:
             cls = self._df_types['field']
-            print('cls', cls)
             values = self._field.field_values + df.field_values
-            print('values', values)
             self._field._revert_categories()
             df._revert_categories()
             df = pd.concat((pd.DataFrame(self._field), pd.DataFrame(df)), ignore_index=True)
             df.reset_index(inplace=True, drop=True)
-            print('df', df)
             self._field = cls(df, field_values=values)
             self._field._set_categories()
         self._traits_need_update = True
