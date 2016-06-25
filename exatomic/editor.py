@@ -163,8 +163,8 @@ class Editor(ExaEditor):
         return Universe(frame=self.frame, atom=self.atom, meta=self.meta, field=self.field,
                         orbital=self.orbital, basis_set=self.basis_set, molecule=self.molecule,
                         two=self.two, periodic_two=self.periodic_two, unit_atom=self.unit_atom,
-                        momatrix=self.momatrix, spherical_gtf_order=spherical_gtf_order,
-                        cartesian_gtf_order=cartesian_gtf_order,
+                        momatrix=self.momatrix, #spherical_gtf_order=spherical_gtf_order,
+                        #cartesian_gtf_order=cartesian_gtf_order,
                         basis_set_summary=self._basis_set_summary, **kwargs)
 
     def _last_num_from_regex(self, regex, typ=int):

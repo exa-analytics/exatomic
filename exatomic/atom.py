@@ -41,10 +41,9 @@ See Also:
 import numpy as np
 import pandas as pd
 from traitlets import Dict, Unicode
-from exa import DataFrame
-from exa.numerical import SparseDataFrame
+from exa.numerical import DataFrame, SparseDataFrame
 from exa.algorithms import supercell3d
-from exatomic import Isotope
+from exa.relational.isotope import symbol_to_color, symbol_to_radius
 
 
 class BaseAtom(DataFrame):
@@ -67,9 +66,9 @@ class BaseAtom(DataFrame):
         symbols = grps.apply(lambda g: g['symbol'].cat.codes.values)
         symbols = Unicode(symbols.to_json(orient='values')).tag(sync=True)
         symmap = {i: v for i, v in enumerate(self['symbol'].cat.categories)}
-        radii = Isotope.symbol_to_radius()[self['symbol'].unique()]
+        radii = symbol_to_radius[self['symbol'].unique()]
         radii = Dict({i: radii[v] for i, v in symmap.items()}).tag(sync=True)
-        colors = Isotope.symbol_to_color()[self['symbol'].unique()]
+        colors = symbol_to_color[self['symbol'].unique()]
         colors = Dict({i: colors[v] for i, v in symmap.items()}).tag(sync=True)
         atom_x = grps.apply(lambda g: g['x'].values).to_json(orient='values', double_precision=self._precision)
         atom_x = Unicode(atom_x).tag(sync=True)

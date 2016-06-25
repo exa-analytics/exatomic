@@ -94,6 +94,9 @@ define([
             ----------------
             Set up some application variables.
             */
+            console.log(this);
+            console.log(this.view);
+            console.log(this.framelist);
             this.last_index = this.view.framelist.length - 1;
             this.atoms_meshes = [];
             this.bonds_meshes = [];

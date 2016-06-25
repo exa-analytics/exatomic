@@ -9,7 +9,8 @@ import numpy as np
 import pandas as pd
 from io import StringIO
 from exa import Series
-from exatomic import Isotope, Universe, Editor, Atom, Length
+from exa.relational.isotope import Z_to_symbol, symbol_to_Z
+from exatomic import Universe, Editor, Atom, Length
 from exatomic.field import AtomicField
 
 
@@ -36,7 +37,7 @@ class Cube(Editor):
         df = pd.read_csv(StringIO('\n'.join(self._lines[6:self._volume_data_start])), delim_whitespace=True,
                          header=None, names=('Z', 'nelectron', 'x', 'y', 'z'))
         del df['nelectron']
-        df['symbol'] = df['Z'].map(Isotope.Z_to_symbol()).astype('category')
+        df['symbol'] = df['Z'].map(Z_to_symbol).astype('category')
         del df['Z']
         df['frame'] = pd.Series([0] * len(df), dtype='category')
         df['label'] = pd.Series(range(self._nat), dtype='category')
@@ -79,33 +80,28 @@ class Cube(Editor):
         df['dzj'] = df['dzj'].astype(np.float64)
         df['dzk'] = df['dzk'].astype(np.float64)
         fields = [Series(data[~np.isnan(data)])]
-        self._field = AtomicField(fields, df)
+        #print(fields)
+        self._field = AtomicField(df, field_values=fields)
 
     def _init(self):
         '''
         Perform some preliminary parsing so that future parsing of atoms, etc.
         is easy. Also parse out metadata (comments).
         '''
-        nat, ox, oy, oz = self[2].split()
-        nx, dxi, dxj, dxk = self[3].split()
-        ny, dyi, dyj, dyk = self[4].split()
-        nz, dzi, dzj, dzk = self[5].split()
-        nx = int(nx)
-        ny = int(ny)
-        nz = int(nz)
-        nat = int(nat)
-        ox = float(ox)
-        oy = float(oy)
-        oz = float(oz)
-        self._dxi = float(dxi)
-        self._dxj = float(dxj)
-        self._dxk = float(dxk)
-        self._dyi = float(dyi)
-        self._dyj = float(dyj)
-        self._dyk = float(dyk)
-        self._dzi = float(dzi)
-        self._dzj = float(dzj)
-        self._dzk = float(dzk)
+        typs = [int, float, float, float]
+        nat, ox, oy, oz = [typ(i) for typ, i in zip(typs, self[2].split())]
+        nx, dxi, dxj, dxk = [typ(i) for typ, i in zip(typs, self[3].split())]
+        ny, dyi, dyj, dyk = [typ(i) for typ, i in zip(typs, self[4].split())]
+        nz, dzi, dzj, dzk = [typ(i) for typ, i in zip(typs, self[5].split())]
+        self._dxi = dxi
+        self._dxj = dxj
+        self._dxk = dxk
+        self._dyi = dyi
+        self._dyj = dyj
+        self._dyk = dyk
+        self._dzi = dzi
+        self._dzj = dzj
+        self._dzk = dzk
         self._nat = abs(nat)
         self._nx = abs(nx)
         self._ny = abs(ny)
@@ -171,7 +167,7 @@ def _write_first_field_of_each_frame(path, universe):
     padding = len(str(len(framelist)))
     for frame in framelist:
         atom = universe.atom[(universe.atom['frame'] == frame), ['symbol', 'x', 'y', 'z']].copy()
-        atom['Z'] = atom['symbol'].map(Isotope.symbol_to_Z())
+        atom['Z'] = atom['symbol'].map(symbol_to_Z)
         atom['electrons'] = 1.0
         del atom['symbol']
         field_data = universe.field[universe.field['frame'] == frame]
