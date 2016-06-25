@@ -64,6 +64,52 @@ class MOMatrix(DataFrame):
     _groupbys = ['orbital', 'basis_function']
     _categories = {'orbital': np.int64, 'basis_function': np.int64, 'spin': np.int64}
 
+    def square(self):
+       return self.pivot('basis_function', 'orbital', 'coefficient') 
+
+class DensityMatrix(DataFrame):
+    '''
+    The density matrix in a contracted basis set. As it is 
+    square symmetric, only n_basis_functions * (n_basis_functions + 1) / 2
+    rows are stored.
+
+    +-------------------+----------+-------------------------------------------+
+    | Column            | Type     | Description                               |
+    +===================+==========+===========================================+
+    | chi1              | int      | first basis function                      |
+    +-------------------+----------+-------------------------------------------+
+    | chi2              | int      | second basis function                     |
+    +-------------------+----------+-------------------------------------------+
+    | coefficient       | float    | overlap matrix element                    |
+    +-------------------+----------+-------------------------------------------+
+    '''
+    _columns = ['chi1', 'chi2', 'coefficient']
+    _indices = ['index']
+
+    def square(self):
+        nbas = np.floor(np.sqrt(self.shape[0] * 2))
+        return self.pivot('chi1', 'chi2', 'coefficient').fillna(value=0) + \
+               self.pivot('chi2', 'chi1', 'coefficient').fillna(value=0) - np.eye(nbas)
+
+    @classmethod
+    def from_momatrix(cls, momatrix, nocc):
+        square = momatrix.square()
+        dens = np.empty(square.shape, dtype=np.float_)
+        for mu in square.columns:
+            for nu in square.index:
+                dens[mu, nu] = np.sum(square.iloc[mu].values[:nocc] *
+                                      square.iloc[nu].values[:nocc])
+        retlen = square.shape[0] * (square.shape[0] + 1) // 2
+        ret = np.empty((retlen,), dtype=[('chi1', 'i8'),
+                                         ('chi2', 'i8'),
+                                         ('coefficient', 'f8')])
+        cnt = 0
+        for mu in square.columns:
+            for nu in range(mu + 1):
+                ret[cnt] = (mu, nu, dens[mu, nu])
+                cnt += 1
+        return cls(ret) 
+
 
 def _voluminate_cartesian_gtfs(universe, xx, yy, zz):
     '''

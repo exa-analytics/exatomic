@@ -37,7 +37,7 @@ class BasisSetSummary(DataFrame):
     +-------------------+----------+-------------------------------------------+
     | function_count    | int      | total number of basis functions           |
     +-------------------+----------+-------------------------------------------+
-    | symbol            | str/cat  | atomic label                              |
+    | symbol            | str/cat  | unique atomic label                       |
     +-------------------+----------+-------------------------------------------+
     | prim_per_atom     | int      | primitive functions per atom              |
     +-------------------+----------+-------------------------------------------+
@@ -51,13 +51,14 @@ class BasisSetSummary(DataFrame):
     Note:
         The function count corresponds to the number of linearly independent
         basis functions as provided by the basis set definition and used within
-        the code in solving the quantum mechanical eigenvalue problem (e.g.
-        s = 1, p = 3, d = 5, etc.).
+        the code in solving the quantum mechanical eigenvalue problem.
     '''
     _columns = ['id', 'name', 'function_count']
     _indices = ['basis_set']
     _categories = {'name': str, 'id': str}
 
+        #(e.g.
+        #s = 1, p = 3, d = 5, etc.).
 
 class BasisSet(DataFrame):
     '''
@@ -191,6 +192,33 @@ class BasisSetMap(BasisSet):
     _indices = ['index']
     _categories = {'symbol': str, 'shell': str, 'nprim': np.int64, 
                    'nbasis': np.int64, 'cartesian': bool, 'spherical': bool}
+
+
+class Overlap(DataFrame):
+    '''
+    Overlap enumerates the overlap matrix elements between basis functions in
+    a contracted basis set. Currently nothing disambiguates between the
+    primitive overlap matrix and the contracted overlap matrix. As it is 
+    square symmetric, only n_basis_functions * (n_basis_functions + 1) / 2
+    rows are stored.
+
+    +-------------------+----------+-------------------------------------------+
+    | Column            | Type     | Description                               |
+    +===================+==========+===========================================+
+    | chi1              | int      | first basis function                      |
+    +-------------------+----------+-------------------------------------------+
+    | chi2              | int      | second basis function                     |
+    +-------------------+----------+-------------------------------------------+
+    | coefficient       | float    | overlap matrix element                    |
+    +-------------------+----------+-------------------------------------------+
+    '''
+    _columns = ['chi1', 'chi2', 'coefficient']
+    _indices = ['index']
+
+    def square(self):
+        nbas = np.floor(np.sqrt(self.shape[0] * 2))
+        return self.pivot('chi1', 'chi2', 'coefficient').fillna(value=0) + \
+               self.pivot('chi2', 'chi1', 'coefficient').fillna(value=0) - np.eye(nbas)
 
 
 class PlanewaveBasisSet(BasisSet):

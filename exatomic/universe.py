@@ -166,6 +166,14 @@ class Universe(Container, metaclass=Meta):
         return self._basis_set_summary
 
     @property
+    def overlap(self):
+        return self._overlap
+
+    @property
+    def density_matrix(self):
+        return self._density_matrix
+
+    @property
     def spherical_gtf_order(self):
         if self._is('_spherical_gtf_order'):
             return self._spherical_gtf_order
