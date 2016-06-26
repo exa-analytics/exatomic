@@ -6,8 +6,8 @@ inside a Python environment in a variety of ways:
 
 .. code-block:: python
 
-    help(atomic.container)
-    u = atomic.Universe()
+    help(exatomic.container)
+    u = exatomic.Universe()
     dir(u)
     #u.atom?    # works in IPython/Jupyter notebook
 
@@ -33,4 +33,5 @@ JavaScript
 .. toctree::
     :maxdepth: 2
 
-    js/atomic.rst
+    js/exatomic.rst
+    js/basis.rst

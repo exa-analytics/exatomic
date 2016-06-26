@@ -1,4 +1,4 @@
-# atomic
+# exatomic
 Data analytics for the computational chemist (and related professions).
 
 # Installation
@@ -6,7 +6,7 @@ Data analytics for the computational chemist (and related professions).
 # Getting Started
 
 # Documentation
-Documentation is available on [read the docs](http://exa-atomic.readthedocs.org)
+Documentation is available on [read the docs](http://exatomic.readthedocs.org)
 
 
 Documentation is generated using [sphinx](http://sphinx-doc.org "Sphinx")
