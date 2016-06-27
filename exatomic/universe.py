@@ -249,15 +249,15 @@ class Universe(Container, metaclass=Meta):
         '''
         Compute the spherical Gaussian type function ordering dataframe.
         '''
-        lmax = universe.basis_set['shell'].map(lmap).max()
+        lmax = self.basis_set['shell'].map(lmap).max()
         self._spherical_gtf_order = SphericalGTFOrder.from_lmax_order(lmax, ordering_func)
 
     def compute_cartesian_gtf_order(self, ordering_func):
         '''
         Compute the cartesian Gaussian type function ordering dataframe.
         '''
-        lmax = universe.basis_set['shell'].map(lmap).max()
-        self._cartesian_gtf_order = SphericalGTFOrder.from_lmax_order(lmax, ordering_func)
+        lmax = self.basis_set['shell'].map(lmap).max()
+        self._cartesian_gtf_order = CartesianGTFOrder.from_lmax_order(lmax, ordering_func)
 
     def compute_two_free(self, *args, **kwargs):
         self.compute_two_body(*args, **kwargs)

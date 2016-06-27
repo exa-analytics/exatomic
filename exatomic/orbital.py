@@ -29,10 +29,14 @@ Orbital information such as centers and energies.
 import re
 import numpy as np
 import pandas as pd
+import sympy as sy
+from sympy import Add, Mul
 from exa import DataFrame, Series
 from exa.algorithms import meshgrid3d
 from exatomic import _conf
+from exatomic.basis import lmap
 from exatomic.field import AtomicField
+from collections import OrderedDict
 
 
 class Orbital(DataFrame):
@@ -111,7 +115,7 @@ class DensityMatrix(DataFrame):
         return cls(ret) 
 
 
-def _voluminate_cartesian_gtfs(universe, xx, yy, zz):
+def _voluminate_gtfs(universe, xx, yy, zz, kind='spherical'):
     '''
     Generate symbolic ordered spherical (in cartesian coordinates)
     Gaussian type function basis for the given universe.
@@ -121,47 +125,82 @@ def _voluminate_cartesian_gtfs(universe, xx, yy, zz):
         xx (array): Discrete values of x
         yy (array): Discrete values of y
         zz (array): Discrete values of z
+        kind (str): 'spherical' or 'cartesian'
 
-    Note:
-        This function exists here because the resultant functions are orbital
-        approximations.
+    Returns:
+        ordered_gtf_basis (list): list of funcs
     '''
+    universe.compute_cartesian_gtf_order(universe._cartesian_ordering_function)
+    universe.compute_spherical_gtf_order(universe._spherical_ordering_function)
     ex, ey, ez = sy.symbols('x y z', imaginary=False)
-    ordered_spherical_gtf_basis = []
-    bases = universe.basis.groupby('symbol')
-    lmax = universe.basis['shell'].map(lmap).max()
-    sh = solid_harmonics(lmax, True, True)
+    ordered_gtf_basis = []
+    bases = universe.basis_set.groupby('symbol')
+    lmax = universe.basis_set['shell'].map(lmap).max()
+    sh = _solid_harmonics(lmax, ex, ey, ez)
     for symbol, x, y, z in zip(universe.atom['symbol'], universe.atom['x'],
                                universe.atom['y'], universe.atom['z']):
-        bas = bases.get_group(symbol).groupby('function')
+        bas = bases.get_group(symbol).groupby('basis_function')
         rx = ex - x
         ry = ey - y
         rz = ez - z
         r2 = rx**2 + ry**2 + rz**2
         for f, grp in bas:
             l = lmap[grp['shell'].values[0]]
-            shell_functions = {}
-            for i, j, k in _cartesian_ordering_function(l):
-                function = 0
-                for alpha, c in zip(grp['alpha'], grp['c']):
-                    function += c * rx**int(i) * ry**int(j) * rz**int(k) * sy.exp(-alpha * r2)
-                function = sy.lambdify(('x', 'y', 'z'), function, 'numpy')
-                if _conf['pkg_numba']:
-                    from numba import vectorize, float64
-                shell_functions['x' * i + 'y' * j + 'z' * k] = function
-            # now reduce cart shell functions to spherical funcs
-            # Reduce the linearly dependent cartesian basis
-            # to a linearly independent spherical basis.
-            if l == 0:
-                ordered_spherical_gtf_basis.append(shell_functions[''])
-            elif l == 1:
-                for lv, ml in universe.spherical_gtf_order.symbolic_keys(l):
-                    key = str(sh[(lv, ml)])
-                    ordered_spherical_gtf_basis.append(shell_functions[key])
+            if kind == 'spherical':
+                sym_keys = universe.spherical_gtf_order.symbolic_keys(l)
+            elif kind == 'cartesian':
+                sym_keys = universe.cartesian_gtf_order.symbolic_keys(l)
             else:
-                for lv, ml in universe.spherical_gtf_order.symbolic_keys(l):
-                    ordered_spherical_gtf_basis.append(sh[(lv, ml)].subs(shell_functions))
-    return ordered_spherical_gtf_basis
+                raise Exception("kind must be 'spherical' or 'cartesian' not {}".format(kind))
+            print(sym_keys)
+            shell_functions = {}
+            for i, j, k in universe._cartesian_ordering_function(l):
+                function = 0
+                for alpha, d in zip(grp['alpha'], grp['d']):
+                    function += d * rx**int(i) * ry**int(j) * rz**int(k) * sy.exp(-alpha * r2)
+                shell_functions['x' * i + 'y' * j + 'z' * k] = function
+            if l == 0:
+                ordered_gtf_basis.append(shell_functions[''])
+            elif l == 1:
+                for lv, ml in sym_keys:
+                    key = str(sh[(lv, ml)])
+                    key = ''.join(re.findall("[A-z]+", key))
+                    ordered_gtf_basis.append(shell_functions[key])
+            else:
+                for lv, ml in sym_keys:
+                    if type(sh[(lv, ml)]) == Mul:
+                        coef, sym = sh[(lv, ml)].as_coeff_Mul()
+                        sym = str(sym).replace('*', '')
+                        ordered_gtf_basis.append(coef * shell_functions[sym])
+                    elif type(sh[(lv, ml)]) == Add:
+                        dic = list(sh[(lv, ml)].as_coefficients_dict().items())
+                        coefs = [i[1] for i in dic]
+                        syms = [str(i[0]) for i in dic]
+                        func = 0
+                        for coef, sym in zip(coefs, syms):
+                        # TODO : this probably breaks for something like x**2z**2
+                            if '**' in sym:
+                                sym = sym[0] * int(sym[-1])
+                                func += coef * shell_functions[sym]
+                            else:
+                                sym = sym.replace('*', '')
+                                func += coef * shell_functions[sym]
+                        ordered_gtf_basis.append(func)
+    return ordered_gtf_basis
+
+    
+def _parse_sympy_expr(syms):
+    strs = ['', '', '']
+    for sym in syms:
+        for i, cart in enumerate(['x', 'y', 'z']):
+            if cart in sym:
+                carstar = cart + '**'
+                if carstar in sym:
+                    strs[i] += strs[i] + cart * int(sym.split(carstar)[1][0])
+                else:
+                    strs[i] += strs[i] + cart
+    return [st for st in strs if st] 
+
 
 
 def add_cubic_field_from_mo(universe, rmin, rmax, nr, vector=None):
@@ -193,12 +232,14 @@ def add_cubic_field_from_mo(universe, rmin, rmax, nr, vector=None):
     dzk = z[1] - z[0]
     dv = dxi * dyj * dzk
     x, y, z = meshgrid3d(x, y, z)
-    basis_funcs = _spherical_gtfs(universe)
-    basis_funcs = [sy.lambdify(('x', 'y', 'z'), func, 'numpy') for func in basis_funcs]
+    # Get symbolic representations of the basis functions
+    basis_funcs = _voluminate_gtfs(universe, x, y, z)
     if _conf['pkg_numba']:
         from numba import vectorize, float64
         nb = vectorize([float64(float64, float64, float64)], nopython=True)
-        basis_funcs = [nb(func) for func in basis_funcs]
+        for i, func in enumerate(basis_funcs):
+            func = sy.lambdify(('x', 'y', 'z'), func, 'numpy')
+            basis_funcs[i] = nb(func)
     else:
         basis_funcs = [np.vectorize(func) for func in basis_funcs]
     nn = len(basis_funcs)
@@ -246,4 +287,36 @@ def add_cubic_field_from_mo(universe, rmin, rmax, nr, vector=None):
                                    'dzk': dzk, 'nx': nx, 'ny': ny, 'nz': nz, 'label': label,
                                    'ox': ox, 'oy': oy, 'oz': oz, 'frame': frame})
     values = [Series(v) for v in values.tolist()]
-    return AtomicField(values, data)
+    return AtomicField(data, field_values=values)
+
+
+def _solid_harmonics(l_max, x, y, z):
+
+    def _top_sh(lcur, sp, sm, x, y, z):
+        lpre = lcur - 1
+        kr = 1 if lpre == 0 else 0
+        return np.sqrt(2 ** kr * (2 * lpre + 1) / (2 * lpre + 2)) * (x * sp - (1 - kr) * y * sm)
+    
+    def _mid_sh(lcur, m, sm, smm, x, y, z):
+        lpre = lcur - 1
+        return ((2 * lpre + 1) * z * sm - np.sqrt((lpre + m) * (lpre - m)) * (x*x + y*y + z*z) * smm) /  \
+                (np.sqrt((lpre + m + 1) * (lpre - m + 1)))
+    
+    def _bot_sh(lcur, sp, sm, x, y, z):
+        lpre = lcur - 1
+        kr = 1 if lpre == 0 else 0
+        return np.sqrt(2 ** kr * (2 * lpre + 1) / (2 * lpre + 2)) * (y * sp + (1 - kr) * x * sm)
+
+    sh = OrderedDict()
+    sh[(0, 0)] = 1
+    for l in range(1, l_max + 1):
+        lpre = l - 1
+        ml_all = list(range(-l, l + 1))
+        sh[(l, ml_all[0])] = _bot_sh(l, sh[(lpre,lpre)], sh[(lpre,-(lpre))], x, y, z)
+        for ml in ml_all[1:-1]:
+            try:
+                sh[(l, ml)] = _mid_sh(l, ml, sh[(lpre,ml)], sh[(lpre-1,ml)], x, y, z)
+            except KeyError:
+                sh[(l, ml)] = _mid_sh(l, ml, sh[(lpre,ml)], sh[(lpre,ml)], x, y, z)
+        sh[(l, ml_all[-1])] = _top_sh(l, sh[(lpre,lpre)], sh[(lpre,-(lpre))], x, y, z)      
+    return sh
