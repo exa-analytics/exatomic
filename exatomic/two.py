@@ -7,21 +7,21 @@ interatomic distances). While this may seem like a trivial calculation, it is
 not; it is a combinatorial problem and fast algorithms for it are an outstanding
 problem in computational science.
 
-+-------------------+----------+-------------------------------------------+
-| Column            | Type     | Description                               |
-+===================+==========+===========================================+
-| atom0             | integer  | foreign key to :class:`~atomic.atom.Atom` |
-+-------------------+----------+-------------------------------------------+
-| atom1             | integer  | foreign key to :class:`~atomic.atom.Atom` |
-+-------------------+----------+-------------------------------------------+
-| distance          | float    | distance between atom0 and atom1          |
-+-------------------+----------+-------------------------------------------+
-| bond              | boolean  | True if bond                              |
-+-------------------+----------+-------------------------------------------+
-| frame             | category | non-unique integer (req.)                 |
-+-------------------+----------+-------------------------------------------+
-| symbols           | category | concatenated atomic symbols               |
-+-------------------+----------+-------------------------------------------+
++-------------------+----------+---------------------------------------------+
+| Column            | Type     | Description                                 |
++===================+==========+=============================================+
+| atom0             | integer  | foreign key to :class:`~exatomic.atom.Atom` |
++-------------------+----------+---------------------------------------------+
+| atom1             | integer  | foreign key to :class:`~exatomic.atom.Atom` |
++-------------------+----------+---------------------------------------------+
+| distance          | float    | distance between atom0 and atom1            |
++-------------------+----------+---------------------------------------------+
+| bond              | boolean  | True if bond                                |
++-------------------+----------+---------------------------------------------+
+| frame             | category | non-unique integer (req.)                   |
++-------------------+----------+---------------------------------------------+
+| symbols           | category | concatenated atomic symbols                 |
++-------------------+----------+---------------------------------------------+
 '''
 import numpy as np
 import pandas as pd
@@ -31,6 +31,7 @@ from exa import DataFrame
 from exa.algorithms import pdist, unordered_pairing
 from exa.relational.isotope import symbols_to_radii
 from exatomic import Length
+from exatomic import Isotope, Length
 
 
 max_atoms_per_frame = 300
@@ -129,7 +130,7 @@ def compute_two_body(universe, k=None, dmax=dmax, dmin=dmin, bond_extra=bond_ext
         distance(A, B) < covalent\_radius(A) + covalent\_radius(B) + bond\_extra
 
     Args:
-        universe (:class:`~atomic.universe.Universe`): Chemical universe
+        universe (:class:`~exatomic.universe.Universe`): Chemical universe
         k (int): Number of distances (per atom) to compute (optional)
         dmax (float): Max distance of interest (larger distances are ignored)
         dmin (float): Min distance of interest (smaller distances are ignored)
@@ -138,7 +139,7 @@ def compute_two_body(universe, k=None, dmax=dmax, dmin=dmin, bond_extra=bond_ext
         compute_symbols (bool): Compute symbol pairs (default: true)
 
     Returns:
-        df (:class:`~atomic.twobody.TwoBody`): Two body property table
+        df (:class:`~exatomic.twobody.TwoBody`): Two body property table
 
     Warning:
         Computing periodic distances can use a large amount of memory (>16 GB)
@@ -168,7 +169,7 @@ def _free_in_mem(universe, dmin, dmax, bond_extra, compute_symbols,
     Free boundary condition two body properties computed in memory.
 
     Args:
-        universe (:class:`~atomic.universe.Universe`): The atomic universe
+        universe (:class:`~exatomic.universe.Universe`): The atomic universe
         dmin (float): Minimum distance of interest
         dmax (float): Max distance of interest
         bond_extra (float): Extra distance to add when determining bonds
@@ -176,7 +177,7 @@ def _free_in_mem(universe, dmin, dmax, bond_extra, compute_symbols,
         compute_bonds (bool): Compute (semi-empirical) bonds
 
     Returns:
-        two (:class:`~atomic.two.Two`): Two body property dataframe
+        two (:class:`~exatomic.two.Two`): Two body property dataframe
     '''
     atom_groups = universe.atom.groupby('frame')
     n = atom_groups.ngroups
@@ -224,7 +225,7 @@ def _periodic_in_mem(universe, k, dmin, dmax, bond_extra, compute_symbols,
     Periodic boundary condition two body properties computed in memory.
 
     Args:
-        universe (:class:`~atomic.universe.Universe`): The atomic universe
+        universe (:class:`~exatomic.universe.Universe`): The atomic universe
         k (int): Number of distances to compute
         dmin (float): Minimum distance of interest
         dmax (float): Max distance of interest
@@ -233,7 +234,7 @@ def _periodic_in_mem(universe, k, dmin, dmax, bond_extra, compute_symbols,
         compute_bonds (bool): Compute (semi-empirical) bonds
 
     Returns:
-        two (:class:`~atomic.two.Two`): Two body property dataframe
+        two (:class:`~exatomic.two.Two`): Two body property dataframe
     '''
     prjd_grps = universe.projected_atom.groupby('frame')
     unit_grps = universe.unit_atom.groupby('frame')
@@ -292,7 +293,7 @@ def compute_bond_count(universe):
     Computes bond count (number of bonds associated with a given atom index).
 
     Args:
-        universe (:class:`~atomic.universe.Universe`): Atomic universe
+        universe (:class:`~exatomic.universe.Universe`): Atomic universe
 
     Returns:
         counts (:class:`~numpy.ndarray`): Bond counts

@@ -12,11 +12,11 @@ require.config({
             exports: 'base'
         },
 
-        'nbextensions/exa/atomic/app': {
+        'nbextensions/exa/exatomic/app': {
             exports: 'UniverseApp'
         },
 
-        'nbextensions/exa/atomic/test': {
+        'nbextensions/exa/exatomic/test': {
             exports: 'UniverseTestApp'
         },
     },
@@ -25,8 +25,8 @@ require.config({
 
 define([
     'nbextensions/exa/container',
-    'nbextensions/exa/atomic/test',
-    'nbextensions/exa/atomic/app'
+    'nbextensions/exa/exatomic/test',
+    'nbextensions/exa/exatomic/app'
 ], function(base, UniverseTestApp, UniverseApp) {
     class UniverseView extends base.ContainerView {
         /*"""

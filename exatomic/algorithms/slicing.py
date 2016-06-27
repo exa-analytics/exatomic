@@ -2,7 +2,7 @@
 '''
 Universe Slicing Algorithms
 ===============================================
-These are methods and algorithms for slicing the atomic specific data
+These are methods and algorithms for slicing the exatomic specific data
 container. Included here are algorithms for complex operations such as
 slicing by selection of nearest neighbors.
 '''
@@ -31,7 +31,7 @@ def nearest_molecules(universe, n, sources, others=None, source_symbols=None,
         compute_nearest_molecules(universe, 5, 'solute', 'solvent', exact=True)
 
     Args:
-        universe (:class:`~atomic.universe.Universe): The atomic Universe
+        universe (:class:`~exatomic.universe.Universe): The atomic Universe
         n (int): Number of neighbors to find
         sources (str or list): Molecules/atoms to search from
         others (str or list): Molecules/atoms to select
@@ -42,7 +42,7 @@ def nearest_molecules(universe, n, sources, others=None, source_symbols=None,
         convert (bool): If periodic universe, convert to free boundary conditions (default)
 
     Returns:
-        partialverse (:class:`~atomic.universe.Universe): Partial universe with only nearest neighbors
+        partialverse (:class:`~exatomic.universe.Universe): Partial universe with only nearest neighbors
 
     '''
     if other_symbols is not None:
@@ -78,7 +78,7 @@ def nearest_molecules(universe, n, sources, others=None, source_symbols=None,
 def _periodic_byatom(uni, n, sources, others, source_symbols, convert):
     '''
     Args:
-        uni (:class:`~atomic.universe.Universe): Atomic universe
+        uni (:class:`~exatomic.universe.Universe): Atomic universe
         n (int): Number of nearest molecules
         sources (list): List of source identifiers
         others (list): List of other identifiers

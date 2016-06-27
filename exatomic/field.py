@@ -9,7 +9,7 @@ from exa.numerical import Field, Series
 
 class AtomicField(Field):
     '''
-    Class for storing atomic cube data (scalar field of 3D space). Note that
+    Class for storing exatomic cube data (scalar field of 3D space). Note that
     this class follows the pattern established by the `cube file format`_.
 
     Note:
@@ -78,7 +78,7 @@ class AtomicField(Field):
             angle (float): Angle of rotation
 
         Return:
-            newfield (:class:`~atomic.field.AtomicField`): Rotated field values and data
+            newfield (:class:`~exatomic.field.AtomicField`): Rotated field values and data
         '''
         d0 = self.ix[[a]]
         f0 = self.field_values[a]

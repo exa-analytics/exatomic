@@ -15,7 +15,7 @@ def radial_pair_correlation(universe, a, b, dr=0.05, start=None, stop=None,
 
     This function is sometimes called the pair radial distribution function. The
     quality of the result depends strongly on the amount of two body distances
-    computed (see :func:`~atomic.two.compute_two_body`) in the case of a
+    computed (see :func:`~exatomic.two.compute_two_body`) in the case of a
     periodic unvierse. Furthermore, the result can be skewed if only a single
     atom a (or b) exists in each frame. In these situations one can use the
     **window** and **dr** parameter to adjust the result accordingly. Reasonable
@@ -39,7 +39,7 @@ def radial_pair_correlation(universe, a, b, dr=0.05, start=None, stop=None,
         \\end{cases}
 
     Args:
-        universe (:class:`~atomic.Universe`): The universe (with two body data)
+        universe (:class:`~exatomic.Universe`): The universe (with two body data)
         a (str): First atom type
         b (str): Second atom type
         dr (float): Radial step size

@@ -21,7 +21,7 @@ def einstein_relation(universe, length='cm', time='s'):
         D = \\lim_{t\\to\\infty} D\\left(t\\right)
 
     Args:
-        universe (:class:`~atomic.Universe`): The universe object
+        universe (:class:`~exatomic.Universe`): The universe object
         msd (:class:`~exa.DataFrame`): Mean squared displacement dataframe
 
     Returns:

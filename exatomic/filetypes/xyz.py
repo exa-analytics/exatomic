@@ -21,11 +21,11 @@ class XYZ(Editor):
     An editor for programmatically manipulating xyz and xyz-like files.
 
     Provides convenience methods for transforming an xyz like file on disk into a
-    :class:`~atomic.universe.Universe`.
+    :class:`~exatomic.universe.Universe`.
     '''
     def parse_atom(self):
         '''
-        Extract the :class:`~atomic.atom.Atom` dataframe from the file.
+        Extract the :class:`~exatomic.atom.Atom` dataframe from the file.
 
         Note:
             This method will add a key "comments" to the meta attribute.
@@ -65,7 +65,7 @@ def write_xyz(uni_or_editor, path, unit='angstrom', trj=False, precision=8):
     Write an xyz file, set of xyz files, or xyz trajectory file.
 
     Args:
-        uni_or_string: One of :class:`~atomic.universe.Universe`, :class:`~atomic.editor.Editor`, or string text
+        uni_or_string: One of :class:`~exatomic.universe.Universe`, :class:`~exatomic.editor.Editor`, or string text
         path (str): Full file path or directory path
         unit (str): Output length unit (default angstrom)
         trj (bool): Write a trajectory file (default False)
@@ -111,7 +111,7 @@ def write_xyz_from_atom(atom, path, unit='angstrom', traj=True):
     Write an xyz file from a universe.
 
     Args:
-        atom (:class:`~atomic.atom.Atom`): Atom dataframe
+        atom (:class:`~exatomic.atom.Atom`): Atom dataframe
         path (str): Directory path (traj=False) or file path (traj=True)
         unit (str): Output length unit (Angstrom default)
         traj (bool): If true, output xyz trajectory file, otherwise write xyz for every frame

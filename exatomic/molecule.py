@@ -10,6 +10,8 @@ from networkx.algorithms.components import connected_components
 from itertools import combinations
 from exa.numerical import DataFrame
 from exa.relational.isotope import symbol_to_element_mass
+from exa import DataFrame
+from exatomic import Isotope
 from exatomic.formula import string_to_dict
 
 
@@ -42,7 +44,7 @@ class Molecule(DataFrame):
             unclassified.
 
         See Also:
-            :func:`~atomic.algorithms.nearest.compute_nearest_molecules`
+            :func:`~exatomic.algorithms.nearest.compute_nearest_molecules`
         '''
         for c in classifiers:
             n = len(c)
@@ -81,7 +83,7 @@ def compute_molecule(universe):
     all nodes (whose indices correspond to physical atoms).
 
     Args:
-        universe (:class:`~atomic.universe.Universe`): Atomic universe
+        universe (:class:`~exatomic.universe.Universe`): Atomic universe
 
     Returns:
         objs (tuple): Molecule indices (for atom dataframe(s)) and molecule dataframe

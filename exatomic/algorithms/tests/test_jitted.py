@@ -1,11 +1,11 @@
 # -*- coding: utf-8 -*-
 '''
-Tests for :mod:`~atomic.algorithms.jitted`
+Tests for :mod:`~exatomic.algorithms.jitted`
 =============================================
 '''
 from exa.testers import UnitTester
-from atomic import _np as np
-from atomic.algorithms.jitted import expand
+from exatomic import _np as np
+from exatomic.algorithms.jitted import expand
 
 
 class TestJitted(UnitTester):

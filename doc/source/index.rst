@@ -1,5 +1,5 @@
 ##################
-atomic
+exatomic
 ##################
 A high-performance computational chemistry data processing, analysis, and
 visualization package.

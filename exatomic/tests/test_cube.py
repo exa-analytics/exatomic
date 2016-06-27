@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 '''
-Tests for :mod:`~atomic.cube`
+Tests for :mod:`~exatomic.cube`
 ===============================
 '''
 from exa.testers import UnitTester

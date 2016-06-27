@@ -12,12 +12,12 @@ def absolute_squared_displacement(universe, ref_frame=None):
     Compute the mean squared displacement per atom per time with respect to the
     referenced position.
 
-    Computes the squared displacement using the :class:`~atomic.atom.Atom`
+    Computes the squared displacement using the :class:`~exatomic.atom.Atom`
     dataframe. In the case where this dataframe only contains the in unit cell
     coordinates, this may not give desired results.
 
     Args:
-        universe (:class:`~atomic.Universe`): The universe containing atomic positions
+        universe (:class:`~exatomic.Universe`): The universe containing atomic positions
         ref_frame (int): Which frame to use as the reference (default first frame)
 
     Returns

@@ -11,7 +11,7 @@ require.config({
         'nbextensions/exa/field': {
             exports: 'field'
         },
-        'nbextensions/exa/atomic/harmonics': {
+        'nbextensions/exa/exatomic/harmonics': {
             exports: 'sh'
         },
     },
@@ -20,7 +20,7 @@ require.config({
 
 define([
     'nbextensions/exa/field',
-    'nbextensions/exa/atomic/harmonics'
+    'nbextensions/exa/exatomic/harmonics'
 ], function(field, sh) {
     class GaussianTypeFunction extends field.ScalarField {
         /*"""

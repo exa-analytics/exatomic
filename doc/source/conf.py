@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 #
-# atomic documentation build configuration file, created by
+# exatomic documentation build configuration file, created by
 # sphinx-quickstart on Tue Jun 23 21:37:50 2015.
 #
 # This file is execfile()d with the current directory set to its
@@ -20,7 +20,7 @@ import shlex
 on_rtd = os.environ.get('READTHEDOCS', None) == 'True'
 sys.path.insert(0, os.path.abspath('../../'))         # HACK
 sys.path.insert(0, os.path.abspath('../../../exa'))   # HACK
-from atomic import __version__
+from exatomic import __version__
 
 # If extensions (or modules to document with autodoc) are in another directory,
 # add these directories to sys.path here. If the directory is relative to the
@@ -76,7 +76,7 @@ source_suffix = ['.rst']
 master_doc = 'index'
 
 # General information about the project.
-project = 'atomic'
+project = 'exatomic'
 copyright = '2016, Tom Duignan, Alex Marchenko'
 author = 'Tom Duignan, Alex Marchenko'
 
@@ -257,7 +257,7 @@ latex_elements = {
 # (source start file, target name, title,
 #  author, documentclass [howto, manual, or own class]).
 latex_documents = [
-  (master_doc, 'atomic.tex', 'atomic Documentation',
+  (master_doc, 'exatomic.tex', 'exatomic Documentation',
    'Tom Duignan', 'Alex Marchenko', 'manual'),
 ]
 
@@ -287,7 +287,7 @@ latex_domain_indices = True
 # One entry per manual page. List of tuples
 # (source start file, name, description, authors, manual section).
 man_pages = [
-    (master_doc, 'atomic', 'atomic Documentation',
+    (master_doc, 'exatomic', 'exatomic Documentation',
      [author], 1)
 ]
 
@@ -301,7 +301,7 @@ man_pages = [
 # (source start file, target name, title, author,
 #  dir menu entry, description, category)
 texinfo_documents = [
-  (master_doc, 'atomic', 'atomic Documentation',
+  (master_doc, 'exatomic', 'exatomic Documentation',
    author, 'Tom Duignan & Alex Marchenko', 'Data management, processing, and visualization',
    'Copyright 2016'),
 ]

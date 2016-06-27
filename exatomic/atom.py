@@ -36,7 +36,7 @@ a guide for what type of data is required and can be expected).
 +-------------------+----------+-------------------------------------------+
 
 See Also:
-    :class:`~atomic.universe.Universe`
+    :class:`~exatomic.universe.Universe`
 '''
 import numpy as np
 import pandas as pd
@@ -142,7 +142,7 @@ class Atom(BaseAtom):
 class UnitAtom(SparseDataFrame):
     '''
     In unit cell coordinates (sparse) for periodic systems. These coordinates
-    are used to update the corresponding :class:`~atomic.atom.Atom` object
+    are used to update the corresponding :class:`~exatomic.atom.Atom` object
     '''
     _indices = ['atom']
     _columns = ['x', 'y', 'z']
@@ -173,7 +173,7 @@ class ProjectedAtom(BaseAtom):
 
 class VisualAtom(SparseDataFrame):
     '''
-    Akin to :class:`~atomic.atom.UnitAtom`, this class is used to store a special
+    Akin to :class:`~exatomic.atom.UnitAtom`, this class is used to store a special
     set of coordinates used specifically for visualization. Typically these coordinates
     are the unit cell coordinates of a periodic system with select atoms translated
     so as not to break apart molecules across the periodic boundary.
@@ -187,13 +187,13 @@ class VisualAtom(SparseDataFrame):
 
 def compute_unit_atom(universe):
     '''
-    Compute the in-unit-cell atomic coordiations of a periodic universe.
+    Compute the in-unit-cell exatomic coordiations of a periodic universe.
 
     Args:
-        universe: Periodic atomic universe
+        universe: Periodic exatomic universe
 
     Returns:
-        unit_atom (:class:`~atomic.atom.UnitAtom`): Sparse dataframe of coordinations
+        unit_atom (:class:`~exatomic.atom.UnitAtom`): Sparse dataframe of coordinations
 
     Note:
         The returned coordinate dataframe is sparse and is used to update the
@@ -208,7 +208,7 @@ def OLD_compute_unit_atom(universe):
     Compute the unit cell coordinates of the atoms.
 
     Args:
-        universe (:class:`~atomic.universe.Universe`): Atomic universe
+        universe (:class:`~exatomic.universe.Universe`): Atomic universe
 
     Returns:
         sparse_df (:pandas:`~pandas.SparseDataFrame`): Sparse dataframe of in unit cell positions
@@ -228,10 +228,10 @@ def compute_projected_atom(universe):
     Computes the 3x3x3 supercell coordinates from the unit cell coordinates.
 
     Args:
-        universe (:class:`~atomic.universe.Universe`): The atomic universe
+        universe (:class:`~exatomic.universe.Universe`): The exatomic universe
 
     Returns:
-        two (:class:`~atomic.two.PeriodicTwo`): Two body distances
+        two (:class:`~exatomic.two.PeriodicTwo`): Two body distances
     '''
     if not universe.is_periodic:
         raise TypeError('Is this a periodic universe? Check frame for periodic column.')
@@ -262,11 +262,11 @@ def _compute_projected_static(universe):
 
 def compute_visual_atom(universe):
     '''
-    Creates visually pleasing atomic coordinates (useful for periodic
+    Creates visually pleasing exatomic coordinates (useful for periodic
     systems).
 
     See Also:
-        :func:`~atomic.universe.Universe.compute_vis_atom`
+        :func:`~exatomic.universe.Universe.compute_vis_atom`
     '''
     if not universe.is_periodic:
         raise TypeError('Is this a periodic universe? Check frame for periodic column.')

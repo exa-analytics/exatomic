@@ -1,7 +1,7 @@
 Algorithms
 ===================
-.. automodule:: atomic.algorithms.pcf
+.. automodule:: exatomic.algorithms.pcf
     :members:
 
-.. automodule:: atomic.algorithms.basis
+.. automodule:: exatomic.algorithms.basis
     :members:

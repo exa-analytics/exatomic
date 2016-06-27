@@ -1,2 +1,2 @@
-Tests for atomic
+Tests for exatomic
 ========================

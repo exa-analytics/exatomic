@@ -33,7 +33,8 @@ from exatomic.molecule import Molecule
 from exatomic.molecule import compute_molecule as _cm
 from exatomic.molecule import compute_molecule_com as _cmcom
 from exatomic.orbital import Orbital, MOMatrix
-from exatomic.basis import SphericalGTFOrder, CartesianGTFOrder, BasisSet
+from exatomic.basis import (SphericalGTFOrder, CartesianGTFOrder, BasisSet,
+                            BasisSetSummary, BasisSetOrder)
 from exatomic.basis import lmap
 
 
@@ -149,8 +150,28 @@ class Universe(Container, metaclass=Meta):
         return self.frame.is_vc
 
     @property
+    def basis_set(self):
+        return self._basis_set
+
+    @property
+    def basis_set_order(self):
+        return self._basis_set_order
+
+    @property
+    def basis_set_meta(self):
+        return self._basis_set_meta
+
+    @property
     def basis_set_summary(self):
         return self._basis_set_summary
+
+    @property
+    def overlap(self):
+        return self._overlap
+
+    @property
+    def density_matrix(self):
+        return self._density_matrix
 
     @property
     def spherical_gtf_order(self):
@@ -297,7 +318,7 @@ class Universe(Container, metaclass=Meta):
             df._revert_categories()
             df = pd.concat((pd.DataFrame(self._field), pd.DataFrame(df)), ignore_index=True)
             df.reset_index(inplace=True, drop=True)
-            self._field = cls(values, df)
+            self._field = cls(df, field_values=values)
             self._field._set_categories()
         self._traits_need_update = True
 
@@ -355,7 +376,7 @@ class Universe(Container, metaclass=Meta):
         if hasattr(self, x):
             return True
         return False
-        
+
     def _custom_container_traits(self):
         '''
         Create custom traits using multiple (related) dataframes.
