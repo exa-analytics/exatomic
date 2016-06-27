@@ -152,7 +152,6 @@ def _voluminate_gtfs(universe, xx, yy, zz, kind='spherical'):
                 sym_keys = universe.cartesian_gtf_order.symbolic_keys(l)
             else:
                 raise Exception("kind must be 'spherical' or 'cartesian' not {}".format(kind))
-            print(sym_keys)
             shell_functions = {}
             for i, j, k in universe._cartesian_ordering_function(l):
                 function = 0
