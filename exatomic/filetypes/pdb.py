@@ -3,9 +3,14 @@
 PDB File I/O
 =======================
 '''
+import os
+import sys
+import numpy as np
+import pandas as pd
 from requests import get as _get
 from json import load
 from warnings import warn as _warn
+
 from exa.utils import mkpath
 from exatomic import _os as os
 from exatomic import _pd as pd
@@ -40,7 +45,7 @@ def read_pdb(path, metadata={}, **kwargs):
         unikws (dict): dataframes containing 'frame', 'one' body and 'meta' data
 
     See Also
-        :class:`atomic.universe.Universe`
+        :class:`exatomic.universe.Universe`
     '''
     flins = _path_handler(path)
     rds = _pre_process_pdb(flins)
@@ -131,10 +136,10 @@ def _parse_pdb(flins, rds):
 
 def write_pdb(pdbuni, path):
     '''
-    Writes a PDB file if it was parsed with :method:`atomic.read_csv`
+    Writes a PDB file if it was parsed with :method:`exatomic.read_csv`
 
     Args
-        pdbuni (:class:`atomic.universe.Universe`): atomic universe from PDB
+        pdbuni (:class:`exatomic.universe.Universe`): atomic universe from PDB
         path (str): file path to be written to
 
     Return

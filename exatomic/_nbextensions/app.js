@@ -22,7 +22,7 @@ require.config({
             exports: 'utility'
         },
 
-        'nbextensions/exa/atomic/field': {
+        'nbextensions/exa/exatomic/field': {
             exports: 'AtomicField'
         }
     },
@@ -33,7 +33,7 @@ define([
     'nbextensions/exa/apps/gui',
     'nbextensions/exa/apps/app3d',
     'nbextensions/exa/utility',
-    'nbextensions/exa/atomic/field'
+    'nbextensions/exa/exatomic/field'
 ], function(ContainerGUI, App3D, utility, AtomicField) {
     class UniverseApp {
         /*"""
@@ -50,7 +50,6 @@ define([
 
             this.update_fields();
             this.render_current_frame();
-
             this.view.container.append(this.gui.domElement);
             this.view.container.append(this.gui.custom_css);
             this.view.container.append(this.view.canvas);
@@ -95,6 +94,9 @@ define([
             ----------------
             Set up some application variables.
             */
+            console.log(this);
+            console.log(this.view);
+            console.log(this.framelist);
             this.last_index = this.view.framelist.length - 1;
             this.atoms_meshes = [];
             this.bonds_meshes = [];

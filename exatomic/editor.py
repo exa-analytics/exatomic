@@ -14,16 +14,16 @@ from exatomic.basis import CartesianGTFOrder, SphericalGTFOrder, lmap
 
 class Editor(ExaEditor):
     '''
-    Editor specific to the atomic package. Property definitions and follow the same naming
-    convention as :class:`~atomic.universe.Universe`. Note that only "raw" dataframes (those
+    Editor specific to the exatomic package. Property definitions and follow the same naming
+    convention as :class:`~exatomic.universe.Universe`. Note that only "raw" dataframes (those
     whose data can only be obtained from the raw input) are acccessible; computed dataframes
-    (such :class:`~atomic.atom.ProjectedAtom`) are available after creating a unvierse
-    (:func:`~atomic.editor.Editor.to_universe`).
+    (such :class:`~exatomic.atom.ProjectedAtom`) are available after creating a unvierse
+    (:func:`~exatomic.editor.Editor.to_universe`).
     '''
     @property
     def frame(self):
         '''
-        The :class:`~atomic.frame.Frame` dataframe parsed from the current editor.
+        The :class:`~exatomic.frame.Frame` dataframe parsed from the current editor.
         '''
         if self._frame is None:
             self.parse_frame()
@@ -32,7 +32,7 @@ class Editor(ExaEditor):
     @property
     def atom(self):
         '''
-        The :class:~atomic.atom.Atom` dataframe parsed from the current editor.
+        The :class:~exatomic.atom.Atom` dataframe parsed from the current editor.
         '''
         if self._atom is None:
             self.parse_atom()
@@ -143,7 +143,7 @@ class Editor(ExaEditor):
 
     def to_universe(self, **kwargs):
         '''
-        Create a :class:`~atomic.universe.Universe` from the editor object.
+        Create a :class:`~exatomic.universe.Universe` from the editor object.
 
         Warning:
             This operation does not make a copy of any dataframes (e.g. atom).
@@ -163,8 +163,8 @@ class Editor(ExaEditor):
         return Universe(frame=self._frame, atom=self._atom, meta=self.meta, field=self.field,
                         orbital=self.orbital, basis_set=self.basis_set, molecule=self.molecule,
                         two=self.two, periodic_two=self.periodic_two, unit_atom=self.unit_atom,
-                        momatrix=self.momatrix, spherical_gtf_order=spherical_gtf_order,
-                        cartesian_gtf_order=cartesian_gtf_order,
+                        momatrix=self.momatrix, #spherical_gtf_order=spherical_gtf_order,
+                        #cartesian_gtf_order=cartesian_gtf_order,
                         basis_set_summary=self._basis_set_summary, **kwargs)
 
     def _last_num_from_regex(self, regex, typ=int):

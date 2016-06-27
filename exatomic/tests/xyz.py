@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 '''
-Tests for :mod:`~atomic.xyz`
+Tests for :mod:`~exatomic.xyz`
 ===============================
 '''
 from io import StringIO

@@ -14,9 +14,9 @@ from exa.widget import ContainerWidget
 
 class UniverseWidget(ContainerWidget):
     '''
-    Custom widget for the :class:`~atomic.universe.Universe` data container.
+    Custom widget for the :class:`~exatomic.universe.Universe` data container.
     '''
-    _view_module = Unicode('nbextensions/exa/atomic/universe').tag(sync=True)
+    _view_module = Unicode('nbextensions/exa/exatomic/universe').tag(sync=True)
     _view_name = Unicode('UniverseView').tag(sync=True)
 
     def _handle_field(self, data):

@@ -2,7 +2,7 @@
 ==================
 test.js
 ==================
-Test visualization application for the universe container (atomic package).
+Test visualization application for the universe container (exatomic package).
 */
 'use strict';
 
@@ -18,16 +18,16 @@ require.config({
         'nbextensions/exa/num': {
             exports: 'num'
         },
-        'nbextensions/exa/atomic/ao': {
+        'nbextensions/exa/exatomic/ao': {
             exports: 'AO'
         },
-        'nbextensions/exa/atomic/gto': {
+        'nbextensions/exa/exatomic/gto': {
             exports: 'GTO'
         },
-        'nbextensions/exa/atomic/gaussian': {
+        'nbextensions/exa/exatomic/gaussian': {
             exports: 'gaussian'
         },
-        'nbextensions/exa/atomic/harmonics': {
+        'nbextensions/exa/exatomic/harmonics': {
             exports: 'sh'
         },
     },
@@ -38,16 +38,16 @@ define([
     'nbextensions/exa/apps/app3d',
     'nbextensions/exa/apps/gui',
     'nbextensions/exa/num',
-    'nbextensions/exa/atomic/ao',
-    'nbextensions/exa/atomic/gto',
-    'nbextensions/exa/atomic/gaussian',
-    'nbextensions/exa/atomic/harmonics'
+    'nbextensions/exa/exatomic/ao',
+    'nbextensions/exa/exatomic/gto',
+    'nbextensions/exa/exatomic/gaussian',
+    'nbextensions/exa/exatomic/harmonics'
 ], function(App3D, ContainerGUI, num, AO, GTO, gaussian, sh) {
     class UniverseTestApp {
         /*"""
         UniverseTestApp
         ==================
-        A test application for the universe container (atomic package).
+        A test application for the universe container (exatomic package).
         */
         constructor(view) {
             /*"""
@@ -115,17 +115,31 @@ define([
                         'label': self.field.function
                     }
                     self.view.send({'type': 'field', 'data': field});
+                },
+                'save image': function() {
+                    self.app3d.renderer.setSize(1920, 1080);
+                    self.app3d.camera.aspect = 1920 / 1080;
+                    self.app3d.camera.updateProjectionMatrix();
+                    //self.app3d.add_unit_axis();
+                    self.app3d.render();
+                    var imgdat = self.app3d.renderer.domElement.toDataURL('image/png');
+                    self.view.send({'type': 'image', 'data': imgdat});
+                    self.app3d.renderer.setSize(self.app3d.width, self.app3d.height);
+                    self.app3d.camera.aspect = self.app3d.width / self.app3d.height;
+                    self.app3d.camera.updateProjectionMatrix();
                 }
             };
             this.top['demo_dropdown'] = this.gui.add(this.top, 'demo', this.top['demos']);
             this.top['play_button'] = this.gui.add(this.top, 'play');
+            this.top['save_image'] = this.gui.add(this.top, 'save image');
             this.top['send_button'] = this.gui.add(this.top, 'save field');
             this.top['fps_slider'] = this.gui.add(this.top, 'fps', 1, 60);
             this.ao = {
                 'function': '1s',
                 'functions': ['1s', '2s', '2px', '2py', '2pz',
                               '3s', '3px', '3py', '3pz',
-                              '3dz2', '3dxz', '3dyz', '3dx2-y2', '3dxy'],
+                              '3d-2', '3d-1', '3d0', '3d+1', '3d+2',
+                              '3dz2', '3d+1', '3dxz', '3dyz', '3dx2-y2', '3dxy'],
                 'isovalue': 0.005
             };
             this.ao['folder'] = this.gui.addFolder('Hydrogen Wave Functions');

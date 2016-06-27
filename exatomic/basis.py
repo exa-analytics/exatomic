@@ -9,18 +9,19 @@ classes provided by this module support not only storage of basis set data, but
 also analytical and discrete manipulations of the basis set.
 
 See Also:
-    For symbolic and discrete manipulations see :mod:`~atomic.algorithms.basis`.
+    For symbolic and discrete manipulations see :mod:`~exatomic.algorithms.basis`.
 '''
 import pandas as pd
 import numpy as np
 from collections import OrderedDict
 from exa import DataFrame
+#from exatomic.algorithms.basis import spher_ml_count, cart_ml_count
 
 
 lmap = {'s': 0, 'p': 1, 'd': 2, 'f': 3, 'g': 4, 'h': 5, 'i': 6, 'k': 7, 'l': 8,
         'm': 9, 'px': 1, 'py': 1, 'pz': 1}
-ml_count = {'s': 1, 'p': 3, 'd': 5, 'f': 7, 'g': 9, 'h': 11, 'i': 13, 'k': 15,
-            'l': 17, 'm': 19}
+spher_ml_count = {'s': 1, 'p': 3, 'd': 5, 'f': 7, 'g': 9, 'h': 11, 'i': 13, 'k': 15,
+                  'l': 17, 'm': 19}
 
 
 class BasisSet(DataFrame):
@@ -30,16 +31,33 @@ class BasisSet(DataFrame):
     +-------------------+----------+-------------------------------------------+
     | Column            | Type     | Description                               |
     +===================+==========+===========================================+
-    | tag                | str/cat  | code specific identifier (e.g. tag)      |
+    | tag               | str/cat  | code specific basis set identifier        |
     +-------------------+----------+-------------------------------------------+
     | name              | str/cat  | common basis set name/description         |
     +-------------------+----------+-------------------------------------------+
     | function_count    | int      | total number of basis functions           |
     +-------------------+----------+-------------------------------------------+
+    | symbol            | str/cat  | unique atomic label                       |
+    +-------------------+----------+-------------------------------------------+
+    | prim_per_atom     | int      | primitive functions per atom              |
+    +-------------------+----------+-------------------------------------------+
+    | func_per_atom     | int      | basis functions per atom                  |
+    +-------------------+----------+-------------------------------------------+
+    | primitive_count   | int      | total primitive functions                 |
+    +-------------------+----------+-------------------------------------------+
+    | function_count    | int      | total basis functions                     |
+    +-------------------+----------+-------------------------------------------+
+
+    Note:
+        The function count corresponds to the number of linearly independent
+        basis functions as provided by the basis set definition and used within
+        the code in solving the quantum mechanical eigenvalue problem.
     '''
     _columns = ['tag', 'name', 'function_count']
     _indices = ['set']
 
+        #(e.g.
+        #s = 1, p = 3, d = 5, etc.).
 
 class BasisFunction(DataFrame):
     '''
@@ -72,10 +90,115 @@ class GaussianBasis(BasisFunction):
     +-------------------+----------+-------------------------------------------+
     | set               | int/cat  | basis set index                           |
     +-------------------+----------+-------------------------------------------+
+
+    Other useful columns can be added to increase compatibility with other functionality.
+
+    +-------------------+----------+-------------------------------------------+
+    | Column            | Type     | Description                               |
+    +===================+==========+===========================================+
+    | index             | int/cat  | basis set identifier                      |
+    +-------------------+----------+-------------------------------------------+
     '''
-    _columns = ['alpha', 'd', 'j', 'l', 'set']
+    _columns = ['alpha', 'd', 'basis_function', 'shell']
+    _indices = ['primitive']
+    _groupbys = ['basis_function']
+    _categories = {'basis_set': np.int64, 'shell': str, 'name': str, 'basis_function': np.int64}
+
+    def basis_count(self):
+        '''
+        Number of basis functions (:math:`g_{i}`) per symbol or label type.
+
+        Returns:
+            counts (:class:`~pandas.Series`)
+        '''
+        return self.groupby('symbol').apply(lambda g: g.groupby('function').apply(
+                                            lambda g: (g['shell'].map(spher_ml_count)).values[0]).sum())
+
+class BasisSetOrder(BasisSet):
+    '''
+    BasisSetOrder uniquely determines the basis function ordering scheme for
+    a given :class:`~exatomic.universe.Universe`. shell_function is used instead
+    of basis_function in the following table to emphasize that it includes the
+    degeneracy from the quantum number :math:`m_{l}`, which may change. This
+    table should be used if the ordering scheme cannot be determined
+    programmatically.
+
+    +-------------------+----------+-------------------------------------------+
+    | Column            | Type     | Description                               |
+    +===================+==========+===========================================+
+    | shell_function    | int      | shell function index                      |
+    +-------------------+----------+-------------------------------------------+
+    | symbol            | str      | symbolic atomic center                    |
+    +-------------------+----------+-------------------------------------------+
+    | center            | int      | numeric atomic center (1-based)           |
+    +-------------------+----------+-------------------------------------------+
+    | type              | str      | identifier equivalent to (l, ml)          |
+    +-------------------+----------+-------------------------------------------+
+    '''
+    _columns = ['shell_function', 'symbol', 'center', 'type']
+    _indices = ['order']
+    _categories = {'symbol': str, 'center': np.int64, 'type': str, 'basis_function': np.int64}
+
+class BasisSetMap(BasisSet):
+    '''
+    BasisSetMap provides the auxiliary information about relational mapping
+    between the complete uncontracted primitive basis set and the resultant
+    contracted basis set within an :class:`~exatomic.universe.Universe`.
+
+    +-------------------+----------+-------------------------------------------+
+    | Column            | Type     | Description                               |
+    +===================+==========+===========================================+
+    | symbol            | str      | symbolic atomic center                    |
+    +-------------------+----------+-------------------------------------------+
+    | shell             | str      | string of quantum number l                |
+    +-------------------+----------+-------------------------------------------+
+    | nprim             | int      | number of primitives within shell         |
+    +-------------------+----------+-------------------------------------------+
+    | nbasis            | int      | number of basis functions within shell    |
+    +-------------------+----------+-------------------------------------------+
+    | cartesian         | bool     | shell is cartesian                        |
+    +-------------------+----------+-------------------------------------------+
+    | spherical         | bool     | shell is spherical                        |
+    +-------------------+----------+-------------------------------------------+
+    '''
+    _columns = ['symbol', 'shell', 'nprim', 'nbasis', 'cartesian', 'spherical']
     _indices = ['index']
-    _groupbys = ['set', 'j']
+    _categories = {'symbol': str, 'shell': str, 'nprim': np.int64,
+                   'nbasis': np.int64, 'cartesian': bool, 'spherical': bool}
+
+
+class Overlap(DataFrame):
+    '''
+    Overlap enumerates the overlap matrix elements between basis functions in
+    a contracted basis set. Currently nothing disambiguates between the
+    primitive overlap matrix and the contracted overlap matrix. As it is
+    square symmetric, only n_basis_functions * (n_basis_functions + 1) / 2
+    rows are stored.
+
+    +-------------------+----------+-------------------------------------------+
+    | Column            | Type     | Description                               |
+    +===================+==========+===========================================+
+    | chi1              | int      | first basis function                      |
+    +-------------------+----------+-------------------------------------------+
+    | chi2              | int      | second basis function                     |
+    +-------------------+----------+-------------------------------------------+
+    | coefficient       | float    | overlap matrix element                    |
+    +-------------------+----------+-------------------------------------------+
+    '''
+    _columns = ['chi1', 'chi2', 'coefficient']
+    _indices = ['index']
+
+    def square(self):
+        nbas = np.floor(np.sqrt(self.shape[0] * 2))
+        return self.pivot('chi1', 'chi2', 'coefficient').fillna(value=0) + \
+               self.pivot('chi2', 'chi1', 'coefficient').fillna(value=0) - np.eye(nbas)
+
+
+class PlanewaveBasisSet(BasisSet):
+    '''
+    '''
+    pass
+
 
 
 class CartesianGTFOrder(DataFrame):

@@ -1,14 +1,14 @@
 # -*- coding: utf-8 -*-
 '''
-Tests for :mod:`~atomic.pdb`
+Tests for :mod:`~exatomic.pdb`
 ===============================
 '''
 from requests import get as _get
 from exa.testers import UnitTester
 from exa.utils import mkpath
-from atomic import _np as np
-from atomic import _os as os
-from atomic import pdb
+from exatomic import _np as np
+from exatomic import _os as os
+from exatomic import pdb
 
 
 _selfpath = os.path.dirname(os.path.realpath(__file__))

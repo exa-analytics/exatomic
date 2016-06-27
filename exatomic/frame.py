@@ -21,8 +21,8 @@ structure, etc.
 +-------------------+----------+-------------------------------------------+
 
 See Also:
-    More information on the :class:`~atomic.frame.Frame` concept can be
-    found in :mod:`~atomic.universe` module's documentation.
+    More information on the :class:`~exatomic.frame.Frame` concept can be
+    found in :mod:`~exatomic.universe` module's documentation.
 '''
 import numpy as np
 from traitlets import Float
@@ -33,7 +33,7 @@ from exa.algorithms import vmag3
 class Frame(DataFrame):
     '''
     The frame DataFrame contains non-atomic information about each snapshot
-    of the :class:`~atomic.universe.Universe` object.
+    of the :class:`~exatomic.universe.Universe` object.
     '''
     xi = Float()  # Static unit cell component
     xj = Float()  # Static unit cell component
@@ -113,8 +113,8 @@ class Frame(DataFrame):
 
 def minimal_frame(atom):
     '''
-    Create a minmal :class:`~atomic.frame.Frame` object from a
-    :class:`~atomic.atom.Atom` object.
+    Create a minmal :class:`~exatomic.frame.Frame` object from a
+    :class:`~exatomic.atom.Atom` object.
     '''
     frame = atom.groupby('frame').size().to_frame()
     frame.index = frame.index.astype(np.int64)

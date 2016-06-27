@@ -70,7 +70,7 @@ define([
 
     // What follows are real regular cartesian solid harmonics
     // The were computed using the recursion relation provided
-    // in atomic.algorithms.harmonics
+    // in exatomic.algorithms.harmonics
     var solid_harmonics = {
         0: {
             '0': function(x, y, z) {
