@@ -53,9 +53,9 @@ class BasisSetSummary(DataFrame):
         basis functions as provided by the basis set definition and used within
         the code in solving the quantum mechanical eigenvalue problem.
     '''
-    _columns = ['id', 'name', 'function_count']
-    _indices = ['basis_set']
-    _categories = {'name': str, 'id': str}
+    _columns = ['tag', 'name', 'function_count']
+    _indices = ['set']
+    _categories = {'tag': str}
 
         #(e.g.
         #s = 1, p = 3, d = 5, etc.).
@@ -105,6 +105,7 @@ class GaussianBasisSet(BasisSet):
     nuclear coordinates and specific values of :math:`\\alpha`, :math:`l`, :math:`m`, and :math:`n`.
     For convenience in data storage, each primitive function record contains its value of
     :math:`\\alpha` and coefficient (typically called the contraction coefficient) :math:`c`.
+    shell_function does not include degeneracy due to :math:`m_{l}`.
 
     +-------------------+----------+-------------------------------------------+
     | Column            | Type     | Description                               |
@@ -113,11 +114,13 @@ class GaussianBasisSet(BasisSet):
     +-------------------+----------+-------------------------------------------+
     | d                 | float    | value of the contraction coefficient      |
     +-------------------+----------+-------------------------------------------+
-    | basis_function    | int/cat  | basis function group identifier           |
+    | shell_function    | int/cat  | basis function group identifier           |
     +-------------------+----------+-------------------------------------------+
     | shell             | str/cat  | chemists' notation orbital shell          |
     +-------------------+----------+-------------------------------------------+
-    
+    | set               | int/cat  | index of unique basis set per unique atom |
+    +-------------------+----------+-------------------------------------------+
+
     Other useful columns can be added to increase compatibility with other functionality.
 
     +-------------------+----------+-------------------------------------------+
@@ -126,10 +129,10 @@ class GaussianBasisSet(BasisSet):
     | index             | int/cat  | basis set identifier                      |
     +-------------------+----------+-------------------------------------------+
     '''
-    _columns = ['alpha', 'd', 'basis_function', 'shell']
+    _columns = ['alpha', 'd', 'shell_function', 'shell']
     _indices = ['primitive']
-    _groupbys = ['basis_function']
-    _categories = {'basis_set': np.int64, 'shell': str, 'name': str, 'basis_function': np.int64}
+    _groupbys = ['shell_function']
+    _categories = {'set': np.int64, 'shell': str, 'name': str, 'shell_function': np.int64}
 
     def basis_count(self):
         '''
@@ -143,12 +146,9 @@ class GaussianBasisSet(BasisSet):
 
 class BasisSetOrder(BasisSet):
     '''
-    BasisSetOrder uniquely determines the basis function ordering scheme for 
-    a given :class:`~exatomic.universe.Universe`. shell_function is used instead
-    of basis_function in the following table to emphasize that it includes the
-    degeneracy from the quantum number :math:`m_{l}`, which may change. This 
-    table should be used if the ordering scheme cannot be determined 
-    programmatically.
+    BasisSetOrder uniquely determines the basis function ordering scheme for
+    a given :class:`~exatomic.universe.Universe`. This table should be used
+    if the ordering scheme is not programmatically available.
 
     +-------------------+----------+-------------------------------------------+
     | Column            | Type     | Description                               |
@@ -168,9 +168,9 @@ class BasisSetOrder(BasisSet):
 
 class BasisSetMap(BasisSet):
     '''
-    BasisSetMap provides the auxiliary information about relational mapping 
+    BasisSetMap provides the auxiliary information about relational mapping
     between the complete uncontracted primitive basis set and the resultant
-    contracted basis set within an :class:`~exatomic.universe.Universe`. 
+    contracted basis set within an :class:`~exatomic.universe.Universe`.
 
     +-------------------+----------+-------------------------------------------+
     | Column            | Type     | Description                               |
@@ -183,22 +183,19 @@ class BasisSetMap(BasisSet):
     +-------------------+----------+-------------------------------------------+
     | nbasis            | int      | number of basis functions within shell    |
     +-------------------+----------+-------------------------------------------+
-    | cartesian         | bool     | shell is cartesian                        |
-    +-------------------+----------+-------------------------------------------+
-    | spherical         | bool     | shell is spherical                        |
+    | degen             | bool     | False if cartesian, True if spherical     |
     +-------------------+----------+-------------------------------------------+
     '''
-    _columns = ['symbol', 'shell', 'nprim', 'nbasis', 'cartesian', 'spherical']
+    _columns = ['symbol', 'shell', 'nprim', 'nbasis', 'degen']
     _indices = ['index']
-    _categories = {'symbol': str, 'shell': str, 'nprim': np.int64, 
-                   'nbasis': np.int64, 'cartesian': bool, 'spherical': bool}
+    _categories = {'symbol': str, 'shell': str, 'nbasis': np.int64, 'degen': bool}
 
 
 class Overlap(DataFrame):
     '''
     Overlap enumerates the overlap matrix elements between basis functions in
     a contracted basis set. Currently nothing disambiguates between the
-    primitive overlap matrix and the contracted overlap matrix. As it is 
+    primitive overlap matrix and the contracted overlap matrix. As it is
     square symmetric, only n_basis_functions * (n_basis_functions + 1) / 2
     rows are stored.
 
@@ -291,6 +288,10 @@ class SphericalGTFOrder(DataFrame):
         l = [k for k, v in data.items() for i in range(len(v))]
         ml = np.concatenate(list(data.values()))
         df = pd.DataFrame.from_dict({'l': l, 'ml': ml})
+        print(data)
+        print(l)
+        print(ml)
+        print(df)
         return cls(df)
 
     def symbolic_keys(self, l=None):

@@ -69,11 +69,11 @@ class MOMatrix(DataFrame):
     _categories = {'orbital': np.int64, 'basis_function': np.int64, 'spin': np.int64}
 
     def square(self):
-       return self.pivot('basis_function', 'orbital', 'coefficient') 
+       return self.pivot('basis_function', 'orbital', 'coefficient')
 
 class DensityMatrix(DataFrame):
     '''
-    The density matrix in a contracted basis set. As it is 
+    The density matrix in a contracted basis set. As it is
     square symmetric, only n_basis_functions * (n_basis_functions + 1) / 2
     rows are stored.
 
@@ -112,7 +112,11 @@ class DensityMatrix(DataFrame):
             for nu in range(mu + 1):
                 ret[cnt] = (mu, nu, dens[mu, nu])
                 cnt += 1
-        return cls(ret) 
+        return cls(ret)
+
+
+def _combine_ps(A):
+    pass
 
 
 def _voluminate_gtfs(universe, xx, yy, zz, kind='spherical'):
@@ -130,16 +134,16 @@ def _voluminate_gtfs(universe, xx, yy, zz, kind='spherical'):
     Returns:
         ordered_gtf_basis (list): list of funcs
     '''
+    lmax = universe.basis_set['shell'].map(lmap).max()
     universe.compute_cartesian_gtf_order(universe._cartesian_ordering_function)
     universe.compute_spherical_gtf_order(universe._spherical_ordering_function)
     ex, ey, ez = sy.symbols('x y z', imaginary=False)
     ordered_gtf_basis = []
     bases = universe.basis_set.groupby('symbol')
-    lmax = universe.basis_set['shell'].map(lmap).max()
     sh = _solid_harmonics(lmax, ex, ey, ez)
     for symbol, x, y, z in zip(universe.atom['symbol'], universe.atom['x'],
                                universe.atom['y'], universe.atom['z']):
-        bas = bases.get_group(symbol).groupby('basis_function')
+        bas = bases.get_group(symbol).groupby('shell_function')
         rx = ex - x
         ry = ey - y
         rz = ez - z
@@ -153,20 +157,32 @@ def _voluminate_gtfs(universe, xx, yy, zz, kind='spherical'):
             else:
                 raise Exception("kind must be 'spherical' or 'cartesian' not {}".format(kind))
             shell_functions = {}
+            #if l == 1:
+            #    functions = []
+            #    sq2 = np.sqrt(2)
+            #    for i, j, k in universe._cartesian_ordering_function(l):
+            #        functions.append(d * rx**int(i) * ry**int(j) * rz**int(k) * sy.exp(-alpha * r2))
+            #    shell_functions['x'] = 1 / sq2 * (functions[0] - functions[-1])
+            #    shell_functions['y'] = 1 / sq2 * (functions[0] + functions[-1])
+            #    shell_functions['z'] = functions[1]
+            #else:
             for i, j, k in universe._cartesian_ordering_function(l):
                 function = 0
                 for alpha, d in zip(grp['alpha'], grp['d']):
                     function += d * rx**int(i) * ry**int(j) * rz**int(k) * sy.exp(-alpha * r2)
                 shell_functions['x' * i + 'y' * j + 'z' * k] = function
             if l == 0:
+                print('l=', l, ' ml=', 0)
                 ordered_gtf_basis.append(shell_functions[''])
             elif l == 1:
                 for lv, ml in sym_keys:
+                    print('l=', lv, ' ml=', ml)
                     key = str(sh[(lv, ml)])
                     key = ''.join(re.findall("[A-z]+", key))
                     ordered_gtf_basis.append(shell_functions[key])
             else:
                 for lv, ml in sym_keys:
+                    print('l=', lv, ' ml=', ml)
                     if type(sh[(lv, ml)]) == Mul:
                         coef, sym = sh[(lv, ml)].as_coeff_Mul()
                         sym = str(sym).replace('*', '')
@@ -186,20 +202,6 @@ def _voluminate_gtfs(universe, xx, yy, zz, kind='spherical'):
                                 func += coef * shell_functions[sym]
                         ordered_gtf_basis.append(func)
     return ordered_gtf_basis
-
-    
-def _parse_sympy_expr(syms):
-    strs = ['', '', '']
-    for sym in syms:
-        for i, cart in enumerate(['x', 'y', 'z']):
-            if cart in sym:
-                carstar = cart + '**'
-                if carstar in sym:
-                    strs[i] += strs[i] + cart * int(sym.split(carstar)[1][0])
-                else:
-                    strs[i] += strs[i] + cart
-    return [st for st in strs if st] 
-
 
 
 def add_cubic_field_from_mo(universe, rmin, rmax, nr, vector=None):
@@ -295,12 +297,12 @@ def _solid_harmonics(l_max, x, y, z):
         lpre = lcur - 1
         kr = 1 if lpre == 0 else 0
         return np.sqrt(2 ** kr * (2 * lpre + 1) / (2 * lpre + 2)) * (x * sp - (1 - kr) * y * sm)
-    
+
     def _mid_sh(lcur, m, sm, smm, x, y, z):
         lpre = lcur - 1
         return ((2 * lpre + 1) * z * sm - np.sqrt((lpre + m) * (lpre - m)) * (x*x + y*y + z*z) * smm) /  \
                 (np.sqrt((lpre + m + 1) * (lpre - m + 1)))
-    
+
     def _bot_sh(lcur, sp, sm, x, y, z):
         lpre = lcur - 1
         kr = 1 if lpre == 0 else 0
@@ -317,5 +319,5 @@ def _solid_harmonics(l_max, x, y, z):
                 sh[(l, ml)] = _mid_sh(l, ml, sh[(lpre,ml)], sh[(lpre-1,ml)], x, y, z)
             except KeyError:
                 sh[(l, ml)] = _mid_sh(l, ml, sh[(lpre,ml)], sh[(lpre,ml)], x, y, z)
-        sh[(l, ml_all[-1])] = _top_sh(l, sh[(lpre,lpre)], sh[(lpre,-(lpre))], x, y, z)      
+        sh[(l, ml_all[-1])] = _top_sh(l, sh[(lpre,lpre)], sh[(lpre,-(lpre))], x, y, z)
     return sh

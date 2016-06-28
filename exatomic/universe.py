@@ -46,7 +46,15 @@ class Meta(TypedRelationalMeta):
     frame = Frame
     atom = Atom
     two_free = Two
+    orbital = Orbital
+    momatrix = MOMatrix
+    field = AtomicField
+    basis_set = BasisSet
     two_periodic = PeriodicTwo
+    basis_set_order = BasisSetOrder
+    basis_set_summary = BasisSetSummary
+    cartesian_gtf_order = CartesianGTFOrder
+    spherical_gtf_order = SphericalGTFOrder
 
 
 class Universe(Container, metaclass=Meta):
@@ -125,53 +133,53 @@ class Universe(Container, metaclass=Meta):
             self.compute_molecule()
         return self._molecule
 
-    @property
-    def field(self):
-        return self._field
-
-    @property
-    def orbital(self):
-        return self._orbital
-
-    @property
-    def basis_set(self):
-        return self._basis_set
-
-    @property
-    def momatrix(self):
-        return self._momatrix
-
-    @property
-    def is_periodic(self):
-        return self.frame.is_periodic
-
-    @property
-    def is_vc(self):
-        return self.frame.is_vc
-
-    @property
-    def basis_set(self):
-        return self._basis_set
-
-    @property
-    def basis_set_order(self):
-        return self._basis_set_order
-
-    @property
-    def basis_set_meta(self):
-        return self._basis_set_meta
-
-    @property
-    def basis_set_summary(self):
-        return self._basis_set_summary
-
-    @property
-    def overlap(self):
-        return self._overlap
-
-    @property
-    def density_matrix(self):
-        return self._density_matrix
+#    @property
+#    def field(self):
+#        return self._field
+#
+#    @property
+#    def orbital(self):
+#        return self._orbital
+#
+#    @property
+#    def basis_set(self):
+#        return self._basis_set
+#
+#    @property
+#    def momatrix(self):
+#        return self._momatrix
+#
+#    @property
+#    def is_periodic(self):
+#        return self.frame.is_periodic
+#
+#    @property
+#    def is_vc(self):
+#        return self.frame.is_vc
+#
+#    @property
+#    def basis_set(self):
+#        return self._basis_set
+#
+#    @property
+#    def basis_set_order(self):
+#        return self._basis_set_order
+#
+#    @property
+#    def basis_set_meta(self):
+#        return self._basis_set_meta
+#
+#    @property
+#    def basis_set_summary(self):
+#        return self._basis_set_summary
+#
+#    @property
+#    def overlap(self):
+#        return self._overlap
+#
+#    @property
+#    def density_matrix(self):
+#        return self._density_matrix
 
     @property
     def spherical_gtf_order(self):
@@ -376,7 +384,7 @@ class Universe(Container, metaclass=Meta):
         if hasattr(self, x):
             return True
         return False
-        
+
     def _custom_container_traits(self):
         '''
         Create custom traits using multiple (related) dataframes.
@@ -404,6 +412,7 @@ class Universe(Container, metaclass=Meta):
         '''
         '''
         super().__init__(*args, **kwargs)
+        self.display = {'atom_table': 'atom'}
         if self._test:
             self.name = 'TestUniverse'
             self._widget.width = 950
