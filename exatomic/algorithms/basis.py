@@ -9,8 +9,7 @@ This is preferred to an explicit parsing and storage of a given
 basis set ordering scheme.
 '''
 import numpy as np
-from exa import global_config
-from exatomic import _conf
+from exatomic import global_config
 
 
 lmap = {'s': 0, 'p': 1, 'd': 2, 'f': 3, 'g': 4, 'h': 5, 'i': 6, 'k': 7, 'l': 8,

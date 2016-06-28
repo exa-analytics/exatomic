@@ -13,7 +13,8 @@ import numpy as np
 from collections import OrderedDict
 from sqlalchemy import Column, Integer, ForeignKey
 from exa.numerical import Field
-from exa.relational.container import Container, TypedRelationalMeta
+from exa.container import TypedMeta
+from exa.relational import Container, BaseMeta
 from exatomic.widget import UniverseWidget
 from exatomic.frame import minimal_frame, Frame
 from exatomic.atom import Atom, ProjectedAtom, UnitAtom, VisualAtom
@@ -34,11 +35,11 @@ from exatomic.molecule import compute_molecule as _cm
 from exatomic.molecule import compute_molecule_com as _cmcom
 from exatomic.orbital import Orbital, MOMatrix
 from exatomic.basis import (SphericalGTFOrder, CartesianGTFOrder, BasisSet,
-                            BasisSetSummary, BasisSetOrder)
+                            BasisSet, BasisSetOrder)
 from exatomic.basis import lmap
 
 
-class Meta(TypedRelationalMeta):
+class Meta(TypedMeta, BaseMeta):
     '''
     This class defines the statically typed attributes (dataframes, series, etc.)
     of :class:`~exatomic.universe.Universe`.
@@ -82,64 +83,64 @@ class Universe(Container, metaclass=Meta):
             return self.two_periodic
         return self.two_free
 
-    @property
-    def unit_atom(self):
-        '''
-        Updated atom table using only in-unit-cell positions.
-
-        Note:
-            This function returns a standard :class:`~pandas.DataFrame`
-        '''
-        if not self._is('_unit_atom'):
-            self.compute_unit_atom()
-        atom = self.atom.copy()
-        atom.update(self._unit_atom)
-        return Atom(atom)
-
-    @property
-    def visual_atom(self):
-        '''
-        Visually pleasing atomic coordinates (useful for periodic universes).
-        '''
-        if self.is_periodic:
-            if self._visual_atom is None:
-                self.compute_visual_atom()
-            atom = self.atom.copy()
-            atom.update(self._visual_atom)
-            return atom
-        else:
-            return self.atom
-
-    @property
-    def projected_atom(self):
-        '''
-        Projected (unit) atom positions into a 3x3x3 supercell.
-        '''
-        if self._projected_atom is None:
-            self.compute_projected_atom()
-        return self._projected_atom
-
-    @property
-    def molecule(self):
-        if not self._is('_molecule'):
-            self.compute_molecule()
-        return self._molecule
-
-    @property
-    def field(self):
-        return self._field
-
-    @property
-    def orbital(self):
-        return self._orbital
-
-    @property
-    def basis_set(self):
-        return self._basis_set
-
-    @property
-    def momatrix(self):
-        return self._momatrix
+#    @property
+#    def unit_atom(self):
+#        '''
+#        Updated atom table using only in-unit-cell positions.
+#
+#        Note:
+#            This function returns a standard :class:`~pandas.DataFrame`
+#        '''
+#        if not self._is('_unit_atom'):
+#            self.compute_unit_atom()
+#        atom = self.atom.copy()
+#        atom.update(self._unit_atom)
+#        return Atom(atom)
+#
+#    @property
+#    def visual_atom(self):
+#        '''
+#        Visually pleasing atomic coordinates (useful for periodic universes).
+#        '''
+#        if self.is_periodic:
+#            if self._visual_atom is None:
+#                self.compute_visual_atom()
+#            atom = self.atom.copy()
+#            atom.update(self._visual_atom)
+#            return atom
+#        else:
+#            return self.atom
+#
+#    @property
+#    def projected_atom(self):
+#        '''
+#        Projected (unit) atom positions into a 3x3x3 supercell.
+#        '''
+#        if self._projected_atom is None:
+#            self.compute_projected_atom()
+#        return self._projected_atom
+#
+#    @property
+#    def molecule(self):
+#        if not self._is('_molecule'):
+#            self.compute_molecule()
+#        return self._molecule
+#
+#    @property
+#    def field(self):
+#        return self._field
+#
+#    @property
+#    def orbital(self):
+#        return self._orbital
+#
+#    @property
+#    def basis_set(self):
+#        return self._basis_set
+#
+#    @property
+#    def momatrix(self):
+#        return self._momatrix
 
     @property
     def is_periodic(self):
@@ -149,44 +150,44 @@ class Universe(Container, metaclass=Meta):
     def is_vc(self):
         return self.frame.is_vc
 
-    @property
-    def basis_set(self):
-        return self._basis_set
-
-    @property
-    def basis_set_order(self):
-        return self._basis_set_order
-
-    @property
-    def basis_set_meta(self):
-        return self._basis_set_meta
-
-    @property
-    def basis_set_summary(self):
-        return self._basis_set_summary
-
-    @property
-    def overlap(self):
-        return self._overlap
-
-    @property
-    def density_matrix(self):
-        return self._density_matrix
-
-    @property
-    def spherical_gtf_order(self):
-        if self._is('_spherical_gtf_order'):
-            return self._spherical_gtf_order
-        else:
-            raise Exception('Compute spherical_gtf_order first!')
-
-    @property
-    def cartesian_gtf_order(self):
-        if self._is('_cartesian_gtf_order'):
-            return self._cartesian_gtf_order
-        else:
-            raise Exception('Compute cartesian_gtf_order first!')
-
+#    @property
+#    def basis_set(self):
+#        return self._basis_set
+#
+#    @property
+#    def basis_set_order(self):
+#        return self._basis_set_order
+#
+#    @property
+#    def basis_set_meta(self):
+#        return self._basis_set_meta
+#
+#    @property
+#    def basis_set_summary(self):
+#        return self._basis_set_summary
+#
+#    @property
+#    def overlap(self):
+#        return self._overlap
+#
+#    @property
+#    def density_matrix(self):
+#        return self._density_matrix
+#
+#    @property
+#    def spherical_gtf_order(self):
+#        if self._is('_spherical_gtf_order'):
+#            return self._spherical_gtf_order
+#        else:
+#            raise Exception('Compute spherical_gtf_order first!')
+#
+#    @property
+#    def cartesian_gtf_order(self):
+#        if self._is('_cartesian_gtf_order'):
+#            return self._cartesian_gtf_order
+#        else:
+#            raise Exception('Compute cartesian_gtf_order first!')
+#
     # Compute
     # ==============
     # Compute methods create and attach new dataframe objects to the container
@@ -410,6 +411,7 @@ class Universe(Container, metaclass=Meta):
             self._widget.gui_width = 350
             self._update_traits()
             self._traits_need_update = False
+        self.display = {'atom_table': 'atom'}
 
 
 #    def __init__(self, frame=None, atom=None, two=None, field=None,

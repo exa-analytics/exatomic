@@ -152,6 +152,7 @@ class Editor(ExaEditor):
             run the parsing functions "parse_*" again. This will only affect
             the editor object; it will not affect the universe object.
         '''
+        return Universe(atom=self.atom, frame=self.frame, field=self.field)
         spherical_gtf_order = None
         cartesian_gtf_order = None
         if self._sgtfo_func is not None:

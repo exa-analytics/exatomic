@@ -9,7 +9,6 @@ from exa.relational.base import create_tables
 from exa._install import install_notebook_widgets
 from exa._install import install as exa_install
 from exatomic import global_config
-from exa import _conf
 
 
 def install(persist=False, verbose=False):
@@ -27,5 +26,5 @@ def update(verbose=False):
     tables and notebook extensions.
     '''
     create_tables()
-    install_notebook_widgets(_conf['exatomic_nbext_localdir'],
-                             _conf['exatomic_nbext_sysdir'], verbose)
+    install_notebook_widgets(global_config['exatomic_nbext_localdir'],
+                             global_config['exatomic_nbext_sysdir'], verbose)

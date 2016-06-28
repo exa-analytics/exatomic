@@ -29,11 +29,9 @@ Orbital information such as centers and energies.
 import re
 import numpy as np
 import pandas as pd
-from exa import DataFrame, global_config, Series
-from exa.algorithms import meshgrid3d
 from exa import DataFrame, Series
 from exa.algorithms import meshgrid3d
-from exatomic import _conf
+from exatomic import global_config
 from exatomic.field import AtomicField
 
 

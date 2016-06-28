@@ -8,7 +8,7 @@ whether exa is persistent or dynamic).
 Attributes
 '''
 import os
-from exa import global_config as _conf
+from exa import global_config
 from exa.utility import mkp
 
 
@@ -20,11 +20,11 @@ def update_config():
     Update the exa's global config.
     '''
     global global_config
-    global_config['exatomic_nbext_localdir'] = mkp(pkg, 'nbextensions')
+    global_config['exatomic_nbext_localdir'] = mkp(pkg, '_nbextensions')
     global_config['exatomic_nbext_sysdir'] = mkp(global_config['nbext_sysdir'], 'exatomic')
 
 
 update_config()
 
-_conf['exatomic_nbext_localdir'] = mkp(pkg, '_nbextensions')
-_conf['exatomic_nbext_sysdir'] = mkp(_conf['nbext_sysdir'], 'exatomic')
+global_config['exatomic_nbext_localdir'] = mkp(pkg, '_nbextensions')
+global_config['exatomic_nbext_sysdir'] = mkp(global_config['nbext_sysdir'], 'exatomic')
