@@ -2,19 +2,17 @@
 '''
 The Atomic Universe
 #########################
-Conceptually, a universe is a collection of related (or independent) frames
-of a given system. A frame represents an instant in time (or another coordinate)
-for which the geometry (and other properties) of the system are known. The
-canonical example of a universe is a geometry optimization where the frame
-coordinate corresponds to step number (in the optimization).
+A universe is a container object that stores "frames". A frame is a snapshot
+atomic geometry obtained from or specified in a quantum mechanical calculation,
+as well as all related data such as orbital coefficients, orbital energies,
+unit cell dimensions, temperature, energy, potentials, etc.
 '''
 import pandas as pd
 import numpy as np
-from collections import OrderedDict
 from sqlalchemy import Column, Integer, ForeignKey
-from exa.numerical import Field
+from exa import Container
 from exa.container import TypedMeta
-from exa.relational import Container, BaseMeta
+from exa.relational import BaseMeta
 from exatomic.widget import UniverseWidget
 from exatomic.frame import minimal_frame, Frame
 from exatomic.atom import Atom, ProjectedAtom, UnitAtom, VisualAtom
@@ -34,43 +32,37 @@ from exatomic.molecule import Molecule
 from exatomic.molecule import compute_molecule as _cm
 from exatomic.molecule import compute_molecule_com as _cmcom
 from exatomic.orbital import Orbital, MOMatrix
-from exatomic.basis import (SphericalGTFOrder, CartesianGTFOrder, BasisSet,
-                            BasisSet, BasisSetOrder)
-from exatomic.basis import lmap
+#from exatomic.basis import (SphericalGTFOrder, CartesianGTFOrder, BasisSet,
+#                            BasisSet, BasisSetOrder)
+#from exatomic.basis import lmap
 
 
-class Meta(TypedMeta, BaseMeta):
+class UniverseTypedMeta(TypedMeta):
     '''
-    This class defines the statically typed attributes (dataframes, series, etc.)
-    of :class:`~exatomic.universe.Universe`.
+    Defines strongly typed attributes of the :class:`~exatomic.universe.Universe`
+    and :class:`~exatomic.editor.AtomicEditor` objects.
     '''
     frame = Frame
     atom = Atom
     two_free = Two
     two_periodic = PeriodicTwo
+    field = AtomicField
+
+
+class Meta(UniverseTypedMeta, BaseMeta):
+    '''
+    Mixes relational and typed metaclasses for :class:`~exatomic.universe.Universe`.
+    '''
+    pass
 
 
 class Universe(Container, metaclass=Meta):
     '''
-    A container for working with computational chemistry data.
-
-    .. code-block:: Python
-
-        u = Universe()               # Demo universe
-        u.data_architecture()        # Universe's dataframes
-        atom = XYZ('myfile.xyz')
-        u = atom.to_universe()       # Universe from XYZ file
-        u                            # Render universe
-        atom = pd.read_csv('somefile.xyz', names=('symbol', 'x', 'y', 'z'))
-        u = Universe(atom=atom)
-        u.frame                      # Displays the universe's Frame dataframe
-        small_uni = large_uni[::200] # Selects every 200th frame from the large_uni
-        first_frame = large_uni[0]   # Create a universe for only the first frame
-        last_frame = large_uni[-1]   # Create a universe for only the last frame
-        specific = large_uni[[0, 10, 20]] # Create universe for 0th, 10th, and 20th frames (positional index)
-
-    See Also:
-        For a conceptual description of the universe, see the module's docstring.
+    Container for working with data coming from quantum mechanical code inputs
+    and outputs. All data (e.g. coordinates, orbital listings, optimized orbital
+    coefficients, energies, ...) are stored in dataframe or series objects. This
+    allows easy manipulation and analysis of data, as well as facilitating
+    conversion between the various formats of the field of atomistic simulation.
     '''
     unid = Column(Integer, ForeignKey('container.pkid'), primary_key=True)
     frame_count = Column(Integer)
@@ -246,20 +238,20 @@ class Universe(Container, metaclass=Meta):
         else:
             self._molecule = _cm(self)
 
-    def compute_spherical_gtf_order(self, ordering_func):
-        '''
-        Compute the spherical Gaussian type function ordering dataframe.
-        '''
-        lmax = universe.basis_set['shell'].map(lmap).max()
-        self._spherical_gtf_order = SphericalGTFOrder.from_lmax_order(lmax, ordering_func)
-
-    def compute_cartesian_gtf_order(self, ordering_func):
-        '''
-        Compute the cartesian Gaussian type function ordering dataframe.
-        '''
-        lmax = universe.basis_set['shell'].map(lmap).max()
-        self._cartesian_gtf_order = SphericalGTFOrder.from_lmax_order(lmax, ordering_func)
-
+#    def compute_spherical_gtf_order(self, ordering_func):
+#        '''
+#        Compute the spherical Gaussian type function ordering dataframe.
+#        '''
+#        lmax = universe.basis_set['shell'].map(lmap).max()
+#        self._spherical_gtf_order = SphericalGTFOrder.from_lmax_order(lmax, ordering_func)
+#
+#    def compute_cartesian_gtf_order(self, ordering_func):
+#        '''
+#        Compute the cartesian Gaussian type function ordering dataframe.
+#        '''
+#        lmax = universe.basis_set['shell'].map(lmap).max()
+#        self._cartesian_gtf_order = SphericalGTFOrder.from_lmax_order(lmax, ordering_func)
+#
     def compute_two_free(self, *args, **kwargs):
         self.compute_two_body(*args, **kwargs)
 
@@ -288,40 +280,6 @@ class Universe(Container, metaclass=Meta):
         Create visually pleasing coordinates (useful for periodic universes).
         '''
         self._visual_atom = _cva(self)
-
-    def append_dataframe(self, df):
-        '''
-        Attach a new dataframe or append the data of a given dataframe to the
-        appropriate existing dataframe.
-        '''
-        raise NotImplementedError()
-
-    def append_field(self, field, frame=None, field_values=None):
-        '''
-        Add (insert/concat) field dataframe to the current universe.
-
-        Args:
-            field: Complete field (instance of :class:`~exa.numerical.Field`) to add or field dimensions dataframe
-            frame (int): Frame index where to insert/concat
-            field_values: Field values list (if field is incomplete)
-        '''
-        if isinstance(frame, int) or isinstance(frame, np.int64) or isinstance(frame, np.int32):
-            if frame not in self.frame.index:
-                raise IndexError('frame {} does not exist in the universe?'.format(frame))
-            field['frame'] = frame
-        df = self._reconstruct_field('field', field, field_values)
-        if self._field is None:
-            self._field = df
-        else:
-            cls = self._df_types['field']
-            values = self._field.field_values + df.field_values
-            self._field._revert_categories()
-            df._revert_categories()
-            df = pd.concat((pd.DataFrame(self._field), pd.DataFrame(df)), ignore_index=True)
-            df.reset_index(inplace=True, drop=True)
-            self._field = cls(df, field_values=values)
-            self._field._set_categories()
-        self._traits_need_update = True
 
     def classify_molecules(self, *args, **kwargs):
         '''
@@ -358,118 +316,12 @@ class Universe(Container, metaclass=Meta):
         pa = pa.append(self.periodic_two['prjd_atom1'].astype(np.int64))
         self._projected_atom = ProjectedAtom(self._projected_atom[self._projected_atom.index.isin(pa)])
 
-    def _slice_by_mids(self, molecule_indices):
-        '''
-        '''
-        raise NotImplementedError()
-
-    def _other_bytes(self):
-        '''
-        Field values are not captured by the df_bytes so add them here.
-        '''
-        field_bytes = 0
-        if self._is('_field'):
-            for field_value in self.field_values:
-                field_bytes += field_value.memory_usage()
-        return field_bytes
-
-    def _is(self, x):
-        if hasattr(self, x):
-            return True
-        return False
-
-    def _custom_container_traits(self):
-        '''
-        Create custom traits using multiple (related) dataframes.
-        '''
-        traits = {}
-        if self.display['atom_table'] == 'visual':
-            traits.update(self.visual_atom._custom_trait_creator())
-        elif self.display['atom_table'] == 'unit':
-            traits.update(self.unit_atom._custom_trait_creator())
-        else:
-            traits.update(self.atom._custom_trait_creator())
-        if self._is('_two'):
-            traits.update(self.two._get_bond_traits(self.atom))
-        elif self._is('_periodic_two'):
-            self.projected_atom['label'] = self.projected_atom['atom'].map(self.atom['label'])
-            traits.update(self.two._get_bond_traits(self.projected_atom))
-            del self.projected_atom['label']
-        return traits
-
     def __len__(self):
         return len(self.frame) if self._is('_frame') else 0
 
-
     def __init__(self, *args, **kwargs):
-        '''
-        '''
         super().__init__(*args, **kwargs)
         if self._test:
             self.name = 'TestUniverse'
             self._widget.width = 950
             self._widget.gui_width = 350
-            self._update_traits()
-            self._traits_need_update = False
-        self.display = {'atom_table': 'atom'}
-
-
-#    def __init__(self, frame=None, atom=None, two=None, field=None,
-#                 field_values=None, unit_atom=None, projected_atom=None,
-#                 periodic_two=None, molecule=None, visual_atom=None, orbital=None,
-#                 momatrix=None, basis_set=None, spherical_gtf_order=None,
-#                 cartesian_gtf_order=None, basis_set_summary=None, **kwargs):
-#    def __init__(self, **kwargs):
-#        '''
-#        The arguments field and field_values are paired: field is the dataframe
-#        containing all of the dimensions of the scalar or vector fields and
-#        field_values is the list of series or dataframe objects that contain
-#        the magnitudes with list position corresponding to the field dataframe
-#        index.
-#
-#        The above approach is only used when loading a universe from a file; in
-#        general only the (appropriately typed) field argument (already
-#        containing the field_values - see :mod:`~exatomic.field`) is needed to
-#        correctly attach fields.
-#        '''
-#        super().__init__(**kwargs)
-#        self.display = {'atom_table': 'atom'}
-        #self.atom = atom
-#        self._frame = self._enforce_df_type('frame', frame)
-#        self._atom = self._enforce_df_type('atom', atom)
-#        self._field = self._reconstruct_field('field', field, field_values)
-#        self._two = self._enforce_df_type('two', two)
-#        self._unit_atom = self._enforce_df_type('unit_atom', unit_atom)
-#        self._projected_atom = self._enforce_df_type('projected_atom', projected_atom)
-#        self._periodic_two = self._enforce_df_type('periodic_two', periodic_two)
-#        self._molecule = self._enforce_df_type('molecule', molecule)
-#        self._visual_atom = self._enforce_df_type('visual_atom', visual_atom)
-#        self._orbital = self._enforce_df_type('orbital', orbital)
-#        self._momatrix = self._enforce_df_type('momatrix', momatrix)
-#        self._spherical_gtf_order = self._enforce_df_type('spherical_gtf_order', spherical_gtf_order)
-#        self._cartesian_gtf_order = self._enforce_df_type('cartesian_gtf_order', cartesian_gtf_order)
-#        self._basis_set_summary = self._enforce_df_type('basis_set_summary', basis_set_summary)
-#        self._basis_set = basis_set
-#        # For smaller systems it is advantageous (for visualization purposes)
-#        # to compute two body properties (i.e. bonds). This is an exception to
-#        # the lazy computation philsophy.
-#        ma = self.frame['atom_count'].max() if self._is('_atom') else 0
-#        nf = len(self)
-#        if ma == 0 and nf == 0:
-#            self.name = 'TestUniverse'
-#            self._widget.width = 950
-#            self._widget.gui_width = 350
-#            self._update_traits()
-#            self._traits_need_update = False
-#        elif self.is_periodic and ma < mapfp and nf < mfp and self._atom is not None:
-#            if self._periodic_two is None:
-#                pass
-##                self.compute_two_body()
-##            self._update_traits()
-#            self._traits_need_update = False
-#        elif not self.is_periodic and ma < mapf and nf < mf and self._atom is not None:
-##            if self._two is None:
-##                self.compute_two_body()
-##            self._update_traits()
-#            self._traits_need_update = False
-#
