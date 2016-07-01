@@ -1,4 +1,4 @@
-# exatomic
+![Alt test](doc/source/_static/logo.png)
 Data analytics for the computational chemist (and related professions).
 
 # Installation
