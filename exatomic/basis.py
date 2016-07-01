@@ -47,18 +47,20 @@ class BasisSetSummary(DataFrame):
     +-------------------+----------+-------------------------------------------+
     | function_count    | int      | total basis functions                     |
     +-------------------+----------+-------------------------------------------+
+    | prim_X            | int      | X = shell primitive functions             |
+    +-------------------+----------+-------------------------------------------+
+    | bas_X             | int      | X = shell basis functions                 |
+    +-------------------+----------+-------------------------------------------+
 
     Note:
         The function count corresponds to the number of linearly independent
         basis functions as provided by the basis set definition and used within
         the code in solving the quantum mechanical eigenvalue problem.
     '''
-    _columns = ['tag', 'name', 'function_count']
+    _columns = ['tag', 'name', 'func_per_atom']
     _indices = ['set']
     _categories = {'tag': str}
 
-        #(e.g.
-        #s = 1, p = 3, d = 5, etc.).
 
 class BasisSet(DataFrame):
     '''
@@ -116,23 +118,15 @@ class GaussianBasisSet(BasisSet):
     +-------------------+----------+-------------------------------------------+
     | shell_function    | int/cat  | basis function group identifier           |
     +-------------------+----------+-------------------------------------------+
-    | shell             | str/cat  | chemists' notation orbital shell          |
+    | l                 | int/cat  | orbital angular momentum quantum number   |
     +-------------------+----------+-------------------------------------------+
     | set               | int/cat  | index of unique basis set per unique atom |
     +-------------------+----------+-------------------------------------------+
-
-    Other useful columns can be added to increase compatibility with other functionality.
-
-    +-------------------+----------+-------------------------------------------+
-    | Column            | Type     | Description                               |
-    +===================+==========+===========================================+
-    | index             | int/cat  | basis set identifier                      |
-    +-------------------+----------+-------------------------------------------+
     '''
-    _columns = ['alpha', 'd', 'shell_function', 'shell']
+    _columns = ['alpha', 'd', 'shell_function', 'l', 'set']
     _indices = ['primitive']
     _groupbys = ['shell_function']
-    _categories = {'set': np.int64, 'shell': str, 'name': str, 'shell_function': np.int64}
+    _categories = {'set': np.int64, 'l': np.int64, 'shell_function': np.int64}
 
     def basis_count(self):
         '''
@@ -175,9 +169,9 @@ class BasisSetMap(BasisSet):
     +-------------------+----------+-------------------------------------------+
     | Column            | Type     | Description                               |
     +===================+==========+===========================================+
-    | symbol            | str      | symbolic atomic center                    |
+    | tag               | str      | basis set identifier                      |
     +-------------------+----------+-------------------------------------------+
-    | shell             | str      | string of quantum number l                |
+    | l                 | int      | oribtal angular momentum quantum number   |
     +-------------------+----------+-------------------------------------------+
     | nprim             | int      | number of primitives within shell         |
     +-------------------+----------+-------------------------------------------+
@@ -186,9 +180,9 @@ class BasisSetMap(BasisSet):
     | degen             | bool     | False if cartesian, True if spherical     |
     +-------------------+----------+-------------------------------------------+
     '''
-    _columns = ['symbol', 'shell', 'nprim', 'nbasis', 'degen']
+    _columns = ['tag', 'l', 'nprim', 'nbasis', 'degen']
     _indices = ['index']
-    _categories = {'symbol': str, 'shell': str, 'nbasis': np.int64, 'degen': bool}
+    #_categories = {'tag': str, 'shell': str, 'nbasis': np.int64, 'degen': bool}
 
 
 class Overlap(DataFrame):
@@ -213,9 +207,9 @@ class Overlap(DataFrame):
     _indices = ['index']
 
     def square(self):
-        nbas = np.floor(np.sqrt(self.shape[0] * 2))
-        return self.pivot('chi1', 'chi2', 'coefficient').fillna(value=0) + \
-               self.pivot('chi2', 'chi1', 'coefficient').fillna(value=0) - np.eye(nbas)
+        nbas = np.floor(np.roots([1, 1, -2 * self.shape[0]])[1])
+        tri = self.pivot('chi1', 'chi2', 'coefficient').fillna(value=0)
+        return tmp + tri.T - np.eye(nbas)
 
 
 class PlanewaveBasisSet(BasisSet):

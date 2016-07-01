@@ -71,6 +71,7 @@ class MOMatrix(DataFrame):
     def square(self):
        return self.pivot('basis_function', 'orbital', 'coefficient')
 
+
 class DensityMatrix(DataFrame):
     '''
     The density matrix in a contracted basis set. As it is
@@ -91,7 +92,7 @@ class DensityMatrix(DataFrame):
     _indices = ['index']
 
     def square(self):
-        nbas = np.floor(np.sqrt(self.shape[0] * 2))
+        nbas = np.floor(np.roots([1, 1, -2 * self.shape[0]])[1])
         return self.pivot('chi1', 'chi2', 'coefficient').fillna(value=0) + \
                self.pivot('chi2', 'chi1', 'coefficient').fillna(value=0) - np.eye(nbas)
 
@@ -114,9 +115,6 @@ class DensityMatrix(DataFrame):
                 cnt += 1
         return cls(ret)
 
-
-def _combine_ps(A):
-    pass
 
 
 def _voluminate_gtfs(universe, xx, yy, zz, kind='spherical'):
@@ -157,20 +155,20 @@ def _voluminate_gtfs(universe, xx, yy, zz, kind='spherical'):
             else:
                 raise Exception("kind must be 'spherical' or 'cartesian' not {}".format(kind))
             shell_functions = {}
-            #if l == 1:
-            #    functions = []
-            #    sq2 = np.sqrt(2)
-            #    for i, j, k in universe._cartesian_ordering_function(l):
-            #        functions.append(d * rx**int(i) * ry**int(j) * rz**int(k) * sy.exp(-alpha * r2))
-            #    shell_functions['x'] = 1 / sq2 * (functions[0] - functions[-1])
-            #    shell_functions['y'] = 1 / sq2 * (functions[0] + functions[-1])
-            #    shell_functions['z'] = functions[1]
-            #else:
-            for i, j, k in universe._cartesian_ordering_function(l):
-                function = 0
-                for alpha, d in zip(grp['alpha'], grp['d']):
-                    function += d * rx**int(i) * ry**int(j) * rz**int(k) * sy.exp(-alpha * r2)
-                shell_functions['x' * i + 'y' * j + 'z' * k] = function
+            if l == 1:
+                functions = []
+                sq2 = np.sqrt(2)
+                for i, j, k in universe._cartesian_ordering_function(l):
+                    functions.append(d * rx**int(i) * ry**int(j) * rz**int(k) * sy.exp(-alpha * r2))
+                shell_functions['x'] = sq2 / 2 * (functions[0] + functions[1])
+                shell_functions['y'] = 1 / sq2 * (functions[1] - functions[0])
+                shell_functions['z'] = functions[2]
+            else:
+                for i, j, k in universe._cartesian_ordering_function(l):
+                    function = 0
+                    for alpha, d in zip(grp['alpha'], grp['d']):
+                        function += d * rx**int(i) * ry**int(j) * rz**int(k) * sy.exp(-alpha * r2)
+                    shell_functions['x' * i + 'y' * j + 'z' * k] = function
             if l == 0:
                 print('l=', l, ' ml=', 0)
                 ordered_gtf_basis.append(shell_functions[''])
