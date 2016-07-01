@@ -35,20 +35,22 @@ class Frame(DataFrame):
     The frame DataFrame contains non-atomic information about each snapshot
     of the :class:`~exatomic.universe.Universe` object.
     '''
-    xi = Float()  # Static unit cell component
-    xj = Float()  # Static unit cell component
-    xk = Float()  # Static unit cell component
-    yi = Float()  # Static unit cell component
-    yj = Float()  # Static unit cell component
-    yk = Float()  # Static unit cell component
-    zi = Float()  # Static unit cell component
-    zj = Float()  # Static unit cell component
-    zk = Float()  # Static unit cell component
-    ox = Float()  # Static unit cell origin point x
-    oy = Float()  # Static unit cell origin point y
-    oz = Float()  # Static unit cell origin point z
+    xi = Float()
+    xj = Float()
+    xk = Float()
+    yi = Float()
+    yj = Float()
+    yk = Float()
+    zi = Float()
+    zj = Float()
+    zk = Float()
+    ox = Float()
+    oy = Float()
+    oz = Float()
     _indices = ['frame']
     _columns = ['atom_count']
+    _precision = {'xi': 2, 'xj': 2, 'xk': 2, 'yi': 2, 'yj': 2, 'yk': 2, 'zi': 2,
+                  'zj': 2, 'zk': 2, 'ox': 2, 'oy': 2, 'oz': 2}
     _traits = ['xi', 'xj', 'xk', 'yi', 'yj', 'yk', 'zi', 'zj', 'zk',
                'ox', 'oy', 'oz', 'frame']
 
