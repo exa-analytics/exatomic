@@ -9,10 +9,10 @@ Test visualization application for the universe container (exatomic package).
 
 require.config({
     shim: {
-        'nbextensions/exa/apps/app3d': {
+        'nbextensions/exa/app3d': {
             exports: 'App3D'
         },
-        'nbextensions/exa/apps/gui': {
+        'nbextensions/exa/gui': {
             exports: 'ContainerGUI'
         },
         'nbextensions/exa/num': {
@@ -35,8 +35,8 @@ require.config({
 
 
 define([
-    'nbextensions/exa/apps/app3d',
-    'nbextensions/exa/apps/gui',
+    'nbextensions/exa/app3d',
+    'nbextensions/exa/gui',
     'nbextensions/exa/num',
     'nbextensions/exa/exatomic/ao',
     'nbextensions/exa/exatomic/gto',

@@ -50,18 +50,20 @@ class BaseAtom(DataFrame):
     '''
     Base atom and related datframe.
     '''
-    _precision = 2
+    _precision = {'x': 2, 'y': 2, 'z': 2}
     _indices = ['atom']
     _columns = ['x', 'y', 'z', 'symbol', 'frame']
     _groupbys = ['frame']
+    _traits = ['x', 'y', 'z']
     _categories = {'frame': np.int64, 'label': np.int64, 'symbol': str,
                    'bond_count': np.int64, 'basis_set': np.int64}
 
-    def _custom_trait_creator(self):
+    def _custom_traits(self):
         '''
         Custom trait creator function because traits from the atom table are
         not automatically created via exa.numerical.
         '''
+        self._set_categories()
         grps = self.groupby('frame')
         symbols = grps.apply(lambda g: g['symbol'].cat.codes.values)
         symbols = Unicode(symbols.to_json(orient='values')).tag(sync=True)
@@ -70,11 +72,11 @@ class BaseAtom(DataFrame):
         radii = Dict({i: radii[v] for i, v in symmap.items()}).tag(sync=True)
         colors = symbol_to_color[self['symbol'].unique()]
         colors = Dict({i: colors[v] for i, v in symmap.items()}).tag(sync=True)
-        atom_x = grps.apply(lambda g: g['x'].values).to_json(orient='values', double_precision=self._precision)
+        atom_x = grps.apply(lambda g: g['x'].values).to_json(orient='values', double_precision=self._precision['x'])
         atom_x = Unicode(atom_x).tag(sync=True)
-        atom_y = grps.apply(lambda g: g['y'].values).to_json(orient='values', double_precision=self._precision)
+        atom_y = grps.apply(lambda g: g['y'].values).to_json(orient='values', double_precision=self._precision['y'])
         atom_y = Unicode(atom_y).tag(sync=True)
-        atom_z = grps.apply(lambda g: g['z'].values).to_json(orient='values', double_precision=self._precision)
+        atom_z = grps.apply(lambda g: g['z'].values).to_json(orient='values', double_precision=self._precision['z'])
         atom_z = Unicode(atom_z).tag(sync=True)
         return {'atom_symbols': symbols, 'atom_radii': radii, 'atom_colors': colors,
                 'atom_x': atom_x, 'atom_y': atom_y, 'atom_z': atom_z}

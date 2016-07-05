@@ -10,11 +10,11 @@ requests the HTML representation of a universe data container.
 
 require.config({
     shim: {
-        'nbextensions/exa/apps/gui': {
+        'nbextensions/exa/gui': {
             exports: 'ContainerGUI'
         },
 
-        'nbextensions/exa/apps/app3d': {
+        'nbextensions/exa/app3d': {
             exports: 'App3D'
         },
 
@@ -30,8 +30,8 @@ require.config({
 
 
 define([
-    'nbextensions/exa/apps/gui',
-    'nbextensions/exa/apps/app3d',
+    'nbextensions/exa/gui',
+    'nbextensions/exa/app3d',
     'nbextensions/exa/utility',
     'nbextensions/exa/exatomic/field'
 ], function(ContainerGUI, App3D, utility, AtomicField) {

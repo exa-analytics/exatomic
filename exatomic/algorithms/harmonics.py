@@ -9,9 +9,9 @@ import re
 import numpy as np
 import pandas as pd
 import sympy as sy
+from numba import vectorize
 from sympy.parsing.sympy_parser import parse_expr
 from sympy.physics.secondquant import KroneckerDelta as kr
-from exatomic import global_config
 
 
 class SolidHarmonic:
@@ -101,10 +101,8 @@ def solid_harmonics(l, return_all=False, vectorize=False, standard_symbols=True)
                     funcs[key] = (symbols, lambda r: r)
                 else:
                     f = sy.lambdify(symbols, s[key], 'numpy')
-                    if global_config['pkg_numba']:
-                        from numba import vectorize
-                        vec = vectorize(['float64({})'.format(', '.join(['float64'] * len(symbols)))], nopython=True)
-                        f = vec(f)
+                    vec = vectorize(['float64({})'.format(', '.join(['float64'] * len(symbols)))], nopython=True)
+                    f = vec(f)
                     funcs[key] = (symbols, f)
         s = funcs
     if return_all:

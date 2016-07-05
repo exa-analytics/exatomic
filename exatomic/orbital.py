@@ -29,9 +29,10 @@ Orbital information such as centers and energies.
 import re
 import numpy as np
 import pandas as pd
+from numba import vectorize, float64
 from exa import DataFrame, Series
 from exa.algorithms import meshgrid3d
-from exatomic import global_config
+from exatomic._config import config
 from exatomic.field import AtomicField
 
 
@@ -146,8 +147,6 @@ def _voluminate_cartesian_gtfs(universe, xx, yy, zz):
                 for alpha, c in zip(grp['alpha'], grp['c']):
                     function += c * rx**int(i) * ry**int(j) * rz**int(k) * sy.exp(-alpha * r2)
                 function = sy.lambdify(('x', 'y', 'z'), function, 'numpy')
-                if global_config['pkg_numba']:
-                    from numba import vectorize, float64
                 shell_functions['x' * i + 'y' * j + 'z' * k] = function
             # now reduce cart shell functions to spherical funcs
             # Reduce the linearly dependent cartesian basis
@@ -195,12 +194,8 @@ def add_cubic_field_from_mo(universe, rmin, rmax, nr, vector=None):
     x, y, z = meshgrid3d(x, y, z)
     basis_funcs = _spherical_gtfs(universe)
     basis_funcs = [sy.lambdify(('x', 'y', 'z'), func, 'numpy') for func in basis_funcs]
-    if global_config['pkg_numba']:
-        from numba import vectorize, float64
-        nb = vectorize([float64(float64, float64, float64)], nopython=True)
-        basis_funcs = [nb(func) for func in basis_funcs]
-    else:
-        basis_funcs = [np.vectorize(func) for func in basis_funcs]
+    nb = vectorize([float64(float64, float64, float64)], nopython=True)
+    basis_funcs = [nb(func) for func in basis_funcs]
     nn = len(basis_funcs)
     n = len(vector)
     # At this point, basis_funcs contains non-normalized ufunc.

@@ -9,10 +9,10 @@ unit cell dimensions, temperature, energy, potentials, etc.
 '''
 import pandas as pd
 import numpy as np
-from sqlalchemy import Column, Integer, ForeignKey
+#from sqlalchemy import Column, Integer, ForeignKey
 from exa import Container
 from exa.container import TypedMeta
-from exa.relational import BaseMeta
+#from exa.relational import BaseMeta
 from exatomic.widget import UniverseWidget
 from exatomic.frame import minimal_frame, Frame
 from exatomic.atom import Atom, ProjectedAtom, UnitAtom, VisualAtom
@@ -49,14 +49,14 @@ class UniverseTypedMeta(TypedMeta):
     field = AtomicField
 
 
-class Meta(UniverseTypedMeta, BaseMeta):
-    '''
-    Mixes relational and typed metaclasses for :class:`~exatomic.universe.Universe`.
-    '''
-    pass
+#class Meta(UniverseTypedMeta, BaseMeta):
+#    '''
+#    Mixes relational and typed metaclasses for :class:`~exatomic.universe.Universe`.
+#    '''
+#    pass
 
 
-class Universe(Container, metaclass=Meta):
+class Universe(Container, metaclass=UniverseTypedMeta):
     '''
     Container for working with data coming from quantum mechanical code inputs
     and outputs. All data (e.g. coordinates, orbital listings, optimized orbital
@@ -64,10 +64,10 @@ class Universe(Container, metaclass=Meta):
     allows easy manipulation and analysis of data, as well as facilitating
     conversion between the various formats of the field of atomistic simulation.
     '''
-    unid = Column(Integer, ForeignKey('container.pkid'), primary_key=True)
-    frame_count = Column(Integer)
+#    unid = Column(Integer, ForeignKey('container.pkid'), primary_key=True)
+#    frame_count = Column(Integer)
+#    __mapper_args__ = {'polymorphic_identity': 'universe'}
     _widget_class = UniverseWidget
-    __mapper_args__ = {'polymorphic_identity': 'universe'}
 
     @property
     def two(self):
@@ -321,7 +321,7 @@ class Universe(Container, metaclass=Meta):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        if self._test:
-            self.name = 'TestUniverse'
-            self._widget.width = 950
-            self._widget.gui_width = 350
+#        if self._test:
+#            self.name = 'TestUniverse'
+#            self._widget.width = 950
+#            self._widget.gui_width = 350
