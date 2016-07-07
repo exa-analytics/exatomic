@@ -35,18 +35,6 @@ class Frame(DataFrame):
     The frame DataFrame contains non-atomic information about each snapshot
     of the :class:`~exatomic.universe.Universe` object.
     '''
-    xi = Float()
-    xj = Float()
-    xk = Float()
-    yi = Float()
-    yj = Float()
-    yk = Float()
-    zi = Float()
-    zj = Float()
-    zk = Float()
-    ox = Float()
-    oy = Float()
-    oz = Float()
     _indices = ['frame']
     _columns = ['atom_count']
     _precision = {'xi': 2, 'xj': 2, 'xk': 2, 'yi': 2, 'yj': 2, 'yk': 2, 'zi': 2,
