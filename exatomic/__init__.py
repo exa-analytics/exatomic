@@ -21,7 +21,8 @@ from exatomic import _config
 from exatomic import error
 
 # User API
-from exatomic.editor import Editor
+from exatomic.container import Universe
+#from exatomic.editor import Editor
 
 
 

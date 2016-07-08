@@ -12,7 +12,7 @@ with open('requirements.txt') as f:
 
 setup(
     name='exatomic',
-    version=''.join((__version__, 'dev1')),
+    version=__version__,
     description='A unified platform for computational chemists.',
     long_description=description,
     author='Tom Duignan, Alex Marchenko',

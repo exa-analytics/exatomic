@@ -11,7 +11,7 @@ import numpy as np
 import pandas as pd
 from io import StringIO
 from exa.editor import Editor as ExaEditor
-from exatomic.universe import Universe
+from exatomic.container import Universe, UniverseTypedMeta
 from exatomic.frame import minimal_frame
 from exatomic.basis import CartesianGTFOrder, SphericalGTFOrder, lmap
 

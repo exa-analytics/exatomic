@@ -1,64 +1,41 @@
-##################
-exatomic
-##################
-A high-performance computational chemistry data processing, analysis, and
-visualization package.
+.. Copyright (c) 2015-2016, Exa Analytics Development Team
+.. Distributed under the terms of the Apache License 2.0
 
-Documentation is organized into three categories.
+##############################################
+`Exatomic`_: Unified Computational Chemistry
+##############################################
+*A unified platform for computational chemists.*
 
-    - :ref:`User Docs<user-docs>`
-    - :ref:`Developer Docs<dev-docs>`
-    - :ref:`Related Projects<rel-proj>`
-
-****************
-Contents
-****************
-
-.. _user-docs:
+***SUMMARY***
 
 .. toctree::
     :maxdepth: 2
-    :caption: User Documentation
+    :caption: General Info
 
+    overview.rst
     install.rst
-    started.rst
-    api.rst
-    glossary.rst
-
-.. _dev-docs:
+    api/api.rst
 
 .. toctree::
     :maxdepth: 2
-    :caption: Developer Documentation
+    :caption: User Guide
 
-    general.rst
-    bugs.rst
-    proposal.rst
-    contrib.rst
-
-.. _rel-proj:
 
 .. toctree::
     :maxdepth: 2
-    :caption: Related Projects
+    :caption: Contributor Guide
 
-    related.rst
-.. toctree::
-    :maxdepth: 2
+    dev/overview.rst
 
-    install.rst
-    started.rst
-    api.rst
-    glossary.rst
 
-****************
-License
-****************
+##################
+Info
+##################
 :download:`License <../../LICENSE>`
 
-****************
-Indexes
-****************
 * :ref:`genindex`
 * :ref:`modindex`
 * :ref:`search`
+
+
+.. _Exatomic: https://exa-analytics.github.io/
