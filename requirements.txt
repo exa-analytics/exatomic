@@ -1,0 +1,16 @@
+numpy
+scipy
+matplotlib
+sqlalchemy
+pandas
+networkx
+sympy
+seaborn
+jupyter
+notebook==4.1
+ipywidgets==4.1
+ipyparallel
+nose
+sphinx
+sphinx_rtd_theme
+sphinxcontrib-autoanysrc

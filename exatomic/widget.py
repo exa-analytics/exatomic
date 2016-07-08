@@ -1,8 +1,11 @@
 # -*- coding: utf-8 -*-
+# Copyright (c) 2015-2016, Exa Analytics Development Team
+# Distributed under the terms of the Apache License 2.0
 '''
 Universe Notebook Widget
-=============================
+#########################
 '''
+import atexit
 import subprocess
 import pandas as pd
 from glob import glob
@@ -57,3 +60,11 @@ class UniverseWidget(ContainerWidget):
             subprocess.call(crop, cwd=savedir, shell=True)
         except:
             pass
+
+
+if config['js']['update'] == '1':
+    verbose = True if config['log']['level'] != '0' else False
+    pkg_nbext = mkp(config['dynamic']['exatomic_pkgdir'], '_nbextension')
+    sys_nbext = mkp(jupyter_data_dir(), 'nbextensions', 'exa', 'exatomic')
+    install_notebook_widgets(pkg_nbext, sys_nbext, verbose)
+    atexit.register(lambda: config['js']['update'] = '0')
