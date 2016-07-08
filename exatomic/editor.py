@@ -1,7 +1,11 @@
 # -*- coding: utf-8 -*-
+# Copyright (c) 2015-2016, Exa Analytics Development Team
+# Distributed under the terms of the Apache License 2.0
 '''
 Atomic Editor
-====================================
+###################
+This module provides a text file editor that can be used to transform commonly
+found file formats directly into :class:`~exatomic.container.Universe` objects.
 '''
 import numpy as np
 import pandas as pd

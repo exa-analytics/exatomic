@@ -1,37 +1,38 @@
 # -*- coding: utf-8 -*-
+# Copyright (c) 2015-2016, Exa Analytics Development Team
+# Distributed under the terms of the Apache License 2.0
 '''
 The Atomic Universe
 #########################
-A universe is a container object that stores "frames". A frame is a snapshot
-atomic geometry obtained from or specified in a quantum mechanical calculation,
-as well as all related data such as orbital coefficients, orbital energies,
-unit cell dimensions, temperature, energy, potentials, etc.
+The :class:`~exatomic.container.Universe` object is a subclass of
+:class:`~exa.container.Container` that stores data coming from computational
+chemistry experiments in a unified and systematic way. Data is organized into
+"frames". A frame is an axis that can represent time (e.g. molecular dynamics
+simulations), step number (e.g. geometry optimization), or an arbitrary index
+like density functional theory exchange correlation functional.
 '''
 import pandas as pd
 import numpy as np
-#from sqlalchemy import Column, Integer, ForeignKey
-from exa import Container
-from exa.container import TypedMeta
-#from exa.relational import BaseMeta
+from exa.container import TypedMeta, Container
 from exatomic.widget import UniverseWidget
-from exatomic.frame import minimal_frame, Frame
-from exatomic.atom import Atom, ProjectedAtom, UnitAtom, VisualAtom
-from exatomic.two import Two, PeriodicTwo
-from exatomic.field import AtomicField
-from exatomic.atom import compute_unit_atom as _cua
-from exatomic.atom import compute_projected_atom as _cpa
-from exatomic.atom import compute_visual_atom as _cva
-from exatomic.two import max_frames_periodic as mfp
-from exatomic.two import max_atoms_per_frame_periodic as mapfp
-from exatomic.two import max_frames as mf
-from exatomic.two import max_atoms_per_frame as mapf
-from exatomic.two import compute_two_body as _ctb
-from exatomic.two import compute_bond_count as _cbc
-from exatomic.two import compute_projected_bond_count as _cpbc
-from exatomic.molecule import Molecule
-from exatomic.molecule import compute_molecule as _cm
-from exatomic.molecule import compute_molecule_com as _cmcom
-from exatomic.orbital import Orbital, MOMatrix
+#from exatomic.frame import minimal_frame, Frame
+#from exatomic.atom import Atom, ProjectedAtom, UnitAtom, VisualAtom
+#from exatomic.two import Two, PeriodicTwo
+#from exatomic.field import AtomicField
+#from exatomic.atom import compute_unit_atom as _cua
+#from exatomic.atom import compute_projected_atom as _cpa
+#from exatomic.atom import compute_visual_atom as _cva
+#from exatomic.two import max_frames_periodic as mfp
+#from exatomic.two import max_atoms_per_frame_periodic as mapfp
+#from exatomic.two import max_frames as mf
+#from exatomic.two import max_atoms_per_frame as mapf
+#from exatomic.two import compute_two_body as _ctb
+#from exatomic.two import compute_bond_count as _cbc
+#from exatomic.two import compute_projected_bond_count as _cpbc
+#from exatomic.molecule import Molecule
+#from exatomic.molecule import compute_molecule as _cm
+#from exatomic.molecule import compute_molecule_com as _cmcom
+#from exatomic.orbital import Orbital, MOMatrix
 #from exatomic.basis import (SphericalGTFOrder, CartesianGTFOrder, BasisSet,
 #                            BasisSet, BasisSetOrder)
 #from exatomic.basis import lmap
@@ -49,13 +50,6 @@ class UniverseTypedMeta(TypedMeta):
     field = AtomicField
 
 
-#class Meta(UniverseTypedMeta, BaseMeta):
-#    '''
-#    Mixes relational and typed metaclasses for :class:`~exatomic.universe.Universe`.
-#    '''
-#    pass
-
-
 class Universe(Container, metaclass=UniverseTypedMeta):
     '''
     Container for working with data coming from quantum mechanical code inputs
@@ -64,9 +58,6 @@ class Universe(Container, metaclass=UniverseTypedMeta):
     allows easy manipulation and analysis of data, as well as facilitating
     conversion between the various formats of the field of atomistic simulation.
     '''
-#    unid = Column(Integer, ForeignKey('container.pkid'), primary_key=True)
-#    frame_count = Column(Integer)
-#    __mapper_args__ = {'polymorphic_identity': 'universe'}
     _widget_class = UniverseWidget
 
     @property
@@ -318,10 +309,3 @@ class Universe(Container, metaclass=UniverseTypedMeta):
 
     def __len__(self):
         return len(self.frame) if self._is('_frame') else 0
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-#        if self._test:
-#            self.name = 'TestUniverse'
-#            self._widget.width = 950
-#            self._widget.gui_width = 350

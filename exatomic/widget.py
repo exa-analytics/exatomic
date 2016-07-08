@@ -5,7 +5,6 @@
 Universe Notebook Widget
 #########################
 '''
-import atexit
 import subprocess
 import pandas as pd
 from glob import glob

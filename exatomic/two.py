@@ -1,7 +1,9 @@
 # -*- coding: utf-8 -*-
+# Copyright (c) 2015-2016, Exa Analytics Development Team
+# Distributed under the terms of the Apache License 2.0
 '''
-Two Body Properties DataFrame
-===============================
+Two Body Properties Table
+##################################
 This module provides various functions for computing two body properties (e.g.
 interatomic distances). While this may seem like a trivial calculation, it is
 not; it is a combinatorial problem and fast algorithms for it are an outstanding
