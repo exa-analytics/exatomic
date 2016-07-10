@@ -21,8 +21,8 @@ require.config({
         'nbextensions/exa/exatomic/ao': {
             exports: 'AO'
         },
-        'nbextensions/exa/exatomic/gto': {
-            exports: 'GTO'
+        'nbextensions/exa/exatomic/gtf': {
+            exports: 'GTF'
         },
         'nbextensions/exa/exatomic/gaussian': {
             exports: 'gaussian'
@@ -39,10 +39,10 @@ define([
     'nbextensions/exa/apps/gui',
     'nbextensions/exa/num',
     'nbextensions/exa/exatomic/ao',
-    'nbextensions/exa/exatomic/gto',
+    'nbextensions/exa/exatomic/gtf',
     'nbextensions/exa/exatomic/gaussian',
     'nbextensions/exa/exatomic/harmonics'
-], function(App3D, ContainerGUI, num, AO, GTO, gaussian, sh) {
+], function(App3D, ContainerGUI, num, AO, GTF, gaussian, sh) {
     class UniverseTestApp {
         /*"""
         UniverseTestApp
@@ -101,11 +101,13 @@ define([
 
             this.top = {
                 'demo': 'Hydrogen Wave Functions',
-                'demos': ['Hydrogen Wave Functions', 'Gaussian Type Orbitals', 'Cube', 'Trajectory'],
+                /*
+                'demos': ['Hydrogen Wave Functions', 'Gaussian Type Functions', 'Cube', 'Trajectory'],
                 'play': function() {
                     console.log('pushed play');
                 },
                 'fps': 24,
+                */
                 'save field': function() {
                     var field = {
                         'ox': self.field.xmin, 'oy': self.field.ymin, 'oz': self.field.zmin,
@@ -129,17 +131,19 @@ define([
                     self.app3d.camera.updateProjectionMatrix();
                 }
             };
+            /*
             this.top['demo_dropdown'] = this.gui.add(this.top, 'demo', this.top['demos']);
             this.top['play_button'] = this.gui.add(this.top, 'play');
+            this.top['fps_slider'] = this.gui.add(this.top, 'fps', 1, 60);
+            */
             this.top['save_image'] = this.gui.add(this.top, 'save image');
             this.top['send_button'] = this.gui.add(this.top, 'save field');
-            this.top['fps_slider'] = this.gui.add(this.top, 'fps', 1, 60);
             this.ao = {
                 'function': '1s',
                 'functions': ['1s', '2s', '2px', '2py', '2pz',
                               '3s', '3px', '3py', '3pz',
-                              '3d-2', '3d-1', '3d0', '3d+1', '3d+2',
-                              '3dz2', '3d+1', '3dxz', '3dyz', '3dx2-y2', '3dxy'],
+                              '3d-2', '3d-1', '3d0', '3d+1', '3d+2'],
+                              //'3dz2', '3d+1', '3dxz', '3dyz', '3dx2-y2', '3dxy'],
                 'isovalue': 0.005
             };
             this.ao['folder'] = this.gui.addFolder('Hydrogen Wave Functions');
@@ -156,26 +160,25 @@ define([
                 self.render_ao();
             });
 
-            this.gto = {
-                'function': '1s',
-                'functions': ['1s', '2s', '2px', '2py', '2pz',
-                              '3s', '3px', '3py', '3pz',
-                              '3dz2', '3dxz', '3dyz', '3dx2-y2', '3dxy'],
-                'isovalue': 0.01
+            this.gtf = {
+                'function': 's',
+                'functions': ['s', 'px', 'py', 'pz',
+                              'd200', 'd110', 'd101', 'd020', 'd011', 'd002'],
+                'isovalue': 0.005
             };
 
-            this.gto['folder'] = this.gui.addFolder('Gaussian Type Orbitals');
-            this.gto['func_dropdown'] = this.gto.folder.add(this.gto, 'function', this.gto['functions']);
-            this.gto['isovalue_slider'] = this.gto.folder.add(this.gto, 'isovalue', 0.0, 0.4);
+            this.gtf['folder'] = this.gui.addFolder('Gaussian Type Functions');
+            this.gtf['func_dropdown'] = this.gtf.folder.add(this.gtf, 'function', this.gtf['functions']);
+            this.gtf['isovalue_slider'] = this.gtf.folder.add(this.gtf, 'isovalue', 0.0, 0.4);
 
-            this.gto['isovalue_slider'].onFinishChange(function(value) {
-                self.gto['isovalue'] = value;
-                self.render_gto();
+            this.gtf['isovalue_slider'].onFinishChange(function(value) {
+                self.gtf['isovalue'] = value;
+                self.render_gtf();
             });
 
-            this.gto['func_dropdown'].onFinishChange(function(value) {
-                self.gto['function'] = value;
-                self.render_gto();
+            this.gtf['func_dropdown'].onFinishChange(function(value) {
+                self.gtf['function'] = value;
+                self.render_gtf();
             });
 
             this.sh = {
@@ -190,7 +193,7 @@ define([
             this.sh.l_slider.onFinishChange(function(value) {
                 self.sh.l = parseInt(value);
                 self.update_m();
-                self.render_spherical_gtf();
+                self.render_solid_harmonic();
             });
         };
 
@@ -205,12 +208,12 @@ define([
             };
             this.sh.m_slider.onFinishChange(function(value) {
                 self.sh.m = parseInt(value);
-                self.render_spherical_gtf();
+                self.render_solid_harmonic();
             });
         };
 
         render_spherical_gtf() {
-            console.log('render spherical gtf');
+            console.log('render solid harmonic');
             this.field = new sh.SolidHarmonic(this.sh.l, this.sh.m, this.dimensions);
             console.log(this.field);
             this.app3d.remove_meshes(this.active_objs);
@@ -219,16 +222,17 @@ define([
 
         render_ao() {
             this.field = new AO(this.dimensions, this.ao['function']);
-            console.log('inside render AO');
+            console.log('render atomic orbital');
             console.log(this.field);
             this.app3d.remove_meshes(this.active_objs);
             this.active_objs = this.app3d.add_scalar_field(this.field, this.ao['isovalue'], 2);
         };
 
-        render_gto() {
-            this.field = new GTO(this.dimensions, this.gto['function']);
+        render_gtf() {
+            console.log('render gaussian type function');
+            this.field = new GTF(this.dimensions, this.gtf['function']);
             this.app3d.remove_meshes(this.active_objs);
-            this.active_objs = this.app3d.add_scalar_field(this.field, this.gto['isovalue'], 2);
+            this.active_objs = this.app3d.add_scalar_field(this.field, this.gtf['isovalue'], 2);
         };
 
         resize() {

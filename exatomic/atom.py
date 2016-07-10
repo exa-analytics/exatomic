@@ -76,8 +76,14 @@ class BaseAtom(DataFrame):
         atom_y = Unicode(atom_y).tag(sync=True)
         atom_z = grps.apply(lambda g: g['z'].values).to_json(orient='values', double_precision=self._precision)
         atom_z = Unicode(atom_z).tag(sync=True)
+        try:
+            atom_set = grps.apply(lambda g: g['set'].values).to_json(orient='values')
+            atom_set = Unicode(atom_set).tag(sync=True)
+        except KeyError:
+            atom_set = Unicode().tag(sync=True)
         return {'atom_symbols': symbols, 'atom_radii': radii, 'atom_colors': colors,
-                'atom_x': atom_x, 'atom_y': atom_y, 'atom_z': atom_z}
+                'atom_x': atom_x, 'atom_y': atom_y, 'atom_z': atom_z,
+                'atom_set': atom_set}
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)

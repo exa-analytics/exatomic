@@ -160,10 +160,11 @@ class Editor(ExaEditor):
         if self._cgtfo_func is not None:
             lmax = self.basis_set['shell'].map(lmap).max()
             cartesian_gtf_order = CartesianGTFOrder.from_lmax_order(lmax, self._cgtfo_func)
-        return Universe(frame=self.frame, atom=self.atom, meta=self.meta, field=self.field,
-                        orbital=self.orbital, basis_set=self.basis_set, molecule=self.molecule,
-                        two=self.two, periodic_two=self.periodic_two, unit_atom=self.unit_atom,
-                        momatrix=self.momatrix, #spherical_gtf_order=spherical_gtf_order,
+        return Universe(frame=self._frame, atom=self._atom, meta=self.meta, field=self._field,
+                        orbital=self._orbital, basis_set=self._basis_set, molecule=self._molecule,
+                        two=self._two, periodic_two=self._periodic_two, unit_atom=self._unit_atom,
+                        momatrix=self._momatrix,
+                        #spherical_gtf_order=spherical_gtf_order,
                         #cartesian_gtf_order=cartesian_gtf_order,
                         basis_set_summary=self._basis_set_summary, **kwargs)
 

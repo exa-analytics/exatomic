@@ -33,8 +33,8 @@ from exatomic.molecule import Molecule
 from exatomic.molecule import compute_molecule as _cm
 from exatomic.molecule import compute_molecule_com as _cmcom
 from exatomic.orbital import Orbital, MOMatrix
-from exatomic.basis import (SphericalGTFOrder, CartesianGTFOrder, BasisSet,
-                            BasisSetSummary, BasisSetOrder)
+from exatomic.basis import (SphericalGTFOrder, CartesianGTFOrder, BasisSet, GaussianBasisSet,
+                            BasisSetSummary, BasisSetOrder, Overlap, TestBasis)
 from exatomic.basis import lmap
 
 
@@ -47,9 +47,10 @@ class Meta(TypedRelationalMeta):
     atom = Atom
     two_free = Two
     orbital = Orbital
+    overlap = Overlap
     momatrix = MOMatrix
     field = AtomicField
-    basis_set = BasisSet
+    basis_set = GaussianBasisSet
     two_periodic = PeriodicTwo
     basis_set_order = BasisSetOrder
     basis_set_summary = BasisSetSummary
@@ -257,14 +258,14 @@ class Universe(Container, metaclass=Meta):
         '''
         Compute the spherical Gaussian type function ordering dataframe.
         '''
-        lmax = self.basis_set['shell'].map(lmap).max()
+        lmax = self.basis_set['l'].max()
         self._spherical_gtf_order = SphericalGTFOrder.from_lmax_order(lmax, ordering_func)
 
     def compute_cartesian_gtf_order(self, ordering_func):
         '''
         Compute the cartesian Gaussian type function ordering dataframe.
         '''
-        lmax = self.basis_set['shell'].map(lmap).max()
+        lmax = self.basis_set['l'].max()
         self._cartesian_gtf_order = CartesianGTFOrder.from_lmax_order(lmax, ordering_func)
 
     def compute_two_free(self, *args, **kwargs):
@@ -312,7 +313,11 @@ class Universe(Container, metaclass=Meta):
             frame (int): Frame index where to insert/concat
             field_values: Field values list (if field is incomplete)
         '''
-        if isinstance(frame, int) or isinstance(frame, np.int64) or isinstance(frame, np.int32):
+        if frame is not None:
+            try:
+                frame = int(frame)
+            except:
+                raise TypeError('must be able to int(frame), cannot be type {}'.format(type(frame)))
             if frame not in self.frame.index:
                 raise IndexError('frame {} does not exist in the universe?'.format(frame))
             field['frame'] = frame
@@ -320,7 +325,7 @@ class Universe(Container, metaclass=Meta):
         if self._field is None:
             self._field = df
         else:
-            cls = self._df_types['field']
+            cls = AtomicField
             values = self._field.field_values + df.field_values
             self._field._revert_categories()
             df._revert_categories()

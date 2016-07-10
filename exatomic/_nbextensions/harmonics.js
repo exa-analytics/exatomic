@@ -29,6 +29,12 @@ define([
                 return sh(x, y, z) * Math.exp(-Math.sqrt(r2));
             };
             super(dimensions, func);
+            /*
+            string = ''
+            for i in smth:
+                string = string + 'SolidHarmonic[l0][m0](x, y, z) + d1*SolidHarmonic[l1][m1](x, y, z) * Math.exp(-alpha1 * r2)'
+             return new Function(string)
+             */
         };
     };
 

@@ -1,35 +1,22 @@
 # -*- coding: utf-8 -*-
 '''
-Orbital DataFrame
+orbital
 =============================
-Orbital information such as centers and energies.
-
-+-------------------+----------+-------------------------------------------+
-| Column            | Type     | Description                               |
-+===================+==========+===========================================+
-| frame             | category | non-unique integer (req.)                 |
-+-------------------+----------+-------------------------------------------+
-| orbital           | int      | vector of MO coefficient matrix           |
-+-------------------+----------+-------------------------------------------+
-| label             | int      | label of orbital                          |
-+-------------------+----------+-------------------------------------------+
-| occupation        | float    | population of orbital                     |
-+-------------------+----------+-------------------------------------------+
-| energy            | float    | eigenvalue of orbital eigenvector         |
-+-------------------+----------+-------------------------------------------+
-| symmetry          | str      | symmetry designation (if applicable)      |
-+-------------------+----------+-------------------------------------------+
-| x                 | float    | orbital center in x                       |
-+-------------------+----------+-------------------------------------------+
-| y                 | float    | orbital center in y                       |
-+-------------------+----------+-------------------------------------------+
-| z                 | float    | orbital center in z                       |
-+-------------------+----------+-------------------------------------------+
+All of the dataframe structures and functions associated with the
+results of a quantum chemical calculation. The Orbital table itself
+summarizes information such as centers and energies. The momatrix
+table contains a C matrix as it is presented in quantum textbooks,
+stored in a columnar format. The bound method square() returns the
+matrix as one would write it out. This table should have dimensions
+N_basis_functions * N_basis_functions. The DensityMatrix table stores
+a triangular matrix in columnar format and contains a similar square()
+method to return the matrix as we see it on a piece of paper.
 '''
 import re
 import numpy as np
 import pandas as pd
 import sympy as sy
+from traitlets import Unicode
 from sympy import Add, Mul
 from exa import DataFrame, Series
 from exa.algorithms import meshgrid3d
@@ -41,6 +28,27 @@ from collections import OrderedDict
 
 class Orbital(DataFrame):
     '''
+    +-------------------+----------+-------------------------------------------+
+    | Column            | Type     | Description                               |
+    +===================+==========+===========================================+
+    | frame             | category | non-unique integer (req.)                 |
+    +-------------------+----------+-------------------------------------------+
+    | orbital           | int      | vector of MO coefficient matrix           |
+    +-------------------+----------+-------------------------------------------+
+    | label             | int      | label of orbital                          |
+    +-------------------+----------+-------------------------------------------+
+    | occupation        | float    | population of orbital                     |
+    +-------------------+----------+-------------------------------------------+
+    | energy            | float    | eigenvalue of orbital eigenvector         |
+    +-------------------+----------+-------------------------------------------+
+    | symmetry          | str      | symmetry designation (if applicable)      |
+    +-------------------+----------+-------------------------------------------+
+    | x                 | float    | orbital center in x                       |
+    +-------------------+----------+-------------------------------------------+
+    | y                 | float    | orbital center in y                       |
+    +-------------------+----------+-------------------------------------------+
+    | z                 | float    | orbital center in z                       |
+    +-------------------+----------+-------------------------------------------+
     Note:
         Spin zero means alpha spin or unknown and spin one means beta spin.
     '''
@@ -52,24 +60,42 @@ class Orbital(DataFrame):
 
 class MOMatrix(DataFrame):
     '''
-    For an atomic nucleus centered at $rx, ry, rz$, a primitive
-    Gaussin function takes the form:
+    The MOMatrix is the result of solving a quantum mechanical eigenvalue
+    problem in a finite basis set. Individual columns are eigenfunctions
+    of the Fock matrix with eigenvalues corresponding to orbital energies.
 
     .. math::
 
-        x_{0} = x - rx \\
-        y_{0} = y - ry \\
-        z_{0} = z - rz \\
-        r^{2} = x_{0}^{2} + y_{0}^{2} + z_{0}^{2}
-        f(x_{0}, y_{0}, z_{0}; \\alpha, i, j, k) = Nx_{0}^{i}y_{0}^{j}z_{0}^{k}e^{-\\alpha r^{2}}
+        C^{*}SC = 1
+
+    +-------------------+----------+-------------------------------------------+
+    | Column            | Type     | Description                               |
+    +===================+==========+===========================================+
+    | basis_function    | int      | row of MO coefficient matrix              |
+    +-------------------+----------+-------------------------------------------+
+    | orbital           | int      | vector of MO coefficient matrix           |
+    +-------------------+----------+-------------------------------------------+
+    | coefficient       | float    | weight of basis_function in MO            |
+    +-------------------+----------+-------------------------------------------+
+    | frame             | category | non-unique integer (req.)                 |
+    +-------------------+----------+-------------------------------------------+
     '''
+    # TODO :: add spin as a column and make it the first groupby?
     _columns = ['coefficient', 'basis_function', 'orbital']
     _indices = ['momatrix']
-    _groupbys = ['orbital', 'basis_function']
-    _categories = {'orbital': np.int64, 'basis_function': np.int64, 'spin': np.int64}
+    _traits = ['orbital']
+    _groupbys = ['frame']
+    _categories = {}
 
-    def square(self):
-       return self.pivot('basis_function', 'orbital', 'coefficient')
+    def _update_custom_traits(self):
+        coefs = self.groupby('frame').apply(lambda x: x.pivot('basis_function', 'orbital', 'coefficient').fillna(value=0).values)
+        coefs = Unicode(coefs.to_json(orient='values')).tag(sync=True)
+        #coefs = Unicode('[' + sq.groupby(by=sq.columns, axis=1).apply(
+        #            lambda x: x[x.columns[0]].values).to_json(orient='values') + ']').tag(sync=True)
+        return {'momatrix_coefficient': coefs}
+
+    def square(self, frame=0):
+       return self[self['frame'] == frame].pivot('basis_function', 'orbital', 'coefficient').fillna(value=0)
 
 
 class DensityMatrix(DataFrame):
@@ -87,29 +113,53 @@ class DensityMatrix(DataFrame):
     +-------------------+----------+-------------------------------------------+
     | coefficient       | float    | overlap matrix element                    |
     +-------------------+----------+-------------------------------------------+
+    | frame             | category | non-unique integer (req.)                 |
+    +-------------------+----------+-------------------------------------------+
     '''
     _columns = ['chi1', 'chi2', 'coefficient']
+    _groupbys = ['frame']
     _indices = ['index']
 
     def square(self):
         nbas = np.floor(np.roots([1, 1, -2 * self.shape[0]])[1])
-        return self.pivot('chi1', 'chi2', 'coefficient').fillna(value=0) + \
-               self.pivot('chi2', 'chi1', 'coefficient').fillna(value=0) - np.eye(nbas)
+        tri = self.pivot('chi1', 'chi2', 'coefficient').fillna(value=0)
+        tri = tri + tri.T
+        diags = np.zeros(tri.shape, dtype=np.float64)
+        for i, val in enumerate(np.diag(tri)):
+            tri[i, i] -= val
+        return tri
 
     @classmethod
-    def from_momatrix(cls, momatrix, nocc):
+    def from_momatrix(cls, momatrix, occvec):
+        '''
+        A density matrix can be constructed from an MOMatrix by:
+        .. math::
+
+            D_{uv} = \sum_{i}^{N} C_{ui} C_{vi} n_{i}
+
+        Args:
+            momatrix (:class:`~exatomic.orbital.MOMatrix`): a C matrix
+            occvec (:class:`~np.array` or similar): vector of len(C.shape[0])
+                containing the occupations of each molecular orbital.
+
+        Returns:
+            ret (:class:`~exatomic.orbital.DensityMatrix`): The density matrix
+        '''
+        # TODO :: jit these functions or call some jitted functions
+        #         the double hit on doubly-nested for loops can be optimized.
         square = momatrix.square()
-        dens = np.empty(square.shape, dtype=np.float_)
-        for mu in square.columns:
-            for nu in square.index:
-                dens[mu, nu] = np.sum(square.iloc[mu].values[:nocc] *
-                                      square.iloc[nu].values[:nocc])
-        retlen = square.shape[0] * (square.shape[0] + 1) // 2
+        mus, nus = square.shape
+        dens = np.empty((mus, nus), dtype=np.float_)
+        for mu in range(mus):
+            for nu in range(nus):
+                dens[mu, nu] = (square.loc[mu].values *
+                                square.loc[nu].values * occvec).sum()
+        retlen =  mus * (mus + 1) // 2
         ret = np.empty((retlen,), dtype=[('chi1', 'i8'),
                                          ('chi2', 'i8'),
                                          ('coefficient', 'f8')])
         cnt = 0
-        for mu in square.columns:
+        for mu in range(mus):
             for nu in range(mu + 1):
                 ret[cnt] = (mu, nu, dens[mu, nu])
                 cnt += 1
@@ -132,22 +182,22 @@ def _voluminate_gtfs(universe, xx, yy, zz, kind='spherical'):
     Returns:
         ordered_gtf_basis (list): list of funcs
     '''
-    lmax = universe.basis_set['shell'].map(lmap).max()
+    lmax = universe.basis_set['l'].max()
     universe.compute_cartesian_gtf_order(universe._cartesian_ordering_function)
     universe.compute_spherical_gtf_order(universe._spherical_ordering_function)
     ex, ey, ez = sy.symbols('x y z', imaginary=False)
     ordered_gtf_basis = []
-    bases = universe.basis_set.groupby('symbol')
+    bases = universe.basis_set.groupby('set')
     sh = _solid_harmonics(lmax, ex, ey, ez)
-    for symbol, x, y, z in zip(universe.atom['symbol'], universe.atom['x'],
+    for seht, x, y, z in zip(universe.atom['set'], universe.atom['x'],
                                universe.atom['y'], universe.atom['z']):
-        bas = bases.get_group(symbol).groupby('shell_function')
+        bas = bases.get_group(seht).groupby('shell_function')
         rx = ex - x
         ry = ey - y
         rz = ez - z
         r2 = rx**2 + ry**2 + rz**2
         for f, grp in bas:
-            l = lmap[grp['shell'].values[0]]
+            l = grp['l'].values[0]
             if kind == 'spherical':
                 sym_keys = universe.spherical_gtf_order.symbolic_keys(l)
             elif kind == 'cartesian':
@@ -271,9 +321,14 @@ def add_cubic_field_from_mo(universe, rmin, rmax, nr, vector=None):
     frame = np.empty((n, ), dtype=np.int64)
     label = np.empty((n, ), dtype=np.int64)
     i = 0
+    print('n', n)
+    print('nn', nn)
+    print('vectors')
+    print(type(vectors))
+    print(len(vectors))
     for vno, vec in vectors:
         if vno in vector:
-            frame[i] = universe.orbital.ix[vno, 'frame']
+            #frame[i] = universe.orbital.ix[vno, 'frame']
             label[i] = vno
             v = 0
             for c, f in zip(vec['coefficient'], vec['basis_function']):
@@ -284,7 +339,7 @@ def add_cubic_field_from_mo(universe, rmin, rmax, nr, vector=None):
     data = pd.DataFrame.from_dict({'dxi': dxi, 'dxj': dxj, 'dxk': dxk, 'dyi': dyi,
                                    'dyj': dyj, 'dyk': dyk, 'dzi': dzi, 'dzj': dzj,
                                    'dzk': dzk, 'nx': nx, 'ny': ny, 'nz': nz, 'label': label,
-                                   'ox': ox, 'oy': oy, 'oz': oz, 'frame': frame})
+                                   'ox': ox, 'oy': oy, 'oz': oz, 'frame': [0] * n})#frame})
     values = [Series(v) for v in values.tolist()]
     return AtomicField(data, field_values=values)
 

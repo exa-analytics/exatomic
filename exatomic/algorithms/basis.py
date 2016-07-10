@@ -6,7 +6,7 @@ Functions for managing and manipulating basis set data.
 Many of the ordering schemes used in computational codes can be
 generated programmatically with the right numerical function.
 This is preferred to an explicit parsing and storage of a given
-basis set ordering scheme. 
+basis set ordering scheme.
 '''
 import numpy as np
 from exatomic import _conf
@@ -17,6 +17,8 @@ lmap = {'s': 0, 'p': 1, 'd': 2, 'f': 3, 'g': 4, 'h': 5, 'i': 6, 'k': 7, 'l': 8,
 spher_ml_count = {'s': 1, 'p': 3, 'd': 5, 'f': 7, 'g': 9, 'h': 11, 'i': 13, 'k': 15,
                   'l': 17, 'm': 19}
 cart_ml_count = {'s': 1, 'p': 3, 'd': 6, 'f': 10, 'g': 15, 'h': 21, 'i': 28}
+lorder = ['s', 'p', 'd', 'f', 'g', 'h', 'i', 'k', 'l', 'm']
+
 
 
 def cartesian_gtf_exponents(l):

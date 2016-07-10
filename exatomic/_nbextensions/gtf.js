@@ -18,7 +18,7 @@ require.config({
 define([
     'nbextensions/exa/field'
 ], function(field) {
-    class GTO extends field.ScalarField {
+    class GTF extends field.ScalarField {
         /*"""
         */
         constructor(dimensions, which) {
@@ -28,14 +28,14 @@ define([
     };
 
     var primitives = {
-        '1s': function(x, y, z, c, alpha) {
+        's': function(x, y, z) {
             var x2 = x*x;
             var y2 = y*y;
             var z2 = z*z;
             var r2 = x2 + y2 + z2;
-            return c * Math.exp(-alpha * r2);
+            return Math.exp(-r2);
         },
-
+        /*
         '2s': function(x, y, z) {
             var x2 = x*x;
             var y2 = y*y;
@@ -43,8 +43,8 @@ define([
             var r2 = x2 + y2 + z2;
             return Math.exp(-r2);
         },
-
-        '2px': function(x, y, z) {
+        */
+        'px': function(x, y, z) {
             var x2 = x*x;
             var y2 = y*y;
             var z2 = z*z;
@@ -52,7 +52,7 @@ define([
             return x * Math.exp(-r2);
         },
 
-        '2py': function(x, y, z) {
+        'py': function(x, y, z) {
             var x2 = x*x;
             var y2 = y*y;
             var z2 = z*z;
@@ -60,7 +60,7 @@ define([
             return y * Math.exp(-r2);
         },
 
-        '2pz': function(x, y, z) {
+        'pz': function(x, y, z) {
             var x2 = x*x;
             var y2 = y*y;
             var z2 = z*z;
@@ -68,6 +68,7 @@ define([
             return z * Math.exp(-r2);
         },
 
+        /*
         '3s': function(x, y, z) {
             var x2 = x*x;
             var y2 = y*y;
@@ -75,7 +76,6 @@ define([
             var r2 = x2 + y2 + z2;
             return Math.exp(-r2);
         },
-
         '3px': function(x, y, z) {
             var x2 = x*x;
             var y2 = y*y;
@@ -102,16 +102,62 @@ define([
             var r = Math.sqrt(r2);
             return z * r * Math.exp(-r2);
         },
-
-        '3dz2': function(x, y, z) {
+        */
+        'd200': function(x, y, z) {
             var x2 = x*x;
             var y2 = y*y;
             var z2 = z*z;
             var r2 = x2 + y2 + z2;
             var r = Math.sqrt(r2);
-            return z2 * Math.exp(-r2);
+            return x2 * Math.exp(-r2);
         },
 
+        'd110': function(x, y, z) {
+            var x2 = x*x;
+            var y2 = y*y;
+            var z2 = z*z;
+            var r2 = x2 + y2 + z2;
+            var r = Math.sqrt(r2);
+            return x * y * Math.exp(-r2);
+        },
+
+        'd101': function(x, y, z) {
+            var x2 = x*x;
+            var y2 = y*y;
+            var z2 = z*z;
+            var r2 = x2 + y2 + z2;
+            var r = Math.sqrt(r2);
+            return x * z * Math.exp(-r2);
+        },
+
+
+        'd020': function(x, y, z) {
+            var x2 = x*x;
+            var y2 = y*y;
+            var z2 = z*z;
+            var r2 = x2 + y2 + z2;
+            var r = Math.sqrt(r2);
+            return y2 * Math.exp(-r2);
+        },
+
+        'd011': function(x, y, z) {
+            var x2 = x*x;
+            var y2 = y*y;
+            var z2 = z*z;
+            var r2 = x2 + y2 + z2;
+            var r = Math.sqrt(r2);
+            return y * z * Math.exp(-r2);
+        },
+
+        'd002': function(x, y, z) {
+            var x2 = x*x;
+            var y2 = y*y;
+            var z2 = z*z;
+            var r2 = x2 + y2 + z2;
+            var r = Math.sqrt(r2);
+            return  z2 * Math.exp(-r2);
+        },
+        /*
         '3dx2-y2': function(x, y, z) {
             var x2 = x*x;
             var y2 = y*y;
@@ -120,9 +166,9 @@ define([
             var r = Math.sqrt(r2);
             return (x2 - y2) * Math.exp(-r2);
         },
-
+        */
 
     };
 
-    return GTO;
+    return GTF;
 });

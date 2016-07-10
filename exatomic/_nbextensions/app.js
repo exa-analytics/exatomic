@@ -22,6 +22,14 @@ require.config({
             exports: 'utility'
         },
 
+        'nbextensions/exa/num': {
+            exports: 'num'
+        },
+
+        'nbextensions/exa/exatomic/gaussian': {
+            exports: 'gaussian'
+        },
+
         'nbextensions/exa/exatomic/field': {
             exports: 'AtomicField'
         }
@@ -33,8 +41,10 @@ define([
     'nbextensions/exa/apps/gui',
     'nbextensions/exa/apps/app3d',
     'nbextensions/exa/utility',
+    'nbextensions/exa/num',
+    'nbextensions/exa/exatomic/gaussian',
     'nbextensions/exa/exatomic/field'
-], function(ContainerGUI, App3D, utility, AtomicField) {
+], function(ContainerGUI, App3D, utility, num, gaussian, AtomicField) {
     class UniverseApp {
         /*"""
         UniverseApp
@@ -55,6 +65,8 @@ define([
             this.view.container.append(this.view.canvas);
             var view_self = this.view;
             this.app3d.render();
+            this.update_orbitals();
+            this.render_orbital();
             this.view.on('displayed', function() {
                 view_self.app.app3d.animate();
                 view_self.app.app3d.controls.handleResize();
@@ -94,9 +106,6 @@ define([
             ----------------
             Set up some application variables.
             */
-            console.log(this);
-            console.log(this.view);
-            console.log(this.framelist);
             this.last_index = this.view.framelist.length - 1;
             this.atoms_meshes = [];
             this.bonds_meshes = [];
@@ -217,7 +226,6 @@ define([
                 'field': null,
                 'cur_fields': [null]
             };
-
             this.fields['folder'] = this.gui.addFolder('fields');
             this.fields['isovalue_slider'] = this.fields.folder.add(this.fields, 'isovalue', 0.0001, 0.5);
             this.fields['field_dropdown'] = this.fields.folder.add(this.fields, 'field', this.fields['cur_fields']);
@@ -229,6 +237,24 @@ define([
                 self.fields.isovalue = value;
                 self.render_field();
             });
+
+            this.orbitals = {
+                'isovalue': 0.03,
+                'orbital': 0,
+                'cur_orbitals': [null]
+            };
+            this.orbitals['folder'] = this.gui.addFolder('orbitals');
+            this.orbitals['isovalue_slider'] = this.orbitals.folder.add(this.orbitals, 'isovalue', 0.0001, 0.5);
+            this.orbitals['orbital_dropdown'] = this.orbitals.folder.add(this.orbitals, 'orbital', this.orbitals['cur_orbitals']);
+            this.orbitals.orbital_dropdown.onFinishChange(function(orbital_index) {
+                self.orbitals['orbital'] = orbital_index;
+                self.render_orbital();
+            });
+            this.orbitals.isovalue_slider.onFinishChange(function(value) {
+                self.orbitals['isovalue'] = value;
+                self.render_orbital();
+            });
+
         };
 
         update_fields() {
@@ -251,6 +277,71 @@ define([
                 self.fields['field'] = field_index;
                 self.render_field();
             });
+        };
+
+        update_orbitals() {
+            /*"""
+            update_orbitals
+            ==================
+            Updates the available orbitals per frame
+            */
+            var self = this;
+            var coefs = this.gv(this.view.momatrix_coefficient, this.top.index);
+            if (coefs === undefined) {
+                return;
+            };
+            var nbfns = coefs.length;
+            var orbital_indices = [];
+            for (var i = 0; i < nbfns; i++) {
+                orbital_indices.push(i);
+            };
+            this.orbitals['cur_orbitals'] = orbital_indices;
+            this.orbitals.folder.__controllers[1].remove();
+            this.orbitals['orbital_dropdown'] = this.orbitals.folder.add(this.orbitals, 'orbital', this.orbitals['cur_orbitals']);
+            this.orbitals.orbital_dropdown.onFinishChange(function(orbital_index) {
+                self.orbitals['orbital'] = orbital_index;
+                self.render_orbital();
+            });
+        };
+
+        render_orbital() {
+            console.log('entering render orbital');
+            var coefs = this.gv(this.view.momatrix_coefficient, this.top.index);
+            if (coefs === undefined) {
+                console.log('exiting render orbital');
+                return;
+            };
+            var nbfns = coefs.length;
+            var sgto = this.gv(this.view.sphericalgtforder_ml, this.top.index);
+            var pl = this.gv(this.view.cartesiangtforder_x, this.top.index);
+            var pm = this.gv(this.view.cartesiangtforder_y, this.top.index);
+            var pn = this.gv(this.view.cartesiangtforder_z, this.top.index);
+            var xs = this.gv(this.view.atom_x, this.top.index);
+            var ys = this.gv(this.view.atom_y, this.top.index);
+            var zs = this.gv(this.view.atom_z, this.top.index);
+            var sets = this.gv(this.view.atom_set, this.top.index);
+            var ds = this.gv(this.view.gaussianbasisset_d, this.top.index);
+            var ls = this.gv(this.view.gaussianbasisset_l, this.top.index);
+            var alphas = this.gv(this.view.gaussianbasisset_alpha, this.top.index);
+
+            var d = {'ox': -9.448633, 'nx': 52, 'dxi': 0.370535, 'dxj': 0, 'dxk': 0,
+                     'oy': -9.448633, 'ny': 52, 'dyj': 0.514072, 'dyi': 0, 'dyk': 0,
+                     'oz': -9.448633, 'nz': 52, 'dzk': 0.370535, 'dzi': 0, 'dzj': 0};
+
+            var dims = {
+                'x': num.gen_array(d.nx, d.ox, d.dxi, d.dyi, d.dzi),
+                'y': num.gen_array(d.ny, d.oy, d.dxj, d.dyj, d.dzj),
+                'z': num.gen_array(d.nz, d.oz, d.dxk, d.dyk, d.dzk)
+                //'n': d.nx * d.ny * d.nz
+            };
+
+            var bfns = gaussian.order_gtf_basis(xs, ys, zs, sets, nbfns, ds, ls, alphas, pl, pm, pn, sgto);
+            var mos = gaussian.construct_mos(bfns, coefs, dims);
+            this.cube_field = new gaussian.GaussianOrbital(d.ox, d.oy, d.oz, d.nx, d.ny, d.nz, d.dxi, d.dxj, d.dxk,
+                                                           d.dyi, d.dyj, d.dyk, d.dzi, d.dzj, d.dzk, mos[this.orbitals['orbital']]);
+            this.app3d.remove_meshes(this.cube_field_mesh);
+            this.cube_field_mesh = this.app3d.add_scalar_field(this.cube_field, this.fields.isovalue, 2);
+            console.log('leaving render orbital');
         };
 
         render_field() {
@@ -301,7 +392,7 @@ define([
             var z = this.gv(this.view.atom_z, this.top.index);
             var v0 = this.gv(this.view.two_bond0, this.top.index);
             var v1 = this.gv(this.view.two_bond1, this.top.index);
-            console.log(this.cube_field);
+            this.render_orbital();
             if (this.cube_field !== undefined) {
                 this.app3d.remove_meshes(this.cube_field_mesh);
                 this.cube_field_mesh = this.app3d.add_scalar_field(this.cube_field, this.fields.isovalue, 2);
