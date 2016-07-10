@@ -2,12 +2,11 @@
 # Copyright (c) 2015-2016, Exa Analytics Development Team
 # Distributed under the terms of the Apache License 2.0
 '''
-Atom Dataframes
+Atomic Position Data
 ############################
-A dataframe containing the nuclear positions, forces, velocities, symbols, etc.
-Examples of data that may exist in this dataframe are given below (note that
-the dataframe is not limited to only these record types - rather this provides
-a guide for what type of data is required and can be expected).
+This module provides a collection of dataframes supporting nuclear positions,
+forces, velocities, symbols, etc. (all data associated with atoms as points).
+The following is a guide for the typical data found in these dataframes.
 
 +-------------------+----------+-------------------------------------------+
 | Column            | Type     | Description                               |
@@ -36,21 +35,20 @@ a guide for what type of data is required and can be expected).
 +-------------------+----------+-------------------------------------------+
 | label             | category | non-unique integer                        |
 +-------------------+----------+-------------------------------------------+
-
-See Also:
-    :class:`~exatomic.universe.Universe`
 '''
 import numpy as np
 import pandas as pd
 from traitlets import Dict, Unicode
 from exa.numerical import DataFrame, SparseDataFrame
-from exa.algorithms import supercell3d
-from exa.relational.isotope import symbol_to_color, symbol_to_radius
+from exa.relational.isotope import (symbol_to_color, symbol_to_radius,
+                                   symbol_to_element_mass)
+#from exa.algorithms import supercell3d
 
 
 class BaseAtom(DataFrame):
     '''
-    Base atom and related datframe.
+    Base atom dataframe; sets some default precision (for traits creation and
+    visualization), required columns, and categories.
     '''
     _precision = {'x': 2, 'y': 2, 'z': 2}
     _indices = ['atom']
@@ -62,30 +60,31 @@ class BaseAtom(DataFrame):
 
     def _custom_traits(self):
         '''
-        Custom trait creator function because traits from the atom table are
-        not automatically created via exa.numerical.
+        Create creates for the atomic size (using the covalent radius) and atom
+        colors (using the common `Jmol`_ color scheme). Note that that data is
+        present in the static data (see :mod:`~exa.relational.isotope`).
+
+        .. _Jmol: http://jmol.sourceforge.net/jscolors/
         '''
         self._set_categories()
         grps = self.groupby('frame')
-        symbols = grps.apply(lambda g: g['symbol'].cat.codes.values)
-        symbols = Unicode(symbols.to_json(orient='values')).tag(sync=True)
+        atom_symbols = grps.apply(lambda g: g['symbol'].cat.codes.values)    # Pass integers rather than string symbols
+        atom_symbols = Unicode(atom_symbols.to_json(orient='values')).tag(sync=True)
         symmap = {i: v for i, v in enumerate(self['symbol'].cat.categories)}
-        radii = symbol_to_radius[self['symbol'].unique()]
-        radii = Dict({i: radii[v] for i, v in symmap.items()}).tag(sync=True)
-        colors = symbol_to_color[self['symbol'].unique()]
+        sym2rad = symbol_to_radius()
+        radii = sym2rad[self['symbol'].unique()]
+        radii = Dict({i: radii[v] for i, v in symmap.items()}).tag(sync=True)  # (Int) symbol radii
+        sym2col = symbol_to_color()
+        colors = sym2col[self['symbol'].unique()]    # Same thing for colors
         colors = Dict({i: colors[v] for i, v in symmap.items()}).tag(sync=True)
-        atom_x = grps.apply(lambda g: g['x'].values).to_json(orient='values', double_precision=self._precision['x'])
-        atom_x = Unicode(atom_x).tag(sync=True)
-        atom_y = grps.apply(lambda g: g['y'].values).to_json(orient='values', double_precision=self._precision['y'])
-        atom_y = Unicode(atom_y).tag(sync=True)
-        atom_z = grps.apply(lambda g: g['z'].values).to_json(orient='values', double_precision=self._precision['z'])
-        atom_z = Unicode(atom_z).tag(sync=True)
-        return {'atom_symbols': symbols, 'atom_radii': radii, 'atom_colors': colors,
-                'atom_x': atom_x, 'atom_y': atom_y, 'atom_z': atom_z}
+        # Note that position traits (atom_x, atom_y, atom_z) are created automatically
+        # since we have defined _traits = ['x', 'y', 'z'] above.
+        return {'atom_symbols': symbols, 'atom_radii': radii, 'atom_colors': colors}
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self._revert_categories()
+        # Fill "ghost" atoms with the default ghost atom (Dga)
         self.ix[self['symbol'].isin(['nan', 'NaN', 'none', 'None']), 'symbol'] = None
         self['symbol'].fillna('Dga', inplace=True)
         self._set_categories()
@@ -93,31 +92,35 @@ class BaseAtom(DataFrame):
 
 class Atom(BaseAtom):
     '''
-    Absolute positions of atoms and their symbol.
+    This table contains the absolute coordinates (regardless of boundary
+    conditions) of atomic nuclei.
     '''
-    def get_element_mass(self, inplace=False):
+    def compute_element_masses(self, inplace=False):
         '''
-        Retrieve the mass of each element in the atom dataframe.
+        Map element symbols to their corresponding (element) mass.
+
+        Args:
+            inplace (bool): Add as a column (default false - return series)
         '''
-        masses = self['symbol'].astype('O').map(Isotope.symbol_to_mass())
+        elem_mass = symbol_to_element_mass()
+        mass = self['symbol'].astype('O').map(elem_mass)
         if inplace:
             self['mass'] = masses
         else:
             return masses
 
-    def reset_label(self):
-        '''
-        Reset the label column
-        '''
+    def reset_labels(self):
+        '''Reset the "label" column.'''
         if 'label' in self:
             del self['label']
         nats = self.groupby('frame').size().values
-        self['label'] = [i for nat in nats for i in range(nat)]
-        self['label'] = self['label'].astype('category')
+        self['label'] = pd.Series([i for nat in nats for i in range(nat)], dtype='category')
 
     def compute_simple_formula(self):
         '''
-        Compute the simple formula for each frame.
+        Compute the simple formula for each frame. For a description of the
+        simple formula format, see :mod:`~exatomic.formula`. Note that the
+        computed formula is a string, returned as a series (frame index).
         '''
         raise NotImplementedError()
 

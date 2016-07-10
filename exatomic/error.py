@@ -33,3 +33,11 @@ class ClassificationError(AtomicException):
     used incorrectly.
     '''
     _msg = 'Classifier must be a tuple of the form ("identifier", "label", exact).'
+
+
+class PeriodicUniverseError(AtomicException):
+    '''
+    Raised when the code is asked to perform a periodic simulation specific
+    operation on a free boundary condition :class:`~exatomic.container.Universe`.
+    '''
+    _msg = 'Not a periodic boundary condition Universe?'

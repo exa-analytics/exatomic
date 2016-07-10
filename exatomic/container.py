@@ -15,6 +15,7 @@ import pandas as pd
 import numpy as np
 from exa.container import TypedMeta, Container
 from exatomic.widget import UniverseWidget
+from exatomic.atom import Atom
 
 
 class UniverseTypedMeta(TypedMeta):
@@ -23,7 +24,7 @@ class UniverseTypedMeta(TypedMeta):
     and :class:`~exatomic.editor.AtomicEditor` objects.
     '''
 #    frame = Frame
-#    atom = Atom
+    atom = Atom
 #    two_free = Two
 #    two_periodic = PeriodicTwo
 #    field = AtomicField
@@ -35,6 +36,9 @@ class Universe(Container, metaclass=UniverseTypedMeta):
     known about the atomistic simulation (whether quantum or classical). This
     includes data such as atomic coordinates, molecular orbital energies, as
     well as (classical phenomena) such as two body distances, etc.
+
+    Attributes:
+        atom (:class:`~exatomic.atom.Atom`): Atomic coordinates, symbols, forces, etc.
     '''
     _widget_class = UniverseWidget
 
@@ -46,6 +50,9 @@ class Universe(Container, metaclass=UniverseTypedMeta):
 
     def __len__(self):
         return len(self.frame) if self._is('_frame') else 0
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
 
 
 

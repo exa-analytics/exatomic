@@ -1,6 +1,6 @@
 | |logo|
-| |build|
 | |docs|
+| |build|
 | |issues|
 | |cov|
 | |lic|
