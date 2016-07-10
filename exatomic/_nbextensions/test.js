@@ -61,15 +61,14 @@ define([
             this.axis = [];
             this.active_objs = [];
             this.dimensions = {
-                'xmin': -25.0,
-                'xmax': 25.0,
-                'ymin': -25.0,
-                'ymax': 25.0,
-                'zmin': -25.0,
-                'zmax': 25.0,
-                'nx': 51,
-                'ny': 51,
-                'nz': 51
+                'ox': -25.0,
+                'oy': -25.0,
+                'oz': -25.0,
+                'nx': 52,
+                'ny': 52,
+                'nz': 52,
+                'dxi': 1.0, 'dyj': 1.0, 'dzk': 1.0,
+                'dxj': 0, 'dxk': 0, 'dyi': 0, 'dyk': 0, 'dzi': 0, 'dzj': 0
             };
             this.field = new AO(this.dimensions, '1s');
             this.app3d = new App3D(this.view.canvas);
@@ -212,7 +211,7 @@ define([
             });
         };
 
-        render_spherical_gtf() {
+        render_solid_harmonic() {
             console.log('render solid harmonic');
             this.field = new sh.SolidHarmonic(this.sh.l, this.sh.m, this.dimensions);
             console.log(this.field);
