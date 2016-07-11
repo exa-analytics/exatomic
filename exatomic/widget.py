@@ -11,7 +11,9 @@ from glob import glob
 from os import sep, getcwd, path
 from base64 import b64decode
 from traitlets import Unicode
-from exa.widget import ContainerWidget
+from notebook.nbextensions import jupyter_data_dir
+from exa.widget import ContainerWidget, install_notebook_widgets
+from exa.utility import mkp
 from exatomic._config import config
 
 

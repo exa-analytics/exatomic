@@ -68,8 +68,8 @@ class BaseAtom(DataFrame):
         '''
         self._set_categories()
         grps = self.groupby('frame')
-        atom_symbols = grps.apply(lambda g: g['symbol'].cat.codes.values)    # Pass integers rather than string symbols
-        atom_symbols = Unicode(atom_symbols.to_json(orient='values')).tag(sync=True)
+        symbols = grps.apply(lambda g: g['symbol'].cat.codes.values)    # Pass integers rather than string symbols
+        symbols = Unicode(symbols.to_json(orient='values')).tag(sync=True)
         symmap = {i: v for i, v in enumerate(self['symbol'].cat.categories)}
         sym2rad = symbol_to_radius()
         radii = sym2rad[self['symbol'].unique()]

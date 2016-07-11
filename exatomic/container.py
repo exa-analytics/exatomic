@@ -16,6 +16,7 @@ import numpy as np
 from exa.container import TypedMeta, Container
 from exatomic.widget import UniverseWidget
 from exatomic.atom import Atom
+from exatomic.frame import compute_frame_from_atom
 
 
 class UniverseTypedMeta(TypedMeta):
@@ -23,7 +24,7 @@ class UniverseTypedMeta(TypedMeta):
     Defines strongly typed attributes of the :class:`~exatomic.universe.Universe`
     and :class:`~exatomic.editor.AtomicEditor` objects.
     '''
-#    frame = Frame
+    frame = Frame
     atom = Atom
 #    two_free = Two
 #    two_periodic = PeriodicTwo
@@ -48,13 +49,16 @@ class Universe(Container, metaclass=UniverseTypedMeta):
             return self.two_periodic
         return self.two_free
 
+    # Compute functions
+    def compute_frame(self):
+        '''
+        Compute a minmal frame table.
+        '''
+        self.frame = compute_frame_from_atom(self.atom)
+
     def __len__(self):
+        return len(self.frame)
         return len(self.frame) if self._is('_frame') else 0
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-
-
 
 
 
