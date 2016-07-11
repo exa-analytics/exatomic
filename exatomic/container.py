@@ -16,7 +16,7 @@ import numpy as np
 from exa.container import TypedMeta, Container
 from exatomic.widget import UniverseWidget
 from exatomic.atom import Atom
-from exatomic.frame import compute_frame_from_atom
+from exatomic.frame import Frame, compute_frame_from_atom
 
 
 class UniverseTypedMeta(TypedMeta):

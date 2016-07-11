@@ -19,7 +19,16 @@ class Editor(BaseEditor, metaclass=UniverseTypedMeta):
         '''
         Convert the editor to a :class:`~exatomic.container.Universe` object.
         '''
-        return Universe
+        return Universe(*args, frame=self.frame, atom=self.atom, **kwargs)
+
+    @classmethod
+    def from_universe(self, universe):
+        '''
+        Create an instance of an :class:`~exatomic.editor.Editor` from an
+        instance of :class:`~exatomic.container.Universe`.
+        '''
+        pass
+        
 
 #import numpy as np
 #import pandas as pd
