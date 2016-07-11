@@ -17,6 +17,8 @@ from exa.container import TypedMeta, Container
 from exatomic.widget import UniverseWidget
 from exatomic.atom import Atom
 from exatomic.frame import Frame, compute_frame_from_atom
+from exatomic.two import FreeTwo, PeriodicTwo
+from exatomic.two import compute_two
 
 
 class UniverseTypedMeta(TypedMeta):
@@ -26,9 +28,8 @@ class UniverseTypedMeta(TypedMeta):
     '''
     frame = Frame
     atom = Atom
-#    two_free = Two
-#    two_periodic = PeriodicTwo
-#    field = AtomicField
+    free_two = FreeTwo
+    periodic_two = PeriodicTwo
 
 
 class Universe(Container, metaclass=UniverseTypedMeta):
@@ -45,9 +46,12 @@ class Universe(Container, metaclass=UniverseTypedMeta):
 
     @property
     def two(self):
-        if self.is_periodic:
-            return self.two_periodic
-        return self.two_free
+        '''
+        Alias for two body properties (regardless of system boundary conditions).
+        '''
+        if self.frame.is_periodic:
+            return self.periodic_two
+        return self.free_two
 
     # Compute functions
     def compute_frame(self):
@@ -55,6 +59,22 @@ class Universe(Container, metaclass=UniverseTypedMeta):
         Compute a minmal frame table.
         '''
         self.frame = compute_frame_from_atom(self.atom)
+
+    def compute_free_two(self, *args, **kwargs):
+        self.free_two = compute_two(self, *args, **kwargs)
+
+    def compute_periodic_two(self, *args, **kwargs):
+        self.periodic_two = compute_two(self, *args, **kwargs)
+
+    def _custom_traits(self):
+        '''
+        Build traits depending on multiple dataframes.
+        '''
+        traits = {}
+        if self.two is not None and len(self.two) > 0:
+            mapper = self.atom['label']
+            traits.update(self.two._bond_traits(mapper))
+        return traits
 
     def __len__(self):
         return len(self.frame)

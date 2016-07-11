@@ -16,11 +16,17 @@ class Editor(BaseEditor, metaclass=UniverseTypedMeta):
     Base atomic editor class for converting between file formats and to (or
     from) :class:`~exatomic.container.Universe` objects.
     '''
+    def parse_frame(self):
+        '''
+        Create a minimal_frame table.
+        '''
+        self.frame = compute_frame_from_atom(self.atom)
+
     def to_universe(self, *args, **kwargs):
         '''
         Convert the editor to a :class:`~exatomic.container.Universe` object.
         '''
-        return Universe(*args, frame=self.frame, atom=self.atom, **kwargs)
+        return Universe(*args, atom=self.atom, **kwargs)
 
 
 #import numpy as np

@@ -26,6 +26,95 @@ by this module.
 | symbols           | category | concatenated atomic symbols                 |
 +-------------------+----------+---------------------------------------------+
 '''
+import numpy as np
+import pandas as pd
+from traitlets import Unicode
+from exa.numerical import DataFrame
+
+
+class BaseTwo(DataFrame):
+    '''
+    Base class for two body properties.
+
+    See Also:
+        Two body data are store depending on the boundary conditions of the
+        system: :class:`~exatomic.two.FreeTwo` or :class:`~exatomic.two.PeriodicTwo`.
+    '''
+    _indices = ['two']
+    _groupbys = ['frame']
+
+    def _bond_traits(self, label_mapper):
+        '''
+        Traits representing bonded atoms are reported as two lists of equal
+        length with atom labels.
+        '''
+        self._revert_categories()
+        bonded = self.ix[self['bond'] == True, [self._idx0, self._idx1, 'frame']]
+        lbl0 = bonded[self._idx0].map(label_mapper)
+        lbl1 = bonded[self._idx1].map(label_mapper)
+        lbl = pd.concat((lbl0, lbl1), axis=1)
+        lbl['frame'] = bonded['frame']
+        grps = lbl.groupby('frame')
+        n = grps.ngroups
+        b0 = np.empty((n, ), dtype='O')
+        b1 = b0.copy()
+        for i, (frame, grp) in enumerate(grps):
+            if frame in grps.groups:
+                b0[i] = grp[self._idx0].values
+                b1[i] = grp[self._idx1].values
+            else:
+                b0[i] = []
+                b1[i] = []
+        b0 = Unicode(pd.Series(b0).to_json(orient='values')).tag(sync=True)
+        b1 = Unicode(pd.Series(b1).to_json(orient='values')).tag(sync=True)
+        self._set_categories()
+        return {'two_bond0': b0, 'two_bond1': b1}
+
+
+class FreeTwo(BaseTwo):
+    '''
+    Free boundary condition two body properties table.
+    '''
+    _idx0 = 'atom0'
+    _idx1 = 'atom1'
+    _columns = BaseTwo._columns + [_idx0, _idx1]
+    _categories = {'frame': np.int64, 'symbols': str, _idx0: np.int64,
+                   _idx1: np.int64}
+
+
+class PeriodicTwo(BaseTwo):
+    '''
+    Periodic boundary condition two body properties table.
+    '''
+    _idx0 = 'prjd_atom0'
+    _idx1 = 'prjd_atom1'
+    _columns = BaseTwo._columns + [_idx0, _idx1]
+    _categories = {'frame': np.int64, 'symbols': str, _idx0: np.int64,
+                   _idx1: np.int64}
+
+
+def compute_two(universe):
+    '''
+    Compute interatomic distances.
+    '''
+    if universe.frame.is_periodic:
+        return compute_periodic_two(universe)
+    else:
+        return compute_free_two(universe)
+
+
+def compute_free_two(universe):
+    '''
+    Compute free boundary condition two body properties from an input universe.
+    '''
+    return pd.DataFrame()
+
+
+def compute_periodic_two(universe):
+    '''
+    '''
+    return pd.DataFrame()
+
 #import numpy as np
 #import pandas as pd
 #from traitlets import Unicode
