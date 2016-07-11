@@ -14,6 +14,7 @@ from base64 import b64decode
 from traitlets import Unicode
 from notebook.nbextensions import jupyter_data_dir
 from exa.widget import ContainerWidget, install_notebook_widgets
+from exa._config import del_update
 from exa.utility import mkp
 from exatomic._config import config
 

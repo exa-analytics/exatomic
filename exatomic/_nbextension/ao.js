@@ -1,7 +1,8 @@
+// Copyright (c) 2015-2016, Exa Analytics Development Team
+// Distributed under the terms of the Apache License 2.0
 /*"""
-==================
 ao.js
-==================
+############
 */
 'use strict';
 
@@ -180,7 +181,7 @@ define([
             var ybody = x * y / r2;
             return rnorm * rbody * ynorm * ybody;
         },
-
+        /*
         '3dz2': function(x, y, z) {
             var r = Math.sqrt(x * x + y * y + z * z);
             var Z = 1;
@@ -189,7 +190,7 @@ define([
             var prefac = Math.pow(sigma, 2) * (3 * Math.pow(z / r, 2) - 1);
             return norm * prefac * Math.exp(-sigma / 3);
         },
-        
+
         '3dxz': function(x, y, z) {
             var x2 = x * x;
             var y2 = y * y;
@@ -241,6 +242,7 @@ define([
             var prefac = Math.pow(Z, 2) * 2 * x * y * (r2 - z2) /(x2 + y2);
             return norm * prefac * Math.exp(-sigma / 3);
         },
+        */
 
     };
 

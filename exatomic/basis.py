@@ -16,6 +16,7 @@ See Also:
 import pandas as pd
 import numpy as np
 from collections import OrderedDict
+from traitlets import Float, Int, Dict, Unicode
 from exa import DataFrame
 #from exatomic.algorithms.basis import spher_ml_count, cart_ml_count
 
@@ -26,9 +27,15 @@ spher_ml_count = {'s': 1, 'p': 3, 'd': 5, 'f': 7, 'g': 9, 'h': 11, 'i': 13, 'k':
                   'l': 17, 'm': 19}
 
 
-class BasisSet(DataFrame):
+class TestBasis(DataFrame):
+    _columns = ['alpha_dict', 'd_dict', 'l_dict']
+    _traits = ['alpha_dict', 'd_dict', 'l_dict']
+    _indices = ['set']
+
+
+class BasisSetSummary(DataFrame):
     '''
-    Description of the basis set name, number of functions, and function types.
+    Stores a summary of the basis set(s) used in the universe.
 
     +-------------------+----------+-------------------------------------------+
     | Column            | Type     | Description                               |
@@ -49,62 +56,121 @@ class BasisSet(DataFrame):
     +-------------------+----------+-------------------------------------------+
     | function_count    | int      | total basis functions                     |
     +-------------------+----------+-------------------------------------------+
+    | prim_X            | int      | X = shell primitive functions             |
+    +-------------------+----------+-------------------------------------------+
+    | bas_X             | int      | X = shell basis functions                 |
+    +-------------------+----------+-------------------------------------------+
+    | frame             | int/cat  | non-unique integer                        |
+    +-------------------+----------+-------------------------------------------+
 
     Note:
         The function count corresponds to the number of linearly independent
         basis functions as provided by the basis set definition and used within
         the code in solving the quantum mechanical eigenvalue problem.
     '''
-    _columns = ['tag', 'name', 'function_count']
+    _columns = ['tag', 'name', 'func_per_atom']
     _indices = ['set']
+    _groupbys = ['frame']
+    _categories = {'tag': str}
 
-        #(e.g.
-        #s = 1, p = 3, d = 5, etc.).
 
-class BasisFunction(DataFrame):
+class BasisSet(DataFrame):
     '''
-    Definition of individual basis functions used in a given universe.
+    Base class for description of a basis set. Stores the parameters of the
+    individual (sometimes called primitive) functions used in the basis.
     '''
     pass
 
 
-class GaussianBasis(BasisFunction):
+class SlaterBasisSet(BasisSet):
     '''
-    Description of primitive functions used to construct a (contracted)
-    Gaussian basis set.
-
-    A real contracted Gaussian basis function, in cartesian space, is defined:
+    Stores information about a Slater type basis set.
 
     .. math::
 
-        \\Chi_{j} = \\sum_{k=1}^{K}d_{jk}NPe^{-\\alpha r^{2}}
+        r = \\left(\\left(x - A_{x}\\right)^{2} + \\left(x - A_{y}\\right)^{2} + \\left(z - A_{z}\\right)^{2}\\right)^{\\frac{1}{2}} \\\\
+        f\\left(x, y, z\\right) = \\left(x - A_{x}\\right)^{i}\\left(x - A_{y}\\right)^{j}\left(z - A_{z}\\right)^{k}r^{m}e^{-\\alpha r}
+    '''
+    pass
+
+
+class GaussianBasisSet(BasisSet):
+    '''
+    Stores information about a Gaussian type basis set.
+
+    A Gaussian type basis set is described by primitive Gaussian functions :math:`f\\left(x, y, z\\right)`
+    of the form:
+
+    .. math::
+
+        r^{2} = \\left(x - A_{x}\\right)^{2} + \\left(x - A_{y}\\right)^{2} + \\left(z - A_{z}\\right)^{2} \\\\
+        f\\left(x, y, z\\right) = \\left(x - A_{x}\\right)^{l}\\left(x - A_{y}\\right)^{m}\\left(z - A_{z}\\right)^{n}e^{-\\alpha r^{2}}
+
+    Note that :math:`l`, :math:`m`, and :math:`n` are not quantum numbers but positive integers
+    (including zero) whose sum defines the orbital angular momentum of the primitive function.
+    Each primitive function is centered on a given atom with coordinates :math:`\\left(A_{x}, A_{y}, A_{z}\\right)`.
+    A basis function in this basis set is a sum of one or more primitive functions:
+
+    .. math::
+
+        g_{i}\\left(x, y, z\\right) = \\sum_{j=1}^{N_{i}}c_{ij}f_{ij}\\left(x, y, z\\right)
+
+    Each primitive function :math:`f_{ij}` is parametrically dependent on its associated atom's
+    nuclear coordinates and specific values of :math:`\\alpha`, :math:`l`, :math:`m`, and :math:`n`.
+    For convenience in data storage, each primitive function record contains its value of
+    :math:`\\alpha` and coefficient (typically called the contraction coefficient) :math:`c`.
+    shell_function does not include degeneracy due to :math:`m_{l}` but separates exponents
+    and coefficients that have the same angular momentum values.
 
     +-------------------+----------+-------------------------------------------+
     | Column            | Type     | Description                               |
     +===================+==========+===========================================+
     | alpha             | float    | value of :math:`\\alpha`                  |
     +-------------------+----------+-------------------------------------------+
-    | d                 | float    | contraction coefficient                   |
+    | d                 | float    | value of the contraction coefficient      |
     +-------------------+----------+-------------------------------------------+
-    | j                 | int/cat  | basis function identifier                 |
+    | shell_function    | int/cat  | basis function group identifier           |
     +-------------------+----------+-------------------------------------------+
-    | l                 | str/cat  | orbital angular momentum                  |
+    | l                 | int/cat  | orbital angular momentum quantum number   |
     +-------------------+----------+-------------------------------------------+
-    | set               | int/cat  | basis set index                           |
+    | set               | int/cat  | index of unique basis set per unique atom |
     +-------------------+----------+-------------------------------------------+
-
-    Other useful columns can be added to increase compatibility with other functionality.
-
-    +-------------------+----------+-------------------------------------------+
-    | Column            | Type     | Description                               |
-    +===================+==========+===========================================+
-    | index             | int/cat  | basis set identifier                      |
+    | frame             | int/cat  | non-unique integer                        |
     +-------------------+----------+-------------------------------------------+
     '''
-    _columns = ['alpha', 'd', 'basis_function', 'shell']
+    _columns = ['alpha', 'd', 'shell_function', 'l', 'set']
     _indices = ['primitive']
-    _groupbys = ['basis_function']
-    _categories = {'basis_set': np.int64, 'shell': str, 'name': str, 'basis_function': np.int64}
+    _traits = ['shell_function']
+    #_groupbys = ['frame']
+    _precision = 8
+    _categories = {'set': np.int64, 'l': np.int64, 'shell_function': np.int64,
+                   'frame': np.int64}
+
+    def _update_custom_traits(self):
+        alphas = self.groupby('frame').apply(
+                 lambda x: x.groupby('set').apply(
+                 lambda y: y.groupby('shell_function').apply(
+                 lambda z: z['alpha'].values).values)).to_json(orient='values')
+        #alphas = Unicode(''.join(['[', alphas, ']'])).tag(sync=True)
+        alphas = Unicode(alphas).tag(sync=True)
+
+        ds = self.groupby('frame').apply(
+             lambda x: x.groupby('set').apply(
+             lambda y: y.groupby('shell_function').apply(
+             lambda z: z['d'].values).values)).to_json(orient='values')
+        #ds = Unicode(''.join(['[', ds, ']'])).tag(sync=True)
+        ds = Unicode(ds).tag(sync=True)
+
+        ls = self.groupby('frame').apply(
+             lambda x: x.groupby('set').apply(
+             lambda y: y.groupby('shell_function').apply(
+             lambda z: z['l'].values).values)).to_json(orient='values')
+        #ls = Unicode(''.join(['[', ls, ']'])).tag(sync=True)
+        ls = Unicode(ls).tag(sync=True)
+
+        return {'gaussianbasisset_d': ds, 'gaussianbasisset_l': ls,
+                'gaussianbasisset_alpha': alphas}
+
 
     def basis_count(self):
         '''
@@ -119,55 +185,49 @@ class GaussianBasis(BasisFunction):
 class BasisSetOrder(BasisSet):
     '''
     BasisSetOrder uniquely determines the basis function ordering scheme for
-    a given :class:`~exatomic.universe.Universe`. shell_function is used instead
-    of basis_function in the following table to emphasize that it includes the
-    degeneracy from the quantum number :math:`m_{l}`, which may change. This
-    table should be used if the ordering scheme cannot be determined
-    programmatically.
+    a given :class:`~exatomic.universe.Universe`. This table should be used
+    if the ordering scheme is not programmatically available.
 
     +-------------------+----------+-------------------------------------------+
     | Column            | Type     | Description                               |
     +===================+==========+===========================================+
-    | shell_function    | int      | shell function index                      |
+    | basis_function    | int      | basis function index                      |
     +-------------------+----------+-------------------------------------------+
-    | symbol            | str      | symbolic atomic center                    |
+    | tag               | str      | symbolic atomic center                    |
     +-------------------+----------+-------------------------------------------+
     | center            | int      | numeric atomic center (1-based)           |
     +-------------------+----------+-------------------------------------------+
     | type              | str      | identifier equivalent to (l, ml)          |
     +-------------------+----------+-------------------------------------------+
     '''
-    _columns = ['shell_function', 'symbol', 'center', 'type']
+    _columns = ['symbol', 'center', 'type']
     _indices = ['order']
-    _categories = {'symbol': str, 'center': np.int64, 'type': str, 'basis_function': np.int64}
+    _categories = {'center': np.int64, 'type': str}
 
-class BasisSetMap(BasisSet):
-    '''
-    BasisSetMap provides the auxiliary information about relational mapping
-    between the complete uncontracted primitive basis set and the resultant
-    contracted basis set within an :class:`~exatomic.universe.Universe`.
-
-    +-------------------+----------+-------------------------------------------+
-    | Column            | Type     | Description                               |
-    +===================+==========+===========================================+
-    | symbol            | str      | symbolic atomic center                    |
-    +-------------------+----------+-------------------------------------------+
-    | shell             | str      | string of quantum number l                |
-    +-------------------+----------+-------------------------------------------+
-    | nprim             | int      | number of primitives within shell         |
-    +-------------------+----------+-------------------------------------------+
-    | nbasis            | int      | number of basis functions within shell    |
-    +-------------------+----------+-------------------------------------------+
-    | cartesian         | bool     | shell is cartesian                        |
-    +-------------------+----------+-------------------------------------------+
-    | spherical         | bool     | shell is spherical                        |
-    +-------------------+----------+-------------------------------------------+
-    '''
-    _columns = ['symbol', 'shell', 'nprim', 'nbasis', 'cartesian', 'spherical']
-    _indices = ['index']
-    _categories = {'symbol': str, 'shell': str, 'nprim': np.int64,
-                   'nbasis': np.int64, 'cartesian': bool, 'spherical': bool}
-
+#class BasisSetMap(BasisSet):
+#    '''
+#    BasisSetMap provides the auxiliary information about relational mapping
+#    between the complete uncontracted primitive basis set and the resultant
+#    contracted basis set within an :class:`~exatomic.universe.Universe`.
+#
+#    +-------------------+----------+-------------------------------------------+
+#    | Column            | Type     | Description                               |
+#    +===================+==========+===========================================+
+#    | tag               | str      | basis set identifier                      |
+#    +-------------------+----------+-------------------------------------------+
+#    | l                 | int      | oribtal angular momentum quantum number   |
+#    +-------------------+----------+-------------------------------------------+
+#    | nprim             | int      | number of primitives within shell         |
+#    +-------------------+----------+-------------------------------------------+
+#    | nbasis            | int      | number of basis functions within shell    |
+#    +-------------------+----------+-------------------------------------------+
+#    | degen             | bool     | False if cartesian, True if spherical     |
+#    +-------------------+----------+-------------------------------------------+
+#    '''
+#    _columns = ['tag', 'nprim', 'nbasis', 'degen']
+#    _indices = ['index']
+#    #_categories = {'tag': str, 'shell': str, 'nbasis': np.int64, 'degen': bool}
+#
 
 class Overlap(DataFrame):
     '''
@@ -177,9 +237,14 @@ class Overlap(DataFrame):
     square symmetric, only n_basis_functions * (n_basis_functions + 1) / 2
     rows are stored.
 
+
+    See Gramian matrix for more on the general properties of the overlap matrix.
+
     +-------------------+----------+-------------------------------------------+
     | Column            | Type     | Description                               |
     +===================+==========+===========================================+
+    | frame             | int/cat  | non-unique integer                        |
+    +-------------------+----------+-------------------------------------------+
     | chi1              | int      | first basis function                      |
     +-------------------+----------+-------------------------------------------+
     | chi2              | int      | second basis function                     |
@@ -187,13 +252,13 @@ class Overlap(DataFrame):
     | coefficient       | float    | overlap matrix element                    |
     +-------------------+----------+-------------------------------------------+
     '''
-    _columns = ['chi1', 'chi2', 'coefficient']
+    _columns = ['chi1', 'chi2', 'coefficient', 'frame']
     _indices = ['index']
 
-    def square(self):
-        nbas = np.floor(np.sqrt(self.shape[0] * 2))
-        return self.pivot('chi1', 'chi2', 'coefficient').fillna(value=0) + \
-               self.pivot('chi2', 'chi1', 'coefficient').fillna(value=0) - np.eye(nbas)
+    def square(self, frame=0):
+        nbas = np.round(np.roots([1, 1, -2 * self.shape[0]])[1]).astype(np.int64)
+        tri = self[self['frame'] == frame].pivot('chi1', 'chi2', 'coefficient').fillna(value=0)
+        return tri + tri.T - np.eye(nbas)
 
 
 class PlanewaveBasisSet(BasisSet):
@@ -210,15 +275,34 @@ class CartesianGTFOrder(DataFrame):
     +-------------------+----------+-------------------------------------------+
     | Column            | Type     | Description                               |
     +===================+==========+===========================================+
+    | frame             | int/cat  | non-unique integer                        |
+    +-------------------+----------+-------------------------------------------+
     | x                 | int      | power of x                                |
     +-------------------+----------+-------------------------------------------+
     | y                 | int      | power of y                                |
     +-------------------+----------+-------------------------------------------+
     | z                 | int      | power of z                                |
     +-------------------+----------+-------------------------------------------+
+    | l                 | int      | x + y + z                                 |
+    +-------------------+----------+-------------------------------------------+
     '''
-    _columns = ['x', 'y', 'z']
+    _columns = ['l', 'x', 'y', 'z', 'frame']
     _indices = ['cart_order']
+    _traits = ['l']
+    _categories = {'l': np.int64, 'x': np.int64, 'y': np.int64, 'z': np.int64}
+
+    def _update_custom_traits(self):
+        #print(self.groupby('l').apply(lambda y: y['x'].values))
+        #print(self.groupby('l').apply(lambda y: y['x'].values).to_json(orient='values'))
+        #cgto_x = self.groupby('l').apply(lambda x: x['x'].values).to_json(orient='values')
+        #cgto_x = Unicode(''.join(['[', cgto_x, ']'])).tag(sync=True)
+        #cgto_y = self.groupby('l').apply(lambda x: x['y'].values).to_json(orient='values')
+        #cgto_y = Unicode(''.join(['[', cgto_y, ']'])).tag(sync=True)
+        #cgto_z = self.groupby('l').apply(lambda x: x['z'].values).to_json(orient='values')
+        #cgto_z = Unicode(''.join(['[', cgto_z, ']'])).tag(sync=True)
+        #return {'cartesiangtforder_x': cgto_x, 'cartesiangtforder_y': cgto_y,
+        #        'cartesiangtforder_z': cgto_z}
+        return {}
 
     @classmethod
     def from_lmax_order(cls, lmax, ordering_function):
@@ -231,7 +315,8 @@ class CartesianGTFOrder(DataFrame):
             ordering_function: Cartesian ordering function (code specific)
         '''
         df = pd.DataFrame(np.concatenate([ordering_function(l) for l in range(lmax + 1)]),
-                          columns=['x', 'y', 'z'])
+                          columns=['l', 'x', 'y', 'z'])
+        df['frame'] = 0
         return cls(df)
 
     def symbolic_keys(self):
@@ -248,9 +333,27 @@ class CartesianGTFOrder(DataFrame):
 class SphericalGTFOrder(DataFrame):
     '''
     Stores order of spherical basis functions with respect to angular momenta.
+
+    +-------------------+----------+-------------------------------------------+
+    | Column            | Type     | Description                               |
+    +===================+==========+===========================================+
+    | frame             | int/cat  | non-unique integer                        |
+    +-------------------+----------+-------------------------------------------+
+    | l                 | int      | orbital angular momentum quantum number   |
+    +-------------------+----------+-------------------------------------------+
+    | ml                | int      | magnetic quantum number                   |
+    +-------------------+----------+-------------------------------------------+
     '''
-    _columns = ['l', 'ml']
+    _columns = ['l', 'ml', 'frame']
+    _traits = ['l']
     _indices = ['spherical_order']
+
+    def _update_custom_traits(self):
+        sgto = self.groupby('frame').apply(lambda x: x.groupby('l').apply( lambda y: y['ml'].values))
+        sgto = Unicode(sgto.to_json(orient='values')).tag(sync=True)
+        return {'sphericalgtforder_ml': sgto}
+        #Unicode('[' + self.groupby('l').apply(
+        #        lambda x: x['ml'].values).to_json(orient='values') + ']').tag(sync=True)}
 
     @classmethod
     def from_lmax_order(cls, lmax, ordering_function):
@@ -266,6 +369,7 @@ class SphericalGTFOrder(DataFrame):
         l = [k for k, v in data.items() for i in range(len(v))]
         ml = np.concatenate(list(data.values()))
         df = pd.DataFrame.from_dict({'l': l, 'ml': ml})
+        df['frame'] = 0
         return cls(df)
 
     def symbolic_keys(self, l=None):
