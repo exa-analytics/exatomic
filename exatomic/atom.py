@@ -77,9 +77,15 @@ class BaseAtom(DataFrame):
         sym2col = symbol_to_color()
         colors = sym2col[self['symbol'].unique()]    # Same thing for colors
         colors = Dict({i: colors[v] for i, v in symmap.items()}).tag(sync=True)
+        try:
+            atom_set = grps.apply(lambda g: g['set'].values).to_json(orient='values')
+            atom_set = Unicode(atom_set).tag(sync=True)
+        except KeyError:
+            atom_set = Unicode().tag(sync=True)
         # Note that position traits (atom_x, atom_y, atom_z) are created automatically
         # since we have defined _traits = ['x', 'y', 'z'] above.
-        return {'atom_symbols': symbols, 'atom_radii': radii, 'atom_colors': colors}
+        return {'atom_symbols': symbols, 'atom_radii': radii, 'atom_colors': colors,
+                'atom_set': atom_set}
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)

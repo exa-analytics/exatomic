@@ -12,7 +12,7 @@ Note:
     Althought the package is called exatomic, some class and function names are
     shortened to just atomic.
 '''
-__exatomic_version__ = (0, 2, 3)
+__exatomic_version__ = (0, 2, 4)
 __version__ = '.'.join((str(v) for v in __exatomic_version__))
 
 

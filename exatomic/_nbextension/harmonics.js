@@ -1,7 +1,8 @@
+// Copyright (c) 2015-2016, Exa Analytics Development Team
+// Distributed under the terms of the Apache License 2.0
 /*"""
-==================
 harmonics.js
-==================
+##################
 */
 'use strict';
 
@@ -29,6 +30,12 @@ define([
                 return sh(x, y, z) * Math.exp(-Math.sqrt(r2));
             };
             super(dimensions, func);
+            /*
+            string = ''
+            for i in smth:
+                string = string + 'SolidHarmonic[l0][m0](x, y, z) + d1*SolidHarmonic[l1][m1](x, y, z) * Math.exp(-alpha1 * r2)'
+             return new Function(string)
+             */
         };
     };
 
