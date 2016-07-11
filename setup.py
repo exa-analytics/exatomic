@@ -39,8 +39,3 @@ setup(
         'Topic :: Scientific/Engineering :: Chemistry'
     ]
 )
-
-from exatomic._config import config, save
-config['db']['update'] = '1'
-config['js']['update'] = '1'
-save()
