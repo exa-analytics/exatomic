@@ -29,12 +29,14 @@ define([
         =============
         JS repr. of .cube file field values and dimensions.
         */
-        constructor(ox, oy, oz, nx, ny, nz, dxi, dxj, dxk, dyi, dyj, dyk, dzi, dzj, dzk, values) {
+        constructor(dimensions, values) {
+            /*
             var dimensions = {
                 'x': num.gen_array(nx, ox, dxi, dyi, dzi),
                 'y': num.gen_array(ny, oy, dxj, dyj, dzj),
                 'z': num.gen_array(nz, oz, dxk, dyk, dzk)
             };
+            */
             super(dimensions, values);
         };
 

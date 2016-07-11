@@ -239,19 +239,54 @@ define([
             });
 
             this.orbitals = {
-                'isovalue': 0.03,
                 'orbital': 0,
-                'cur_orbitals': [null]
+                'isovalue': 0.03,
+                'cur_orbitals': [null],
+                'ox': -10.0, 'oy': -10.0, 'oz': -10.0,
+                'nx':  52,   'ny':  52,   'nz':  52,
+                'dxi':  0.4, 'dyi':  0.0, 'dzi':  0.0,
+                'dxj':  0.0, 'dyj':  0.5, 'dzj':  0.0,
+                'dxk':  0.0, 'dyk':  0.0, 'dzk':  0.4
             };
             this.orbitals['folder'] = this.gui.addFolder('orbitals');
             this.orbitals['isovalue_slider'] = this.orbitals.folder.add(this.orbitals, 'isovalue', 0.0001, 0.5);
             this.orbitals['orbital_dropdown'] = this.orbitals.folder.add(this.orbitals, 'orbital', this.orbitals['cur_orbitals']);
+            this.orbitals['ox_slider'] = this.orbitals.folder.add(this.orbitals, 'ox', -15.0, -5.0);
+            this.orbitals['oy_slider'] = this.orbitals.folder.add(this.orbitals, 'oy', -15.0, -5.0);
+            this.orbitals['oz_slider'] = this.orbitals.folder.add(this.orbitals, 'oz', -15.0, -5.0);
+            this.orbitals['dxi_slider'] = this.orbitals.folder.add(this.orbitals, 'dxi', 0.3, 0.5);
+            this.orbitals['dyj_slider'] = this.orbitals.folder.add(this.orbitals, 'dyj', 0.3, 0.7);
+            this.orbitals['dzk_slider'] = this.orbitals.folder.add(this.orbitals, 'dzk', 0.3, 0.5);
             this.orbitals.orbital_dropdown.onFinishChange(function(orbital_index) {
                 self.orbitals['orbital'] = orbital_index;
                 self.render_orbital();
             });
             this.orbitals.isovalue_slider.onFinishChange(function(value) {
                 self.orbitals['isovalue'] = value;
+                self.render_orbital();
+            });
+            this.orbitals.ox_slider.onFinishChange(function(value) {
+                self.orbitals['ox'] = value;
+                self.render_orbital();
+            });
+            this.orbitals.oy_slider.onFinishChange(function(value) {
+                self.orbitals['oy'] = value;
+                self.render_orbital();
+            });
+            this.orbitals.oz_slider.onFinishChange(function(value) {
+                self.orbitals['oz'] = value;
+                self.render_orbital();
+            });
+            this.orbitals.dxi_slider.onFinishChange(function(value) {
+                self.orbitals['dxi'] = value;
+                self.render_orbital();
+            });
+            this.orbitals.dyj_slider.onFinishChange(function(value) {
+                self.orbitals['dyj'] = value;
+                self.render_orbital();
+            });
+            this.orbitals.dzk_slider.onFinishChange(function(value) {
+                self.orbitals['dzk'] = value;
                 self.render_orbital();
             });
 
@@ -324,23 +359,23 @@ define([
             var ls = this.gv(this.view.gaussianbasisset_l, this.top.index);
             var alphas = this.gv(this.view.gaussianbasisset_alpha, this.top.index);
 
-            var d = {'ox': -9.448633, 'nx': 52, 'dxi': 0.370535, 'dxj': 0, 'dxk': 0,
-                     'oy': -9.448633, 'ny': 52, 'dyj': 0.514072, 'dyi': 0, 'dyk': 0,
-                     'oz': -9.448633, 'nz': 52, 'dzk': 0.370535, 'dzi': 0, 'dzj': 0};
-
             var dims = {
-                'x': num.gen_array(d.nx, d.ox, d.dxi, d.dyi, d.dzi),
-                'y': num.gen_array(d.ny, d.oy, d.dxj, d.dyj, d.dzj),
-                'z': num.gen_array(d.nz, d.oz, d.dxk, d.dyk, d.dzk)
-                //'n': d.nx * d.ny * d.nz
+                'ox': this.orbitals['ox'], 'oy': this.orbitals['oy'], 'oz': this.orbitals['oz'],
+                'nx': this.orbitals['nx'], 'ny': this.orbitals['ny'], 'nz': this.orbitals['nz'],
+                'dxi': this.orbitals['dxi'], 'dyj': this.orbitals['dyj'], 'dzk': this.orbitals['dzk'],
+                'dxj': 0.0, 'dyk': 0.0, 'dzi': 0.0,
+                'dxk': 0.0, 'dyi': 0.0, 'dzj': 0.0,
             };
+            dims['x'] = num.gen_array(dims.nx, dims.ox, dims.dxi, dims.dyi, dims.dzi);
+            dims['y'] = num.gen_array(dims.ny, dims.oy, dims.dxj, dims.dyj, dims.dzj);
+            dims['z'] = num.gen_array(dims.nz, dims.oz, dims.dxk, dims.dyk, dims.dzk);
+            dims['n'] = dims.nx * dims.ny * dims.nz;
 
             var bfns = gaussian.order_gtf_basis(xs, ys, zs, sets, nbfns, ds, ls, alphas, pl, pm, pn, sgto);
             var mos = gaussian.construct_mos(bfns, coefs, dims);
-            this.cube_field = new gaussian.GaussianOrbital(d.ox, d.oy, d.oz, d.nx, d.ny, d.nz, d.dxi, d.dxj, d.dxk,
-                                                           d.dyi, d.dyj, d.dyk, d.dzi, d.dzj, d.dzk, mos[this.orbitals['orbital']]);
+            this.cube_field = new gaussian.GaussianOrbital(dims, mos[this.orbitals['orbital']]);
             this.app3d.remove_meshes(this.cube_field_mesh);
-            this.cube_field_mesh = this.app3d.add_scalar_field(this.cube_field, this.fields.isovalue, 2);
+            this.cube_field_mesh = this.app3d.add_scalar_field(this.cube_field, this.orbitals.isovalue, 2);
             console.log('leaving render orbital');
         };
 
@@ -365,8 +400,12 @@ define([
             var dzj = this.gv(this.view.atomicfield_dzj, this.top.index);
             var dzk = this.gv(this.view.atomicfield_dzk, this.top.index);
             var values = this.gv(this.view.field_values, this.fields['field']);
-            this.cube_field = new AtomicField(ox, oy, oz, nx, ny, nz, dxi, dxj, dxk,
-                                              dyi, dyj, dyk, dzi, dzj, dzk, values);
+            this.cube_field = new AtomicField({'ox': ox, 'oy': oy, 'oz': oz,
+                                               'nx': nx, 'ny': ny, 'nz': nz,
+                                               'dxi': dxi, 'dxj': dxj, 'dxk': dxk,
+                                               'dyi': dyi, 'dyj': dyj, 'dyk': dyk,
+                                               'dzi': dzi, 'dzj': dzj, 'dzk': dzk},
+                                               values);
             this.app3d.remove_meshes(this.cube_field_mesh);
             this.cube_field_mesh = this.app3d.add_scalar_field(this.cube_field, this.fields.isovalue, 2);
         };

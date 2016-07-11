@@ -34,8 +34,8 @@ define([
         is laid out in the functions order_gtf_basis and construct_mos.
         This is merely a thin wrapper around the AtomicField class.
         */
-        constructor(ox, oy, oz, nx, ny, nz, dxi, dxj, dxk, dyi, dyj, dyk, dzi, dzj, dzk, func) {
-            super(ox, oy, oz, nx, ny, nz, dxi, dxj, dxk, dyi, dyj, dyk, dzi, dzj, dzk, func)
+        constructor(dims, func) {
+            super(dims, func)
         };
     };
 
@@ -51,15 +51,10 @@ define([
         // Compute the normalization factor for each basis function independently
         var norms = [];
         var nbfns = bfns.length;
-        //console.log(bfns);
-        //console.log(dims);
         for (var bf = 0; bf < nbfns; bf++) {
             var func = new Function('x,y,z', 'return '.concat(bfns[bf]));
             norms.push(num.compute_field(dims.x, dims.y, dims.z, dims.n, func)['norm']);
         };
-        //console.log('norms');
-        //console.log(norms);
-        // Now construct our MOs
         var mos = [];
         for (var i = 0; i < nbfns; i++) {
             var mo = 'return ';
@@ -72,11 +67,18 @@ define([
             };
             mos.push(new Function('x,y,z', mo));
         };
-        //console.log(mos);
         return mos;
     };
 
     var order_gtf_basis = function(xs, ys, zs, sets, nbfns, d, l, alpha, pl, pm, pn, sgto) {
+      /*"""
+      order_gtf_basis
+      =====================
+      Unpack the nested data structures to generate strings representing
+      basis functions. This necessarily assumes some knowledge of the way
+      a computational code orders basis functions, therefore it will not work
+      for all cases and a different function may be needed.
+      */
       /*
         console.log('inside order_gtf_basis');
         console.log('xs');
@@ -125,10 +127,6 @@ define([
             var ls = l[set];
             var alphas = alpha[set];
             var nshells = alphas.length;
-            //console.log('alphas');
-            //console.log(alphas);
-            //console.log('nshells');
-            //console.log(nshells);
             for (var ns = 0; ns < nshells; ns++) {
                 //console.log('nshell');
                 //console.log(ns);
@@ -155,8 +153,6 @@ define([
                     } else {
                         bstr = bstr.concat(cs[prim].toFixed(8), ' * ', 'Math.exp(-', exps[prim], ' * ', r2, ') + ');
                     };
-                    //console.log(bstr);
-                    //};
                 };
                 bfns.push(bstr);
             };
@@ -171,37 +167,3 @@ define([
     };
 
 });
-
-//    class SphericalGaussian extends GaussianTypeFunction {
-        /*"""
-        SphericaGaussian
-        ====================
-        */
-        //constructor(momatrix, basis_set) {
-        //    console.log(momatrix);
-        //    console.log(basis_set);
-        //    var p = solid_harmonics(4);
-        //    console.log(p);
-        //};
-    //};
-    // Some constants
-    //var pi = Math.PI;
-
-    //var spherical_gtf = function(x, y, z, alpha, l, m) {
-        /*"""
-        partial_spherical_gtf
-        ==========================
-        Full spherical Gaussian type function is:
-
-        .. math::
-
-            f(\mathbf{r}; p, \alpha, l, \mathbf{r}_{A}) = N\left(\alpha, p\right)p\left(\mathbf{r}-\mathbf{r}_{A}\right)
-        */
-      //  var arg = 2*l - 1;
-        //if (Math.mod(arg, 2) == 0) {
-
-        //}
-        //var N = Math.sqrt(Math.pow(2*alpha/pi, 1.5)*(4*alpha*l))
-        //var r2 = x*x + y*y + z*z
-        //return Math.exp(-alpha*r2);
-    //};

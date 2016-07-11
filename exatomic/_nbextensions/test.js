@@ -61,14 +61,11 @@ define([
             this.axis = [];
             this.active_objs = [];
             this.dimensions = {
-                'ox': -25.0,
-                'oy': -25.0,
-                'oz': -25.0,
-                'nx': 52,
-                'ny': 52,
-                'nz': 52,
-                'dxi': 1.0, 'dyj': 1.0, 'dzk': 1.0,
-                'dxj': 0, 'dxk': 0, 'dyi': 0, 'dyk': 0, 'dzi': 0, 'dzj': 0
+                'ox': -25.0,  'oy': -25.0, 'oz': -25.0,
+                'nx':  52,    'ny':  52,   'nz':  52,
+                'dxi':  1.0, 'dxj':   0,   'dxk':  0,
+                'dyi':  0,   'dyj':   1.0, 'dyk':  0,
+                'dzi':  0,   'dzj':   0,   'dzk':  1.0
             };
             this.field = new AO(this.dimensions, '1s');
             this.app3d = new App3D(this.view.canvas);
@@ -99,8 +96,8 @@ define([
             this.gui = new ContainerGUI(this.view.gui_width);
 
             this.top = {
-                'demo': 'Hydrogen Wave Functions',
                 /*
+                'demo': 'Hydrogen Wave Functions',
                 'demos': ['Hydrogen Wave Functions', 'Gaussian Type Functions', 'Cube', 'Trajectory'],
                 'play': function() {
                     console.log('pushed play');
@@ -121,7 +118,6 @@ define([
                     self.app3d.renderer.setSize(1920, 1080);
                     self.app3d.camera.aspect = 1920 / 1080;
                     self.app3d.camera.updateProjectionMatrix();
-                    //self.app3d.add_unit_axis();
                     self.app3d.render();
                     var imgdat = self.app3d.renderer.domElement.toDataURL('image/png');
                     self.view.send({'type': 'image', 'data': imgdat});
@@ -142,18 +138,15 @@ define([
                 'functions': ['1s', '2s', '2px', '2py', '2pz',
                               '3s', '3px', '3py', '3pz',
                               '3d-2', '3d-1', '3d0', '3d+1', '3d+2'],
-                              //'3dz2', '3d+1', '3dxz', '3dyz', '3dx2-y2', '3dxy'],
                 'isovalue': 0.005
             };
             this.ao['folder'] = this.gui.addFolder('Hydrogen Wave Functions');
             this.ao['func_dropdown'] = this.ao.folder.add(this.ao, 'function', this.ao['functions']);
             this.ao['isovalue_slider'] = this.ao.folder.add(this.ao, 'isovalue', 0.0, 0.4);
-
             this.ao['isovalue_slider'].onFinishChange(function(value) {
                 self.ao['isovalue'] = value;
                 self.render_ao();
             });
-
             this.ao['func_dropdown'].onFinishChange(function(value) {
                 self.ao['function'] = value;
                 self.render_ao();
@@ -165,26 +158,19 @@ define([
                               'd200', 'd110', 'd101', 'd020', 'd011', 'd002'],
                 'isovalue': 0.005
             };
-
             this.gtf['folder'] = this.gui.addFolder('Gaussian Type Functions');
             this.gtf['func_dropdown'] = this.gtf.folder.add(this.gtf, 'function', this.gtf['functions']);
             this.gtf['isovalue_slider'] = this.gtf.folder.add(this.gtf, 'isovalue', 0.0, 0.4);
-
             this.gtf['isovalue_slider'].onFinishChange(function(value) {
                 self.gtf['isovalue'] = value;
                 self.render_gtf();
             });
-
             this.gtf['func_dropdown'].onFinishChange(function(value) {
                 self.gtf['function'] = value;
                 self.render_gtf();
             });
 
-            this.sh = {
-                'l': 0,
-                'm': 0,
-                'isovalue': 0.03
-            };
+            this.sh = {'l': 0, 'm': 0, 'isovalue': 0.03};
             this.sh['folder'] = this.gui.addFolder('Solid Harmonics');
             this.sh['isovalue_slider'] = this.sh.folder.add(this.sh, 'isovalue', 0.0001, 1.0);
             this.sh['l_slider'] = this.sh.folder.add(this.sh, 'l').min(0).max(7).step(1);
@@ -212,23 +198,18 @@ define([
         };
 
         render_solid_harmonic() {
-            console.log('render solid harmonic');
             this.field = new sh.SolidHarmonic(this.sh.l, this.sh.m, this.dimensions);
-            console.log(this.field);
             this.app3d.remove_meshes(this.active_objs);
             this.active_objs = this.app3d.add_scalar_field(this.field, this.sh.isovalue, 2);
         };
 
         render_ao() {
             this.field = new AO(this.dimensions, this.ao['function']);
-            console.log('render atomic orbital');
-            console.log(this.field);
             this.app3d.remove_meshes(this.active_objs);
             this.active_objs = this.app3d.add_scalar_field(this.field, this.ao['isovalue'], 2);
         };
 
         render_gtf() {
-            console.log('render gaussian type function');
             this.field = new GTF(this.dimensions, this.gtf['function']);
             this.app3d.remove_meshes(this.active_objs);
             this.active_objs = this.app3d.add_scalar_field(this.field, this.gtf['isovalue'], 2);
