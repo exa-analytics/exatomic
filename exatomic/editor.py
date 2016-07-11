@@ -13,7 +13,8 @@ from exatomic.container import UniverseTypedMeta, Universe
 
 class Editor(BaseEditor, metaclass=UniverseTypedMeta):
     '''
-    Base (ex)atomic editor class for manipulating
+    Base atomic editor class for converting between file formats and to (or
+    from) :class:`~exatomic.container.Universe` objects.
     '''
     def to_universe(self, *args, **kwargs):
         '''
@@ -21,14 +22,6 @@ class Editor(BaseEditor, metaclass=UniverseTypedMeta):
         '''
         return Universe(*args, frame=self.frame, atom=self.atom, **kwargs)
 
-    @classmethod
-    def from_universe(self, universe):
-        '''
-        Create an instance of an :class:`~exatomic.editor.Editor` from an
-        instance of :class:`~exatomic.container.Universe`.
-        '''
-        pass
-        
 
 #import numpy as np
 #import pandas as pd
