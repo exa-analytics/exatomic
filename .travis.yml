@@ -1,0 +1,17 @@
+sudo: true
+language: python
+python:
+    - "3.4"
+    - "3.5"
+    - "nightly"
+before_install:
+    - sudo add-apt-repository "deb http://archive.ubuntu.com/ubuntu $(lsb_release -sc) main universe"
+    - sudo apt-get update
+    - sudo apt-get install libblas-dev liblapack-dev build-essential gfortran
+install:
+    - pip install -r requirements.txt
+    - pip install codecov
+script:
+    - nosetests --with-doctest --with-coverage
+after_success:
+    - codecov

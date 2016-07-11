@@ -1,15 +1,21 @@
 # -*- coding: utf-8 -*-
+# Copyright (c) 2015-2016, Exa Analytics Development Team
+# Distributed under the terms of the Apache License 2.0
 '''
-Frame Dataframes
-==========================
-A frame represents a single unique nuclear geometry. Frames are distinguishable
-by any type of information, time, level of theory, differences in atomic
-structure, etc.
+Frame Data
+######################
+The primary "coordinate" for the atomic container (:class:`~exatomic.container.Universe`)
+is the "frame". The frame concept can be anything; time, step along a geometry
+optimization, different functional, etc. Each frame is distinguished from other
+frames by unique atomic coordinates, a different level of theory, etc.
+The following is a guide for the typical data found in this dataframe.
 
 +-------------------+----------+-------------------------------------------+
 | Column            | Type     | Description                               |
 +===================+==========+===========================================+
 | atom_count        | int      | non-unique integer (req.)                 |
++-------------------+----------+-------------------------------------------+
+| molecule_count    | int      | non-unique integer                        |
 +-------------------+----------+-------------------------------------------+
 | ox                | float    | unit cell origin point in x               |
 +-------------------+----------+-------------------------------------------+
@@ -17,38 +23,26 @@ structure, etc.
 +-------------------+----------+-------------------------------------------+
 | oz                | float    | unit cell origin point in z               |
 +-------------------+----------+-------------------------------------------+
-| periodic          | bool     | periodic frame?                           |
+| periodic          | bool     | true if periodic system                   |
 +-------------------+----------+-------------------------------------------+
-
-See Also:
-    More information on the :class:`~exatomic.frame.Frame` concept can be
-    found in :mod:`~exatomic.universe` module's documentation.
 '''
 import numpy as np
 from traitlets import Float
 from exa.numerical import DataFrame
-from exa.algorithms import vmag3
+from exa.math.vector.cartesian import magnitude_xyz
+from exatomic.error import PeriodicUniverseError
 
 
 class Frame(DataFrame):
     '''
-    The frame DataFrame contains non-atomic information about each snapshot
-    of the :class:`~exatomic.universe.Universe` object.
+    Information about the current frame; a frame is a concept that distinguishes
+    atomic coordinates along a molecular dynamics simulation, geometry optimization,
+    etc.
     '''
-    xi = Float()  # Static unit cell component
-    xj = Float()  # Static unit cell component
-    xk = Float()  # Static unit cell component
-    yi = Float()  # Static unit cell component
-    yj = Float()  # Static unit cell component
-    yk = Float()  # Static unit cell component
-    zi = Float()  # Static unit cell component
-    zj = Float()  # Static unit cell component
-    zk = Float()  # Static unit cell component
-    ox = Float()  # Static unit cell origin point x
-    oy = Float()  # Static unit cell origin point y
-    oz = Float()  # Static unit cell origin point z
     _indices = ['frame']
     _columns = ['atom_count']
+    _precision = {'xi': 2, 'xj': 2, 'xk': 2, 'yi': 2, 'yj': 2, 'yk': 2, 'zi': 2,
+                  'zj': 2, 'zk': 2, 'ox': 2, 'oy': 2, 'oz': 2}
     _traits = ['xi', 'xj', 'xk', 'yi', 'yj', 'yk', 'zi', 'zj', 'zk',
                'ox', 'oy', 'oz', 'frame']
 
@@ -58,7 +52,7 @@ class Frame(DataFrame):
         Check if any/all frames are periodic.
 
         Args:
-            how (str): Either any (default) or all
+            how (str): Require "any" frames to be periodic ("all" default)
 
         Returns:
             result (bool): True if any/all frame are periodic
@@ -73,12 +67,10 @@ class Frame(DataFrame):
         return False
 
     @property
-    def is_vc(self, how='all'):
+    def is_variable_cell(self, how='all'):
         '''
-        Check if this is a variable unit cell simulation.
-
-        Note:
-            Returns false if not periodic
+        Check if the simulation cell (applicable to periodic simulations) varies
+        (e.g. variable cell molecular dynamics).
         '''
         if self.is_periodic:
             if 'rx' not in self.columns:
@@ -90,31 +82,41 @@ class Frame(DataFrame):
                 return False
             else:
                 return True
-        return False
-
+        raise PeriodicUniverseError()
 
     def compute_cell_magnitudes(self):
         '''
         Compute the magnitudes of the unit cell vectors (rx, ry, rz).
         '''
-        xi = self['xi'].values    # Vector component variables are denoted by
-        xj = self['xj'].values    # their basis vector ending: _i, _j, _k
-        xk = self['xk'].values
-        yi = self['yi'].values
-        yj = self['yj'].values
-        yk = self['yk'].values
-        zi = self['zi'].values
-        zj = self['zj'].values
-        zk = self['zk'].values
-        self['rx'] = vmag3(xi, yi, zi)**0.5
-        self['ry'] = vmag3(xj, yj, zj)**0.5
-        self['rz'] = vmag3(xk, yk, zk)**0.5
+        self['rx'] = magnitude_xyz(self['xi'].values, self['yi'].values, self['zi'].values)
+        self['ry'] = magnitude_xyz(self['xj'].values, self['yj'].values, self['zj'].values)
+        self['rz'] = magnitude_xyz(self['xk'].values, self['yk'].values, self['zk'].values)
 
 
-def minimal_frame(atom):
+def compute_frame(universe):
     '''
-    Create a minmal :class:`~exatomic.frame.Frame` object from a
-    :class:`~exatomic.atom.Atom` object.
+    Compute (minmal) :class:`~exatomic.frame.Frame` from
+    :class:`~exatomic.container.Universe`.
+
+    Args:
+        uni (:class:`~exatomic.container.Universe`): Universe with atom table
+
+    Returns:
+        frame (:class:`~exatomic.frame.Frame`): Minimal frame table
+    '''
+    return compute_frame_from_atom(universe.atom)
+
+
+def compute_frame_from_atom(atom):
+    '''
+    Compute :class:`~exatomic.frame.Frame` from :class:`~exatomic.atom.Atom`
+    (or related).
+
+    Args:
+        atom (:class:`~exatomic.atom.Atom`): Atom table
+
+    Returns:
+        frame (:class:`~exatomic.frame.Frame`): Minimal frame table
     '''
     frame = atom.groupby('frame').size().to_frame()
     frame.index = frame.index.astype(np.int64)
