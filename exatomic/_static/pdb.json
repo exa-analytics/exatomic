@@ -1,0 +1,1305 @@
+{
+    "HETATM": {
+        "tok": null,
+        "rec": [
+            [
+                0,
+                6,
+                "rec",
+                "U6"
+            ],
+            [
+                7,
+                10,
+                "hetID",
+                "U3"
+            ],
+            [
+                12,
+                13,
+                "ChainID",
+                "i8"
+            ],
+            [
+                13,
+                17,
+                "seqNum",
+                "i8"
+            ],
+            [
+                17,
+                18,
+                "iCode",
+                "U1",
+            ],
+            [
+                20,
+                25,
+                "nHetAts",
+                "i8"
+            ],
+            [
+                30,
+                70,
+                "text",
+                "U40"
+            ]
+    ],
+        "test": null
+    },
+    "SEQADV": {
+        "tok": null,
+        "rec": null,
+        "test": null
+    },
+    "MDLTYP": {
+        "tok": null,
+        "rec": [
+            [
+                0,
+                6,
+                "rec",
+                "U6"
+            ],
+            [
+                8,
+                10,
+                "cont.",
+                "f4"
+            ],
+            [
+                10,
+                80,
+                "comment",
+                "U70"
+            ]
+        ],
+        "test": "\nMDLTYP    MINIMIZED AVERAGE\nMDLTYP    CA ATOMS ONLY, CHAIN A, B, C, D, E, F, G, H, I, J, K ; P ATOMS ONLY,\nMDLTYP   2 CHAIN X, Y, Z\nMDLTYP    MINIMIZED AVERAGE; CA ATOMS ONLY, CHAIN A, B\n"
+    },
+    "CRYST1": {
+        "tok": null,
+        "rec": null,
+        "test": null
+    },
+    "DBREF": {
+        "tok": null,
+        "rec": null,
+        "test": null
+    },
+    "CISPEP": {
+        "tok": null,
+        "rec": null,
+        "test": null
+    },
+    "NUMMDL": {
+        "tok": null,
+        "rec": [
+            [
+                0,
+                6,
+                "rec",
+                "U6"
+            ],
+            [
+                10,
+                14,
+                "modNum",
+                "f8"
+            ]
+        ],
+        "test": "\nNUMMDL    20\n"
+    },
+    "AUTHOR": {
+        "tok": null,
+        "rec": [
+            [
+                0,
+                6,
+                "rec",
+                "U6"
+            ],
+            [
+                8,
+                10,
+                "cont.",
+                "f4"
+            ],
+            [
+                10,
+                79,
+                "authors",
+                "U70"
+            ]
+        ],
+        "test": "\nAUTHOR    M.B.BERRY,B.MEADOR,T.BILDERBACK,P.LIANG,M.GLASER,\nAUTHOR   2 G.N.PHILLIPS JR.,T.L.ST. STEVENS\n"
+    },
+    "SPRSDE": {
+        "tok": null,
+        "rec": [
+            [
+                0,
+                6,
+                "rec",
+                "U6"
+            ],
+            [
+                8,
+                10,
+                "cont.",
+                "f4"
+            ],
+            [
+                11,
+                20,
+                "sDate",
+                "U9"
+            ],
+            [
+                21,
+                25,
+                "idCode",
+                "U5"
+            ],
+            [
+                31,
+                35,
+                "sidCode1",
+                "U5"
+            ],
+            [
+                36,
+                40,
+                "sidCode2",
+                "U5"
+            ],
+            [
+                41,
+                45,
+                "sidCode3",
+                "U5"
+            ],
+            [
+                46,
+                50,
+                "sidCode4",
+                "U5"
+            ],
+            [
+                51,
+                55,
+                "sidCode5",
+                "U5"
+            ],
+            [
+                56,
+                60,
+                "sidCode6",
+                "U5"
+            ],
+            [
+                61,
+                65,
+                "sidCode7",
+                "U5"
+            ],
+            [
+                66,
+                70,
+                "sidCode8",
+                "U5"
+            ],
+            [
+                71,
+                75,
+                "sidCode9",
+                "U5"
+            ]
+        ],
+        "test": "\nSPRSDE     17-JUL-84 4HHB      1HHB\nSPRSDE     27-FEB-95 1GDJ      1LH4 2LH4\n"
+    },
+    "HET": {
+        "tok": null,
+        "rec": null,
+        "test": null
+    },
+    "SITE": {
+        "tok": null,
+        "rec": null,
+        "test": null
+    },
+    "FORMUL": {
+        "tok": null,
+        "rec": null,
+        "test": null
+    },
+    "COMPND": {
+        "tok": [
+            "MOL_ID",
+            "MOLECULE",
+            "CHAIN",
+            "FRAGMENT",
+            "SYNONYM",
+            "EC",
+            "ENGINEERED",
+            "MUTATION",
+            "OTHER_DETAILS"
+        ],
+        "rec": [
+            [
+                0,
+                6,
+                "rec",
+                "U6"
+            ],
+            [
+                7,
+                10,
+                "cont.",
+                "f4"
+            ],
+            [
+                10,
+                80,
+                "compound",
+                "U70"
+            ]
+        ],
+        "test": "\nCOMPND    MOL_ID: 1;\nCOMPND   2 MOLECULE: HEMOGLOBIN ALPHA CHAIN;\nCOMPND   3 CHAIN: A, C;\nCOMPND   4 SYNONYM: DEOXYHEMOGLOBIN ALPHA CHAIN;\nCOMPND   5 ENGINEERED: YES;\nCOMPND   6 MUTATION: YES;\nCOMPND   7 MOL_ID: 2;\nCOMPND   8 MOLECULE: HEMOGLOBIN BETA CHAIN;\nCOMPND   9 CHAIN: B, D;\nCOMPND  10 SYNONYM: DEOXYHEMOGLOBIN BETA CHAIN;\nCOMPND  11 ENGINEERED: YES;\nCOMPND  12 MUTATION: YES \nCOMPND    MOL_ID: 1;\nCOMPND   2 MOLECULE: COWPEA CHLOROTIC MOTTLE VIRUS;\nCOMPND   3 CHAIN: A, B, C;\nCOMPND   4 SYNONYM: CCMV;\nCOMPND   5 MOL_ID: 2;\nCOMPND   6 MOLECULE: RNA (5'-(*AP*UP*AP*U)-3');\nCOMPND   7 CHAIN: D, F;\nCOMPND   8 ENGINEERED: YES;\nCOMPND   9 MOL_ID: 3; \nCOMPND  10 MOLECULE: RNA (5'-(*AP*U)-3');\nCOMPND  11 CHAIN: E;\nCOMPND  12 ENGINEERED: YES \nCOMPND    MOL_ID: 1;\nCOMPND   2 MOLECULE: HEVAMINE A;\nCOMPND   3 CHAIN: A;\nCOMPND   4 EC: 3.2.1.14, 3.2.1.17;\nCOMPND   5 OTHER_DETAILS: PLANT ENDOCHITINASE/LYSOZYME \n"
+    },
+    "MODRES": {
+        "tok": null,
+        "rec": null,
+        "test": null
+    },
+    "EXPDTA": {
+        "tok": [
+            "X-RAY DIFFRACTION",
+            "FIBER DIFFRACTION",
+            "NEUTRON DIFFRACTION",
+            "NEUTRON DIFFRACTION",
+            "ELECTRON CRYSTALLOGRAPHY",
+            "ELECTRON MICROSCOPY",
+            "SOLID-STATE NMR",
+            "SOLUTION NMR",
+            "SOLUTION SCATTERING"
+        ],
+        "rec": [
+            [
+                0,
+                6,
+                "rec",
+                "U6"
+            ],
+            [
+                8,
+                10,
+                "cont.",
+                "f4"
+            ],
+            [
+                10,
+                79,
+                "technique",
+                "U70"
+            ]
+        ],
+        "test": "\nEXPDTA    X-RAY DIFFRACTION\nEXPDTA    NEUTRON DIFFRACTION; X-RAY DIFFRACTION\nEXPDTA    SOLUTION NMR\nEXPDTA    ELECTRON MICROSCOPY\n"
+    },
+    "CAVEAT": {
+        "tok": null,
+        "rec": [
+            [
+                0,
+                6,
+                "rec",
+                "U6"
+            ],
+            [
+                8,
+                10,
+                "cont.",
+                "f8"
+            ],
+            [
+                11,
+                15,
+                "idCode",
+                "U5"
+            ],
+            [
+                19,
+                79,
+                "Comment",
+                "U60"
+            ]
+        ],
+        "test": null
+    },
+    "JRNL": {
+        "tok": {
+            "REFN": [
+                [
+                    0,
+                    6,
+                    "rec",
+                    "U6"
+                ],
+                [
+                    12,
+                    16,
+                    "refn.",
+                    "U5"
+                ],
+                [
+                    35,
+                    39,
+                    "[ie]ssn",
+                    "U5"
+                ],
+                [
+                    40,
+                    65,
+                    "issn",
+                    "U30"
+                ]
+            ],
+            "DOI": [
+                [
+                    0,
+                    6,
+                    "rec",
+                    "U6"
+                ],
+                [
+                    12,
+                    16,
+                    "DOI",
+                    "U5"
+                ],
+                [
+                    19,
+                    79,
+                    "cont.",
+                    "U60"
+                ]
+            ],
+            "PUBL": [
+                [
+                    0,
+                    6,
+                    "rec",
+                    "U6"
+                ],
+                [
+                    12,
+                    16,
+                    "publ.",
+                    "U5"
+                ],
+                [
+                    16,
+                    18,
+                    "cont.",
+                    "f4"
+                ],
+                [
+                    19,
+                    70,
+                    "pub",
+                    "U50"
+                ]
+            ],
+            "PMID": [
+                [
+                    0,
+                    6,
+                    "rec",
+                    "U6"
+                ],
+                [
+                    12,
+                    16,
+                    "PMID",
+                    "U5"
+                ],
+                [
+                    19,
+                    79,
+                    "cont.",
+                    "U60"
+                ]
+            ],
+            "EDIT": [
+                [
+                    0,
+                    6,
+                    "rec",
+                    "U6"
+                ],
+                [
+                    9,
+                    10,
+                    "1",
+                    "U2"
+                ],
+                [
+                    12,
+                    16,
+                    "title",
+                    "U5"
+                ],
+                [
+                    17,
+                    18,
+                    "cont.",
+                    "f4"
+                ],
+                [
+                    19,
+                    79,
+                    "title",
+                    "U60"
+                ]
+            ],
+            "REF": [
+                [
+                    0,
+                    6,
+                    "rec",
+                    "U6"
+                ],
+                [
+                    12,
+                    16,
+                    "ref",
+                    "U5"
+                ],
+                [
+                    16,
+                    18,
+                    "cont.",
+                    "f4"
+                ],
+                [
+                    19,
+                    47,
+                    "pubName",
+                    "U30"
+                ],
+                [
+                    49,
+                    51,
+                    "vol.",
+                    "U4"
+                ],
+                [
+                    51,
+                    55,
+                    "volume",
+                    "U5"
+                ],
+                [
+                    56,
+                    61,
+                    "page",
+                    "U6"
+                ],
+                [
+                    62,
+                    66,
+                    "year",
+                    "U4"
+                ]
+            ],
+            "TITL": [
+                [
+                    0,
+                    6,
+                    "rec",
+                    "U6"
+                ],
+                [
+                    9,
+                    10,
+                    "1",
+                    "U2"
+                ],
+                [
+                    12,
+                    16,
+                    "title",
+                    "U5"
+                ],
+                [
+                    16,
+                    18,
+                    "cont.",
+                    "f4"
+                ],
+                [
+                    19,
+                    79,
+                    "title",
+                    "U60"
+                ]
+            ],
+            "AUTH": [
+                [
+                    0,
+                    6,
+                    "rec",
+                    "U6"
+                ],
+                [
+                    9,
+                    10,
+                    "1",
+                    "U2"
+                ],
+                [
+                    12,
+                    16,
+                    "author",
+                    "U5"
+                ],
+                [
+                    16,
+                    18,
+                    "cont.",
+                    "f4"
+                ],
+                [
+                    19,
+                    79,
+                    "authList",
+                    "U60"
+                ]
+            ]
+        },
+        "rec": [
+            [
+                0,
+                6,
+                "rec",
+                "U6"
+            ],
+            [
+                12,
+                79,
+                "text",
+                "U70"
+            ]
+        ],
+        "test": "\nJRNL        AUTH   G.FERMI,M.F.PERUTZ,B.SHAANAN,R.FOURME\nJRNL        TITL   THE CRYSTAL STRUCTURE OF HUMAN DEOXYHAEMOGLOBIN AT\nJRNL        TITL 2 1.74 A RESOLUTION\nJRNL        REF    J.MOL.BIOL.                   V. 175   159 1984\nJRNL        REFN                   ISSN 0022-2836\nJRNL        PMID   6726807\nJRNL        DOI    10.1016/0022-2836(84)90472-8 \n"
+    },
+    "ENDMDL": {
+        "tok": null,
+        "rec": null,
+        "test": null
+    },
+    "ATOM": {
+        "tok": null,
+        "rec": [
+            [
+                0,
+                6,
+                "rec",
+                "U6"
+            ],
+            [
+                6,
+                11,
+                "serial",
+                "f8"
+            ],
+            [
+                12,
+                16,
+                "name",
+                "U5"
+            ],
+            [
+                16,
+                17,
+                "alt.loc.",
+                "U1"
+            ],
+            [
+                17,
+                20,
+                "residue",
+                "U3"
+            ],
+            [
+                20,
+                21,
+                "chain",
+                "U1"
+            ],
+            [
+                22,
+                26,
+                "res. seq.",
+                "f8"
+            ],
+            [
+                26,
+                27,
+                "ins. code",
+                "U1"
+            ],
+            [
+                30,
+                38,
+                "x",
+                "f8"
+            ],
+            [
+                38,
+                46,
+                "y",
+                "f8"
+            ],
+            [
+                46,
+                54,
+                "z",
+                "f8"
+            ],
+            [
+                54,
+                60,
+                "occ.",
+                "f8"
+            ],
+            [
+                60,
+                66,
+                "temp.",
+                "f8"
+            ],
+            [
+                72,
+                76,
+                "seg. id",
+                "U4"
+            ],
+            [
+                76,
+                78,
+                "symbol",
+                "U2"
+            ],
+            [
+                78,
+                80,
+                "chg",
+                "f8"
+            ]
+        ],
+        "test": "\nATOM    301  O   ASN A  21     -12.208  -4.169   3.312  1.00  0.00           O  \nATOM    304  OD1 ASN A  21      -9.202  -4.073   7.813  1.00  0.00           O  \nATOM    306  OXT ASN A  21     -13.466  -4.014   5.054  1.00  0.00           O  \nATOM    307  H   ASN A  21      -9.293  -3.750   4.682  1.00  0.00           H  \nATOM    308  HA  ASN A  21     -11.301  -5.449   5.885  1.00  0.00           H  \nATOM    310  HB3 ASN A  21     -12.069  -3.052   6.747  1.00  0.00           H  \nATOM    312 HD22 ASN A  21     -10.738  -4.752   9.544  1.00  0.00           H  \nTER     313      ASN A  21                                                      \n"
+    },
+    "HELIX": {
+        "tok": null,
+        "rec": null,
+        "test": null
+    },
+    "SEQRES": {
+        "tok": null,
+        "rec": null,
+        "test": null
+    },
+    "TITLE": {
+        "tok": null,
+        "rec": [
+            [
+                0,
+                6,
+                "rec",
+                "U6"
+            ],
+            [
+                8,
+                10,
+                "cont.",
+                "f4"
+            ],
+            [
+                10,
+                80,
+                "title",
+                "U70"
+            ]
+        ],
+        "test": "\nTITLE     RHIZOPUSPEPSIN COMPLEXED WITH REDUCED PEPTIDE INHIBITOR\nTITLE     STRUCTURE OF THE TRANSFORMED MONOCLINIC LYSOZYME BY \nTITLE    2 CONTROLLED DEHYDRATION\nTITLE     NMR STUDY OF OXIDIZED THIOREDOXIN MUTANT (C62A,C69A,C73A)\nTITLE    2 MINIMIZED AVERAGE STRUCTURE\nTITLE    3 ADDED FOR ADDITIONAL TEST\n"
+    },
+    "SOURCE": {
+        "tok": [
+            "MOL_ID",
+            "SYNTHETIC",
+            "FRAGMENT",
+            "ORGANISM_SCIENTIFIC",
+            "ORGANISM_COMMON",
+            "ORGANISM_TAXID",
+            "STRAIN",
+            "VARIANT",
+            "CELL_LINE",
+            "ATCC",
+            "ORGAN",
+            "TISSUE",
+            "CELL",
+            "ORGANELLE",
+            "SECRETION",
+            "CELLULAR_LOCATION",
+            "PLASMID",
+            "GENE",
+            "EXPRESSION_SYSTEM",
+            "EXPRESSION_SYSTEM_COMMON",
+            "EXPRESSION_SYSTEM_TAXID",
+            "EXPRESSION_SYSTEM_STRAIN",
+            "EXPRESSION_SYSTEM_VARIANT",
+            "EXPRESSION_SYSTEM_CELL_LINE",
+            "EXPRESSION_SYSTEM_ATCC_NUMBER",
+            "EXPRESSION_SYSTEM_ORGAN",
+            "EXPRESSION_SYSTEM_TISSUE",
+            "EXPRESSION_SYSTEM_CELL",
+            "EXPRESSION_SYSTEM_ORGANELLE",
+            "EXPRESSION_SYSTEM_CELLULAR_LOCATION",
+            "EXPRESSION_SYSTEM_VECTOR_TYPE",
+            "EXPRESSION_SYSTEM_VECTOR",
+            "EXPRESSION_SYSTEM_PLASMID",
+            "EXPRESSION_SYSTEM_GENE",
+            "OTHER_DETAILS"
+        ],
+        "rec": [
+            [
+                0,
+                6,
+                "rec",
+                "U6"
+            ],
+            [
+                7,
+                10,
+                "cont.",
+                "f4"
+            ],
+            [
+                10,
+                79,
+                "srcName",
+                "U70"
+            ]
+        ],
+        "test": "\nSOURCE    MOL_ID: 1;\nSOURCE   2 ORGANISM_SCIENTIFIC: AVIAN SARCOMA VIRUS;\nSOURCE   3 ORGANISM_TAXID: 11876\nSOURCE   4 STRAIN: SCHMIDT-RUPPIN B;\nSOURCE   5 EXPRESSION_SYSTEM: ESCHERICHIA COLI;\nSOURCE   6 EXPRESSION_SYSTEM_TAXID: 562\nSOURCE   7 EXPRESSION_SYSTEM_PLASMID: PRC23IN\nSOURCE    MOL_ID: 1;\nSOURCE   2 ORGANISM_SCIENTIFIC: GALLUS GALLUS;\nSOURCE   3 ORGANISM_COMMON: CHICKEN;\nSOURCE   3 ORGANISM_TAXID: 9031\nSOURCE   4 ORGAN: HEART;\nSOURCE   5 TISSUE: MUSCLE\nSOURCE    MOL_ID: 1;\nSOURCE   2 ORGANISM_SCIENTIFIC: MUS MUSCULUS, HOMO SAPIENS;\nSOURCE   3 ORGANISM_COMMON: MOUSE, HUMAN;\nSOURCE   3 ORGANISM_TAXID: 10090, 9606\nSOURCE   5 EXPRESSION_SYSTEM: ESCHERICHIA COLI;\nSOURCE   6 EXPRESSION_SYSTEM_TAXID: 344601\nSOURCE   6 EXPRESSION_SYSTEM_STRAIN: B171;\nSOURCE   7 EXPRESSION_SYSTEM_VECTOR_TYPE: PLASMID;\nSOURCE   8 EXPRESSION_SYSTEM_PLASMID: P4XH-M13; \n"
+    },
+    "HETSYN": {
+        "tok": null,
+        "rec": null,
+        "test": null
+    },
+    "SPLIT": {
+        "tok": null,
+        "rec": [
+            [
+                0,
+                6,
+                "rec",
+                "U6"
+            ],
+            [
+                8,
+                10,
+                "cont.",
+                "f4"
+            ],
+            [
+                11,
+                15,
+                "idCode1",
+                "U5"
+            ],
+            [
+                16,
+                20,
+                "idCode2",
+                "U5"
+            ],
+            [
+                21,
+                25,
+                "idCode3",
+                "U5"
+            ],
+            [
+                31,
+                35,
+                "idCode4",
+                "U5"
+            ],
+            [
+                36,
+                40,
+                "idCode5",
+                "U5"
+            ],
+            [
+                31,
+                45,
+                "idCode6",
+                "U5"
+            ],
+            [
+                46,
+                50,
+                "idCode7",
+                "U5"
+            ],
+            [
+                51,
+                55,
+                "idCode8",
+                "U5"
+            ],
+            [
+                56,
+                60,
+                "idCode9",
+                "U5"
+            ],
+            [
+                61,
+                65,
+                "idCode10",
+                "U5"
+            ],
+            [
+                66,
+                70,
+                "idCode11",
+                "U5"
+            ],
+            [
+                71,
+                75,
+                "idCode12",
+                "U5"
+            ]
+        ],
+        "test": "\nSPLIT      1VOQ 1VOR 1VOS 1VOU 1VOV 1VOW 1VOX 1VOY 1VP0 1VOZ \n"
+    },
+    "SHEET": {
+        "tok": null,
+        "rec": null,
+        "test": null
+    },
+    "LINK": {
+        "tok": null,
+        "rec": null,
+        "test": null
+    },
+    "KEYWDS": {
+        "tok": null,
+        "rec": [
+            [
+                0,
+                6,
+                "rec",
+                "U6"
+            ],
+            [
+                8,
+                10,
+                "cont.",
+                "f4"
+            ],
+            [
+                10,
+                79,
+                "keywds",
+                "U70"
+            ]
+        ],
+        "test": "\nKEYWDS    LYASE, TRICARBOXYLIC ACID CYCLE, MITOCHONDRION, OXIDATIVE\nKEYWDS   2 METABOLISM\n"
+    },
+    "HEADER": {
+        "tok": null,
+        "rec": [
+            [
+                0,
+                6,
+                "rec",
+                "U6"
+            ],
+            [
+                10,
+                50,
+                "classif.",
+                "U40"
+            ],
+            [
+                50,
+                59,
+                "depDate",
+                "U9"
+            ],
+            [
+                62,
+                66,
+                "idCode",
+                "U4"
+            ]
+        ],
+        "test": "\nHEADER    PHOTOSYNTHESIS                          28-MAR-07   2UXK\nHEADER    TRANSFERASE/TRANSFERASE INHIBITOR       17-SEP-04   1XH6\nHEADER    MEMBRANE PROTEIN, TRANSPORT PROTEIN     20-JUL-06   2HRT \n"
+    },
+    "MTRIX": {
+        "tok": null,
+        "rec": null,
+        "test": null
+    },
+    "ANISOU": {
+        "tok": null,
+        "rec": [
+            [
+                0,
+                6,
+                "record_name",
+                "U6"
+            ],
+            [
+                6,
+                11,
+                "atom_number",
+                "i8"
+            ],
+            [
+                11,
+                12,
+                "blank_1",
+                "U1"
+            ],
+            [
+                12,
+                16,
+                "atom_name",
+                "U4"
+            ],
+            [
+                16,
+                17,
+                "alt_loc",
+                "U1"
+            ],
+            [
+                17,
+                20,
+                "residue_name",
+                "U3"
+            ],
+            [
+                20,
+                21,
+                "blank_2",
+                "U1"
+            ],
+            [
+                21,
+                22,
+                "chain_id",
+                "U1"
+            ],
+            [
+                22,
+                26,
+                "residue_number",
+                "i8"
+            ],
+            [
+                26,
+                27,
+                "insertion",
+                "U1"
+            ],
+            [
+                27,
+                28,
+                "blank_3",
+                "U1"
+            ],
+            [
+                28,
+                35,
+                "U(1,1)",
+                "i8"
+            ],
+            [
+                35,
+                42,
+                "U(2,2)",
+                "i8"
+            ],
+            [
+                42,
+                49,
+                "U(3,3)",
+                "i8"
+            ],
+            [
+                49,
+                56,
+                "U(1,2)",
+                "i8"
+            ],
+            [
+                56,
+                63,
+                "U(1,3)",
+                "i8"
+            ],
+            [
+                63,
+                70,
+                "U(2,3)",
+                "i8"
+            ],
+            [
+                70,
+                76,
+                "blank_4",
+                "U6"
+            ],
+            [
+                76,
+                78,
+                "element_symbol",
+                "U2"
+            ],
+            [
+                78,
+                80,
+                "charge",
+                "f8"
+            ]
+        ],
+        "test": "\nANISOU29139  CA  ILE H 147     1684   2116   1492     43   -326    271       C\nANISOU29140  C   ILE H 147     1943   2384   1279     75   -416    278       C\nANISOU29141  O   ILE H 147     2054   2392   1570    -21   -695    193       O"
+    },
+    "ORIGX": {
+        "tok": null,
+        "rec": null,
+        "test": null
+    },
+    "SSBOND": {
+        "tok": null,
+        "rec": null,
+        "test": null
+    },
+    "REVDAT": {
+        "tok": null,
+        "rec": [
+            [
+                0,
+                6,
+                "rec",
+                "U6"
+            ],
+            [
+                7,
+                10,
+                "modNum",
+                "f4"
+            ],
+            [
+                10,
+                12,
+                "cont.",
+                "f4"
+            ],
+            [
+                13,
+                22,
+                "modDate",
+                "U9"
+            ],
+            [
+                23,
+                27,
+                "modId",
+                "U5"
+            ],
+            [
+                32,
+                33,
+                "modType",
+                "f4"
+            ],
+            [
+                39,
+                45,
+                "record1",
+                "U6"
+            ],
+            [
+                46,
+                52,
+                "record2",
+                "U6"
+            ],
+            [
+                53,
+                59,
+                "record3",
+                "U6"
+            ],
+            [
+                60,
+                66,
+                "record4",
+                "U6"
+            ]
+        ],
+        "test": "\nREVDAT   2   15-OCT-99 1ABC    1       REMARK\nREVDAT   1   09-JAN-89 1ABC    0\nREVDAT   2   11-MAR-08 2ABC    1       JRNL VERSN\nREVDAT   1   09-DEC-03 2ABC    0\n"
+    },
+    "TER": {
+        "tok": null,
+        "rec": null,
+        "test": null
+    },
+    "END": {
+        "tok": null,
+        "rec": null,
+        "test": null
+    },
+    "CONECT": {
+        "tok": null,
+        "rec": null,
+        "test": null
+    },
+    "HETNAM": {
+        "tok": null,
+        "rec": null,
+        "test": null
+    },
+    "MASTER": {
+        "tok": null,
+        "rec": null,
+        "test": null
+    },
+    "MODEL": {
+        "tok": null,
+        "rec": null,
+        "test": null
+    },
+    "REMARK": {
+        "tok": null,
+        "rec": [
+            [
+                0,
+                6,
+                "rec",
+                "U6"
+            ],
+            [
+                7,
+                10,
+                "rmrkNum",
+                "f8"
+            ],
+            [
+                11,
+                79,
+                "empty",
+                "U70"
+            ]
+        ],
+        "test": "\nREMARK   0\nREMARK   0 THIS ENTRY yyyy REFLECTS AN ALTERNATIVE MODELING OF THE\nREMARK   0 ORIGINAL STRUCTURAL DATA (RxxxxSF or xxxx.MR) DETERMINED BY\nREMARK   0 AUTHORS OF THE PDB ENTRY xxxx.\nREMARK   0\nREMARK   0 ORIGINAL DATA REFERENCE 1\nREMARK   0  PDB ID: XXXX\nREMARK   0  AUTH   AUTHOR INITIALS, AUTHOR LAST NAME\nREMARK   0  TITL\nREMARK   0  REF    JRNL_NAME                     VOLUMNE PG YEAR\nREMARK   0  REFN                   ISSN #\nREMARK   0  PMID   XXXXXXX\nREMARK   0  DOI    YYYYYYY \n"
+    },
+    "SCALE": {
+        "tok": null,
+        "rec": null,
+        "test": null
+    },
+    "OBSLTE": {
+        "tok": null,
+        "rec": [
+            [
+                0,
+                6,
+                "rec",
+                "U6"
+            ],
+            [
+                8,
+                10,
+                "cont.",
+                "f4"
+            ],
+            [
+                11,
+                20,
+                "depDate",
+                "U9"
+            ],
+            [
+                21,
+                25,
+                "idCode",
+                "U5"
+            ],
+            [
+                31,
+                35,
+                "ridCode1",
+                "U5"
+            ],
+            [
+                36,
+                40,
+                "ridCode2",
+                "U5"
+            ],
+            [
+                41,
+                45,
+                "ridCode3",
+                "U5"
+            ],
+            [
+                46,
+                50,
+                "ridCode4",
+                "U5"
+            ],
+            [
+                51,
+                55,
+                "ridCode5",
+                "U5"
+            ],
+            [
+                56,
+                60,
+                "ridCode6",
+                "U5"
+            ],
+            [
+                61,
+                65,
+                "ridCode7",
+                "U5"
+            ],
+            [
+                66,
+                70,
+                "ridCode8",
+                "U5"
+            ],
+            [
+                71,
+                75,
+                "ridCode9",
+                "U5"
+            ]
+        ],
+        "test": "\nOBSLTE     31-JAN-94 1MBP      2MBP\n"
+    }
+}

@@ -1,7 +1,9 @@
 # -*- coding: utf-8 -*-
+# Copyright (c) 2015-2016, Exa Analytics Development Team
+# Distributed under the terms of the Apache License 2.0
 '''
 Cube File Support
-====================
+##########################
 Cube files contain an atomic geometry and scalar field values corresponding to
 a physical quantity.
 '''
@@ -9,6 +11,7 @@ import numpy as np
 import pandas as pd
 from io import StringIO
 from exa import Series
+from exatomic import Isotope, Universe, Editor, Atom, Length
 from exa.relational.isotope import Z_to_symbol, symbol_to_Z
 from exatomic import Universe, Editor, Atom, Length
 from exatomic.field import AtomicField

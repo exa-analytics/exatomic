@@ -1,13 +1,17 @@
 # -*- coding: utf-8 -*-
+# Copyright (c) 2015-2016, Exa Analytics Development Team
+# Distributed under the terms of the Apache License 2.0
 '''
-Molecule Data
-===============================
+Molecule Table
+###################
 '''
 import numpy as np
 import pandas as pd
 from networkx import Graph
 from networkx.algorithms.components import connected_components
 from itertools import combinations
+from exa.numerical import DataFrame
+from exa.relational.isotope import symbol_to_element_mass
 from exa import DataFrame
 from exatomic import Isotope
 from exatomic.formula import string_to_dict
@@ -118,7 +122,7 @@ def compute_molecule(universe):
     # Set the molecule indices
     universe.atom['molecule'] = universe.atom.index.map(lambda idx: mapper[idx])
     # Now compute molecule table
-    universe.atom['mass'] = universe.atom['symbol'].map(Isotope.symbol_to_mass())
+    universe.atom['mass'] = universe.atom['symbol'].map(symbol_to_element_mass)
     # The coordinates of visual_atom represent grouped molecules for
     # periodic calculations and absolute coordinates for free boundary conditions.
     molecules = universe.atom.groupby('molecule')
@@ -137,7 +141,7 @@ def compute_molecule_com(universe):
     '''
     Compute molecules' center of mass.
     '''
-    universe.atom['mass'] = universe.atom['symbol'].map(Isotope.symbol_to_mass())
+    universe.atom['mass'] = universe.atom['symbol'].map(symbol_to_element_mass)
     universe.atom['xm'] = universe.visual_atom['x'].mul(universe.atom['mass'])
     universe.atom['ym'] = universe.visual_atom['y'].mul(universe.atom['mass'])
     universe.atom['zm'] = universe.visual_atom['z'].mul(universe.atom['mass'])

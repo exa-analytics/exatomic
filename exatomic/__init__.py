@@ -1,24 +1,42 @@
 # -*- coding: utf-8 -*-
-__exatomic_version__ = (0, 2, 1)                  # exatomic VERSION NUMBER
+# Copyright (c) 2015-2016, Exa Analytics Development Team
+# Distributed under the terms of the Apache License 2.0
+'''
+Exatomic
+#############
+This package provides a unified data format for organizing, analyzing, and
+visualizing data coming from the most common computational chemistry software
+programs.
+
+Note:
+    Althought the package is called exatomic, some class and function names are
+    shortened to just atomic.
+'''
+__exatomic_version__ = (0, 2, 4)
 __version__ = '.'.join((str(v) for v in __exatomic_version__))
 
 
-from exa.relational import Isotope, Length, Energy, Time, Amount, Constant
+from exa.relational import Isotope, Length, Energy, Time, Amount, Constant, Mass
+from exatomic import _config
+from exatomic import error
 
-
-from exatomic._config import _conf
-from exatomic.frame import Frame
-from exatomic.atom import Atom
-from exatomic.molecule import Molecule
-from exatomic.basis import PlanewaveBasisSet, GaussianBasisSet, SlaterBasisSet
-from exatomic.universe import Universe
+# User API
+from exatomic.container import Universe
 from exatomic.editor import Editor
-from exatomic.formula import SimpleFormula
-from exatomic.filetypes import XYZ, write_xyz, Cube
-from exatomic.algorithms import nearest_molecules, einstein_relation, radial_pair_correlation
-from exatomic import tests
+
+from exatomic.filetypes import XYZ
 
 
-if not _conf['exa_persistent']:
-    from exatomic._install import install
-    install()
+
+
+#from exatomic import _config
+#_config.update_config()
+#from exatomic.universe import Universe
+#from exatomic.editor import Editor
+#from exatomic.filetypes import XYZ, write_xyz, Cube
+#from exatomic.algorithms import nearest_molecules, einstein_relation, radial_pair_correlation
+#from exatomic import tests, _install
+#
+#if _config.config['exa_persistent'] == False:
+#    _install.install()
+#

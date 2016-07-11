@@ -1,2 +1,0 @@
-Enhancement Proposals
-========================

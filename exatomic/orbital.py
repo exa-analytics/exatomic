@@ -1,8 +1,11 @@
 # -*- coding: utf-8 -*-
+# Copyright (c) 2015-2016, Exa Analytics Development Team
+# Distributed under the terms of the Apache License 2.0
 '''
-orbital
-=============================
-All of the dataframe structures and functions associated with the
+Orbital DataFrame
+####################
+Orbital information such as centers and energies. All of the dataframe structures
+and functions associated with the
 results of a quantum chemical calculation. The Orbital table itself
 summarizes information such as centers and energies. The momatrix
 table contains a C matrix as it is presented in quantum textbooks,
@@ -11,6 +14,28 @@ matrix as one would write it out. This table should have dimensions
 N_basis_functions * N_basis_functions. The DensityMatrix table stores
 a triangular matrix in columnar format and contains a similar square()
 method to return the matrix as we see it on a piece of paper.
+
++-------------------+----------+-------------------------------------------+
+| Column            | Type     | Description                               |
++===================+==========+===========================================+
+| frame             | category | non-unique integer (req.)                 |
++-------------------+----------+-------------------------------------------+
+| orbital           | int      | vector of MO coefficient matrix           |
++-------------------+----------+-------------------------------------------+
+| label             | int      | label of orbital                          |
++-------------------+----------+-------------------------------------------+
+| occupation        | float    | population of orbital                     |
++-------------------+----------+-------------------------------------------+
+| energy            | float    | eigenvalue of orbital eigenvector         |
++-------------------+----------+-------------------------------------------+
+| symmetry          | str      | symmetry designation (if applicable)      |
++-------------------+----------+-------------------------------------------+
+| x                 | float    | orbital center in x                       |
++-------------------+----------+-------------------------------------------+
+| y                 | float    | orbital center in y                       |
++-------------------+----------+-------------------------------------------+
+| z                 | float    | orbital center in z                       |
++-------------------+----------+-------------------------------------------+
 '''
 import re
 import numpy as np
