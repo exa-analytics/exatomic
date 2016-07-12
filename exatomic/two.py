@@ -30,6 +30,8 @@ import numpy as np
 import pandas as pd
 from traitlets import Unicode
 from exa.numerical import DataFrame
+from exa.relational.isotope import symbols_to_radii
+from exatomic.math.distance import free_two_frame, periodic_two_frame
 
 
 class BaseTwo(DataFrame):
@@ -59,12 +61,8 @@ class BaseTwo(DataFrame):
         b0 = np.empty((n, ), dtype='O')
         b1 = b0.copy()
         for i, (frame, grp) in enumerate(grps):
-            if frame in grps.groups:
-                b0[i] = grp[self._idx0].values
-                b1[i] = grp[self._idx1].values
-            else:
-                b0[i] = []
-                b1[i] = []
+            b0[i] = grp[self._idx0].values
+            b1[i] = grp[self._idx1].values
         b0 = Unicode(pd.Series(b0).to_json(orient='values')).tag(sync=True)
         b1 = Unicode(pd.Series(b1).to_json(orient='values')).tag(sync=True)
         self._set_categories()
@@ -99,21 +97,119 @@ def compute_two(universe):
     '''
     if universe.frame.is_periodic:
         return compute_periodic_two(universe)
-    else:
-        return compute_free_two(universe)
+    return compute_free_two(universe)
 
 
-def compute_free_two(universe):
+def compute_free_two(universe, bond_extra=0.55):
     '''
     Compute free boundary condition two body properties from an input universe.
     '''
-    return pd.DataFrame()
+    groups = universe.atom.groupby('frame')
+    n = groups.ngroups
+    dxs = np.empty((n, ), dtype='O')
+    dys = np.empty((n, ), dtype='O')
+    dzs = np.empty((n, ), dtype='O')
+    ds = np.empty((n, ), dtype='O')
+    idx0s = np.empty((n, ), dtype='O')
+    idx1s = np.empty((n, ), dtype='O')
+    fdxs = np.empty((n, ), dtype='O')
+    for i, (frame, group) in enumerate(groups):
+        x = group['x'].values.astype(np.float64)
+        y = group['y'].values.astype(np.float64)
+        z = group['z'].values.astype(np.float64)
+        idx = group.index.values.astype(np.int64)
+        dx, dy, dz, idx0, idx1, fdx, d = free_two_frame(x, y, z, idx, frame)
+        dxs[i] = dx
+        dys[i] = dy
+        dzs[i] = dz
+        idx0s[i] = idx0
+        idx1s[i] = idx1
+        fdxs[i] = fdx
+        ds[i] = d
+    dxs = np.concatenate(dxs)
+    dys = np.concatenate(dys)
+    dzs = np.concatenate(dzs)
+    idx0s = pd.Series(np.concatenate(idx0s), dtype='category')
+    idx1s = pd.Series(np.concatenate(idx1s), dtype='category')
+    fdxs = pd.Series(np.concatenate(fdxs), dtype='category')
+    ds = np.concatenate(ds)
+    two = pd.DataFrame.from_dict({'dx': dxs, 'dy': dys, 'dz': dzs, 'distance': ds,
+                                  'frame': fdxs, 'atom0': idx0s, 'atom1': idx1s})
+    mapper = universe.atom['symbol'].astype(str)
+    two['symbol0'] = two['atom0'].astype(np.int64).map(mapper)
+    two['symbol1'] = two['atom1'].astype(np.int64).map(mapper)
+    two['symbols'] = (two['symbol0'] + two['symbol1']).astype('category')
+    del two['symbol0']
+    del two['symbol1']
+    mapper = symbols_to_radii()
+    two['mbl'] = two['symbols'].astype(str).map(mapper) + bond_extra
+    two['bond'] = two['distance'] < two['mbl']
+    del two['mbl']
+    return FreeTwo(two)
 
 
-def compute_periodic_two(universe):
+def compute_periodic_two(universe, bond_extra=0.55):
     '''
+    Compute periodic two body properties.
     '''
-    return pd.DataFrame()
+    grps = universe.atom[['x', 'y', 'z', 'frame']].copy()
+    grps.update(universe.unit_atom)
+    grps = grps.groupby('frame')
+    n = grps.ngroups
+    dxs = np.empty((n, ), dtype='O')
+    dys = np.empty((n, ), dtype='O')
+    dzs = np.empty((n, ), dtype='O')
+    idx0s = np.empty((n, ), dtype='O')
+    idx1s = np.empty((n, ), dtype='O')
+    fdxs = np.empty((n, ), dtype='O')
+    pxs = np.empty((n, ), dtype='O')
+    pys = np.empty((n, ), dtype='O')
+    pzs = np.empty((n, ), dtype='O')
+    ds = np.empty((n, ), dtype='O')
+    for i, (frame, grp) in enumerate(grps):
+        ux = grp['x'].values.astype(np.float64)
+        uy = grp['y'].values.astype(np.float64)
+        uz = grp['z'].values.astype(np.float64)
+        idx = grp.index.values.astype(np.int64)
+        rx, ry, rz = universe.frame.ix[frame, ['rx', 'ry', 'rz']]
+        dx, dy, dz, d, idx0, idx1, fdx, px, py, pz = periodic_two_frame(ux, uy, uz, rx, ry, rz, idx, frame)
+        dxs[i] = dx
+        dys[i] = dy
+        dzs[i] = dz
+        idx0s[i] = idx0
+        idx1s[i] = idx1
+        pxs[i] = px
+        pys[i] = py
+        pzs[i] = pz
+        ds[i] = d
+        fdxs[i] = fdx
+    dxs = np.concatenate(dxs)
+    dys = np.concatenate(dys)
+    dzs = np.concatenate(dzs)
+    ds = np.concatenate(ds)
+    idx0s = pd.Series(np.concatenate(idx0s), dtype='category')
+    idx1s = pd.Series(np.concatenate(idx1s), dtype='category')
+    fdxs = pd.Series(np.concatenate(fdxs), dtype='category')
+    pxs = np.concatenate(pxs)
+    pys = np.concatenate(pys)
+    pzs = np.concatenate(pzs)
+    patom = pd.DataFrame.from_dict({'x': pxs, 'y': pys, 'z': pzs, 'frame': fdxs,
+                                    'atom': idx1s})
+    ptwo = pd.DataFrame.from_dict({'dx': dxs, 'dy': dys, 'dz': dzs, 'distance': ds,
+                                   'frame': fdxs, 'prjd_atom0': idx0s,
+                                   'prjd_atom1': idx1s})
+    mapper = universe.atom['symbol'].astype(str)
+    ptwo['symbol0'] = ptwo['prjd_atom0'].astype(np.int64).map(mapper)
+    ptwo['symbol1'] = ptwo['prjd_atom1'].astype(np.int64).map(mapper)
+    ptwo['symbols'] = (ptwo['symbol0'] + ptwo['symbol1']).astype('category')
+    del ptwo['symbol0']
+    del ptwo['symbol1']
+    mapper = symbols_to_radii()
+    ptwo['mbl'] = ptwo['symbols'].astype(str).map(mapper) + bond_extra
+    ptwo['bond'] = ptwo['distance'] < ptwo['mbl']
+    del ptwo['mbl']
+    return ptwo, patom
+
 
 #import numpy as np
 #import pandas as pd

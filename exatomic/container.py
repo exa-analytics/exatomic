@@ -15,7 +15,7 @@ import pandas as pd
 import numpy as np
 from exa.container import TypedMeta, Container
 from exatomic.widget import UniverseWidget
-from exatomic.atom import Atom
+from exatomic.atom import Atom, UnitAtom, ProjectedAtom
 from exatomic.frame import Frame, compute_frame_from_atom
 from exatomic.two import FreeTwo, PeriodicTwo
 from exatomic.two import compute_two
@@ -30,6 +30,8 @@ class UniverseTypedMeta(TypedMeta):
     atom = Atom
     free_two = FreeTwo
     periodic_two = PeriodicTwo
+    unit_atom = UnitAtom
+    projected_atom = ProjectedAtom
 
 
 class Universe(Container, metaclass=UniverseTypedMeta):
@@ -43,6 +45,7 @@ class Universe(Container, metaclass=UniverseTypedMeta):
         atom (:class:`~exatomic.atom.Atom`): Atomic coordinates, symbols, forces, etc.
     '''
     _widget_class = UniverseWidget
+    _cardinal_axis = 'frame'
 
     @property
     def two(self):
@@ -60,11 +63,17 @@ class Universe(Container, metaclass=UniverseTypedMeta):
         '''
         self.frame = compute_frame_from_atom(self.atom)
 
+    def compute_unit_atom(self):
+        '''Compute minimal image for periodic systems.'''
+        self.unit_atom = UnitAtom.from_universe(self)
+
     def compute_free_two(self, *args, **kwargs):
         self.free_two = compute_two(self, *args, **kwargs)
 
     def compute_periodic_two(self, *args, **kwargs):
-        self.periodic_two = compute_two(self, *args, **kwargs)
+        ptwo, patom = compute_two(self, *args, **kwargs)
+        self.periodic_two = ptwo
+        self.projected_atom = patom
 
     def _custom_traits(self):
         '''
@@ -72,7 +81,7 @@ class Universe(Container, metaclass=UniverseTypedMeta):
         '''
         traits = {}
         if self.two is not None and len(self.two) > 0:
-            mapper = self.atom['label']
+            mapper = self.atom['label'].astype(np.int64)
             traits.update(self.two._bond_traits(mapper))
         return traits
 
