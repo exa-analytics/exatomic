@@ -1,0 +1,5 @@
+# The package including static
+recursive-include exatomic *
+
+# root text files
+include requirements.txt
