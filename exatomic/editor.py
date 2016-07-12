@@ -20,7 +20,7 @@ class Editor(BaseEditor, metaclass=UniverseTypedMeta):
         '''
         Convert the editor to a :class:`~exatomic.container.Universe` object.
         '''
-        return Universe(*args, frame=self.frame, atom=self.atom, **kwargs)
+        return Universe(*args, atom=self.atom, frame=self.frame, **kwargs)
 
 
 #import numpy as np
