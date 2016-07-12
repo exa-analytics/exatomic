@@ -1,16 +1,1 @@
-numpy
-scipy
-matplotlib
-sqlalchemy
-pandas>=0.18
-networkx
-sympy
-seaborn
-jupyter
-notebook==4.1
-ipywidgets==4.1
-ipyparallel
-sphinx
-sphinxcontrib-autoanysrc
-nose
 exa>=0.2.5
