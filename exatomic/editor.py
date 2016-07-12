@@ -9,6 +9,7 @@ found file formats directly into :class:`~exatomic.container.Universe` objects.
 '''
 from exa.editor import Editor as BaseEditor
 from exatomic.container import UniverseTypedMeta, Universe
+from exatomic.frame import compute_frame_from_atom
 
 
 class Editor(BaseEditor, metaclass=UniverseTypedMeta):

@@ -9,8 +9,8 @@ before_install:
     - sudo apt-get update
     - sudo apt-get install libblas-dev liblapack-dev build-essential gfortran
 install:
-    - pip install numpy scipy matplotlib pandas networkx sympy seaborn jupyter
-    - pip install notebook ipywidgets ipyparallel sphinx nose exa
+    - pip install numpy scipy matplotlib sqlalchemy pandas networkx sympy
+    - pip install seaborn jupyter notebook ipywidgets ipyparallel sphinx nose exa
     - pip install codecov
 script:
     - nosetests --with-doctest --with-coverage
