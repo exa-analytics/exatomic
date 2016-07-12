@@ -17,7 +17,7 @@ __version__ = '.'.join((str(v) for v in __exatomic_version__))
 
 
 from exa.relational import Isotope, Length, Energy, Time, Amount, Constant, Mass
-from exatomic import _config
+from exatomic import _config as config
 from exatomic import error
 
 # User API
