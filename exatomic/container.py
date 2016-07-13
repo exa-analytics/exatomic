@@ -15,7 +15,9 @@ import pandas as pd
 import numpy as np
 from exa.container import TypedMeta, Container
 from exatomic.widget import UniverseWidget
+from exatomic.frame import Frame, compute_frame_from_atom
 from exatomic.atom import Atom, UnitAtom, ProjectedAtom
+from exatomic.two import FreeTwo, PeriodicTwo, compute_two, compute_bond_count
 from exatomic.widget import UniverseWidget
 #from exatomic.field import AtomicField
 #from exatomic.orbital import Orbital, MOMatrix, DensityMatrix
@@ -86,6 +88,9 @@ class Universe(Container, metaclass=UniverseTypedMeta):
         ptwo, patom = compute_two(self, *args, **kwargs)
         self.periodic_two = ptwo
         self.projected_atom = patom
+
+    def compute_bond_count(self):
+        self.atom['bond_count'] = compute_bond_count(self)
 
     def _custom_traits(self):
         '''
