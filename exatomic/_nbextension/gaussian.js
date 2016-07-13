@@ -50,22 +50,28 @@ define([
         */
 
         // Compute the normalization factor for each basis function independently
+        console.log('CONSTRUCT MOS');
+        console.log(bfns);
+        console.log(coefs);
+        console.log(dims);
         var norms = [];
         var nbfns = bfns.length;
         for (var bf = 0; bf < nbfns; bf++) {
             var func = new Function('x,y,z', 'return '.concat(bfns[bf]));
             norms.push(num.compute_field(dims.x, dims.y, dims.z, dims.n, func)['norm']);
         };
+        console.log(norms);
         var mos = [];
         for (var i = 0; i < nbfns; i++) {
             var mo = 'return ';
             for (var j = 0; j < nbfns; j++) {
                 if (j == nbfns - 1) {
-                    mo = mo.concat(coefs[j][i].toFixed(12), ' * ', norms[j], ' * (', bfns[j], ')');
+                    mo = mo.concat(coefs[j][i].toFixed(12), ' * ', norms[j].toFixed(12), ' * (', bfns[j], ')');
                 } else {
-                    mo = mo.concat(coefs[j][i].toFixed(12), ' * ', norms[j], ' * (', bfns[j], ') + ');
+                    mo = mo.concat(coefs[j][i].toFixed(12), ' * ', norms[j].toFixed(12), ' * (', bfns[j], ') + ');
                 };
             };
+            console.log(mo);
             mos.push(new Function('x,y,z', mo));
         };
         return mos;
@@ -80,7 +86,6 @@ define([
       a computational code orders basis functions, therefore it will not work
       for all cases and a different function may be needed.
       */
-      /*
         console.log('inside order_gtf_basis');
         console.log('xs');
         console.log(xs);
@@ -106,7 +111,6 @@ define([
         console.log(alpha);
         console.log('sgto');
         console.log(sgto);
-        */
         var bfns = [];
         var nat = xs.length;
         for (var atom = 0; atom < nat; atom++) {

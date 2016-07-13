@@ -355,6 +355,35 @@ define([
             var xs = this.gv(this.view.atom_x, this.top.index);
             var ys = this.gv(this.view.atom_y, this.top.index);
             var zs = this.gv(this.view.atom_z, this.top.index);
+            var nat = 0;
+            var to_expand = [];
+            if (typeof xs === 'number') {
+                to_expand.push('xs');
+            } else {
+                nat = xs.length;
+            };
+            if (typeof ys === 'number') {
+                to_expand.push('ys');
+            } else {
+                nat = ys.length;
+            };
+            if (typeof zs === 'number') {
+                to_expand.push('zs');
+            } else {
+                nat = zs.length;
+            };
+            for (var thing of to_expand) {
+                if (thing === 'xs') {
+                    xs = utility.repeat_float(xs, nat);
+                } else if (thing === 'ys') {
+                    ys = utility.repeat_float(ys, nat);
+                } else if (thing === 'zs') {
+                    zs = utility.repeat_float(zs, nat);
+                };
+            };
+            console.log('xs');
+            console.log(xs);
+
             var sets = this.gv(this.view.atom_set, this.top.index);
             var ds = this.gv(this.view.gaussianbasisset_d, this.top.index);
             var ls = this.gv(this.view.gaussianbasisset_l, this.top.index);
@@ -373,8 +402,13 @@ define([
             dims['n'] = dims.nx * dims.ny * dims.nz;
 
             var bfns = gaussian.order_gtf_basis(xs, ys, zs, sets, nbfns, ds, ls, alphas, pl, pm, pn, sgto);
+            console.log(bfns);
             var mos = gaussian.construct_mos(bfns, coefs, dims);
+            console.log(mos);
+            console.log(typeof mos[0]);
             this.cube_field = new gaussian.GaussianOrbital(dims, mos[this.orbitals['orbital']]);
+            console.log(this.cube_field);
+            console.log(this.cube_field.values);
             this.app3d.remove_meshes(this.cube_field_mesh);
             this.cube_field_mesh = this.app3d.add_scalar_field(this.cube_field, this.orbitals.isovalue, 2);
             console.log('leaving render orbital');
