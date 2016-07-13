@@ -9,15 +9,21 @@ visualizing data coming from the most common computational chemistry software
 programs.
 
 Note:
-    Althought the package is called exatomic, some class and function names are
+    Although the package is called exatomic, some class and function names are
     shortened to just atomic.
+
+Warning:
+    This package uses the `atomic`_ unit system - all quantities appear in
+    atomic units!
+
+.. _atomic: https://en.wikipedia.org/wiki/Atomic_units
 '''
 __exatomic_version__ = (0, 2, 4)
 __version__ = '.'.join((str(v) for v in __exatomic_version__))
 
 
 from exa.relational import Isotope, Length, Energy, Time, Amount, Constant, Mass
-from exatomic import _config as config
+from exatomic import _config
 from exatomic import error
 
 # User API

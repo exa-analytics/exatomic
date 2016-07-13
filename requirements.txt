@@ -15,3 +15,4 @@ sphinx
 sphinx_rtd_theme
 sphinxcontrib-autoanysrc
 exa
+exa>=0.2.5

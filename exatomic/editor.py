@@ -19,7 +19,7 @@ class Editor(BaseEditor, metaclass=UniverseTypedMeta):
     '''
     def parse_frame(self):
         '''
-        Create a minimal_frame table
+        Create a minimal_frame table.
         '''
         self.frame = compute_frame_from_atom(self.atom)
 
@@ -27,10 +27,9 @@ class Editor(BaseEditor, metaclass=UniverseTypedMeta):
         '''
         Convert the editor to a :class:`~exatomic.container.Universe` object.
         '''
-
         to_parse = [func.replace('parse_', '') for func in vars(self.__class__).keys() if func[:5] == 'parse']
         kwargs.update({attr: getattr(self, attr) for attr in to_parse})
-        kwargs.update({'frame': self.frame})
+#        kwargs.update({'frame': self.frame})
         return Universe(*args, **kwargs)
 
 

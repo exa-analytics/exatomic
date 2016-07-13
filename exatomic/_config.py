@@ -11,19 +11,15 @@ configuration options and usage see `exa`_.
 '''
 import os
 import shutil
-import platform
+import atexit
 from exa.utility import mkp
-from exa._config import config
+from exa._config import config, del_update
 
 
-if platform.system().lower() == 'windows':   # Get exatomic's root directory
-    home = os.getenv('USERPROFILE')
-else:
-    home = os.getenv('HOME')
-
-root = mkp(home, '.exa', mk=True)            # Make exa root directory
 config['dynamic']['exatomic_pkgdir'] = os.path.dirname(__file__)
 
-if 'notebooks' in config['paths']['notebooks']:
+
+if config['paths']['update'] == '1':
     shutil.copyfile(mkp(config['dynamic']['exatomic_pkgdir'], '_static', 'exatomic_demo.ipynb'),
                     mkp(root, 'notebooks', 'exatomic_demo.ipynb'))
+    atexit.register(del_update)
