@@ -9,7 +9,7 @@ This is preferred to an explicit parsing and storage of a given
 basis set ordering scheme.
 '''
 import numpy as np
-from exatomic import _conf
+from exatomic._config import config
 
 
 lmap = {'s': 0, 'p': 1, 'd': 2, 'f': 3, 'g': 4, 'h': 5, 'i': 6, 'k': 7, 'l': 8,
@@ -55,6 +55,6 @@ def cartesian_gtf_exponents(l):
     return values
 
 
-if _conf['pkg_numba']:
+if config['dynamic']['numba'] == 'true':
     from numba import jit
     cartesian_gtf_exponents = jit(nopython=True, cache=True)(cartesian_gtf_exponents)

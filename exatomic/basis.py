@@ -142,7 +142,7 @@ class GaussianBasisSet(BasisSet):
     _indices = ['primitive']
     _traits = ['shell_function']
     #_groupbys = ['frame']
-    _precision = 8
+    #_precision = {'alpha': 8, 'd': 8}
     _categories = {'set': np.int64, 'l': np.int64, 'shell_function': np.int64,
                    'frame': np.int64}
 
