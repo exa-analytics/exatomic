@@ -1,4 +1,4 @@
-sudo: true
+sudo: false
 language: python
 python:
     - "3.4"
@@ -13,16 +13,12 @@ addons:
     - gfortran
     - libgmp-dev
     - libmpfr-dev
-    - ccache
 before_install:
-    - sudo add-apt-repository "deb http://archive.ubuntu.com/ubuntu $(lsb_release -sc) main universe"
-    - sudo apt-get update
-    - sudo apt-get install libblas-dev liblapack-dev build-essential gfortran
+    - export TESTMODE=fast
 install:
-    - pip install numpy scipy matplotlib sqlalchemy pandas networkx sympy
-    - pip install seaborn jupyter notebook ipywidgets ipyparallel sphinx nose
-    - pip install traitlets exa
-    - pip install codecov
+    - travis_retry pip install numpy scipy matplotlib sqlalchemy pandas networkx sympy
+    - travis_retry pip install seaborn jupyter notebook ipywidgets ipyparallel sphinx nose
+    - travis_retry pip install traitlets gmpy2 exa codecov
 script:
     - nosetests --with-doctest --with-coverage
 after_success:
