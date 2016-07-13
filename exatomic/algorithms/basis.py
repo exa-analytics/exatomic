@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 '''
 Basis Function Manipulation
-===============================
+################################
 Functions for managing and manipulating basis set data.
 Many of the ordering schemes used in computational codes can be
 generated programmatically with the right numerical function.
