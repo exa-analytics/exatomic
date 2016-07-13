@@ -1,13 +1,13 @@
 # -*- coding: utf-8 -*-
-## Copyright (c) 2015-2016, Exa Analytics Development Team
-## Distributed under the terms of the Apache License 2.0
-#'''
-#Tests for :mod:`~exatomic.xyz`
-#################################
-#
-#'''
+# Copyright (c) 2015-2016, Exa Analytics Development Team
+# Distributed under the terms of the Apache License 2.0
+'''
+Tests for :mod:`~exatomic.xyz`
+################################
+
+'''
 #from io import StringIO
-#from exa.testers import UnitTester
+#from exa.test import UnitTester
 #from exatomic.xyz import read_xyz
 #from exatomic import _np as np
 #
@@ -42,4 +42,3 @@
 #        to = xyz._parse_xyz(self.raw, 'A', self.idx)
 #        self.assertTrue(np.all(np.array(to.index.levels[0]) == np.array([0, 1])))
 #        self.assertTrue(np.all(np.array(to.index.levels[1]) == np.array([0, 1, 2])))
-#
