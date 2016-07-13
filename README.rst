@@ -54,3 +54,8 @@ Legal
 ###############
 | Copyright (c) 2015-2016, Exa Analytics Development Team
 | Distributed under the terms of the Apache License 2.0
+
+
+.. image:: https://badges.gitter.im/exa-analytics/exatomic.svg
+   :alt: Join the chat at https://gitter.im/exa-analytics/exatomic
+   :target: https://gitter.im/exa-analytics/exatomic?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge
