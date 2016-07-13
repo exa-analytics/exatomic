@@ -8,7 +8,8 @@ slicing by selection of nearest neighbors.
 '''
 import numpy as np
 import pandas as pd
-from exatomic import Universe, Atom
+from exatomic.container import Universe
+from exatomic.atom import Atom
 
 
 def nearest_molecules(universe, n, sources, others=None, source_symbols=None,

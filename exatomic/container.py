@@ -14,8 +14,12 @@ like density functional theory exchange correlation functional.
 import pandas as pd
 import numpy as np
 from exa.container import TypedMeta, Container
-from exatomic.widget import UniverseWidget
 from exatomic.atom import Atom
+from exatomic.widget import UniverseWidget
+from exatomic.field import AtomicField
+from exatomic.orbital import Orbital, MOMatrix, DensityMatrix
+from exatomic.basis import (SphericalGTFOrder, CartesianGTFOrder, Overlap,
+                            BasisSetSummary, GaussianBasisSet, BasisSetOrder)
 from exatomic.frame import Frame, compute_frame_from_atom
 
 
@@ -24,8 +28,18 @@ class UniverseTypedMeta(TypedMeta):
     Defines strongly typed attributes of the :class:`~exatomic.universe.Universe`
     and :class:`~exatomic.editor.AtomicEditor` objects.
     '''
-    frame = Frame
     atom = Atom
+    frame = Frame
+    orbital = Orbital
+    overlap = Overlap
+    momatrix = MOMatrix
+    field = AtomicField
+    density = DensityMatrix
+    basis_set_order = BasisSetOrder
+    basis_set_summary = BasisSetSummary
+    gaussian_basis_set = GaussianBasisSet
+    spherical_gtf_order = SphericalGTFOrder
+    cartesian_gtf_order = CartesianGTFOrder
 #    two_free = Two
 #    two_periodic = PeriodicTwo
 #    field = AtomicField
@@ -79,9 +93,6 @@ class Universe(Container, metaclass=UniverseTypedMeta):
 #from exatomic.molecule import Molecule
 #from exatomic.molecule import compute_molecule as _cm
 #from exatomic.molecule import compute_molecule_com as _cmcom
-#from exatomic.orbital import Orbital, MOMatrix
-#from exatomic.basis import (SphericalGTFOrder, CartesianGTFOrder, BasisSet,
-#                            BasisSet, BasisSetOrder)
 #from exatomic.basis import lmap
 
 

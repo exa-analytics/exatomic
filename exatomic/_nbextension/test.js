@@ -173,9 +173,15 @@ define([
 
             this.sh = {'l': 0, 'm': 0, 'isovalue': 0.03};
             this.sh['folder'] = this.gui.addFolder('Solid Harmonics');
-            this.sh['isovalue_slider'] = this.sh.folder.add(this.sh, 'isovalue', 0.0001, 1.0);
+            //this.sh['isovalue_slider'] = this.sh.folder.add(this.sh, 'isovalue', 0.0001, 1.0);
             this.sh['l_slider'] = this.sh.folder.add(this.sh, 'l').min(0).max(7).step(1);
             this.sh['ml_slider'] = this.sh.folder.add(this.sh, 'm').min(0).max(0).step(1);
+            /*
+            this.sh['isovalue_slider'].onFinishChange(function(value) {
+                self.sh['isovalue'] = value;
+                self.render_solid_harmonic();
+            });
+            */
             this.sh.l_slider.onFinishChange(function(value) {
                 self.sh.l = parseInt(value);
                 self.update_m();
@@ -207,13 +213,13 @@ define([
         render_ao() {
             this.field = new AO(this.dimensions, this.ao['function']);
             this.app3d.remove_meshes(this.active_objs);
-            this.active_objs = this.app3d.add_scalar_field(this.field, this.ao['isovalue'], 2);
+            this.active_objs = this.app3d.add_scalar_field(this.field, this.ao.isovalue, 2);
         };
 
         render_gtf() {
             this.field = new GTF(this.dimensions, this.gtf['function']);
             this.app3d.remove_meshes(this.active_objs);
-            this.active_objs = this.app3d.add_scalar_field(this.field, this.gtf['isovalue'], 2);
+            this.active_objs = this.app3d.add_scalar_field(this.field, this.gtf.isovalue, 2);
         };
 
         resize() {

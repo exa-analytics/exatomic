@@ -44,8 +44,8 @@ import sympy as sy
 from traitlets import Unicode
 from sympy import Add, Mul
 from exa import DataFrame, Series
-from exa.algorithms import meshgrid3d
-from exatomic import _conf
+#from exa.algorithms import meshgrid3d
+from exatomic import config
 from exatomic.basis import lmap
 from exatomic.field import AtomicField
 from collections import OrderedDict
@@ -305,10 +305,10 @@ def add_cubic_field_from_mo(universe, rmin, rmax, nr, vector=None):
     dyj = y[1] - y[0]
     dzk = z[1] - z[0]
     dv = dxi * dyj * dzk
-    x, y, z = meshgrid3d(x, y, z)
+#    x, y, z = meshgrid3d(x, y, z)
     # Get symbolic representations of the basis functions
     basis_funcs = _voluminate_gtfs(universe, x, y, z)
-    if _conf['pkg_numba']:
+    if config['pkg_numba']:
         from numba import vectorize, float64
         nb = vectorize([float64(float64, float64, float64)], nopython=True)
         for i, func in enumerate(basis_funcs):
