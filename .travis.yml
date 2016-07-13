@@ -15,10 +15,13 @@ addons:
     - libmpfr-dev
 before_install:
     - export TESTMODE=fast
+    - wget https://github.com/exa-analytics/exa/archive/master.zip
+    - unzip master.zip
+    - cd exa-master && pip install -e .
 install:
     - travis_retry pip install numpy scipy matplotlib sqlalchemy pandas networkx sympy
     - travis_retry pip install seaborn jupyter notebook ipywidgets ipyparallel sphinx nose
-    - travis_retry pip install traitlets gmpy2 exa codecov
+    - travis_retry pip install traitlets gmpy2 codecov
 script:
     - nosetests --with-doctest --with-coverage
 after_success:
