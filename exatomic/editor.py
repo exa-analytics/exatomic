@@ -29,7 +29,7 @@ class Editor(BaseEditor, metaclass=UniverseTypedMeta):
         '''
         to_parse = [func.replace('parse_', '') for func in vars(self.__class__).keys() if func[:5] == 'parse']
         kwargs.update({attr: getattr(self, attr) for attr in to_parse})
-        kwargs.update({'frame': self.frame})
+#        kwargs.update({'frame': self.frame})
         return Universe(*args, **kwargs)
 
 
