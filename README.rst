@@ -1,5 +1,6 @@
 | |logo|
 | |docs|
+| |gitter|
 | |build|
 | |issues|
 | |cov|
@@ -16,6 +17,10 @@
 .. |docs| image:: https://readthedocs.org/projects/exatomic/badge/?version=latest
     :target: http://exatomic.readthedocs.io/en/latest/?badge=latest
     :alt: Documentation Status
+
+.. |gitter| image:: https://badges.gitter.im/exa-analytics/exatomic.svg
+   :alt: Join the chat at https://gitter.im/exa-analytics/exatomic
+   :target: https://gitter.im/exa-analytics/exatomic?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge
 
 .. |issues| image:: https://www.quantifiedcode.com/api/v1/project/99e4f26905194100ad4c27aba432ec4c/badge.svg
     :target: https://www.quantifiedcode.com/app/project/99e4f26905194100ad4c27aba432ec4c
@@ -56,6 +61,3 @@ Legal
 | Distributed under the terms of the Apache License 2.0
 
 
-.. image:: https://badges.gitter.im/exa-analytics/exatomic.svg
-   :alt: Join the chat at https://gitter.im/exa-analytics/exatomic
-   :target: https://gitter.im/exa-analytics/exatomic?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge
