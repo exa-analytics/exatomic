@@ -14,28 +14,6 @@ matrix as one would write it out. This table should have dimensions
 N_basis_functions * N_basis_functions. The DensityMatrix table stores
 a triangular matrix in columnar format and contains a similar square()
 method to return the matrix as we see it on a piece of paper.
-
-+-------------------+----------+-------------------------------------------+
-| Column            | Type     | Description                               |
-+===================+==========+===========================================+
-| frame             | category | non-unique integer (req.)                 |
-+-------------------+----------+-------------------------------------------+
-| orbital           | int      | vector of MO coefficient matrix           |
-+-------------------+----------+-------------------------------------------+
-| label             | int      | label of orbital                          |
-+-------------------+----------+-------------------------------------------+
-| occupation        | float    | population of orbital                     |
-+-------------------+----------+-------------------------------------------+
-| energy            | float    | eigenvalue of orbital eigenvector         |
-+-------------------+----------+-------------------------------------------+
-| symmetry          | str      | symmetry designation (if applicable)      |
-+-------------------+----------+-------------------------------------------+
-| x                 | float    | orbital center in x                       |
-+-------------------+----------+-------------------------------------------+
-| y                 | float    | orbital center in y                       |
-+-------------------+----------+-------------------------------------------+
-| z                 | float    | orbital center in z                       |
-+-------------------+----------+-------------------------------------------+
 '''
 import re
 import numpy as np
@@ -45,7 +23,7 @@ from traitlets import Unicode
 from sympy import Add, Mul
 from exa import DataFrame, Series
 #from exa.algorithms import meshgrid3d
-from exatomic import config
+from exatomic._config import config
 from exatomic.basis import lmap
 from exatomic.field import AtomicField
 from collections import OrderedDict
@@ -307,7 +285,7 @@ def add_cubic_field_from_mo(universe, rmin, rmax, nr, vector=None):
 #    x, y, z = meshgrid3d(x, y, z)
     # Get symbolic representations of the basis functions
     basis_funcs = _voluminate_gtfs(universe, x, y, z)
-    if config['pkg_numba']:
+    if config['dynamic']['numba'] == '1':
         from numba import vectorize, float64
         nb = vectorize([float64(float64, float64, float64)], nopython=True)
         for i, func in enumerate(basis_funcs):

@@ -18,7 +18,6 @@ import numpy as np
 from collections import OrderedDict
 from traitlets import Float, Int, Dict, Unicode
 from exa import DataFrame
-#from exatomic.algorithms.basis import spher_ml_count, cart_ml_count
 
 
 lmap = {'s': 0, 'p': 1, 'd': 2, 'f': 3, 'g': 4, 'h': 5, 'i': 6, 'k': 7, 'l': 8,

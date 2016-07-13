@@ -7,13 +7,10 @@ Molecule Table
 '''
 import numpy as np
 import pandas as pd
-from networkx import Graph
+import networkx as nx
 from networkx.algorithms.components import connected_components
-from itertools import combinations
 from exa.numerical import DataFrame
 from exa.relational.isotope import symbol_to_element_mass
-from exa import DataFrame
-from exatomic import Isotope
 from exatomic.formula import string_to_dict
 
 
@@ -22,7 +19,6 @@ class Molecule(DataFrame):
     Description of molecules in the atomic universe.
     '''
     _index = ['molecule']
-    _groupbys = ['frame']
     _categories = {'frame': np.int64, 'formula': str, 'classification': object}
 
     def classify(self, *classifiers, overwrite=False):
@@ -77,82 +73,64 @@ class Molecule(DataFrame):
 
 def compute_molecule(universe):
     '''
-    Cluster atoms into molecules.
-
-    The algorithm is to create a network graph containing every atom (in every
-    frame as nodes and bonds as edges). Using this connectivity information,
-    one can perform a (breadth first) traversal of the network graph to cluster
-    all nodes (whose indices correspond to physical atoms).
+    Cluster atoms into molecules and create the :class:`~exatomic.molecule.Molecule`
+    table.
 
     Args:
-        universe (:class:`~exatomic.universe.Universe`): Atomic universe
+        universe: Atomic universe
 
     Returns:
-        objs (tuple): Molecule indices (for atom dataframe(s)) and molecule dataframe
+        molecule: Molecule table
 
     Warning:
-        This function will modify (in place) a few tables of the universe!
+        This function modifies the universe's atom (:class:`~exatomic.atom.Atom`)
+        table in place!
     '''
-    if 'bond_count' not in universe.atom:    # The bond count is used to find single atoms;
-        universe.compute_bond_count()        # single atoms are treated as molecules.
-    b0 = None
-    b1 = None
-    bonded = universe.two[universe.two['bond'] == True]
-    if universe.is_periodic:
-        mapper = universe.projected_atom['atom']
-        b0 = bonded['prjd_atom0'].map(mapper)
-        b1 = bonded['prjd_atom1'].map(mapper)
-    else:
-        b0 = bonded['atom0']
-        b1 = bonded['atom1']
-    graph = Graph()
-    graph.add_edges_from(zip(b0.values, b1.values))
+    nodes = universe.atom.index.values
+    bonded = universe.two.ix[universe.two['bond'] == True, ['atom0', 'atom1']]
+    edges = zip(bonded['atom0'].astype(np.int64), bonded['atom1'].astype(np.int64))
+    g = nx.Graph()
+    g.add_nodes_from(nodes)
+    g.add_edges_from(edges)
+    # generate molecule indices for the atom table
     mapper = {}
-    for i, molecule in enumerate(connected_components(graph)):
-        for atom in molecule:
-            mapper[atom] = i
-    n = 1
-    if len(mapper.values()) > 0:
-        n += max(mapper.values())
-    else:
-        n -= 1
-    idxs = universe.atom[universe.atom['bond_count'] == 0].index
-    for i, index in enumerate(idxs):
-        mapper[index] = i + n
-    # Set the molecule indices
-    universe.atom['molecule'] = universe.atom.index.map(lambda idx: mapper[idx])
-    # Now compute molecule table
-    universe.atom['mass'] = universe.atom['symbol'].map(symbol_to_element_mass)
-    # The coordinates of visual_atom represent grouped molecules for
-    # periodic calculations and absolute coordinates for free boundary conditions.
-    molecules = universe.atom.groupby('molecule')
-    molecule = molecules['symbol'].value_counts().unstack().fillna(0).astype(np.int64)
+    i = 0
+    for k, v in g.degree().items():    # First handle single atom "molecules"
+        if v == 0:
+            mapper[k] = i
+            i += 1
+    for seht in connected_components(g):    # Second handle multi atom molecules
+        for adx in seht:
+            mapper[adx] = i
+        i += 1
+    universe.atom['molecule'] = universe.atom.index.map(lambda x: mapper[x])
+    sym2mass = symbol_to_element_mass()
+    universe.atom['mass'] = universe.atom['symbol'].map(sym2mass)
+    grps = universe.atom.groupby('molecule')
+    molecule = grps['symbol'].value_counts().unstack().fillna(0).astype(np.int64)
     molecule.columns.name = None
-    molecule['frame'] = universe.atom.drop_duplicates('molecule').set_index('molecule')['frame']
-    molecule['mass'] = molecules['mass'].sum()
-    del universe.atom['mass']
-    frame = universe.atom[['molecule', 'frame']].drop_duplicates('molecule')
-    frame = frame.set_index('molecule')['frame'].astype(np.int64)
-    molecule['frame'] = frame.astype('category')
-    return Molecule(molecule)
-
-
-def compute_molecule_com(universe):
-    '''
-    Compute molecules' center of mass.
-    '''
-    universe.atom['mass'] = universe.atom['symbol'].map(symbol_to_element_mass)
-    universe.atom['xm'] = universe.visual_atom['x'].mul(universe.atom['mass'])
-    universe.atom['ym'] = universe.visual_atom['y'].mul(universe.atom['mass'])
-    universe.atom['zm'] = universe.visual_atom['z'].mul(universe.atom['mass'])
-    molecules = universe.atom.groupby('molecule')
-    molecule = (molecules['xm'].sum() / universe.molecule['mass']).to_frame()
-    molecule.index.names = ['molecule']
-    molecule.columns = ['cx']
-    molecule['cy'] = molecules['ym'].sum() / universe.molecule['mass']
-    molecule['cz'] = molecules['zm'].sum() / universe.molecule['mass']
-    del universe.atom['xm']
-    del universe.atom['ym']
-    del universe.atom['zm']
-    del universe.atom['mass']
+    molecule['mass'] = grps['mass'].sum()
+    universe.atom['molecule'] = universe.atom['molecule'].astype('category')
     return molecule
+
+
+#def compute_molecule_com(universe):
+#    '''
+#    Compute molecules' center of mass.
+#    '''
+#    universe.atom['mass'] = universe.atom['symbol'].map(symbol_to_element_mass)
+#    universe.atom['xm'] = universe.visual_atom['x'].mul(universe.atom['mass'])
+#    universe.atom['ym'] = universe.visual_atom['y'].mul(universe.atom['mass'])
+#    universe.atom['zm'] = universe.visual_atom['z'].mul(universe.atom['mass'])
+#    molecules = universe.atom.groupby('molecule')
+#    molecule = (molecules['xm'].sum() / universe.molecule['mass']).to_frame()
+#    molecule.index.names = ['molecule']
+#    molecule.columns = ['cx']
+#    molecule['cy'] = molecules['ym'].sum() / universe.molecule['mass']
+#    molecule['cz'] = molecules['zm'].sum() / universe.molecule['mass']
+#    del universe.atom['xm']
+#    del universe.atom['ym']
+#    del universe.atom['zm']
+#    del universe.atom['mass']
+#    return molecule
+#

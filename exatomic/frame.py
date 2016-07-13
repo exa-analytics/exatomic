@@ -8,23 +8,6 @@ The primary "coordinate" for the atomic container (:class:`~exatomic.container.U
 is the "frame". The frame concept can be anything; time, step along a geometry
 optimization, different functional, etc. Each frame is distinguished from other
 frames by unique atomic coordinates, a different level of theory, etc.
-The following is a guide for the typical data found in this dataframe.
-
-+-------------------+----------+-------------------------------------------+
-| Column            | Type     | Description                               |
-+===================+==========+===========================================+
-| atom_count        | int      | non-unique integer (req.)                 |
-+-------------------+----------+-------------------------------------------+
-| molecule_count    | int      | non-unique integer                        |
-+-------------------+----------+-------------------------------------------+
-| ox                | float    | unit cell origin point in x               |
-+-------------------+----------+-------------------------------------------+
-| oy                | float    | unit cell origin point in y               |
-+-------------------+----------+-------------------------------------------+
-| oz                | float    | unit cell origin point in z               |
-+-------------------+----------+-------------------------------------------+
-| periodic          | bool     | true if periodic system                   |
-+-------------------+----------+-------------------------------------------+
 '''
 import numpy as np
 from traitlets import Float
@@ -38,6 +21,22 @@ class Frame(DataFrame):
     Information about the current frame; a frame is a concept that distinguishes
     atomic coordinates along a molecular dynamics simulation, geometry optimization,
     etc.
+
+    +-------------------+----------+-------------------------------------------+
+    | Column            | Type     | Description                               |
+    +===================+==========+===========================================+
+    | atom_count        | int      | non-unique integer (req.)                 |
+    +-------------------+----------+-------------------------------------------+
+    | molecule_count    | int      | non-unique integer                        |
+    +-------------------+----------+-------------------------------------------+
+    | ox                | float    | unit cell origin point in x               |
+    +-------------------+----------+-------------------------------------------+
+    | oy                | float    | unit cell origin point in y               |
+    +-------------------+----------+-------------------------------------------+
+    | oz                | float    | unit cell origin point in z               |
+    +-------------------+----------+-------------------------------------------+
+    | periodic          | bool     | true if periodic system                   |
+    +-------------------+----------+-------------------------------------------+
     '''
     _indices = ['frame']
     _columns = ['atom_count']
@@ -88,9 +87,9 @@ class Frame(DataFrame):
         '''
         Compute the magnitudes of the unit cell vectors (rx, ry, rz).
         '''
-        self['rx'] = magnitude_xyz(self['xi'].values, self['yi'].values, self['zi'].values)
-        self['ry'] = magnitude_xyz(self['xj'].values, self['yj'].values, self['zj'].values)
-        self['rz'] = magnitude_xyz(self['xk'].values, self['yk'].values, self['zk'].values)
+        self['rx'] = magnitude_xyz(self['xi'].values, self['yi'].values, self['zi'].values).astype(np.float64)
+        self['ry'] = magnitude_xyz(self['xj'].values, self['yj'].values, self['zj'].values).astype(np.float64)
+        self['rz'] = magnitude_xyz(self['xk'].values, self['yk'].values, self['zk'].values).astype(np.float64)
 
 
 def compute_frame(universe):

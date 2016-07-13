@@ -1,4 +1,4 @@
-# -*- coding: utf-8 -*-
+ #-*- coding: utf-8 -*-
 # Copyright (c) 2015-2016, Exa Analytics Development Team
 # Distributed under the terms of the Apache License 2.0
 '''
@@ -10,10 +10,10 @@ a physical quantity.
 import numpy as np
 import pandas as pd
 from io import StringIO
-from exa import Series
-from exatomic import Isotope, Universe, Editor, Atom, Length
-from exa.relational.isotope import Z_to_symbol, symbol_to_Z
-from exatomic import Universe, Editor, Atom, Length
+from exa.numerical import Series
+from exa.relational.isotope import z_to_symbol, symbol_to_z
+from exatomic.atom import Atom
+from exatomic.editor import Editor
 from exatomic.field import AtomicField
 
 
@@ -40,7 +40,8 @@ class Cube(Editor):
         df = pd.read_csv(StringIO('\n'.join(self._lines[6:self._volume_data_start])), delim_whitespace=True,
                          header=None, names=('Z', 'nelectron', 'x', 'y', 'z'))
         del df['nelectron']
-        df['symbol'] = df['Z'].map(Z_to_symbol).astype('category')
+        mapper = z_to_symbol()
+        df['symbol'] = df['Z'].map(mapper).astype('category')
         del df['Z']
         df['frame'] = pd.Series([0] * len(df), dtype='category')
         df['label'] = pd.Series(range(self._nat), dtype='category')
@@ -170,7 +171,8 @@ def _write_first_field_of_each_frame(path, universe):
     padding = len(str(len(framelist)))
     for frame in framelist:
         atom = universe.atom[(universe.atom['frame'] == frame), ['symbol', 'x', 'y', 'z']].copy()
-        atom['Z'] = atom['symbol'].map(symbol_to_Z)
+        mapper = symbol_to_z()
+        atom['Z'] = atom['symbol'].map(mapper)
         atom['electrons'] = 1.0
         del atom['symbol']
         field_data = universe.field[universe.field['frame'] == frame]
