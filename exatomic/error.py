@@ -32,7 +32,8 @@ class ClassificationError(AtomicException):
     Raised when a classifier for :func:`~exatomic.molecule.Molecule.add_classification`
     used incorrectly.
     '''
-    _msg = 'Classifier must be a tuple of the form ("identifier", "label", exact).'
+    def __init__(self):
+        super().__init__(msg='Classifier must be a tuple of the form ("identifier", "label", exact).')
 
 
 class PeriodicUniverseError(AtomicException):
@@ -40,4 +41,11 @@ class PeriodicUniverseError(AtomicException):
     Raised when the code is asked to perform a periodic simulation specific
     operation on a free boundary condition :class:`~exatomic.container.Universe`.
     '''
-    _msg = 'Not a periodic boundary condition Universe?'
+    def __init__(self):
+        super().__init__(msg='Not a periodic boundary condition Universe?')
+
+class FreeBoundaryUniverseError(AtomicException):
+    '''
+    '''
+    def __init__(self):
+        super().__init__(msg='Not a free boundary condition Universe?')

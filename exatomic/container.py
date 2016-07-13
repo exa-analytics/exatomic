@@ -14,15 +14,17 @@ like density functional theory exchange correlation functional.
 import pandas as pd
 import numpy as np
 from exa.container import TypedMeta, Container
+from exatomic.error import PeriodicUniverseError, FreeBoundaryUniverseError
 from exatomic.widget import UniverseWidget
 from exatomic.frame import Frame, compute_frame_from_atom
 from exatomic.atom import Atom, UnitAtom, ProjectedAtom
 from exatomic.two import FreeTwo, PeriodicTwo, compute_two, compute_bond_count
+from exatomic.molecule import Molecule, compute_molecule
 from exatomic.widget import UniverseWidget
-#from exatomic.field import AtomicField
-#from exatomic.orbital import Orbital, MOMatrix, DensityMatrix
-#from exatomic.basis import (SphericalGTFOrder, CartesianGTFOrder, Overlap,
-#                            BasisSetSummary, GaussianBasisSet, BasisSetOrder)
+from exatomic.field import AtomicField
+from exatomic.orbital import Orbital, MOMatrix, DensityMatrix
+from exatomic.basis import (SphericalGTFOrder, CartesianGTFOrder, Overlap,
+                            BasisSetSummary, GaussianBasisSet, BasisSetOrder)
 
 
 class UniverseTypedMeta(TypedMeta):
@@ -36,16 +38,17 @@ class UniverseTypedMeta(TypedMeta):
     periodic_two = PeriodicTwo
     unit_atom = UnitAtom
     projected_atom = ProjectedAtom
-#    orbital = Orbital
-#    overlap = Overlap
-#    momatrix = MOMatrix
-#    field = AtomicField
-#    density = DensityMatrix
-#    basis_set_order = BasisSetOrder
-#    basis_set_summary = BasisSetSummary
-#    gaussian_basis_set = GaussianBasisSet
-#    spherical_gtf_order = SphericalGTFOrder
-#    cartesian_gtf_order = CartesianGTFOrder
+    molecule = Molecule
+    field = AtomicField
+    orbital = Orbital
+    overlap = Overlap
+    momatrix = MOMatrix
+    density = DensityMatrix
+    basis_set_order = BasisSetOrder
+    basis_set_summary = BasisSetSummary
+    gaussian_basis_set = GaussianBasisSet
+    spherical_gtf_order = SphericalGTFOrder
+    cartesian_gtf_order = CartesianGTFOrder
 
 
 class Universe(Container, metaclass=UniverseTypedMeta):
@@ -81,16 +84,41 @@ class Universe(Container, metaclass=UniverseTypedMeta):
         '''Compute minimal image for periodic systems.'''
         self.unit_atom = UnitAtom.from_universe(self)
 
-    def compute_free_two(self, *args, **kwargs):
-        self.free_two = compute_two(self, *args, **kwargs)
+    def compute_free_two(self, bond_extra=0.55, max_distance=19.0):
+        '''
+        Compute free boundary two body properties (interatomic distances and bonds).
 
-    def compute_periodic_two(self, *args, **kwargs):
-        ptwo, patom = compute_two(self, *args, **kwargs)
+        Args:
+            bond_extra (float): Extra amount to add when determining bonds (default 0.55 au)
+            max_distance (float): Maximum distance of interest (default 19.0 au)
+        '''
+        if self.frame.is_periodic:
+            raise FreeBoundaryUniverseError()
+        self.free_two = compute_two(self, bond_extra=bond_extra, max_distance=max_distance)
+
+    def compute_periodic_two(self, bond_extra=0.55, max_distance=19.0):
+        '''
+        Compute periodic two body properties (interatomic distances and bonds).
+
+        Args:
+            bond_extra (float): Extra amount to add when determining bonds (default 0.55 au)
+            max_distance (float): Maximum distance of interest (default 19.0 au)
+        '''
+        if not self.frame.is_periodic:
+            raise PeriodicUniverseError()
+        ptwo, patom = compute_two(self, bond_extra=bond_extra, max_distance=max_distance)
         self.periodic_two = ptwo
         self.projected_atom = patom
 
     def compute_bond_count(self):
+        '''
+        Compute bond counts and attach them to the :class:`~exatomic.atom.Atom` table.
+        '''
         self.atom['bond_count'] = compute_bond_count(self)
+
+    def compute_molecule(self):
+        '''Compute the :class:`~exatomic.molecule.Molecule` table.'''
+        self.molecule = compute_molecule(self)
 
     def _custom_traits(self):
         '''

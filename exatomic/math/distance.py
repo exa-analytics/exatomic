@@ -74,7 +74,7 @@ def minimal_image_counts(xyz, rxyz, oxyz, counts):
     return minimal_image(xyz, rxyz, oxyz)
 
 
-def periodic_two_frame(ux, uy, uz, rx, ry, rz, idx, frame):
+def periodic_two_frame(ux, uy, uz, rx, ry, rz, idx, frame, dmax, tol=10**-8):
     '''
     There is only one distance between two atoms.
     '''
@@ -82,15 +82,25 @@ def periodic_two_frame(ux, uy, uz, rx, ry, rz, idx, frame):
     n = len(ux)
     nn = n*(n - 1)//2
     dxs = np.empty((nn, ), dtype=np.float64)    # Two body distance component x
+    dxs[:] = np.nan
     dys = np.empty((nn, ), dtype=np.float64)    # within corresponding periodic
+    dys[:] = np.nan
     dzs = np.empty((nn, ), dtype=np.float64)    # unit cell
+    dzs[:] = np.nan
     ds = np.empty((nn, ), dtype=np.float64)
+    ds[:] = np.nan
     pxs = np.empty((nn, ), dtype=np.float64)    # Projected j coordinate x
+    pxs[:] = np.nan
     pys = np.empty((nn, ), dtype=np.float64)    # Projected j coordinate y
+    pys[:] = np.nan
     pzs = np.empty((nn, ), dtype=np.float64)    # Projected j coordinate z
+    pzs[:] = np.nan
     idx0s = np.empty((nn, ), dtype=np.int64)    # index of i
+    idx0s[:] = np.nan
     idx1s = np.empty((nn, ), dtype=np.int64)    # index of j
+    idx1s[:] = np.nan
     fdxs = np.empty((nn, ), dtype=np.int64)     # frame index
+    fdxs[:] = np.nan
     h = 0
     for i in range(n):
         for j in range(i+1, n):
@@ -122,16 +132,26 @@ def periodic_two_frame(ux, uy, uz, rx, ry, rz, idx, frame):
                         hh += 1
             pds = magnitude_xyz(pdx, pdy, pdz)
             hh = np.argmin(pds)
-            pxs[h] = pxj[hh]
-            pys[h] = pyj[hh]
-            pzs[h] = pzj[hh]
-            dxs[h] = pdx[hh]
-            dys[h] = pdy[hh]
-            dzs[h] = pdz[hh]
-            fdxs[h] = frame
-            ds[h] = pds[hh]
-            idx0s[h] = idx[i]
-            idx1s[h] = idx[j]
+            if pds[hh] < dmax:
+                if np.abs(pxj[hh] - xj) <= tol:
+                    pxs[h] = np.nan
+                else:
+                    pxs[h] = pxj[hh]
+                if np.abs(pyj[hh] - yj) <= tol:
+                    pys[h] = np.nan
+                else:
+                    pys[h] = pyj[hh]
+                if np.abs(pzj[hh] - zj) <= tol:
+                    pzs[h] = np.nan
+                else:
+                    pzs[h] = pzj[hh]
+                dxs[h] = pdx[hh]
+                dys[h] = pdy[hh]
+                dzs[h] = pdz[hh]
+                fdxs[h] = frame
+                ds[h] = pds[hh]
+                idx0s[h] = idx[i]
+                idx1s[h] = idx[j]
             h += 1
     return dxs, dys, dzs, ds, idx0s, idx1s, fdxs, pxs, pys, pzs
 
