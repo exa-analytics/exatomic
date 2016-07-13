@@ -52,11 +52,39 @@ class BaseAtom(DataFrame):
     '''
     _precision = {'x': 2, 'y': 2, 'z': 2}
     _indices = ['atom']
-    _columns = ['x', 'y', 'z', 'symbol', 'frame']
     _groupbys = ['frame']
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self._revert_categories()
+        # Fill "ghost" atoms with the default ghost atom (Dga)
+        if 'symbol' in self:
+            self.ix[self['symbol'].isin(['nan', 'NaN', 'none', 'None']), 'symbol'] = None
+            self['symbol'].fillna('Dga', inplace=True)
+        self._set_categories()
+
+
+class Atom(BaseAtom):
+    '''
+    This table contains the absolute coordinates (regardless of boundary
+    conditions) of atomic nuclei.
+    '''
     _traits = ['x', 'y', 'z']
+    _columns = ['x', 'y', 'z', 'symbol', 'frame']
     _categories = {'frame': np.int64, 'label': np.int64, 'symbol': str,
-                   'bond_count': np.int64, 'basis_set': np.int64}
+                   'bond_count': np.int64, 'set': np.int64}
+
+    def compute_element_masses(self):
+        '''Map element symbols to their corresponding (element) mass.'''
+        elem_mass = symbol_to_element_mass()
+        self['mass'] = self['symbol'].astype('O').map(elem_mass)
+
+    def reset_labels(self):
+        '''Reset the "label" column.'''
+        if 'label' in self:
+            del self['label']
+        nats = self.groupby('frame').size().values
+        self['label'] = pd.Series([i for nat in nats for i in range(nat)], dtype='category')
 
     def _custom_traits(self):
         '''
@@ -86,33 +114,6 @@ class BaseAtom(DataFrame):
         # since we have defined _traits = ['x', 'y', 'z'] above.
         return {'atom_symbols': symbols, 'atom_radii': radii, 'atom_colors': colors,
                 'atom_set': atom_set}
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self._revert_categories()
-        # Fill "ghost" atoms with the default ghost atom (Dga)
-        if 'symbol' in self:
-            self.ix[self['symbol'].isin(['nan', 'NaN', 'none', 'None']), 'symbol'] = None
-            self['symbol'].fillna('Dga', inplace=True)
-        self._set_categories()
-
-
-class Atom(BaseAtom):
-    '''
-    This table contains the absolute coordinates (regardless of boundary
-    conditions) of atomic nuclei.
-    '''
-    def compute_element_masses(self):
-        '''Map element symbols to their corresponding (element) mass.'''
-        elem_mass = symbol_to_element_mass()
-        self['mass'] = self['symbol'].astype('O').map(elem_mass)
-
-    def reset_labels(self):
-        '''Reset the "label" column.'''
-        if 'label' in self:
-            del self['label']
-        nats = self.groupby('frame').size().values
-        self['label'] = pd.Series([i for nat in nats for i in range(nat)], dtype='category')
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
