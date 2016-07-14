@@ -145,7 +145,7 @@ class GaussianBasisSet(BasisSet):
     _categories = {'set': np.int64, 'l': np.int64, 'shell_function': np.int64,
                    'frame': np.int64}
 
-    def _update_custom_traits(self):
+    def _custom_traits(self):
         alphas = self.groupby('frame').apply(
                  lambda x: x.groupby('set').apply(
                  lambda y: y.groupby('shell_function').apply(
@@ -163,7 +163,7 @@ class GaussianBasisSet(BasisSet):
         ls = self.groupby('frame').apply(
              lambda x: x.groupby('set').apply(
              lambda y: y.groupby('shell_function').apply(
-             lambda z: z['l'].values).values)).to_json(orient='values')
+             lambda z: z['l'].astype(np.int64).values).values)).to_json(orient='values')
         #ls = Unicode(''.join(['[', ls, ']'])).tag(sync=True)
         ls = Unicode(ls).tag(sync=True)
 
@@ -290,7 +290,7 @@ class CartesianGTFOrder(DataFrame):
     _traits = ['l']
     _categories = {'l': np.int64, 'x': np.int64, 'y': np.int64, 'z': np.int64}
 
-    def _update_custom_traits(self):
+    def _custom_traits(self):
         #print(self.groupby('l').apply(lambda y: y['x'].values))
         #print(self.groupby('l').apply(lambda y: y['x'].values).to_json(orient='values'))
         #cgto_x = self.groupby('l').apply(lambda x: x['x'].values).to_json(orient='values')
@@ -347,7 +347,7 @@ class SphericalGTFOrder(DataFrame):
     _traits = ['l']
     _indices = ['spherical_order']
 
-    def _update_custom_traits(self):
+    def _custom_traits(self):
         sgto = self.groupby('frame').apply(lambda x: x.groupby('l').apply( lambda y: y['ml'].values))
         sgto = Unicode(sgto.to_json(orient='values')).tag(sync=True)
         return {'sphericalgtforder_ml': sgto}
