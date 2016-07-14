@@ -14,9 +14,8 @@ from base64 import b64decode
 from traitlets import Unicode
 from notebook.nbextensions import jupyter_data_dir
 from exa.widget import ContainerWidget, install_notebook_widgets
-from exa._config import del_update
 from exa.utility import mkp
-from exatomic._config import config
+from exatomic._config import config, del_update
 
 
 class UniverseWidget(ContainerWidget):
@@ -66,7 +65,7 @@ class UniverseWidget(ContainerWidget):
             pass
 
 
-if config['js']['update'] == '1':
+if config['exatomic']['update'] == '1':
     verbose = True if config['log']['level'] != '0' else False
     pkg_nbext = mkp(config['dynamic']['exatomic_pkgdir'], '_nbextension')
     sys_nbext = mkp(jupyter_data_dir(), 'nbextensions', 'exa', 'exatomic')

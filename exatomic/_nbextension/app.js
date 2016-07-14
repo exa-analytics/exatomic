@@ -476,6 +476,8 @@ define([
                 this.app3d.remove_meshes(this.cube_field_mesh);
                 this.cube_field_mesh = this.app3d.add_scalar_field(this.cube_field, this.fields.isovalue, 2);
             };
+            console.log(v0);
+            console.log(v1);
             this.app3d.remove_meshes(this.bond_meshes);
             if (v0 !== undefined && v1 !== undefined) {
                 if (this.display.spheres === true) {

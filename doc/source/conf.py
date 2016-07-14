@@ -19,6 +19,11 @@ import sys
 import os
 sys.path.insert(0, os.path.abspath(os.sep.join(('..', '..'))))
 from exatomic import __version__
+from unittest.mock import Mock
+
+
+MOCK_MODULES = ['scipy', 'numpy', 'pandas']
+sys.modules.update((mod_name, Mock()) for mod_name in MOCK_MODULES)
 
 # If extensions (or modules to document with autodoc) are in another directory,
 # add these directories to sys.path here. If the directory is relative to the

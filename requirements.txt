@@ -14,4 +14,4 @@ nose
 sphinx
 sphinx_rtd_theme
 sphinxcontrib-autoanysrc
-exa>=0.2.7
+exa>=0.2.8
