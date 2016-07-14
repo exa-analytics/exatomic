@@ -10,8 +10,8 @@
     :target: doc/source/_static/logo.png
     :alt: Exatomic
 
-.. |build| image:: https://travis-ci.org/tjduigna/exatomic.svg?branch=master
-    :target: https://travis-ci.org/tjduigna/exatomic
+.. |build| image:: https://travis-ci.org/exa-analytics/exatomic.svg?branch=master
+    :target: https://travis-ci.org/exa-analytics/exatomic
     :alt: Build Status
 
 .. |docs| image:: https://readthedocs.org/projects/exatomic/badge/?version=latest
@@ -26,8 +26,8 @@
     :target: https://www.quantifiedcode.com/app/project/99e4f26905194100ad4c27aba432ec4c
     :alt: Code issues
 
-.. |cov| image:: https://codecov.io/gh/avmarchenko/exatomic/branch/master/graph/badge.svg
-    :target: https://codecov.io/gh/avmarchenko/exatomic
+.. |cov| image:: https://codecov.io/gh/exa-analytics/exatomic/branch/master/graph/badge.svg
+    :target: https://codecov.io/gh/exa-analytics/exatomic
     :alt: Code Coverage
 
 .. |lic| image:: http://img.shields.io/:license-apache-blue.svg?style=flat-square
@@ -59,5 +59,3 @@ Legal
 ###############
 | Copyright (c) 2015-2016, Exa Analytics Development Team
 | Distributed under the terms of the Apache License 2.0
-
-

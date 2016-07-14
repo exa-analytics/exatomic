@@ -342,10 +342,10 @@ define([
         };
 
         render_orbital() {
-            console.log('entering render orbital');
+            //console.log('entering render orbital');
             var coefs = this.gv(this.view.momatrix_coefficient, this.top.index);
             if (coefs === undefined) {
-                console.log('exiting render orbital');
+                //console.log('exiting render orbital');
                 return;
             };
             var nbfns = coefs.length;
@@ -382,10 +382,14 @@ define([
                     zs = utility.repeat_float(zs, nat);
                 };
             };
-            console.log('xs');
-            console.log(xs);
+            //console.log('xs');
+            //console.log(xs);
 
             var sets = this.gv(this.view.atom_set, this.top.index);
+            if (typeof sets === 'number') {
+                sets = utility.repeat_int(sets, nat);
+            };
+            //console.log(sets);
             var ds = this.gv(this.view.gaussianbasisset_d, this.top.index);
             var ls = this.gv(this.view.gaussianbasisset_l, this.top.index);
             var alphas = this.gv(this.view.gaussianbasisset_alpha, this.top.index);
@@ -403,16 +407,16 @@ define([
             dims['n'] = dims.nx * dims.ny * dims.nz;
 
             var bfns = gaussian.order_gtf_basis(xs, ys, zs, sets, nbfns, ds, ls, alphas, pl, pm, pn, sgto);
-            console.log(bfns);
+            //console.log(bfns);
             var mos = gaussian.construct_mos(bfns, coefs, dims);
-            console.log(mos);
-            console.log(typeof mos[0]);
+            //console.log(mos);
+            //console.log(typeof mos[0]);
             this.cube_field = new gaussian.GaussianOrbital(dims, mos[this.orbitals['orbital']]);
-            console.log(this.cube_field);
-            console.log(this.cube_field.values);
+            //console.log(this.cube_field);
+            //console.log(this.cube_field.values);
             this.app3d.remove_meshes(this.cube_field_mesh);
             this.cube_field_mesh = this.app3d.add_scalar_field(this.cube_field, this.orbitals.isovalue, 2);
-            console.log('leaving render orbital');
+            //console.log('leaving render orbital');
         };
 
         render_field() {
