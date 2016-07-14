@@ -106,7 +106,7 @@ class Atom(BaseAtom):
         colors = sym2col[self['symbol'].unique()]    # Same thing for colors
         colors = Dict({i: colors[v] for i, v in symmap.items()}).tag(sync=True)
         try:
-            atom_set = grps.apply(lambda g: g['set'].values).to_json(orient='values')
+            atom_set = grps.apply(lambda g: g['set']).to_json(orient='values')
             atom_set = Unicode(atom_set).tag(sync=True)
         except KeyError:
             atom_set = Unicode().tag(sync=True)
