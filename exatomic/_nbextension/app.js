@@ -73,6 +73,7 @@ define([
                 view_self.app.app3d.animate();
                 view_self.app.app3d.controls.handleResize();
             });
+            this.app3d.set_camera_from_scene();
         };
 
         update_display_params() {
@@ -476,8 +477,6 @@ define([
                 this.app3d.remove_meshes(this.cube_field_mesh);
                 this.cube_field_mesh = this.app3d.add_scalar_field(this.cube_field, this.fields.isovalue, 2);
             };
-            console.log(v0);
-            console.log(v1);
             this.app3d.remove_meshes(this.bond_meshes);
             if (v0 !== undefined && v1 !== undefined) {
                 if (this.display.spheres === true) {
@@ -492,13 +491,13 @@ define([
             } else {
                 this.atom_meshes = this.app3d.add_points(x, y, z, colors, radii);
             };
-            if (this.top.index === 0) {
+/*            if (this.top.index === 0) {
                 if (this.display.spheres === true) {
                     this.app3d.set_camera_from_scene();
                 } else {
                     this.app3d.set_camera_from_mesh(this.atom_meshes[0], 4.0, 4.0, 4.0);
                 };
-            };
+            };*/
         };
 
         render_cell() {

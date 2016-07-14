@@ -53,22 +53,25 @@ class BaseTwo(DataFrame):
         Traits representing bonded atoms are reported as two lists of equal
         length with atom labels.
         '''
-        self._revert_categories()
         bonded = self.ix[self['bond'] == True, ['atom0', 'atom1', 'frame']]
         lbl0 = bonded['atom0'].map(label_mapper)
         lbl1 = bonded['atom1'].map(label_mapper)
         lbl = pd.concat((lbl0, lbl1), axis=1)
         lbl['frame'] = bonded['frame']
-        grps = lbl.groupby('frame')
+        bond_grps = lbl.groupby('frame')
+        grps = self.groupby('frame')
         n = grps.ngroups
         b0 = np.empty((n, ), dtype='O')
         b1 = b0.copy()
         for i, (frame, grp) in enumerate(grps):
-            b0[i] = grp['atom0'].values
-            b1[i] = grp['atom1'].values
+            if frame in bond_grps.groups:
+                b0[i] = bond_grps.get_group(frame)['atom0'].astype(str).values
+                b1[i] = bond_grps.get_group(frame)['atom1'].astype(str).values
+            else:
+                b0[i] = []
+                b1[i] = []
         b0 = Unicode(pd.Series(b0).to_json(orient='values')).tag(sync=True)
         b1 = Unicode(pd.Series(b1).to_json(orient='values')).tag(sync=True)
-        self._set_categories()
         return {'two_bond0': b0, 'two_bond1': b1}
 
 
@@ -86,13 +89,13 @@ class PeriodicTwo(BaseTwo):
     pass
 
 
-def compute_two(universe, *args, **kwargs):
+def compute_two(universe, bond_extra=0.55, max_distance=19.0):
     '''
     Compute interatomic distances.
     '''
     if universe.frame.is_periodic:
-        return compute_periodic_two(universe, *args, **kwargs)
-    return compute_free_two(universe, *args, **kwargs)
+        return compute_periodic_two(universe, bond_extra, max_distance)
+    return compute_free_two(universe, bond_extra, max_distance)
 
 
 def compute_free_two(universe, bond_extra=0.55, max_distance=19.0):

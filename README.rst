@@ -38,14 +38,17 @@ Installation
 ##################
 .. code-block:: bash
 
-    conda install exatomic    # or pip install exa
+    pip install exa
+    pip install exatomic
+    # Coming soon!
+    # conda install exatomic
 
 
 Getting Started
 ##################
 .. code-block:: bash
 
-    exa    # Run in command line and click on "exatomic_demo.ipynb"
+    exa -u    #  Use the "-u" option on first run
 
 
 Documentation

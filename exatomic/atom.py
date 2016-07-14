@@ -122,7 +122,7 @@ class Atom(BaseAtom):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         if 'label' not in self:
-            self.reset_label()
+            self.reset_labels()
 
 
 class UnitAtom(SparseDataFrame):
