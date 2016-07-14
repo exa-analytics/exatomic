@@ -10,8 +10,8 @@
     :target: doc/source/_static/logo.png
     :alt: Exatomic
 
-.. |build| image:: https://travis-ci.org/avmarchenko/exatomic.svg?branch=master
-    :target: https://travis-ci.org/avmarchenko/exatomic
+.. |build| image:: https://travis-ci.org/tjduigna/exatomic.svg?branch=master
+    :target: https://travis-ci.org/tjduigna/exatomic
     :alt: Build Status
 
 .. |docs| image:: https://readthedocs.org/projects/exatomic/badge/?version=latest

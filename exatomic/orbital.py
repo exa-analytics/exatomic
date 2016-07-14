@@ -90,7 +90,7 @@ class MOMatrix(DataFrame):
     _groupbys = ['frame']
     _categories = {}
 
-    def _update_custom_traits(self):
+    def _custom_traits(self):
         coefs = self.groupby('frame').apply(lambda x: x.pivot('basis_function', 'orbital', 'coefficient').fillna(value=0).values)
         coefs = Unicode(coefs.to_json(orient='values')).tag(sync=True)
         #coefs = Unicode('[' + sq.groupby(by=sq.columns, axis=1).apply(
@@ -127,9 +127,8 @@ class DensityMatrix(DataFrame):
         nbas = np.floor(np.roots([1, 1, -2 * self.shape[0]])[1])
         tri = self.pivot('chi1', 'chi2', 'coefficient').fillna(value=0)
         tri = tri + tri.T
-        diags = np.zeros(tri.shape, dtype=np.float64)
         for i, val in enumerate(np.diag(tri)):
-            tri[i, i] -= val
+            tri.at[i, i] /= 2
         return tri
 
     @classmethod
