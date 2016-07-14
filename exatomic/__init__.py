@@ -30,4 +30,4 @@ from exatomic import error
 from exatomic.container import Universe
 from exatomic.editor import Editor
 
-from exatomic.filetypes import XYZ
+from exatomic.filetypes import XYZ, Cube

@@ -2,7 +2,7 @@ numpy
 scipy
 matplotlib
 sqlalchemy
-pandas
+pandas>=0.18.1
 networkx
 sympy
 seaborn
@@ -14,4 +14,4 @@ nose
 sphinx
 sphinx_rtd_theme
 sphinxcontrib-autoanysrc
-exa>=0.2.5
+exa>=0.2.6
