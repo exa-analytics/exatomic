@@ -59,15 +59,14 @@ class BaseTwo(DataFrame):
         lbl = pd.concat((lbl0, lbl1), axis=1)
         lbl['frame'] = bonded['frame']
         bond_grps = lbl.groupby('frame')
-        grps = self.groupby('frame')
-        n = grps.ngroups
-        b0 = np.empty((n, ), dtype='O')
+        frames = self['frame'].unique().astype(np.int64)
+        b0 = np.empty((len(frames), ), dtype='O')
         b1 = b0.copy()
-        for i, (frame, grp) in enumerate(grps):
-            if frame in bond_grps.groups:
-                b0[i] = bond_grps.get_group(frame)['atom0'].astype(str).values
-                b1[i] = bond_grps.get_group(frame)['atom1'].astype(str).values
-            else:
+        for i, frame in enumerate(frames):
+            try:
+                b0[i] = bond_grps.get_group(frame)['atom0'].astype(np.int64).values
+                b1[i] = bond_grps.get_group(frame)['atom1'].astype(np.int64).values
+            except Exception:
                 b0[i] = []
                 b1[i] = []
         b0 = Unicode(pd.Series(b0).to_json(orient='values')).tag(sync=True)
