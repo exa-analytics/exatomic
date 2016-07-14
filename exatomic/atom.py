@@ -155,18 +155,6 @@ class ProjectedAtom(SparseDataFrame):
     _columns = ['x', 'y', 'z']
 
 
-#class ProjectedAtom(BaseAtom):
-#    '''
-#    Projected atom coordinates (e.g. on 3x3x3 supercell). These coordinates are
-#    typically associated with their corresponding indices in another dataframe.
-#    '''
-#    _indices = ['prjd_atom']
-#    _columns = ['x', 'y', 'z', 'frame', 'atom']
-#    _traits = []
-#    _groupbys = ['frame']
-#    _categories = {'atom': np.int64, 'frame': np.int64, 'label': np.int64,
-#                   'symbol': str, 'bond_count': np.int64}
-
 #class VisualAtom(SparseDataFrame):
 #    '''
 #    Akin to :class:`~exatomic.atom.UnitAtom`, this class is used to store a special
