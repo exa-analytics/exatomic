@@ -57,12 +57,10 @@ class Frame(DataFrame):
             result (bool): True if any/all frame are periodic
         '''
         if 'periodic' in self:
-            if how == 'all':
-                if np.all(self['periodic'] == True):
-                    return True
-            elif how == 'any':
-                if np.any(self['periodic'] == True):
-                    return True
+            if how == 'all' and np.all(self['periodic'] == True):
+                return True
+            elif how == 'any' and np.any(self['periodic'] == True):
+                return True
         return False
 
     @property
