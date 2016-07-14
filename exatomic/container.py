@@ -85,7 +85,7 @@ class Universe(Container, metaclass=UniverseTypedMeta):
         '''Compute minimal image for periodic systems.'''
         self.unit_atom = UnitAtom.from_universe(self)
 
-    def compute_free_two(self, bond_extra=0.55, max_distance=19.0):
+    def compute_free_two(self, bond_extra=0.55, max_distance=19.0, cutoff=3000):
         '''
         Compute free boundary two body properties (interatomic distances and bonds).
 
@@ -93,11 +93,13 @@ class Universe(Container, metaclass=UniverseTypedMeta):
             bond_extra (float): Extra amount to add when determining bonds (default 0.55 au)
             max_distance (float): Maximum distance of interest (default 19.0 au)
         '''
+        if self.frame['atom_count'].sum() > cutoff* len(self):
+            return
         if self.frame.is_periodic:
             raise FreeBoundaryUniverseError()
         self.free_two = compute_two(self, bond_extra=bond_extra, max_distance=max_distance)
 
-    def compute_periodic_two(self, bond_extra=0.55, max_distance=19.0):
+    def compute_periodic_two(self, bond_extra=0.55, max_distance=19.0, cutoff=3000):
         '''
         Compute periodic two body properties (interatomic distances and bonds).
 
@@ -105,6 +107,8 @@ class Universe(Container, metaclass=UniverseTypedMeta):
             bond_extra (float): Extra amount to add when determining bonds (default 0.55 au)
             max_distance (float): Maximum distance of interest (default 19.0 au)
         '''
+        if self.frame['atom_count'].sum() > cutoff* len(self):
+            return
         if not self.frame.is_periodic:
             raise PeriodicUniverseError()
         ptwo, patom = compute_two(self, bond_extra=bond_extra, max_distance=max_distance)
@@ -126,7 +130,8 @@ class Universe(Container, metaclass=UniverseTypedMeta):
         Build traits depending on multiple dataframes.
         '''
         traits = {}
-        if self.two is not None and len(self.two) > 0:
+        # Hack for now...
+        if hasattr(self, '_free_two') or hasattr(self, '_periodic_two') or len(self) * 3000 > self.frame['atom_count'].sum():
             mapper = self.atom['label'].astype(np.int64)
             traits.update(self.two._bond_traits(mapper))
         return traits
@@ -177,7 +182,7 @@ def concat(*universes, name=None, description=None, meta=None):
 #            name = key[1:] if key.startswith('_') else key
 #            idx_name = data.index.name
 #            if idx_name in indices:
-#                indices[idx_name] += 
+#                indices[idx_name] +=
 
 
 #from exatomic.frame import minimal_frame, Frame

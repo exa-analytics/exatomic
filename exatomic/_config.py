@@ -31,4 +31,6 @@ if 'exatomic' not in config:
 if config['exatomic']['update'] == '1':
     shutil.copyfile(mkp(config['dynamic']['exatomic_pkgdir'], '_static', 'exatomic_demo.ipynb'),
                     mkp(config['dynamic']['exa_root'], 'notebooks', 'exatomic_demo.ipynb'))
+    shutil.copyfile(mkp(config['dynamic']['exatomic_pkgdir'], '_static', 'porphyrin.xyz'),
+                    mkp(config['dynamic']['exa_root'], 'data', 'examples', 'porphyrin.xyz'))
     atexit.register(del_update)
