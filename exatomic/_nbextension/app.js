@@ -157,7 +157,7 @@ define([
                     //self.app3d.add_unit_axis();
                     self.app3d.render();
                     var imgdat = self.app3d.renderer.domElement.toDataURL('image/png');
-                    self.view.send({'type': 'image', 'data': imgdat});
+                    self.view.send({'type': 'image', 'content': imgdat});
                     self.app3d.renderer.setSize(self.app3d.width, self.app3d.height);
                     self.app3d.camera.aspect = self.app3d.width / self.app3d.height;
                     self.app3d.camera.updateProjectionMatrix();

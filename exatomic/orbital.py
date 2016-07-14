@@ -52,6 +52,7 @@ class Orbital(DataFrame):
     +-------------------+----------+-------------------------------------------+
     | z                 | float    | orbital center in z                       |
     +-------------------+----------+-------------------------------------------+
+    
     Note:
         Spin zero means alpha spin or unknown and spin one means beta spin.
     '''
