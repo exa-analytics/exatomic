@@ -1,18 +1,19 @@
-sudo: true
 language: python
 python:
     - "3.4"
     - "3.5"
-    - "nightly"
 before_install:
-    - sudo add-apt-repository "deb http://archive.ubuntu.com/ubuntu $(lsb_release -sc) main universe"
-    - sudo apt-get update
-    - sudo apt-get install libblas-dev liblapack-dev build-essential gfortran
+    - wget https://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh -O miniconda.sh
+    - chmod +x miniconda.sh
+    - ./miniconda.sh -b
+    - export PATH=/home/travis/miniconda3/bin:$PATH
+    - conda update --yes conda
+    - wget https://github.com/exa-analytics/exa/archive/master.zip
+    - unzip master.zip
 install:
-    - pip install numpy scipy matplotlib sqlalchemy pandas networkx sympy
-    - pip install seaborn jupyter notebook ipywidgets ipyparallel sphinx nose
-    - pip install traitlets exa
-    - pip install codecov
+    - conda install --yes python=$TRAVIS_PYTHON_VERSION atlas numpy scipy matplotlib pandas sqlalchemy networkx sympy seaborn jupyter notebook==4.1 ipywidgets==4.1 ipyparallel sphinx nose
+    - pip install sphinxcontrib-autoanysrc codecov
+    - cd exa-master && pip install -e .
 script:
     - nosetests --with-doctest --with-coverage
 after_success:

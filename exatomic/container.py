@@ -13,6 +13,7 @@ like density functional theory exchange correlation functional.
 '''
 import pandas as pd
 import numpy as np
+from exa.numerical import Field
 from exa.container import TypedMeta, Container
 from exatomic.error import PeriodicUniverseError, FreeBoundaryUniverseError
 from exatomic.widget import UniverseWidget
@@ -133,6 +134,50 @@ class Universe(Container, metaclass=UniverseTypedMeta):
     def __len__(self):
         return len(self.frame)
 
+
+def concat(*universes, name=None, description=None, meta=None):
+    '''
+    Warning:
+        This function is not fully featured or tested yet!
+    '''
+    kwargs = {'name': name, 'description': description, 'meta': meta}
+    names = []
+    for universe in universes:
+        for key, data in universe._data().items():
+            name = key[1:] if key.startswith('_') else key
+            names.append(name)
+            if name in kwargs:
+                kwargs[name].append(data)
+            else:
+                kwargs[name] = [data]
+    for name in set(names):
+        cls = kwargs[name][0].__class__
+        if isinstance(kwargs[name][0], Field):
+            data = pd.concat(kwargs[name])
+            values = [v for field in kwargs[name] for v in field.field_values]
+            kwargs[name] = cls(data, field_values=values)
+        else:
+            kwargs[name] = cls(pd.concat(kwargs[name]))
+    return Universe(**kwargs)
+
+
+#def concat_frames(*universes, name=None, description=None, meta=None):
+#    '''
+#    Concatenate a collection of "single frame" :class:`~exatomic.container.Unvierse`
+#    objects. A single frame means that each :class:`~exatomic.container.Universe`
+#    object contains data corresponding to a single atomic configuration (or
+#    other type of "cardinal" axis). Indices are altered to match the order the
+#    universes are passed as arguments.
+#    '''
+#    kwargs = {'name': name, 'description': description, 'meta': meta}
+#    indices = {}
+#    atom = 0
+#    for frame, universe in enumerate(universes):
+#        for key, data in universe._data().items():
+#            name = key[1:] if key.startswith('_') else key
+#            idx_name = data.index.name
+#            if idx_name in indices:
+#                indices[idx_name] += 
 
 
 #from exatomic.frame import minimal_frame, Frame

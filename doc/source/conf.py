@@ -230,11 +230,6 @@ html_show_copyright = True
 # Output file base name for HTML help builder.
 htmlhelp_basename = 'exadoc'
 
-if not on_rtd:
-    import sphinx_rtd_theme
-    html_theme = 'sphinx_rtd_theme'
-    html_theme_path = [sphinx_rtd_theme.get_html_theme_path()]
-
 # -- Options for LaTeX output ---------------------------------------------
 
 latex_elements = {

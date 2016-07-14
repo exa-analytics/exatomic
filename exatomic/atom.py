@@ -69,7 +69,7 @@ class Atom(BaseAtom):
     This table contains the absolute coordinates (regardless of boundary
     conditions) of atomic nuclei.
     '''
-    _traits = ['x', 'y', 'z']
+    _traits = ['x', 'y', 'z', 'set']
     _columns = ['x', 'y', 'z', 'symbol', 'frame']
     _categories = {'frame': np.int64, 'label': np.int64, 'symbol': str,
                    'bond_count': np.int64, 'set': np.int64, 'molecule': np.int64}
@@ -95,25 +95,29 @@ class Atom(BaseAtom):
         .. _Jmol: http://jmol.sourceforge.net/jscolors/
         '''
         self._set_categories()
+        kwargs = {}
         grps = self.groupby('frame')
         symbols = grps.apply(lambda g: g['symbol'].cat.codes.values)    # Pass integers rather than string symbols
-        symbols = Unicode(symbols.to_json(orient='values')).tag(sync=True)
+        kwargs['atom_symbols'] = Unicode(symbols.to_json(orient='values')).tag(sync=True)
         symmap = {i: v for i, v in enumerate(self['symbol'].cat.categories)}
         sym2rad = symbol_to_radius()
         radii = sym2rad[self['symbol'].unique()]
-        radii = Dict({i: radii[v] for i, v in symmap.items()}).tag(sync=True)  # (Int) symbol radii
+        kwargs['atom_radii'] = Dict({i: radii[v] for i, v in symmap.items()}).tag(sync=True)  # (Int) symbol radii
         sym2col = symbol_to_color()
         colors = sym2col[self['symbol'].unique()]    # Same thing for colors
-        colors = Dict({i: colors[v] for i, v in symmap.items()}).tag(sync=True)
-        try:
-            atom_set = grps.apply(lambda g: g['set'].values).to_json(orient='values')
-            atom_set = Unicode(atom_set).tag(sync=True)
-        except KeyError:
-            atom_set = Unicode().tag(sync=True)
+        kwargs['atom_colors'] = Dict({i: colors[v] for i, v in symmap.items()}).tag(sync=True)
+        return kwargs
+        #if 'set' in self:
+
+        #try:
+        #    atom_set = grps.apply(lambda g: g['set'].values).to_json(orient='values')
+        #    atom_set = Unicode(atom_set).tag(sync=True)
+        #except KeyError:
+        #    atom_set = Unicode().tag(sync=True)
         # Note that position traits (atom_x, atom_y, atom_z) are created automatically
         # since we have defined _traits = ['x', 'y', 'z'] above.
-        return {'atom_symbols': symbols, 'atom_radii': radii, 'atom_colors': colors,
-                'atom_set': atom_set}
+        #return {'atom_symbols': symbols, 'atom_radii': radii, 'atom_colors': colors,
+        #        'atom_set': atom_set}
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -154,18 +158,6 @@ class ProjectedAtom(SparseDataFrame):
     _indices = ['two']
     _columns = ['x', 'y', 'z']
 
-
-#class ProjectedAtom(BaseAtom):
-#    '''
-#    Projected atom coordinates (e.g. on 3x3x3 supercell). These coordinates are
-#    typically associated with their corresponding indices in another dataframe.
-#    '''
-#    _indices = ['prjd_atom']
-#    _columns = ['x', 'y', 'z', 'frame', 'atom']
-#    _traits = []
-#    _groupbys = ['frame']
-#    _categories = {'atom': np.int64, 'frame': np.int64, 'label': np.int64,
-#                   'symbol': str, 'bond_count': np.int64}
 
 #class VisualAtom(SparseDataFrame):
 #    '''

@@ -21,5 +21,5 @@ config['dynamic']['exatomic_pkgdir'] = os.path.dirname(__file__)
 
 if config['paths']['update'] == '1':
     shutil.copyfile(mkp(config['dynamic']['exatomic_pkgdir'], '_static', 'exatomic_demo.ipynb'),
-                    mkp(root, 'notebooks', 'exatomic_demo.ipynb'))
+                    mkp(config['dynamic']['exa_root'], 'notebooks', 'exatomic_demo.ipynb'))
     atexit.register(del_update)
