@@ -44,8 +44,16 @@ class PeriodicUniverseError(AtomicException):
     def __init__(self):
         super().__init__(msg='Not a periodic boundary condition Universe?')
 
+
 class FreeBoundaryUniverseError(AtomicException):
     '''
     '''
     def __init__(self):
         super().__init__(msg='Not a free boundary condition Universe?')
+
+
+class BasisSetNotFoundError(AtomicException):
+    '''
+    '''
+    def __init__(self):
+        super().__init__(msg='Not basis set table present in Universe?')

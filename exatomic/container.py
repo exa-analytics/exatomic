@@ -15,7 +15,8 @@ import pandas as pd
 import numpy as np
 from exa.numerical import Field
 from exa.container import TypedMeta, Container
-from exatomic.error import PeriodicUniverseError, FreeBoundaryUniverseError
+from exatomic.error import (PeriodicUniverseError, FreeBoundaryUniverseError,
+                            BasisSetNotFoundError)
 from exatomic.widget import UniverseWidget
 from exatomic.frame import Frame, compute_frame_from_atom
 from exatomic.atom import Atom, UnitAtom, ProjectedAtom
@@ -28,10 +29,12 @@ from exatomic.basis import (SphericalGTFOrder, CartesianGTFOrder, Overlap,
                             BasisSetSummary, GaussianBasisSet, BasisSetOrder)
 
 
-class UniverseTypedMeta(TypedMeta):
+class Meta(TypedMeta):
     '''
     Defines strongly typed attributes of the :class:`~exatomic.universe.Universe`
-    and :class:`~exatomic.editor.AtomicEditor` objects.
+    and :class:`~exatomic.editor.AtomicEditor` objects. All "aliases" below are
+    in fact type definitions that get dynamically generated on package load
+    for :class:`~exatomic.container.Universe` and :class:`~exatomic.editor.Editor`.
     '''
     atom = Atom
     frame = Frame
@@ -52,7 +55,7 @@ class UniverseTypedMeta(TypedMeta):
     cartesian_gtf_order = CartesianGTFOrder
 
 
-class Universe(Container, metaclass=UniverseTypedMeta):
+class Universe(Container, metaclass=Meta):
     '''
     The atomic container is called a universe because it represents everything
     known about the atomistic simulation (whether quantum or classical). This
@@ -74,7 +77,18 @@ class Universe(Container, metaclass=UniverseTypedMeta):
             return self.periodic_two
         return self.free_two
 
-    # Compute functions
+    @property
+    def basis_set(self):
+        '''
+        Attempts to find the correct basis set table for the universe.
+        '''
+        if hasattr(self, '_gaussian_basis_set'):
+            return self.gaussian_basis_set
+        else:
+            raise BasisSetNotFoundError()
+
+    # Note that compute_* function may be called automatically by typed
+    # properties defined in UniverseMeta
     def compute_frame(self):
         '''
         Compute a minmal frame table.

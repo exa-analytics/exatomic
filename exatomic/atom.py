@@ -10,7 +10,7 @@ forces, velocities, symbols, etc. (all data associated with atoms as points).
 import numpy as np
 import pandas as pd
 from traitlets import Dict, Unicode
-from exa.numerical import DataFrame, SparseDataFrame
+from exa.numerical import DataFrame, SparseDataFrame, Series
 from exa.relational.isotope import (symbol_to_color, symbol_to_radius,
                                    symbol_to_element_mass)
 from exatomic.error import PeriodicUniverseError
@@ -47,8 +47,6 @@ class BaseAtom(DataFrame):
     +-------------------+----------+-------------------------------------------+
     | vz                | float    | velocity in z                             |
     +-------------------+----------+-------------------------------------------+
-    | label             | category | non-unique integer                        |
-    +-------------------+----------+-------------------------------------------+
     '''
     _precision = {'x': 2, 'y': 2, 'z': 2}
     _indices = ['atom']
@@ -71,20 +69,23 @@ class Atom(BaseAtom):
     '''
     _traits = ['x', 'y', 'z', 'set']
     _columns = ['x', 'y', 'z', 'symbol', 'frame']
-    _categories = {'frame': np.int64, 'label': np.int64, 'symbol': str,
-                   'bond_count': np.int64, 'set': np.int64, 'molecule': np.int64}
+    _categories = {'frame': np.int64, 'symbol': str, 'set': np.int64,
+                   'molecule': np.int64}
 
-    def compute_element_masses(self):
-        '''Map element symbols to their corresponding (element) mass.'''
+    def get_element_masses(self):
+        '''Compute and return element masses from symbols.'''
         elem_mass = symbol_to_element_mass()
-        self['mass'] = self['symbol'].astype('O').map(elem_mass)
+        return self['symbol'].astype('O').map(elem_mass)
 
-    def reset_labels(self):
-        '''Reset the "label" column.'''
-        if 'label' in self:
-            del self['label']
+    def get_atom_labels(self):
+        '''
+        Compute and return enumerated atoms.
+
+        Returns:
+            labels (:class:`~exa.numerical.Series`): Enumerated atom labels (of type int)
+        '''
         nats = self.groupby('frame').size().values
-        self['label'] = pd.Series([i for nat in nats for i in range(nat)], dtype='category')
+        return Series([i for nat in nats for i in range(nat)])
 
     def _custom_traits(self):
         '''
@@ -107,23 +108,7 @@ class Atom(BaseAtom):
         colors = sym2col[self['symbol'].unique()]    # Same thing for colors
         kwargs['atom_colors'] = Dict({i: colors[v] for i, v in symmap.items()}).tag(sync=True)
         return kwargs
-        #if 'set' in self:
-
-        #try:
-        #    atom_set = grps.apply(lambda g: g['set'].values).to_json(orient='values')
-        #    atom_set = Unicode(atom_set).tag(sync=True)
-        #except KeyError:
-        #    atom_set = Unicode().tag(sync=True)
-        # Note that position traits (atom_x, atom_y, atom_z) are created automatically
-        # since we have defined _traits = ['x', 'y', 'z'] above.
-        #return {'atom_symbols': symbols, 'atom_radii': radii, 'atom_colors': colors,
-        #        'atom_set': atom_set}
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        if 'label' not in self:
-            self.reset_labels()
-
+        
 
 class UnitAtom(SparseDataFrame):
     '''

@@ -8,28 +8,33 @@ This module provides a text file editor that can be used to transform commonly
 found file formats directly into :class:`~exatomic.container.Universe` objects.
 '''
 from exa.editor import Editor as BaseEditor
-from exatomic.container import UniverseTypedMeta, Universe
+from exatomic.container import Meta, Universe
 from exatomic.frame import compute_frame_from_atom
 
 
-class Editor(BaseEditor, metaclass=UniverseTypedMeta):
+class Editor(BaseEditor, metaclass=Meta):
     '''
     Base atomic editor class for converting between file formats and to (or
     from) :class:`~exatomic.container.Universe` objects.
+
+    Note:
+        Functions defined in the editor that generate typed attributes (see
+        below) should be names "parse_{data object name}".
+
+    See Also:
+        For a list of typed attributes, see :class:`~exatomic.container.Universe`.
     '''
     def parse_frame(self):
         '''
-        Create a minimal_frame table.
+        Create a minimal :class:`~exatomic.frame.Frame` from the (parsed)
+        :class:`~exatomic.atom.Atom` object.
         '''
         self.frame = compute_frame_from_atom(self.atom)
 
-    def to_universe(self, *args, **kwargs):
+    def to_universe(self, name=None, description=None, meta=None):
         '''
         Convert the editor to a :class:`~exatomic.container.Universe` object.
         '''
-        to_parse = [func.replace('parse_', '') for func in vars(self.__class__).keys() if func[:5] == 'parse']
-        kwargs.update({attr: getattr(self, attr) for attr in to_parse if hasattr(self, attr)})
-        kwargs.update({'frame': self.frame})
-        return Universe(*args, **kwargs)
-
-
+        attrs = [attr.replace('parse_', '') for attr in vars(self).keys() if attr.startswith('parse_')]
+        kwargs.update({attr: getattr(self, attr) for attr in attrs})
+        return Universe(name=name, description=description, meta=meta, **kwargs)
