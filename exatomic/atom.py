@@ -49,8 +49,8 @@ class BaseAtom(DataFrame):
     +-------------------+----------+-------------------------------------------+
     '''
     _precision = {'x': 2, 'y': 2, 'z': 2}
-    _indices = ['atom']
-    _groupbys = ['frame']
+    _index = 'atom'
+    _groupby = 'frame'
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -84,7 +84,7 @@ class Atom(BaseAtom):
         Returns:
             labels (:class:`~exa.numerical.Series`): Enumerated atom labels (of type int)
         '''
-        nats = self.groupby('frame').size().values
+        nats = self.grpd.size().values
         return Series([i for nat in nats for i in range(nat)])
 
     def _custom_traits(self):
@@ -97,7 +97,7 @@ class Atom(BaseAtom):
         '''
         self._set_categories()
         kwargs = {}
-        grps = self.groupby('frame')
+        grps = self.grpd
         symbols = grps.apply(lambda g: g['symbol'].cat.codes.values)    # Pass integers rather than string symbols
         kwargs['atom_symbols'] = Unicode(symbols.to_json(orient='values')).tag(sync=True)
         symmap = {i: v for i, v in enumerate(self['symbol'].cat.categories)}
@@ -108,7 +108,7 @@ class Atom(BaseAtom):
         colors = sym2col[self['symbol'].unique()]    # Same thing for colors
         kwargs['atom_colors'] = Dict({i: colors[v] for i, v in symmap.items()}).tag(sync=True)
         return kwargs
-        
+
 
 class UnitAtom(SparseDataFrame):
     '''

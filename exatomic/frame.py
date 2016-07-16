@@ -115,7 +115,7 @@ def compute_frame_from_atom(atom):
     Returns:
         frame (:class:`~exatomic.frame.Frame`): Minimal frame table
     '''
-    frame = atom.groupby('frame').size().to_frame()
+    frame = atom.grpd.size().to_frame()
     frame.index = frame.index.astype(np.int64)
     frame.columns = ['atom_count']
     return Frame(frame)
