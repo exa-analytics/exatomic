@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 # Copyright (c) 2015-2016, Exa Analytics Development Team
 # Distributed under the terms of the Apache License 2.0
-'''
+"""
 Basis Set Representations
 ##############################
 This module provides classes that support representations of various basis sets.
@@ -12,7 +12,7 @@ also analytical and discrete manipulations of the basis set.
 
 See Also:
     For symbolic and discrete manipulations see :mod:`~exatomic.algorithms.basis`.
-'''
+"""
 import pandas as pd
 import numpy as np
 from collections import OrderedDict
@@ -26,14 +26,8 @@ spher_ml_count = {'s': 1, 'p': 3, 'd': 5, 'f': 7, 'g': 9, 'h': 11, 'i': 13, 'k':
                   'l': 17, 'm': 19}
 
 
-class TestBasis(DataFrame):
-    _columns = ['alpha_dict', 'd_dict', 'l_dict']
-    _traits = ['alpha_dict', 'd_dict', 'l_dict']
-    _indices = ['set']
-
-
 class BasisSetSummary(DataFrame):
-    '''
+    """
     Stores a summary of the basis set(s) used in the universe.
 
     +-------------------+----------+-------------------------------------------+
@@ -66,35 +60,35 @@ class BasisSetSummary(DataFrame):
         The function count corresponds to the number of linearly independent
         basis functions as provided by the basis set definition and used within
         the code in solving the quantum mechanical eigenvalue problem.
-    '''
+    """
     _columns = ['tag', 'name', 'func_per_atom']
-    _indices = ['set']
-    _groupbys = ['frame']
+    _index = 'set'
+    _groupby = ('frame', np.int64)
     _categories = {'tag': str}
 
 
 class BasisSet(DataFrame):
-    '''
+    """
     Base class for description of a basis set. Stores the parameters of the
     individual (sometimes called primitive) functions used in the basis.
-    '''
+    """
     pass
 
 
 class SlaterBasisSet(BasisSet):
-    '''
+    """
     Stores information about a Slater type basis set.
 
     .. math::
 
         r = \\left(\\left(x - A_{x}\\right)^{2} + \\left(x - A_{y}\\right)^{2} + \\left(z - A_{z}\\right)^{2}\\right)^{\\frac{1}{2}} \\\\
         f\\left(x, y, z\\right) = \\left(x - A_{x}\\right)^{i}\\left(x - A_{y}\\right)^{j}\left(z - A_{z}\\right)^{k}r^{m}e^{-\\alpha r}
-    '''
+    """
     pass
 
 
 class GaussianBasisSet(BasisSet):
-    '''
+    """
     Stores information about a Gaussian type basis set.
 
     A Gaussian type basis set is described by primitive Gaussian functions :math:`f\\left(x, y, z\\right)`
@@ -136,31 +130,30 @@ class GaussianBasisSet(BasisSet):
     +-------------------+----------+-------------------------------------------+
     | frame             | int/cat  | non-unique integer                        |
     +-------------------+----------+-------------------------------------------+
-    '''
+    """
     _columns = ['alpha', 'd', 'shell_function', 'l', 'set']
-    _indices = ['primitive']
+    _index = 'primitive'
     _traits = ['shell_function']
-    #_groupbys = ['frame']
-    #_precision = {'alpha': 8, 'd': 8}
-    _categories = {'set': np.int64, 'l': np.int64, 'shell_function': np.int64,
-                   'frame': np.int64}
+    _precision = {'alpha': 8, 'd': 8}
+    _categories = {'set': np.int64, 'l': np.int64, 'shell_function': np.int64}
 
     def _custom_traits(self):
-        alphas = self.groupby('frame').apply(
+        g = self.grpd
+        alphas = g.apply(
                  lambda x: x.groupby('set').apply(
                  lambda y: y.groupby('shell_function').apply(
                  lambda z: z['alpha'].values).values)).to_json(orient='values')
         #alphas = Unicode(''.join(['[', alphas, ']'])).tag(sync=True)
         alphas = Unicode(alphas).tag(sync=True)
 
-        ds = self.groupby('frame').apply(
+        ds = g.apply(
              lambda x: x.groupby('set').apply(
              lambda y: y.groupby('shell_function').apply(
              lambda z: z['d'].values).values)).to_json(orient='values')
         #ds = Unicode(''.join(['[', ds, ']'])).tag(sync=True)
         ds = Unicode(ds).tag(sync=True)
 
-        ls = self.groupby('frame').apply(
+        ls = g.apply(
              lambda x: x.groupby('set').apply(
              lambda y: y.groupby('shell_function').apply(
              lambda z: z['l'].astype(np.int64).values).values)).to_json(orient='values')
@@ -172,17 +165,17 @@ class GaussianBasisSet(BasisSet):
 
 
     def basis_count(self):
-        '''
+        """
         Number of basis functions (:math:`g_{i}`) per symbol or label type.
 
         Returns:
             counts (:class:`~pandas.Series`)
-        '''
+        """
         return self.groupby('symbol').apply(lambda g: g.groupby('function').apply(
                                             lambda g: (g['shell'].map(spher_ml_count)).values[0]).sum())
 
 class BasisSetOrder(BasisSet):
-    '''
+    """
     BasisSetOrder uniquely determines the basis function ordering scheme for
     a given :class:`~exatomic.universe.Universe`. This table should be used
     if the ordering scheme is not programmatically available.
@@ -198,13 +191,13 @@ class BasisSetOrder(BasisSet):
     +-------------------+----------+-------------------------------------------+
     | type              | str      | identifier equivalent to (l, ml)          |
     +-------------------+----------+-------------------------------------------+
-    '''
+    """
     _columns = ['symbol', 'center', 'type']
-    _indices = ['order']
+    _index = 'order'
     _categories = {'center': np.int64, 'type': str}
 
 #class BasisSetMap(BasisSet):
-#    '''
+#    """
 #    BasisSetMap provides the auxiliary information about relational mapping
 #    between the complete uncontracted primitive basis set and the resultant
 #    contracted basis set within an :class:`~exatomic.universe.Universe`.
@@ -222,14 +215,14 @@ class BasisSetOrder(BasisSet):
 #    +-------------------+----------+-------------------------------------------+
 #    | degen             | bool     | False if cartesian, True if spherical     |
 #    +-------------------+----------+-------------------------------------------+
-#    '''
+#    """
 #    _columns = ['tag', 'nprim', 'nbasis', 'degen']
 #    _indices = ['index']
 #    #_categories = {'tag': str, 'shell': str, 'nbasis': np.int64, 'degen': bool}
 #
 
 class Overlap(DataFrame):
-    '''
+    """
     Overlap enumerates the overlap matrix elements between basis functions in
     a contracted basis set. Currently nothing disambiguates between the
     primitive overlap matrix and the contracted overlap matrix. As it is
@@ -250,9 +243,9 @@ class Overlap(DataFrame):
     +-------------------+----------+-------------------------------------------+
     | coefficient       | float    | overlap matrix element                    |
     +-------------------+----------+-------------------------------------------+
-    '''
+    """
     _columns = ['chi1', 'chi2', 'coefficient', 'frame']
-    _indices = ['index']
+    _index = 'index'
 
     def square(self, frame=0):
         nbas = np.round(np.roots([1, 1, -2 * self.shape[0]])[1]).astype(np.int64)
@@ -261,14 +254,14 @@ class Overlap(DataFrame):
 
 
 class PlanewaveBasisSet(BasisSet):
-    '''
-    '''
+    """
+    """
     pass
 
 
 
 class CartesianGTFOrder(DataFrame):
-    '''
+    """
     Stores cartesian basis function order with respect to basis function label.
 
     +-------------------+----------+-------------------------------------------+
@@ -284,9 +277,9 @@ class CartesianGTFOrder(DataFrame):
     +-------------------+----------+-------------------------------------------+
     | l                 | int      | x + y + z                                 |
     +-------------------+----------+-------------------------------------------+
-    '''
+    """
     _columns = ['l', 'x', 'y', 'z', 'frame']
-    _indices = ['cart_order']
+    _index = 'cart_order'
     _traits = ['l']
     _categories = {'l': np.int64, 'x': np.int64, 'y': np.int64, 'z': np.int64}
 
@@ -305,24 +298,24 @@ class CartesianGTFOrder(DataFrame):
 
     @classmethod
     def from_lmax_order(cls, lmax, ordering_function):
-        '''
+        """
         Generate the dataframe of cartesian basis function ordering with
         respect to spin angular momentum.
 
         Args:
             lmax (int): Maximum value of orbital angular momentum
             ordering_function: Cartesian ordering function (code specific)
-        '''
+        """
         df = pd.DataFrame(np.concatenate([ordering_function(l) for l in range(lmax + 1)]),
                           columns=['l', 'x', 'y', 'z'])
         df['frame'] = 0
         return cls(df)
 
     def symbolic_keys(self):
-        '''
+        """
         Generate the enumerated symbolic keys (e.g. 'x', 'xx', 'xxyy', etc.)
         associated with each row for ordering purposes.
-        '''
+        """
         x = self['x'].apply(lambda i: 'x' * i).astype(str)
         y = self['y'].apply(lambda i: 'y' * i).astype(str)
         z = self['z'].apply(lambda i: 'z' * i).astype(str)
@@ -330,7 +323,7 @@ class CartesianGTFOrder(DataFrame):
 
 
 class SphericalGTFOrder(DataFrame):
-    '''
+    """
     Stores order of spherical basis functions with respect to angular momenta.
 
     +-------------------+----------+-------------------------------------------+
@@ -342,10 +335,10 @@ class SphericalGTFOrder(DataFrame):
     +-------------------+----------+-------------------------------------------+
     | ml                | int      | magnetic quantum number                   |
     +-------------------+----------+-------------------------------------------+
-    '''
+    """
     _columns = ['l', 'ml', 'frame']
     _traits = ['l']
-    _indices = ['spherical_order']
+    _index = 'spherical_order'
 
     def _custom_traits(self):
         sgto = self.groupby('frame').apply(lambda x: x.groupby('l').apply( lambda y: y['ml'].values))
@@ -356,14 +349,14 @@ class SphericalGTFOrder(DataFrame):
 
     @classmethod
     def from_lmax_order(cls, lmax, ordering_function):
-        '''
+        """
         Generate the spherical basis function ordering with respect
         to spin angular momentum.
 
         Args:
             lmax (int): Maximum value of orbital angular momentum
             ordering_function: Spherical ordering function (code specific)
-        '''
+        """
         data = OrderedDict([(l, ordering_function(l)) for l in range(lmax + 1)])
         l = [k for k, v in data.items() for i in range(len(v))]
         ml = np.concatenate(list(data.values()))
@@ -372,10 +365,10 @@ class SphericalGTFOrder(DataFrame):
         return cls(df)
 
     def symbolic_keys(self, l=None):
-        '''
+        """
         Generate the enumerated symbolic keys (e.g. '(0, 0)', '(1, -1)', '(2, 2)',
         etc.) associated with each row for ordering purposes.
-        '''
+        """
         obj = zip(self['l'], self['ml'])
         if l is None:
             return list(obj)

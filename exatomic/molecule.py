@@ -1,10 +1,10 @@
 # -*- coding: utf-8 -*-
 # Copyright (c) 2015-2016, Exa Analytics Development Team
 # Distributed under the terms of the Apache License 2.0
-'''
+"""
 Molecule Table
 ###################
-'''
+"""
 import numpy as np
 import pandas as pd
 import networkx as nx
@@ -15,14 +15,14 @@ from exatomic.formula import string_to_dict
 
 
 class Molecule(DataFrame):
-    '''
+    """
     Description of molecules in the atomic universe.
-    '''
-    _index = ['molecule']
+    """
+    _index = 'molecule'
     _categories = {'frame': np.int64, 'formula': str, 'classification': object}
 
     def classify(self, *classifiers, overwrite=False):
-        '''
+        """
         Classify molecules into arbitrary categories.
 
         .. code-block:: Python
@@ -43,7 +43,7 @@ class Molecule(DataFrame):
 
         See Also:
             :func:`~exatomic.algorithms.nearest.compute_nearest_molecules`
-        '''
+        """
         for c in classifiers:
             n = len(c)
             if n != 3 and n != 2:
@@ -64,15 +64,15 @@ class Molecule(DataFrame):
         self['classification'] = self['classification'].astype('category')
 
     def compute_atom_count(self):
-        '''
+        """
         Compute the molecular atom count.
-        '''
+        """
         symbols = [col for col in self.columns if len(col) < 3 and col[0].istitle()]
         self['atom_count'] = self[symbols].sum(axis=1)
 
 
 def compute_molecule(universe):
-    '''
+    """
     Cluster atoms into molecules and create the :class:`~exatomic.molecule.Molecule`
     table.
 
@@ -85,7 +85,7 @@ def compute_molecule(universe):
     Warning:
         This function modifies the universe's atom (:class:`~exatomic.atom.Atom`)
         table in place!
-    '''
+    """
     nodes = universe.atom.index.values
     bonded = universe.two.ix[universe.two['bond'] == True, ['atom0', 'atom1']]
     edges = zip(bonded['atom0'].astype(np.int64), bonded['atom1'].astype(np.int64))
@@ -115,9 +115,9 @@ def compute_molecule(universe):
 
 
 #def compute_molecule_com(universe):
-#    '''
+#    """
 #    Compute molecules' center of mass.
-#    '''
+#    """
 #    universe.atom['mass'] = universe.atom['symbol'].map(symbol_to_element_mass)
 #    universe.atom['xm'] = universe.visual_atom['x'].mul(universe.atom['mass'])
 #    universe.atom['ym'] = universe.visual_atom['y'].mul(universe.atom['mass'])

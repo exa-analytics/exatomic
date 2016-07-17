@@ -1,12 +1,12 @@
 # -*- coding: utf-8 -*-
 # Copyright (c) 2015-2016, Exa Analytics Development Team
 # Distributed under the terms of the Apache License 2.0
-'''
+"""
 Atomic Position Data
 ############################
 This module provides a collection of dataframes supporting nuclear positions,
 forces, velocities, symbols, etc. (all data associated with atoms as points).
-'''
+"""
 import numpy as np
 import pandas as pd
 from traitlets import Dict, Unicode
@@ -18,7 +18,7 @@ from exatomic.math.distance import minimal_image_counts
 
 
 class BaseAtom(DataFrame):
-    '''
+    """
     Base atom dataframe; sets some default precision (for traits creation and
     visualization), required columns, and categories.
 
@@ -47,54 +47,44 @@ class BaseAtom(DataFrame):
     +-------------------+----------+-------------------------------------------+
     | vz                | float    | velocity in z                             |
     +-------------------+----------+-------------------------------------------+
-    '''
+    """
     _precision = {'x': 2, 'y': 2, 'z': 2}
     _index = 'atom'
-    _groupby = 'frame'
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self._revert_categories()
-        # Fill "ghost" atoms with the default ghost atom (Dga)
-        if 'symbol' in self:
-            self.ix[self['symbol'].isin(['nan', 'NaN', 'none', 'None']), 'symbol'] = None
-            self['symbol'].fillna('Dga', inplace=True)
-        self._set_categories()
+    _groupby = ('frame', np.int64)
+    _categories = {'symbol': str, 'set': np.int64, 'molecule': np.int64}
 
 
 class Atom(BaseAtom):
-    '''
+    """
     This table contains the absolute coordinates (regardless of boundary
     conditions) of atomic nuclei.
-    '''
+    """
     _traits = ['x', 'y', 'z', 'set']
-    _columns = ['x', 'y', 'z', 'symbol', 'frame']
-    _categories = {'frame': np.int64, 'symbol': str, 'set': np.int64,
-                   'molecule': np.int64}
+    _columns = ['x', 'y', 'z', 'symbol']
 
     def get_element_masses(self):
-        '''Compute and return element masses from symbols.'''
+        """Compute and return element masses from symbols."""
         elem_mass = symbol_to_element_mass()
         return self['symbol'].astype('O').map(elem_mass)
 
     def get_atom_labels(self):
-        '''
+        """
         Compute and return enumerated atoms.
 
         Returns:
             labels (:class:`~exa.numerical.Series`): Enumerated atom labels (of type int)
-        '''
+        """
         nats = self.grpd.size().values
         return Series([i for nat in nats for i in range(nat)])
 
     def _custom_traits(self):
-        '''
+        """
         Create creates for the atomic size (using the covalent radius) and atom
         colors (using the common `Jmol`_ color scheme). Note that that data is
         present in the static data (see :mod:`~exa.relational.isotope`).
 
         .. _Jmol: http://jmol.sourceforge.net/jscolors/
-        '''
+        """
         self._set_categories()
         kwargs = {}
         grps = self.grpd
@@ -111,21 +101,21 @@ class Atom(BaseAtom):
 
 
 class UnitAtom(SparseDataFrame):
-    '''
+    """
     In unit cell coordinates (sparse) for periodic systems. These coordinates
     are used to update the corresponding :class:`~exatomic.atom.Atom` object
-    '''
-    _indices = ['atom']
+    """
+    _index = 'atom'
     _columns = ['x', 'y', 'z']
 
     @classmethod
     def from_universe(cls, universe):
-        '''
-        '''
-        if universe.frame.is_periodic:
+        """
+        """
+        if universe.frame.is_periodic():
             xyz = universe.atom[['x', 'y', 'z']].values.astype(np.float64)
             if 'rx' not in universe.frame:
-                universe.compute_cell_magnitudes()
+                universe.frame.compute_cell_magnitudes()
             counts = universe.frame['atom_count'].values.astype(np.int64)
             rxyz = universe.frame[['rx', 'ry', 'rz']].values.astype(np.float64)
             oxyz = universe.frame[['ox', 'oy', 'oz']].values.astype(np.float64)
@@ -136,21 +126,21 @@ class UnitAtom(SparseDataFrame):
 
 
 class ProjectedAtom(SparseDataFrame):
-    '''
+    """
     Projected atom coordinates (e.g. on 3x3x3 supercell). These coordinates are
     typically associated with their corresponding indices in another dataframe.
-    '''
-    _indices = ['two']
+    """
+    _index = 'two'
     _columns = ['x', 'y', 'z']
 
 
 #class VisualAtom(SparseDataFrame):
-#    '''
+#    """
 #    Akin to :class:`~exatomic.atom.UnitAtom`, this class is used to store a special
 #    set of coordinates used specifically for visualization. Typically these coordinates
 #    are the unit cell coordinates of a periodic system with select atoms translated
 #    so as not to break apart molecules across the periodic boundary.
-#    '''
+#    """
 #    _indices = ['atom']
 #    _columns = ['x', 'y', 'z']
 #
@@ -159,7 +149,7 @@ class ProjectedAtom(SparseDataFrame):
 #
 #
 #def compute_unit_atom(universe):
-#    '''
+#    """
 #    Compute the in-unit-cell exatomic coordiations of a periodic universe.
 #
 #    Args:
@@ -172,12 +162,12 @@ class ProjectedAtom(SparseDataFrame):
 #        The returned coordinate dataframe is sparse and is used to update the
 #        atom dataframe as needed. Note that updating the atom dataframe overwrites
 #        the data there, so typically one updates a copy of the atom dataframe.
-#    '''
+#    """
 #    if not universe.is_periodic:
 #        raise TypeError('Is this a periodic universe? Check frame for periodic column.')
 #
 #def OLD_compute_unit_atom(universe):
-#    '''
+#    """
 #    Compute the unit cell coordinates of the atoms.
 #
 #    Args:
@@ -185,7 +175,7 @@ class ProjectedAtom(SparseDataFrame):
 #
 #    Returns:
 #        sparse_df (:pandas:`~pandas.SparseDataFrame`): Sparse dataframe of in unit cell positions
-#    '''
+#    """
 #    if not universe.is_periodic:
 #        raise TypeError('Is this a periodic universe? Check frame for periodic column.')
 #    if universe.is_vc:
@@ -197,7 +187,7 @@ class ProjectedAtom(SparseDataFrame):
 #
 #
 #def compute_projected_atom(universe):
-#    '''
+#    """
 #    Computes the 3x3x3 supercell coordinates from the unit cell coordinates.
 #
 #    Args:
@@ -205,7 +195,7 @@ class ProjectedAtom(SparseDataFrame):
 #
 #    Returns:
 #        two (:class:`~exatomic.two.PeriodicTwo`): Two body distances
-#    '''
+#    """
 #    if not universe.is_periodic:
 #        raise TypeError('Is this a periodic universe? Check frame for periodic column.')
 #    if universe.is_vc:
@@ -214,9 +204,9 @@ class ProjectedAtom(SparseDataFrame):
 #
 #
 #def _compute_projected_static(universe):
-#    '''
+#    """
 #    Compute the 3x3x3 supercell coordinates given a static unit cell
-#    '''
+#    """
 #    idx = universe.frame.index[0]
 #    ua = universe.unit_atom
 #    x = ua['x'].values
@@ -234,13 +224,13 @@ class ProjectedAtom(SparseDataFrame):
 #
 #
 #def compute_visual_atom(universe):
-#    '''
+#    """
 #    Creates visually pleasing exatomic coordinates (useful for periodic
 #    systems).
 #
 #    See Also:
 #        :func:`~exatomic.universe.Universe.compute_vis_atom`
-#    '''
+#    """
 #    if not universe.is_periodic:
 #        raise TypeError('Is this a periodic universe? Check frame for periodic column.')
 #    if 'bond_count' not in universe.projected_atom:

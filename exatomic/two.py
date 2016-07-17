@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 # Copyright (c) 2015-2016, Exa Analytics Development Team
 # Distributed under the terms of the Apache License 2.0
-'''
+"""
 Two Body Properties Table
 ##################################
 This module provides functions for computing interatomic distances and bonds
@@ -25,7 +25,7 @@ by this module.
 +-------------------+----------+---------------------------------------------+
 | symbols           | category | concatenated atomic symbols                 |
 +-------------------+----------+---------------------------------------------+
-'''
+"""
 import numpy as np
 import pandas as pd
 from traitlets import Unicode
@@ -35,24 +35,23 @@ from exatomic.math.distance import free_two_frame, periodic_two_frame
 
 
 class BaseTwo(DataFrame):
-    '''
+    """
     Base class for two body properties.
 
     See Also:
         Two body data are store depending on the boundary conditions of the
         system: :class:`~exatomic.two.FreeTwo` or :class:`~exatomic.two.PeriodicTwo`.
-    '''
-    _indices = ['two']
+    """
+    _index = 'two'
     _columns = ['dx', 'dy', 'dz', 'atom0', 'atom1', 'distance', 'frame']
-    _groupbys = ['frame']
-    _categories = {'frame': np.int64, 'symbols': str, 'atom0': np.int64,
-                   'atom1': np.int64}
+    _groupby = ('frame', np.int64)
+    _categories = {'symbols': str, 'atom0': np.int64, 'atom1': np.int64}
 
     def _bond_traits(self, label_mapper):
-        '''
+        """
         Traits representing bonded atoms are reported as two lists of equal
         length with atom labels.
-        '''
+        """
         bonded = self.ix[self['bond'] == True, ['atom0', 'atom1', 'frame']]
         lbl0 = bonded['atom0'].map(label_mapper)
         lbl1 = bonded['atom1'].map(label_mapper)
@@ -75,33 +74,33 @@ class BaseTwo(DataFrame):
 
 
 class FreeTwo(BaseTwo):
-    '''
+    """
     Free boundary condition two body properties table.
-    '''
+    """
     pass
 
 
 class PeriodicTwo(BaseTwo):
-    '''
+    """
     Periodic boundary condition two body properties table.
-    '''
+    """
     pass
 
 
 def compute_two(universe, bond_extra=0.55, max_distance=19.0):
-    '''
+    """
     Compute interatomic distances.
-    '''
-    if universe.frame.is_periodic:
+    """
+    if universe.frame.is_periodic():
         return compute_periodic_two(universe, bond_extra, max_distance)
     return compute_free_two(universe, bond_extra, max_distance)
 
 
 def compute_free_two(universe, bond_extra=0.55, max_distance=19.0):
-    '''
+    """
     Compute free boundary condition two body properties from an input universe.
-    '''
-    groups = universe.atom.groupby('frame')
+    """
+    groups = universe.atom.grpd
     n = groups.ngroups
     dxs = np.empty((n, ), dtype='O')
     dys = np.empty((n, ), dtype='O')
@@ -146,9 +145,9 @@ def compute_free_two(universe, bond_extra=0.55, max_distance=19.0):
 
 
 def compute_periodic_two(universe, bond_extra=0.55, max_distance=19.0):
-    '''
+    """
     Compute periodic two body properties.
-    '''
+    """
     grps = universe.atom[['x', 'y', 'z', 'frame']].copy()
     grps.update(universe.unit_atom)
     grps = grps.groupby('frame')
@@ -209,7 +208,7 @@ def compute_periodic_two(universe, bond_extra=0.55, max_distance=19.0):
 
 
 def compute_bond_count(universe):
-    '''
+    """
     Computes bond count (number of bonds associated with a given atom index).
 
     Args:
@@ -222,14 +221,14 @@ def compute_bond_count(universe):
         For both periodic and non-periodic universes, counts returned are
         atom indexed. Counts for projected atoms have no meaning/are not
         computed during two body property calculation.
-    '''
+    """
     stack = universe.two.ix[universe.two['bond'] == True, ['atom0', 'atom1']].stack()
     return stack.value_counts().sort_index()
 
 
 #def bond_summary_by_label_pairs(universe, *labels, length='A', stdev=False,
 #                                stderr=False, variance=False, ncount=False):
-#    '''
+#    """
 #    Compute a summary of bond lengths by label pairs
 #
 #    Args:
@@ -243,7 +242,7 @@ def compute_bond_count(universe):
 #
 #    Returns:
 #        summary (:class:`~pandas.DataFrame`): Bond length dataframe
-#    '''
+#    """
 #    l0, l1 = list(zip(*labels))
 #    l0 = np.array(l0, dtype=np.int64)
 #    l1 = np.array(l1, dtype=np.int64)
@@ -282,7 +281,7 @@ def compute_bond_count(universe):
 #
 #def n_nearest_distances_by_symbols(universe, a, b, n, length='A', stdev=False,
 #                                   stderr=False, variance=False, ncount=False):
-#    '''
+#    """
 #    Compute a distance summary of the n nearest pairs of symbols, (a, b).
 #
 #    Args:
@@ -297,7 +296,7 @@ def compute_bond_count(universe):
 #
 #    Returns:
 #        summary (:class:`~pandas.DataFrame`): Distance summary dataframe
-#    '''
+#    """
 #    def compute(group):
 #        return group.sort_values('distance').iloc[:n]
 #

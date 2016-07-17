@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 # Copyright (c) 2015-2016, Exa Analytics Development Team
 # Distributed under the terms of the Apache License 2.0
-'''
+"""
 Exatomic
 #############
 This package provides a unified data format for organizing, analyzing, and
@@ -17,7 +17,7 @@ Warning:
     atomic units!
 
 .. _atomic: https://en.wikipedia.org/wiki/Atomic_units
-'''
+"""
 __exatomic_version__ = (0, 2, 11)
 __version__ = '.'.join((str(v) for v in __exatomic_version__))
 
@@ -29,5 +29,6 @@ from exatomic import error
 # User API
 from exatomic.container import Universe
 from exatomic.editor import Editor
-
 from exatomic.filetypes import XYZ, Cube
+
+from exatomic import test

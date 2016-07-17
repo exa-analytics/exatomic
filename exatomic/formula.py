@@ -1,10 +1,10 @@
 # -*- coding: utf-8 -*-
 # Copyright (c) 2015-2016, Exa Analytics Development Team
 # Distributed under the terms of the Apache License 2.0
-'''
+"""
 Simple Formula
 ##################
-'''
+"""
 import numpy as np
 import pandas as pd
 from exatomic import Isotope
@@ -12,7 +12,7 @@ from exatomic.error import StringFormulaError
 
 
 class SimpleFormula(pd.Series):
-    '''
+    """
     A simple way of storing a chemical formula that contains no structural
     information. Element symbols are in alphabetical order (e.g. 'B', 'C', 'Cl', 'Uuo')
 
@@ -20,22 +20,22 @@ class SimpleFormula(pd.Series):
         >>> naoh = SimpleFormula('Na(1)O(1)H(1)')
         >>> naoh
         SimpleFormula('H(1)Na(1)O(1)')
-    '''
+    """
     @property
     def mass(self):
-        '''
+        """
         Returns:
             mass (float): Mass (in atomic units) of the associated formula
-        '''
+        """
         df = self.to_frame()
         df['mass'] = df.index.map(Isotope.symbol_to_mass())
         return (df['mass'] * df['count']).sum()
 
     def as_string(self):
-        '''
+        """
         Returns:
             formula (str): String representation of the chemical formula.
-        '''
+        """
         return ''.join(('{0}({1})'.format(key.title(), self[key]) for key in sorted(self.index)))
 
     def __init__(self, data):
@@ -52,7 +52,7 @@ class SimpleFormula(pd.Series):
 
 
 def string_to_dict(formula):
-    '''
+    """
     Convert string formula to a dictionary.
 
     Args:
@@ -60,7 +60,7 @@ def string_to_dict(formula):
 
     Returns:
         fdict (dict): Dictionary formula representation
-    '''
+    """
     obj = []
     if ')' not in formula and len(formula) <= 3 and all((not char.isdigit() for char in formula)):
         return {formula: 1}
@@ -74,7 +74,7 @@ def string_to_dict(formula):
 
 
 def dict_to_string(formula):
-    '''
+    """
     Convert a dictionary formula to a string.
 
     Args:
@@ -82,5 +82,5 @@ def dict_to_string(formula):
 
     Returns:
         fstr (str): String formula representation
-    '''
+    """
     return ''.join(('{0}({1})'.format(key.title(), formula[key]) for key in sorted(formula.keys())))
