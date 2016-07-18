@@ -132,6 +132,7 @@ class GaussianBasisSet(BasisSet):
     +-------------------+----------+-------------------------------------------+
     """
     _columns = ['alpha', 'd', 'shell_function', 'l', 'set']
+    _groupby = ('frame', np.int64)
     _index = 'primitive'
     _traits = ['shell_function']
     _precision = {'alpha': 8, 'd': 8}

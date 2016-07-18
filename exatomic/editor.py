@@ -37,5 +37,12 @@ class Editor(BaseEditor, metaclass=Meta):
         """
         kwargs = {'name': name, 'description': description, 'meta': meta}
         attrs = [attr.replace('parse_', '') for attr in vars(self.__class__).keys() if attr.startswith('parse_')]
-        kwargs.update({attr: getattr(self, attr) for attr in attrs})
+        for attr in attrs:
+            result = None
+            try:
+                result = getattr(self, attr)
+            except AttributeError:
+                pass
+            if result is not None:
+                kwargs[attr] = result
         return Universe(**kwargs)
