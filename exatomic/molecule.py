@@ -21,25 +21,28 @@ class Molecule(DataFrame):
     _index = 'molecule'
     _categories = {'frame': np.int64, 'formula': str, 'classification': object}
 
-    def classify(self, *classifiers, overwrite=False):
+    def classify(self, *classifiers):
         """
         Classify molecules into arbitrary categories.
 
         .. code-block:: Python
 
-            u.molecule.classify(('Na', 'solute'), ('H(2)O(1)', 'solvent'))
+            u.molecule.classify(('solute', 'Na'), ('solvent', 'H(2)O(1)'))
 
         Args:
-            classifiers: Any number of tuples of the form ("identifier", "label", exact) (see below)
-            overwrite (bool): If true, overwrite existing ClassificationError
+            classifiers: Any number of tuples of the form ('label', 'identifier', exact) (see below)
 
         Note:
-            A classifier has 3 parts, "identifier", e.g. "H(2)O(1)", "label", e.g.
-            "solvent", and exact (true or false). If exact is false (default),
+            A classifier has 3 parts, "label", e.g. "solvent", "identifier", e.g.
+            "H(2)O(1)", and exact (true or false). If exact is false (default),
             classification is greedy and (in this example) molecules with formulas
             "H(1)O(1)", "H(3)O(1)", etc. would get classified as "solvent". If,
             instead, exact were set to true, those molecules would remain
             unclassified.
+
+        Warning:
+            Classifiers are applied in the order passed; where identifiers overlap,
+            the latter classification is used.
 
         See Also:
             :func:`~exatomic.algorithms.nearest.compute_nearest_molecules`
@@ -48,13 +51,12 @@ class Molecule(DataFrame):
             n = len(c)
             if n != 3 and n != 2:
                 raise ClassificationError()
-        if 'classification' not in self:
-            self['classification'] = None
+        self['classification'] = None
         for classifier in classifiers:
             identifier = string_to_dict(classifier[0])
             classification = classifier[1]
             exact = classifier[2] if len(classifier) == 3 else False
-            this = self if overwrite else self[self['classification'].isnull()]
+            this = self
             for symbol, count in identifier.items():
                 this = this[this[symbol] == count] if exact else this[this[symbol] >= 1]
             if len(this) > 0:
@@ -111,7 +113,18 @@ def compute_molecule(universe):
     molecule.columns.name = None
     molecule['mass'] = grps['mass'].sum()
     universe.atom['molecule'] = universe.atom['molecule'].astype('category')
+    del universe.atom['mass']
     return molecule
+
+
+def compute_molecule_count(universe):
+    '''
+    '''
+    mapper = universe.atom.drop_duplicates('molecule').set_index('molecule')['frame']
+    universe.molecule['frame'] = universe.molecule.index.map(lambda x: mapper[x])
+    molecule_count = universe.molecule.groupby('frame').size()
+    del universe.molecule['frame']
+    return molecule_count
 
 
 #def compute_molecule_com(universe):

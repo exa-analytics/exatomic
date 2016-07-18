@@ -120,7 +120,8 @@ class UnitAtom(SparseDataFrame):
             rxyz = universe.frame[['rx', 'ry', 'rz']].values.astype(np.float64)
             oxyz = universe.frame[['ox', 'oy', 'oz']].values.astype(np.float64)
             unit = pd.DataFrame(minimal_image_counts(xyz, rxyz, oxyz, counts), columns=['x', 'y', 'z'])
-            unit = unit[unit != xyz].astype(np.float64).dropna(how='all').to_sparse()
+            unit = unit[unit != xyz].astype(np.float64).to_sparse()
+            unit.index = universe.atom.index
             return cls(unit)
         raise PeriodicUniverseError()
 
@@ -129,6 +130,13 @@ class ProjectedAtom(SparseDataFrame):
     """
     Projected atom coordinates (e.g. on 3x3x3 supercell). These coordinates are
     typically associated with their corresponding indices in another dataframe.
+
+    Note:
+        This table is computed when periodic two body properties are computed;
+        it doesn't have meaning outside of that context.
+
+    See Also:
+        :func:`~exatomic.two.compute_periodic_two`.
     """
     _index = 'two'
     _columns = ['x', 'y', 'z']
