@@ -11,7 +11,7 @@ import networkx as nx
 from networkx.algorithms.components import connected_components
 from exa.numerical import DataFrame
 from exa.relational.isotope import symbol_to_element_mass
-from exatomic.formula import string_to_dict
+from exatomic.formula import string_to_dict, dict_to_string
 
 
 class Molecule(DataFrame):
@@ -65,12 +65,29 @@ class Molecule(DataFrame):
                 raise KeyError('No records found for {}, with identifier {}.'.format(classification, identifier))
         self['classification'] = self['classification'].astype('category')
 
-    def compute_atom_count(self):
+    def get_atom_count(self):
         """
-        Compute the molecular atom count.
+        Compute the number of atoms per molecule.
         """
-        symbols = [col for col in self.columns if len(col) < 3 and col[0].istitle()]
-        self['atom_count'] = self[symbols].sum(axis=1)
+        symbols = self._get_symbols()
+        return self[symbols].sum(axis=1)
+
+    def get_formula(self, as_map=False):
+        """
+        Compute the string representation of the molecule.
+        """
+        symbols = self._get_symbols()
+        mcules = self[symbols].to_dict(orient='index')
+        ret = map(dict_to_string, mcules.values())
+        if as_map:
+            return ret
+        return list(ret)
+
+    def _get_symbols(self):
+        """
+        Helper method to get atom symbols.
+        """
+        return [col for col in self if len(col) < 3 and col[0].istitle()]
 
 
 def compute_molecule(universe):

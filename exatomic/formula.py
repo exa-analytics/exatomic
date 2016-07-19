@@ -83,4 +83,4 @@ def dict_to_string(formula):
     Returns:
         fstr (str): String formula representation
     """
-    return ''.join(('{0}({1})'.format(key.title(), formula[key]) for key in sorted(formula.keys())))
+    return ''.join(('{0}({1})'.format(key.title(), formula[key]) for key in sorted(formula.keys()) if formula[key] > 0))

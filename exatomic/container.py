@@ -99,7 +99,7 @@ class Universe(Container, metaclass=Meta):
         """Compute minimal image for periodic systems."""
         self.unit_atom = UnitAtom.from_universe(self)
 
-    def compute_free_two(self, bond_extra=0.55, cutoff=3000):
+    def compute_free_two(self, bond_extra=0.45, cutoff=3000):
         """
         Compute free boundary two body properties (interatomic distances and bonds).
 
@@ -113,7 +113,7 @@ class Universe(Container, metaclass=Meta):
             raise FreeBoundaryUniverseError()
         self.free_two = compute_two(self, bond_extra=bond_extra)
 
-    def compute_periodic_two(self, bond_extra=0.55, cutoff=3000):
+    def compute_periodic_two(self, bond_extra=0.45, cutoff=3000):
         """
         Compute periodic two body properties (interatomic distances and bonds).
 

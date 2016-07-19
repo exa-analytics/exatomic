@@ -18,7 +18,7 @@ from exa.math.misc.repeat import repeat_counts_f8_2d
 from exa.math.vector.cartesian import magnitude_xyz
 
 
-def free_two_frame(x, y, z, idx, frame):
+def free_two_frame(x, y, z, idx):
     """
     Compute the minimum data required for :class:`~exatomic.two.FreeTwo` for a
     given frame.
@@ -28,7 +28,6 @@ def free_two_frame(x, y, z, idx, frame):
         y (array): Array of y coordinates
         z (array): Array of z coordinates
         idx (array): Array of atom indices
-        frame (int): Frame integer
 
     Returns:
         dx (array): Differences in x components (i - j)
@@ -36,7 +35,6 @@ def free_two_frame(x, y, z, idx, frame):
         dz (array): Differences in z components (i - j)
         idx0 (array): First index (i)
         idx1 (array): Second index (j)
-        frame (array): Frame array
         d (array): Distance
     """
     n = len(idx)
@@ -46,7 +44,6 @@ def free_two_frame(x, y, z, idx, frame):
     dz = np.empty((nn, ), dtype=np.float64)
     idx0 = np.empty((nn, ), dtype=np.int64)
     idx1 = np.empty((nn, ), dtype=np.int64)
-    fdx = np.empty((nn, ), dtype=np.int64)
     h = 0
     for i in range(n):
         for j in range(i+1, n):
@@ -55,9 +52,50 @@ def free_two_frame(x, y, z, idx, frame):
             dz[h] = z[i] - z[j]
             idx0[h] = idx[i]
             idx1[h] = idx[j]
-            fdx[h] = frame
             h += 1
-    return dx, dy, dz, idx0, idx1, fdx, magnitude_xyz(dx, dy, dz)
+    return dx, dy, dz, idx0, idx1, magnitude_xyz(dx, dy, dz)
+
+
+#def free_two_frame(x, y, z, idx, frame):
+#    """
+#    Compute the minimum data required for :class:`~exatomic.two.FreeTwo` for a
+#    given frame.
+#
+#    Args:
+#        x (array): Array of x coordinates
+#        y (array): Array of y coordinates
+#        z (array): Array of z coordinates
+#        idx (array): Array of atom indices
+#        frame (int): Frame integer
+#
+#    Returns:
+#        dx (array): Differences in x components (i - j)
+#        dy (array): Differences in y components (i - j)
+#        dz (array): Differences in z components (i - j)
+#        idx0 (array): First index (i)
+#        idx1 (array): Second index (j)
+#        frame (array): Frame array
+#        d (array): Distance
+#    """
+#    n = len(idx)
+#    nn = n*(n - 1)//2
+#    dx = np.empty((nn, ), dtype=np.float64)
+#    dy = np.empty((nn, ), dtype=np.float64)
+#    dz = np.empty((nn, ), dtype=np.float64)
+#    idx0 = np.empty((nn, ), dtype=np.int64)
+#    idx1 = np.empty((nn, ), dtype=np.int64)
+#    fdx = np.empty((nn, ), dtype=np.int64)
+#    h = 0
+#    for i in range(n):
+#        for j in range(i+1, n):
+#            dx[h] = x[i] - x[j]
+#            dy[h] = y[i] - y[j]
+#            dz[h] = z[i] - z[j]
+#            idx0[h] = idx[i]
+#            idx1[h] = idx[j]
+#            fdx[h] = frame
+#            h += 1
+#    return dx, dy, dz, idx0, idx1, fdx, magnitude_xyz(dx, dy, dz)
 
 
 def minimal_image(xyz, rxyz, oxyz):
@@ -74,7 +112,7 @@ def minimal_image_counts(xyz, rxyz, oxyz, counts):
     return minimal_image(xyz, rxyz, oxyz)
 
 
-def periodic_two_frame(ux, uy, uz, rx, ry, rz, idx, frame):
+def periodic_two_frame(ux, uy, uz, rx, ry, rz, idx):
     """
     There is only one distance between two atoms.
     """
@@ -89,7 +127,6 @@ def periodic_two_frame(ux, uy, uz, rx, ry, rz, idx, frame):
     pzs = np.empty((nn, ), dtype=np.float64)    # Projected j coordinate z
     idx0s = np.empty((nn, ), dtype=np.int64)    # index of i
     idx1s = np.empty((nn, ), dtype=np.int64)    # index of j
-    fdxs = np.empty((nn, ), dtype=np.int64)     # frame index
     h = 0
     for ii in m:
         for jj in m:
@@ -113,10 +150,9 @@ def periodic_two_frame(ux, uy, uz, rx, ry, rz, idx, frame):
                         pzs[h] = zpj
                         idx0s[h] = idx[i]
                         idx1s[h] = idx[j]
-                        fdxs[h] = frame
                         h += 1
     ds = magnitude_xyz(dxs, dys, dzs)
-    return dxs, dys, dzs, ds, idx0s, idx1s, pxs, pys, pzs, fdxs
+    return dxs, dys, dzs, ds, idx0s, idx1s, pxs, pys, pzs
 
 
 #def periodic_two_frame(ux, uy, uz, rx, ry, rz, idx, frame, tol=10**-8):
