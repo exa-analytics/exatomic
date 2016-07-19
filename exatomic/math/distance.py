@@ -74,102 +74,137 @@ def minimal_image_counts(xyz, rxyz, oxyz, counts):
     return minimal_image(xyz, rxyz, oxyz)
 
 
-def periodic_two_frame(ux, uy, uz, rx, ry, rz, idx, frame, tol=10**-8):
+def periodic_two_frame(ux, uy, uz, rx, ry, rz, idx, frame):
     """
     There is only one distance between two atoms.
     """
     m = [-1, 0, 1]
     n = len(ux)
-    nn = n*(n - 1)//2
+    nn = 27*n*(n - 1)//2
     dxs = np.empty((nn, ), dtype=np.float64)    # Two body distance component x
-#    dxs[:] = np.nan
     dys = np.empty((nn, ), dtype=np.float64)    # within corresponding periodic
-#    dys[:] = np.nan
     dzs = np.empty((nn, ), dtype=np.float64)    # unit cell
-#    dzs[:] = np.nan
-    ds = np.empty((nn, ), dtype=np.float64)
-#    ds[:] = np.nan
     pxs = np.empty((nn, ), dtype=np.float64)    # Projected j coordinate x
-#    pxs[:] = np.nan
     pys = np.empty((nn, ), dtype=np.float64)    # Projected j coordinate y
-#    pys[:] = np.nan
     pzs = np.empty((nn, ), dtype=np.float64)    # Projected j coordinate z
-#    pzs[:] = np.nan
     idx0s = np.empty((nn, ), dtype=np.int64)    # index of i
-#    idx0s[:] = np.nan
     idx1s = np.empty((nn, ), dtype=np.int64)    # index of j
-#    idx1s[:] = np.nan
     fdxs = np.empty((nn, ), dtype=np.int64)     # frame index
-#    fdxs[:] = np.nan
-    iquad = np.empty((nn, ), dtype=np.float64)
-    jquad = np.empty((nn, ), dtype=np.float64)
-    kquad = np.empty((nn, ), dtype=np.float64)
-    quad = np.empty((nn, ), dtype=np.float64)
     h = 0
-    for i in range(n):
-        for j in range(i+1, n):
-            xi = ux[i]
-            yi = uy[i]
-            zi = uz[i]
-            xj = ux[j]
-            yj = uy[j]
-            zj = uz[j]
-            pxj = np.empty((27, ), dtype=np.float64)    # projected coords
-            pyj = np.empty((27, ), dtype=np.float64)
-            pzj = np.empty((27, ), dtype=np.float64)
-            pdx = np.empty((27, ), dtype=np.float64)    # projected distances
-            pdy = np.empty((27, ), dtype=np.float64)
-            pdz = np.empty((27, ), dtype=np.float64)
-            iijjkk = np.empty((27, 3), dtype=np.float64)
-            hh = 0
-            for ii in m:
-                for jj in m:
-                    for kk in m:
+    for ii in m:
+        for jj in m:
+            for kk in m:
+                for i in range(n):
+                    xi = ux[i]
+                    yi = uy[i]
+                    zi = uz[i]
+                    for j in range(i+1, n):
+                        xj = ux[j]
+                        yj = uy[j]
+                        zj = uz[j]
                         xpj = xj + ii*rx
                         ypj = yj + jj*ry
                         zpj = zj + kk*rz
-                        pdx[hh] = xi - xpj
-                        pdy[hh] = yi - ypj
-                        pdz[hh] = zi - zpj
-                        pxj[hh] = xpj
-                        pyj[hh] = ypj
-                        pzj[hh] = zpj
-                        iijjkk[hh] = [ii, jj, kk]
-                        hh += 1
-            pds = magnitude_xyz(pdx, pdy, pdz)
-            hh = np.argmin(pds)
-            #if pds[hh] < dmax:
-            if np.abs(pxj[hh] - xj) <= tol:
-                pxs[h] = np.nan
-#                iquad[h] = np.nan
-            else:
-                pxs[h] = pxj[hh]
-#                iquad[h] = iijjkk[hh, 0]
-            if np.abs(pyj[hh] - yj) <= tol:
-                pys[h] = np.nan
-#                jquad[h] = np.nan
-            else:
-                pys[h] = pyj[hh]
-#                jquad[h] = iijjkk[hh, 1]
-            if np.abs(pzj[hh] - zj) <= tol:
-                pzs[h] = np.nan
-#                kquad[h] = np.nan
-            else:
-                pzs[h] = pzj[hh]
-#                kquad[h] = iijjkk[hh, 2]
-            iquad[h] = iijjkk[hh, 0]
-            jquad[h] = iijjkk[hh, 1]
-            kquad[h] = iijjkk[hh, 2]
-            quad[h] = hh
-            dxs[h] = pdx[hh]
-            dys[h] = pdy[hh]
-            dzs[h] = pdz[hh]
-            fdxs[h] = frame
-            ds[h] = pds[hh]
-            idx0s[h] = idx[i]
-            idx1s[h] = idx[j]
-            h += 1
-    return dxs, dys, dzs, ds, idx0s, idx1s, fdxs, pxs, pys, pzs, iquad, jquad, kquad, quad
+                        dxs[h] = xi - xpj
+                        dys[h] = yi - ypj
+                        dzs[h] = zi - zpj
+                        pxs[h] = xpj
+                        pys[h] = ypj
+                        pzs[h] = zpj
+                        idx0s[h] = idx[i]
+                        idx1s[h] = idx[j]
+                        fdxs[h] = frame
+                        h += 1
+    ds = magnitude_xyz(dxs, dys, dzs)
+    return dxs, dys, dzs, ds, idx0s, idx1s, pxs, pys, pzs, fdxs
+
+
+#def periodic_two_frame(ux, uy, uz, rx, ry, rz, idx, frame, tol=10**-8):
+#    """
+#    There is only one distance between two atoms.
+#    """
+#    m = [-1, 0, 1]
+#    n = len(ux)
+#    nn = n*(n - 1)//2
+#    dxs = np.empty((nn, ), dtype=np.float64)    # Two body distance component x
+#    dys = np.empty((nn, ), dtype=np.float64)    # within corresponding periodic
+#    dzs = np.empty((nn, ), dtype=np.float64)    # unit cell
+#    ds = np.empty((nn, ), dtype=np.float64)
+#    pxs = np.empty((nn, ), dtype=np.float64)    # Projected j coordinate x
+#    pys = np.empty((nn, ), dtype=np.float64)    # Projected j coordinate y
+#    pzs = np.empty((nn, ), dtype=np.float64)    # Projected j coordinate z
+#    idx0s = np.empty((nn, ), dtype=np.int64)    # index of i
+#    idx1s = np.empty((nn, ), dtype=np.int64)    # index of j
+#    fdxs = np.empty((nn, ), dtype=np.int64)     # frame index
+#    iquad = np.empty((nn, ), dtype=np.float64)
+#    jquad = np.empty((nn, ), dtype=np.float64)
+#    kquad = np.empty((nn, ), dtype=np.float64)
+#    quad = np.empty((nn, ), dtype=np.float64)
+#    h = 0
+#    for i in range(n):
+#        for j in range(i+1, n):
+#            xi = ux[i]
+#            yi = uy[i]
+#            zi = uz[i]
+#            xj = ux[j]
+#            yj = uy[j]
+#            zj = uz[j]
+#            pxj = np.empty((27, ), dtype=np.float64)    # projected coords
+#            pyj = np.empty((27, ), dtype=np.float64)
+#            pzj = np.empty((27, ), dtype=np.float64)
+#            pdx = np.empty((27, ), dtype=np.float64)    # projected distances
+#            pdy = np.empty((27, ), dtype=np.float64)
+#            pdz = np.empty((27, ), dtype=np.float64)
+#            iijjkk = np.empty((27, 3), dtype=np.float64)
+#            hh = 0
+#            for ii in m:
+#                for jj in m:
+#                    for kk in m:
+#                        xpj = xj + ii*rx
+#                        ypj = yj + jj*ry
+#                        zpj = zj + kk*rz
+#                        pdx[hh] = xi - xpj
+#                        pdy[hh] = yi - ypj
+#                        pdz[hh] = zi - zpj
+#                        pxj[hh] = xpj
+#                        pyj[hh] = ypj
+#                        pzj[hh] = zpj
+#                        iijjkk[hh] = [ii, jj, kk]
+#                        hh += 1
+#            pds = magnitude_xyz(pdx, pdy, pdz)
+#            hh = np.argmin(pds)
+#            #if pds[hh] < dmax:
+#            if np.abs(pxj[hh] - xj) <= tol:
+#                pxs[h] = np.nan
+##                iquad[h] = np.nan
+#            else:
+#                pxs[h] = pxj[hh]
+##                iquad[h] = iijjkk[hh, 0]
+#            if np.abs(pyj[hh] - yj) <= tol:
+#                pys[h] = np.nan
+##                jquad[h] = np.nan
+#            else:
+#                pys[h] = pyj[hh]
+##                jquad[h] = iijjkk[hh, 1]
+#            if np.abs(pzj[hh] - zj) <= tol:
+#                pzs[h] = np.nan
+##                kquad[h] = np.nan
+#            else:
+#                pzs[h] = pzj[hh]
+##                kquad[h] = iijjkk[hh, 2]
+#            iquad[h] = iijjkk[hh, 0]
+#            jquad[h] = iijjkk[hh, 1]
+#            kquad[h] = iijjkk[hh, 2]
+#            quad[h] = hh
+#            dxs[h] = pdx[hh]
+#            dys[h] = pdy[hh]
+#            dzs[h] = pdz[hh]
+#            fdxs[h] = frame
+#            ds[h] = pds[hh]
+#            idx0s[h] = idx[i]
+#            idx1s[h] = idx[j]
+#            h += 1
+#    return dxs, dys, dzs, ds, idx0s, idx1s, fdxs, pxs, pys, pzs, iquad, jquad, kquad, quad
 
 
 if config['dynamic']['numba'] == 'true':

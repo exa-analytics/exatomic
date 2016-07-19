@@ -163,17 +163,18 @@ def compute_periodic_two(universe, bond_extra=0.55):
     pys = np.empty((n, ), dtype='O')
     pzs = np.empty((n, ), dtype='O')
     ds = np.empty((n, ), dtype='O')
-    iqs = np.empty((n, ), dtype='O')
-    jqs = np.empty((n, ), dtype='O')
-    kqs = np.empty((n, ), dtype='O')
-    qs = np.empty((n, ), dtype='O')
+    #iqs = np.empty((n, ), dtype='O')
+    #jqs = np.empty((n, ), dtype='O')
+    #kqs = np.empty((n, ), dtype='O')
+    #qs = np.empty((n, ), dtype='O')
     for i, (frame, grp) in enumerate(grps):
         ux = grp['x'].values.astype(np.float64)
         uy = grp['y'].values.astype(np.float64)
         uz = grp['z'].values.astype(np.float64)
         idx = grp.index.values.astype(np.int64)
         rx, ry, rz = universe.frame.ix[frame, ['rx', 'ry', 'rz']]
-        dx, dy, dz, d, idx0, idx1, fdx, px, py, pz, iq, jq, kq, q = periodic_two_frame(ux, uy, uz, rx, ry, rz, idx, frame)
+        #dx, dy, dz, d, idx0, idx1, fdx, px, py, pz, iq, jq, kq, q = periodic_two_frame(ux, uy, uz, rx, ry, rz, idx, frame)
+        dx, dy, dz, d, idx0, idx1, px, py, pz, fdx = periodic_two_frame(ux, uy, uz, rx, ry, rz, idx, frame)
         dxs[i] = dx
         dys[i] = dy
         dzs[i] = dz
@@ -184,10 +185,10 @@ def compute_periodic_two(universe, bond_extra=0.55):
         pzs[i] = pz
         ds[i] = d
         fdxs[i] = fdx
-        iqs[i] = iq
-        jqs[i] = jq
-        kqs[i] = kq
-        qs[i] = q
+        #iqs[i] = iq
+        #jqs[i] = jq
+        #kqs[i] = kq
+        #qs[i] = q
     dxs = np.concatenate(dxs)
     dys = np.concatenate(dys)
     dzs = np.concatenate(dzs)
@@ -198,16 +199,18 @@ def compute_periodic_two(universe, bond_extra=0.55):
     pxs = np.concatenate(pxs)
     pys = np.concatenate(pys)
     pzs = np.concatenate(pzs)
-    iqs = np.concatenate(iqs)
-    jqs = np.concatenate(jqs)
-    kqs = np.concatenate(kqs)
-    qs = np.concatenate(qs)
-    two = pd.DataFrame.from_dict({'dx': dxs, 'dy': dys, 'dz': dzs, 'distance': ds,
-                                  'frame': fdxs, 'atom0': idx0s, 'atom1': idx1s})
-    two = two.dropna(how='any', axis=0)
-    patom = pd.DataFrame.from_dict({'x': pxs, 'y': pys, 'z': pzs, 'i': iqs,
-                                    'j': jqs, 'k': kqs, 'h': qs})
-    patom = patom.dropna(how='all', subset=['x', 'y', 'z'])
+    #iqs = np.concatenate(iqs)
+    #jqs = np.concatenate(jqs)
+    #kqs = np.concatenate(kqs)
+    #qs = np.concatenate(qs)
+    #two = pd.DataFrame.from_dict({'dx': dxs, 'dy': dys, 'dz': dzs, 'distance': ds,
+#                                  'frame': fdxs, 'atom0': idx0s, 'atom1': idx1s})
+    two = pd.DataFrame.from_dict({'dx':dxs, 'dy': dys, 'dz': dzs, 'distance': ds,
+                                  'atom0': idx0s, 'atom1': idx1s, 'frame': fdxs})
+    #two = two.dropna(how='any', axis=0)
+    patom = pd.DataFrame.from_dict({'x': pxs, 'y': pys, 'z': pzs})#, 'i': iqs,
+                                    #'j': jqs, 'k': kqs, 'h': qs})
+    #patom = patom.dropna(how='all', subset=['x', 'y', 'z'])
     mapper = universe.atom['symbol'].astype(str)
     two['symbol0'] = two['atom0'].astype(np.int64).map(mapper)
     two['symbol1'] = two['atom1'].astype(np.int64).map(mapper)
