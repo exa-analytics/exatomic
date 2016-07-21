@@ -126,7 +126,7 @@ def compute_free_two(universe, bond_extra=0.45):
         distance[start:stop] = dist
         start = stop
     atom0 = pd.Series(atom0, dtype='category')
-    atom1 = pd.Series(atom0, dtype='category')
+    atom1 = pd.Series(atom1, dtype='category')
     two = pd.DataFrame.from_dict({'dx': dx, 'dy': dy, 'dz': dz, 'distance': distance,
                                   'atom0': atom0, 'atom1': atom1})
     mapper = universe.atom['symbol'].astype(str).map(symbol_to_radius())
