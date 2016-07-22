@@ -13,6 +13,7 @@ like density functional theory exchange correlation functional.
 '''
 import pandas as pd
 import numpy as np
+from exa.numerical import Field
 from exa.container import TypedMeta, Container
 from exatomic.error import PeriodicUniverseError, FreeBoundaryUniverseError
 from exatomic.widget import UniverseWidget
@@ -84,7 +85,7 @@ class Universe(Container, metaclass=UniverseTypedMeta):
         '''Compute minimal image for periodic systems.'''
         self.unit_atom = UnitAtom.from_universe(self)
 
-    def compute_free_two(self, bond_extra=0.55, max_distance=19.0):
+    def compute_free_two(self, bond_extra=0.55, max_distance=19.0, cutoff=3000):
         '''
         Compute free boundary two body properties (interatomic distances and bonds).
 
@@ -92,11 +93,13 @@ class Universe(Container, metaclass=UniverseTypedMeta):
             bond_extra (float): Extra amount to add when determining bonds (default 0.55 au)
             max_distance (float): Maximum distance of interest (default 19.0 au)
         '''
+        if self.frame['atom_count'].sum() > cutoff* len(self):
+            return
         if self.frame.is_periodic:
             raise FreeBoundaryUniverseError()
         self.free_two = compute_two(self, bond_extra=bond_extra, max_distance=max_distance)
 
-    def compute_periodic_two(self, bond_extra=0.55, max_distance=19.0):
+    def compute_periodic_two(self, bond_extra=0.55, max_distance=19.0, cutoff=3000):
         '''
         Compute periodic two body properties (interatomic distances and bonds).
 
@@ -104,6 +107,8 @@ class Universe(Container, metaclass=UniverseTypedMeta):
             bond_extra (float): Extra amount to add when determining bonds (default 0.55 au)
             max_distance (float): Maximum distance of interest (default 19.0 au)
         '''
+        if self.frame['atom_count'].sum() > cutoff* len(self):
+            return
         if not self.frame.is_periodic:
             raise PeriodicUniverseError()
         ptwo, patom = compute_two(self, bond_extra=bond_extra, max_distance=max_distance)
@@ -125,7 +130,8 @@ class Universe(Container, metaclass=UniverseTypedMeta):
         Build traits depending on multiple dataframes.
         '''
         traits = {}
-        if self.two is not None and len(self.two) > 0:
+        # Hack for now...
+        if hasattr(self, '_free_two') or hasattr(self, '_periodic_two') or len(self) * 3000 > self.frame['atom_count'].sum():
             mapper = self.atom['label'].astype(np.int64)
             traits.update(self.two._bond_traits(mapper))
         return traits
@@ -133,6 +139,50 @@ class Universe(Container, metaclass=UniverseTypedMeta):
     def __len__(self):
         return len(self.frame)
 
+
+def concat(*universes, name=None, description=None, meta=None):
+    '''
+    Warning:
+        This function is not fully featured or tested yet!
+    '''
+    kwargs = {'name': name, 'description': description, 'meta': meta}
+    names = []
+    for universe in universes:
+        for key, data in universe._data().items():
+            name = key[1:] if key.startswith('_') else key
+            names.append(name)
+            if name in kwargs:
+                kwargs[name].append(data)
+            else:
+                kwargs[name] = [data]
+    for name in set(names):
+        cls = kwargs[name][0].__class__
+        if isinstance(kwargs[name][0], Field):
+            data = pd.concat(kwargs[name])
+            values = [v for field in kwargs[name] for v in field.field_values]
+            kwargs[name] = cls(data, field_values=values)
+        else:
+            kwargs[name] = cls(pd.concat(kwargs[name]))
+    return Universe(**kwargs)
+
+
+#def concat_frames(*universes, name=None, description=None, meta=None):
+#    '''
+#    Concatenate a collection of "single frame" :class:`~exatomic.container.Unvierse`
+#    objects. A single frame means that each :class:`~exatomic.container.Universe`
+#    object contains data corresponding to a single atomic configuration (or
+#    other type of "cardinal" axis). Indices are altered to match the order the
+#    universes are passed as arguments.
+#    '''
+#    kwargs = {'name': name, 'description': description, 'meta': meta}
+#    indices = {}
+#    atom = 0
+#    for frame, universe in enumerate(universes):
+#        for key, data in universe._data().items():
+#            name = key[1:] if key.startswith('_') else key
+#            idx_name = data.index.name
+#            if idx_name in indices:
+#                indices[idx_name] +=
 
 
 #from exatomic.frame import minimal_frame, Frame

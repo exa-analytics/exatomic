@@ -73,6 +73,7 @@ define([
                 view_self.app.app3d.animate();
                 view_self.app.app3d.controls.handleResize();
             });
+            this.app3d.set_camera_from_scene();
         };
 
         update_display_params() {
@@ -157,7 +158,7 @@ define([
                     //self.app3d.add_unit_axis();
                     self.app3d.render();
                     var imgdat = self.app3d.renderer.domElement.toDataURL('image/png');
-                    self.view.send({'type': 'image', 'data': imgdat});
+                    self.view.send({'type': 'image', 'content': imgdat});
                     self.app3d.renderer.setSize(self.app3d.width, self.app3d.height);
                     self.app3d.camera.aspect = self.app3d.width / self.app3d.height;
                     self.app3d.camera.updateProjectionMatrix();
@@ -370,10 +371,10 @@ define([
         };
 
         render_orbital() {
-            console.log('entering render orbital');
+            //console.log('entering render orbital');
             var coefs = this.gv(this.view.momatrix_coefficient, this.top.index);
             if (coefs === undefined) {
-                console.log('exiting render orbital');
+                //console.log('exiting render orbital');
                 return;
             };
             var nbfns = coefs.length;
@@ -384,16 +385,12 @@ define([
             var xs = this.gv(this.view.atom_x, this.top.index);
             var ys = this.gv(this.view.atom_y, this.top.index);
             var zs = this.gv(this.view.atom_z, this.top.index);
-            var sets = this.gv(this.view.atom_set, this.top.index);
             var ds = this.gv(this.view.gaussianbasisset_d, this.top.index);
             var ls = this.gv(this.view.gaussianbasisset_l, this.top.index);
             var alphas = this.gv(this.view.gaussianbasisset_alpha, this.top.index);
 
             var nat = 0;
             var to_expand = [];
-            if (typeof sets === 'number') {
-                to_expand.push('sets');
-            }
             if (typeof xs === 'number') {
                 to_expand.push('xs');
             } else {
@@ -416,9 +413,11 @@ define([
                     ys = utility.repeat_float(ys, nat);
                 } else if (thing === 'zs') {
                     zs = utility.repeat_float(zs, nat);
-                } else if (thing === 'sets') {
-                    sets = utility.repeat_float(sets, nat);
                 };
+            };
+            var sets = this.gv(this.view.atom_set, this.top.index);
+            if (typeof sets === 'number') {
+                sets = utility.repeat_int(sets, nat);
             };
 
             var dims = {
@@ -439,7 +438,6 @@ define([
             this.cube_like = 'orbital';
             this.app3d.remove_meshes(this.cube_field_mesh);
             this.cube_field_mesh = this.app3d.add_scalar_field(this.cube_field, this.orbitals.isovalue, 2);
-            console.log('leaving render orbital');
         };
 
         render_field() {
