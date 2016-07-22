@@ -31,7 +31,7 @@ import pandas as pd
 from traitlets import Unicode
 from exa.numerical import DataFrame, SparseDataFrame
 from exa.relational.isotope import symbol_to_radius
-from exatomic.math.distance import free_two_frame, periodic_two_frame
+#from exatomic.math.distance import free_two_frame, periodic_two_frame
 
 
 class BaseTwo(DataFrame):
@@ -88,20 +88,21 @@ class PeriodicTwo(BaseTwo):
 
 def compute_two(universe, bond_extra=0.45):
     """
-    Compute interatomic distances.
+    Top level function for computing two body properties.
     """
+    # This function decides what type of two body calculation to perform
+    # depending on the universe passed, resources available, and parameters set.
     if universe.frame.is_periodic():
         return compute_periodic_two(universe, bond_extra)
     return compute_free_two(universe, bond_extra)
 
 
-def compute_free_two(universe, bond_extra=0.45):
+def compute_free_two_si(universe, bond_extra=0.45):
     """
-    Compute free boundary condition two body properties from an input universe.
+    Serial, in memory computation of two body properties for free boundary
+    condition systems.
     """
-    groups = universe.atom.grpd
-    n = groups.ngroups
-    n = universe.frame['atom_count']
+    n = universe.frame['atom_count'].astype(np.int64)
     n = (n*(n - 1)//2).sum()
     dx = np.empty((n, ), dtype=np.float64)
     dy = np.empty((n, ), dtype=np.float64)
