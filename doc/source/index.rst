@@ -6,8 +6,6 @@
 ##############################################
 *A unified platform for computational chemists.*
 
-***SUMMARY***
-
 .. toctree::
     :maxdepth: 2
     :caption: General Info

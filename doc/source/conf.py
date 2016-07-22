@@ -19,6 +19,11 @@ import sys
 import os
 sys.path.insert(0, os.path.abspath(os.sep.join(('..', '..'))))
 from exatomic import __version__
+from unittest.mock import Mock
+
+
+MOCK_MODULES = ['scipy', 'numpy', 'pandas']
+sys.modules.update((mod_name, Mock()) for mod_name in MOCK_MODULES)
 
 # If extensions (or modules to document with autodoc) are in another directory,
 # add these directories to sys.path here. If the directory is relative to the
@@ -229,11 +234,6 @@ html_show_copyright = True
 
 # Output file base name for HTML help builder.
 htmlhelp_basename = 'exadoc'
-
-if not on_rtd:
-    import sphinx_rtd_theme
-    html_theme = 'sphinx_rtd_theme'
-    html_theme_path = [sphinx_rtd_theme.get_html_theme_path()]
 
 # -- Options for LaTeX output ---------------------------------------------
 

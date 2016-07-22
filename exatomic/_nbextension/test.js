@@ -122,7 +122,7 @@ define([
                     self.app3d.camera.updateProjectionMatrix();
                     self.app3d.render();
                     var imgdat = self.app3d.renderer.domElement.toDataURL('image/png');
-                    self.view.send({'type': 'image', 'data': imgdat});
+                    self.view.send({'type': 'image', 'content': imgdat});
                     self.app3d.renderer.setSize(self.app3d.width, self.app3d.height);
                     self.app3d.camera.aspect = self.app3d.width / self.app3d.height;
                     self.app3d.camera.updateProjectionMatrix();
@@ -174,15 +174,15 @@ define([
 
             this.sh = {'l': 0, 'm': 0, 'isovalue': 0.03};
             this.sh['folder'] = this.gui.addFolder('Solid Harmonics');
-            //this.sh['isovalue_slider'] = this.sh.folder.add(this.sh, 'isovalue', 0.0001, 1.0);
+            this.sh['isovalue_slider'] = this.sh.folder.add(this.sh, 'isovalue', 0.0001, 1.0);
             this.sh['l_slider'] = this.sh.folder.add(this.sh, 'l').min(0).max(7).step(1);
             this.sh['ml_slider'] = this.sh.folder.add(this.sh, 'm').min(0).max(0).step(1);
-            /*
+
             this.sh['isovalue_slider'].onFinishChange(function(value) {
                 self.sh['isovalue'] = value;
                 self.render_solid_harmonic();
             });
-            */
+
             this.sh.l_slider.onFinishChange(function(value) {
                 self.sh.l = parseInt(value);
                 self.update_m();
