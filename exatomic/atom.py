@@ -74,8 +74,10 @@ class Atom(BaseAtom):
         Returns:
             labels (:class:`~exa.numerical.Series`): Enumerated atom labels (of type int)
         """
-        nats = self.grpd.size().values
-        return Series([i for nat in nats for i in range(nat)])
+        nats = self.grouped().size().values
+        labels = Series([i for nat in nats for i in range(nat)], dtype='category')
+        labels.index = self.index
+        return labels
 
     def _custom_traits(self):
         """
@@ -87,7 +89,7 @@ class Atom(BaseAtom):
         """
         self._set_categories()
         kwargs = {}
-        grps = self.grpd
+        grps = self.grouped()
         symbols = grps.apply(lambda g: g['symbol'].cat.codes.values)    # Pass integers rather than string symbols
         kwargs['atom_symbols'] = Unicode(symbols.to_json(orient='values')).tag(sync=True)
         symmap = {i: v for i, v in enumerate(self['symbol'].cat.categories)}
@@ -142,10 +144,23 @@ class ProjectedAtom(DataFrame):
     _columns = ['x', 'y', 'z']
 
 
-class VisualAtom(DataFrame):
+class VisualAtom(SparseDataFrame):
     """
     """
-    pass
+    @classmethod
+    def from_universe(cls, universe):
+        """
+        """
+        if universe.frame.is_periodic():
+            atom = universe.atom[['x', 'y', 'z']].copy()
+            atom.update(universe.unit_atom)
+            bonded = universe.two[universe.two['bond'] == True]
+            prjd = universe.projected_atom.ix[bonded.index.values]
+            prjd.index = bonded['atom1'].astype(np.int64)
+            atom.update(prjd)
+            atom = atom[atom != atom[['x', 'y', 'z']]].to_sparse()
+            return cls(atom)
+        raise PeriodicUniverseError()
 
 
 #class VisualAtom(SparseDataFrame):

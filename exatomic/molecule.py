@@ -135,8 +135,8 @@ def compute_molecule(universe):
 
 
 def compute_molecule_count(universe):
-    '''
-    '''
+    """
+    """
     mapper = universe.atom.drop_duplicates('molecule').set_index('molecule')['frame']
     universe.molecule['frame'] = universe.molecule.index.map(lambda x: mapper[x])
     molecule_count = universe.molecule.groupby('frame').size()

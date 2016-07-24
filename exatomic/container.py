@@ -145,7 +145,8 @@ class Universe(Container, metaclass=Meta):
         """
         traits = {}
         # Hack for now...
-        if hasattr(self, '_free_two') or hasattr(self, '_periodic_two') or len(self) * 3000 > self.frame['atom_count'].sum():
+        if (hasattr(self, '_free_two') or hasattr(self, '_periodic_two') or
+            len(self)*3000 > self.frame['atom_count'].sum()):
             mapper = self.atom['label'].astype(np.int64)
             traits.update(self.two._bond_traits(mapper))
         return traits

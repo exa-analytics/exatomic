@@ -31,7 +31,7 @@ import pandas as pd
 from traitlets import Unicode
 from exa.numerical import DataFrame, SparseDataFrame
 from exa.relational.isotope import symbol_to_radius
-#from exatomic.math.distance import free_two_frame, periodic_two_frame
+from exa.math.vector.cartesian import pdist_euc_dxyz_idx, periodic_pdist_euc_dxyz_idx
 
 
 class BaseTwo(DataFrame):
@@ -43,6 +43,7 @@ class BaseTwo(DataFrame):
         system: :class:`~exatomic.two.FreeTwo` or :class:`~exatomic.two.PeriodicTwo`.
     """
     _index = 'two'
+    _groupby = ('frame', np.int64)
     _columns = ['dx', 'dy', 'dz', 'atom0', 'atom1', 'distance']
     _categories = {'symbols': str, 'atom0': np.int64, 'atom1': np.int64}
 
@@ -93,8 +94,8 @@ def compute_two(universe, bond_extra=0.45):
     # This function decides what type of two body calculation to perform
     # depending on the universe passed, resources available, and parameters set.
     if universe.frame.is_periodic():
-        return compute_periodic_two(universe, bond_extra)
-    return compute_free_two(universe, bond_extra)
+        return compute_periodic_two_si(universe, bond_extra)
+    return compute_free_two_si(universe, bond_extra)
 
 
 def compute_free_two_si(universe, bond_extra=0.45):
@@ -110,14 +111,15 @@ def compute_free_two_si(universe, bond_extra=0.45):
     distance = np.empty((n, ), dtype=np.float64)
     atom0 = np.empty((n, ), dtype=np.int64)
     atom1 = np.empty((n, ), dtype=np.int64)
+    fdx = np.empty((n, ), dtype=np.int64)
     start = 0
     stop = 0
-    for frame, group in groups:
+    for frame, group in universe.atom.grouped():
         x = group['x'].values.astype(np.float64)
         y = group['y'].values.astype(np.float64)
         z = group['z'].values.astype(np.float64)
         idx = group.index.values.astype(np.int64)
-        dxx, dyy, dzz, a0, a1, dist = free_two_frame(x, y, z, idx)
+        dxx, dyy, dzz, dist, a0, a1 = pdist_euc_dxyz_idx(x, y, z, idx)
         stop += len(dxx)
         dx[start:stop] = dxx
         dy[start:stop] = dyy
@@ -125,11 +127,13 @@ def compute_free_two_si(universe, bond_extra=0.45):
         atom0[start:stop] = a0
         atom1[start:stop] = a1
         distance[start:stop] = dist
+        fdx[start:stop] = frame
         start = stop
     atom0 = pd.Series(atom0, dtype='category')
     atom1 = pd.Series(atom1, dtype='category')
+    fdx = pd.Series(fdx, dtype='category')
     two = pd.DataFrame.from_dict({'dx': dx, 'dy': dy, 'dz': dz, 'distance': distance,
-                                  'atom0': atom0, 'atom1': atom1})
+                                  'atom0': atom0, 'atom1': atom1, 'frame': fdx})
     mapper = universe.atom['symbol'].astype(str).map(symbol_to_radius())
     radius0 = two['atom0'].map(mapper)
     radius1 = two['atom1'].map(mapper)
@@ -139,7 +143,7 @@ def compute_free_two_si(universe, bond_extra=0.45):
     return two
 
 
-def compute_periodic_two(universe, bond_extra=0.45):
+def compute_periodic_two_si(universe, bond_extra=0.45):
     """
     Compute periodic two body properties.
     """
@@ -155,6 +159,7 @@ def compute_periodic_two(universe, bond_extra=0.45):
     atom0 = np.empty((n, ), dtype=np.int64)
     atom1 = np.empty((n, ), dtype=np.int64)
     distance = np.empty((n, ), dtype=np.float64)
+    fdx = np.empty((n, ), dtype=np.int64)
     px = np.empty((n, ), dtype=np.float64)
     py = np.empty((n, ), dtype=np.float64)
     pz = np.empty((n, ), dtype=np.float64)
@@ -166,7 +171,7 @@ def compute_periodic_two(universe, bond_extra=0.45):
         uz = grp['z'].values.astype(np.float64)
         idx = grp.index.values.astype(np.int64)
         rx, ry, rz = universe.frame.ix[frame, ['rx', 'ry', 'rz']]
-        dxx, dyy, dzz, d, a0, a1, pxx, pyy, pzz = periodic_two_frame(ux, uy, uz, rx, ry, rz, idx)
+        dxx, dyy, dzz, d, a0, a1, pxx, pyy, pzz = periodic_pdist_euc_dxyz_idx(ux, uy, uz, rx, ry, rz, idx)
         stop += len(dxx)
         dx[start:stop] = dxx
         dy[start:stop] = dyy
@@ -177,11 +182,13 @@ def compute_periodic_two(universe, bond_extra=0.45):
         px[start:stop] = pxx
         py[start:stop] = pyy
         pz[start:stop] = pzz
+        fdx[start:stop] = frame
         start = stop
     atom0 = pd.Series(atom0, dtype='category')
-    atom1 = pd.Series(atom0, dtype='category')
+    atom1 = pd.Series(atom1, dtype='category')
+    fdx = pd.Series(fdx, dtype='category')
     two = pd.DataFrame.from_dict({'dx':dx, 'dy': dy, 'dz': dz, 'distance': distance,
-                                  'atom0': atom0, 'atom1': atom1})
+                                  'atom0': atom0, 'atom1': atom1, 'frame': fdx})
     patom = pd.DataFrame.from_dict({'x': px, 'y': py, 'z': pz})
     mapper = universe.atom['symbol'].astype(str).map(symbol_to_radius())
     radius0 = two['atom0'].map(mapper)
