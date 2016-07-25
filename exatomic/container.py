@@ -19,7 +19,7 @@ from exatomic.error import (PeriodicUniverseError, FreeBoundaryUniverseError,
                             BasisSetNotFoundError)
 from exatomic.widget import UniverseWidget
 from exatomic.frame import Frame, compute_frame_from_atom
-from exatomic.atom import Atom, UnitAtom, ProjectedAtom
+from exatomic.atom import Atom, UnitAtom, ProjectedAtom, VisualAtom
 from exatomic.two import FreeTwo, PeriodicTwo, compute_two, compute_bond_count
 from exatomic.molecule import Molecule, compute_molecule
 from exatomic.widget import UniverseWidget
@@ -42,6 +42,7 @@ class Meta(TypedMeta):
     periodic_two = PeriodicTwo
     unit_atom = UnitAtom
     projected_atom = ProjectedAtom
+    visual_atom = VisualAtom
     molecule = Molecule
     field = AtomicField
     orbital = Orbital
@@ -99,6 +100,10 @@ class Universe(Container, metaclass=Meta):
         """Compute minimal image for periodic systems."""
         self.unit_atom = UnitAtom.from_universe(self)
 
+    def compute_visual_atom(self):
+        """"""
+        self.visual_atom = VisualAtom.from_universe(self)
+
     def compute_free_two(self, bond_extra=0.45, cutoff=3000):
         """
         Compute free boundary two body properties (interatomic distances and bonds).
@@ -139,6 +144,10 @@ class Universe(Container, metaclass=Meta):
         """Compute the :class:`~exatomic.molecule.Molecule` table."""
         self.molecule = compute_molecule(self)
 
+    def compute_atom_count(self):
+        """Compute the atom count for each frame."""
+        self.frame['atom_count'] = self.atom.grouped().size()
+
     def _custom_traits(self):
         """
         Build traits depending on multiple dataframes.
@@ -147,7 +156,7 @@ class Universe(Container, metaclass=Meta):
         # Hack for now...
         if (hasattr(self, '_free_two') or hasattr(self, '_periodic_two') or
             len(self)*3000 > self.frame['atom_count'].sum()):
-            mapper = self.atom['label'].astype(np.int64)
+            mapper = self.atom.get_atom_labels().astype(np.int64)
             traits.update(self.two._bond_traits(mapper))
         return traits
 

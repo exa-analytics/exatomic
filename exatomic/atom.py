@@ -147,6 +147,9 @@ class ProjectedAtom(DataFrame):
 class VisualAtom(SparseDataFrame):
     """
     """
+    _index = 'atom'
+    _columns = ['x', 'y', 'z']
+
     @classmethod
     def from_universe(cls, universe):
         """
@@ -156,9 +159,11 @@ class VisualAtom(SparseDataFrame):
             atom.update(universe.unit_atom)
             bonded = universe.two[universe.two['bond'] == True]
             prjd = universe.projected_atom.ix[bonded.index.values]
-            prjd.index = bonded['atom1'].astype(np.int64)
+            prjd['atom'] = bonded['atom1'].astype(np.int64)
+            prjd.drop_duplicates('atom', inplace=True)
+            prjd.set_index('atom', inplace=True)
             atom.update(prjd)
-            atom = atom[atom != atom[['x', 'y', 'z']]].to_sparse()
+            atom = atom[atom != universe.atom[['x', 'y', 'z']]].to_sparse()
             return cls(atom)
         raise PeriodicUniverseError()
 
