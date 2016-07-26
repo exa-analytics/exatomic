@@ -74,7 +74,7 @@ class XYZ(Editor):
             with open(path, 'w') as f:
                 f.write(str(self))
         else:
-            grps = self.atom.grpd
+            grps = self.atom.grouped()
             n = len(str(self['frame'].values.max()))
             for frame, atom in grps:
                 filename = str(frame).zfill(n) + '.xyz'
@@ -95,7 +95,7 @@ class XYZ(Editor):
         more than one frame, creates an xyz trajectory format editor.
         """
         string = ''
-        grps = universe.atom.grpd
+        grps = universe.atom.grouped()
         for frame, atom in grps:
             string += cls._header.format(nat=len(atom), comment='frame: ' + str(frame))
             atom_copy = atom[cls._cols].copy()

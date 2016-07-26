@@ -48,6 +48,17 @@ class BaseTwo(DataFrame):
     _columns = ['dx', 'dy', 'dz', 'atom0', 'atom1', 'distance']
     _categories = {'symbols': str, 'atom0': np.int64, 'atom1': np.int64}
 
+    def compute_bonds(self, symbols, mapper=None, bond_extra=0.45):
+        """
+        """
+        mapper = symbol_to_radius() if mapper is None else mapper
+        mapper = symbols.astype(str).map(mapper)
+        radius0 = self['atom0'].map(mapper)
+        radius1 = self['atom1'].map(mapper)
+        self['mbl'] = radius0 + radius1 + bond_extra
+        self['bond'] = self['distance'] <= self['mbl']
+        del self['mbl']
+
     def _bond_traits(self, label_mapper):
         """
         Traits representing bonded atoms are reported as two lists of equal
@@ -135,12 +146,8 @@ def compute_free_two_si(universe, bond_extra=0.45):
     fdx = pd.Series(fdx, dtype='category')
     two = pd.DataFrame.from_dict({'dx': dx, 'dy': dy, 'dz': dz, 'distance': distance,
                                   'atom0': atom0, 'atom1': atom1, 'frame': fdx})
-    mapper = universe.atom['symbol'].astype(str).map(symbol_to_radius())
-    radius0 = two['atom0'].map(mapper)
-    radius1 = two['atom1'].map(mapper)
-    two['mbl'] = radius0 + radius1 + bond_extra
-    two['bond'] = two['distance'] < two['mbl']
-    del two['mbl']
+    two = FreeTwo(two)
+    two.compute_bonds(universe.atom['symbol'])
     return two
 
 
@@ -183,7 +190,7 @@ def compute_periodic_two_si(universe, bond_extra=0.45):
         px[i] = pxx
         py[i] = pyy
         pz[i] = pzz
-        fdx[i] = (frame for j in range(nnn))
+        fdx[i] = [frame for j in range(nnn)]
         start = stop
     dx = np.concatenate(dx)
     dy = np.concatenate(dy)
@@ -198,12 +205,8 @@ def compute_periodic_two_si(universe, bond_extra=0.45):
     two = pd.DataFrame.from_dict({'dx':dx, 'dy': dy, 'dz': dz, 'distance': distance,
                                   'atom0': atom0, 'atom1': atom1, 'frame': fdx})
     patom = pd.DataFrame.from_dict({'x': px, 'y': py, 'z': pz})
-    mapper = universe.atom['symbol'].astype(str).map(symbol_to_radius())
-    radius0 = two['atom0'].map(mapper)
-    radius1 = two['atom1'].map(mapper)
-    two['mbl'] = radius0 + radius1 + bond_extra
-    two['bond'] = two['distance'] < two['mbl']
-    del two['mbl']
+    two = PeriodicTwo(two)
+    two.compute_bonds(universe.atom['symbol'])
     return two, patom
 
 
