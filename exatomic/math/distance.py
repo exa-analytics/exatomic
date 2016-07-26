@@ -32,6 +32,75 @@ def minimal_image_counts(xyz, rxyz, oxyz, counts):
     return minimal_image(xyz, rxyz, oxyz)
 
 
+def periodic_pdist_euc_dxyz_idx(ux, uy, uz, rx, ry, rz, idxs, tol=10**-8):
+    """
+    Pairwise Euclidean distance computation for periodic systems returning
+    distance vectors, pair indices, and projected coordinates.
+    """
+    m = [-1, 0, 1]
+    n = len(ux)
+    nn = n*(n - 1)//2
+    dx = np.empty((nn, ), dtype=np.float64)    # Two body distance component x
+    dy = np.empty((nn, ), dtype=np.float64)    # within corresponding periodic
+    dz = np.empty((nn, ), dtype=np.float64)    # unit cell
+    dr = np.empty((nn, ), dtype=np.float64)
+    px = np.empty((nn, ), dtype=np.float64)    # Projected j coordinate x
+    py = np.empty((nn, ), dtype=np.float64)    # Projected j coordinate y
+    pz = np.empty((nn, ), dtype=np.float64)    # Projected j coordinate z
+    pxj = np.empty((27, ), dtype=np.float64)
+    pyj = np.empty((27, ), dtype=np.float64)
+    pzj = np.empty((27, ), dtype=np.float64)
+    prj = np.empty((27, ), dtype=np.float64)
+    idxi = np.empty((nn, ), dtype=np.int64)    # index of i
+    idxj = np.empty((nn, ), dtype=np.int64)    # index of j
+    h = 0
+    for i in range(n):
+        xi = ux[i]
+        yi = uy[i]
+        zi = uz[i]
+        indexi = idxs[i]
+        for j in range(i + 1, n):
+            xj = ux[j]
+            yj = uy[j]
+            zj = uz[j]
+            hh = 0
+            for ii in m:
+                for jj in m:
+                    for kk in m:
+                        pxjj = xj + ii*rx
+                        pxj[hh] = pxjj
+                        pyjj = yj + jj*ry
+                        pyj[hh] = pyjj
+                        pzjj = zj + kk*rz
+                        pzj[hh] = pzjj
+                        prj[hh] = (xi - pxjj)**2 + (yi - pyjj)**2 + (zi - pzjj)**2
+                        h += 1
+            hh = np.argmin(prj)
+            dx[h] = pxj[hh]
+            dy[h] = pyj[hh]
+            dz[h] = pzj[hh]
+            dr[h] = prj[hh]
+            pj = pxj[hh]
+            if xj - pj <= tol:
+                px[h] = np.nan
+            else:
+                px[h] = pj
+            pj = pyj[hh]
+            if xj - pj <= tol:
+                py[h] = np.nan
+            else:
+                py[h] = pj
+            pj = pzj[hh]
+            if xj - pj <= tol:
+                pz[h] = np.nan
+            else:
+                pz[h] = pj
+            idxi[h] = indexi
+            idxj[h] = idxs[j]
+            h += 1
+    return dx, dy, dz, dr, idxi, idxj, px, py, pz
+
+
 if config['dynamic']['numba'] == 'true':
     from numba import jit, vectorize
     from exa.math.vector.cartesian import magnitude_xyz
@@ -39,3 +108,4 @@ if config['dynamic']['numba'] == 'true':
              'float32(float32, float32, float32)', 'float64(float64, float64, float64)']
     minimal_image_counts = jit(nopython=True, cache=True, nogil=True)(minimal_image_counts)
     minimal_image = vectorize(types3, nopython=True)(minimal_image)
+    periodic_pdist_euc_dxyz_idx = jit(nopython=True, cache=True, nogil=True)(periodic_pdist_euc_dxyz_idx)

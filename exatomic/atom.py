@@ -128,7 +128,7 @@ class UnitAtom(SparseDataFrame):
         raise PeriodicUniverseError()
 
 
-class ProjectedAtom(DataFrame):
+class ProjectedAtom(SparseDataFrame):
     """
     Projected atom coordinates (e.g. on 3x3x3 supercell). These coordinates are
     typically associated with their corresponding indices in another dataframe.

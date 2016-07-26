@@ -31,7 +31,8 @@ import pandas as pd
 from traitlets import Unicode
 from exa.numerical import DataFrame, SparseDataFrame
 from exa.relational.isotope import symbol_to_radius
-from exa.math.vector.cartesian import pdist_euc_dxyz_idx, periodic_pdist_euc_dxyz_idx
+from exa.math.vector.cartesian import pdist_euc_dxyz_idx
+from exatomic.math.distance import periodic_pdist_euc_dxyz_idx
 
 
 class BaseTwo(DataFrame):
@@ -151,42 +152,49 @@ def compute_periodic_two_si(universe, bond_extra=0.45):
     grps['frame'] = grps['frame'].astype(np.int64)
     grps.update(universe.unit_atom)
     grps = grps.groupby('frame')
-    n = universe.frame['atom_count']
-    n = 27*(n*(n-1)//2).sum()
-    dx = np.empty((n, ), dtype=np.float64)
-    dy = np.empty((n, ), dtype=np.float64)
-    dz = np.empty((n, ), dtype=np.float64)
-    atom0 = np.empty((n, ), dtype=np.int64)
-    atom1 = np.empty((n, ), dtype=np.int64)
-    distance = np.empty((n, ), dtype=np.float64)
-    fdx = np.empty((n, ), dtype=np.int64)
-    px = np.empty((n, ), dtype=np.float64)
-    py = np.empty((n, ), dtype=np.float64)
-    pz = np.empty((n, ), dtype=np.float64)
+    n = grps.ngroups
+    dx = np.empty((n, ), dtype=np.ndarray)
+    dy = np.empty((n, ), dtype=np.ndarray)
+    dz = np.empty((n, ), dtype=np.ndarray)
+    atom0 = np.empty((n, ), dtype=np.ndarray)
+    atom1 = np.empty((n, ), dtype=np.ndarray)
+    distance = np.empty((n, ), dtype=np.ndarray)
+    fdx = np.empty((n, ), dtype=np.ndarray)
+    px = np.empty((n, ), dtype=np.ndarray)
+    py = np.empty((n, ), dtype=np.ndarray)
+    pz = np.empty((n, ), dtype=np.ndarray)
     start = 0
     stop = 0
-    for frame, grp in grps:
+    for i, (frame, grp) in enumerate(grps):
         ux = grp['x'].values.astype(np.float64)
         uy = grp['y'].values.astype(np.float64)
         uz = grp['z'].values.astype(np.float64)
-        idx = grp.index.values.astype(np.int64)
+        sidx = grp.index.values.astype(np.int64)
         rx, ry, rz = universe.frame.ix[frame, ['rx', 'ry', 'rz']]
-        dxx, dyy, dzz, d, a0, a1, pxx, pyy, pzz = periodic_pdist_euc_dxyz_idx(ux, uy, uz, rx, ry, rz, idx)
-        stop += len(dxx)
-        dx[start:stop] = dxx
-        dy[start:stop] = dyy
-        dz[start:stop] = dzz
-        distance[start:stop] = d
-        atom0[start:stop] = a0
-        atom1[start:stop] = a1
-        px[start:stop] = pxx
-        py[start:stop] = pyy
-        pz[start:stop] = pzz
-        fdx[start:stop] = frame
+        dxx, dyy, dzz, d, a0, a1, pxx, pyy, pzz = periodic_pdist_euc_dxyz_idx(ux, uy, uz, rx, ry, rz, sidx)
+        nnn = len(dxx)
+        stop += nnn
+        dx[i] = dxx
+        dy[i] = dyy
+        dz[i] = dzz
+        distance[i] = d
+        atom0[i] = a0
+        atom1[i] = a1
+        px[i] = pxx
+        py[i] = pyy
+        pz[i] = pzz
+        fdx[i] = (frame for j in range(nnn))
         start = stop
-    atom0 = pd.Series(atom0, dtype='category')
-    atom1 = pd.Series(atom1, dtype='category')
-    fdx = pd.Series(fdx, dtype='category')
+    dx = np.concatenate(dx)
+    dy = np.concatenate(dy)
+    dz = np.concatenate(dz)
+    distance = np.concatenate(distance)
+    px = np.concatenate(px)
+    py = np.concatenate(py)
+    pz = np.concatenate(pz)
+    atom0 = pd.Series(np.concatenate(atom0), dtype='category')
+    atom1 = pd.Series(np.concatenate(atom1), dtype='category')
+    fdx = pd.Series(np.concatenate(fdx), dtype='category')
     two = pd.DataFrame.from_dict({'dx':dx, 'dy': dy, 'dz': dz, 'distance': distance,
                                   'atom0': atom0, 'atom1': atom1, 'frame': fdx})
     patom = pd.DataFrame.from_dict({'x': px, 'y': py, 'z': pz})
