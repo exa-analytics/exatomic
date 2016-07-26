@@ -25,7 +25,8 @@ from exatomic.widget import UniverseWidget
 from exatomic.field import AtomicField
 from exatomic.orbital import Orbital, MOMatrix, DensityMatrix
 from exatomic.basis import (SphericalGTFOrder, CartesianGTFOrder, Overlap,
-                            BasisSetSummary, GaussianBasisSet, BasisSetOrder)
+                            BasisSetSummary, GaussianBasisSet, BasisSetOrder,
+                            Primitive)
 
 
 class UniverseTypedMeta(TypedMeta):
@@ -36,14 +37,15 @@ class UniverseTypedMeta(TypedMeta):
     atom = Atom
     frame = Frame
     free_two = FreeTwo
-    periodic_two = PeriodicTwo
     unit_atom = UnitAtom
+    periodic_two = PeriodicTwo
     projected_atom = ProjectedAtom
     molecule = Molecule
     field = AtomicField
     orbital = Orbital
     overlap = Overlap
     momatrix = MOMatrix
+    primitive = Primitive
     density = DensityMatrix
     basis_set_order = BasisSetOrder
     basis_set_summary = BasisSetSummary
