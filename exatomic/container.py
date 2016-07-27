@@ -104,7 +104,7 @@ class Universe(Container, metaclass=Meta):
         """"""
         self.visual_atom = VisualAtom.from_universe(self)
 
-    def compute_free_two(self, bond_extra=0.45, cutoff=3000):
+    def compute_free_two(self, bond_extra=0.45, mapper=None, cutoff=3000):
         """
         Compute free boundary two body properties (interatomic distances and bonds).
 
@@ -116,9 +116,9 @@ class Universe(Container, metaclass=Meta):
             return
         if self.frame.is_periodic():
             raise FreeBoundaryUniverseError()
-        self.free_two = compute_two(self, bond_extra=bond_extra)
+        self.free_two = compute_two(self, bond_extra=bond_extra, mapper=mapper)
 
-    def compute_periodic_two(self, bond_extra=0.45, cutoff=3000):
+    def compute_periodic_two(self, bond_extra=0.45, mapper=None, cutoff=3000):
         """
         Compute periodic two body properties (interatomic distances and bonds).
 
@@ -130,7 +130,7 @@ class Universe(Container, metaclass=Meta):
             return
         if not self.frame.is_periodic():
             raise PeriodicUniverseError()
-        ptwo, patom = compute_two(self, bond_extra=bond_extra)
+        ptwo, patom = compute_two(self, bond_extra=bond_extra, mapper=mapper)
         self.periodic_two = ptwo
         self.projected_atom = patom
 

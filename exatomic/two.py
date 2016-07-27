@@ -51,7 +51,14 @@ class BaseTwo(DataFrame):
     def compute_bonds(self, symbols, mapper=None, bond_extra=0.45):
         """
         """
-        mapper = symbol_to_radius() if mapper is None else mapper
+        if mapper is None:
+            mapper = symbol_to_radius()
+        elif not all(symbol in mapper for symbol in symbols.unique()):
+            sym2rad = symbol_to_radius()
+            for symbol in symbols.unique():
+                if symbol not in mapper:
+                    mapper[symbol] = sym2rad[symbol]
+        # Note that the mapper is transformed here, but the same name is used...
         mapper = symbols.astype(str).map(mapper)
         radius0 = self['atom0'].map(mapper)
         radius1 = self['atom1'].map(mapper)
@@ -99,18 +106,18 @@ class PeriodicTwo(BaseTwo):
     pass
 
 
-def compute_two(universe, bond_extra=0.45):
+def compute_two(universe, bond_extra=0.45, mapper=None):
     """
     Top level function for computing two body properties.
     """
-    # This function decides what type of two body calculation to perform
+    # This function will decide what type of two body calculation to perform
     # depending on the universe passed, resources available, and parameters set.
     if universe.frame.is_periodic():
-        return compute_periodic_two_si(universe, bond_extra)
-    return compute_free_two_si(universe, bond_extra)
+        return compute_periodic_two_si(universe, bond_extra, mapper)
+    return compute_free_two_si(universe, bond_extra, mapper)
 
 
-def compute_free_two_si(universe, bond_extra=0.45):
+def compute_free_two_si(universe, bond_extra=0.45, mapper=None):
     """
     Serial, in memory computation of two body properties for free boundary
     condition systems.
@@ -147,11 +154,11 @@ def compute_free_two_si(universe, bond_extra=0.45):
     two = pd.DataFrame.from_dict({'dx': dx, 'dy': dy, 'dz': dz, 'distance': distance,
                                   'atom0': atom0, 'atom1': atom1, 'frame': fdx})
     two = FreeTwo(two)
-    two.compute_bonds(universe.atom['symbol'])
+    two.compute_bonds(universe.atom['symbol'], mapper=mapper)
     return two
 
 
-def compute_periodic_two_si(universe, bond_extra=0.45):
+def compute_periodic_two_si(universe, bond_extra=0.45, mapper=None):
     """
     Compute periodic two body properties.
     """
@@ -206,7 +213,7 @@ def compute_periodic_two_si(universe, bond_extra=0.45):
                                   'atom0': atom0, 'atom1': atom1, 'frame': fdx})
     patom = pd.DataFrame.from_dict({'x': px, 'y': py, 'z': pz})
     two = PeriodicTwo(two)
-    two.compute_bonds(universe.atom['symbol'])
+    two.compute_bonds(universe.atom['symbol'], mapper=mapper)
     return two, patom
 
 

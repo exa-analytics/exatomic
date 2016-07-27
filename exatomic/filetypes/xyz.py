@@ -75,7 +75,7 @@ class XYZ(Editor):
                 f.write(str(self))
         else:
             grps = self.atom.grouped()
-            n = len(str(self['frame'].values.max()))
+            n = len(str(self.frame.index.max()))
             for frame, atom in grps:
                 filename = str(frame).zfill(n) + '.xyz'
                 with open(mkp(path, filename), 'w') as f:
