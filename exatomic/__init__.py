@@ -18,7 +18,7 @@ Warning:
 
 .. _atomic: https://en.wikipedia.org/wiki/Atomic_units
 """
-__exatomic_version__ = (0, 2, 11)
+__exatomic_version__ = (0, 2, 12)
 __version__ = '.'.join((str(v) for v in __exatomic_version__))
 
 
