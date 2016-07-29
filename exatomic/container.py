@@ -15,13 +15,13 @@ import pandas as pd
 import numpy as np
 from exa.numerical import Field
 from exa.container import TypedMeta, Container
-from exatomic.error import (PeriodicUniverseError, FreeBoundaryUniverseError,
-                            BasisSetNotFoundError)
+from exatomic.error import BasisSetNotFoundError
 from exatomic.widget import UniverseWidget
 from exatomic.frame import Frame, compute_frame_from_atom
 from exatomic.atom import Atom, UnitAtom, ProjectedAtom, VisualAtom
-from exatomic.two import FreeTwo, PeriodicTwo, compute_two, compute_bond_count
-from exatomic.molecule import Molecule, compute_molecule
+from exatomic.two import (AtomTwo, MoleculeTwo, compute_atom_two,
+                          compute_bond_count, compute_molecule_two)
+from exatomic.molecule import Molecule, compute_molecule, compute_com
 from exatomic.widget import UniverseWidget
 from exatomic.field import AtomicField
 from exatomic.orbital import Orbital, MOMatrix, DensityMatrix
@@ -38,12 +38,12 @@ class Meta(TypedMeta):
     """
     atom = Atom
     frame = Frame
-    free_two = FreeTwo
-    periodic_two = PeriodicTwo
+    atom_two = AtomTwo
     unit_atom = UnitAtom
     projected_atom = ProjectedAtom
     visual_atom = VisualAtom
     molecule = Molecule
+    molecule_two = MoleculeTwo
     field = AtomicField
     orbital = Orbital
     overlap = Overlap
@@ -68,15 +68,6 @@ class Universe(Container, metaclass=Meta):
     """
     _widget_class = UniverseWidget
     _cardinal = 'frame'
-
-    @property
-    def two(self):
-        """
-        Alias for two body properties (regardless of system boundary conditions).
-        """
-        if self.frame.is_periodic():
-            return self.periodic_two
-        return self.free_two
 
     @property
     def basis_set(self):
@@ -104,35 +95,30 @@ class Universe(Container, metaclass=Meta):
         """"""
         self.visual_atom = VisualAtom.from_universe(self)
 
-    def compute_free_two(self, bond_extra=0.45, mapper=None, cutoff=3000):
+    def compute_atom_two(self, mapper=None, bond_extra=0.45):
         """
-        Compute free boundary two body properties (interatomic distances and bonds).
+        Compute interatomic two body properties (e.g. bonds).
 
         Args:
-            bond_extra (float): Extra amount to add when determining bonds (default 0.55 au)
-            max_distance (float): Maximum distance of interest (default 19.0 au)
+            mapper (dict): Custom radii to use when determining bonds
+            bond_extra (float): Extra additive factor to use when determining bonds
         """
-        if self.frame['atom_count'].sum() > cutoff* len(self):
-            return
         if self.frame.is_periodic():
-            raise FreeBoundaryUniverseError()
-        self.free_two = compute_two(self, bond_extra=bond_extra, mapper=mapper)
+            atom_two, projected_atom = compute_atom_two(self, mapper, bond_extra)
+            self.atom_two = atom_two
+            self.projected_atom = projected_atom
+        else:
+            self.atom_two = compute_atom_two(self, mapper, bond_extra)
 
-    def compute_periodic_two(self, bond_extra=0.45, mapper=None, cutoff=3000):
+    def compute_bonds(self, mapper=None, bond_extra=0.45):
         """
-        Compute periodic two body properties (interatomic distances and bonds).
+        Updates bonds (and molecules).
 
-        Args:
-            bond_extra (float): Extra amount to add when determining bonds (default 0.55 au)
-            max_distance (float): Maximum distance of interest (default 19.0 au)
+        See Also:
+            :func:`~exatomic.two.AtomTwo.compute_bonds`
         """
-        if self.frame['atom_count'].sum() > cutoff* len(self):
-            return
-        if not self.frame.is_periodic():
-            raise PeriodicUniverseError()
-        ptwo, patom = compute_two(self, bond_extra=bond_extra, mapper=mapper)
-        self.periodic_two = ptwo
-        self.projected_atom = patom
+        self.atom_two.compute_bonds(self.atom['symbol'], mapper=mapper, bond_extra=bond_extra)
+        self.compute_molecule()
 
     def compute_bond_count(self):
         """
@@ -144,6 +130,12 @@ class Universe(Container, metaclass=Meta):
         """Compute the :class:`~exatomic.molecule.Molecule` table."""
         self.molecule = compute_molecule(self)
 
+    def compute_molecule_com(self):
+        cx, cy, cz = compute_com(self)
+        self.molecule['cx'] = cx
+        self.molecule['cy'] = cy
+        self.molecule['cz'] = cz
+
     def compute_atom_count(self):
         """Compute the atom count for each frame."""
         self.frame['atom_count'] = self.atom.grouped().size()
@@ -154,10 +146,9 @@ class Universe(Container, metaclass=Meta):
         """
         traits = {}
         # Hack for now...
-        if (hasattr(self, '_free_two') or hasattr(self, '_periodic_two') or
-            len(self)*3000 > self.frame['atom_count'].sum()):
+        if hasattr(self, '_atom_two') or len(self)*100 > self.frame['atom_count'].sum():
             mapper = self.atom.get_atom_labels().astype(np.int64)
-            traits.update(self.two._bond_traits(mapper))
+            traits.update(self.atom_two._bond_traits(mapper))
         return traits
 
     def __len__(self):
@@ -169,6 +160,7 @@ def concat(*universes, name=None, description=None, meta=None):
     Warning:
         This function is not fully featured or tested yet!
     """
+    raise NotImplementedError()
     kwargs = {'name': name, 'description': description, 'meta': meta}
     names = []
     for universe in universes:
@@ -188,285 +180,3 @@ def concat(*universes, name=None, description=None, meta=None):
         else:
             kwargs[name] = cls(pd.concat(kwargs[name]))
     return Universe(**kwargs)
-
-
-#def concat_frames(*universes, name=None, description=None, meta=None):
-#    """
-#    Concatenate a collection of "single frame" :class:`~exatomic.container.Unvierse`
-#    objects. A single frame means that each :class:`~exatomic.container.Universe`
-#    object contains data corresponding to a single atomic configuration (or
-#    other type of "cardinal" axis). Indices are altered to match the order the
-#    universes are passed as arguments.
-#    """
-#    kwargs = {'name': name, 'description': description, 'meta': meta}
-#    indices = {}
-#    atom = 0
-#    for frame, universe in enumerate(universes):
-#        for key, data in universe._data().items():
-#            name = key[1:] if key.startswith('_') else key
-#            idx_name = data.index.name
-#            if idx_name in indices:
-#                indices[idx_name] +=
-
-
-#from exatomic.frame import minimal_frame, Frame
-#from exatomic.atom import Atom, ProjectedAtom, UnitAtom, VisualAtom
-#from exatomic.two import Two, PeriodicTwo
-#from exatomic.field import AtomicField
-#from exatomic.atom import compute_unit_atom as _cua
-#from exatomic.atom import compute_projected_atom as _cpa
-#from exatomic.atom import compute_visual_atom as _cva
-#from exatomic.two import max_frames_periodic as mfp
-#from exatomic.two import max_atoms_per_frame_periodic as mapfp
-#from exatomic.two import max_frames as mf
-#from exatomic.two import max_atoms_per_frame as mapf
-#from exatomic.two import compute_two_body as _ctb
-#from exatomic.two import compute_bond_count as _cbc
-#from exatomic.two import compute_projected_bond_count as _cpbc
-#from exatomic.molecule import Molecule
-#from exatomic.molecule import compute_molecule as _cm
-#from exatomic.molecule import compute_molecule_com as _cmcom
-#from exatomic.basis import lmap
-
-
-##    @property
-##    def unit_atom(self):
-##        """
-##        Updated atom table using only in-unit-cell positions.
-##
-##        Note:
-##            This function returns a standard :class:`~pandas.DataFrame`
-##        """
-##        if not self._is('_unit_atom'):
-##            self.compute_unit_atom()
-##        atom = self.atom.copy()
-##        atom.update(self._unit_atom)
-##        return Atom(atom)
-##
-##    @property
-##    def visual_atom(self):
-##        """
-##        Visually pleasing atomic coordinates (useful for periodic universes).
-##        """
-##        if self.is_periodic:
-##            if self._visual_atom is None:
-##                self.compute_visual_atom()
-##            atom = self.atom.copy()
-##            atom.update(self._visual_atom)
-##            return atom
-##        else:
-##            return self.atom
-##
-##    @property
-##    def projected_atom(self):
-##        """
-##        Projected (unit) atom positions into a 3x3x3 supercell.
-##        """
-##        if self._projected_atom is None:
-##            self.compute_projected_atom()
-##        return self._projected_atom
-##
-##    @property
-##    def molecule(self):
-##        if not self._is('_molecule'):
-##            self.compute_molecule()
-##        return self._molecule
-##
-##    @property
-##    def field(self):
-##        return self._field
-##
-##    @property
-##    def orbital(self):
-##        return self._orbital
-##
-##    @property
-##    def basis_set(self):
-##        return self._basis_set
-##
-##    @property
-##    def momatrix(self):
-##        return self._momatrix
-#
-#    @property
-#    def is_periodic(self):
-#        return self.frame.is_periodic
-#
-#    @property
-#    def is_vc(self):
-#        return self.frame.is_vc
-#
-##    @property
-##    def basis_set(self):
-##        return self._basis_set
-##
-##    @property
-##    def basis_set_order(self):
-##        return self._basis_set_order
-##
-##    @property
-##    def basis_set_meta(self):
-##        return self._basis_set_meta
-##
-##    @property
-##    def basis_set_summary(self):
-##        return self._basis_set_summary
-##
-##    @property
-##    def overlap(self):
-##        return self._overlap
-##
-##    @property
-##    def density_matrix(self):
-##        return self._density_matrix
-##
-##    @property
-##    def spherical_gtf_order(self):
-##        if self._is('_spherical_gtf_order'):
-##            return self._spherical_gtf_order
-##        else:
-##            raise Exception('Compute spherical_gtf_order first!')
-##
-##    @property
-##    def cartesian_gtf_order(self):
-##        if self._is('_cartesian_gtf_order'):
-##            return self._cartesian_gtf_order
-##        else:
-##            raise Exception('Compute cartesian_gtf_order first!')
-##
-#    # Compute
-#    # ==============
-#    # Compute methods create and attach new dataframe objects to the container
-#    def compute_frame(self):
-#        """
-#        Create a minimal frame using the atom table.
-#        """
-#        self.frame = minimal_frame(self.atom)
-#
-#    def compute_unit_atom(self):
-#        """
-#        Compute the sparse unit atom dataframe.
-#        """
-#        self._unit_atom = _cua(self)
-#
-#    def compute_projected_atom(self):
-#        """
-#        Compute the projected supercell from the unit atom coordinates.
-#        """
-#        self._projected_atom = _cpa(self)
-#
-#    def compute_bond_count(self):
-#        """
-#        Compute the bond count and update the atom table.
-#
-#        Returns:
-#            bc (:class:`~pandas.Series`): :class:`~exatomic.atom.Atom` bond counts
-#            pbc (:class:`~pandas.Series`): :class:`~exatomic.atom.PeriodicAtom` bond counts
-#
-#        Note:
-#            If working with a periodic universe, the projected atom table will
-#            also be updated; an index of minus takes the usual convention of
-#            meaning not applicable or not calculated.
-#        """
-#        self.atom['bond_count'] = _cbc(self)
-#        self.atom['bond_count'] = self.atom['bond_count'].fillna(0).astype(np.int64)
-#        self.atom['bond_count'] = self.atom['bond_count'].astype('category')
-#
-#    def compute_projected_bond_count(self):
-#        """
-#        See Also:
-#            :func:`~exatomic.two.compute_projected_bond_count`
-#        """
-#        self.projected_atom['bond_count'] = _cpbc(self)
-#        self.projected_atom['bond_count'] = self.projected_atom['bond_count'].fillna(-1).astype(np.int64)
-#        self.projected_atom['bond_count'] = self.projected_atom['bond_count'].astype('category')
-#
-#    def compute_molecule(self, com=False):
-#        """
-#        Compute the molecule table.
-#        """
-#        if com:
-#            self._molecule = _cm(self)
-#            self.compute_visual_atom()
-#            self._molecule = Molecule(pd.concat((self._molecule, _cmcom(self)), axis=1))
-#        else:
-#            self._molecule = _cm(self)
-#
-##    def compute_spherical_gtf_order(self, ordering_func):
-##        """
-##        Compute the spherical Gaussian type function ordering dataframe.
-##        """
-##        lmax = universe.basis_set['shell'].map(lmap).max()
-##        self._spherical_gtf_order = SphericalGTFOrder.from_lmax_order(lmax, ordering_func)
-##
-##    def compute_cartesian_gtf_order(self, ordering_func):
-##        """
-##        Compute the cartesian Gaussian type function ordering dataframe.
-##        """
-##        lmax = universe.basis_set['shell'].map(lmap).max()
-##        self._cartesian_gtf_order = SphericalGTFOrder.from_lmax_order(lmax, ordering_func)
-##
-#    def compute_two_free(self, *args, **kwargs):
-#        self.compute_two_body(*args, **kwargs)
-#
-#    def compute_two_periodic(self, *args, **kwargs):
-#        self.compute_two_body(*args, **kwargs)
-#
-#    def compute_two_body(self, *args, truncate_projected=True, **kwargs):
-#        """
-#        Compute two body properties for the current universe.
-#
-#        For arguments see :func:`~exatomic.two.get_two_body`. Note that this
-#        operation (like all compute) operations are performed in place.
-#
-#        Args:
-#            truncate_projected (bool): Applicable to periodic universes - decreases the size of the projected atom table
-#        """
-#        if self.is_periodic:
-#            self.two_periodic = _ctb(self, *args, **kwargs)
-#            if truncate_projected:
-#                self.truncate_projected_atom()
-#        else:
-#            self.two_free = _ctb(self, *args, **kwargs)
-#
-#    def compute_visual_atom(self):
-#        """
-#        Create visually pleasing coordinates (useful for periodic universes).
-#        """
-#        self._visual_atom = _cva(self)
-#
-#    def classify_molecules(self, *args, **kwargs):
-#        """
-#        Add classifications (of any form) for molecules.
-#
-#        .. code-block:: Python
-#
-#            universe.classify_molecules(('Na', 'solute'), ('H(2)O(1)', 'solvent'))
-#
-#        Args:
-#            \*classifiers: ('identifier', 'classification', exact)
-#
-#
-#        Warning:
-#            Will attempt to compute molecules if they haven't been computed.
-#        """
-#        self.molecule.classify(*args, **kwargs)
-#
-#    def slice_by_molecules(self, identifier):
-#        """
-#        String, list of string, index, list of indices, slice
-#        """
-#        raise NotImplementedError()
-#
-#    def truncate_projected_atom(self):
-#        """
-#        When first generated, the projected_atom table contains many atomic
-#        coordinates that are not used when computing two body properties. This
-#        function will truncate this table, keeping only useful coordinates.
-#        Projected coordinates can always be generated using
-#        :func:`~exatomic.atom.compute_projected_atom`.
-#        """
-#        pa = self.periodic_two['prjd_atom0'].astype(np.int64)
-#        pa = pa.append(self.periodic_two['prjd_atom1'].astype(np.int64))
-#        self._projected_atom = ProjectedAtom(self._projected_atom[self._projected_atom.index.isin(pa)])
-#

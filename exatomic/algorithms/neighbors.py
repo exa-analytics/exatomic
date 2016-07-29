@@ -13,10 +13,12 @@ Before performing a search, check that the molecule table is computed as desired
 and classified (if necessary): see :func:`~exatomic.two.BaseTwo.compute_bonds`
 and :func:`~exatomic.molecule.Molecule.classify`.
 """
-import warnings
+import numpy as np
+from exatomic.container import Universe
 
 
-def get_nearest_molecules(universe, n, sources, restrictions=None, how='atom'):
+def nearest_molecules(universe, n, sources, restrictions=None, how='atom',
+                      free_boundary=True, center=(0, 0, 0)):
     """
     Select nearest molecules to a source or sources.
 
@@ -25,102 +27,127 @@ def get_nearest_molecules(universe, n, sources, restrictions=None, how='atom'):
         source = 'analyte'    # By molecule classification  (Molecule)
         source = 1            # By atom label (Atom)
         source = 'C'          # By atom symbol (Atom)
-        get_nearest_molecules(uni, 5, source)
+        nearest_molecules(uni, 5, source)
 
     .. code-block:: Python
 
         sources = ['solute', 'C']   # Can mix and match..
-        get_nearest_molecules(uni, 5, sources)    # Nearest neighbors to 'C' atoms on 'solute' molecules
+        nearest_molecules(uni, 5, sources)    # Nearest neighbors to 'C' atoms on 'solute' molecules
 
     Args:
         universe (:class:`~exatomic.container.Universe`): An atomic universe
-        n (int): Numver of neighbors to select to each source
-        sources: See examples above or note below
+        n (int or list): Number(s) of neighbors to select to each source (see note)
+        sources: Source molecules/atoms from which to search for neighbors
+        restrictions: Restrict neighbors (non-source molecules/atoms) by atom symbol or molecule classification
+        how (str): Search by atom to atom distance ('atom') or molecule center of mass ('com')
+        free_boundary (bool): Convert to free boundary conditions (if periodic system - default true)
+        center (array): Center the result on the given point (default (0, 0, 0))
+
+    Returns:
+        unis (dict): Dictionary of number of neighbors keys, universe values
     """
-    # Perform some simple checks
-    if 'classification' not in universe.molecule:
-        raise KeyErrror("Column 'classification' not in the molecule table, please classify")
-    if len(universe.molecule[universe.molecule['classification'].isnull()]) > 0:
-        warnings.warn("Unclassified molecules present in the molecule table, unclassificed .")
+    source_atoms, other_atoms, source_molecules, other_molecules, n = _slice_atoms_molecules(universe, sources, restrictions, how)
+    ordered_molecules, ordered_twos = _compute_neighbors_by_atom(universe, source_atoms, other_atoms, source_molecules)
+    unis = {nn: _build_universe(universe, ordered_molecules, ordered_twos, nn) for nn in n}
+
+
+
+
+
+
+def _slice_atoms_molecules(universe, sources, restrictions, n):
+    """
+    Initial check of the unvierse data and argument types and creation of atom
+    and molecule table slices.
+    """
+    if 'classification' not in universe.molecule.columns and any(len(source) > 3 for source in sources):
+        raise KeyErrror("Column 'classification' not in the molecule table, please classify molecules or select by symbols only.")
     if not isinstance(sources, list):
         sources = [sources]
     if not isinstance(restrictions, list) and restrictions is not None:
         restrictions = [restrictions]
-    # Determine the type of selection method
+    if not isinstance(n, list):
+        n = [n]
     symbols = universe.atom['symbol'].unique()
     classification = universe.molecule['classification'].unique()
-    src_all_in_symbols = all(source in symbols for source in sources)
-    src_all_in_classif = all(source in classification for source in sources)
-    src_any_in_symbols = any(source in symbols for source in sources)
-    src_any_in_classif = any(source in classification for source in sources)
-    if restrictions is not None:
-        rst_all_in_symbols = all(restriction in symbols for restriction in restrictions)
-        rst_all_in_classif = all(restriction in classification for restriction in restrictions)
-        rst_any_in_symbols = any(restriction in symbols for restriction in restrictions)
-        rst_any_in_classif = any(restriction in classification for restriction in restrictions)
-    # Based on the selection method get the correct sections of the molecule and atom tables
-    if src_all_in_symbols:
-        return get_nearest_molecules_source_by_symbols(universe, n, sources)
-    elif src_all_in_classif:
-        return get_nearest_molecules_source_by_classif(universe, n, sources)
+    if all(source in symbols for source in sources):
+        source_atoms = universe.atom[universe.atom['symbol'].isin(sources)]
+        mdx = source_atoms['molecule'].astype(np.int64)
+        source_molecules = universe.molecule[universe.molecule.index.isin(mdx)]
+    elif all(source in classification for source in sources):
+        source_molecules = universe.molecule[universe.molecule['classification'].isin(sources)]
+        source_atoms = universe.atom[universe.atom['molecule'].isin(source_molecules.index)]
     else:
-        raise NotImplementedError()
-    # The following loop performs the selection
-    mapper = u.atom['molecule']
-    groups = u.two.groupby('frame')
-other_molecules = np.empty((groups.ngroups, ), dtype=np.ndarray)
-twos = np.empty((groups.ngroups, ), dtype=np.ndarray)
-
-h = 0
-for frame, group in groups:
-    g = group[(group['atom0'].isin(source_atoms.index) & group['atom1'].isin(other_atoms.index)) |
-              (group['atom1'].isin(source_atoms.index) & group['atom0'].isin(other_atoms.index))]
-    srtd = g.sort_values('distance')
-    molecule0 = srtd['atom0'].map(mapper)
-    molecule1 = srtd['atom1'].map(mapper)
-    nn = len(molecule0)*2
-    molecules = np.empty((nn, ), dtype=np.int64)
-    index = np.empty((nn, ), dtype=np.int64)
-    molecules[0::2] = molecule0.values
-    molecules[1::2] = molecule1.values
-    index[0::2] = molecule0.index.values
-    index[1::2] = molecule1.index.values
-    molecules = pd.Series(molecules)
-    molecules.index = index
-    molecules = molecules.drop_duplicates(keep='first')
-    molecules = molecules[~molecules.isin(source_molecules.index)]
-    molecules = molecules.iloc[:n]
-    other_molecules[h] = molecules.values
-    twos[h] = molecules.index.values
-    h += 1
-other_molecules = np.concatenate(other_molecules)
-molecules = np.concatenate((other_molecules, source_molecules.index.values))
-twos = np.concatenate(twos)
-
-
-def _get_nearest_molecules_source_by_classif(universe, sources):
-    """
-    """
-    source_molecules = universe.molecule[universe.molecule['classification'].isin(sources)]
+        classif = [source for source in sources if source in classification]
+        syms = [source for source in sources if source in symbols]
+        source_molecules = universe.molecule[universe.molecule['classification'].isin(classif)]
+        source_atoms = universe.atom[universe.atom['molecule'].isin(source_molecules.index)]
+        source_atoms = source_atoms[source_atoms['symbol'].isin(syms)]
     other_molecules = universe.molecule[~universe.molecule.index.isin(source_molecules.index)]
-    source_atoms = u.atom[u.atom['molecule'].isin(source_molecules.index)]
-    other_atoms = u.atom[~u.atom.index.isin(source_atoms.index)]
-    return sources, n
+    other_atoms = universe.atom[~universe.atom.index.isin(source_atoms.index)]
+    if restrictions is not None:
+        if all(other in symbols for other in restrictions):
+            other_atoms = other_atoms[other_atoms['symbol'].isin(restrictions)]
+            mdx = other_atoms['molecule'].astype(np.int64)
+            other_molecules = other_molecules[other_molecules.index.isin(mdx)]
+        elif all(other in classification for other in restrictions):
+            other_molecules = other_molecules[other_molecules['classification'].isin(restrictions)]
+            other_atoms = other_atom[other_atoms['molecule'].isin(other_molecules.index)]
+        else:
+            classif = [other for other in restrictions if other in classification]
+            syms = [other for other in restrictions if other in symbols]
+            other_molecules = other_molecules[other_molecules['classification'].isin(classif)]
+            other_atoms = other_atoms[other_atoms['molecule'].isin(other_molecules.index)]
+            other_atoms = other_atoms[other_atoms['symbol'].isin(syms)]
+    return source_atoms, other_atoms, source_molecules, other_molecules, n
 
 
-def _get_nearest_molecules_source_by_symbols(universe, n, sources):
+def _compute_neighbors_by_atom(universe, source_atoms, other_atoms, source_molecules):
     """
     """
-    source_atoms = universe.atom[universe.atom['symbol'].isin(sources)]
-    other_atoms = universe.atom[~universe.atom.index.isin(source_atoms)]
-    source_molecules = universe.molecule[universe.molecule[sources[0]] > 0]
-    if len(sources) > 1:
-        for source in sources[1:]:
-            source_molecules = source_molecules[source_molecules[source] > 0]
-    other_molecules = universe.molecule[~universe.molecule.index.isin(source_molecules.index)]
-    return source_atoms, other_atoms, source_molecules, other_molecules
+    universe.atom_two._revert_categories()
+    two = universe.atom_two.ix[(universe.atom_two['atom0'].isin(source_atoms.index) &
+                                universe.atom_two['atom1'].isin(other_atoms.index)) |
+                               (universe.atom_two['atom1'].isin(source_atoms.index) &
+                                universe.atom_two['atom0'].isin(other_atoms.index)),
+                               ['atom0', 'atom1', 'distance', 'frame']].sort_values('distance')
+    mapper = universe.atom['molecule'].astype(np.int64)
+    groups = two['atom0'].map(mapper).to_frame()
+    groups.columns = ['molecule0']
+    groups['molecule1'] = two['atom1'].map(mapper)
+    groups['frame'] = two['frame']
+    universe.atom_two._set_categories()
+    groups = groups.groupby('frame')
+    n = groups.ngroups
+    ordered_molecules = np.empty((n, ), dtype=np.ndarray)
+    ordered_twos = np.empty((n, ), dtype=np.ndarray)
+    for i, (frame, group) in enumerate(groups):
+        series = group[['molecule0', 'molecule1']].stack().drop_duplicates().reset_index(level=1, drop=True)
+        series = series[~series.isin(source_molecules.index)]
+        ordered_molecules[i] = series.values
+        ordered_twos[i] = series.index.values
+    return ordered_molecules, ordered_twos
 
-def _index_slicer(universe, source_molecules, source_atoms, other_molecules, other_atoms):
+
+def _compute_neighbors_by_com(universe, source_molecules, other_molecules):
     """
     """
-    pass
+    raise NotImplementedError()
+
+
+def _build_universe(universe, ordered_molecules, ordered_twos, n):
+    """
+    """
+    # TODO CONVERT TO A GENERIC AND COMPLETE SLICER
+    molecules = np.concatenate([m[:n] for m in ordered_molecules.values])
+    twos = np.concatenate([t[:n] for t in ordered_twos.values])
+    atom = universe.atom[universe.atom['molecule'].isin(molecules)].copy().sort_index()
+    two = universe.atom_two[universe.atom_two['atom0'].isin(atom.index) &
+                            universe.atom_two['atom1'].isin(atom.index)].copy().sort_index()
+    projected_atom = universe.projected_atom.ix[two.index.values].copy().sort_index()
+    visual_atom = universe.visual_atom.ix[atom.index].copy().sort_index()
+    molecule = universe.molecule.ix[molecules].copy().sort_index()
+    frame = universe.frame.copy().sort_index()
+    uni = Universe(atom=atom, atom_two=two, molecule=molecule, frame=frame,
+                   visual_atom=visual_atom, projected_atom=projected_atom)
+    return uni

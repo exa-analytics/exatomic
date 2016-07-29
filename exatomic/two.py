@@ -2,13 +2,14 @@
 # Copyright (c) 2015-2016, Exa Analytics Development Team
 # Distributed under the terms of the Apache License 2.0
 """
-Two Body Properties Table
+Two Body Properties
 ##################################
-This module provides functions for computing interatomic distances and bonds
-(i.e. two body properties). This computation depends on the type of boundary
-conditions used; free or periodic boundaries. The following table provides a
-guide for the types of data found in the two types of two body tables provided
-by this module.
+This module provides functions for computing two body properties. A body can be,
+for example, an atom (such that two body properties correspond to inter-atomic
+distances - bonds), or a molecule (such that two body properties correspond to
+distances between molecule centers of mass). The following table provides a
+guide for the types of data found in two body tables provided by this module
+(specifically for atom two body properties).
 
 +-------------------+----------+---------------------------------------------+
 | Column            | Type     | Description                                 |
@@ -32,16 +33,12 @@ from traitlets import Unicode
 from exa.numerical import DataFrame, SparseDataFrame
 from exa.relational.isotope import symbol_to_radius
 from exa.math.vector.cartesian import pdist_euc_dxyz_idx
-from exatomic.math.distance import periodic_pdist_euc_dxyz_idx
+from exatomic.algorithms.distance import periodic_pdist_euc_dxyz_idx
 
 
-class BaseTwo(DataFrame):
+class AtomTwo(DataFrame):
     """
-    Base class for two body properties.
-
-    See Also:
-        Two body data are store depending on the boundary conditions of the
-        system: :class:`~exatomic.two.FreeTwo` or :class:`~exatomic.two.PeriodicTwo`.
+    Interatomic distances generated from the :class:`~exatomic.atom.Atom` table.
     """
     _index = 'two'
     _groupby = ('frame', np.int64)
@@ -50,6 +47,23 @@ class BaseTwo(DataFrame):
 
     def compute_bonds(self, symbols, mapper=None, bond_extra=0.45):
         """
+        Update bonds based on radii and an extra factor (in atomic units).
+
+        .. code-block:: Python
+
+            symbols = universe.atom['symbol']
+            mapper = {'C': 2.0}    # atomic units - Bohr
+            bond_extra = 0.2       # ditto
+            universe.two.compute_bonds(symbols, mapper, bond_extra)  # updates universe.two['bond']
+
+        Args:
+            symbols: Series of symbols from the atom table (e.g. uni.atom['symbol'])
+            mapper (dict): Dictionary of symbol, radii pairs (see note below)
+            bond_extra (float): Extra additive factor to include when computing bonds
+
+        Note:
+            If the mapper is none, or is missing data, the computation will use
+            default covalent radii available in :class:`~exa.relational.isotope`.
         """
         if mapper is None:
             mapper = symbol_to_radius()
@@ -62,9 +76,8 @@ class BaseTwo(DataFrame):
         mapper = symbols.astype(str).map(mapper)
         radius0 = self['atom0'].map(mapper)
         radius1 = self['atom1'].map(mapper)
-        self['mbl'] = radius0 + radius1 + bond_extra
-        self['bond'] = self['distance'] <= self['mbl']
-        del self['mbl']
+        mbl = radius0 + radius1 + bond_extra
+        self['bond'] = self['distance'] <= mbl
 
     def _bond_traits(self, label_mapper):
         """
@@ -92,32 +105,27 @@ class BaseTwo(DataFrame):
         return {'two_bond0': b0, 'two_bond1': b1}
 
 
-class FreeTwo(BaseTwo):
+class MoleculeTwo(DataFrame):
     """
-    Free boundary condition two body properties table.
-    """
-    pass
-
-
-class PeriodicTwo(BaseTwo):
-    """
-    Periodic boundary condition two body properties table.
     """
     pass
 
 
-def compute_two(universe, bond_extra=0.45, mapper=None):
+def compute_atom_two(universe, mapper=None, bond_extra=0.45):
     """
-    Top level function for computing two body properties.
+    Compute interatomic distances and determine bonds.
+
+    Args:
+        universe: An atomic universe
+        mapper (dict): Dictionary of symbol, radii pairs (see note below)
+        bond_extra (float): Extra additive factor to include when computing bonds
     """
-    # This function will decide what type of two body calculation to perform
-    # depending on the universe passed, resources available, and parameters set.
     if universe.frame.is_periodic():
-        return compute_periodic_two_si(universe, bond_extra, mapper)
-    return compute_free_two_si(universe, bond_extra, mapper)
+        return compute_periodic_two_si(universe, mapper, bond_extra)
+    return compute_free_two_si(universe, mapper, bond_extra)
 
 
-def compute_free_two_si(universe, bond_extra=0.45, mapper=None):
+def compute_free_two_si(universe, mapper=None, bond_extra=0.45):
     """
     Serial, in memory computation of two body properties for free boundary
     condition systems.
@@ -153,12 +161,12 @@ def compute_free_two_si(universe, bond_extra=0.45, mapper=None):
     fdx = pd.Series(fdx, dtype='category')
     two = pd.DataFrame.from_dict({'dx': dx, 'dy': dy, 'dz': dz, 'distance': distance,
                                   'atom0': atom0, 'atom1': atom1, 'frame': fdx})
-    two = FreeTwo(two)
+    two = AtomTwo(two)
     two.compute_bonds(universe.atom['symbol'], mapper=mapper)
     return two
 
 
-def compute_periodic_two_si(universe, bond_extra=0.45, mapper=None):
+def compute_periodic_two_si(universe, mapper=None, bond_extra=0.45):
     """
     Compute periodic two body properties.
     """
@@ -212,7 +220,7 @@ def compute_periodic_two_si(universe, bond_extra=0.45, mapper=None):
     two = pd.DataFrame.from_dict({'dx':dx, 'dy': dy, 'dz': dz, 'distance': distance,
                                   'atom0': atom0, 'atom1': atom1, 'frame': fdx})
     patom = pd.DataFrame.from_dict({'x': px, 'y': py, 'z': pz})
-    two = PeriodicTwo(two)
+    two = AtomTwo(two)
     two.compute_bonds(universe.atom['symbol'], mapper=mapper)
     return two, patom
 
@@ -234,6 +242,15 @@ def compute_bond_count(universe):
     """
     stack = universe.two.ix[universe.two['bond'] == True, ['atom0', 'atom1']].stack()
     return stack.value_counts().sort_index()
+
+
+def compute_molecule_two(universe):
+    """
+    """
+    raise NotImplementedError()
+
+
+
 
 
 #def bond_summary_by_label_pairs(universe, *labels, length='A', stdev=False,

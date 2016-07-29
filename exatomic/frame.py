@@ -13,7 +13,6 @@ import numpy as np
 from traitlets import Float
 from exa.numerical import DataFrame
 from exa.math.vector.cartesian import magnitude_xyz
-from exatomic.error import PeriodicUniverseError
 
 
 class Frame(DataFrame):

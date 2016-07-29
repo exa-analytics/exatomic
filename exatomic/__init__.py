@@ -31,4 +31,4 @@ from exatomic.container import Universe
 from exatomic.editor import Editor
 from exatomic.filetypes import XYZ, Cube
 
-from exatomic import test
+from exatomic import algorithms, test

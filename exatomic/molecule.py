@@ -8,6 +8,7 @@ Molecule Table
 import numpy as np
 import pandas as pd
 import networkx as nx
+import warnings
 from networkx.algorithms.components import connected_components
 from exa.numerical import DataFrame
 from exa.relational.isotope import symbol_to_element_mass
@@ -64,6 +65,8 @@ class Molecule(DataFrame):
             else:
                 raise KeyError('No records found for {}, with identifier {}.'.format(classification, identifier))
         self['classification'] = self['classification'].astype('category')
+        if len(self[self['classification'].isnull()]) > 0:
+            warnings.warn("Unclassified molecules remaining...")
 
     def get_atom_count(self):
         """
@@ -106,7 +109,7 @@ def compute_molecule(universe):
         table in place!
     """
     nodes = universe.atom.index.values
-    bonded = universe.two.ix[universe.two['bond'] == True, ['atom0', 'atom1']]
+    bonded = universe.atom_two.ix[universe.atom_two['bond'] == True, ['atom0', 'atom1']]
     edges = zip(bonded['atom0'].astype(np.int64), bonded['atom1'].astype(np.int64))
     g = nx.Graph()
     g.add_nodes_from(nodes)
@@ -144,23 +147,22 @@ def compute_molecule_count(universe):
     return molecule_count
 
 
-#def compute_molecule_com(universe):
-#    """
-#    Compute molecules' center of mass.
-#    """
-#    universe.atom['mass'] = universe.atom['symbol'].map(symbol_to_element_mass)
-#    universe.atom['xm'] = universe.visual_atom['x'].mul(universe.atom['mass'])
-#    universe.atom['ym'] = universe.visual_atom['y'].mul(universe.atom['mass'])
-#    universe.atom['zm'] = universe.visual_atom['z'].mul(universe.atom['mass'])
-#    molecules = universe.atom.groupby('molecule')
-#    molecule = (molecules['xm'].sum() / universe.molecule['mass']).to_frame()
-#    molecule.index.names = ['molecule']
-#    molecule.columns = ['cx']
-#    molecule['cy'] = molecules['ym'].sum() / universe.molecule['mass']
-#    molecule['cz'] = molecules['zm'].sum() / universe.molecule['mass']
-#    del universe.atom['xm']
-#    del universe.atom['ym']
-#    del universe.atom['zm']
-#    del universe.atom['mass']
-#    return molecule
-#
+def compute_com(universe):
+    """
+    Compute molecules' centers of mass.
+    """
+    if 'molecule' not in universe.atom.columns:
+        universe.compute_molecule()
+    xyz = universe.atom[['x', 'y', 'z', 'molecule']].copy()
+    xyz['mass'] = universe.atom.get_element_masses()
+    xyz.update(u.visual_atom)
+    xyz['xm'] = xyz['x'].mul(xyz['mass'])
+    xyz['ym'] = xyz['y'].mul(xyz['mass'])
+    xyz['zm'] = xyz['z'].mul(xyz['mass'])
+    xyz['rm'] = xyz['xm'].add(xyz['ym']).add(xyz['zm'])
+    grps = xyz.groupby('molecule')
+    sums = grps.sum()
+    cx = sums['xm'].div(sums['mass'])
+    cy = sums['ym'].div(sums['mass'])
+    cz = sums['zm'].div(sums['mass'])
+    return cx, cy, cz

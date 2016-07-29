@@ -14,13 +14,12 @@ from exa.numerical import DataFrame, SparseDataFrame, Series
 from exa.relational.isotope import (symbol_to_color, symbol_to_radius,
                                    symbol_to_element_mass)
 from exatomic.error import PeriodicUniverseError
-from exatomic.math.distance import minimal_image_counts
+from exatomic.algorithms.distance import minimal_image_counts
 
 
-class BaseAtom(DataFrame):
+class Atom(DataFrame):
     """
-    Base atom dataframe; sets some default precision (for traits creation and
-    visualization), required columns, and categories.
+    The atom dataframe.
 
     +-------------------+----------+-------------------------------------------+
     | Column            | Type     | Description                               |
@@ -52,13 +51,6 @@ class BaseAtom(DataFrame):
     _index = 'atom'
     _groupby = ('frame', np.int64)
     _categories = {'symbol': str, 'set': np.int64, 'molecule': np.int64}
-
-
-class Atom(BaseAtom):
-    """
-    This table contains the absolute coordinates (regardless of boundary
-    conditions) of atomic nuclei.
-    """
     _traits = ['x', 'y', 'z', 'set']
     _columns = ['x', 'y', 'z', 'symbol']
 
@@ -157,7 +149,7 @@ class VisualAtom(SparseDataFrame):
         if universe.frame.is_periodic():
             atom = universe.atom[['x', 'y', 'z']].copy()
             atom.update(universe.unit_atom)
-            bonded = universe.two.ix[universe.two['bond'] == True, 'atom1'].astype(np.int64)
+            bonded = universe.atom_two.ix[universe.atom_two['bond'] == True, 'atom1'].astype(np.int64)
             prjd = universe.projected_atom.ix[bonded.index].to_dense()
             prjd['atom'] = bonded
             prjd.drop_duplicates('atom', inplace=True)
