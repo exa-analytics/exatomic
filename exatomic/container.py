@@ -138,6 +138,20 @@ class Universe(Container, metaclass=UniverseTypedMeta):
             traits.update(self.two._bond_traits(mapper))
         return traits
 
+    @classmethod
+    def from_small_molecule_data(cls, center=None, ligand=None, distance=None, geometry=None,
+                                 offset=None, plane=None, axis=None, domains=None, unit='A'):
+        '''
+        Build a universe from small molecule data
+
+        See
+            exatomic.algorithms.geometry.make_small_molecule
+        '''
+        return cls(atom=Atom.from_small_molecule_data(center=center, ligand=ligand,
+                                                      distance=distance, geometry=geometry,
+                                                      offset=offset, plane=plane, axis=axis,
+                                                      domains=domains, unit=unit))
+
     def __len__(self):
         return len(self.frame)
 

@@ -13,8 +13,10 @@ from traitlets import Dict, Unicode
 from exa.numerical import DataFrame, SparseDataFrame
 from exa.relational.isotope import (symbol_to_color, symbol_to_radius,
                                    symbol_to_element_mass)
+from exatomic import Length
 from exatomic.error import PeriodicUniverseError
 from exatomic.math.distance import minimal_image_counts
+from exatomic.algorithms.geometry import make_small_molecule
 
 
 class BaseAtom(DataFrame):
@@ -111,19 +113,35 @@ class Atom(BaseAtom):
             atom_set = Unicode(atom_set).tag(sync=True)
         except KeyError:
             atom_set = Unicode().tag(sync=True)
-        kwargs['atom_colors'] = Dict({i: colors[v] for i, v in symmap.items()}).tag(sync=True)
+        kwargs['atom_colors'] = colors
         return kwargs
-        #if 'set' in self:
 
-        #try:
-        #    atom_set = grps.apply(lambda g: g['set'].values).to_json(orient='values')
-        #    atom_set = Unicode(atom_set).tag(sync=True)
-        #except KeyError:
-        #    atom_set = Unicode().tag(sync=True)
-        # Note that position traits (atom_x, atom_y, atom_z) are created automatically
-        # since we have defined _traits = ['x', 'y', 'z'] above.
-        #return {'atom_symbols': symbols, 'atom_radii': radii, 'atom_colors': colors,
-        #        'atom_set': atom_set}
+
+    @classmethod
+    def from_small_molecule_data(cls, center=None, ligand=None, distance=None, geometry=None,
+                                 offset=None, plane=None, axis=None, domains=None, unit='A'):
+        '''
+        A minimal molecule builder for simple one-center, homogeneous ligand
+        molecules of various general chemistry molecular geometries. If domains
+        is not specified and geometry is ambiguous (like 'bent'),
+        it just guesses the simplest geometry (smallest number of domains).
+
+        Args
+            center (str): atomic symbol of central atom
+            ligand (str): atomic symbol of ligand atoms
+            distance (float): distance between central atom and any ligand
+            geometry (str): molecular geometry
+            domains (int): number of electronic domains
+            offset (np.array): 3-array of position of central atom
+            plane (str): cartesian plane of molecule (eg. for 'square_planar')
+            axis (str): cartesian axis of molecule (eg. for 'linear')
+
+        Returns
+            exatomic.atom.Atom: Atom table of small molecule
+        '''
+        return cls(make_small_molecule(center=center, ligand=ligand, distance=distance,
+                                       geometry=geometry, offset=offset, plane=plane,
+                                       axis=axis, domains=domains, unit=unit))
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -164,6 +182,7 @@ class ProjectedAtom(SparseDataFrame):
     _indices = ['two']
     _columns = ['x', 'y', 'z']
 
+#class VisualA)
 
 #class VisualAtom(SparseDataFrame):
 #    '''

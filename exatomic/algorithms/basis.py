@@ -18,6 +18,7 @@ x, y, z = sympy.symbols('x y z')
 lorder = ['s', 'p', 'd', 'f', 'g', 'h', 'i', 'k', 'l', 'm']
 lmap = {'s': 0, 'p': 1, 'd': 2, 'f': 3, 'g': 4, 'h': 5, 'i': 6, 'k': 7, 'l': 8,
         'm': 9, 'px': 1, 'py': 1, 'pz': 1}
+rlmap = {value: key for key, value in lmap.items() if len(key) == 1}
 spher_ml_count = {'s': 1, 'p': 3, 'd': 5, 'f': 7, 'g': 9, 'h': 11, 'i': 13, 'k': 15,
                   'l': 17, 'm': 19}
 spher_lml_count = {lorder.index(key): value for key, value in spher_ml_count.items()}

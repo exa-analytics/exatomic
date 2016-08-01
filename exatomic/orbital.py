@@ -87,16 +87,16 @@ class MOMatrix(DataFrame):
     # TODO :: add spin as a column and make it the first groupby?
     _columns = ['coefficient', 'basis_function', 'orbital']
     _indices = ['momatrix']
-    _traits = ['orbital']
+    #_traits = ['orbital']
     _groupbys = ['frame']
     _categories = {}
 
-    def _custom_traits(self):
-        coefs = self.groupby('frame').apply(lambda x: x.pivot('basis_function', 'orbital', 'coefficient').fillna(value=0).values)
-        coefs = Unicode(coefs.to_json(orient='values')).tag(sync=True)
-        #coefs = Unicode('[' + sq.groupby(by=sq.columns, axis=1).apply(
-        #            lambda x: x[x.columns[0]].values).to_json(orient='values') + ']').tag(sync=True)
-        return {'momatrix_coefficient': coefs}
+    #def _custom_traits(self):
+    #    coefs = self.groupby('frame').apply(lambda x: x.pivot('basis_function', 'orbital', 'coefficient').fillna(value=0).values)
+    #    coefs = Unicode(coefs.to_json(orient='values')).tag(sync=True)
+    #    #coefs = Unicode('[' + sq.groupby(by=sq.columns, axis=1).apply(
+    #    #            lambda x: x[x.columns[0]].values).to_json(orient='values') + ']').tag(sync=True)
+    #    return {'momatrix_coefficient': coefs}
 
     def square(self, frame=0):
        return self[self['frame'] == frame].pivot('basis_function', 'orbital', 'coefficient').fillna(value=0)
@@ -345,5 +345,3 @@ def add_cubic_field_from_mo(universe, rmin, rmax, nr, vector=None):
                                    'ox': ox, 'oy': oy, 'oz': oz, 'frame': [0] * n})#frame})
     values = [Series(v) for v in values.tolist()]
     return AtomicField(data, field_values=values)
-
-
