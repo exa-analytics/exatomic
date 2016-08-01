@@ -30,7 +30,7 @@ from collections import OrderedDict
 
 
 class Orbital(DataFrame):
-    '''
+    """
     +-------------------+----------+-------------------------------------------+
     | Column            | Type     | Description                               |
     +===================+==========+===========================================+
@@ -55,15 +55,15 @@ class Orbital(DataFrame):
 
     Note:
         Spin zero means alpha spin or unknown and spin one means beta spin.
-    '''
+    """
     _columns = ['frame', 'energy', 'x', 'y', 'z', 'occupation', 'spin', 'vector']
-    _indices = ['orbital']
-    _groupbys = ['frame']
-    _categories = {'frame': np.int64, 'spin': np.int64}
+    _index = 'orbital'
+    _groupby = ('frame', np.int64)
+    _categories = {'spin': np.int64}
 
 
 class MOMatrix(DataFrame):
-    '''
+    """
     The MOMatrix is the result of solving a quantum mechanical eigenvalue
     problem in a finite basis set. Individual columns are eigenfunctions
     of the Fock matrix with eigenvalues corresponding to orbital energies.
@@ -83,7 +83,7 @@ class MOMatrix(DataFrame):
     +-------------------+----------+-------------------------------------------+
     | frame             | category | non-unique integer (req.)                 |
     +-------------------+----------+-------------------------------------------+
-    '''
+    """
     # TODO :: add spin as a column and make it the first groupby?
     _columns = ['coefficient', 'basis_function', 'orbital']
     _indices = ['momatrix']
@@ -103,7 +103,7 @@ class MOMatrix(DataFrame):
 
 
 class DensityMatrix(DataFrame):
-    '''
+    """
     The density matrix in a contracted basis set. As it is
     square symmetric, only n_basis_functions * (n_basis_functions + 1) / 2
     rows are stored.
@@ -119,10 +119,10 @@ class DensityMatrix(DataFrame):
     +-------------------+----------+-------------------------------------------+
     | frame             | category | non-unique integer (req.)                 |
     +-------------------+----------+-------------------------------------------+
-    '''
+    """
     _columns = ['chi1', 'chi2', 'coefficient']
-    _groupbys = ['frame']
-    _indices = ['index']
+    _groupby = ('frame', np.int64)
+    _index = 'index'
 
     def square(self):
         nbas = np.round(np.roots([1, 1, -2 * self.shape[0]])[1])
@@ -134,7 +134,7 @@ class DensityMatrix(DataFrame):
 
     @classmethod
     def from_momatrix(cls, momatrix, occvec):
-        '''
+        """
         A density matrix can be constructed from an MOMatrix by:
         .. math::
 
@@ -147,7 +147,7 @@ class DensityMatrix(DataFrame):
 
         Returns:
             ret (:class:`~exatomic.orbital.DensityMatrix`): The density matrix
-        '''
+        """
         # TODO :: jit these functions or call some jitted functions
         #         the double hit on doubly-nested for loops can be optimized.
         square = momatrix.square()
@@ -171,7 +171,7 @@ class DensityMatrix(DataFrame):
 
 
 def _voluminate_gtfs(universe, xx, yy, zz, kind='spherical'):
-    '''
+    """
     Generate symbolic ordered spherical (in cartesian coordinates)
     Gaussian type function basis for the given universe.
 
@@ -184,7 +184,7 @@ def _voluminate_gtfs(universe, xx, yy, zz, kind='spherical'):
 
     Returns:
         ordered_gtf_basis (list): list of funcs
-    '''
+    """
     lmax = universe.basis_set['l'].max()
     universe.compute_cartesian_gtf_order(universe._cartesian_ordering_function)
     universe.compute_spherical_gtf_order(universe._spherical_ordering_function)
@@ -256,7 +256,7 @@ def _voluminate_gtfs(universe, xx, yy, zz, kind='spherical'):
 
 
 def add_cubic_field_from_mo(universe, rmin, rmax, nr, vector=None):
-    '''
+    """
     Create a cubic field from a given vector (molecular orbital).
 
     Args:
@@ -268,7 +268,7 @@ def add_cubic_field_from_mo(universe, rmin, rmax, nr, vector=None):
 
     Returns:
         fields (list): List of cubic fields corresponding to vectors
-    '''
+    """
     vectors = universe.momatrix.groupby('orbital')
     if isinstance(vector, int):
         vector = [vector]

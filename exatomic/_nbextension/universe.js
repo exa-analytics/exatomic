@@ -10,25 +10,17 @@ Universe View
 
 require.config({
     shim: {
-        'nbextensions/exa/container': {
-            exports: 'base'
-        },
-
-        'nbextensions/exa/exatomic/app': {
-            exports: 'UniverseApp'
-        },
-
-        'nbextensions/exa/exatomic/test': {
-            exports: 'UniverseTestApp'
-        },
+        "nbextensions/exa/container": {exports: 'base'},
+        "nbextensions/exa/exatomic/app": {exports: 'UniverseApp'},
+        "nbextensions/exa/exatomic/test": {exports: 'UniverseTestApp'}
     },
 });
 
 
 define([
-    'nbextensions/exa/container',
-    'nbextensions/exa/exatomic/test',
-    'nbextensions/exa/exatomic/app'
+    "nbextensions/exa/container",
+    "nbextensions/exa/exatomic/test",
+    "nbextensions/exa/exatomic/app"
 ], function(base, UniverseTestApp, UniverseApp) {
     class UniverseView extends base.ContainerView {
         /*"""
@@ -36,6 +28,7 @@ define([
         ================
         */
         init() {
+            console.log('init1');
             this.init_listeners();
             this.if_empty();
         };
@@ -48,7 +41,7 @@ define([
             */
             var check = this.get_trait('test');
             if (check === true) {
-                console.log('Empty universe, displaying test interface!');
+                console.log("Empty universe, displaying test interface!");
                 this.app = new UniverseTestApp(this);
             } else {
                 this.app = new UniverseApp(this);
