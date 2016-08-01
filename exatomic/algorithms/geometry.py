@@ -13,10 +13,10 @@ columns = ['x', 'y', 'z', 'symbol', 'frame', 'label']
 
 def make_small_molecule(center=None, ligand=None, distance=None, geometry=None,
                         offset=None, plane=None, axis=None, domains=None, unit='A'):
-    '''
+    """
     A minimal molecule builder for simple one-center, homogeneous ligand
-    molecules of various general chemistry molecular geometries. If domains
-    is not specified and geometry is ambiguous (like 'bent'),
+    molecules of various general chemistry molecular geometries. If `domains'
+    is not specified and geometry is ambiguous (like `bent'),
     it just guesses the simplest geometry (smallest number of domains).
 
     Args
@@ -31,7 +31,7 @@ def make_small_molecule(center=None, ligand=None, distance=None, geometry=None,
 
     Returns
         exatomic.atom.Atom: Atom table of small molecule
-    '''
+    """
     if center is None or ligand is None or distance is None or geometry is None:
         raise NotImplementedError('must supply center, ligand, distance and geometry')
     distance *= Length[unit, 'au']

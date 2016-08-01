@@ -135,7 +135,7 @@ class GaussianBasisSet(BasisSet):
     _index = 'primitive'
     _traits = ['shell_function']
     _precision = {'alpha': 8, 'd': 8}
-    _categories = {'set': np.int64, 'l': np.int64, 'shell_function': np.int64}
+    _categories = {'set': np.int64, 'L': np.int64, 'shell_function': np.int64}
 
 #    def _custom_traits(self):
 #        g = self.grpd

@@ -56,10 +56,17 @@ class Orbital(DataFrame):
     Note:
         Spin zero means alpha spin or unknown and spin one means beta spin.
     """
-    _columns = ['frame', 'energy', 'x', 'y', 'z', 'occupation', 'spin', 'vector']
+    _columns = ['frame', 'energy', 'occupation', 'spin', 'vector']
     _index = 'orbital'
     _groupby = ('frame', np.int64)
     _categories = {'spin': np.int64}
+
+    def get_orbital(self, orb=-1, spin=0, index=None):
+        if index is None:
+            return self[(self['occupation'] > 0) & (self['spin'] == spin)].iloc[orb]
+        else:
+            return self.iloc[index]
+
 
 
 class MOMatrix(DataFrame):

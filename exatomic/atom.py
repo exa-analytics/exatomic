@@ -15,6 +15,7 @@ from exa.relational.isotope import (symbol_to_color, symbol_to_radius,
                                    symbol_to_element_mass)
 from exatomic.error import PeriodicUniverseError
 from exatomic.algorithms.distance import minimal_image_counts
+from exatomic.algorithms.geometry import make_small_molecule
 
 
 class Atom(DataFrame):

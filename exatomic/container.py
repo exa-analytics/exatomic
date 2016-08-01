@@ -41,7 +41,6 @@ class Meta(TypedMeta):
     frame = Frame
     atom_two = AtomTwo
     unit_atom = UnitAtom
-    periodic_two = PeriodicTwo
     projected_atom = ProjectedAtom
     visual_atom = VisualAtom
     molecule = Molecule
