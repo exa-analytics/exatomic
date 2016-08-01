@@ -1,12 +1,12 @@
  #-*- coding: utf-8 -*-
 # Copyright (c) 2015-2016, Exa Analytics Development Team
 # Distributed under the terms of the Apache License 2.0
-'''
+"""
 Cube File Support
 ##########################
 Cube files contain an atomic geometry and scalar field values corresponding to
 a physical quantity.
-'''
+"""
 import numpy as np
 import pandas as pd
 from io import StringIO
@@ -18,7 +18,7 @@ from exatomic.field import AtomicField
 
 
 class Cube(Editor):
-    '''
+    """
     An editor for handling cube files.
 
     .. code-block:: python
@@ -32,11 +32,11 @@ class Cube(Editor):
 
     Warning:
         Be sure your cube is in atomic units.
-    '''
+    """
     def parse_atom(self):
-        '''
+        """
         Parse the :class:`~exatomic.atom.Atom` object from the cube file in place.
-        '''
+        """
         df = pd.read_csv(StringIO('\n'.join(self._lines[6:self._volume_data_start])), delim_whitespace=True,
                          header=None, names=('Z', 'nelectron', 'x', 'y', 'z'))
         del df['nelectron']
@@ -48,7 +48,7 @@ class Cube(Editor):
         self._atom = Atom(df)
 
     def parse_field(self):
-        '''
+        """
         Parse the scalar field into a trait aware object.
 
         Note:
@@ -56,7 +56,7 @@ class Cube(Editor):
             field data (i.e. information about the discretization and shape of
             the field's spatial points) as well as the field values (at each of
             those points in space).
-        '''
+        """
         data = pd.read_csv(StringIO('\n'.join(self._lines[self._volume_data_start:])),
                            delim_whitespace=True, header=None).values.ravel()
         df = pd.Series({'ox': self._ox, 'oy': self._oy, 'oz': self._oz,
@@ -88,10 +88,10 @@ class Cube(Editor):
         self._field = AtomicField(df, field_values=fields)
 
     def _init(self):
-        '''
+        """
         Perform some preliminary parsing so that future parsing of atoms, etc.
         is easy. Also parse out metadata (comments).
-        '''
+        """
         typs = [int, float, float, float]
         nat, ox, oy, oz = [typ(i) for typ, i in zip(typs, self[2].split())]
         nx, dxi, dxj, dxk = [typ(i) for typ, i in zip(typs, self[3].split())]
@@ -124,7 +124,7 @@ class Cube(Editor):
 
 
 def write_cube(path, universe, frame=None, field=None):
-    '''
+    """
     Generate a cube file or files from a given unvierse.
 
     Only the path and universe are required; if no frame or field indices are
@@ -146,7 +146,7 @@ def write_cube(path, universe, frame=None, field=None):
     Note:
         "Indices" in the above description always refer to dataframe index.
         Also always writes in atomic units.
-    '''
+    """
     if isinstance(frame, list) and isinstance(field, list):
         if isinstance(field[0], list):
             raise NotImplementedError('frame=[], field=[[]]')
@@ -161,9 +161,9 @@ def write_cube(path, universe, frame=None, field=None):
         raise TypeError('Unsupported argument types ({}, {}), see docstring.'.format(type(frame), type(field)))
 
 def _write_first_field_of_each_frame(path, universe):
-    '''
+    """
     Writes the first field of every frame of the universe in a given directory.
-    '''
+    """
     raise NotImplementedError('Started but not completed')
     if not os.path.isdir(path):
         raise NotADirectoryError('Path {}, is not a directory or does not exist!'.format(path))

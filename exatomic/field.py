@@ -1,16 +1,20 @@
 # -*- coding: utf-8 -*-
 # Copyright (c) 2015-2016, Exa Analytics Development Team
 # Distributed under the terms of the Apache License 2.0
-'''
-Field
-###########
-'''
+"""
+Atomic Field
+#####################
+Essentially a :class:`~exa.numerical.Field3D` used for storing cube file data
+(see :mod:`~exatomic.filetypes.cube`). Cube files values are written in a
+csv-like structure with the outer loop going over the x dimension, the middle
+loop going over the y dimension, and the inner loop going over the z dimension.
+"""
 import numpy as np
 from exa.numerical import Field, Series
 
 
 class AtomicField(Field):
-    '''
+    """
     Class for storing exatomic cube data (scalar field of 3D space). Note that
     this class follows the pattern established by the `cube file format`_.
 
@@ -18,17 +22,17 @@ class AtomicField(Field):
         Supports any shape "cube".
 
     .. _cube file format: http://paulbourke.net/dataformats/cube/
-    '''
-    _precision = 6
-    _groupbys = ['frame']
-    _categories = {'frame': np.int64, 'label': str, 'field_type': str}
+    """
+    _values_precision = 6
+    _groupby = ('frame', np.int64)
+    _categories = {'label': str, 'field_type': str}
     _traits = ['nx', 'ny', 'nz', 'ox', 'oy', 'oz', 'dxi', 'dxj', 'dxk',
                'dyi', 'dyj', 'dyk', 'dzi', 'dzj', 'dzk']
     _columns = ['nx', 'ny', 'nz', 'ox', 'oy', 'oz', 'dxi', 'dxj', 'dxk',
-                'dyi', 'dyj', 'dyk', 'dzi', 'dzj', 'dzk', 'frame', 'label']
+                'dyi', 'dyj', 'dyk', 'dzi', 'dzj', 'dzk', 'frame']
 
     def compute_dv(self):
-        '''
+        """
         Compute the volume element for each field.
 
         Volume of a parallelpiped whose dimensions are :math:`\mathbf{a}`,
@@ -37,11 +41,11 @@ class AtomicField(Field):
         .. math::
 
             v = \\left|\\mathbf{a}\\cdot\\left(\\mathbf{b}\\times\\mathbf{c}\\right)\\right|
-        '''
+        """
         def _dv(row):
-            '''
+            """
             Helper function that performs the operation above.
-            '''
+            """
             a = row[['dxi', 'dxj', 'dxk']].values.astype(np.float64)
             b = row[['dyi', 'dyj', 'dyk']].values.astype(np.float64)
             c = row[['dzi', 'dzj', 'dzk']].values.astype(np.float64)
@@ -49,7 +53,7 @@ class AtomicField(Field):
         self['dv'] = self.apply(_dv, axis=1)
 
     def integration(self):
-        '''
+        """
         Check that field values are normalized.
 
         Computes the integral of the field values. For normalized fields (e.g
@@ -58,7 +62,7 @@ class AtomicField(Field):
         .. math::
 
             \\int\\left|\\phi_{i}\\right|^{2}dV \equiv 1
-        '''
+        """
         if 'dv' not in self:
             self.compute_dv()
         self['sums'] = [np.sum(fv**2) for fv in self.field_values]
@@ -67,7 +71,7 @@ class AtomicField(Field):
         return norm
 
     def rotate(self, a, b, angle):
-        '''
+        """
         Unitary transformation of the discrete field.
 
         .. code-block:: Python
@@ -81,7 +85,7 @@ class AtomicField(Field):
 
         Return:
             newfield (:class:`~exatomic.field.AtomicField`): Rotated field values and data
-        '''
+        """
         d0 = self.ix[[a]]
         f0 = self.field_values[a]
         f1 = self.field_values[b]

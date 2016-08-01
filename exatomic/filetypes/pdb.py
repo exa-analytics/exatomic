@@ -1,10 +1,10 @@
 # -*- coding: utf-8 -*-
 # Copyright (c) 2015-2016, Exa Analytics Development Team
 # Distributed under the terms of the Apache License 2.0
-#'''
+#"""
 #PDB File I/O
 #=======================
-#'''
+#"""
 #import os
 #import sys
 #import numpy as np
@@ -35,7 +35,7 @@
 #
 #
 #def read_pdb(path, metadata={}, **kwargs):
-#    '''
+#    """
 #    Reads a PDB file
 #
 #    Args
@@ -48,7 +48,7 @@
 #
 #    See Also
 #        :class:`exatomic.universe.Universe`
-#    '''
+#    """
 #    flins = _path_handler(path)
 #    rds = _pre_process_pdb(flins)
 #    frdx, odx, ptls = _expand(
@@ -137,7 +137,7 @@
 #
 #
 #def write_pdb(pdbuni, path):
-#    '''
+#    """
 #    Writes a PDB file if it was parsed with :method:`exatomic.read_csv`
 #
 #    Args
@@ -146,7 +146,7 @@
 #
 #    Return
 #        None - writes to file
-#    '''
+#    """
 #    with open(path, 'w') as f:
 #        for line in pdbuni['metadata']['text']:
 #            f.write(line + '\n')

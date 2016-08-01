@@ -12,40 +12,23 @@ requests the HTML representation of a universe data container.
 
 require.config({
     shim: {
-        'nbextensions/exa/gui': {
-            exports: 'ContainerGUI'
-        },
-
-        'nbextensions/exa/app3d': {
-            exports: 'App3D'
-        },
-
-        'nbextensions/exa/utility': {
-            exports: 'utility'
-        },
-
-        'nbextensions/exa/num': {
-            exports: 'num'
-        },
-
-        'nbextensions/exa/exatomic/gaussian': {
-            exports: 'gaussian'
-        },
-
-        'nbextensions/exa/exatomic/field': {
-            exports: 'AtomicField'
-        }
+        "nbextensions/exa/gui": {exports: 'ContainerGUI'},
+        "nbextensions/exa/app3d": {exports: 'App3D'},
+        "nbextensions/exa/utility": {exports: 'utility'},
+        "nbextensions/exa/num": {exports: 'num'},
+        "nbextensions/exa/exatomic/gaussian": {exports: 'gaussian'},
+        "nbextensions/exa/exatomic/field": {exports: 'AtomicField'}
     },
 });
 
 
 define([
-    'nbextensions/exa/gui',
-    'nbextensions/exa/app3d',
-    'nbextensions/exa/utility',
-    'nbextensions/exa/num',
-    'nbextensions/exa/exatomic/gaussian',
-    'nbextensions/exa/exatomic/field'
+    "nbextensions/exa/gui",
+    "nbextensions/exa/app3d",
+    "nbextensions/exa/utility",
+    "nbextensions/exa/num",
+    "nbextensions/exa/exatomic/gaussian",
+    "nbextensions/exa/exatomic/field"
 ], function(ContainerGUI, App3D, utility, num, gaussian, AtomicField) {
     class UniverseApp {
         /*"""
@@ -54,6 +37,7 @@ define([
         Notebook widget application for visualization of the universe container.
         */
         constructor(view) {
+            console.log('init2');
             this.view = view;
             this.view.create_canvas();
             this.update_vars();
