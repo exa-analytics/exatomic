@@ -19,11 +19,10 @@ from collections import OrderedDict
 from traitlets import Float, Int, Dict, Unicode
 from exa import DataFrame
 
-
-lmap = {'s': 0, 'p': 1, 'd': 2, 'f': 3, 'g': 4, 'h': 5, 'i': 6, 'k': 7, 'l': 8,
-        'm': 9, 'px': 1, 'py': 1, 'pz': 1}
-spher_ml_count = {'s': 1, 'p': 3, 'd': 5, 'f': 7, 'g': 9, 'h': 11, 'i': 13, 'k': 15,
-                  'l': 17, 'm': 19}
+from exatomic.algorithms.basis import (lmap, spher_ml_count, enum_cartesian,
+                                       cart_lml_count, spher_lml_count,
+                                       _vec_normalize, _wrap_overlap,
+                                       solid_harmonics, car2sph_transform_matrices)
 
 
 class BasisSetSummary(DataFrame):
@@ -124,46 +123,45 @@ class GaussianBasisSet(BasisSet):
     +-------------------+----------+-------------------------------------------+
     | shell_function    | int/cat  | basis function group identifier           |
     +-------------------+----------+-------------------------------------------+
-    | l                 | int/cat  | orbital angular momentum quantum number   |
+    | L                 | int/cat  | orbital angular momentum quantum number   |
     +-------------------+----------+-------------------------------------------+
     | set               | int/cat  | index of unique basis set per unique atom |
     +-------------------+----------+-------------------------------------------+
     | frame             | int/cat  | non-unique integer                        |
     +-------------------+----------+-------------------------------------------+
     """
-    _columns = ['alpha', 'd', 'shell_function', 'l', 'set']
+    _columns = ['alpha', 'd', 'shell_function', 'L', 'set']
     _groupby = ('frame', np.int64)
     _index = 'primitive'
     _traits = ['shell_function']
     _precision = {'alpha': 8, 'd': 8}
-    _categories = {'set': np.int64, 'l': np.int64, 'shell_function': np.int64}
+    _categories = {'set': np.int64, 'L': np.int64, 'shell_function': np.int64}
 
-    def _custom_traits(self):
-        g = self.grpd
-        alphas = g.apply(
-                 lambda x: x.groupby('set').apply(
-                 lambda y: y.groupby('shell_function').apply(
-                 lambda z: z['alpha'].values).values)).to_json(orient='values')
-        #alphas = Unicode(''.join(['[', alphas, ']'])).tag(sync=True)
-        alphas = Unicode(alphas).tag(sync=True)
-
-        ds = g.apply(
-             lambda x: x.groupby('set').apply(
-             lambda y: y.groupby('shell_function').apply(
-             lambda z: z['d'].values).values)).to_json(orient='values')
-        #ds = Unicode(''.join(['[', ds, ']'])).tag(sync=True)
-        ds = Unicode(ds).tag(sync=True)
-
-        ls = g.apply(
-             lambda x: x.groupby('set').apply(
-             lambda y: y.groupby('shell_function').apply(
-             lambda z: z['l'].astype(np.int64).values).values)).to_json(orient='values')
-        #ls = Unicode(''.join(['[', ls, ']'])).tag(sync=True)
-        ls = Unicode(ls).tag(sync=True)
-
-        return {'gaussianbasisset_d': ds, 'gaussianbasisset_l': ls,
-                'gaussianbasisset_alpha': alphas}
-
+#    def _custom_traits(self):
+#        g = self.grpd
+#        alphas = g.apply(
+#                 lambda x: x.groupby('set').apply(
+#                 lambda y: y.groupby('shell_function').apply(
+#                 lambda z: z['alpha'].values).values)).to_json(orient='values')
+#        #alphas = Unicode(''.join(['[', alphas, ']'])).tag(sync=True)
+#        alphas = Unicode(alphas).tag(sync=True)
+#
+#        ds = g.apply(
+#             lambda x: x.groupby('set').apply(
+#             lambda y: y.groupby('shell_function').apply(
+#             lambda z: z['d'].values).values)).to_json(orient='values')
+#        #ds = Unicode(''.join(['[', ds, ']'])).tag(sync=True)
+#        ds = Unicode(ds).tag(sync=True)
+#
+#        ls = g.apply(
+#             lambda x: x.groupby('set').apply(
+#             lambda y: y.groupby('shell_function').apply(
+#             lambda z: z['L'].astype(np.int64).values).values)).to_json(orient='values')
+#        #ls = Unicode(''.join(['[', ls, ']'])).tag(sync=True)
+#        ls = Unicode(ls).tag(sync=True)
+#
+#        return {'gaussianbasisset_d': ds, 'gaussianbasisset_l': ls,
+#                'gaussianbasisset_alpha': alphas}
 
     def basis_count(self):
         """
@@ -174,6 +172,214 @@ class GaussianBasisSet(BasisSet):
         """
         return self.groupby('symbol').apply(lambda g: g.groupby('function').apply(
                                             lambda g: (g['shell'].map(spher_ml_count)).values[0]).sum())
+
+    def _check(self):
+        if 'N' not in self.columns:
+            self._normalize()
+
+#    @classmethod
+#    def expand(cls, universe, inplace=False):
+#        '''
+#        The minimum information specified by a basis set does not include
+#        expansion due to degeneracy from m_l. This will expand the basis in a
+#        systematic cartesian ordering convention to generate the full cartesian
+#        basis. The universe argument must already have a universe with atom,
+#        basis_set_summary, and gaussian_basis_set attributes.
+#        '''
+#        bases = universe.gaussian_basis_set[abs(universe.gaussian_basis_set['d']) > 0].groupby('set')
+#        primdf = []
+#        shfunc, func = -1, -1
+#        for seht, x, y, z in zip(universe.atom['set'], universe.atom['x'],
+#                                 universe.atom['y'], universe.atom['z']):
+#            summ = universe.basis_set_summary.ix[seht]
+#            b = bases.get_group(seht).groupby('shell_function')
+#            for sh in range(len(b)):
+#                prims = b.get_group(sh)
+#                l = prims['L'].cat.as_ordered().max()
+#                shfunc += 1
+#                for l, m, n in enum_cartesian[l]:
+#                    func += 1
+#                    for alpha, d in zip(prims['alpha'], prims['d']):
+#                        primdf.append([x, y, z, alpha, d, l, m, n, l + m + n, sh, shfunc, func, seht])
+#        primdf = pd.DataFrame(primdf)
+#        primdf.columns = ['xa', 'ya', 'za', 'alpha', 'd', 'l', 'm', 'n', 'L', 'shell_function', 'shell', 'func', 'set']
+#        if inplace:
+#            universe.gaussian_basis_set = primdf
+#        else:
+#            return cls(primdf)
+
+
+class Primitive(DataFrame):
+    _columns = ['xa', 'ya', 'za', 'alpha', 'd', 'l', 'm', 'n', 'L']
+    _indices = ['primitive']
+    _categories = {'l': np.int64, 'm': np.int64, 'n': np.int64, 'L': np.int64}
+
+    def _normalize(self):
+        '''
+        Often primitives come unnormalized. This fixes that.
+        '''
+        self['N'] = _vec_normalize(self['alpha'].values,
+                                   self['l'].astype(np.int64).values,
+                                   self['m'].astype(np.int64).values,
+                                   self['n'].astype(np.int64).values)
+
+
+    def _cartesian_contraction_matrix(self, l=False):
+        '''
+        Generates the (nprim,ncont) matrix needed to reduce the
+        dimensionality of the primitive basis to the contracted
+        cartesian basis.
+        '''
+        bfns = self.groupby('func')
+        contmat = np.zeros((len(self), len(bfns)), dtype=np.float64)
+        cnt = 0
+        if l:
+            l = np.zeros(len(bfns), dtype=np.int64)
+            for bfn, cont in bfns:
+                ln = len(cont)
+                contmat[cnt:cnt + ln, bfn] = cont['d'].values
+                l[bfn] = cont['L'].values[0]
+                cnt += ln
+            return contmat, l
+        for bfn, cont in bfns:
+            ln = len(cont)
+            contmat[cnt:cnt + ln, bfn] = cont['d'].values
+            cnt += ln
+        return contmat
+
+    def _spherical_contraction_matrix(self):
+        '''
+        Generates the (nprim,ncont) matrix needed to reduce the
+        dimensionality of the primitive basis to the contracted
+        spherical basis.
+        '''
+        pass
+
+
+    def _spherical_from_cartesian(self):
+        '''
+        Reduces the dimensionality of the contracted cartesian
+        basis to the contracted spherical basis.
+        '''
+        print('warning: this is not correct')
+        lmax = self['L'].cat.as_ordered().max()
+        primS = self.primitive_overlap().square()
+        cartprim, ls = self._cartesian_contraction_matrix(l=True)
+        contracted = pd.DataFrame(np.dot(np.dot(cartprim.T, primS), cartprim))
+        sh = solid_harmonics(lmax)
+        sphtrans = car2sph_transform_matrices(sh, lmax)
+        bfns = self.groupby('func')
+        lcounts = bfns.apply(lambda y: y['L'].values[0]).value_counts()
+        for l, lc in lcounts.items():
+            lcounts[l] = lc * spher_lml_count[l] // cart_lml_count[l]
+        lc = lcounts.sum()
+        spherical = np.zeros((contracted.shape[0], lc), dtype=np.float64)
+        ip = 0
+        ic = 0
+        while ip < lc:
+            l = ls[ic]
+            if l < 2:
+                spherical[:,ic] = contracted[ic]
+                ip += 1
+                ic += 1
+            else:
+                cspan = ic + cart_lml_count[l]
+                sspan = ip + spher_lml_count[l]
+                carts = contracted[list(range(ic, cspan))]
+                trans = np.dot(carts, sphtrans[l].T)
+                spherical[:,ip:sspan] = trans
+                ip += spher_lml_count[l]
+                ic += cart_lml_count[l]
+        return pd.DataFrame(np.dot(np.dot(spherical.T, contracted), spherical))
+
+
+    def primitive_overlap(self):
+        '''
+        Computes the complete primitive cartesian overlap matrix.
+        '''
+        if 'N' not in self.columns:
+            self._normalize()
+        chi1, chi2, overlap =  _wrap_overlap(self['xa'].values,
+                                             self['ya'].values,
+                                             self['za'].values,
+                                             self['l'].astype(np.int64).values,
+                                             self['m'].astype(np.int64).values,
+                                             self['n'].astype(np.int64).values,
+                                             self['N'].values, self['alpha'].values)
+        return Overlap.from_dict({'chi1': chi1, 'chi2': chi2,
+                                  'coefficient': overlap,
+                                  'frame': [0] * len(chi1)})
+
+
+    def contracted_cartesian_overlap(self):
+        primS = self.primitive_overlap().square()
+        contprim = self._cartesian_contraction_matrix()
+        square = pd.DataFrame(np.dot(np.dot(contprim.T, primS), contprim))
+        return Overlap.from_square(square)
+
+    def contracted_spherical_overlap(self):
+        return self._spherical_from_cartesian()
+
+
+#    @classmethod
+#    def from_universe(cls, universe, inplace=False):
+#        bases = universe.gaussian_basis_set[abs(universe.gaussian_basis_set['d']) > 0].groupby('set')
+#        primdf = []
+#        shfunc, func = -1, -1
+#        for seht, x, y, z in zip(universe.atom['set'], universe.atom['x'],
+#                                 universe.atom['y'], universe.atom['z']):
+#            summ = universe.basis_set_summary.ix[seht]
+#            b = bases.get_group(seht).groupby('shell_function')
+#            for sh in range(len(b)):
+#                prims = b.get_group(sh)
+#                l = prims['l'].cat.as_ordered().max()
+#                shfunc += 1
+#                for l, m, n in enum_cartesian[l]:
+#                    func += 1
+#                    for alpha, d in zip(prims['alpha'].values, prims['d'].values):
+#                        primdf.append([x, y, z, alpha, d, l, m, n, l + m + n, shfunc, func])
+#        primdf = pd.DataFrame(primdf)
+#        primdf.columns = ['xa', 'ya', 'za', 'alpha', 'd', 'l', 'm', 'n', 'L', 'shell', 'func']
+#        if inplace:
+#            universe.primitive = primdf
+#        else:
+#            return cls(primdf)
+
+    @classmethod
+    def from_universe(cls, universe, inplace=False):
+        '''
+        The minimum information specified by a basis set does not include
+        expansion due to degeneracy from m_l. This will expand the basis in a
+        systematic cartesian ordering convention to generate the full cartesian
+        basis. The universe argument must already have a universe with atom,
+        basis_set_summary, and gaussian_basis_set attributes.
+        '''
+        bases = universe.gaussian_basis_set[abs(universe.gaussian_basis_set['d']) > 0].groupby('set')
+        primdf = []
+        shfunc, func = -1, -1
+        for seht, x, y, z in zip(universe.atom['set'], universe.atom['x'],
+                                 universe.atom['y'], universe.atom['z']):
+            summ = universe.basis_set_summary.ix[seht]
+            b = bases.get_group(seht).groupby('shell_function')
+            for sh in range(len(b)):
+                prims = b.get_group(sh)
+                l = prims['L'].cat.as_ordered().max()
+                shfunc += 1
+                for l, m, n in enum_cartesian[l]:
+                    func += 1
+                    for alpha, d in zip(prims['alpha'], prims['d']):
+                        primdf.append([x, y, z, alpha, d, l, m, n, l + m + n, sh, shfunc, func, seht])
+        primdf = pd.DataFrame(primdf)
+        primdf.columns = ['xa', 'ya', 'za', 'alpha', 'd', 'l', 'm', 'n', 'L', 'shell_function', 'shell', 'func', 'set']
+        if inplace:
+            universe.primitive = primdf
+        else:
+            return cls(primdf)
+
+
+
+
+
 
 class BasisSetOrder(BasisSet):
     """
@@ -252,6 +458,26 @@ class Overlap(DataFrame):
         nbas = np.round(np.roots([1, 1, -2 * self.shape[0]])[1]).astype(np.int64)
         tri = self[self['frame'] == frame].pivot('chi1', 'chi2', 'coefficient').fillna(value=0)
         return tri + tri.T - np.eye(nbas)
+
+    @classmethod
+    def from_square(cls, df):
+        ndim = df.shape[0]
+        arr = df.values
+        arlen = ndim * (ndim + 1) // 2
+        #chi1 = np.empty(arlen, dtype=np.int64)
+        #chi2 = np.empty(arlen, dtype=np.int64)
+        #coef = np.empty(arlen, dtype=np.float64)
+        ret = np.empty((arlen,), dtype=[('chi1', 'i8'),
+                                        ('chi2', 'i8'),
+                                        ('coefficient', 'f8'),
+                                        ('frame', 'i8')])
+        cnt = 0
+        for i in range(ndim):
+            for j in range(i + 1):
+                ret[cnt] = (i, j, arr[i, j], 0)
+                cnt += 1
+        return cls(ret)
+
 
 
 class PlanewaveBasisSet(BasisSet):

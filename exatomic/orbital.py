@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 # Copyright (c) 2015-2016, Exa Analytics Development Team
 # Distributed under the terms of the Apache License 2.0
-"""
+'''
 Orbital DataFrame
 ####################
 Orbital information such as centers and energies. All of the dataframe structures
@@ -14,7 +14,7 @@ matrix as one would write it out. This table should have dimensions
 N_basis_functions * N_basis_functions. The DensityMatrix table stores
 a triangular matrix in columnar format and contains a similar square()
 method to return the matrix as we see it on a piece of paper.
-"""
+'''
 import re
 import numpy as np
 import pandas as pd
@@ -22,9 +22,9 @@ import sympy as sy
 from traitlets import Unicode
 from sympy import Add, Mul
 from exa import DataFrame, Series
-#from exa.algorithms import meshgrid3d
 from exatomic._config import config
 from exatomic.basis import lmap
+from exatomic.algorithms.basis import solid_harmonics
 from exatomic.field import AtomicField
 from collections import OrderedDict
 
@@ -56,10 +56,17 @@ class Orbital(DataFrame):
     Note:
         Spin zero means alpha spin or unknown and spin one means beta spin.
     """
-    _columns = ['frame', 'energy', 'x', 'y', 'z', 'occupation', 'spin', 'vector']
+    _columns = ['frame', 'energy', 'occupation', 'spin', 'vector']
     _index = 'orbital'
     _groupby = ('frame', np.int64)
     _categories = {'spin': np.int64}
+
+    def get_orbital(self, orb=-1, spin=0, index=None):
+        if index is None:
+            return self[(self['occupation'] > 0) & (self['spin'] == spin)].iloc[orb]
+        else:
+            return self.iloc[index]
+
 
 
 class MOMatrix(DataFrame):
@@ -86,15 +93,17 @@ class MOMatrix(DataFrame):
     """
     # TODO :: add spin as a column and make it the first groupby?
     _columns = ['coefficient', 'basis_function', 'orbital']
-    _index = 'momatrix'
-    _traits = ['orbital']
-    _groupby = ('frame', np.int64)
+    _indices = ['momatrix']
+    #_traits = ['orbital']
+    _groupbys = ['frame']
     _categories = {}
 
-    def _custom_traits(self):
-        coefs = self.groupby('frame').apply(lambda x: x.pivot('basis_function', 'orbital', 'coefficient').fillna(value=0).values)
-        coefs = Unicode(coefs.to_json(orient='values')).tag(sync=True)
-        return {'momatrix_coefficient': coefs}
+    #def _custom_traits(self):
+    #    coefs = self.groupby('frame').apply(lambda x: x.pivot('basis_function', 'orbital', 'coefficient').fillna(value=0).values)
+    #    coefs = Unicode(coefs.to_json(orient='values')).tag(sync=True)
+    #    #coefs = Unicode('[' + sq.groupby(by=sq.columns, axis=1).apply(
+    #    #            lambda x: x[x.columns[0]].values).to_json(orient='values') + ']').tag(sync=True)
+    #    return {'momatrix_coefficient': coefs}
 
     def square(self, frame=0):
        return self[self['frame'] == frame].pivot('basis_function', 'orbital', 'coefficient').fillna(value=0)
@@ -123,7 +132,7 @@ class DensityMatrix(DataFrame):
     _index = 'index'
 
     def square(self):
-        nbas = np.floor(np.roots([1, 1, -2 * self.shape[0]])[1])
+        nbas = np.round(np.roots([1, 1, -2 * self.shape[0]])[1])
         tri = self.pivot('chi1', 'chi2', 'coefficient').fillna(value=0)
         tri = tri + tri.T
         for i, val in enumerate(np.diag(tri)):
@@ -189,7 +198,7 @@ def _voluminate_gtfs(universe, xx, yy, zz, kind='spherical'):
     ex, ey, ez = sy.symbols('x y z', imaginary=False)
     ordered_gtf_basis = []
     bases = universe.basis_set.groupby('set')
-    sh = _solid_harmonics(lmax, ex, ey, ez)
+    sh = solid_harmonics(lmax, ex, ey, ez)
     for seht, x, y, z in zip(universe.atom['set'], universe.atom['x'],
                                universe.atom['y'], universe.atom['z']):
         bas = bases.get_group(seht).groupby('shell_function')
@@ -322,11 +331,11 @@ def add_cubic_field_from_mo(universe, rmin, rmax, nr, vector=None):
     frame = np.empty((n, ), dtype=np.int64)
     label = np.empty((n, ), dtype=np.int64)
     i = 0
-    print('n', n)
-    print('nn', nn)
-    print('vectors')
-    print(type(vectors))
-    print(len(vectors))
+#    print('n', n)
+#    print('nn', nn)
+#    print('vectors')
+#    print(type(vectors))
+#    print(len(vectors))
     for vno, vec in vectors:
         if vno in vector:
             #frame[i] = universe.orbital.ix[vno, 'frame']
@@ -343,35 +352,3 @@ def add_cubic_field_from_mo(universe, rmin, rmax, nr, vector=None):
                                    'ox': ox, 'oy': oy, 'oz': oz, 'frame': [0] * n})#frame})
     values = [Series(v) for v in values.tolist()]
     return AtomicField(data, field_values=values)
-
-
-def _solid_harmonics(l_max, x, y, z):
-
-    def _top_sh(lcur, sp, sm, x, y, z):
-        lpre = lcur - 1
-        kr = 1 if lpre == 0 else 0
-        return np.sqrt(2 ** kr * (2 * lpre + 1) / (2 * lpre + 2)) * (x * sp - (1 - kr) * y * sm)
-
-    def _mid_sh(lcur, m, sm, smm, x, y, z):
-        lpre = lcur - 1
-        return ((2 * lpre + 1) * z * sm - np.sqrt((lpre + m) * (lpre - m)) * (x*x + y*y + z*z) * smm) /  \
-                (np.sqrt((lpre + m + 1) * (lpre - m + 1)))
-
-    def _bot_sh(lcur, sp, sm, x, y, z):
-        lpre = lcur - 1
-        kr = 1 if lpre == 0 else 0
-        return np.sqrt(2 ** kr * (2 * lpre + 1) / (2 * lpre + 2)) * (y * sp + (1 - kr) * x * sm)
-
-    sh = OrderedDict()
-    sh[(0, 0)] = 1
-    for l in range(1, l_max + 1):
-        lpre = l - 1
-        ml_all = list(range(-l, l + 1))
-        sh[(l, ml_all[0])] = _bot_sh(l, sh[(lpre,lpre)], sh[(lpre,-(lpre))], x, y, z)
-        for ml in ml_all[1:-1]:
-            try:
-                sh[(l, ml)] = _mid_sh(l, ml, sh[(lpre,ml)], sh[(lpre-1,ml)], x, y, z)
-            except KeyError:
-                sh[(l, ml)] = _mid_sh(l, ml, sh[(lpre,ml)], sh[(lpre,ml)], x, y, z)
-        sh[(l, ml_all[-1])] = _top_sh(l, sh[(lpre,lpre)], sh[(lpre,-(lpre))], x, y, z)
-    return sh

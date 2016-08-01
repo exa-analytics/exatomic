@@ -26,7 +26,8 @@ from exatomic.widget import UniverseWidget
 from exatomic.field import AtomicField
 from exatomic.orbital import Orbital, MOMatrix, DensityMatrix
 from exatomic.basis import (SphericalGTFOrder, CartesianGTFOrder, Overlap,
-                            BasisSetSummary, GaussianBasisSet, BasisSetOrder)
+                            BasisSetSummary, GaussianBasisSet, BasisSetOrder,
+                            Primitive)
 
 
 class Meta(TypedMeta):
@@ -48,6 +49,7 @@ class Meta(TypedMeta):
     orbital = Orbital
     overlap = Overlap
     momatrix = MOMatrix
+    primitive = Primitive
     density = DensityMatrix
     basis_set_order = BasisSetOrder
     basis_set_summary = BasisSetSummary
@@ -150,6 +152,20 @@ class Universe(Container, metaclass=Meta):
             mapper = self.atom.get_atom_labels().astype(np.int64)
             traits.update(self.atom_two._bond_traits(mapper))
         return traits
+
+    @classmethod
+    def from_small_molecule_data(cls, center=None, ligand=None, distance=None, geometry=None,
+                                 offset=None, plane=None, axis=None, domains=None, unit='A'):
+        '''
+        Build a universe from small molecule data
+
+        See
+            exatomic.algorithms.geometry.make_small_molecule
+        '''
+        return cls(atom=Atom.from_small_molecule_data(center=center, ligand=ligand,
+                                                      distance=distance, geometry=geometry,
+                                                      offset=offset, plane=plane, axis=axis,
+                                                      domains=domains, unit=unit))
 
     def __len__(self):
         return len(self.frame)

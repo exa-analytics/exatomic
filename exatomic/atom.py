@@ -15,6 +15,7 @@ from exa.relational.isotope import (symbol_to_color, symbol_to_radius,
                                    symbol_to_element_mass)
 from exatomic.error import PeriodicUniverseError
 from exatomic.algorithms.distance import minimal_image_counts
+from exatomic.algorithms.geometry import make_small_molecule
 
 
 class Atom(DataFrame):
@@ -92,6 +93,32 @@ class Atom(DataFrame):
         colors = sym2col[self['symbol'].unique()]    # Same thing for colors
         kwargs['atom_colors'] = Dict({i: colors[v] for i, v in symmap.items()}).tag(sync=True)
         return kwargs
+
+    @classmethod
+    def from_small_molecule_data(cls, center=None, ligand=None, distance=None, geometry=None,
+                                 offset=None, plane=None, axis=None, domains=None, unit='A'):
+        '''
+        A minimal molecule builder for simple one-center, homogeneous ligand
+        molecules of various general chemistry molecular geometries. If domains
+        is not specified and geometry is ambiguous (like 'bent'),
+        it just guesses the simplest geometry (smallest number of domains).
+
+        Args
+            center (str): atomic symbol of central atom
+            ligand (str): atomic symbol of ligand atoms
+            distance (float): distance between central atom and any ligand
+            geometry (str): molecular geometry
+            domains (int): number of electronic domains
+            offset (np.array): 3-array of position of central atom
+            plane (str): cartesian plane of molecule (eg. for 'square_planar')
+            axis (str): cartesian axis of molecule (eg. for 'linear')
+
+        Returns
+            exatomic.atom.Atom: Atom table of small molecule
+        '''
+        return cls(make_small_molecule(center=center, ligand=ligand, distance=distance,
+                                       geometry=geometry, offset=offset, plane=plane,
+                                       axis=axis, domains=domains, unit=unit))
 
 
 class UnitAtom(SparseDataFrame):
