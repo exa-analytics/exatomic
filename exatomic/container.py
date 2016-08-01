@@ -9,7 +9,7 @@ The :class:`~exatomic.container.Universe` object is a subclass of
 chemistry experiments in a unified and systematic way. Data is organized into
 "frames". A frame is an axis that can represent time (e.g. molecular dynamics
 simulations), step number (e.g. geometry optimization), or an arbitrary index
-like density functional theory exchange correlation functional.
+(e.g. density functional theory exchange correlation functional).
 """
 import pandas as pd
 import numpy as np
