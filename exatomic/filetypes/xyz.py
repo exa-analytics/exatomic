@@ -1,10 +1,10 @@
 # -*- coding: utf-8 -*-
 # Copyright (c) 2015-2016, Exa Analytics Development Team
 # Distributed under the terms of the Apache License 2.0
-'''
+"""
 XYZ File Editor
 ##################
-'''
+"""
 import csv
 import numpy as np
 import pandas as pd
@@ -17,21 +17,21 @@ from exatomic.frame import compute_frame_from_atom
 
 
 class XYZ(Editor):
-    '''
+    """
     An editor for programmatically editing `xyz`_ files.
 
     .. _xyz: https://en.wikipedia.org/wiki/XYZ_file_format
-    '''
+    """
     _header = '{nat}\n{comment}\n'
     _cols = ['symbol', 'x', 'y', 'z']
 
     def parse_atom(self, unit='A'):
-        '''
+        """
         Parse the atom table from the current xyz file.
 
         Args:
             unit (str): Default xyz unit of length is the Angstrom
-        '''
+        """
         df = pd.read_csv(StringIO(str(self)), delim_whitespace=True,
                                   names=('symbol', 'x', 'y', 'z'), header=None,
                                   skip_blank_lines=False)
@@ -60,7 +60,7 @@ class XYZ(Editor):
         self.atom = df
 
     def write(self, path, trajectory=True, float_format='%    .8f'):
-        '''
+        """
         Write an xyz file (or files) to disk.
 
         Args:
@@ -69,13 +69,13 @@ class XYZ(Editor):
 
         Returns:
             path (str): On success, return the directory or file path written
-        '''
+        """
         if trajectory:
             with open(path, 'w') as f:
                 f.write(str(self))
         else:
-            grps = self.atom.groupby('frame')
-            n = len(str(self['frame'].values.max()))
+            grps = self.atom.grouped()
+            n = len(str(self.frame.index.max()))
             for frame, atom in grps:
                 filename = str(frame).zfill(n) + '.xyz'
                 with open(mkp(path, filename), 'w') as f:
@@ -90,12 +90,12 @@ class XYZ(Editor):
 
     @classmethod
     def from_universe(cls, universe, float_format='%    .8f'):
-        '''
+        """
         Create an xyz file editor from a given universe. If the universe has
         more than one frame, creates an xyz trajectory format editor.
-        '''
+        """
         string = ''
-        grps = universe.atom.groupby('frame')
+        grps = universe.atom.grouped()
         for frame, atom in grps:
             string += cls._header.format(nat=len(atom), comment='frame: ' + str(frame))
             atom_copy = atom[cls._cols].copy()

@@ -1,14 +1,15 @@
 # -*- coding: utf-8 -*-
 # Copyright (c) 2015-2016, Exa Analytics Development Team
 # Distributed under the terms of the Apache License 2.0
-'''
-Two Body Properties Table
+"""
+Two Body Properties
 ##################################
-This module provides functions for computing interatomic distances and bonds
-(i.e. two body properties). This computation depends on the type of boundary
-conditions used; free or periodic boundaries. The following table provides a
-guide for the types of data found in the two types of two body tables provided
-by this module.
+This module provides functions for computing two body properties. A body can be,
+for example, an atom (such that two body properties correspond to inter-atomic
+distances - bonds), or a molecule (such that two body properties correspond to
+distances between molecule centers of mass). The following table provides a
+guide for the types of data found in two body tables provided by this module
+(specifically for atom two body properties).
 
 +-------------------+----------+---------------------------------------------+
 | Column            | Type     | Description                                 |
@@ -25,34 +26,64 @@ by this module.
 +-------------------+----------+---------------------------------------------+
 | symbols           | category | concatenated atomic symbols                 |
 +-------------------+----------+---------------------------------------------+
-'''
+"""
 import numpy as np
 import pandas as pd
 from traitlets import Unicode
 from exa.numerical import DataFrame, SparseDataFrame
-from exa.relational.isotope import symbols_to_radii
-from exatomic.math.distance import free_two_frame, periodic_two_frame
+from exa.relational.isotope import symbol_to_radius
+from exa.math.vector.cartesian import pdist_euc_dxyz_idx
+from exatomic.algorithms.distance import periodic_pdist_euc_dxyz_idx
 
 
-class BaseTwo(DataFrame):
-    '''
-    Base class for two body properties.
+class AtomTwo(DataFrame):
+    """
+    Interatomic distances generated from the :class:`~exatomic.atom.Atom` table.
+    """
+    _index = 'two'
+    _groupby = ('frame', np.int64)
+    _columns = ['dx', 'dy', 'dz', 'atom0', 'atom1', 'distance']
+    _categories = {'symbols': str, 'atom0': np.int64, 'atom1': np.int64}
 
-    See Also:
-        Two body data are store depending on the boundary conditions of the
-        system: :class:`~exatomic.two.FreeTwo` or :class:`~exatomic.two.PeriodicTwo`.
-    '''
-    _indices = ['two']
-    _columns = ['dx', 'dy', 'dz', 'atom0', 'atom1', 'distance', 'frame']
-    _groupbys = ['frame']
-    _categories = {'frame': np.int64, 'symbols': str, 'atom0': np.int64,
-                   'atom1': np.int64}
+    def compute_bonds(self, symbols, mapper=None, bond_extra=0.45):
+        """
+        Update bonds based on radii and an extra factor (in atomic units).
+
+        .. code-block:: Python
+
+            symbols = universe.atom['symbol']
+            mapper = {'C': 2.0}    # atomic units - Bohr
+            bond_extra = 0.2       # ditto
+            universe.two.compute_bonds(symbols, mapper, bond_extra)  # updates universe.two['bond']
+
+        Args:
+            symbols: Series of symbols from the atom table (e.g. uni.atom['symbol'])
+            mapper (dict): Dictionary of symbol, radii pairs (see note below)
+            bond_extra (float): Extra additive factor to include when computing bonds
+
+        Note:
+            If the mapper is none, or is missing data, the computation will use
+            default covalent radii available in :class:`~exa.relational.isotope`.
+        """
+        if mapper is None:
+            mapper = symbol_to_radius()
+        elif not all(symbol in mapper for symbol in symbols.unique()):
+            sym2rad = symbol_to_radius()
+            for symbol in symbols.unique():
+                if symbol not in mapper:
+                    mapper[symbol] = sym2rad[symbol]
+        # Note that the mapper is transformed here, but the same name is used...
+        mapper = symbols.astype(str).map(mapper)
+        radius0 = self['atom0'].map(mapper)
+        radius1 = self['atom1'].map(mapper)
+        mbl = radius0 + radius1 + bond_extra
+        self['bond'] = self['distance'] <= mbl
 
     def _bond_traits(self, label_mapper):
-        '''
+        """
         Traits representing bonded atoms are reported as two lists of equal
         length with atom labels.
-        '''
+        """
         bonded = self.ix[self['bond'] == True, ['atom0', 'atom1', 'frame']]
         lbl0 = bonded['atom0'].map(label_mapper)
         lbl1 = bonded['atom1'].map(label_mapper)
@@ -74,142 +105,128 @@ class BaseTwo(DataFrame):
         return {'two_bond0': b0, 'two_bond1': b1}
 
 
-class FreeTwo(BaseTwo):
-    '''
-    Free boundary condition two body properties table.
-    '''
+class MoleculeTwo(DataFrame):
+    """
+    """
     pass
 
 
-class PeriodicTwo(BaseTwo):
-    '''
-    Periodic boundary condition two body properties table.
-    '''
-    pass
+def compute_atom_two(universe, mapper=None, bond_extra=0.45):
+    """
+    Compute interatomic distances and determine bonds.
+
+    Args:
+        universe: An atomic universe
+        mapper (dict): Dictionary of symbol, radii pairs (see note below)
+        bond_extra (float): Extra additive factor to include when computing bonds
+    """
+    if universe.frame.is_periodic():
+        return compute_periodic_two_si(universe, mapper, bond_extra)
+    return compute_free_two_si(universe, mapper, bond_extra)
 
 
-def compute_two(universe, bond_extra=0.55, max_distance=19.0):
-    '''
-    Compute interatomic distances.
-    '''
-    if universe.frame.is_periodic:
-        return compute_periodic_two(universe, bond_extra, max_distance)
-    return compute_free_two(universe, bond_extra, max_distance)
-
-
-def compute_free_two(universe, bond_extra=0.55, max_distance=19.0):
-    '''
-    Compute free boundary condition two body properties from an input universe.
-    '''
-    groups = universe.atom.groupby('frame')
-    n = groups.ngroups
-    dxs = np.empty((n, ), dtype='O')
-    dys = np.empty((n, ), dtype='O')
-    dzs = np.empty((n, ), dtype='O')
-    ds = np.empty((n, ), dtype='O')
-    idx0s = np.empty((n, ), dtype='O')
-    idx1s = np.empty((n, ), dtype='O')
-    fdxs = np.empty((n, ), dtype='O')
-    for i, (frame, group) in enumerate(groups):
+def compute_free_two_si(universe, mapper=None, bond_extra=0.45):
+    """
+    Serial, in memory computation of two body properties for free boundary
+    condition systems.
+    """
+    n = universe.frame['atom_count'].astype(np.int64)
+    n = (n*(n - 1)//2).sum()
+    dx = np.empty((n, ), dtype=np.float64)
+    dy = np.empty((n, ), dtype=np.float64)
+    dz = np.empty((n, ), dtype=np.float64)
+    distance = np.empty((n, ), dtype=np.float64)
+    atom0 = np.empty((n, ), dtype=np.int64)
+    atom1 = np.empty((n, ), dtype=np.int64)
+    fdx = np.empty((n, ), dtype=np.int64)
+    start = 0
+    stop = 0
+    for frame, group in universe.atom.grouped():
         x = group['x'].values.astype(np.float64)
         y = group['y'].values.astype(np.float64)
         z = group['z'].values.astype(np.float64)
         idx = group.index.values.astype(np.int64)
-        dx, dy, dz, idx0, idx1, fdx, d = free_two_frame(x, y, z, idx, frame)
-        dxs[i] = dx
-        dys[i] = dy
-        dzs[i] = dz
-        idx0s[i] = idx0
-        idx1s[i] = idx1
-        fdxs[i] = fdx
-        ds[i] = d
-    dxs = np.concatenate(dxs)
-    dys = np.concatenate(dys)
-    dzs = np.concatenate(dzs)
-    idx0s = pd.Series(np.concatenate(idx0s), dtype='category')
-    idx1s = pd.Series(np.concatenate(idx1s), dtype='category')
-    fdxs = pd.Series(np.concatenate(fdxs), dtype='category')
-    ds = np.concatenate(ds)
-    two = pd.DataFrame.from_dict({'dx': dxs, 'dy': dys, 'dz': dzs, 'distance': ds,
-                                  'frame': fdxs, 'atom0': idx0s, 'atom1': idx1s})
-    mapper = universe.atom['symbol'].astype(str)
-    two['symbol0'] = two['atom0'].astype(np.int64).map(mapper)
-    two['symbol1'] = two['atom1'].astype(np.int64).map(mapper)
-    two['symbols'] = (two['symbol0'] + two['symbol1']).astype('category')
-    del two['symbol0']
-    del two['symbol1']
-    mapper = symbols_to_radii()
-    two['mbl'] = two['symbols'].astype(str).map(mapper) + bond_extra
-    two['bond'] = two['distance'] < two['mbl']
-    del two['mbl']
-    return FreeTwo(two)
+        dxx, dyy, dzz, dist, a0, a1 = pdist_euc_dxyz_idx(x, y, z, idx)
+        stop += len(dxx)
+        dx[start:stop] = dxx
+        dy[start:stop] = dyy
+        dz[start:stop] = dzz
+        atom0[start:stop] = a0
+        atom1[start:stop] = a1
+        distance[start:stop] = dist
+        fdx[start:stop] = frame
+        start = stop
+    atom0 = pd.Series(atom0, dtype='category')
+    atom1 = pd.Series(atom1, dtype='category')
+    fdx = pd.Series(fdx, dtype='category')
+    two = pd.DataFrame.from_dict({'dx': dx, 'dy': dy, 'dz': dz, 'distance': distance,
+                                  'atom0': atom0, 'atom1': atom1, 'frame': fdx})
+    two = AtomTwo(two)
+    two.compute_bonds(universe.atom['symbol'], mapper=mapper)
+    return two
 
 
-def compute_periodic_two(universe, bond_extra=0.55, max_distance=19.0):
-    '''
+def compute_periodic_two_si(universe, mapper=None, bond_extra=0.45):
+    """
     Compute periodic two body properties.
-    '''
+    """
     grps = universe.atom[['x', 'y', 'z', 'frame']].copy()
+    grps['frame'] = grps['frame'].astype(np.int64)
     grps.update(universe.unit_atom)
     grps = grps.groupby('frame')
     n = grps.ngroups
-    dxs = np.empty((n, ), dtype='O')
-    dys = np.empty((n, ), dtype='O')
-    dzs = np.empty((n, ), dtype='O')
-    idx0s = np.empty((n, ), dtype='O')
-    idx1s = np.empty((n, ), dtype='O')
-    fdxs = np.empty((n, ), dtype='O')
-    pxs = np.empty((n, ), dtype='O')
-    pys = np.empty((n, ), dtype='O')
-    pzs = np.empty((n, ), dtype='O')
-    ds = np.empty((n, ), dtype='O')
+    dx = np.empty((n, ), dtype=np.ndarray)
+    dy = np.empty((n, ), dtype=np.ndarray)
+    dz = np.empty((n, ), dtype=np.ndarray)
+    atom0 = np.empty((n, ), dtype=np.ndarray)
+    atom1 = np.empty((n, ), dtype=np.ndarray)
+    distance = np.empty((n, ), dtype=np.ndarray)
+    fdx = np.empty((n, ), dtype=np.ndarray)
+    px = np.empty((n, ), dtype=np.ndarray)
+    py = np.empty((n, ), dtype=np.ndarray)
+    pz = np.empty((n, ), dtype=np.ndarray)
+    start = 0
+    stop = 0
     for i, (frame, grp) in enumerate(grps):
         ux = grp['x'].values.astype(np.float64)
         uy = grp['y'].values.astype(np.float64)
         uz = grp['z'].values.astype(np.float64)
-        idx = grp.index.values.astype(np.int64)
+        sidx = grp.index.values.astype(np.int64)
         rx, ry, rz = universe.frame.ix[frame, ['rx', 'ry', 'rz']]
-        dx, dy, dz, d, idx0, idx1, fdx, px, py, pz = periodic_two_frame(ux, uy, uz, rx, ry, rz, idx, frame, max_distance)
-        dxs[i] = dx
-        dys[i] = dy
-        dzs[i] = dz
-        idx0s[i] = idx0
-        idx1s[i] = idx1
-        pxs[i] = px
-        pys[i] = py
-        pzs[i] = pz
-        ds[i] = d
-        fdxs[i] = fdx
-    dxs = np.concatenate(dxs)
-    dys = np.concatenate(dys)
-    dzs = np.concatenate(dzs)
-    ds = np.concatenate(ds)
-    idx0s = pd.Series(np.concatenate(idx0s), dtype='category')
-    idx1s = pd.Series(np.concatenate(idx1s), dtype='category')
-    fdxs = pd.Series(np.concatenate(fdxs), dtype='category')
-    pxs = np.concatenate(pxs)
-    pys = np.concatenate(pys)
-    pzs = np.concatenate(pzs)
-    two = pd.DataFrame.from_dict({'dx': dxs, 'dy': dys, 'dz': dzs, 'distance': ds,
-                                  'frame': fdxs, 'atom0': idx0s, 'atom1': idx1s})
-    two = two.dropna(how='any', axis=0)
-    patom = pd.DataFrame.from_dict({'x': pxs, 'y': pys, 'z': pzs})
-    patom = patom.dropna(how='all', subset=['x', 'y', 'z'])
-    mapper = universe.atom['symbol'].astype(str)
-    two['symbol0'] = two['atom0'].astype(np.int64).map(mapper)
-    two['symbol1'] = two['atom1'].astype(np.int64).map(mapper)
-    two['symbols'] = (two['symbol0'] + two['symbol1']).astype('category')
-    del two['symbol0']
-    del two['symbol1']
-    mapper = symbols_to_radii()
-    two['mbl'] = two['symbols'].astype(str).map(mapper) + bond_extra
-    two['bond'] = two['distance'] < two['mbl']
-    del two['mbl']
+        dxx, dyy, dzz, d, a0, a1, pxx, pyy, pzz = periodic_pdist_euc_dxyz_idx(ux, uy, uz, rx, ry, rz, sidx)
+        nnn = len(dxx)
+        stop += nnn
+        dx[i] = dxx
+        dy[i] = dyy
+        dz[i] = dzz
+        distance[i] = d
+        atom0[i] = a0
+        atom1[i] = a1
+        px[i] = pxx
+        py[i] = pyy
+        pz[i] = pzz
+        fdx[i] = [frame for j in range(nnn)]
+        start = stop
+    dx = np.concatenate(dx)
+    dy = np.concatenate(dy)
+    dz = np.concatenate(dz)
+    distance = np.concatenate(distance)
+    px = np.concatenate(px)
+    py = np.concatenate(py)
+    pz = np.concatenate(pz)
+    atom0 = pd.Series(np.concatenate(atom0), dtype='category')
+    atom1 = pd.Series(np.concatenate(atom1), dtype='category')
+    fdx = pd.Series(np.concatenate(fdx), dtype='category')
+    two = pd.DataFrame.from_dict({'dx':dx, 'dy': dy, 'dz': dz, 'distance': distance,
+                                  'atom0': atom0, 'atom1': atom1, 'frame': fdx})
+    patom = pd.DataFrame.from_dict({'x': px, 'y': py, 'z': pz})
+    two = AtomTwo(two)
+    two.compute_bonds(universe.atom['symbol'], mapper=mapper)
     return two, patom
 
 
 def compute_bond_count(universe):
-    '''
+    """
     Computes bond count (number of bonds associated with a given atom index).
 
     Args:
@@ -222,14 +239,23 @@ def compute_bond_count(universe):
         For both periodic and non-periodic universes, counts returned are
         atom indexed. Counts for projected atoms have no meaning/are not
         computed during two body property calculation.
-    '''
+    """
     stack = universe.two.ix[universe.two['bond'] == True, ['atom0', 'atom1']].stack()
     return stack.value_counts().sort_index()
 
 
+def compute_molecule_two(universe):
+    """
+    """
+    raise NotImplementedError()
+
+
+
+
+
 #def bond_summary_by_label_pairs(universe, *labels, length='A', stdev=False,
 #                                stderr=False, variance=False, ncount=False):
-#    '''
+#    """
 #    Compute a summary of bond lengths by label pairs
 #
 #    Args:
@@ -243,7 +269,7 @@ def compute_bond_count(universe):
 #
 #    Returns:
 #        summary (:class:`~pandas.DataFrame`): Bond length dataframe
-#    '''
+#    """
 #    l0, l1 = list(zip(*labels))
 #    l0 = np.array(l0, dtype=np.int64)
 #    l1 = np.array(l1, dtype=np.int64)
@@ -282,7 +308,7 @@ def compute_bond_count(universe):
 #
 #def n_nearest_distances_by_symbols(universe, a, b, n, length='A', stdev=False,
 #                                   stderr=False, variance=False, ncount=False):
-#    '''
+#    """
 #    Compute a distance summary of the n nearest pairs of symbols, (a, b).
 #
 #    Args:
@@ -297,7 +323,7 @@ def compute_bond_count(universe):
 #
 #    Returns:
 #        summary (:class:`~pandas.DataFrame`): Distance summary dataframe
-#    '''
+#    """
 #    def compute(group):
 #        return group.sort_values('distance').iloc[:n]
 #

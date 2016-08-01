@@ -1,10 +1,10 @@
 # -*- coding: utf-8 -*-
 # Copyright (c) 2015-2016, Exa Analytics Development Team
 # Distributed under the terms of the Apache License 2.0
-'''
+"""
 Universe Notebook Widget
 #########################
-'''
+"""
 import atexit
 import subprocess
 import pandas as pd
@@ -19,9 +19,9 @@ from exatomic._config import config, del_update
 
 
 class UniverseWidget(ContainerWidget):
-    '''
+    """
     Custom widget for the :class:`~exatomic.universe.Universe` data container.
-    '''
+    """
     _view_module = Unicode('nbextensions/exa/exatomic/universe').tag(sync=True)
     _view_name = Unicode('UniverseView').tag(sync=True)
 
