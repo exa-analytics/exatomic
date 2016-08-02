@@ -14,7 +14,8 @@ and classified (if necessary): see :func:`~exatomic.two.BaseTwo.compute_bonds`
 and :func:`~exatomic.molecule.Molecule.classify`.
 """
 import numpy as np
-from exatomic.container import Universe
+import pandas as pd
+from exatomic.algorithms.distance import _compute
 
 
 def nearest_molecules(universe, n, sources, restrictions=None, how='atom',
@@ -46,13 +47,17 @@ def nearest_molecules(universe, n, sources, restrictions=None, how='atom',
     Returns:
         unis (dict): Dictionary of number of neighbors keys, universe values
     """
-    source_atoms, other_atoms, source_molecules, other_molecules, n = _slice_atoms_molecules(universe, sources, restrictions, how)
+    source_atoms, other_atoms, source_molecules, other_molecules, n = _slice_atoms_molecules(universe, sources, restrictions, n)
     ordered_molecules, ordered_twos = _compute_neighbors_by_atom(universe, source_atoms, other_atoms, source_molecules)
-    unis = {nn: _build_universe(universe, ordered_molecules, ordered_twos, nn) for nn in n}
-
-
-
-
+    unis = {}
+    if free_boundary == True:
+        for nn in n:
+            unis[nn] = _build_free_universe(universe, ordered_molecules,
+                                            ordered_twos, nn, source_atoms,
+                                            source_molecules)
+    else:
+        raise NotImplementedError()
+    return unis
 
 
 def _slice_atoms_molecules(universe, sources, restrictions, n):
@@ -66,7 +71,7 @@ def _slice_atoms_molecules(universe, sources, restrictions, n):
         sources = [sources]
     if not isinstance(restrictions, list) and restrictions is not None:
         restrictions = [restrictions]
-    if not isinstance(n, list):
+    if isinstance(n, (int, np.int32, np.int64)):
         n = [n]
     symbols = universe.atom['symbol'].unique()
     classification = universe.molecule['classification'].unique()
@@ -135,12 +140,67 @@ def _compute_neighbors_by_com(universe, source_molecules, other_molecules):
     raise NotImplementedError()
 
 
+def _build_free_universe(universe, ordered_molecules, ordered_twos, n,
+                         source_atoms, source_molecules):
+    """
+    """
+    molecule = np.concatenate([mcules[:n] for mcules in ordered_molecules])
+    molecule = np.concatenate((molecule, source_molecules.index.tolist()))
+    molecule = universe.molecule[universe.molecule.index.isin(molecule)].copy()
+    atom = universe.atom[universe.atom['molecule'].isin(molecule.index)].copy()
+    atom_two = universe.atom_two[(universe.atom_two['atom0'].isin(atom.index) &
+                                  universe.atom_two['atom1'].isin(atom.index))].copy()
+    frame = universe.frame[universe.frame.index.isin(atom['frame'])].copy()
+    frame['periodic'] = False
+    uni = universe.__class__(atom=atom, molecule=molecule, frame=frame, atom_two=atom_two)
+    if universe.frame.is_periodic():
+        uni.atom.update(universe.visual_atom)
+        uni.compute_molecule_com()
+        uni.atom._revert_categories()
+        mapper = uni.atom.drop_duplicates('molecule').set_index('molecule')['frame']
+        uni.atom._set_categories()
+        uni.molecule['frame'] = uni.molecule.index.map(lambda x: mapper[x])
+        sources = source_atoms.groupby('frame')
+        groups = uni.molecule.groupby('frame')
+        n = groups.ngroups
+        dx = np.empty((n, ), dtype=np.ndarray)
+        dy = np.empty((n, ), dtype=np.ndarray)
+        dz = np.empty((n, ), dtype=np.ndarray)
+        index = np.empty((n, ), dtype=np.ndarray)
+        for i, (frame, group) in enumerate(groups):
+            cx = group['cx'].values
+            cy = group['cy'].values
+            cz = group['cz'].values
+            ccx, ccy, ccz = sources.get_group(frame)[['x', 'y', 'z']].mean().values
+    #        ccx, ccy, ccz = mcules.ix[mcules['classification'] == 'solute', ['cx', 'cy', 'cz']].values[0]
+            rx, ry, rz = uni.frame.ix[frame, ['rx', 'ry', 'rz']].values
+            dxf, dyf, dzf = _compute(cx, cy, cz, rx, ry, rz, ccx, ccy, ccz)
+            dx[i] = dxf
+            dy[i] = dyf
+            dz[i] = dzf
+            index[i] = group.index.values
+        del uni.molecule['frame']
+        dx = np.concatenate(dx)
+        dy = np.concatenate(dy)
+        dz = np.concatenate(dz)
+        index = np.concatenate(index)
+        df = pd.DataFrame.from_dict({'x': dx, 'y': dy, 'z': dz, 'molecule': index})
+        df.set_index('molecule', inplace=True)
+        for molecule in df.index:
+            dx, dy, dz = df.ix[molecule].values
+            uni.atom.ix[uni.atom['molecule'] == molecule, 'x'] += dx
+            uni.atom.ix[uni.atom['molecule'] == molecule, 'y'] += dy
+            uni.atom.ix[uni.atom['molecule'] == molecule, 'z'] += dz
+    return uni
+
+
 def _build_universe(universe, ordered_molecules, ordered_twos, n):
     """
     """
+    raise NotImplementedError()
     # TODO CONVERT TO A GENERIC AND COMPLETE SLICER
-    molecules = np.concatenate([m[:n] for m in ordered_molecules.values])
-    twos = np.concatenate([t[:n] for t in ordered_twos.values])
+    molecules = np.concatenate([m[:n] for m in ordered_molecules])
+    twos = np.concatenate([t[:n] for t in ordered_twos])
     atom = universe.atom[universe.atom['molecule'].isin(molecules)].copy().sort_index()
     two = universe.atom_two[universe.atom_two['atom0'].isin(atom.index) &
                             universe.atom_two['atom1'].isin(atom.index)].copy().sort_index()

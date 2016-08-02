@@ -21,13 +21,13 @@ from exatomic.frame import Frame, compute_frame_from_atom
 from exatomic.atom import Atom, UnitAtom, ProjectedAtom, VisualAtom
 from exatomic.two import (AtomTwo, MoleculeTwo, compute_atom_two,
                           compute_bond_count, compute_molecule_two)
-from exatomic.molecule import Molecule, compute_molecule, compute_com
+from exatomic.molecule import (Molecule, compute_molecule, compute_molecule_com,
+                               compute_molecule_count)
 from exatomic.widget import UniverseWidget
 from exatomic.field import AtomicField
 from exatomic.orbital import Orbital, MOMatrix, DensityMatrix
 from exatomic.basis import (SphericalGTFOrder, CartesianGTFOrder, Overlap,
-                            BasisSetSummary, GaussianBasisSet, BasisSetOrder,
-                            Primitive)
+                            BasisSetSummary, GaussianBasisSet, BasisSetOrder)
 
 
 class Meta(TypedMeta):
@@ -49,7 +49,6 @@ class Meta(TypedMeta):
     orbital = Orbital
     overlap = Overlap
     momatrix = MOMatrix
-    primitive = Primitive
     density = DensityMatrix
     basis_set_order = BasisSetOrder
     basis_set_summary = BasisSetSummary
@@ -133,14 +132,18 @@ class Universe(Container, metaclass=Meta):
         self.molecule = compute_molecule(self)
 
     def compute_molecule_com(self):
-        cx, cy, cz = compute_com(self)
+        cx, cy, cz = compute_molecule_com(self)
         self.molecule['cx'] = cx
         self.molecule['cy'] = cy
         self.molecule['cz'] = cz
 
     def compute_atom_count(self):
-        """Compute the atom count for each frame."""
+        """Compute number of atoms per frame."""
         self.frame['atom_count'] = self.atom.grouped().size()
+
+    def compute_molecule_count(self):
+        """Compute number of molecules per frame."""
+        self.frame['molecule_count'] = compute_molecule_count(self)
 
     def _custom_traits(self):
         """
@@ -152,20 +155,6 @@ class Universe(Container, metaclass=Meta):
             mapper = self.atom.get_atom_labels().astype(np.int64)
             traits.update(self.atom_two._bond_traits(mapper))
         return traits
-
-    @classmethod
-    def from_small_molecule_data(cls, center=None, ligand=None, distance=None, geometry=None,
-                                 offset=None, plane=None, axis=None, domains=None, unit='A'):
-        '''
-        Build a universe from small molecule data
-
-        See
-            exatomic.algorithms.geometry.make_small_molecule
-        '''
-        return cls(atom=Atom.from_small_molecule_data(center=center, ligand=ligand,
-                                                      distance=distance, geometry=geometry,
-                                                      offset=offset, plane=plane, axis=axis,
-                                                      domains=domains, unit=unit))
 
     def __len__(self):
         return len(self.frame)

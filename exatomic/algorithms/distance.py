@@ -101,6 +101,46 @@ def periodic_pdist_euc_dxyz_idx(ux, uy, uz, rx, ry, rz, idxs, tol=10**-8):
     return dx, dy, dz, dr, idxi, idxj, px, py, pz
 
 
+def _compute(cx, cy, cz, rx, ry, rz, ox, oy, oz):
+    """
+    """
+    l = [-1, 0, 1]
+    m = len(cx)
+    dx = np.empty((m, ), dtype=np.float64)
+    dy = np.empty((m, ), dtype=np.float64)
+    dz = np.empty((m, ), dtype=np.float64)
+    px = np.empty((27, ), dtype=np.float64)
+    py = np.empty((27, ), dtype=np.float64)
+    pz = np.empty((27, ), dtype=np.float64)
+    pr = np.empty((27, ), dtype=np.float64)
+    h = 0
+    for i in range(m):
+        cxi = cx[i]
+        cyi = cy[i]
+        czi = cz[i]
+        hh = 0
+        for ii in l:
+            for jj in l:
+                for kk in l:
+                    sx = ii*rx
+                    sy = jj*ry
+                    sz = kk*rz
+                    xx = cxi + sx
+                    yy = cyi + sy
+                    zz = czi + sz
+                    pr[hh] = (ox - xx)**2 + (oy - yy)**2 + (oz - zz)**2
+                    px[hh] = sx
+                    py[hh] = sy
+                    pz[hh] = sz
+                    hh += 1
+        hh = np.argmin(pr)
+        dx[h] = px[hh]
+        dy[h] = py[hh]
+        dz[h] = pz[hh]
+        h += 1
+    return dx, dy, dz
+
+
 if config['dynamic']['numba'] == 'true':
     from numba import jit, vectorize
     from exa.math.vector.cartesian import magnitude_xyz
@@ -109,3 +149,4 @@ if config['dynamic']['numba'] == 'true':
     minimal_image_counts = jit(nopython=True, cache=True, nogil=True)(minimal_image_counts)
     minimal_image = vectorize(types3, nopython=True)(minimal_image)
     periodic_pdist_euc_dxyz_idx = jit(nopython=True, cache=True, nogil=True)(periodic_pdist_euc_dxyz_idx)
+    _compute = jit(nopython=True, cache=True, nogil=True)(_compute)
