@@ -140,28 +140,37 @@ def compute_molecule(universe):
 def compute_molecule_count(universe):
     """
     """
+    if 'molecule' not in universe.atom.columns:
+        universe.compute_molecule()
+    universe.atom._revert_categories()
     mapper = universe.atom.drop_duplicates('molecule').set_index('molecule')['frame']
+    universe.atom._set_categories()
     universe.molecule['frame'] = universe.molecule.index.map(lambda x: mapper[x])
     molecule_count = universe.molecule.groupby('frame').size()
     del universe.molecule['frame']
     return molecule_count
 
 
-def compute_com(universe):
+def compute_molecule_com(universe):
     """
     Compute molecules' centers of mass.
     """
     if 'molecule' not in universe.atom.columns:
         universe.compute_molecule()
-    xyz = universe.atom[['x', 'y', 'z', 'molecule']].copy()
-    xyz['mass'] = universe.atom.get_element_masses()
-    xyz.update(u.visual_atom)
-    xyz['xm'] = xyz['x'].mul(xyz['mass'])
-    xyz['ym'] = xyz['y'].mul(xyz['mass'])
-    xyz['zm'] = xyz['z'].mul(xyz['mass'])
-    xyz['rm'] = xyz['xm'].add(xyz['ym']).add(xyz['zm'])
-    grps = xyz.groupby('molecule')
-    sums = grps.sum()
+    mass = universe.atom.get_element_masses()
+    if universe.frame.is_periodic():
+        xyz = universe.atom[['x', 'y', 'z']].copy()
+        xyz.update(u.visual_atom)
+    else:
+        xyz = universe.atom[['x', 'y', 'z']]
+    xm = xyz['x'].mul(mass)
+    ym = xyz['y'].mul(mass)
+    zm = xyz['z'].mul(mass)
+    rm = xm.add(ym).add(zm)
+    df = pd.DataFrame.from_dict({'xm': xm, 'ym': ym, 'zm': zm, 'mass': mass,
+                                 'molecule': universe.atom['molecule']})
+    groups = df.groupby('molecule')
+    sums = groups.sum()
     cx = sums['xm'].div(sums['mass'])
     cy = sums['ym'].div(sums['mass'])
     cz = sums['zm'].div(sums['mass'])

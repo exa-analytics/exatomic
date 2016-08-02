@@ -21,7 +21,8 @@ from exatomic.frame import Frame, compute_frame_from_atom
 from exatomic.atom import Atom, UnitAtom, ProjectedAtom, VisualAtom
 from exatomic.two import (AtomTwo, MoleculeTwo, compute_atom_two,
                           compute_bond_count, compute_molecule_two)
-from exatomic.molecule import Molecule, compute_molecule, compute_com
+from exatomic.molecule import (Molecule, compute_molecule, compute_molecule_com,
+                               compute_molecule_count)
 from exatomic.widget import UniverseWidget
 from exatomic.field import AtomicField
 from exatomic.orbital import Orbital, MOMatrix, DensityMatrix
@@ -131,14 +132,18 @@ class Universe(Container, metaclass=Meta):
         self.molecule = compute_molecule(self)
 
     def compute_molecule_com(self):
-        cx, cy, cz = compute_com(self)
+        cx, cy, cz = compute_molecule_com(self)
         self.molecule['cx'] = cx
         self.molecule['cy'] = cy
         self.molecule['cz'] = cz
 
     def compute_atom_count(self):
-        """Compute the atom count for each frame."""
+        """Compute number of atoms per frame."""
         self.frame['atom_count'] = self.atom.grouped().size()
+
+    def compute_molecule_count(self):
+        """Compute number of molecules per frame."""
+        self.frame['molecule_count'] = compute_molecule_count(self)
 
     def _custom_traits(self):
         """
