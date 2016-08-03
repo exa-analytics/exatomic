@@ -9,7 +9,9 @@ before_install:
     - export PATH=/home/travis/miniconda3/bin:$PATH
     - conda update --yes conda
 install:
-    - conda install --yes python=$TRAVIS_PYTHON_VERSION exa
+    - conda install --yes python=$TRAVIS_PYTHON_VERSION
+    - conda config --add channels https://conda.anaconda.org/exaanalytics
+    - conda install --yes exa
     - pip install sphinxcontrib-autoanysrc coverage codecov python-coveralls
     - python setup.py install
     - exa -uu
