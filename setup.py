@@ -25,7 +25,7 @@ setup(
     include_package_data=True,
     install_requires=dependencies,
     license="Apache License Version 2.0",
-    keywords="analytics visualization computational chemistry",
+    keywords="quantum mechanics computational chemistry visualization",
     classifiers=[
         "Development Status :: 3 - Alpha",
         "Environment :: Web Environment",
@@ -34,7 +34,6 @@ setup(
         "License :: OSI Approved :: Apache Software License",
         "Programming Language :: Python :: 3.4",
         "Programming Language :: Python :: 3.5",
-        "Programming Language :: Python :: 3.6",
         "Natural Language :: English",
         "Topic :: Scientific/Engineering :: Chemistry"
     ]
