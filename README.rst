@@ -8,7 +8,7 @@ Exatomic is available through `anaconda`_,
 
 .. code-block:: bash
 
-    conda install exatomic
+    conda install -c exaanalytics exatomic
 
 or `pypi`_.
 
@@ -58,8 +58,8 @@ Legal
     :target: http://exatomic.readthedocs.io/en/latest/?badge=latest
     :alt: Documentation Status
 
-.. |conda| image:: https://anaconda.org/anaconda/anaconda/badges/version.svg
-    :target: https://anaconda.org/exaanalytics/exatomic
+.. |conda| image:: https://anaconda.org/exaanalytics/exatomic/badges/installer/conda.svg
+    :target: https://conda.anaconda.org/exaanalytics
     :alt: Anaconda Version
 
 .. |pypi| image:: https://badge.fury.io/py/exatomic.svg
