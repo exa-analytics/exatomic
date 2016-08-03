@@ -95,6 +95,7 @@ class Universe(Container, metaclass=Meta):
     def compute_visual_atom(self):
         """"""
         self.visual_atom = VisualAtom.from_universe(self)
+        self.compute_molecule_com()
 
     def compute_atom_two(self, mapper=None, bond_extra=0.45):
         """
@@ -130,6 +131,7 @@ class Universe(Container, metaclass=Meta):
     def compute_molecule(self):
         """Compute the :class:`~exatomic.molecule.Molecule` table."""
         self.molecule = compute_molecule(self)
+        self.compute_molecule_count()
 
     def compute_molecule_com(self):
         cx, cy, cz = compute_molecule_com(self)

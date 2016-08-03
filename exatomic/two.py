@@ -54,7 +54,8 @@ class AtomTwo(DataFrame):
             symbols = universe.atom['symbol']
             mapper = {'C': 2.0}    # atomic units - Bohr
             bond_extra = 0.2       # ditto
-            universe.two.compute_bonds(symbols, mapper, bond_extra)  # updates universe.two['bond']
+            # updates universe.atom_two['bond']
+            universe.atom_two.compute_bonds(symbols, mapper, bond_extra)
 
         Args:
             symbols: Series of symbols from the atom table (e.g. uni.atom['symbol'])
@@ -240,7 +241,7 @@ def compute_bond_count(universe):
         atom indexed. Counts for projected atoms have no meaning/are not
         computed during two body property calculation.
     """
-    stack = universe.two.ix[universe.two['bond'] == True, ['atom0', 'atom1']].stack()
+    stack = universe.atom_two.ix[universe.atom_two['bond'] == True, ['atom0', 'atom1']].stack()
     return stack.value_counts().sort_index()
 
 

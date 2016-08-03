@@ -1,2 +1,2 @@
-pip install -e $SRC_DIR
+#!/bin/bash
 $PYTHON setup.py install

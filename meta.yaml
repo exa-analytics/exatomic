@@ -2,16 +2,19 @@ package:
   name: exatomic
   version: "0.2.14"
 
+
 source:
   git_rev: v0.2.14
   git_url: https://github.com/exa-analytics/exatomic.git
 
+
 build:
   preserve_egg_dir: True
 
+
 requirements:
   build:
-    - python >=3.4
+    - python x.x
     - numpy
     - scipy
     - matplotlib
@@ -21,14 +24,15 @@ requirements:
     - sympy
     - seaborn
     - jupyter
-    - notebook ==4.1.0
-    - ipywidgets ==4.1.1
+    - notebook ==4.1
+    - ipywidgets ==4.1
     - ipyparallel
     - sphinx
     - nose
     - exa
+
   run:
-    - python >=3.4
+    - python
     - numpy
     - scipy
     - matplotlib
@@ -38,11 +42,10 @@ requirements:
     - sympy
     - seaborn
     - jupyter
-    - notebook ==4.1.0
-    - ipywidgets ==4.1.1
+    - notebook
+    - ipywidgets
     - ipyparallel
     - sphinx
-    - nose
     - exa
 
 
