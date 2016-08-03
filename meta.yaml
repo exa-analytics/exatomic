@@ -1,55 +1,50 @@
 package:
-  name: exatomic
-  version: "0.2.14"
-
+    name: exatomic
+    version: "0.2.14"
 
 source:
-  git_rev: v0.2.14
-  git_url: https://github.com/exa-analytics/exatomic.git
-
-
-build:
-  preserve_egg_dir: True
-
+    git_rev: v0.2.14
+    git_url: https://github.com/exa-analytics/exatomic.git
 
 requirements:
-  build:
-    - python x.x
-    - numpy
-    - scipy
-    - matplotlib
-    - sqlalchemy
-    - pandas >=0.18.1
-    - networkx
-    - sympy
-    - seaborn
-    - jupyter
-    - notebook ==4.1
-    - ipywidgets ==4.1
-    - ipyparallel
-    - sphinx
-    - nose
-    - exa
+    build:
+        - python x.x
+        - numpy
+        - scipy
+        - matplotlib
+        - sqlalchemy
+        - pandas >=0.18.1
+        - networkx
+        - sympy
+        - seaborn
+        - jupyter
+        - notebook ==4.1
+        - ipywidgets ==4.1
+        - ipyparallel
+        - sphinx
+        - nose
+        - exa
 
-  run:
-    - python
-    - numpy
-    - scipy
-    - matplotlib
-    - sqlalchemy
-    - pandas
-    - networkx
-    - sympy
-    - seaborn
-    - jupyter
-    - notebook
-    - ipywidgets
-    - ipyparallel
-    - sphinx
-    - exa
-
+    run:
+        - python
+        - numpy
+        - scipy
+        - matplotlib
+        - sqlalchemy
+        - pandas
+        - networkx
+        - sympy
+        - seaborn
+        - jupyter
+        - notebook
+        - ipywidgets
+        - ipyparallel
+        - sphinx
+        - nose
+        - exa
 
 about:
-  home: https://github.com/exa-analytics/exatomic
-  license: Apache 2.0
-  license_file: LICENSE
+    home: https://exa-analytics.github.io
+    license: Apache 2.0
+    license_file: LICENSE
+    summary: A unified platform for computational chemists.
