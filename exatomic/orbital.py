@@ -58,7 +58,7 @@ class Orbital(DataFrame):
     """
     _columns = ['frame', 'energy', 'occupation', 'spin', 'vector']
     _index = 'orbital'
-    _groupby = ('frame', np.int64)
+    _cardinal = ('frame', np.int64)
     _categories = {'spin': np.int64}
 
     def get_orbital(self, orb=-1, spin=0, index=None):
@@ -95,7 +95,7 @@ class MOMatrix(DataFrame):
     _columns = ['coefficient', 'basis_function', 'orbital']
     _indices = ['momatrix']
     #_traits = ['orbital']
-    _groupbys = ['frame']
+    _cardinal = ('frame', np.int64)
     _categories = {}
 
     #def _custom_traits(self):
@@ -128,7 +128,7 @@ class DensityMatrix(DataFrame):
     +-------------------+----------+-------------------------------------------+
     """
     _columns = ['chi1', 'chi2', 'coefficient']
-    _groupby = ('frame', np.int64)
+    _cardinal = ('frame', np.int64)
     _index = 'index'
 
     def square(self):

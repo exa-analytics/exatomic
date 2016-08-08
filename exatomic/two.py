@@ -41,7 +41,7 @@ class AtomTwo(DataFrame):
     Interatomic distances generated from the :class:`~exatomic.atom.Atom` table.
     """
     _index = 'two'
-    _groupby = ('frame', np.int64)
+    _cardinal = ('frame', np.int64)
     _columns = ['dx', 'dy', 'dz', 'atom0', 'atom1', 'distance']
     _categories = {'symbols': str, 'atom0': np.int64, 'atom1': np.int64}
 
