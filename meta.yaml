@@ -18,8 +18,8 @@ requirements:
         - sympy
         - seaborn
         - jupyter
-        - notebook ==4.1
-        - ipywidgets ==4.1
+        - notebook
+        - ipywidgets
         - ipyparallel
         - sphinx
         - nose
