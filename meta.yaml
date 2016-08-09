@@ -13,7 +13,7 @@ requirements:
         - scipy
         - matplotlib
         - sqlalchemy
-        - pandas >=0.18.1
+        - pandas
         - networkx
         - sympy
         - seaborn

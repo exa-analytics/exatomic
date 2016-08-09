@@ -10,6 +10,7 @@ before_install:
     - conda update --yes conda
 install:
     - conda install --yes python=$TRAVIS_PYTHON_VERSION
+    - conda install -c conda-forge --yes jupyter notebook ipywidgets ipyparallel
     - conda config --add channels https://conda.anaconda.org/exaanalytics
     - conda install --yes exa
     - pip install sphinxcontrib-autoanysrc coverage codecov python-coveralls
