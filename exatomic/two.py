@@ -142,7 +142,7 @@ def compute_free_two_si(universe, mapper=None, bond_extra=0.45):
     fdx = np.empty((n, ), dtype=np.int64)
     start = 0
     stop = 0
-    for frame, group in universe.atom.grouped():
+    for frame, group in universe.atom.cardinal_groupby():
         x = group['x'].values.astype(np.float64)
         y = group['y'].values.astype(np.float64)
         z = group['z'].values.astype(np.float64)
