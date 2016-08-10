@@ -141,7 +141,7 @@ class Universe(Container, metaclass=Meta):
 
     def compute_atom_count(self):
         """Compute number of atoms per frame."""
-        self.frame['atom_count'] = self.atom.grouped().size()
+        self.frame['atom_count'] = self.atom.cardinal_groupby().size()
 
     def compute_molecule_count(self):
         """Compute number of molecules per frame."""
