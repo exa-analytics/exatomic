@@ -21,7 +21,7 @@ from exa import DataFrame
 
 from exatomic.algorithms.basis import (lmap, spher_ml_count, enum_cartesian,
                                        cart_lml_count, spher_lml_count,
-                                       _vec_normalize, _wrap_overlap,
+                                       _vec_normalize, _wrap_overlap, lorder,
                                        solid_harmonics, car2sph_transform_matrices)
 
 
@@ -64,6 +64,20 @@ class BasisSetSummary(DataFrame):
     _index = 'set'
     _cardinal = ('frame', np.int64)
     _categories = {'tag': str}
+
+    def shells(self):
+        """
+        Returns a list of all the shells in the basis set
+        """
+        cols = [col.replace('bas_', '') for col in self if 'bas_' in col]
+        shells = []
+        for l in lorder:
+            for ll in cols:
+                if l == ll:
+                    shells.append(l)
+        return shells
+
+
 
 
 class BasisSet(DataFrame):
@@ -135,7 +149,7 @@ class GaussianBasisSet(BasisSet):
     _index = 'primitive'
     _traits = ['shell_function']
     _precision = {'alpha': 8, 'd': 8}
-    _categories = {'set': np.int64, 'L': np.int64, 'shell_function': np.int64}
+    _categories = {'set': np.int64, 'L': np.int64}#, 'shell_function': np.int64}
 
 #    def _custom_traits(self):
 #        g = self.grpd
@@ -390,8 +404,6 @@ class BasisSetOrder(BasisSet):
     +-------------------+----------+-------------------------------------------+
     | Column            | Type     | Description                               |
     +===================+==========+===========================================+
-    | basis_function    | int      | basis function index                      |
-    +-------------------+----------+-------------------------------------------+
     | tag               | str      | symbolic atomic center                    |
     +-------------------+----------+-------------------------------------------+
     | center            | int      | numeric atomic center (1-based)           |
@@ -399,9 +411,9 @@ class BasisSetOrder(BasisSet):
     | type              | str      | identifier equivalent to (l, ml)          |
     +-------------------+----------+-------------------------------------------+
     """
-    _columns = ['symbol', 'center', 'type']
-    _index = 'order'
-    _categories = {'center': np.int64, 'type': str}
+    _columns = ['tag', 'center', 'type']
+    _index = 'chi'
+    _categories = {'center': np.int64, 'symbol': str}
 
 #class BasisSetMap(BasisSet):
 #    """
