@@ -179,6 +179,12 @@ def normalize(alpha, l, m, n):
              fac2(2 * n - 1)) ** (0.5)
     return prefac * numer / denom
 
+def sloppy_normalize(alpha, L):
+    prefac = (2 / np.pi) ** (0.75)
+    numer = 2 ** (L) * alpha ** ((L + 1.5) / 2)
+    denom = (fac2(2 * L - 1)) ** (0.5)
+    return prefac * numer / denom
+
 def _vec_fac(n):
     return fac(n)
 
@@ -193,9 +199,16 @@ def _vec_normalize(alpha, l, m, n):
              _vec_fac2(2 * n - 1)) ** (0.5)
     return prefac * numer / denom
 
+def _vec_sloppy_normalize(alpha, L):
+    prefac = (2 / np.pi) ** (0.75)
+    numer = 2 ** (L) * alpha ** ((L + 1.5) / 2)
+    denom = (_vec_fac2(2 * L - 1)) ** (0.5)
+    return prefac * numer / denom
+
 def _overlap(x1, x2, y1, y2, z1, z2, l1, l2, m1, m2, n1, n2, N1, N2, alpha1, alpha2):
     '''
-    Pardon my Fortran.
+    Pardon the Fortran style that follows. This was translated from the snafu
+    electronic structure software package.
     '''
     s12 = 0.
     tol = 1e-8
@@ -343,9 +356,11 @@ if config['dynamic']['numba'] == 'true':
     fac = jit(nopython=True)(fac)
     fac2 = jit(nopython=True)(fac2)
     normalize = jit(nopython=True)(normalize)
+    sloppy_normalize = jit(nopython=True)(sloppy_normalize)
     _vec_fac = vectorize(['int64(int64)'])(_vec_fac)
     _vec_fac2 = vectorize(['int64(int64)'])(_vec_fac2)
     _vec_normalize = vectorize(['float64(float64,int64,int64,int64)'])(_vec_normalize)
+    _vec_sloppy_normalize = vectorize(['float64(float64,int64)'])(_vec_sloppy_normalize)
     _overlap = vectorize(['float64(float64,float64,float64,float64,float64,float64,int64, \
                           int64,int64,int64,int64,int64,float64,float64,float64,float64)'])(_overlap)
     _wrap_overlap = jit()(_wrap_overlap)

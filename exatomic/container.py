@@ -142,6 +142,33 @@ class Universe(Container, metaclass=Meta):
         """Compute the atom count for each frame."""
         self.frame['atom_count'] = self.atom.grouped().size()
 
+    def add_field(self, field):
+        """Adds a field object to the universe."""
+        if isinstance(field, AtomicField):
+            if not hasattr(self, 'field'):
+                self.field = field
+            else:
+                new_field_values = self.field.field_values + field.field_values
+                newdx = range(len(self.field), len(self.field) + len(field))
+                field.index = newdx
+                new_field = pd.concat([self.field, field])
+                self.field = AtomicField(new_field, field_values=new_field_values)
+        elif isinstance(field, list):
+            if not hasattr(self, 'field'):
+                fields = pd.concat(field)
+                fields.index = range(len(fields))
+                fields_values = [f.field_values for f in field]
+                self.field = AtomicField(fields, field_values=fields_values)
+            else:
+                new_field_values = self.field.field_values + [j for i in field for j in i.field_values]
+                newdx = range(len(self.field), len(self.field) + sum([len(i.field_values) for i in field]))
+                for i, idx in enumerate(newdx):
+                    field[i].index = [idx]
+                new_field = pd.concat([self.field] + field)
+                self.field = AtomicField(new_field, field_values=new_field_values)
+        else:
+            raise TypeError('field must be an instance of exatomic.field.AtomicField or a list of them')
+
     def _custom_traits(self):
         """
         Build traits depending on multiple dataframes.
