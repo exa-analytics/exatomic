@@ -27,7 +27,7 @@ from exatomic import _config
 from exatomic import error
 
 # User API
-from exatomic.container import Universe
+from exatomic.container import Universe, basis_function_contributions
 from exatomic.editor import Editor
 from exatomic.filetypes import XYZ, Cube
 

@@ -261,37 +261,7 @@ def gen_string_bfns(universe, kind='spherical'):
                     bastrs.append(_enumerate_primitives_prefacs(prefacs, grp, r2str))
     return bastrs
 
-
-
-def add_mos_to_universe(universe, *field_params, vector=None):
-    """
-    Provided a universe contains enough information to regenerate
-    molecular orbitals (complete basis set specification and C matrix),
-    this function evaluates the molecular orbitals on a discretized grid
-    determined by field_params. field_params is either a pandas.Series
-    containing ['ox', 'oy', 'oz', 'nx', 'ny', 'nz', 'dxi', 'dyj', 'dzk',
-    'dxj', 'dyk', 'dzi', 'dxk', 'dyi', 'dzj', 'field_type', 'label', 'frame']
-    attributes (see make_field_params) or a tuple of (rmin, rmax, nr), the
-    bounding box and number of points along a single cartesian direction.
-    """
-    if isinstance(field_params[0], pd.Series):
-        field_params = field_params[0]
-    else:
-        field_params = make_field_params(*field_params)
-    vectors = universe.momatrix.groupby('orbital')
-    if isinstance(vector, int):
-        vector = [vector]
-    elif vector is None:
-        vector = [key for key in vectors.groups.keys()]
-    elif not isinstance(vector, (list, tuple, range)):
-        raise TypeError()
-
-    ### TODO :: optimizations.
-    ###         1) determine approximately the HOMO based on atoms (or have it parsed into the frame table)
-    ###         2) screen the MOMatrix to determine the basis functions contributing to the orbitals of interest 
-    ###         3) only numerically evaluate the basis functions that show up in the MOs
-
-    print('Warning: this might only work for molcas basis function ordering currently')
+def numerical_grid_from_field_params(field_params):
     mx = field_params.ox + (field_params.nx - 1) * field_params.dxi
     my = field_params.oy + (field_params.ny - 1) * field_params.dyj
     mz = field_params.oz + (field_params.nz - 1) * field_params.dzk
@@ -302,35 +272,88 @@ def add_mos_to_universe(universe, *field_params, vector=None):
     x = x.flatten()
     y = y.flatten()
     z = z.flatten()
+    return x, y, z
 
+def _determine_vectors(universe, vector):
+    if isinstance(vector, int):
+        vector = [vector]
+    elif vector is None:
+        try:
+            nclosed = universe.atom['Zeff'].sum() // 2
+            vector = range(nclosed - 15, nclosed + 5)
+        except KeyError:
+            nclosed = universe.atom['Z'].sum() // 2
+            vector = range(nclosed - 15, nclosed + 5)
+    elif not isinstance(vector, (list, tuple, range)):
+        raise TypeError()
+    return vector
+
+
+def add_mos_to_universe(universe, *field_params, mocoefs=None, vector=None):
+    """
+    Provided a universe contains enough information to regenerate
+    molecular orbitals (complete basis set specification and C matrix),
+    this function evaluates the molecular orbitals on a discretized grid
+    determined by field_params. field_params is either a pandas.Series
+    containing ['ox', 'oy', 'oz', 'nx', 'ny', 'nz', 'dxi', 'dyj', 'dzk',
+    'dxj', 'dyk', 'dzi', 'dxk', 'dyi', 'dzj', 'field_type', 'label', 'frame']
+    attributes (see make_field_params) or a tuple of (rmin, rmax, nr), the
+    bounding box and number of points along a single cartesian direction.
+
+    If no argument vector is passed, naively compute the number of closed
+    shell orbitals by summing 'Z/Zeff' in the atom table, divide by 2, and
+    produce HOMO-15 to LUMO+5.
+
+    Warning:
+        Removes any fields previously attached to the universe
+    """
+    if hasattr(universe, '_field'):
+        del universe.__dict__['_field']
+    field_params = field_params[0] if type(field_params[0]) == pd.Series else make_field_params(*field_params)
+    vectors = universe.momatrix.groupby('orbital')
+    if mocoefs is not None:
+        if vector is None:
+            raise Exception('Must supply vector if non-canonical MOs are used')
+    vector = _determine_vectors(universe, vector)
+
+    ### TODO :: optimizations.
+    ###         1) determine approximately the HOMO based on atoms (or have it parsed into the frame table)
+    ###         2) screen the MOMatrix to determine the basis functions contributing to the orbitals of interest
+    ###         3) only numerically evaluate the basis functions that show up in the MOs
+    ### Would look something like this? Preliminary thoughts are that most basis
+    ### functions are required for a reasonable span of MOs so this may not be the way to go.
+    #bases_of_int = np.unique(np.concatenate([universe.momatrix.contributions(i)['chi'].values for i in vector]))
+    #basfns = [basfns[i] for i in bases_of_int]
+
+    print('Warning: not extensively tested. Please be careful.')
     basfns = gen_string_bfns(universe)
-
     print('Compiling basis functions, may take a while.')
     t1 = datetime.now()
-
-    #basis_keys, basis_functions = make_bfn_dict(basfns)
     _add_bfns_to_universe(universe, basfns)
-
     t2 = datetime.now()
     print('It took {:.8f}s to compile the basis "module" with {} characters'.format(
             (t2-t1).total_seconds(), sum([len(b) for b in basfns])))
 
+    x, y, z = numerical_grid_from_field_params(field_params)
     nbas = universe.basis_set_summary['function_count'].sum()
     npoints = len(x)
     nvec = len(vector)
 
     basis_values = np.zeros((npoints, nbas), dtype=np.float64)
-
     for name, basis_function in universe.basis_functions.items():
         if 'bf' in name:
             basis_values[:,int(name[2:])] = basis_function(x, y, z)
 
     field_data = np.zeros((npoints, nvec), dtype=np.float64)
 
+    if mocoefs is None:
+        if mocoefs not in universe.momatrix.columns:
+            mocoefs = 'coefficient'
+
     cnt = 0
     for vno in vector:
         vec = vectors.get_group(vno)
-        for chi, coef in zip(vec['chi'], vec['coefficient']):
+        for chi, coef in zip(vec['chi'], vec[mocoefs]):
             field_data[:, cnt] += coef * basis_values[:, chi]
         cnt += 1
 
@@ -340,7 +363,7 @@ def add_mos_to_universe(universe, *field_params, vector=None):
                                  for i in range(nvec)])
     universe._traits_need_update = True
 
-def update_mos(universe, *field_params, vector=None):
+def update_molecular_orbitals(universe, *field_params, mocoefs=None, vector=None):
     """
     Provided the universe already contains the basis_functions attribute,
     reevaluates the MOs with the new field_params
@@ -355,24 +378,12 @@ def update_mos(universe, *field_params, vector=None):
     else:
         field_params = make_field_params(*field_params)
     vectors = universe.momatrix.groupby('orbital')
-    if isinstance(vector, int):
-        vector = [vector]
-    elif vector is None:
-        vector = [key for key in vectors.groups.keys()]
-    elif not isinstance(vector, (list, tuple, range)):
-        raise TypeError()
+    if mocoefs is not None:
+        if vector is None:
+            raise Exception('Must supply vector if non-canonical MOs are used')
+    vector = _determine_vectors(universe, vector)
 
-    mx = field_params.ox + (field_params.nx - 1) * field_params.dxi
-    my = field_params.oy + (field_params.ny - 1) * field_params.dyj
-    mz = field_params.oz + (field_params.nz - 1) * field_params.dzk
-    x = np.linspace(field_params.ox, mx, field_params.nx)
-    y = np.linspace(field_params.oy, my, field_params.ny)
-    z = np.linspace(field_params.oz, mz, field_params.nz)
-    y, x, z = np.meshgrid(x, y, z)
-    x = x.flatten()
-    y = y.flatten()
-    z = z.flatten()
-
+    x, y, z = numerical_grid_from_field_params(field_params)
     nbas = universe.basis_set_summary['function_count'].sum()
     npoints = len(x)
     nvec = len(vector)
@@ -385,10 +396,20 @@ def update_mos(universe, *field_params, vector=None):
 
     field_data = np.zeros((npoints, nvec), dtype=np.float64)
 
+    print(mocoefs)
+    print(universe.momatrix.columns)
+
+    if mocoefs is None:
+        print('mocoefs is None')
+        if mocoefs not in universe.momatrix.columns:
+            mocoefs = 'coefficient'
+
+    print(mocoefs)
+
     cnt = 0
     for vno in vector:
         vec = vectors.get_group(vno)
-        for chi, coef in zip(vec['chi'], vec['coefficient']):
+        for chi, coef in zip(vec['chi'], vec[mocoefs]):
             field_data[:, cnt] += coef * basis_values[:, chi]
         cnt += 1
 
@@ -397,7 +418,6 @@ def update_mos(universe, *field_params, vector=None):
     universe.field = AtomicField(nfps, field_values=[field_data[:, i]
                                  for i in range(nvec)])
     universe._traits_need_update = True
-
 
 
 if config['dynamic']['numba'] == 'true':
