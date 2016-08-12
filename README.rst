@@ -21,6 +21,7 @@ Getting Started
 ###################
 | |docs|
 | |gitter|
+| |doi|
 Documentation can be built using `sphinx`_:
 
 .. code-block:: bash
@@ -81,3 +82,7 @@ Legal
 .. |lic| image:: http://img.shields.io/:license-apache-blue.svg?style=flat-square
     :target: http://www.apache.org/licenses/LICENSE-2.0
     :alt: License
+
+.. |doi| image:: https://zenodo.org/badge/23807/exa-analytics/exatomic.svg
+    :target: https://zenodo.org/badge/latestdoi/23807/exa-analytics/exatomic
+    :alt: DOI
