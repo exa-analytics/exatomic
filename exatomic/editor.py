@@ -35,6 +35,11 @@ class Editor(BaseEditor, metaclass=Meta):
         """
         Convert the editor to a :class:`~exatomic.container.Universe` object.
         """
+        if self.meta is not None:
+            if meta is not None:
+                meta.update(self.meta)
+            else:
+                meta = self.meta
         kwargs = {'name': name, 'description': description, 'meta': meta}
         attrs = [attr.replace('parse_', '') for attr in vars(self.__class__).keys() if attr.startswith('parse_')]
         for attr in attrs:
