@@ -241,14 +241,14 @@ def _overlap(x1, x2, y1, y2, z1, z2, l1, l2, m1, m2, n1, n2, N1, N2, alpha1, alp
     py2 = yp - y2
     pz2 = zp - z2
     pg12 = np.sqrt(np.pi / gamma)
-    xIx = 0
-    yIy = 0
-    zIz = 0
+    xix = 0
+    yiy = 0
+    ziz = 0
     ltot = l1 + l2
     mtot = m1 + m2
     ntot = n1 + n2
     if ltot == 0:
-        xIx = pg12
+        xix = pg12
     else:
         iii = (ltot - 1) // 2 if ltot % 2 != 0 else ltot // 2
         for i in range(iii):
@@ -263,9 +263,9 @@ def _overlap(x1, x2, y1, y2, z1, z2, l1, l2, m1, m2, n1, n2, N1, N2, alpha1, alp
                 newt1 = fac(l1) / fac(j) / fac(l1 - j)
                 newt2 = fac(l2) / fac(k) / fac(l2 - k)
                 fk += newt1 * newt2 * (px1 ** (l1 - j)) * (px2 ** (l2 - k))
-            xIx += prod * fk
+            xix += prod * fk
     if mtot == 0:
-        yIy = pg12
+        yiy = pg12
     else:
         iii = (mtot - 1) // 2 if mtot % 2 != 0 else mtot // 2
         for i in range(iii):
@@ -280,9 +280,9 @@ def _overlap(x1, x2, y1, y2, z1, z2, l1, l2, m1, m2, n1, n2, N1, N2, alpha1, alp
                 newt1 = fac(m1) / fac(j) / fac(m1 - j)
                 newt2 = fac(m2) / fac(k) / fac(m2 - k)
                 fk += newt1 * newt2 * (py1 ** (m1 - j)) * (py2 ** (m2 - k))
-            yIy += prod * fk
+            yiy += prod * fk
     if ntot == 0:
-        zIz = pg12
+        ziz = pg12
     else:
         iii = (ntot - 1) // 2 if ntot % 2 != 0 else ntot // 2
         for i in range(iii):
@@ -297,9 +297,9 @@ def _overlap(x1, x2, y1, y2, z1, z2, l1, l2, m1, m2, n1, n2, N1, N2, alpha1, alp
                 newt1 = fac(n1) / fac(j) / fac(n1 - j)
                 newt2 = fac(n2) / fac(k) / fac(n2 - k)
                 fk += newt1 * newt2 * (pz1 ** (n1 - j)) * (pz2 ** (n2 - k))
-            zIz += prod * fk
+            ziz += prod * fk
     exponent = alpha1 * alpha2 * ab2 / gamma
-    s12 = N1 * N2 * np.exp(-exponent) * xIx * yIy * zIz
+    s12 = N1 * N2 * np.exp(-exponent) * xix * yiy * ziz
     return s12
 
 
