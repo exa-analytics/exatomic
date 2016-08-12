@@ -8,15 +8,16 @@ before_install:
     - ./miniconda.sh -b
     - export PATH=/home/travis/miniconda3/bin:$PATH
     - conda update --yes conda
-    - wget https://github.com/exa-analytics/exa/archive/master.zip
-    - unzip master.zip
 install:
-    - conda install --yes python=$TRAVIS_PYTHON_VERSION atlas numpy scipy matplotlib pandas sqlalchemy networkx sympy seaborn jupyter notebook==4.1 ipywidgets==4.1 ipyparallel sphinx nose
-    - pip install sphinxcontrib-autoanysrc codecov
-    - cd exa-master && pip install .
+    - conda install --yes python=$TRAVIS_PYTHON_VERSION
+    - conda install -c conda-forge --yes jupyter notebook ipywidgets ipyparallel
+    - conda config --add channels https://conda.anaconda.org/exaanalytics
+    - conda install --yes exa
+    - pip install sphinxcontrib-autoanysrc coverage codecov python-coveralls
+    - python setup.py install
     - exa -uu
-    - cd ../exa-master
 script:
     - nosetests --with-doctest --with-coverage
 after_success:
     - codecov
+    - coveralls

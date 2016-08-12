@@ -1,10 +1,5 @@
 # Byte-compiled / optimized / DLL files
-__pycache__
-_pycache__*
-__pycache__/*
-atomic/__pycache__/*
-atomic/qe/__pycahce__/*
-atomic/nwchem/__pycache__/*
+__pycache__/
 *.py[cod]
 *.nbc
 *.nbi
@@ -59,7 +54,7 @@ coverage.xml
 *.log
 
 # Sphinx documentation
-doc/build/*
+doc/build/
 
 # PyBuilder
 target/*
@@ -70,3 +65,4 @@ target/*
 .settings/*
 *.swp
 .ipynb*
+*~

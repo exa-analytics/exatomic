@@ -41,7 +41,7 @@ class AtomTwo(DataFrame):
     Interatomic distances generated from the :class:`~exatomic.atom.Atom` table.
     """
     _index = 'two'
-    _groupby = ('frame', np.int64)
+    _cardinal = ('frame', np.int64)
     _columns = ['dx', 'dy', 'dz', 'atom0', 'atom1', 'distance']
     _categories = {'symbols': str, 'atom0': np.int64, 'atom1': np.int64}
 
@@ -54,7 +54,8 @@ class AtomTwo(DataFrame):
             symbols = universe.atom['symbol']
             mapper = {'C': 2.0}    # atomic units - Bohr
             bond_extra = 0.2       # ditto
-            universe.two.compute_bonds(symbols, mapper, bond_extra)  # updates universe.two['bond']
+            # updates universe.atom_two['bond']
+            universe.atom_two.compute_bonds(symbols, mapper, bond_extra)
 
         Args:
             symbols: Series of symbols from the atom table (e.g. uni.atom['symbol'])
@@ -141,7 +142,7 @@ def compute_free_two_si(universe, mapper=None, bond_extra=0.45):
     fdx = np.empty((n, ), dtype=np.int64)
     start = 0
     stop = 0
-    for frame, group in universe.atom.grouped():
+    for frame, group in universe.atom.cardinal_groupby():
         x = group['x'].values.astype(np.float64)
         y = group['y'].values.astype(np.float64)
         z = group['z'].values.astype(np.float64)
@@ -240,7 +241,7 @@ def compute_bond_count(universe):
         atom indexed. Counts for projected atoms have no meaning/are not
         computed during two body property calculation.
     """
-    stack = universe.two.ix[universe.two['bond'] == True, ['atom0', 'atom1']].stack()
+    stack = universe.atom_two.ix[universe.atom_two['bond'] == True, ['atom0', 'atom1']].stack()
     return stack.value_counts().sort_index()
 
 

@@ -62,7 +62,7 @@ class BasisSetSummary(DataFrame):
     """
     _columns = ['tag', 'name', 'func_per_atom']
     _index = 'set'
-    _groupby = ('frame', np.int64)
+    _cardinal = ('frame', np.int64)
     _categories = {'tag': str}
 
     def shells(self):
@@ -145,7 +145,7 @@ class GaussianBasisSet(BasisSet):
     +-------------------+----------+-------------------------------------------+
     """
     _columns = ['alpha', 'd', 'shell_function', 'L', 'set']
-    _groupby = ('frame', np.int64)
+    _cardinal = ('frame', np.int64)
     _index = 'primitive'
     _traits = ['shell_function']
     _precision = {'alpha': 8, 'd': 8}

@@ -51,9 +51,9 @@ class Orbital(DataFrame):
         Spin zero means alpha spin or unknown and spin one means beta spin.
     """
     _columns = ['frame', 'energy', 'occupation', 'spin', 'vector']
-    _categories = {'spin': np.int64}
-    _groupby = ('frame', np.int64)
     _index = 'orbital'
+    _cardinal = ('frame', np.int64)
+    _categories = {'spin': np.int64}
 
     def get_orbital(self, frame=0, orb=-1, spin=0, index=None):
         """
@@ -107,9 +107,10 @@ class MOMatrix(DataFrame):
     | frame             | category | non-unique integer (req.)                 |
     +-------------------+----------+-------------------------------------------+
     """
-    # TODO :: add spin as a column and make it a custom groupby?
+    # TODO :: add spin as a column and make it the first groupby?
+    #_traits = ['orbital']
     _columns = ['coefficient', 'chi', 'orbital']
-    _groupby = ('frame', np.int64)
+    _cardinal = ('frame', np.int64)
     _index = 'index'
 
     def contributions(self, orbital, tol=0.01, frame=0):
@@ -155,7 +156,7 @@ class DensityMatrix(DataFrame):
     +-------------------+----------+-------------------------------------------+
     """
     _columns = ['chi1', 'chi2', 'coefficient']
-    _groupby = ('frame', np.int64)
+    _cardinal = ('frame', np.int64)
     _index = 'index'
 
     def square(self, frame=0):
