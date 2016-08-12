@@ -438,18 +438,6 @@ class CartesianGTFOrder(DataFrame):
     _traits = ['l']
     _categories = {'l': np.int64, 'x': np.int64, 'y': np.int64, 'z': np.int64}
 
-    def _custom_traits(self):
-        #print(self.groupby('l').apply(lambda y: y['x'].values))
-        #print(self.groupby('l').apply(lambda y: y['x'].values).to_json(orient='values'))
-        #cgto_x = self.groupby('l').apply(lambda x: x['x'].values).to_json(orient='values')
-        #cgto_x = Unicode(''.join(['[', cgto_x, ']'])).tag(sync=True)
-        #cgto_y = self.groupby('l').apply(lambda x: x['y'].values).to_json(orient='values')
-        #cgto_y = Unicode(''.join(['[', cgto_y, ']'])).tag(sync=True)
-        #cgto_z = self.groupby('l').apply(lambda x: x['z'].values).to_json(orient='values')
-        #cgto_z = Unicode(''.join(['[', cgto_z, ']'])).tag(sync=True)
-        #return {'cartesiangtforder_x': cgto_x, 'cartesiangtforder_y': cgto_y,
-        #        'cartesiangtforder_z': cgto_z}
-        return {}
 
     @classmethod
     def from_lmax_order(cls, lmax, ordering_function):
@@ -494,13 +482,6 @@ class SphericalGTFOrder(DataFrame):
     _columns = ['l', 'ml', 'frame']
     _traits = ['l']
     _index = 'spherical_order'
-
-    def _custom_traits(self):
-        sgto = self.groupby('frame').apply(lambda x: x.groupby('l').apply( lambda y: y['ml'].values))
-        sgto = Unicode(sgto.to_json(orient='values')).tag(sync=True)
-        return {'sphericalgtforder_ml': sgto}
-        #Unicode('[' + self.groupby('l').apply(
-        #        lambda x: x['ml'].values).to_json(orient='values') + ']').tag(sync=True)}
 
     @classmethod
     def from_lmax_order(cls, lmax, ordering_function):

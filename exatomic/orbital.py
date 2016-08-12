@@ -160,6 +160,7 @@ class DensityMatrix(DataFrame):
     _index = 'index'
 
     def square(self, frame=0):
+        """Returns a square dataframe of the density matrix."""
         denvec = self[self['frame'] == frame]['coefficient'].values
         square = pd.DataFrame(density_as_square(denvec))
         square.index.name = 'chi1'
