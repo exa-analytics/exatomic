@@ -155,7 +155,8 @@ def _build_free_universe(universe, ordered_molecules, ordered_twos, n,
     uni = universe.__class__(atom=atom, molecule=molecule, frame=frame, atom_two=atom_two)
     if universe.frame.is_periodic():
         uni.atom.update(universe.visual_atom)
-        uni.compute_molecule_com()
+        if 'cx' not in uni.molecule.columns:
+            uni.compute_molecule_com()
         uni.atom._revert_categories()
         mapper = uni.atom.drop_duplicates('molecule').set_index('molecule')['frame']
         uni.atom._set_categories()

@@ -95,6 +95,7 @@ class Universe(Container, metaclass=Meta):
     def compute_visual_atom(self):
         """"""
         self.visual_atom = VisualAtom.from_universe(self)
+        self.compute_molecule_com()
 
     def compute_atom_two(self, mapper=None, bond_extra=0.45):
         """
@@ -130,6 +131,7 @@ class Universe(Container, metaclass=Meta):
     def compute_molecule(self):
         """Compute the :class:`~exatomic.molecule.Molecule` table."""
         self.molecule = compute_molecule(self)
+        self.compute_molecule_count()
 
     def compute_molecule_com(self):
         cx, cy, cz = compute_molecule_com(self)
@@ -139,11 +141,38 @@ class Universe(Container, metaclass=Meta):
 
     def compute_atom_count(self):
         """Compute number of atoms per frame."""
-        self.frame['atom_count'] = self.atom.grouped().size()
+        self.frame['atom_count'] = self.atom.cardinal_groupby().size()
 
     def compute_molecule_count(self):
         """Compute number of molecules per frame."""
         self.frame['molecule_count'] = compute_molecule_count(self)
+
+    def add_field(self, field):
+        """Adds a field object to the universe."""
+        if isinstance(field, AtomicField):
+            if not hasattr(self, 'field'):
+                self.field = field
+            else:
+                new_field_values = self.field.field_values + field.field_values
+                newdx = range(len(self.field), len(self.field) + len(field))
+                field.index = newdx
+                new_field = pd.concat([self.field, field])
+                self.field = AtomicField(new_field, field_values=new_field_values)
+        elif isinstance(field, list):
+            if not hasattr(self, 'field'):
+                fields = pd.concat(field)
+                fields.index = range(len(fields))
+                fields_values = [f.field_values for f in field]
+                self.field = AtomicField(fields, field_values=fields_values)
+            else:
+                new_field_values = self.field.field_values + [j for i in field for j in i.field_values]
+                newdx = range(len(self.field), len(self.field) + sum([len(i.field_values) for i in field]))
+                for i, idx in enumerate(newdx):
+                    field[i].index = [idx]
+                new_field = pd.concat([self.field] + field)
+                self.field = AtomicField(new_field, field_values=new_field_values)
+        else:
+            raise TypeError('field must be an instance of exatomic.field.AtomicField or a list of them')
 
     def _custom_traits(self):
         """

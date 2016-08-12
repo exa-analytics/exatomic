@@ -160,7 +160,7 @@ def compute_molecule_com(universe):
     mass = universe.atom.get_element_masses()
     if universe.frame.is_periodic():
         xyz = universe.atom[['x', 'y', 'z']].copy()
-        xyz.update(u.visual_atom)
+        xyz.update(universe.visual_atom)
     else:
         xyz = universe.atom[['x', 'y', 'z']]
     xm = xyz['x'].mul(mass)

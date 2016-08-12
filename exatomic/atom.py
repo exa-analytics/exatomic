@@ -50,7 +50,7 @@ class Atom(DataFrame):
     """
     _precision = {'x': 2, 'y': 2, 'z': 2}
     _index = 'atom'
-    _groupby = ('frame', np.int64)
+    _cardinal = ('frame', np.int64)
     _categories = {'symbol': str, 'set': np.int64, 'molecule': np.int64}
     _traits = ['x', 'y', 'z', 'set']
     _columns = ['x', 'y', 'z', 'symbol']
@@ -67,7 +67,7 @@ class Atom(DataFrame):
         Returns:
             labels (:class:`~exa.numerical.Series`): Enumerated atom labels (of type int)
         """
-        nats = self.grouped().size().values
+        nats = self.cardinal_groupby().size().values
         labels = Series([i for nat in nats for i in range(nat)], dtype='category')
         labels.index = self.index
         return labels
@@ -82,7 +82,7 @@ class Atom(DataFrame):
         """
         self._set_categories()
         kwargs = {}
-        grps = self.grouped()
+        grps = self.cardinal_groupby()
         symbols = grps.apply(lambda g: g['symbol'].cat.codes.values)    # Pass integers rather than string symbols
         kwargs['atom_symbols'] = Unicode(symbols.to_json(orient='values')).tag(sync=True)
         symmap = {i: v for i, v in enumerate(self['symbol'].cat.categories)}

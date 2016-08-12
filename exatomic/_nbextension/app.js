@@ -178,14 +178,27 @@ define([
             });
 
             this.display = {
+                'labels': false,
+                'symbols': false,
                 'cell': false,
                 'axis': false,
                 'spheres': false,
             };
             this.display['folder'] = this.gui.addFolder('display');
+            this.display['labels_checkbox'] = this.display.folder.add(this.display, 'labels');
+            this.display['symbols_checkbox'] = this.display.folder.add(this.display, 'symbols');
             this.display['cell_checkbox'] = this.display.folder.add(this.display, 'cell');
             this.display['axis_checkbox'] = this.display.folder.add(this.display, 'axis');
             this.display['spheres_checkbox'] = this.display.folder.add(this.display, 'spheres');
+
+            /*this.display.labels_checkbox.onFinishChange(function(value) {
+                self.display.labels = value;
+                if (value === false) {
+                    self.app3d.remove(self.label_meshes);
+                } else {
+                    self.render_labels();
+                };
+            });*/
 
             this.display.cell_checkbox.onFinishChange(function(value) {
                 self.display.cell = value;
@@ -539,6 +552,7 @@ define([
             this.app3d.remove_meshes(this.cell_meshes);
             this.cell_meshes = this.app3d.add_wireframe(vertices);
         };
+
     };
 
     return UniverseApp;

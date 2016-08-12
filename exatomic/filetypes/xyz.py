@@ -47,8 +47,6 @@ class XYZ(Editor):
         df = df[df.index.isin(indices)]
         df[['x', 'y', 'z']] = df[['x', 'y', 'z']].astype(np.float64)
         df['symbol'] = df['symbol'].astype('category')
-        df['label'] = label
-        df['label'] = df['label'].astype('category')
         df['frame'] = frame
         df['frame'] = df['frame'].astype('category')
         df.reset_index(drop=True, inplace=True)

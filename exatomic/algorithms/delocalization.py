@@ -85,6 +85,8 @@ def compute_deloc(cat, neut, an, tag='', debug=False, jtype=None):
         cat (exatomic.Universe): N-1 electron system
         neut (exatomic.Universe): N electron system
         an (exatomic.Universe): N+1 electron system
+        debug (bool): verbose printing
+        jtype (str): 'IP' or 'EA' if not both
 
     Returns
         ret (pd.DataFrame): The energy as a function of N
