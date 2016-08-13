@@ -280,10 +280,16 @@ def _determine_vectors(universe, vector):
     elif vector is None:
         try:
             nclosed = universe.atom['Zeff'].sum() // 2
-            vector = range(nclosed - 15, nclosed + 5)
+            if nclosed -15 < 0:
+                vector = range(0, nclosed + 10)
+            else:
+                vector = range(nclosed - 15, nclosed + 5)
         except KeyError:
             nclosed = universe.atom['Z'].sum() // 2
-            vector = range(nclosed - 15, nclosed + 5)
+            if nclosed - 15 < 0:
+                vector = range(0, nclosed + 10)
+            else:
+                vector = range(nclosed - 15, nclosed + 5)
     elif not isinstance(vector, (list, tuple, range)):
         raise TypeError()
     return vector
