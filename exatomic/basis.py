@@ -509,3 +509,46 @@ class SphericalGTFOrder(DataFrame):
         if l is None:
             return list(obj)
         return [kv for kv in obj if kv[0] == l]
+
+
+################################################################################
+import sympy as sy
+from exa.symbolic import SymbolicFunction
+
+
+class SlaterTypeBasisFunction(SymbolicFunction):
+    """
+    .. math:
+
+        \Chi_{A}\left(x, y, z\right) = r_{A}^{k_r}x_{A}^{k_x}y_{A}^{k_y}z_{A}^{k_z}e^{-\zeta r_{A}}
+    """
+    kr, kx, ky, kz = sy.symbols("k_r k_x k_y k_z", imaginary=False, positive=True, integer=True)
+    x, y, z, xa, ya, za = sy.symbols("x y z x_A y_A z_A", imaginary=False)
+    zeta = sy.Symbol("zeta", imaginary=False, positive=True)
+    xx = x - xa
+    yy = y - ya
+    zz = z - za
+    r = sy.sqrt(xx**2 + yy**2 + zz**2)
+    expr = r**kr * x**kx * y**ky * z**kz * sy.exp(-zeta*r)
+
+    @classmethod
+    def eval(cls, xa=None, ya=None, za=None, kr=None, kx=None, ky=None, kz=None, zeta=None):
+        subs = {}
+        if xa:
+            subs[cls.xa] = xa
+        if ya:
+            subs[cls.ya] = ya
+        if za:
+            subs[cls.za] = za
+        if kr:
+            subs[cls.kr] = kr
+        if kx:
+            subs[cls.kx] = kx
+        if ky:
+            subs[cls.ky] = ky
+        if kz:
+            subs[cls.kz] = kz
+        if zeta:
+            subs[cls.zeta] = zeta
+        expr = cls.expr.subs(subs)
+        return super().new_expression(expr, "vectorize")
