@@ -54,7 +54,10 @@ class XYZ(Editor):
         df['x'] *= Length[unit, 'au']
         df['y'] *= Length[unit, 'au']
         df['z'] *= Length[unit, 'au']
-        self.meta['comments'] = {line: self._lines[line] for line in comments}
+        if self.meta is not None:
+            self.meta['comments'] = {line: self._lines[line] for line in comments}
+        else:
+            self.meta = {'comments': {line: self._lines[line] for line in comments}}
         self.atom = df
 
     def write(self, path, trajectory=True, float_format='%    .8f'):
