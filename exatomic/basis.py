@@ -518,6 +518,16 @@ from exa.symbolic import SymbolicFunction
 
 class SlaterTypeBasisFunction(SymbolicFunction):
     """
+    Args:
+        xa (float): Basis center in x
+        ya (float): Basis center in y
+        za (float): Basis center in z
+        kx (int): Spherical harmonic coefficient in x
+        ky (int): Spherical harmonic coefficient in y
+        kz (int): Spherical harmonic coefficient in z
+        kr (int): Spherical harmonic coefficient in r
+        zeta (float): Positive exponential coefficient
+
     .. math:
 
         \Chi_{A}\left(x, y, z\right) = r_{A}^{k_r}x_{A}^{k_x}y_{A}^{k_y}z_{A}^{k_z}e^{-\zeta r_{A}}
@@ -532,7 +542,7 @@ class SlaterTypeBasisFunction(SymbolicFunction):
     expr = r**kr * x**kx * y**ky * z**kz * sy.exp(-zeta*r)
 
     @classmethod
-    def eval(cls, xa=None, ya=None, za=None, kr=None, kx=None, ky=None, kz=None, zeta=None):
+    def eval(cls, xa=None, ya=None, za=None, kx=None, ky=None, kz=None, kr=None, zeta=None):
         subs = {}
         if xa:
             subs[cls.xa] = xa
