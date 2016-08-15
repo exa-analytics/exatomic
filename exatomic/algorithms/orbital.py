@@ -132,6 +132,31 @@ def _gen_prefactor(sh, l, ml, porder, corder, phase=False):
             prefacs.append(prefac)
         return prefacs
 
+def _cartesian_prefactor(l, xs, ys, zs, porder, corder):
+    if l == 0: return ['']
+    prefacs = []
+    if l == 1:
+        for x, y, z in zip(xs, ys, zs):
+            prefac = ''
+            if x:
+                prefac += '({}) * '.format(porder[1])
+            if y:
+                prefac += '({}) * '.format(porder[2])
+            if z:
+                prefac += '({}) * '.format(porder[0])
+            prefacs.append(prefac)
+        return prefacs
+    for x, y, z in zip(xs, ys, zs):
+        prefac = ''
+        if x:
+            prefac += '({})**{} * '.format(porder[1], x)
+        if y:
+            prefac += '({})**{} * '.format(porder[2], y)
+        if z:
+            prefac += '({})**{} * '.format(porder[0], z)
+        prefacs.append(prefac)
+    return prefacs
+
 def _enumerate_primitives_prefacs(prefacs, group, r2str):
     """
     Given a list of pre-exponential facors and a group of
@@ -232,6 +257,7 @@ def gen_string_bfns(universe, kind='spherical'):
     bastrs = []
     for i, (seht, x, y, z) in enumerate(zip(universe.atom['set'], universe.atom['x'],
                                             universe.atom['y'],   universe.atom['z'])):
+        spherical = universe.basis_set_summary.ix[seht].spherical
         xastr = 'x' if np.isclose(x, 0) else 'x - ' + str(x)
         yastr = 'y' if np.isclose(y, 0) else 'y - ' + str(y)
         zastr = 'z' if np.isclose(z, 0) else 'z - ' + str(z)
@@ -251,14 +277,17 @@ def gen_string_bfns(universe, kind='spherical'):
             for f, grp in bas:
                 if len(grp) == 0: continue
                 l = grp['L'].values[0]
-                if kind == 'spherical':
+                if spherical:
                     sym_keys = universe.spherical_gtf_order.symbolic_keys(l)
-                elif kind == 'cartesian':
-                    sym_keys = universe.spherical_gtf_order.symbolic_keys(l)
-                for L, ml in sym_keys:
-                    bastr = ''
-                    prefacs = _gen_prefactor(sh, L, ml, porder, corder)
-                    bastrs.append(_enumerate_primitives_prefacs(prefacs, grp, r2str))
+                    for L, ml in sym_keys:
+                        bastr = ''
+                        prefacs = _gen_prefactor(sh, L, ml, porder, corder)
+                        bastrs.append(_enumerate_primitives_prefacs(prefacs, grp, r2str))
+                else:
+                    subcart = universe.cartesian_gtf_order[universe.cartesian_gtf_order['l'] == l]
+                    prefacs = _cartesian_prefactor(l, subcart['x'], subcart['y'], subcart['z'], porder, corder)
+                    for prefac in prefacs:
+                        bastrs.append(_enumerate_primitives_prefacs([prefac], grp, r2str))
     return bastrs
 
 def numerical_grid_from_field_params(field_params):
