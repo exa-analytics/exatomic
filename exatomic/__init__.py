@@ -18,7 +18,7 @@ Warning:
 
 .. _atomic: https://en.wikipedia.org/wiki/Atomic_units
 """
-__exatomic_version__ = (0, 3, 0)
+__exatomic_version__ = (0, 3, 1)
 __version__ = '.'.join((str(v) for v in __exatomic_version__))
 
 
@@ -27,7 +27,7 @@ from exatomic import _config
 from exatomic import error
 
 # User API
-from exatomic.container import Universe
+from exatomic.container import Universe, basis_function_contributions
 from exatomic.editor import Editor
 from exatomic.filetypes import XYZ, Cube
 
