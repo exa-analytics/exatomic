@@ -10,15 +10,13 @@ ao.js
 
 require.config({
     shim: {
-        'nbextensions/exa/field': {
-            exports: 'field'
-        },
+        "nbextensions/exa/field": {exports: 'field'}
     },
 });
 
 
 define([
-    'nbextensions/exa/field'
+    "nbextensions/exa/field"
 ], function(field) {
     class AO extends field.ScalarField {
         /*"""

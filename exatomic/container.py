@@ -28,6 +28,8 @@ from exatomic.field import AtomicField
 from exatomic.orbital import Orbital, MOMatrix, DensityMatrix
 from exatomic.basis import (SphericalGTFOrder, CartesianGTFOrder, Overlap,
                             BasisSetSummary, GaussianBasisSet, BasisSetOrder)
+from exatomic.algorithms.orbital import add_mos_to_universe as _add_mos_to_universe
+from exatomic.algorithms.orbital import update_molecular_orbitals as _update_mos
 
 
 class Meta(TypedMeta):
@@ -162,7 +164,7 @@ class Universe(Container, metaclass=Meta):
             if not hasattr(self, 'field'):
                 fields = pd.concat(field)
                 fields.index = range(len(fields))
-                fields_values = [f.field_values for f in field]
+                fields_values = [j for i in field for j in i.field_values]
                 self.field = AtomicField(fields, field_values=fields_values)
             else:
                 new_field_values = self.field.field_values + [j for i in field for j in i.field_values]
@@ -173,6 +175,34 @@ class Universe(Container, metaclass=Meta):
                 self.field = AtomicField(new_field, field_values=new_field_values)
         else:
             raise TypeError('field must be an instance of exatomic.field.AtomicField or a list of them')
+
+    def add_molecular_orbitals(self, *field_params, mocoefs=None, vector=None):
+        """
+        Adds molecular orbitals to universe. field_params define the numerical
+        field and may be a tuple of (min, max, nsteps) or a series containing
+        all of the columns specified in the exatomic.field.AtomicField table.
+
+        Warning:
+            Removes any existing field attribute of the universe.
+        """
+        if not hasattr(self, '_momatrix'):
+            raise AttributeError("universe must have a momatrix to make MOs")
+        if not hasattr(self, '_basis_set_order'):
+            print('Warning: without the basis_set_order, MOs are likely incorrect.')
+        _add_mos_to_universe(self, *field_params, mocoefs=mocoefs, vector=vector)
+
+    def update_molecular_orbitals(self, *field_params, mocoefs=None, vector=None):
+        """
+        Updates the molecular orbitals with new field_params, different MO
+        coefficients or different eigenvectors. Significantly faster than
+        add_molecular_orbitals as the basis functions have already been compiled.
+
+        Warning:
+            Removes any existing field attribute of the universe.
+        """
+        if not hasattr(self, 'basis_functions'):
+            raise AttributeError('Universe has no basis functions, add_molecular_orbitals first')
+        _update_mos(self, *field_params, mocoefs=mocoefs, vector=vector)
 
     def _custom_traits(self):
         """
@@ -214,3 +244,20 @@ def concat(*universes, name=None, description=None, meta=None):
         else:
             kwargs[name] = cls(pd.concat(kwargs[name]))
     return Universe(**kwargs)
+
+
+def basis_function_contributions(universe, mo):
+    """
+    Provided a universe with momatrix and basis_set_order attributes,
+    return the major basis function contributions of a particular
+    molecular orbital.
+
+    Args
+        universe (exatomic.container.Universe): a universe
+        mo (int): molecular orbital index
+    """
+    small = universe.momatrix.contributions(mo)
+    chis = small['chi'].values
+    coefs = small['coefficient']
+    coefs.index = chis
+    return pd.concat([universe.basis_set_order.ix[chis], coefs], axis=1)

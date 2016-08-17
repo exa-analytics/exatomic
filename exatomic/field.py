@@ -10,6 +10,7 @@ csv-like structure with the outer loop going over the x dimension, the middle
 loop going over the y dimension, and the inner loop going over the z dimension.
 """
 import numpy as np
+import pandas as pd
 from exa.numerical import Field, Series
 
 
@@ -52,7 +53,7 @@ class AtomicField(Field):
             return np.dot(a, np.cross(b, c))
         self['dv'] = self.apply(_dv, axis=1)
 
-    def integration(self):
+    def integrate(self):
         """
         Check that field values are normalized.
 
@@ -81,13 +82,19 @@ class AtomicField(Field):
         Args:
             a (int): Index of first field
             b (int): Index of second field
-            angle (float): Angle of rotation
+            angle (float or list of floats): angle(s) of rotation
 
         Return:
             newfield (:class:`~exatomic.field.AtomicField`): Rotated field values and data
         """
-        d0 = self.ix[[a]]
+        field_params = self.ix[[a]]
         f0 = self.field_values[a]
         f1 = self.field_values[b]
-        f = Series(np.cos(angle) * f0 + np.sin(angle) * f1)
-        return AtomicField([f], d0)
+        field_values = []
+        if isinstance(angle, float):
+            angle = [angle]
+        for ang in angle:
+            field_values.append(Series(np.cos(ang) * f0 + np.sin(ang) * f1))
+        field_params = pd.concat([field_params] * len(field_values))
+        field_params.reset_index(drop=True, inplace=True)
+        return AtomicField(field_params, field_values=field_values)
