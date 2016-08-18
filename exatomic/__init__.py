@@ -18,7 +18,7 @@ Warning:
 
 .. _atomic: https://en.wikipedia.org/wiki/Atomic_units
 """
-__exatomic_version__ = (0, 3, 1)
+__exatomic_version__ = (0, 3, 2)
 __version__ = '.'.join((str(v) for v in __exatomic_version__))
 
 
@@ -33,3 +33,5 @@ from exatomic.filetypes import XYZ, Cube
 
 from exatomic import test
 from exatomic.algorithms import neighbors
+from exatomic.algorithms import diffusion
+from exatomic.algorithms import pcf
