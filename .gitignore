@@ -25,6 +25,11 @@ var/*
 .installed.cfg
 *.egg
 *.pypirc
+win-32
+win-64
+linux-32
+linux-64
+osx-64
 
 # PyInstaller
 #  Usually these files are written by a python script from a template

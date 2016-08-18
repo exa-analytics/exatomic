@@ -65,17 +65,21 @@ def _slice_atoms_molecules(universe, sources, restrictions, n):
     Initial check of the unvierse data and argument types and creation of atom
     and molecule table slices.
     """
-    if 'classification' not in universe.molecule.columns and any(len(source) > 3 for source in sources):
-        raise KeyErrror("Column 'classification' not in the molecule table, please classify molecules or select by symbols only.")
     if not isinstance(sources, list):
         sources = [sources]
     if not isinstance(restrictions, list) and restrictions is not None:
         restrictions = [restrictions]
     if isinstance(n, (int, np.int32, np.int64)):
         n = [n]
-    symbols = universe.atom['symbol'].unique()
-    classification = universe.molecule['classification'].unique()
-    if all(source in symbols for source in sources):
+    labels = universe.atom.get_atom_labels()
+    universe.atom['label'] = labels
+    symbols = universe.atom['symbol']
+    classification = universe.molecule['classification']
+    if all(source in labels for source in sources):
+        source_atoms = universe.atom[universe.atom['label'].isin(sources)]
+        mdx = source_atoms['molecule'].astype(np.int64)
+        source_molecules = universe.molecule[universe.molecule.index.isin(mdx)]
+    elif all(source in symbols for source in sources):
         source_atoms = universe.atom[universe.atom['symbol'].isin(sources)]
         mdx = source_atoms['molecule'].astype(np.int64)
         source_molecules = universe.molecule[universe.molecule.index.isin(mdx)]
@@ -85,13 +89,21 @@ def _slice_atoms_molecules(universe, sources, restrictions, n):
     else:
         classif = [source for source in sources if source in classification]
         syms = [source for source in sources if source in symbols]
+        lbls = [source for source in sources if source in labels]
         source_molecules = universe.molecule[universe.molecule['classification'].isin(classif)]
         source_atoms = universe.atom[universe.atom['molecule'].isin(source_molecules.index)]
-        source_atoms = source_atoms[source_atoms['symbol'].isin(syms)]
+        if len(syms) > 0:
+            source_atoms = source_atoms[source_atoms['symbol'].isin(syms)]
+        if len(lbls) > 0:
+            source_atoms = source_atoms[source_atoms['label'].isin(lbls)]
     other_molecules = universe.molecule[~universe.molecule.index.isin(source_molecules.index)]
     other_atoms = universe.atom[~universe.atom.index.isin(source_atoms.index)]
     if restrictions is not None:
-        if all(other in symbols for other in restrictions):
+        if all(other in labels for other in restrictions):
+            other_atoms = other_atoms[other_atoms['label'].isin(restrictions)]
+            mdx = other_atoms['molecule'].astype(np.int64)
+            other_molecules = other_molecules[other_molecules.index.isin(mdx)]
+        elif all(other in symbols for other in restrictions):
             other_atoms = other_atoms[other_atoms['symbol'].isin(restrictions)]
             mdx = other_atoms['molecule'].astype(np.int64)
             other_molecules = other_molecules[other_molecules.index.isin(mdx)]
@@ -101,9 +113,14 @@ def _slice_atoms_molecules(universe, sources, restrictions, n):
         else:
             classif = [other for other in restrictions if other in classification]
             syms = [other for other in restrictions if other in symbols]
+            lbls = [other for other in restrictions if other in labels]
             other_molecules = other_molecules[other_molecules['classification'].isin(classif)]
             other_atoms = other_atoms[other_atoms['molecule'].isin(other_molecules.index)]
-            other_atoms = other_atoms[other_atoms['symbol'].isin(syms)]
+            if len(syms) > 0:
+                other_atoms = other_atoms[other_atoms['symbol'].isin(syms)]
+            if len(lbls) > 0:
+                other_atoms = other_atoms[other_atoms['label'].isin(lbls)]
+    del universe.atom['label']
     return source_atoms, other_atoms, source_molecules, other_molecules, n
 
 

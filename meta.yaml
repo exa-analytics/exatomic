@@ -23,6 +23,7 @@ requirements:
         - ipyparallel
         - sphinx
         - nose
+        - numba
         - exa
 
     run:
@@ -41,6 +42,7 @@ requirements:
         - ipyparallel
         - sphinx
         - nose
+        - numba
         - exa
 
 about:
