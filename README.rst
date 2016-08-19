@@ -29,6 +29,8 @@ If using conda, make sure to be on up-to-date versions of `ipywidgets` and
 
     conda install -c conda-forge notebook ipywidgets
 
+Visualization currently support Chrome and Firefox.
+
 ###################
 Getting Started
 ###################
