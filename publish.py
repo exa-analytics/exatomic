@@ -118,7 +118,7 @@ def conda_build(pys):
                 raise Exception("Upload failed with command {}".format(string))
 
 
-def pypi_build(pypi):
+def pypi_build():
     """
     Deploy to pypi/pypitest.
     """
