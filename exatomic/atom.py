@@ -12,7 +12,7 @@ import pandas as pd
 from traitlets import Dict, Unicode
 from exa.numerical import DataFrame, SparseDataFrame, Series
 from exa.relational.isotope import (symbol_to_color, symbol_to_radius,
-                                   symbol_to_element_mass)
+                                    symbol_to_element_mass)
 from exatomic.error import PeriodicUniverseError
 from exatomic.algorithms.distance import minimal_image_counts
 from exatomic.algorithms.geometry import make_small_molecule
@@ -51,7 +51,8 @@ class Atom(DataFrame):
     _precision = {'x': 2, 'y': 2, 'z': 2}
     _index = 'atom'
     _cardinal = ('frame', np.int64)
-    _categories = {'symbol': str, 'set': np.int64, 'molecule': np.int64}
+    _categories = {'symbol': str, 'set': np.int64, 'molecule': np.int64,
+                   'label': np.int64}
     _traits = ['x', 'y', 'z', 'set']
     _columns = ['x', 'y', 'z', 'symbol']
 
