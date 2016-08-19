@@ -22,7 +22,6 @@ def get_args():
     parser = argparse.ArgumentParser(description="Deployment script for Exa Analytics")
     parser.add_argument("pkg", nargs="?")
     parser.add_argument("version", nargs="?")
-    parser.add_argument("which_pypi", nargs="?", default="pypi")
     return parser.parse_args()
 
 
@@ -123,7 +122,7 @@ def pypi_build(pypi):
     """
     Deploy to pypi/pypitest.
     """
-    string = "python setup.py sdist upload {}".format(pypi)
+    string = "python setup.py sdist upload"
     ret = subprocess.run([string], shell=True, check=True,
                          stdout=subprocess.PIPE, stdin=subprocess.PIPE)
 
@@ -147,5 +146,5 @@ if __name__ == "__main__":
     chk = check(args.pkg, args.version, pys)
     if chk:
         conda_build(pys)
-        pypi_build(args.which_pypi)
+        pypi_build()
     cleanup()
