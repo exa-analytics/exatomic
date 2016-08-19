@@ -1,16 +1,18 @@
 # -*- coding: utf-8 -*-
-'''
+# Copyright (c) 2015-2016, Exa Analytics Development Team
+# Distributed under the terms of the Apache License 2.0
+"""
 Pair Correlation Functions
 ############################
-'''
+"""
 import numpy as np
 import pandas as pd
 from exatomic import Length
 
 
 def radial_pair_correlation(universe, a, b, dr=0.05, start=1.0, stop=13.0,
-                            length='A', window=1):
-    '''
+                            length="A", window=1):
+    """
     Compute the angularly independent pair correlation function.
 
     This function is sometimes called the pair radial distribution function. The
@@ -24,8 +26,8 @@ def radial_pair_correlation(universe, a, b, dr=0.05, start=1.0, stop=13.0,
 
     .. code-block:: Python
 
-        pcf = radial_pair_correlation(universe, 'O', 'O')
-        pcf.plot(secondary_y='Pair Count')
+        pcf = radial_pair_correlation(universe, "O", "O")
+        pcf.plot(secondary_y="Pair Count")
 
     .. math::
 
@@ -57,30 +59,30 @@ def radial_pair_correlation(universe, a, b, dr=0.05, start=1.0, stop=13.0,
         the volume sampled during computation of two body properties divided by
         the number of properties used in the histogram (the triple summation
         above, divided by the normalization for the radial distance outward).
-    '''
+    """
     bins = np.arange(start, stop, dr)                     # Discrete values of r for histogram
-    symbol = universe.atom['symbol'].astype(str)          # To select distances, map to symbols
-    symbol0 = universe.atom_two['atom0'].map(symbol)
-    symbol1 = universe.atom_two['atom1'].map(symbol)
+    symbol = universe.atom["symbol"].astype(str)          # To select distances, map to symbols
+    symbol0 = universe.atom_two["atom0"].map(symbol)
+    symbol1 = universe.atom_two["atom1"].map(symbol)
     symbols = symbol0 + symbol1
     indexes = symbols[symbols.isin([a + b, b + a])].index # Distances of interest or those that
-    distances = universe.atom_two.ix[indexes, 'distance'] # match symbol pairs
+    distances = universe.atom_two.ix[indexes, "distance"] # match symbol pairs
     hist, bins = np.histogram(distances, bins)            # Compute histogram
     nn = hist.sum()                                       # Number of observations
     bmax = bins.max()                                     # Note that bins is unchanged by np.hist..
-    rx, ry, rz = universe.frame[['rx', 'ry', 'rz']].mean().values
+    rx, ry, rz = universe.frame[["rx", "ry", "rz"]].mean().values
     ratio = (((bmax/rx + bmax/ry + bmax/rz)/3)**3).mean() # Variable actual vol and bin vol
     v_shell = bins[1:]**3 - bins[:-1]**3                  # Volume of each bin shell
-    v_cell = universe.frame['cell_volume'].mean()         # Actual volume
+    v_cell = universe.frame["cell_volume"].mean()         # Actual volume
     g = hist*v_cell*ratio/(v_shell*nn)                    # Compute pair correlation
-    na = universe.atom[universe.atom['symbol'] == a].groupby('frame').size().mean()
-    nb = universe.atom[universe.atom['symbol'] == b].groupby('frame').size().mean()
+    na = universe.atom[universe.atom["symbol"] == a].groupby("frame").size().mean()
+    nb = universe.atom[universe.atom["symbol"] == b].groupby("frame").size().mean()
     if a == b:
         nb -= 1
     n = hist.cumsum()/nn*na*nb                           # Compute pair count
-    r = (bins[1:] + bins[:-1])/2*Length['au', length]
-    unit = 'au'
-    if length in ['A', 'angstrom', 'ang']:
+    r = (bins[1:] + bins[:-1])/2*Length["au", length]
+    unit = "au"
+    if length in ["A", "angstrom", "ang"]:
         unit = r"\AA"
     rlabel = r"$r\ \mathrm{(" + unit + ")}$"
     glabel = r"$g_\mathrm{" + a + b + r"}(r)$"

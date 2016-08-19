@@ -407,7 +407,8 @@ def update_molecular_orbitals(universe, *field_params, mocoefs=None, vector=None
         universe (exatomic.container.Universe): universe with basis_functions attribute
         field_params (pd.Series or rmin, rmax, nr): dimensions of new numerical grid
     """
-    del universe.__dict__['_field']
+    if hasattr(universe, '_field'):
+        del universe.__dict__['_field']
     if isinstance(field_params[0], pd.Series):
         field_params = field_params[0]
     else:
