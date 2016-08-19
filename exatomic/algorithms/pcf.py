@@ -88,5 +88,7 @@ def radial_pair_correlation(universe, a, b, dr=0.05, start=1.0, stop=13.0,
     glabel = r"$g_\mathrm{" + a + b + r"}(r)$"
     nlabel = r"$n_\mathrm{" + a + b + r"}(r)$"
     df = pd.DataFrame.from_dict({rlabel: r, glabel: g, nlabel: n})
+    if window > 1:
+        df = df.rolling(window=window).mean()
     df.set_index(rlabel, inplace=True)
     return df

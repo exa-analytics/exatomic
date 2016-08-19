@@ -48,12 +48,7 @@ def nearest_molecules(universe, n, sources, restrictions=None, how='atom',
         unis (dict): Dictionary of number of neighbors keys, universe values
     """
     source_atoms, other_atoms, source_molecules, other_molecules, n = _slice_atoms_molecules(universe, sources, restrictions, n)
-    print(source_atoms.shape)
-    print(other_atoms.shape)
-    print(source_molecules.shape)
-    print(other_molecules.shape)
     ordered_molecules, ordered_twos = _compute_neighbors_by_atom(universe, source_atoms, other_atoms, source_molecules)
-    print(ordered_molecules.shape)
     unis = {}
     if free_boundary == True:
         for nn in n:
@@ -82,21 +77,17 @@ def _slice_atoms_molecules(universe, sources, restrictions, n):
     symbols = universe.atom['symbol'].unique()
     classification = universe.molecule['classification'].unique()
     if all(source in labels for source in sources):
-        print("all  labels")
         source_atoms = universe.atom[universe.atom['label'].isin(sources)]
         mdx = source_atoms['molecule'].astype(np.int64)
         source_molecules = universe.molecule[universe.molecule.index.isin(mdx)]
     elif all(source in symbols for source in sources):
-        print("all symbols")
         source_atoms = universe.atom[universe.atom['symbol'].isin(sources)]
         mdx = source_atoms['molecule'].astype(np.int64)
         source_molecules = universe.molecule[universe.molecule.index.isin(mdx)]
     elif all(source in classification for source in sources):
-        print("all mols")
         source_molecules = universe.molecule[universe.molecule['classification'].isin(sources)]
         source_atoms = universe.atom[universe.atom['molecule'].isin(source_molecules.index)]
     else:
-        print("all other")
         classif = [source for source in sources if source in classification]
         syms = [source for source in sources if source in symbols]
         lbls = [source for source in sources if source in labels]
