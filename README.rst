@@ -16,6 +16,19 @@ or `pypi`_.
 
     pip install exatomic
 
+After installation, run the following to set up visualization.
+
+.. code-block:: bash
+
+    exa -u
+
+If using conda, make sure to be on up-to-date versions of `ipywidgets` and
+`notebook`:
+
+.. code-block:: bash
+
+    conda install -c conda-forge notebook ipywidgets
+
 ###################
 Getting Started
 ###################
