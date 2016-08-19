@@ -542,23 +542,27 @@ class SlaterTypeBasisFunction(SymbolicFunction):
     expr = r**kr * x**kx * y**ky * z**kz * sy.exp(-zeta*r)
 
     @classmethod
-    def eval(cls, xa=None, ya=None, za=None, kx=None, ky=None, kz=None, kr=None, zeta=None):
+    def eval(cls, xa=None, ya=None, za=None, kx=None, ky=None, kz=None,
+             kr=None, zeta=None):
+        """
+        """
         subs = {}
-        if xa:
+        if xa is not None:
             subs[cls.xa] = xa
-        if ya:
+        if ya is not None:
             subs[cls.ya] = ya
-        if za:
+        if za is not None:
             subs[cls.za] = za
-        if kr:
+        if kr is not None:
             subs[cls.kr] = kr
-        if kx:
+        if kx is not None:
             subs[cls.kx] = kx
-        if ky:
+        if ky is not None:
             subs[cls.ky] = ky
-        if kz:
+        if kz is not None:
             subs[cls.kz] = kz
-        if zeta:
+        if zeta is not None:
             subs[cls.zeta] = zeta
+        print(subs)
         expr = cls.expr.subs(subs)
         return super().new_expression(expr, "vectorize")
