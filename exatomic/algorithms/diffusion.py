@@ -33,4 +33,6 @@ def einstein_relation(universe, length='cm', time='s'):
     '''
     msd = absolute_squared_displacement(universe).mean(axis=1)
     t = universe.frame['time'].values
+    msd *= Length['au', length]**2
+    t /= Time['ps', time]
     return msd / (6 * t)
