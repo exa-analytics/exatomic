@@ -72,7 +72,10 @@ def _slice_atoms_molecules(universe, sources, restrictions, n):
     if isinstance(n, (int, np.int32, np.int64)):
         n = [n]
     labels = universe.atom.get_atom_labels()
-    universe.atom['label'] = labels
+    del_label = False
+    if 'label' not in universe.atom.columns:
+        del_label = True
+        universe.atom['label'] = labels
     labels = labels.unique()
     symbols = universe.atom['symbol'].unique()
     classification = universe.molecule['classification'].unique()
@@ -121,7 +124,8 @@ def _slice_atoms_molecules(universe, sources, restrictions, n):
                 other_atoms = other_atoms[other_atoms['symbol'].isin(syms)]
             if len(lbls) > 0:
                 other_atoms = other_atoms[other_atoms['label'].isin(lbls)]
-    del universe.atom['label']
+    if del_label:
+        del universe.atom['label']
     return source_atoms, other_atoms, source_molecules, other_molecules, n
 
 
