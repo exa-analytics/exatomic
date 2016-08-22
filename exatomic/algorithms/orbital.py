@@ -132,9 +132,10 @@ def _gen_prefactor(sh, l, ml, porder, corder, phase=False):
             prefacs.append(prefac)
         return prefacs
 
-def _cartesian_prefactor(l, xs, ys, zs, porder, corder):
+def _cartesian_prefactor(l, xs, ys, zs, porder):
     if l == 0: return ['']
     prefacs = []
+    # Special case for l == 1 just cuts down on characters to compile
     if l == 1:
         for x, y, z in zip(xs, ys, zs):
             prefac = ''
@@ -285,7 +286,7 @@ def gen_string_bfns(universe, kind='spherical'):
                         bastrs.append(_enumerate_primitives_prefacs(prefacs, grp, r2str))
                 else:
                     subcart = universe.cartesian_gtf_order[universe.cartesian_gtf_order['l'] == l]
-                    prefacs = _cartesian_prefactor(l, subcart['x'], subcart['y'], subcart['z'], porder, corder)
+                    prefacs = _cartesian_prefactor(l, subcart['x'], subcart['y'], subcart['z'], porder)
                     for prefac in prefacs:
                         bastrs.append(_enumerate_primitives_prefacs([prefac], grp, r2str))
     return bastrs
