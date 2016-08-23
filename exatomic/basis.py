@@ -516,7 +516,7 @@ import sympy as sy
 from exa.symbolic import SymbolicFunction
 
 
-class SlaterTypeBasisFunction(SymbolicFunction):
+class CartesianSlater(SymbolicFunction):
     """
     Args:
         xa (float): Basis center in x
@@ -553,7 +553,7 @@ class SlaterTypeBasisFunction(SymbolicFunction):
             ky (int):
             kz (int):
             kr (int):
-            zeta (float): 
+            zeta (float):
         """
         subs = {}
         if xa is not None:
@@ -572,5 +572,64 @@ class SlaterTypeBasisFunction(SymbolicFunction):
             subs[cls.kz] = kz
         if zeta is not None:
             subs[cls.zeta] = zeta
+        expr = cls.expr.subs(subs)
+        return super().new_expression(expr, "vectorize")
+
+
+class CartesianGaussian(SymbolicFunction):
+    """
+    Args:
+        xa (float): Basis center in x
+        ya (float): Basis center in y
+        za (float): Basis center in z
+        kx (int): Spherical harmonic coefficient in x
+        ky (int): Spherical harmonic coefficient in y
+        kz (int): Spherical harmonic coefficient in z
+        kr (int): Spherical harmonic coefficient in r
+        alpha (float): Positive exponential coefficient
+
+    .. math:
+
+        \Chi_{A}\left(x, y, z\right) = x_{A}^{k_x}y_{A}^{k_y}z_{A}^{k_z}e^{-\alpha r_{A}^2}
+    """
+    kr, kx, ky, kz = sy.symbols("k_r k_x k_y k_z", imaginary=False, positive=True, integer=True)
+    x, y, z, xa, ya, za = sy.symbols("x y z x_A y_A z_A", imaginary=False)
+    alpha = sy.Symbol("alpha", imaginary=False, positive=True)
+    xx = x - xa
+    yy = y - ya
+    zz = z - za
+    r2 = xx**2 + yy**2 + zz**2
+    expr = x**kx * y**ky * z**kz * sy.exp(-alpha*r2)
+
+    @classmethod
+    def eval(cls, xa=None, ya=None, za=None, kx=None, ky=None, kz=None, alpha=None):
+        """
+        Args:
+            xa (float): Basis function center in x
+            ya (float): Basis function center in y
+            za (float): Basis function center in z
+            kx (int):
+            ky (int):
+            kz (int):
+            kr (int):
+            zeta (float):
+        """
+        subs = {}
+        if xa is not None:
+            subs[cls.xa] = xa
+        if ya is not None:
+            subs[cls.ya] = ya
+        if za is not None:
+            subs[cls.za] = za
+        if kr is not None:
+            subs[cls.kr] = kr
+        if kx is not None:
+            subs[cls.kx] = kx
+        if ky is not None:
+            subs[cls.ky] = ky
+        if kz is not None:
+            subs[cls.kz] = kz
+        if alpha is not None:
+            subs[cls.alpha] = alpha
         expr = cls.expr.subs(subs)
         return super().new_expression(expr, "vectorize")
