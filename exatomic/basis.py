@@ -545,6 +545,15 @@ class SlaterTypeBasisFunction(SymbolicFunction):
     def eval(cls, xa=None, ya=None, za=None, kx=None, ky=None, kz=None,
              kr=None, zeta=None):
         """
+        Args:
+            xa (float): Basis function center in x
+            ya (float): Basis function center in y
+            za (float): Basis function center in z
+            kx (int):
+            ky (int):
+            kz (int):
+            kr (int):
+            zeta (float): 
         """
         subs = {}
         if xa is not None:
@@ -563,6 +572,5 @@ class SlaterTypeBasisFunction(SymbolicFunction):
             subs[cls.kz] = kz
         if zeta is not None:
             subs[cls.zeta] = zeta
-        print(subs)
         expr = cls.expr.subs(subs)
         return super().new_expression(expr, "vectorize")
