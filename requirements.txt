@@ -5,8 +5,13 @@ sqlalchemy
 pandas
 networkx
 sympy
+<<<<<<< HEAD
 traitlets
 seaborn
+=======
+seaborn
+traitlets
+>>>>>>> 884b05a97af38fb1a6e18c8f167a93a41d12bc47
 jupyter
 notebook
 ipywidgets

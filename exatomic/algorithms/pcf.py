@@ -79,7 +79,7 @@ def radial_pair_correlation(universe, a, b, dr=0.05, start=1.0, stop=13.0,
     nb = universe.atom[universe.atom["symbol"] == b].groupby("frame").size().mean()
     if a == b:
         nb -= 1
-    n = hist.cumsum()/nn*na*nb                           # Compute pair count
+    n = hist.cumsum()/nn*na*nb*4/3*np.pi*bmax**3/v_cell
     r = (bins[1:] + bins[:-1])/2*Length["au", length]
     unit = "au"
     if length in ["A", "angstrom", "ang"]:
@@ -90,5 +90,6 @@ def radial_pair_correlation(universe, a, b, dr=0.05, start=1.0, stop=13.0,
     df = pd.DataFrame.from_dict({rlabel: r, glabel: g, nlabel: n})
     if window > 1:
         df = df.rolling(window=window).mean()
+        df = df.iloc[window:]
     df.set_index(rlabel, inplace=True)
     return df
