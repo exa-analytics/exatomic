@@ -57,6 +57,21 @@ def momatrix_as_square(movec):
             cnt += 1
     return square
 
+def meshgrid3d(x, y, z):
+    tot = len(x) * len(y) * len(z)
+    xs = np.empty(tot, dtype=np.float64)
+    ys = np.empty(tot, dtype=np.float64)
+    zs = np.empty(tot, dtype=np.float64)
+    cnt = 0
+    for i in x:
+        for j in y:
+            for k in z:
+                xs[cnt] = i
+                ys[cnt] = j
+                zs[cnt] = k
+                cnt += 1
+    return xs, ys, zs
+
 def make_field_params(rmin, rmax, nr, frame=0, label=np.nan, field_type=np.nan):
     """
     Helper function that generates necessary field parameters of a
@@ -77,7 +92,7 @@ def make_field_params(rmin, rmax, nr, frame=0, label=np.nan, field_type=np.nan):
                       'frame': frame})
 
 
-def _gen_prefactor(sh, l, ml, porder, corder, phase=False):
+def _gen_prefactor(sh, l, ml, nucpos):
     """
     For a given (l, ml) combination, determine
     the pre-exponential factor in a given basis function.
@@ -86,9 +101,7 @@ def _gen_prefactor(sh, l, ml, porder, corder, phase=False):
         sh: result of exatomic.algorithms.basis.solid_harmonics
         l (int): angular quantum Number
         ml (int): magnetic quantum number
-        porder (list): atomic x, y, z positions in the order of p functions
-        corder (list): mapping of {'x', 'y', 'z'} in same order as porder
-        phase (bool): allows for testing of Condon-Shortley phase factors
+        nucpos (dict): atomic x, y, z positions
 
     Returns
         prefacs (list): the pre-exponential factors as strings
@@ -96,18 +109,16 @@ def _gen_prefactor(sh, l, ml, porder, corder, phase=False):
     if l == 0: return ['']
     symbolic = sh[(l, ml)]
     if l == 1:
-        return ['(' + porder[ml] + ') * ']
+        mld = {1: 'x', -1: 'y', 0: 'z'}
+        return ['(' + nucpos[mld[ml]] + ') * ']
     if l > 1:
         prefacs = []
         symbolic = sh[(l, ml)].expand(basic=True)
         if type(symbolic) == Mul:
             coef, sym = symbolic.as_coeff_Mul()
             sym = str(sym).replace('*', '')
-            sympos = ['(' + porder[corder.index(char)] + ')' for char in sym]
-            if phase:
-                return [' * '.join(['-' + '{:.8f}'.format(coef)] + sympos + [''])]
-            else:
-                return [' * '.join(['{:.8f}'.format(coef)] + sympos + [''])]
+            sympos = ['(' + nucpos[char] + ')' for char in sym]
+            return [' * '.join(['{:.8f}'.format(coef)] + sympos + [''])]
         elif type(symbolic) == Add:
             dat = list(symbolic.expand(basic=True).as_coefficients_dict().items())
             coefs = [i[1] for i in dat]
@@ -123,16 +134,25 @@ def _gen_prefactor(sh, l, ml, porder, corder, phase=False):
             for cart in powers:
                 if powers[cart]:
                     if powers[cart] == 1:
-                        if len(porder[corder.index(cart)]) == 1:
-                            prefac += porder[corder.index(cart)] + ' * '
-                        else:
-                            prefac += '(' + porder[corder.index(cart)] + ')' + ' * '
+                        prefac += '(' + nucpos[cart] + ')' + ' * '
                     else:
-                        prefac += '(' + porder[corder.index(cart)] + ')**' + str(powers[cart]) + ' * '
+                        prefac += '(' + nucpos[cart] + ')**' + str(powers[cart]) + ' * '
             prefacs.append(prefac)
         return prefacs
 
-def _cartesian_prefactor(l, xs, ys, zs, porder):
+def _cartesian_prefactor(l, xs, ys, zs, nucpos):
+    """
+    As with _gen_prefactor, create the string version of the pre-exponential
+    factor in a given basis function, this time as a function of cartesian
+    powers instead of (l, ml) quantum numbers.
+
+    Args
+        l (int): angular momentum quantum number
+        xs (list): powers of x
+        ys (list): powers of y
+        zs (list): powers of z
+        nucpos (dict): atomic x,y,z positions
+    """
     if l == 0: return ['']
     prefacs = []
     # Special case for l == 1 just cuts down on characters to compile
@@ -140,21 +160,21 @@ def _cartesian_prefactor(l, xs, ys, zs, porder):
         for x, y, z in zip(xs, ys, zs):
             prefac = ''
             if x:
-                prefac += '({}) * '.format(porder[1])
+                prefac += '({}) * '.format(nucpos['x'])
             if y:
-                prefac += '({}) * '.format(porder[2])
+                prefac += '({}) * '.format(nucpos['y'])
             if z:
-                prefac += '({}) * '.format(porder[0])
+                prefac += '({}) * '.format(nucpos['z'])
             prefacs.append(prefac)
         return prefacs
     for x, y, z in zip(xs, ys, zs):
         prefac = ''
         if x:
-            prefac += '({})**{} * '.format(porder[1], x)
+            prefac += '({})**{} * '.format(nucpos['x'], x)
         if y:
-            prefac += '({})**{} * '.format(porder[2], y)
+            prefac += '({})**{} * '.format(nucpos['y'], y)
         if z:
-            prefac += '({})**{} * '.format(porder[0], z)
+            prefac += '({})**{} * '.format(nucpos['z'], z)
         prefacs.append(prefac)
     return prefacs
 
@@ -262,8 +282,7 @@ def gen_string_bfns(universe, kind='spherical'):
         xastr = 'x' if np.isclose(x, 0) else 'x - ' + str(x)
         yastr = 'y' if np.isclose(y, 0) else 'y - ' + str(y)
         zastr = 'z' if np.isclose(z, 0) else 'z - ' + str(z)
-        porder = [zastr, xastr, yastr]
-        corder = ['z', 'x', 'y']
+        nucpos = {'x': xastr, 'y': yastr, 'z': zastr}
         r2str = '(' + xastr + ')**2 + (' + yastr + ')**2 + (' + zastr + ')**2'
         if hasattr(universe, 'basis_set_order'):
             bas = bases.get_group(seht).groupby('L')
@@ -271,7 +290,7 @@ def gen_string_bfns(universe, kind='spherical'):
             for L, ml, shfunc in zip(basord['L'], basord['ml'], basord['shell_function']):
                 grp = bas.get_group(L).groupby('shell_function').get_group(shfunc)
                 bastr = ''
-                prefacs = _gen_prefactor(sh, L, ml, porder, corder)
+                prefacs = _gen_prefactor(sh, L, ml, nucpos)
                 bastrs.append(_enumerate_primitives_prefacs(prefacs, grp, r2str))
         else:
             bas = bases.get_group(seht).groupby('shell_function')
@@ -282,11 +301,11 @@ def gen_string_bfns(universe, kind='spherical'):
                     sym_keys = universe.spherical_gtf_order.symbolic_keys(l)
                     for L, ml in sym_keys:
                         bastr = ''
-                        prefacs = _gen_prefactor(sh, L, ml, porder, corder)
+                        prefacs = _gen_prefactor(sh, L, ml, nucpos)
                         bastrs.append(_enumerate_primitives_prefacs(prefacs, grp, r2str))
                 else:
                     subcart = universe.cartesian_gtf_order[universe.cartesian_gtf_order['l'] == l]
-                    prefacs = _cartesian_prefactor(l, subcart['x'], subcart['y'], subcart['z'], porder)
+                    prefacs = _cartesian_prefactor(l, subcart['x'], subcart['y'], subcart['z'], nucpos)
                     for prefac in prefacs:
                         bastrs.append(_enumerate_primitives_prefacs([prefac], grp, r2str))
     return bastrs
@@ -298,58 +317,90 @@ def numerical_grid_from_field_params(field_params):
     x = np.linspace(field_params.ox, mx, field_params.nx)
     y = np.linspace(field_params.oy, my, field_params.ny)
     z = np.linspace(field_params.oz, mz, field_params.nz)
-    y, x, z = np.meshgrid(x, y, z)
-    x = x.flatten()
-    y = y.flatten()
-    z = z.flatten()
-    return x, y, z
+    return meshgrid3d(x, y, z)
+
+def _determine_field_params(universe, field_params):
+    if field_params is None:
+        dr = 41
+        rmin = min(universe.atom['x'].min(),
+                   universe.atom['y'].min(),
+                   universe.atom['z'].min()) - 4
+        rmax = max(universe.atom['x'].max(),
+                   universe.atom['y'].max(),
+                   universe.atom['z'].max()) + 4
+        return make_field_params(rmin, rmax, dr)
+    else:
+        return make_field_params(*field_params)
 
 def _determine_vectors(universe, vector):
     if isinstance(vector, int):
-        vector = [vector]
+        return [vector]
+    elif isinstance(vector, (list, tuple, range)):
+        return vector
     elif vector is None:
         try:
             nclosed = universe.atom['Zeff'].sum() // 2
-            if nclosed -15 < 0:
-                vector = range(0, nclosed + 10)
-            else:
-                vector = range(nclosed - 15, nclosed + 5)
         except KeyError:
             nclosed = universe.atom['Z'].sum() // 2
-            if nclosed - 15 < 0:
-                vector = range(0, nclosed + 10)
-            else:
-                vector = range(nclosed - 15, nclosed + 5)
-    elif not isinstance(vector, (list, tuple, range)):
-        raise TypeError()
-    return vector
+        if nclosed - 15 < 0:
+            return range(0, nclosed + 15)
+        else:
+            return range(nclosed - 15, nclosed + 5)
+    else:
+        raise TypeError('Try specifying vector as a list or int')
 
+def _determine_mocoefs(universe, mocoefs):
+    if mocoefs is None:
+        return 'coefficient'
+    else:
+        if mocoefs not in universe.momatrix.columns:
+            raise Exception('mocoefs must be a column in universe.momatrix')
+        if vector is None:
+            raise Exception('Must supply vector if non-canonical MOs are used')
 
-def add_mos_to_universe(universe, *field_params, mocoefs=None, vector=None):
+def _evaluate_basis(universe, basis_values, x, y, z):
+    for name, basis_function in universe.basis_functions.items():
+        if 'bf' in name:
+            basis_values[:,int(name[2:])] = basis_function(x, y, z)
+    return basis_values
+
+def _evaluate_fields(universe, basis_values, vector, field_data, mocoefs):
+    vectors = universe.momatrix.groupby('orbital')
+    for i, vno in enumerate(vector):
+        vec = vectors.get_group(vno)
+        for chi, coef in zip(vec['chi'], vec[mocoefs]):
+            field_data[:, i] += coef * basis_values[:, chi]
+    return field_data
+
+def _compute_mos(basis_values, coefs, vector):
+    nfield = len(vector)
+    field_data = np.zeros((basis_values.shape[0], nfield), dtype=np.float64)
+    for i, vec in enumerate(vector):
+        for j, bs in enumerate(coefs):
+            field_data[:, i] += basis_values[:, j] * coefs[:, j]
+    return [field_data[:, j] for j in range(nfield)]
+
+def add_mos_to_universe(universe, field_params=None, mocoefs=None, vector=None):
     """
-    Provided a universe contains enough information to regenerate
-    molecular orbitals (complete basis set specification and C matrix),
-    this function evaluates the molecular orbitals on a discretized grid
-    determined by field_params. field_params is either a pandas.Series
-    containing ['ox', 'oy', 'oz', 'nx', 'ny', 'nz', 'dxi', 'dyj', 'dzk',
-    'dxj', 'dyk', 'dzi', 'dxk', 'dyi', 'dzj', 'field_type', 'label', 'frame']
-    attributes (see make_field_params) or a tuple of (rmin, rmax, nr), the
-    bounding box and number of points along a single cartesian direction.
+    If a universe contains enough information to generate
+    molecular orbitals (basis_set, basis_set_summary and momatrix),
+    evaluate the molecular orbitals on a discretized grid. If vector
+    is not provided, attempts to calculate vectors by the sum of Z/Zeff
+    of the atoms present divided by two; roughly (HOMO-15,LUMO+5).
 
-    If no argument vector is passed, naively compute the number of closed
-    shell orbitals by summing 'Z/Zeff' in the atom table, divide by 2, and
-    produce HOMO-15 to LUMO+5.
+    Args
+        field_params (tuple): tuple of (min, max, steps)
+        mocoefs (str): column in momatrix (default is 'coefficient')
+        vector (int, list, range): the MO vectors to evaluate
 
     Warning:
         Removes any fields previously attached to the universe
     """
     if hasattr(universe, '_field'):
         del universe.__dict__['_field']
-    field_params = field_params[0] if type(field_params[0]) == pd.Series else make_field_params(*field_params)
-    vectors = universe.momatrix.groupby('orbital')
-    if mocoefs is not None:
-        if vector is None:
-            raise Exception('Must supply vector if non-canonical MOs are used')
+
+    field_params = _determine_field_params(universe, field_params)
+    mocoefs = _determine_mocoefs(universe, mocoefs)
     vector = _determine_vectors(universe, vector)
 
     ### TODO :: optimizations.
@@ -361,45 +412,47 @@ def add_mos_to_universe(universe, *field_params, mocoefs=None, vector=None):
     #bases_of_int = np.unique(np.concatenate([universe.momatrix.contributions(i)['chi'].values for i in vector]))
     #basfns = [basfns[i] for i in bases_of_int]
 
-    print('Warning: not extensively tested. Please be careful.')
     basfns = gen_string_bfns(universe)
+    print('Warning: not extensively tested. Please be careful.')
     print('Compiling basis functions, may take a while.')
     t1 = datetime.now()
-    _add_bfns_to_universe(universe, basfns)
-    t2 = datetime.now()
-    print('It took {:.8f}s to compile the basis "module" with {} characters'.format(
-            (t2-t1).total_seconds(), sum([len(b) for b in basfns])))
 
+    _add_bfns_to_universe(universe, basfns)
     x, y, z = numerical_grid_from_field_params(field_params)
     nbas = universe.basis_set_summary['function_count'].sum()
     npoints = len(x)
     nvec = len(vector)
 
+    t2 = datetime.now()
+    try:
+        print('Took {:.2f}s to compile basis functions ' \
+              'with {} characters, {} primitives and {} contracted functions'.format(
+                (t2-t1).total_seconds(), sum([len(b) for b in basfns]),
+                universe.basis_set_summary['primitive_count'].sum(),
+                nbas))
+    except KeyError:
+        print('Took {:.2f}s to compile basis functions ' \
+              'with {} characters and {} contracted functions'.format(
+                (t2-t1).total_seconds(), sum([len(b) for b in basfns]),
+                nbas))
+
     basis_values = np.zeros((npoints, nbas), dtype=np.float64)
-    for name, basis_function in universe.basis_functions.items():
-        if 'bf' in name:
-            basis_values[:,int(name[2:])] = basis_function(x, y, z)
+    basis_values = _evaluate_basis(universe, basis_values, x, y, z)
 
     field_data = np.zeros((npoints, nvec), dtype=np.float64)
+    field_data = _evaluate_fields(universe, basis_values, vector, field_data, mocoefs)
 
-    if mocoefs is None:
-        if mocoefs not in universe.momatrix.columns:
-            mocoefs = 'coefficient'
-
-    cnt = 0
-    for vno in vector:
-        vec = vectors.get_group(vno)
-        for chi, coef in zip(vec['chi'], vec[mocoefs]):
-            field_data[:, cnt] += coef * basis_values[:, chi]
-        cnt += 1
+    #coefs = universe.momatrix.square(column=mocoefs)
+    #field_values = compute_mos(basis_values, coefs, vector)
+    #print('basis values', basis_values.shape)
+    #print('field values', field_values.shape)
 
     nfps = pd.concat([field_params] * nvec, axis=1).T
-
     universe.field = AtomicField(nfps, field_values=[field_data[:, i]
                                  for i in range(nvec)])
     universe._traits_need_update = True
 
-def update_molecular_orbitals(universe, *field_params, mocoefs=None, vector=None):
+def update_molecular_orbitals(universe, field_params=None, mocoefs=None, vector=None):
     """
     Provided the universe already contains the basis_functions attribute,
     reevaluates the MOs with the new field_params
@@ -410,45 +463,23 @@ def update_molecular_orbitals(universe, *field_params, mocoefs=None, vector=None
     """
     if hasattr(universe, '_field'):
         del universe.__dict__['_field']
-    if isinstance(field_params[0], pd.Series):
-        field_params = field_params[0]
-    else:
-        field_params = make_field_params(*field_params)
-    vectors = universe.momatrix.groupby('orbital')
-    if mocoefs is not None:
-        if vector is None:
-            raise Exception('Must supply vector if non-canonical MOs are used')
-    vector = _determine_vectors(universe, vector)
 
+    print(field_params)
+    print(type(field_params))
+
+    field_params = _determine_field_params(universe, field_params)
+    mocoefs = _determine_mocoefs(universe, mocoefs)
+    vector = _determine_vectors(universe, vector)
     x, y, z = numerical_grid_from_field_params(field_params)
     nbas = universe.basis_set_summary['function_count'].sum()
     npoints = len(x)
     nvec = len(vector)
 
     basis_values = np.zeros((npoints, nbas), dtype=np.float64)
-
-    for name, basis_function in universe.basis_functions.items():
-        if 'bf' in name:
-            basis_values[:,int(name[2:])] = basis_function(x, y, z)
+    basis_values = _evaluate_basis(universe, basis_values, x, y, z)
 
     field_data = np.zeros((npoints, nvec), dtype=np.float64)
-
-    print(mocoefs)
-    print(universe.momatrix.columns)
-
-    if mocoefs is None:
-        print('mocoefs is None')
-        if mocoefs not in universe.momatrix.columns:
-            mocoefs = 'coefficient'
-
-    print(mocoefs)
-
-    cnt = 0
-    for vno in vector:
-        vec = vectors.get_group(vno)
-        for chi, coef in zip(vec['chi'], vec[mocoefs]):
-            field_data[:, cnt] += coef * basis_values[:, chi]
-        cnt += 1
+    field_data = _evaluate_fields(universe, basis_values, vector, field_data, mocoefs)
 
     nfps = pd.concat([field_params] * nvec, axis=1).T
 
@@ -462,5 +493,7 @@ if config['dynamic']['numba'] == 'true':
     density_from_momatrix = jit(nopython=True)(density_from_momatrix)
     density_as_square = jit(nopython=True)(density_as_square)
     momatrix_as_square = jit(nopython=True)(momatrix_as_square)
+    meshgrid3d = jit(nopython=True, cache=True, nogil=True)(meshgrid3d)
+    #compute_mos = jit(nopython=True, cache=True)(compute_mos)
 else:
     print('add_mos_to_universe will not work without having numba installed')

@@ -125,12 +125,12 @@ class MOMatrix(DataFrame):
         return tmp[abs(tmp['coefficient']) > tol]
 
 
-    def square(self, frame=0):
+    def square(self, frame=0, column='coefficient'):
         """
         Returns a square dataframe corresponding to the canonical C matrix
         representation.
         """
-        movec = self[self['frame'] == frame]['coefficient'].values
+        movec = self[self['frame'] == frame][column].values
         square = pd.DataFrame(momatrix_as_square(movec))
         square.index.name = 'chi'
         square.columns.name = 'orbital'
