@@ -3,8 +3,10 @@
 # Copyright (c) 2015-2016, Exa Analytics Development Team
 # Distributed under the terms of the Apache License 2.0
 """
-Build/Publish
-#################
+Build and Publish
+###################
+Script to automatically build and publish the package to
+anaconda and pypi package repositories.
 """
 import os
 import shutil
@@ -99,23 +101,25 @@ def conda_build(pys):
     conup_fmt = "anaconda upload {}/{}"
     for py in pys:
         string = build_fmt.format(py=py)
-        build = subprocess.run([string], shell=True, check=True, stdout=subprocess.PIPE)
-        if build.returncode != 0:
-            raise Exception("Build failed with command {}".format(string))
-        for line in build.stdout.decode("utf-8").split('\n'):
-            if "anaconda upload" in line:
-                path = line.split()[-1]
-        string = conv_fmt.format(path)
-        conv = subprocess.run([string], shell=True, check=True, stdout=subprocess.PIPE)
-        if conv.returncode != 0:
-            raise Exception("Convert failed with command {}".format(string))
+        print(string)
+        #build = subprocess.run([string], shell=True, check=True, stdout=subprocess.PIPE)
+        #if build.returncode != 0:
+        #    raise Exception("Build failed with command {}".format(string))
+        #for line in build.stdout.decode("utf-8").split('\n'):
+        #    if "anaconda upload" in line:
+        #        path = line.split()[-1]
+        #string = conv_fmt.format(path)
+        string = conv_fmt.format("PATH")
+        #conv = subprocess.run([string], shell=True, check=True, stdout=subprocess.PIPE)
+        #if conv.returncode != 0:
+        #    raise Exception("Convert failed with command {}".format(string))
         name = path.split(os.sep)[-1]
         for pltfrm in builds:
             string = conup_fmt.format(pltfrm, name)
-            upload = subprocess.run([string], shell=True, check=True,
-                                    stdout=subprocess.PIPE, stdin=subprocess.PIPE)
-            if upload.returncode != 0:
-                raise Exception("Upload failed with command {}".format(string))
+        #    upload = subprocess.run([string], shell=True, check=True,
+        #                            stdout=subprocess.PIPE, stdin=subprocess.PIPE)
+        #    if upload.returncode != 0:
+        #        raise Exception("Upload failed with command {}".format(string))
 
 
 def pypi_build():
@@ -123,8 +127,8 @@ def pypi_build():
     Deploy to pypi/pypitest.
     """
     string = "python setup.py sdist upload"
-    ret = subprocess.run([string], shell=True, check=True,
-                         stdout=subprocess.PIPE, stdin=subprocess.PIPE)
+#    ret = subprocess.run([string], shell=True, check=True,
+#                         stdout=subprocess.PIPE, stdin=subprocess.PIPE)
 
 
 def cleanup():
