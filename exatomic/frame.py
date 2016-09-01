@@ -45,6 +45,20 @@ class Frame(DataFrame):
     _traits = ['xi', 'xj', 'xk', 'yi', 'yj', 'yk', 'zi', 'zj', 'zk',
                'ox', 'oy', 'oz', 'frame']
 
+    def create_cubic_lattice(self, a, ox=0.0, oy=0.0, oz=0.0):
+        """
+        Create a static cubic cell lattice for the current universe.
+        """
+        self['ox'] = ox
+        self['oy'] = oy
+        self['oz'] = oz
+        for i, xyz in enumerate(["x", "y", "z"]):
+            for j, ijk in enumerate(["i", "j", "k"]):
+                if i == j:
+                    self[xyz+ijk] = a
+                else:
+                    self[xyz+ijk] = 0.0
+
     def is_periodic(self, how='all'):
         """
         Check if any/all frames are periodic.
