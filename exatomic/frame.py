@@ -73,7 +73,7 @@ class Frame(DataFrame):
             rx = self['rx'].min()
             ry = self['ry'].min()
             rz = self['rz'].min()
-            if np.all(self['rx'] == rx) and np.all(self['ry'] == ry) and np.all(self['rz'] == rz):
+            if np.allclose(self['rx'], rx) and np.allclose(self['ry'], ry) and np.allclose(self['rz'], rz):
                 return False
             else:
                 return True
