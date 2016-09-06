@@ -85,16 +85,22 @@ class AtomicField(Field):
             angle (float or list of floats): angle(s) of rotation
 
         Return:
-            newfield (:class:`~exatomic.field.AtomicField`): Rotated field values and data
+            rotated (:class:`~exatomic.field.AtomicField`): positive then negative linear combinations
         """
         field_params = self.ix[[a]]
         f0 = self.field_values[a]
         f1 = self.field_values[b]
         field_values = []
-        if isinstance(angle, float):
+        try:
+            angle = float(angle)
             angle = [angle]
+        except TypeError:
+            pass
         for ang in angle:
-            field_values.append(Series(np.cos(ang) * f0 + np.sin(ang) * f1))
+            t1 = np.cos(ang) * f0
+            t2 = np.sin(ang) * f1
+            field_values.append(Series(t1 + t2))
+            field_values.append(Series(t1 - t2))
         field_params = pd.concat([field_params] * len(field_values))
         field_params.reset_index(drop=True, inplace=True)
         return AtomicField(field_params, field_values=field_values)
