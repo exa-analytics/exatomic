@@ -246,6 +246,7 @@ def {}(x, y, z): return {}""".format
         baskeys.append(bas)
         funcs = ''.join([funcs, basformat(dec, bas, bfn)])
     code = header + funcs
+    code = compile(code, '<string>', 'exec')
     exec(code, bfns)
     if inplace:
         universe.basis_functions = bfns

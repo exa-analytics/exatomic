@@ -183,7 +183,7 @@ class Universe(Container, metaclass=Meta):
         else:
             raise TypeError('field must be an instance of exatomic.field.AtomicField or a list of them')
 
-    def add_molecular_orbitals(self, *field_params, mocoefs=None, vector=None):
+    def add_molecular_orbitals(self, field_params=None, mocoefs=None, vector=None):
         """
         Adds molecular orbitals to universe. field_params define the numerical
         field and may be a tuple of (min, max, nsteps) or a series containing
@@ -196,9 +196,9 @@ class Universe(Container, metaclass=Meta):
             raise AttributeError("universe must have a momatrix to make MOs")
         if not hasattr(self, '_basis_set_order'):
             print('Warning: without the basis_set_order, MOs may be incorrect.')
-        _add_mos_to_universe(self, *field_params, mocoefs=mocoefs, vector=vector)
+        _add_mos_to_universe(self, field_params=field_params, mocoefs=mocoefs, vector=vector)
 
-    def update_molecular_orbitals(self, *field_params, mocoefs=None, vector=None):
+    def update_molecular_orbitals(self, field_params=None, mocoefs=None, vector=None):
         """
         Updates the molecular orbitals with new field_params, different MO
         coefficients or different eigenvectors. Significantly faster than
@@ -209,7 +209,7 @@ class Universe(Container, metaclass=Meta):
         """
         if not hasattr(self, 'basis_functions'):
             raise AttributeError('Universe has no basis functions, add_molecular_orbitals first')
-        _update_mos(self, *field_params, mocoefs=mocoefs, vector=vector)
+        _update_mos(self, field_params=field_params, mocoefs=mocoefs, vector=vector)
 
     def _custom_traits(self):
         """
