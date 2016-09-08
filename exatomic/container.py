@@ -113,6 +113,7 @@ class Universe(Container, metaclass=Meta):
             self.projected_atom = projected_atom
         else:
             self.atom_two = compute_atom_two(self, mapper, bond_extra)
+        self._traits_need_update = True
 
     def compute_bonds(self, mapper=None, bond_extra=0.45):
         """
@@ -123,6 +124,7 @@ class Universe(Container, metaclass=Meta):
         """
         self.atom_two.compute_bonds(self.atom['symbol'], mapper=mapper, bond_extra=bond_extra)
         self.compute_molecule()
+        self._traits_need_update = True
 
     def compute_bond_count(self):
         """
@@ -182,6 +184,7 @@ class Universe(Container, metaclass=Meta):
                 self.field = AtomicField(new_field, field_values=new_field_values)
         else:
             raise TypeError('field must be an instance of exatomic.field.AtomicField or a list of them')
+        self._traits_need_update = True
 
     def add_molecular_orbitals(self, field_params=None, mocoefs=None, vector=None):
         """
@@ -197,6 +200,7 @@ class Universe(Container, metaclass=Meta):
         if not hasattr(self, '_basis_set_order'):
             print('Warning: without the basis_set_order, MOs may be incorrect.')
         _add_mos_to_universe(self, field_params=field_params, mocoefs=mocoefs, vector=vector)
+        self._traits_need_update = True
 
     def update_molecular_orbitals(self, field_params=None, mocoefs=None, vector=None):
         """
@@ -210,6 +214,7 @@ class Universe(Container, metaclass=Meta):
         if not hasattr(self, 'basis_functions'):
             raise AttributeError('Universe has no basis functions, add_molecular_orbitals first')
         _update_mos(self, field_params=field_params, mocoefs=mocoefs, vector=vector)
+        self._traits_need_update = True
 
     def _custom_traits(self):
         """

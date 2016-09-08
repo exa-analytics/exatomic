@@ -509,3 +509,60 @@ class SphericalGTFOrder(DataFrame):
         if l is None:
             return list(obj)
         return [kv for kv in obj if kv[0] == l]
+
+
+################################################################################
+import sympy as sy
+from exa.symbolic import SymbolicFunction
+
+
+class SlaterTypeBasisFunction(SymbolicFunction):
+    """
+    Args:
+        xa (float): Basis center in x
+        ya (float): Basis center in y
+        za (float): Basis center in z
+        kx (int): Spherical harmonic coefficient in x
+        ky (int): Spherical harmonic coefficient in y
+        kz (int): Spherical harmonic coefficient in z
+        kr (int): Spherical harmonic coefficient in r
+        zeta (float): Positive exponential coefficient
+
+    .. math:
+
+        \Chi_{A}\left(x, y, z\right) = r_{A}^{k_r}x_{A}^{k_x}y_{A}^{k_y}z_{A}^{k_z}e^{-\zeta r_{A}}
+    """
+    kr, kx, ky, kz = sy.symbols("k_r k_x k_y k_z", imaginary=False, positive=True, integer=True)
+    x, y, z, xa, ya, za = sy.symbols("x y z x_A y_A z_A", imaginary=False)
+    zeta = sy.Symbol("zeta", imaginary=False, positive=True)
+    xx = x - xa
+    yy = y - ya
+    zz = z - za
+    r = sy.sqrt(xx**2 + yy**2 + zz**2)
+    expr = r**kr * x**kx * y**ky * z**kz * sy.exp(-zeta*r)
+
+    @classmethod
+    def eval(cls, xa=None, ya=None, za=None, kx=None, ky=None, kz=None,
+             kr=None, zeta=None):
+        """
+        """
+        subs = {}
+        if xa is not None:
+            subs[cls.xa] = xa
+        if ya is not None:
+            subs[cls.ya] = ya
+        if za is not None:
+            subs[cls.za] = za
+        if kr is not None:
+            subs[cls.kr] = kr
+        if kx is not None:
+            subs[cls.kx] = kx
+        if ky is not None:
+            subs[cls.ky] = ky
+        if kz is not None:
+            subs[cls.kz] = kz
+        if zeta is not None:
+            subs[cls.zeta] = zeta
+        print(subs)
+        expr = cls.expr.subs(subs)
+        return super().new_expression(expr, "vectorize")

@@ -75,7 +75,7 @@ class XYZ(Editor):
             with open(path, 'w') as f:
                 f.write(str(self))
         else:
-            grps = self.atom.grouped()
+            grps = self.atom.cardinal_groupby()
             n = len(str(self.frame.index.max()))
             for frame, atom in grps:
                 filename = str(frame).zfill(n) + '.xyz'
@@ -90,16 +90,25 @@ class XYZ(Editor):
                              quoting=csv.QUOTE_NONE, escapechar=' ')
 
     @classmethod
-    def from_universe(cls, universe, float_format='%    .8f'):
+    def from_universe(cls, universe, atom_table='atom', float_format='%    .8f'):
         """
         Create an xyz file editor from a given universe. If the universe has
         more than one frame, creates an xyz trajectory format editor.
+
+        Args:
+            universe: The universe
+            atom_table (str): One of 'atom', 'unit', or 'visual' corresponding to coordinates
+            float_format (str): Floating point format (for writing)
         """
         string = ''
-        grps = universe.atom.grouped()
+        grps = universe.atom.cardinal_groupby()
         for frame, atom in grps:
             string += cls._header.format(nat=len(atom), comment='frame: ' + str(frame))
             atom_copy = atom[cls._cols].copy()
+            if atom_table == 'unit':
+                atom_copy.update(universe.unit_atom)
+            elif atom_table == 'visual':
+                atom_copy.update(universe.visual_atom)
             atom_copy['x'] *= Length['au', 'A']
             atom_copy['y'] *= Length['au', 'A']
             atom_copy['z'] *= Length['au', 'A']
