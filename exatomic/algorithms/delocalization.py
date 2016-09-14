@@ -12,49 +12,35 @@ an (N-1), N, and (N+1) electron system.
 
 import numpy as np
 import pandas as pd
-
+import seaborn as sns
 from exatomic import Energy
-#from exatomic.field import AtomicField
-#from exatomic.container import Universe
 
-#def stack_unis(unis, same_frame=False):
-#    """
-#    A non-general algorithm for combining ``universes'' into a single universe.
-#    """
-#    attrs = [key[1:] for key, value in vars(unis[0]).items() if key not in
-#             ['_traits_need_update', '_widget', '_lines'] and key.startswith('_')]
-#    dfs = {}
-#    if same_frame:
-#        for attr in attrs:
-#            if attr == 'field':
-#                continue
-#            dfs[attr] = getattr(unis[0], attr)
-#        if hasattr(unis[0], 'field'):
-#            field_values = [i.field.field_values[0] for i in unis]
-#            field_params = pd.concat([pd.DataFrame(unis[0].field)] * len(unis)).reset_index(drop=True)
-#            field_params['frame'] = 0
-#            #field_params['label'] = field_params['label'].astype(np.int64)
-#            dfs['field'] = AtomicField(field_params, field_values=field_values)
-#        return Universe(**dfs)
-#    for attr in attrs:
-#        if attr == 'field':
-#            continue
-#        subdfs = []
-#        for i, uni in enumerate(unis):
-#            smdf = getattr(uni, attr)
-#            smdf['frame'] = i
-#            subdfs.append(smdf)
-#        adf = pd.concat(subdfs)
-#        adf.reset_index(drop=True, inplace=True)
-#        dfs[attr] = adf
-#    if hasattr(unis[0], 'field'):
-#        field_values = [i.field.field_values[0] for i in unis]
-#        field_params = pd.concat([pd.DataFrame(unis[0].field)] * len(unis)).reset_index(drop=True)
-#        field_params['frame'] = range(len(unis))
-#        field_params['label'] = 0
-#        field_params['label'] = field_params['label'].astype(np.int64)
-#        dfs['field'] = AtomicField(field_params, field_values=field_values)
-#    return Universe(**dfs)
+sns.mpl.pyplot.rcParams.update({'text.usetex': True,
+                                'font.family': 'serif',
+                                'font.serif': ['Times'],
+                                'ytick.labelsize': 24,
+                                'xtick.labelsize': 24})
+
+def _deltaE(col):
+    if col.name == 'n': return col
+    cat = np.linspace(col.max(), 0, 51)
+    an = np.linspace(0, col.min(), 51)
+    return col - np.hstack([cat, an[1:]])
+
+def plot_en(deloc, title='', delta=None, xlabel='$\Delta$N',
+            ylabel='$\Delta$E (eV)', figsize=(5,5), legpos=[1.1,-0.0]):
+    fig = sns.mpl.pyplot.figure(figsize=figsize)
+    ax = fig.add_subplot(111)
+    color = sns.color_palette('viridis', deloc.shape[1] - 1)
+    if delta is not None:
+        deloc.apply(_deltaE).plot(ax=ax, x='n', color=color, title=title)
+    else:
+        deloc.plot(ax=ax, x='n', color=color, title=title)
+    ax.set_xlabel(xlabel)
+    ax.set_ylabel(ylabel)
+    sns.mpl.pyplot.legend(loc=legpos)
+    return fig
+
 
 def combine_deloc(delocs, order=None):
     """
@@ -72,7 +58,10 @@ def combine_deloc(delocs, order=None):
         reordered = delocs
     for i, deloc in enumerate(reordered):
         if i > 0:
-            reordered[i].drop('n', axis=1, inplace=True)
+            try:
+                reordered[i].drop('n', axis=1, inplace=True)
+            except ValueError:
+                pass
     return pd.concat(reordered, axis=1)
 
 
