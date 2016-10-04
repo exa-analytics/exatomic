@@ -36,3 +36,8 @@ from exatomic.algorithms import delocalization
 from exatomic.algorithms import neighbors
 from exatomic.algorithms import diffusion
 from exatomic.algorithms import pcf
+
+from exatomic import molcas
+from exatomic import nwchem
+from exatomic import gaussian
+from exatomic import nbo

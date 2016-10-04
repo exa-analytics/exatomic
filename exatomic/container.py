@@ -26,8 +26,7 @@ from exatomic.molecule import (Molecule, compute_molecule, compute_molecule_com,
 from exatomic.widget import UniverseWidget
 from exatomic.field import AtomicField
 from exatomic.orbital import Orbital, MOMatrix, DensityMatrix
-from exatomic.basis import (SphericalGTFOrder, CartesianGTFOrder, Overlap,
-                            BasisSetSummary, GaussianBasisSet, BasisSetOrder)
+from exatomic.basis import (Overlap, GaussianBasisSet, BasisSetOrder)
 from exatomic.algorithms.orbital import add_mos_to_universe as _add_mos_to_universe
 from exatomic.algorithms.orbital import update_molecular_orbitals as _update_mos
 
@@ -53,11 +52,7 @@ class Meta(TypedMeta):
     momatrix = MOMatrix
     density = DensityMatrix
     basis_set_order = BasisSetOrder
-    basis_set_summary = BasisSetSummary
     gaussian_basis_set = GaussianBasisSet
-    spherical_gtf_order = SphericalGTFOrder
-    cartesian_gtf_order = CartesianGTFOrder
-
 
 class Universe(Container, metaclass=Meta):
     """

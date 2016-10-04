@@ -140,42 +140,43 @@ def _gen_prefactor(sh, l, ml, nucpos):
             prefacs.append(prefac)
         return prefacs
 
-def _cartesian_prefactor(l, xs, ys, zs, nucpos):
+def _cartesian_prefactor(l, x, y, z, nucpos):
     """
     As with _gen_prefactor, create the string version of the pre-exponential
     factor in a given basis function, this time as a function of cartesian
     powers instead of (l, ml) quantum numbers.
 
     Args
-        l (int): angular momentum quantum number
+        ls (list): angular momentum quantum number
         xs (list): powers of x
         ys (list): powers of y
         zs (list): powers of z
         nucpos (dict): atomic x,y,z positions
     """
+    #for l, x, y, z in zip()
     if l == 0: return ['']
     prefacs = []
     # Special case for l == 1 just cuts down on characters to compile
     if l == 1:
-        for x, y, z in zip(xs, ys, zs):
-            prefac = ''
-            if x:
-                prefac += '({}) * '.format(nucpos['x'])
-            if y:
-                prefac += '({}) * '.format(nucpos['y'])
-            if z:
-                prefac += '({}) * '.format(nucpos['z'])
-            prefacs.append(prefac)
-        return prefacs
-    for x, y, z in zip(xs, ys, zs):
+        #for x, y, z in zip(xs, ys, zs):
         prefac = ''
         if x:
-            prefac += '({})**{} * '.format(nucpos['x'], x)
+            prefac += '({}) * '.format(nucpos['x'])
         if y:
-            prefac += '({})**{} * '.format(nucpos['y'], y)
+            prefac += '({}) * '.format(nucpos['y'])
         if z:
-            prefac += '({})**{} * '.format(nucpos['z'], z)
+            prefac += '({}) * '.format(nucpos['z'])
         prefacs.append(prefac)
+        return prefacs
+    #for x, y, z in zip(xs, ys, zs):
+    prefac = ''
+    if x:
+        prefac += '({})**{} * '.format(nucpos['x'], x)
+    if y:
+        prefac += '({})**{} * '.format(nucpos['y'], y)
+    if z:
+        prefac += '({})**{} * '.format(nucpos['z'], z)
+    prefacs.append(prefac)
     return prefacs
 
 def _enumerate_primitives_prefacs(prefacs, group, r2str):
@@ -254,7 +255,7 @@ def {}(x, y, z): return {}""".format
         return bfns
 
 
-def gen_string_bfns(universe, kind='spherical'):
+def gen_string_bfns(universe):#, kind='spherical'):
     """
     Given an exatomic.container.Universe that contains complete momatrix
     and basis_set attributes, generates and returns the strings corresponding
@@ -279,36 +280,43 @@ def gen_string_bfns(universe, kind='spherical'):
     bastrs = []
     for i, (seht, x, y, z) in enumerate(zip(universe.atom['set'], universe.atom['x'],
                                             universe.atom['y'],   universe.atom['z'])):
-        spherical = universe.basis_set_summary.ix[seht].spherical
+        #spherical = universe.basis_set_summary.ix[seht].spherical
         xastr = 'x' if np.isclose(x, 0) else 'x - ' + str(x)
         yastr = 'y' if np.isclose(y, 0) else 'y - ' + str(y)
         zastr = 'z' if np.isclose(z, 0) else 'z - ' + str(z)
         nucpos = {'x': xastr, 'y': yastr, 'z': zastr}
         r2str = '(' + xastr + ')**2 + (' + yastr + ')**2 + (' + zastr + ')**2'
-        if hasattr(universe, 'basis_set_order'):
-            bas = bases.get_group(seht).groupby('L')
-            basord = centers.get_group(i + 1)
-            for L, ml, shfunc in zip(basord['L'], basord['ml'], basord['shell_function']):
-                grp = bas.get_group(L).groupby('shell_function').get_group(shfunc)
+        #if hasattr(universe, 'basis_set_order'):
+        bas = bases.get_group(seht).groupby('L')
+        basord = centers.get_group(i)
+        if universe.basis_set.spherical:
+            for L, ml, shfunc in zip(basord['L'], basord['ml'], basord['shell']):
+                grp = bas.get_group(L).groupby('shell').get_group(shfunc)
                 bastr = ''
                 prefacs = _gen_prefactor(sh, L, ml, nucpos)
                 bastrs.append(_enumerate_primitives_prefacs(prefacs, grp, r2str))
         else:
-            bas = bases.get_group(seht).groupby('shell_function')
-            for f, grp in bas:
-                if len(grp) == 0: continue
-                l = grp['L'].values[0]
-                if spherical:
-                    sym_keys = universe.spherical_gtf_order.symbolic_keys(l)
-                    for L, ml in sym_keys:
-                        bastr = ''
-                        prefacs = _gen_prefactor(sh, L, ml, nucpos)
-                        bastrs.append(_enumerate_primitives_prefacs(prefacs, grp, r2str))
-                else:
-                    subcart = universe.cartesian_gtf_order[universe.cartesian_gtf_order['l'] == l]
-                    prefacs = _cartesian_prefactor(l, subcart['x'], subcart['y'], subcart['z'], nucpos)
-                    for prefac in prefacs:
-                        bastrs.append(_enumerate_primitives_prefacs([prefac], grp, r2str))
+            for L, l, m, n, shfunc in zip(basord['L'], basord['l'], basord['m'], basord['n'], basord['shell']):
+                grp = bas.get_group(L).groupby('shell').get_group(shfunc)
+                bastr = ''
+                prefacs = _cartesian_prefactor(L, l, m, n, nucpos)
+                bastrs.append(_enumerate_primitives_prefacs(prefacs, grp, r2str))
+#        else:
+#            bas = bases.get_group(seht).groupby('shell_function')
+#            for f, grp in bas:
+#                if len(grp) == 0: continue
+#                l = grp['L'].values[0]
+#                if spherical:
+#                    sym_keys = universe.spherical_gtf_order.symbolic_keys(l)
+#                    for L, ml in sym_keys:
+#                        bastr = ''
+#                        prefacs = _gen_prefactor(sh, L, ml, nucpos)
+#                        bastrs.append(_enumerate_primitives_prefacs(prefacs, grp, r2str))
+#                else:
+#                    subcart = universe.cartesian_gtf_order[universe.cartesian_gtf_order['l'] == l]
+#                    prefacs = _cartesian_prefactor(l, subcart['x'], subcart['y'], subcart['z'], nucpos)
+#                    for prefac in prefacs:
+#                        bastrs.append(_enumerate_primitives_prefacs([prefac], grp, r2str))
     return bastrs
 
 def numerical_grid_from_field_params(field_params):
@@ -420,22 +428,16 @@ def add_mos_to_universe(universe, field_params=None, mocoefs=None, vector=None):
 
     _add_bfns_to_universe(universe, basfns)
     x, y, z = numerical_grid_from_field_params(field_params)
-    nbas = universe.basis_set_summary['function_count'].sum()
+    #nbas = universe.basis_set_summary['function_count'].sum()
+    nbas = universe.atom['set'].map(universe.basis_set.functions()).sum()
     npoints = len(x)
     nvec = len(vector)
 
     t2 = datetime.now()
-    try:
-        print('Took {:.2f}s to compile basis functions ' \
-              'with {} characters, {} primitives and {} contracted functions'.format(
-                (t2-t1).total_seconds(), sum([len(b) for b in basfns]),
-                universe.basis_set_summary['primitive_count'].sum(),
-                nbas))
-    except KeyError:
-        print('Took {:.2f}s to compile basis functions ' \
-              'with {} characters and {} contracted functions'.format(
-                (t2-t1).total_seconds(), sum([len(b) for b in basfns]),
-                nbas))
+    print('Took {:.2f}s to compile basis functions ' \
+          'with {} characters, {} primitives and {} contracted functions'.format(
+          (t2-t1).total_seconds(), sum([len(b) for b in basfns]),
+          universe.atom['set'].map(universe.basis_set.primitives()).sum(), nbas))
 
     basis_values = np.zeros((npoints, nbas), dtype=np.float64)
     basis_values = _evaluate_basis(universe, basis_values, x, y, z)
@@ -472,7 +474,7 @@ def update_molecular_orbitals(universe, field_params=None, mocoefs=None, vector=
     mocoefs = _determine_mocoefs(universe, mocoefs)
     vector = _determine_vectors(universe, vector)
     x, y, z = numerical_grid_from_field_params(field_params)
-    nbas = universe.basis_set_summary['function_count'].sum()
+    nbas = universe.atom['set'].map(universe.basis_set.functions()).sum()
     npoints = len(x)
     nvec = len(vector)
 

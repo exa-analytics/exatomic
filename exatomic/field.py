@@ -90,7 +90,8 @@ class AtomicField(Field):
         field_params = self.ix[[a]]
         f0 = self.field_values[a]
         f1 = self.field_values[b]
-        field_values = []
+        pos_values = []
+        neg_values = []
         try:
             angle = float(angle)
             angle = [angle]
@@ -99,8 +100,8 @@ class AtomicField(Field):
         for ang in angle:
             t1 = np.cos(ang) * f0
             t2 = np.sin(ang) * f1
-            field_values.append(Series(t1 + t2))
-            field_values.append(Series(t1 - t2))
+            pos_values.append(Series(t1 + t2))
+            neg_values.append(Series(t1 - t2))
         field_params = pd.concat([field_params] * len(field_values))
         field_params.reset_index(drop=True, inplace=True)
-        return AtomicField(field_params, field_values=field_values)
+        return AtomicField(field_params, field_values=pos_values + neg_values)
