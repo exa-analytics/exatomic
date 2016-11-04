@@ -56,6 +56,32 @@ class Atom(DataFrame):
     _traits = ['x', 'y', 'z', 'set']
     _columns = ['x', 'y', 'z', 'symbol']
 
+    def to_xyz(self, tag='symbol', header=False, comment='', frame=0):
+        """
+        Return atomic data in XYZ format, by default without the first 2 lines.
+        If multiple frames are specified, return an XYZ trajectory format.
+        
+        Args
+            tag (str): column name to use in place of 'symbol'
+            header (bool): if True, return the first 2 lines of XYZ format 
+            comment (str): a comment to put in the comment line
+            frame (int,list,tup,range): frame or frames to return
+        
+        Returns
+            string: XYZ formatted atomic data
+        """
+        try:
+            frame = int(frame)
+            hdr = ''
+            if header or comment:
+                hdr = '\n'.join([str(len(self)), comment, ''])
+            return hdr + self[self['frame'] == 0].to_string(columns=(tag, 'x', 'y', 'z'),
+                                                            header=False, index=False, 
+                                                            formatters={tag: lambda x: '{:<5}'.format(x)})
+        except TypeError:
+            raise NotImplementedError('I dont deal with trajectories :D')
+            
+
     def get_element_masses(self):
         """Compute and return element masses from symbols."""
         elem_mass = symbol_to_element_mass()
