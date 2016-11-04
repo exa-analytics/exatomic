@@ -26,8 +26,7 @@ from exatomic.molecule import (Molecule, compute_molecule, compute_molecule_com,
 from exatomic.widget import UniverseWidget
 from exatomic.field import AtomicField
 from exatomic.orbital import Orbital, MOMatrix, DensityMatrix
-from exatomic.basis import (SphericalGTFOrder, CartesianGTFOrder, Overlap,
-                            BasisSetSummary, GaussianBasisSet, BasisSetOrder)
+from exatomic.basis import (Overlap, GaussianBasisSet, BasisSetOrder)
 from exatomic.algorithms.orbital import add_mos_to_universe as _add_mos_to_universe
 from exatomic.algorithms.orbital import update_molecular_orbitals as _update_mos
 
@@ -53,11 +52,7 @@ class Meta(TypedMeta):
     momatrix = MOMatrix
     density = DensityMatrix
     basis_set_order = BasisSetOrder
-    basis_set_summary = BasisSetSummary
     gaussian_basis_set = GaussianBasisSet
-    spherical_gtf_order = SphericalGTFOrder
-    cartesian_gtf_order = CartesianGTFOrder
-
 
 class Universe(Container, metaclass=Meta):
     """
@@ -151,8 +146,15 @@ class Universe(Container, metaclass=Meta):
         """Compute number of molecules per frame."""
         self.frame['molecule_count'] = compute_molecule_count(self)
 
+    def compute_density(self):
+        """Compute density from momatrix and occupation vector."""
+        if not hasattr(self, 'occupation_vector'):
+            raise Exception('Universe must have momatrix and occupation_vector attributes')
+        self.density = DensityMatrix.from_momatrix(self.momatrix, self.occupation_vector)
+
     def add_field(self, field):
         """Adds a field object to the universe."""
+        self._traits_need_update = True
         if isinstance(field, AtomicField):
             if not hasattr(self, 'field'):
                 self.field = field
@@ -179,7 +181,7 @@ class Universe(Container, metaclass=Meta):
             raise TypeError('field must be an instance of exatomic.field.AtomicField or a list of them')
         self._traits_need_update = True
 
-    def add_molecular_orbitals(self, *field_params, mocoefs=None, vector=None):
+    def add_molecular_orbitals(self, field_params=None, mocoefs=None, vector=None):
         """
         Adds molecular orbitals to universe. field_params define the numerical
         field and may be a tuple of (min, max, nsteps) or a series containing
@@ -191,11 +193,11 @@ class Universe(Container, metaclass=Meta):
         if not hasattr(self, '_momatrix'):
             raise AttributeError("universe must have a momatrix to make MOs")
         if not hasattr(self, '_basis_set_order'):
-            print('Warning: without the basis_set_order, MOs are likely incorrect.')
-        _add_mos_to_universe(self, *field_params, mocoefs=mocoefs, vector=vector)
+            print('Warning: without the basis_set_order, MOs may be incorrect.')
+        _add_mos_to_universe(self, field_params=field_params, mocoefs=mocoefs, vector=vector)
         self._traits_need_update = True
 
-    def update_molecular_orbitals(self, *field_params, mocoefs=None, vector=None):
+    def update_molecular_orbitals(self, field_params=None, mocoefs=None, vector=None):
         """
         Updates the molecular orbitals with new field_params, different MO
         coefficients or different eigenvectors. Significantly faster than
@@ -206,7 +208,7 @@ class Universe(Container, metaclass=Meta):
         """
         if not hasattr(self, 'basis_functions'):
             raise AttributeError('Universe has no basis functions, add_molecular_orbitals first')
-        _update_mos(self, *field_params, mocoefs=mocoefs, vector=vector)
+        _update_mos(self, field_params=field_params, mocoefs=mocoefs, vector=vector)
         self._traits_need_update = True
 
     def _custom_traits(self):
@@ -251,7 +253,7 @@ def concat(*universes, name=None, description=None, meta=None):
     return Universe(**kwargs)
 
 
-def basis_function_contributions(universe, mo):
+def basis_function_contributions(universe, mo, tol=0.01, ao=None, frame=0):
     """
     Provided a universe with momatrix and basis_set_order attributes,
     return the major basis function contributions of a particular
@@ -260,9 +262,18 @@ def basis_function_contributions(universe, mo):
     Args
         universe (exatomic.container.Universe): a universe
         mo (int): molecular orbital index
+        tol (float): minimum value of coefficient by which to filter
+        frame (int): frame of the universe (default is zero)
+
+    Returns
+        together (pd.DataFrame): a join of momatrix and basis_set_order
     """
-    small = universe.momatrix.contributions(mo)
+    small = universe.momatrix.contributions(mo, tol=tol, frame=frame)
     chis = small['chi'].values
     coefs = small['coefficient']
     coefs.index = chis
-    return pd.concat([universe.basis_set_order.ix[chis], coefs], axis=1)
+    together = pd.concat([universe.basis_set_order.ix[chis], coefs], axis=1)
+    if ao is None:
+        return together
+    else:
+        raise NotImplementedError("not clever enough for that.")

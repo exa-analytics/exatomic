@@ -73,6 +73,8 @@ def _2_domain(center, ligand, distance, geometry, offset, plane, axis):
             geom.append([xi, yi, zi, ligand, 0, cnt])
             cnt += 1
         return pd.DataFrame(geom, columns=columns)
+    else:
+        raise NotImplementedError
 
 def _3_domain(center, ligand, distance, geometry, offset, plane, axis):
     if geometry == 'trigonal_pyramidal':
