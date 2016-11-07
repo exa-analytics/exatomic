@@ -383,11 +383,11 @@ _regeom02 = 'Standard orientation'
 _reorb01 = '(?=Alpha|Beta).*(?=occ|virt)'
 _reorb02 = 'Orbital symmetries'
 _orbslice = [slice(10 * i, 10 * i + 9) for i in range(5)]
-_symrep = {'Occupied': '', 'Virtual': '', 'Alpha Orbitals': '',
-           'Beta  Orbitals': '', '\(': '', '\)': ''}
+_symrep = {'Occupied': '', 'Virtual': '', 'Alpha Orbitals:': '',
+           'Beta  Orbitals:': '', '\(': '', '\)': ''}
 _resympat = re.compile('|'.join(_symrep.keys()))
-#_resympat['('] = ''
-#_resympat[')'] = ''
+_symrep['('] = ''
+_symrep[')'] = ''
 # MOMatrix flags
 _remomat01 = r'pop.*(?=full|no)'
 _remomat02 = 'Orbital Coefficients'
