@@ -44,7 +44,7 @@ class TestOutput(UnitTester):
     def test_parse_orbital(self):
         """Test the orbital table parser."""
         self.uo2sp.parse_orbital()
-        self.assertEqual(self.uo2sp.orbital.shape, (141, 5))
+        self.assertEqual(self.uo2sp.orbital.shape, (141, 6))
         self.assertTrue(np.all(pd.notnull(self.uo2sp.orbital)))
 
     def test_parse_momatrix(self):

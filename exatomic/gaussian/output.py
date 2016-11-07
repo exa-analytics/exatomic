@@ -82,10 +82,10 @@ class Output(Editor):
         nsets = nrows // 2 if os else nrows
         # Allocate a numpy array to store it
         # index is arbitrary for the momentum
-        dtypes = [('energy', 'f8'), ('occupation', 'f8'),
+        dtypes = [('energy', 'f8'), ('occupation', 'f8'), ('vector', 'f8'),
                   ('spin', 'i8'), ('index', 'i8')]
         data = np.empty((nbas * nrows,), dtype=dtypes)
-        cnt, idx = 0, 0
+        cnt, vec, idx = 0, 0, 0
         idxchk = 2 * nbas if os else nbas
         # Populate and increment accordingly
         for lno, ln in found[_reorb01]:
@@ -96,7 +96,9 @@ class Output(Editor):
                     spn = 0 if 'Alpha' in ln else 1
                     data[cnt] = (en, occ, spn, idx)
                     cnt += 1
+                    orb += 1
                     if cnt == idxchk: idx += 1
+                    if vec == nbas - 1: vec = 0
         orbital = pd.DataFrame(data)
         orbital['frame'] = 0
         # Symmetry labels

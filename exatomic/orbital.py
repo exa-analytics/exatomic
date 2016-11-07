@@ -102,10 +102,10 @@ class Orbital(_Convolve):
     Note:
         Spin zero means alpha spin or unknown and spin one means beta spin.
     """
-    _columns = ['frame', 'energy', 'occupation', 'spin']
+    _columns = ['frame', 'energy', 'occupation', 'vector', 'spin']
     _index = 'orbital'
     _cardinal = ('frame', np.int64)
-    _categories = {'spin': np.int64, 'occupation': np.float64}
+    _categories = {'spin': np.int64}
 
     def get_orbital(self, frame=0, orb=-1, spin=0, index=None):
         """
