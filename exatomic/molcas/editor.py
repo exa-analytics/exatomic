@@ -10,11 +10,11 @@ import numpy as np
 import pandas as pd
 from exatomic.container import Universe
 from io import StringIO
-from exatomic import Editor
+from exatomic import Editor as AtomicEditor
 
-class MolcasEditor(Editor):
+class Editor(AtomicEditor):
 
-    _to_universe = Editor.to_universe
+    _to_universe = AtomicEditor.to_universe
 
     def _basis_map(self, start, stop, seht):
         df = []
@@ -27,27 +27,13 @@ class MolcasEditor(Editor):
                 df.append([shell.lower(), int(nprim), int(nbas), seht, True])
         return pd.DataFrame(df)
 
-
-    def _expand_summary(self):
-        dfs = []
-        for kind in ['prim', 'bas']:
-            col = 'n' + kind if 'b' not in kind else 'n' + kind + 'is'
-            df = self.basis_set_map.pivot('symbol', 'shell', col).fillna(value=0).astype(np.int64)
-            df.columns = ['_'.join([kind, i]) for i in df.columns]
-            df.reset_index(inplace=True)
-            df.index.name = 'set'
-            dfs.append(df)
-        self._basis_set_summary = pd.concat([self.basis_set_summary, dfs[0], dfs[1]], axis=1)
-
-
     def _find_break(self, start, finds=[]):
         stop = start
         if finds:
             while True:
                 stop += 1
-                for find in finds:
-                    if find in self[stop]:
-                        return stop
+                if any((find in self[stop] for find in finds)):
+                    return stop
         while True:
             stop += 1
             if not self[stop].strip():

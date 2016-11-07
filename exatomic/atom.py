@@ -60,13 +60,13 @@ class Atom(DataFrame):
         """
         Return atomic data in XYZ format, by default without the first 2 lines.
         If multiple frames are specified, return an XYZ trajectory format.
-        
+
         Args
             tag (str): column name to use in place of 'symbol'
-            header (bool): if True, return the first 2 lines of XYZ format 
+            header (bool): if True, return the first 2 lines of XYZ format
             comment (str): a comment to put in the comment line
             frame (int,list,tup,range): frame or frames to return
-        
+
         Returns
             string: XYZ formatted atomic data
         """
@@ -76,11 +76,11 @@ class Atom(DataFrame):
             if header or comment:
                 hdr = '\n'.join([str(len(self)), comment, ''])
             return hdr + self[self['frame'] == 0].to_string(columns=(tag, 'x', 'y', 'z'),
-                                                            header=False, index=False, 
+                                                            header=False, index=False,
                                                             formatters={tag: lambda x: '{:<5}'.format(x)})
         except TypeError:
             raise NotImplementedError('I dont deal with trajectories :D')
-            
+
 
     def get_element_masses(self):
         """Compute and return element masses from symbols."""
@@ -212,3 +212,54 @@ class VisualAtom(SparseDataFrame):
             atom = atom[atom != universe.atom[['x', 'y', 'z']]].to_sparse()
             return cls(atom)
         raise PeriodicUniverseError()
+
+
+class Frequency(DataFrame):
+    """
+    The Frequency dataframe.
+
+    +-------------------+----------+-------------------------------------------+
+    | Column            | Type     | Description                               |
+    +===================+==========+===========================================+
+    | frame             | category | non-unique integer (req.)                 |
+    +-------------------+----------+-------------------------------------------+
+    | frequency         | float    | frequency of oscillation (cm-1) (req.)    |
+    +-------------------+----------+-------------------------------------------+
+    | freqdx            | int      | index of frequency of oscillation (req.)  |
+    +-------------------+----------+-------------------------------------------+
+    | dx                | float    | atomic displacement in x direction (req.) |
+    +-------------------+----------+-------------------------------------------+
+    | dy                | float    | atomic displacement in y direction (req.) |
+    +-------------------+----------+-------------------------------------------+
+    | dz                | float    | atomic displacement in z direction (req.) |
+    +-------------------+----------+-------------------------------------------+
+    | symbol            | str      | atomic symbol (req.)                      |
+    +-------------------+----------+-------------------------------------------+
+    | label             | int      | atomic identifier                         |
+    +-------------------+----------+-------------------------------------------+
+    """
+    def displacement(self, freqdx):
+        return self[self['freqdx'] == freqdx][['dx', 'dy', 'dz', 'symbol']]
+
+def add_vibrational_mode(uni, freqdx):
+    displacements = uni.frequency.displacements(freqdx)
+    if not all(displacements['symbol'] == uni.atom['symbol']):
+        print('Mismatch in ordering of atoms and frequencies.')
+        return
+    displaced = []
+    frames = []
+    # Should these only be absolute values?
+    factor = np.abs(np.sin(np.linspace(-4*np.pi, 4*np.pi, 200)))
+    for fac in factor:
+        moved = uni.atom.copy()
+        moved['x'] += displacements['dx'].values * fac
+        moved['y'] += displacements['dy'].values * fac
+        moved['z'] += displacements['dz'].values * fac
+        displaced.append(moved)
+        frames.append(uni.frame)
+    movie = pd.concat(displaced).reset_index()
+    movie['frame'] = np.repeat(range(len(factor)), len(uni.atom))
+    uni.frame = pd.concat(frames).reset_index()
+    uni.atom = movie
+    uni._traits_need_update = True
+    uni._update_traits()    

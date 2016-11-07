@@ -358,7 +358,7 @@ def _determine_vectors(universe, vector):
     else:
         raise TypeError('Try specifying vector as a list or int')
 
-def _determine_mocoefs(universe, mocoefs):
+def _determine_mocoefs(universe, mocoefs, vector):
     if mocoefs is None:
         return 'coefficient'
     else:
@@ -366,6 +366,7 @@ def _determine_mocoefs(universe, mocoefs):
             raise Exception('mocoefs must be a column in universe.momatrix')
         if vector is None:
             raise Exception('Must supply vector if non-canonical MOs are used')
+        return mocoefs
 
 def _evaluate_basis(universe, basis_values, x, y, z):
     for name, basis_function in universe.basis_functions.items():
@@ -375,6 +376,9 @@ def _evaluate_basis(universe, basis_values, x, y, z):
 
 def _evaluate_fields(universe, basis_values, vector, field_data, mocoefs):
     vectors = universe.momatrix.groupby('orbital')
+    print('n vectors =', len(vectors))
+    print('mocoefs = ', mocoefs)
+    print('vector = ', vector)
     for i, vno in enumerate(vector):
         vec = vectors.get_group(vno)
         for chi, coef in zip(vec['chi'], vec[mocoefs]):
@@ -409,7 +413,7 @@ def add_mos_to_universe(universe, field_params=None, mocoefs=None, vector=None):
         del universe.__dict__['_field']
 
     field_params = _determine_field_params(universe, field_params)
-    mocoefs = _determine_mocoefs(universe, mocoefs)
+    mocoefs = _determine_mocoefs(universe, mocoefs, vector)
     vector = _determine_vectors(universe, vector)
 
     ### TODO :: optimizations.
@@ -471,7 +475,7 @@ def update_molecular_orbitals(universe, field_params=None, mocoefs=None, vector=
     print(type(field_params))
 
     field_params = _determine_field_params(universe, field_params)
-    mocoefs = _determine_mocoefs(universe, mocoefs)
+    mocoefs = _determine_mocoefs(universe, mocoefs, vector)
     vector = _determine_vectors(universe, vector)
     x, y, z = numerical_grid_from_field_params(field_params)
     nbas = universe.atom['set'].map(universe.basis_set.functions()).sum()

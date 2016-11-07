@@ -13,7 +13,7 @@ import pandas as pd
 import numpy as np
 from io import StringIO
 
-from .editor import MolcasEditor
+from .editor import Editor
 
 from exatomic.atom import Atom
 from exatomic.basis import GaussianBasisSet, BasisSetOrder, Overlap
@@ -27,7 +27,7 @@ symbol_to_Z = symbol_to_z()
 Z_to_symbol = z_to_symbol()
 rlmap = {value: key for key, value in lmap.items()}
 
-class Base(MolcasEditor):
+class Base(Editor):
 
     def _parse_momatrix(self):
         dim = int(self[5])
@@ -99,12 +99,10 @@ class Orb(Base):
         super().__init__(*args, **kwargs)
 
 
-class Output(MolcasEditor):
+class Output(Editor):
 
     def parse_atom(self):
-        '''
-        Parses the atom list generated in SEWARD.
-        '''
+        '''Parses the atom list generated in SEWARD.'''
         start = self.find(_re_atom, keys_only=True)[0] + 8
         stop = self._find_break(start, finds=['****', '--'])
         atom = self.pandas_dataframe(start, stop, 8)

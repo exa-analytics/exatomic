@@ -28,15 +28,18 @@ class Output(Editor):
         """
         Parse the atom dataframe.
         """
-        found = self.find(_reatom01, _reatom02, _reatom03, _reatom04, keys_only=True)
+        found = self.find(_reatom01, _reatom02,
+                          _reatom03, _reatom04, keys_only=True)
         unit = self[found[_reatom04][0]].split()[3]
         starts = np.array(found[_reatom01]) + 7
         stops = np.array(found[_reatom02]) - 1
         ecps = np.array(found[_reatom03]) + 2
         ecps = {self[ln].split()[0]: int(self[ln].split()[3]) for ln in ecps}
         columns = ['label', 'tag', 'Z', 'x', 'y', 'z']
-        atom = pd.concat([self.pandas_dataframe(s, e, columns) for s, e in zip(starts, stops)])
-        atom['symbol'] = atom['tag'].str.extract('([A-z]{1,})([0-9]*)', expand=False)[0].str.lower().str.title()
+        atom = pd.concat([self.pandas_dataframe(s, e, columns)
+                          for s, e in zip(starts, stops)])
+        atom['symbol'] = atom['tag'].str.extract('([A-z]{1,})([0-9]*)',
+                                                 expand=False)[0].str.lower().str.title()
         atom['Z'] = atom['Z'].astype(np.int64)
         atom['Zeff'] = (atom['Z'] - atom['tag'].map(ecps).fillna(value=0)).astype(np.int64)
         n = len(atom)
@@ -80,18 +83,22 @@ class Output(Editor):
 
     def parse_momatrix(self):
         """
-        Parse the :class:`~exatomic.orbital,MOMatrix` dataframe.
+        Parse the :class:`~exatomic.orbital.MOMatrix` dataframe.
+
+        Note:
+            Must supply 'print "final vectors" "final vectors analysis" for momatrix
         """
-        try:
+        found = self.find(_reallmos, keys_only=True)
+        if found:
             nrcol = 6
-            begin = self.find(_reallmos, keys_only=True)[0] + 8
-            # Ensure that gaussian basis set gets parsed
-            # as it is where atom['set'] is set
-            funcs = self.gaussian_basis_set.functions()
-            nbas = self.atom['set'].map(funcs).sum()
+            start = found[0] + 8
+            nfuncs = self.gaussian_basis_set.functions()
+            nbas = self.atom['set'].map(nfuncs).sum()
+            chunk = nbas + 3
             nchunks = np.ceil(nbas / nrcol).astype(np.int64)
             leftover = nbas % nrcol
-            idxs = [(begin + (nbas + 3) * i, begin + nbas + (nbas + 3) * i) for i in range(nchunks)]
+            idxs = [(start + chunk * i, start + nbas + chunk * i) for i in range(nchunks)]
+            print(idxs)
             dfs = []
             for i, (start, stop) in enumerate(idxs):
                 if i == len(idxs) - 1 and leftover:
@@ -105,11 +112,6 @@ class Output(Editor):
                                                     'orbital': orbitals,
                                                     'chi': chis,
                                                     'frame': [0] * nbas ** 2})
-
-
-        except IndexError:
-            print("""must supply 'print "final vectors" "final vectors analysis"' in calculation block""")
-            self.momatrix = pd.DataFrame(columns=('chi', 'orbital', 'coefficient', 'frame'))
 
 
     def _parse_orbital(self, starts, stops):

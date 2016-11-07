@@ -4,11 +4,13 @@
 '''
 Orbital DataFrame
 ####################
-Orbital information such as centers and energies. All of the dataframe structures
-and functions associated with the
-results of a quantum chemical calculation. The Orbital table itself
-summarizes information such as centers and energies. The momatrix
-table contains a C matrix as it is presented in quantum textbooks,
+Orbital information. All of the dataframe structures and functions associated
+with the results of a quantum chemical calculation. The Orbital table itself
+summarizes information such as centers and energies. The Excitation table
+collects information about orbital excitations from time-dependent calculations.
+The convolve() bound method can be used to generate photoelectron spectroscopy
+and absorbance spectra.
+The MOMatrix table contains a C matrix as it is presented in quantum textbooks,
 stored in a columnar format. The bound method square() returns the
 matrix as one would write it out. This table should have dimensions
 N_basis_functions * N_basis_functions. The DensityMatrix table stores
@@ -23,7 +25,57 @@ from exatomic.algorithms.orbital import (density_from_momatrix,
                                          momatrix_as_square)
 from exatomic.field import AtomicField
 
-class Orbital(DataFrame):
+class _Convolve(DataFrame):
+
+    def _gauss(sigma, en, en0):
+        return (1.0 / (sigma * np.sqrt(2 * np.pi))) * \
+               np.exp(-(en - en0) ** 2 / (2 * sigma ** 2))
+
+    def _lorentz(gamma, en, en0):
+        return gamma / (2 * np.pi * (en - en0) ** 2 + (gamma / 2) ** 2)
+
+    def convolve(self, func='gauss', units='eV', ewin=None, broaden=0.13,
+                 padding=5, npoints=1001, name=None):
+        """
+        Compute a spectrum based on excitation energies and oscillator strengths.
+
+        Args
+            func (str): either 'gauss' or 'lorentz'
+            units (str): units of resulting spectrum
+            ewin (iter): (emin, emax) in same units as units (default in eV)
+            broaden (float): how broad to make the peaks (FWHM, default in eV)
+            npoints (int): "resolution" of the spectrum
+            name (str): optional - name the column of returned data
+
+        Returns
+            df (pd.DataFrame): contains x and y values of a spectrum
+                               (signal and energy)
+        """
+        if func not in ['gauss', 'lorentz']:
+            raise NotImplementedError('Convolution must be one of "gauss" or "lorentz".')
+        choices = {'gauss': self._gauss, 'lorentz': self._lorentz}
+        if units == 'Ha': units = 'energy'
+        if units not in self.columns:
+            self[units] = self['energy'] * Energy['Ha', units]
+        sm = self[units].min() if ewin is None else ewin[0]
+        lg = self[units].max() if ewin is None else ewin[1]
+        mine = sm - padding * broaden
+        maxe = lg + padding * broaden
+        enrg = np.linspace(mine, maxe, npoints)
+        spec = np.zeros(npoints)
+        smdf = self[(self[units] > sm) & (self[units] < lg)]
+        if self.__name__ == 'Excitation':
+            for osc, en0 in zip(smdf['osc'], smdf[units]):
+                spec += osc * choices[func](broaden, enrg, en0)
+        else:
+            for en0 in smdf[units]:
+                spec += choices[func](broaden, enrg, en0)
+        spec /= spec.max()
+        name = 'signal' if name is None else name
+        return pd.DataFrame.from_dict({units: enrg, name: spec})
+
+
+class Orbital(_Convolve):
     """
     +-------------------+----------+-------------------------------------------+
     | Column            | Type     | Description                               |
@@ -88,6 +140,32 @@ class Orbital(DataFrame):
         else:
             return self.iloc[index]
 
+class Excitation(_Convolve):
+    """
+    +-------------------+----------+-------------------------------------------+
+    | Column            | Type     | Description                               |
+    +===================+==========+===========================================+
+    | energy            | float    | excitation energy in Ha                   |
+    +-------------------+----------+-------------------------------------------+
+    | irrep             | str      | irreducible representation of excitation  |
+    +-------------------+----------+-------------------------------------------+
+    | osc               | float    | oscillator strength (length repr.)        |
+    +-------------------+----------+-------------------------------------------+
+    | occ               | int      | occupied orbital of excitation            |
+    +-------------------+----------+-------------------------------------------+
+    | virt              | int      | virtual orbital of excitation             |
+    +-------------------+----------+-------------------------------------------+
+    | occsym            | str      | occupied orbital symmetry                 |
+    +-------------------+----------+-------------------------------------------+
+    | virtsym           | str      | virtual orbital symmetry                  |
+    +-------------------+----------+-------------------------------------------+
+    | frame             | int      | non-unique integer (req.)                 |
+    +-------------------+----------+-------------------------------------------+
+    """
+    _columns = ['energy', 'osc', 'frame']
+    _index = 'excitation'
+    _cardinal = ('frame', np.int64)
+    _categories = {}
 
 
 class MOMatrix(DataFrame):
@@ -107,14 +185,14 @@ class MOMatrix(DataFrame):
     +-------------------+----------+-------------------------------------------+
     | orbital           | int      | vector of MO coefficient matrix           |
     +-------------------+----------+-------------------------------------------+
-    | coefficient       | float    | weight of basis_function in MO            |
+    | coef              | float    | weight of basis_function in MO            |
     +-------------------+----------+-------------------------------------------+
     | frame             | category | non-unique integer (req.)                 |
     +-------------------+----------+-------------------------------------------+
     """
     # TODO :: add spin as a column and make it the first groupby?
     #_traits = ['orbital']
-    _columns = ['coefficient', 'chi', 'orbital']
+    _columns = ['chi', 'orbital']
     _cardinal = ('frame', np.int64)
     _index = 'index'
 
