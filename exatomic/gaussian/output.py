@@ -94,11 +94,11 @@ class Output(Editor):
                 if en:
                     occ = 1 if 'occ' in ln else 0
                     spn = 0 if 'Alpha' in ln else 1
-                    data[cnt] = (en, occ, spn, idx)
+                    data[cnt] = (en, occ, vec, spn, idx)
                     cnt += 1
-                    orb += 1
+                    vec += 1
                     if cnt == idxchk: idx += 1
-                    if vec == nbas - 1: vec = 0
+                    if vec == nbas: vec = 0
         orbital = pd.DataFrame(data)
         orbital['frame'] = 0
         # Symmetry labels
