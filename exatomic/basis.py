@@ -15,13 +15,11 @@ See Also:
 """
 import pandas as pd
 import numpy as np
-from collections import OrderedDict
-from traitlets import Float, Int, Dict, Unicode
 from exa import DataFrame
 
 from exatomic.algorithms.basis import (lmap, spher_ml_count, enum_cartesian,
                                        cart_lml_count, spher_lml_count,
-                                       _vec_normalize, _wrap_overlap, lorder,
+                                       _vec_sloppy_normalize, _wrap_overlap, lorder,
                                        solid_harmonics, car2sph_transform_matrices)
 
 class BasisSet(DataFrame):
@@ -178,7 +176,6 @@ class Overlap(DataFrame):
     primitive overlap matrix and the contracted overlap matrix. As it is
     square symmetric, only n_basis_functions * (n_basis_functions + 1) / 2
     rows are stored.
-
 
     See Gramian matrix for more on the general properties of the overlap matrix.
 
