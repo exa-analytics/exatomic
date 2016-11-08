@@ -266,12 +266,13 @@ class Output(Editor):
             # Generate the appropriate dimensions of other columns
             labels = np.tile(df[0].values, nfreqs)
             zs = np.tile(df[1].values, nfreqs)
-            idxs = np.repeat(range(fdx, fdx + nfreqs), df.shape[0])
+            freqdxs = np.repeat(range(fdx, fdx + nfreqs), df.shape[0])
+            freqs = np.repeat(freqs, df.shape[0])
             fdx += nfreqs
             # Put it all together
             stacked = pd.DataFrame.from_dict({'Z': zs, 'label': labels,
                                              'dx': dx, 'dy': dy, 'dz': dz,
-                                             'frequency': freqs, 'freqdx': idxs})
+                                             'frequency': freqs, 'freqdx': freqdxs})
             stacked['symbol'] = stacked['Z'].map(z_to_symbol)
             dfs.append(stacked)
         # Now put all our frequencies together
