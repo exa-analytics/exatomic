@@ -7,6 +7,7 @@ Atomic Position Data
 This module provides a collection of dataframes supporting nuclear positions,
 forces, velocities, symbols, etc. (all data associated with atoms as points).
 """
+from numbers import Integral
 import numpy as np
 import pandas as pd
 from traitlets import Dict, Unicode
@@ -56,31 +57,52 @@ class Atom(DataFrame):
     _traits = ['x', 'y', 'z', 'set']
     _columns = ['x', 'y', 'z', 'symbol']
 
-    def to_xyz(self, tag='symbol', header=False, comment='', frame=0):
+    @property
+    def frames(self):
+        """Return the total number of frames in the atom table."""
+        return self['frame'].cat.as_ordered().max() + 1
+
+    @property
+    def last_frame(self):
+        """Return the last frame of the atom table."""
+        return self[self['frame'] == self.frames - 1]
+
+    def to_xyz(self, tag='symbol', header=False, comment='', frame=None):
         """
         Return atomic data in XYZ format, by default without the first 2 lines.
-        If multiple frames are specified, return an XYZ trajectory format.
+        If multiple frames are specified, return an XYZ trajectory format. If
+        frame is not specified, by default returns the last frame in the table.
 
         Args
             tag (str): column name to use in place of 'symbol'
             header (bool): if True, return the first 2 lines of XYZ format
-            comment (str): a comment to put in the comment line
+            comment (str,list): comment(s) to put in the comment line
             frame (int,list,tup,range): frame or frames to return
 
         Returns
-            string: XYZ formatted atomic data
+            ret (str): XYZ formatted atomic data
         """
-        try:
-            frame = int(frame)
-            hdr = ''
-            if header or comment:
-                hdr = '\n'.join([str(len(self)), comment, ''])
-            return hdr + self[self['frame'] == 0].to_string(columns=(tag, 'x', 'y', 'z'),
-                                                            header=False, index=False,
-                                                            formatters={tag: lambda x: '{:<5}'.format(x)})
-        except TypeError:
-            raise NotImplementedError('I dont deal with trajectories :D')
-
+        frame = self.frames - 1 if frame is None else frame
+        if isinstance(frame, Integral): frame = [frame]
+        if isinstance(comment, list) and len(comment) != len(frame):
+            raise Exception('If comment is a list it must be same length as frame.')
+        grps = self[self['frame'].isin(frame)].groupby('frame')
+        ret = ''
+        stargs = {'columns': (tag, 'x', 'y', 'z'), 'header': False,
+                  'index': False, 'formatters': {tag: lambda x: '{:<5}'.format(x)}}
+        if isinstance(comment, list):
+            for c, (f, grp) in zip(comment, grps):
+                if not len(grp): continue
+                hdr = '\n'.join([str(len(grp)), c, ''])
+                ret = ''.join([ret, hdr, grp.to_string(**stargs), '\n'])
+        else:
+            for f, grp in grps:
+                if not len(grp): continue
+                hdr = ''
+                if header or comment or len(frame) > 1:
+                    hdr = '\n'.join([str(len(grp)), comment, ''])
+                ret = ''.join([ret, hdr, grp.to_string(**stargs), '\n'])
+        return ret
 
     def get_element_masses(self):
         """Compute and return element masses from symbols."""
@@ -262,4 +284,4 @@ def add_vibrational_mode(uni, freqdx):
     uni.frame = pd.concat(frames).reset_index()
     uni.atom = movie
     uni._traits_need_update = True
-    uni._update_traits()    
+    uni._update_traits()

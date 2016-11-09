@@ -27,6 +27,8 @@ class Output(Editor):
         # Check if nosymm was specified
         key = _regeom02 if found[_regeom02] else _regeom01
         starts = np.array(found[key]) + 5
+        # Prints converged geometry twice but only need it once
+        starts = starts[:-1] if len(starts) > 1 else starts
         stop = starts[0]
         # Find where the data stops
         while '-------' not in self[stop]: stop += 1
@@ -63,8 +65,9 @@ class Output(Editor):
         # Find where the data actually starts
         while not len(self[start].split()) > 4: start -= 1
         # Call out to the mess that actually parses it
-        self.gaussian_basis_set, setmap = _basis_set(
-            self.pandas_dataframe(start + 1, stop, 4)[[0, 1]])
+        df = self.pandas_dataframe(start + 1, stop, 4)
+        self.gaussian_basis_set, setmap = _basis_set(df)
+        # Map the unique basis sets on atomic centers
         self.atom['set'] = self.atom['set'].map(setmap)
 
     def parse_orbital(self):
@@ -152,7 +155,7 @@ class Output(Editor):
         # Allocate a big ol' array
         coefs = np.empty((nbas ** 2, ndim), dtype=np.float64)
         # Dynamic column generation hasn't been worked out yet
-        colnames = ['coef'] + ['coef' + str(i) for i in range(1, ndim - 1)]
+        colnames = ['coef'] + ['coef' + str(i) for i in range(1, ndim)]
         # Iterate over where the data was found
         # c counts the column in the resulting momatrix table
         for c, (lno, ln) in enumerate(found[_remomat02]):
@@ -200,7 +203,11 @@ class Output(Editor):
         self.frame = compute_frame_from_atom(self.atom)
         # Find our data
         found = self.find(_retoten, _realphaelec, _reelecstate)
-        self.frame['total_energy'] = [float(i[1].split()[4]) for i in found[_retoten]]
+        # Extract just the total SCF energies
+        ens = [float(ln.split()[4]) for lno, ln in found[_retoten]]
+        # If 'SCF Done' prints out more times than frames
+        ens = ens if len(self.frame) == len(ens) else ens[-len(self.frame):]
+        self.frame['E_tot'] = ens
         # We will assume number of electrons doesn't change per frame
         ae, x, x, be, x, x = found[_realphaelec][0][1].split()
         self.frame['N_e'] = int(ae) + int(be)
@@ -295,83 +302,106 @@ class Output(Editor):
 
 
 def _basis_set_order(chunk):
-    centag = []
-    for ln in chunk:
-        ll = ln.split()
-        if len(ll) == 9:
-            cen = ll[1]
-            tag = ll[2]
-        centag.append((cen, tag))
-    basord = pd.DataFrame(centag, columns=('center', 'tag'))
+    # Gaussian only prints the atom center
+    # and label once for all basis functions
+    nas = (np.nan, np.nan)
+    centers = [(ln[4:8], ln[8:12]) if ln[4:8].strip() else nas for ln in chunk]
+    # pandas takes care of that
+    basord = pd.DataFrame(centers, columns=('center', 'tag')).fillna(method='pad')
     basord['center'] = basord['center'].astype(np.int64)
+    # Zero based indexing
     basord['center'] -= 1
-    block = '\n'.join([ln[10:] for ln in chunk])
-    block = _rebaspat.sub(lambda m: _basrep[m.group(0)], block)
-    basord['type'] = [ln.split()[0] if len(ln.split()) == 6 else ln.split()[1] for ln in block.splitlines()]
-    split = basord['type'].str.extract(r"([0-9]{1,})([A-z])(.*)", expand=True)
-    shfuncs = []
-    shfunc = 0
-    prevcen = basord['center'].values[0]
-    prevtyp = basord['type'].values[0]
-    for cen, typ in zip(basord['center'].values, basord['type'].values):
-        if not cen == prevcen:
-            shfunc = -1
-        if prevtyp[0] == typ[0]:
-            if prevtyp[1] == typ[1]:
-                pass
-            else:
-                shfunc += 1
-        else:
-            shfunc += 1
-        shfuncs.append(shfunc)
-        prevcen = cen
-        prevtyp = typ
-    basord['shell'] = shfuncs
-    basord['L'] = split[1].str.lower().map(lmap)
-    basord['L'] = basord['L'].astype(np.int64)
-    basord['ml'] = split[2]
-    basord['ml'].update(split[2].map({'': 0, 'X': 1, 'Y': -1, 'Z': 0}))
+    # nlml defines the type of basis function
+    types = '\n'.join([ln[10:20].strip() for ln in chunk])
+    # Gaussian prints 'D 0' so replace with 'D0'
+    types = _rebaspat.sub(lambda m: _basrep[m.group(0)], types)
+    types = pd.Series(types.splitlines())
+    # Now pull it apart into n, l, ml columns
+    split = r"([0-9]{1,})([A-z])(.*)"
+    basord[['n', 'L', 'ml']] = types.str.extract(split, expand=True)
+    # And clean it up -- don't really need n but can use it for shells
+    basord['n'] = basord['n'].astype(np.int64) - 1
+    basord['L'] = basord['L'].str.lower().map(lmap).astype(np.int64)
+    basord['ml'].update(basord['ml'].map({'': 0, 'X': 1, 'Y': -1, 'Z': 0}))
     basord['ml'] = basord['ml'].astype(np.int64)
+    # Finally get shells -- why so difficult
+    shfns = []
+    shl, pcen, pl, pn = -1, -1, -1, -1
+    for cen, n, l in zip(basord['center'], basord['n'], basord['L']):
+        if not pcen == cen: shl = -1
+        if (not pl == l) or (not pn == n): shl += 1
+        shfns.append(shl)
+        pcen, pl, pn = cen, l, n
+    basord['shell'] = shfns
+    # Get rid of n because it isn't even n anymore
+    del basord['n']
     return basord
 
 def _basis_set(raw):
-    lmap['e'] = 2
+    # Fortran scientific notation
     raw[0] = raw[0].str.replace('D', 'E')
     raw[1] = raw[1].str.replace('D', 'E')
-    center, shell, l, cnt = -1, -1, 0, 0
+    raw[2] = raw[2].str.replace('D', 'E')
+    # But now we replaced the 'D' shell with 'E' so
+    lmap['e'] = 2
+    # The data we need
     dtype = [('alpha', 'f8'), ('d', 'f8'), ('center', 'i8'),
              ('shell', 'i8'), ('L', 'i8')]
-    keep = np.empty((raw.shape[0],), dtype=dtype)
-    for alpha, d in zip(raw[0], raw[1]):
+    df = np.empty((raw.shape[0],), dtype=dtype)
+    # The data we deserve
+    master = []
+    for i, (one, two) in enumerate(zip(raw[0], raw[1])):
+        # See if it is int-able (an atom center in this case)
         try:
-            int(alpha)
-            center += 1
-            shell = -1
+            center = int(one) - 1
         except ValueError:
-            if alpha.isalpha():
-                shell += 1
-                l = lmap[alpha.lower()]
-            try:
-                keep[cnt] = (alpha, d, center, shell, l)
+            # See if it is a string corresponding to L eg. 'S'
+            if one.isalpha():
+                # Collect (atom, shell, number of primitives, index)
+                master.append((center, one.lower(), int(two), i + 1))
+    # Now through this data (2 loops mainly because of 'sp' shells)
+    cnt, shell, pcntr = 0, 0, 0
+    for cntr, lval, npr, pdx in master:
+        # Reset shell counter if atom changed
+        if pcntr != cntr: shell = 0
+        # l is lval except when lval is 'sp'
+        for c, l in enumerate(lval):
+            l = lmap[l]
+            # Get all the prims per shell
+            for i in range(pdx, pdx + npr):
+                df[cnt] = (raw[0][i], raw[c + 1][i], cntr, shell, l)
                 cnt += 1
-            except ValueError:
-                pass
-    keep = pd.DataFrame(keep[:cnt])
-    centers = keep['center'].unique()
+            shell += 1
+        # Previous center is now center
+        pcntr = cntr
+    # Chop off what we don't need
+    df = pd.DataFrame(df[:cnt])
+    # Now to deduplicate identical basis sets
+    # Gaussian prints out every single atomic basis set
+    centers = df['center'].unique()
+    sets = df.groupby('center')
+    # What defines an identical basis set
     chk = ['alpha', 'd']
-    sets = keep.groupby('center')
-    unq = [sets.get_group(0)]
-    setmap = {0: 0}
-    for center in centers[1:]:
-        try:
-            if np.allclose(unq[-1][chk], sets.get_group(center)[chk]):
-                setmap[center] = len(unq) - 1
-                continue
-        except ValueError:
-            pass
-        unq.append(keep[keep['center'] == center])
-        setmap[center] = len(unq) - 1
-    df = pd.concat(unq).reset_index(drop=True)
+    unique, setmap, cnt = [], {}, 0
+    # Over the sets
+    for center, seht in sets:
+        # Over the unique sets
+        for i, other in enumerate(unique):
+            # First check shapes to avoid exception
+            if other.shape != seht.shape: continue
+            # Check for identical alphas and ds
+            if np.allclose(other[chk], seht[chk]):
+                setmap[center] = i
+                break
+        else:
+            # Add it to the list of unique basis sets
+            unique.append(seht)
+            # And df track of which center corresponds to which set
+            setmap[center] = cnt
+            cnt += 1
+    # Now slap 'em all together and reset the index
+    df = pd.concat(unique).reset_index(drop=True)
+    # And now 'center' is 'set' and we must map the setmap onto atom
     df.rename(columns={'center': 'set'}, inplace=True)
     # TODO : extend to multiple frames or assume a single basis set?
     df['frame'] = 0

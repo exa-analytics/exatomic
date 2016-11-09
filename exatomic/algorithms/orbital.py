@@ -360,7 +360,7 @@ def _determine_vectors(universe, vector):
 
 def _determine_mocoefs(universe, mocoefs, vector):
     if mocoefs is None:
-        return 'coefficient'
+        return 'coef'
     else:
         if mocoefs not in universe.momatrix.columns:
             raise Exception('mocoefs must be a column in universe.momatrix')
@@ -403,7 +403,7 @@ def add_mos_to_universe(universe, field_params=None, mocoefs=None, vector=None):
 
     Args
         field_params (tuple): tuple of (min, max, steps)
-        mocoefs (str): column in momatrix (default is 'coefficient')
+        mocoefs (str): column in momatrix (default is 'coef')
         vector (int, list, range): the MO vectors to evaluate
 
     Warning:
