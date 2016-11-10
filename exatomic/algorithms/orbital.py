@@ -255,7 +255,7 @@ def {}(x, y, z): return {}""".format
         return bfns
 
 
-def gen_string_bfns(universe):#, kind='spherical'):
+def gen_string_bfns(universe, frame):#, kind='spherical'):
     """
     Given an exatomic.container.Universe that contains complete momatrix
     and basis_set attributes, generates and returns the strings corresponding
@@ -393,7 +393,8 @@ def _compute_mos(basis_values, coefs, vector):
             field_data[:, i] += basis_values[:, j] * coefs[:, j]
     return [field_data[:, j] for j in range(nfield)]
 
-def add_mos_to_universe(universe, field_params=None, mocoefs=None, vector=None):
+def add_mos_to_universe(universe, field_params=None, mocoefs=None,
+                        vector=None, frame=None):
     """
     If a universe contains enough information to generate
     molecular orbitals (basis_set, basis_set_summary and momatrix),
@@ -412,6 +413,7 @@ def add_mos_to_universe(universe, field_params=None, mocoefs=None, vector=None):
     if hasattr(universe, '_field'):
         del universe.__dict__['_field']
 
+    frame = 0 if frame is None else frame
     field_params = _determine_field_params(universe, field_params)
     mocoefs = _determine_mocoefs(universe, mocoefs, vector)
     vector = _determine_vectors(universe, vector)
@@ -425,7 +427,7 @@ def add_mos_to_universe(universe, field_params=None, mocoefs=None, vector=None):
     #bases_of_int = np.unique(np.concatenate([universe.momatrix.contributions(i)['chi'].values for i in vector]))
     #basfns = [basfns[i] for i in bases_of_int]
 
-    basfns = gen_string_bfns(universe)
+    basfns = gen_string_bfns(universe, frame)
     print('Warning: not extensively tested. Please be careful.')
     print('Compiling basis functions, may take a while.')
     t1 = datetime.now()
@@ -433,7 +435,7 @@ def add_mos_to_universe(universe, field_params=None, mocoefs=None, vector=None):
     _add_bfns_to_universe(universe, basfns)
     x, y, z = numerical_grid_from_field_params(field_params)
     #nbas = universe.basis_set_summary['function_count'].sum()
-    nbas = universe.atom['set'].map(universe.basis_set.functions()).sum()
+    nbas = universe.atom[universe.atom['frame'] == 0]['set'].map(universe.basis_set.functions().to_dict()).sum()
     npoints = len(x)
     nvec = len(vector)
 
@@ -441,7 +443,7 @@ def add_mos_to_universe(universe, field_params=None, mocoefs=None, vector=None):
     print('Took {:.2f}s to compile basis functions ' \
           'with {} characters, {} primitives and {} contracted functions'.format(
           (t2-t1).total_seconds(), sum([len(b) for b in basfns]),
-          universe.atom['set'].map(universe.basis_set.primitives()).sum(), nbas))
+          universe.atom[universe.atom['frame'] == 0]['set'].map(universe.basis_set.primitives().to_dict()).sum(), nbas))
 
     basis_values = np.zeros((npoints, nbas), dtype=np.float64)
     basis_values = _evaluate_basis(universe, basis_values, x, y, z)
@@ -459,7 +461,8 @@ def add_mos_to_universe(universe, field_params=None, mocoefs=None, vector=None):
                                  for i in range(nvec)])
     universe._traits_need_update = True
 
-def update_molecular_orbitals(universe, field_params=None, mocoefs=None, vector=None):
+def update_molecular_orbitals(universe, field_params=None, mocoefs=None,
+                              vector=None, frame=None):
     """
     Provided the universe already contains the basis_functions attribute,
     reevaluates the MOs with the new field_params
@@ -474,11 +477,12 @@ def update_molecular_orbitals(universe, field_params=None, mocoefs=None, vector=
     print(field_params)
     print(type(field_params))
 
+    frame = 0 if frame is None else frame
     field_params = _determine_field_params(universe, field_params)
     mocoefs = _determine_mocoefs(universe, mocoefs, vector)
     vector = _determine_vectors(universe, vector)
     x, y, z = numerical_grid_from_field_params(field_params)
-    nbas = universe.atom['set'].map(universe.basis_set.functions()).sum()
+    nbas = universe.atom[universe.atom['frame'] == 0]['set'].map(universe.basis_set.functions().to_dict()).sum()
     npoints = len(x)
     nvec = len(vector)
 

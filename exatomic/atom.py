@@ -67,7 +67,8 @@ class Atom(DataFrame):
         """Return the last frame of the atom table."""
         return self[self['frame'] == self.frames - 1]
 
-    def to_xyz(self, tag='symbol', header=False, comment='', frame=None):
+    def to_xyz(self, tag='symbol', header=False, comment='',
+               frame=None, units='A'):
         """
         Return atomic data in XYZ format, by default without the first 2 lines.
         If multiple frames are specified, return an XYZ trajectory format. If
@@ -77,31 +78,32 @@ class Atom(DataFrame):
             tag (str): column name to use in place of 'symbol'
             header (bool): if True, return the first 2 lines of XYZ format
             comment (str,list): comment(s) to put in the comment line
-            frame (int,list,tup,range): frame or frames to return
+            frame (int,iter): frame or frames to return
+            units (str): units (default angstroms)
 
         Returns
             ret (str): XYZ formatted atomic data
         """
         frame = self.frames - 1 if frame is None else frame
         if isinstance(frame, Integral): frame = [frame]
-        if isinstance(comment, list) and len(comment) != len(frame):
-            raise Exception('If comment is a list it must be same length as frame.')
-        grps = self[self['frame'].isin(frame)].groupby('frame')
+        if not isinstance(comment, list): comment = [comment]
+        if len(comment) == 1: comment = comment * len(frame)
+        df = self[self['frame'].isin(frame)].copy()
+        df['x'] *= Length['au', units]
+        df['y'] *= Length['au', units]
+        df['z'] *= Length['au', units]
+        grps = df.groupby('frame')
         ret = ''
-        stargs = {'columns': (tag, 'x', 'y', 'z'), 'header': False,
-                  'index': False, 'formatters': {tag: lambda x: '{:<5}'.format(x)}}
-        if isinstance(comment, list):
-            for c, (f, grp) in zip(comment, grps):
-                if not len(grp): continue
-                hdr = '\n'.join([str(len(grp)), c, ''])
-                ret = ''.join([ret, hdr, grp.to_string(**stargs), '\n'])
-        else:
-            for f, grp in grps:
-                if not len(grp): continue
-                hdr = ''
-                if header or comment or len(frame) > 1:
-                    hdr = '\n'.join([str(len(grp)), comment, ''])
-                ret = ''.join([ret, hdr, grp.to_string(**stargs), '\n'])
+        columns = (tag, 'x', 'y', 'z')
+        formatter = {tag: lambda x: '{:<5}'.format(x)}
+        stargs = {'columns': columns, 'header': False,
+                  'index': False, 'formatters': formatter}
+        t = 0
+        for f, grp in grps:
+            if not len(grp): continue
+            tru = (header or comment[t] or len(frame) > 1)
+            hdr = '\n'.join([str(len(grp)), c, '']) if tru else ''
+            ret = ''.join([ret, hdr, grp.to_string(**stargs), '\n'])
         return ret
 
     def get_element_masses(self):

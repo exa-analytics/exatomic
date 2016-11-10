@@ -32,6 +32,7 @@ class Output(Editor):
         stop = starts[0]
         # Find where the data stops
         while '-------' not in self[stop]: stop += 1
+        # But it should be same sized array each time
         stops = starts + (stop - starts[0])
         dfs = []
         # Iterate over frames
@@ -44,7 +45,7 @@ class Output(Editor):
         atom.drop([2], axis=1, inplace=True)
         # Name the data
         atom.columns = ['set', 'Z', 'x', 'y', 'z', 'frame']
-        # Python is zero-based, sorry FORTRAN
+        # Zero-based indexing
         atom['set'] -= 1
         # Convert to atomic units
         atom['x'] *= Length['A', 'au']
@@ -78,7 +79,7 @@ class Output(Editor):
         # If no orbital energies, quit
         if not found[_reorb01]: return
         # Check if open shell
-        os = True if any(('Beta' in ln for lno, ln in found[_reorb01])) else False
+        os = any(('Beta' in ln for lno, ln in found[_reorb01]))
         # Find out how big our data is
         # 5 eigenvalues are printed per line
         nrows = len(found[_reorb01]) * 5 // nbas
@@ -150,6 +151,8 @@ class Output(Editor):
         found = self.find(_remomat02, _rebas02)
         # Get some dimensions
         ndim = len(found[_remomat02])
+        # If something goes wrong
+        if not ndim: return
         nbas = int(found[_rebas02][0][1].split()[0])
         nblocks = np.int64(np.ceil(nbas / 5))
         # Allocate a big ol' array
@@ -305,7 +308,9 @@ def _basis_set_order(chunk):
     # Gaussian only prints the atom center
     # and label once for all basis functions
     nas = (np.nan, np.nan)
-    centers = [(ln[4:8], ln[8:12]) if ln[4:8].strip() else nas for ln in chunk]
+    lsp = len(chunk[0]) - len(chunk[0].lstrip(' ')) + 2
+    centers = [(ln[lsp:lsp + 3], ln[lsp + 3:lsp + 6])
+               if ln[lsp:lsp + 3].strip() else nas for ln in chunk]
     # pandas takes care of that
     basord = pd.DataFrame(centers, columns=('center', 'tag')).fillna(method='pad')
     basord['center'] = basord['center'].astype(np.int64)
@@ -349,7 +354,7 @@ def _basis_set(raw):
              ('shell', 'i8'), ('L', 'i8')]
     df = np.empty((raw.shape[0],), dtype=dtype)
     # The data we deserve
-    master = []
+    data = []
     for i, (one, two) in enumerate(zip(raw[0], raw[1])):
         # See if it is int-able (an atom center in this case)
         try:
@@ -358,10 +363,10 @@ def _basis_set(raw):
             # See if it is a string corresponding to L eg. 'S'
             if one.isalpha():
                 # Collect (atom, shell, number of primitives, index)
-                master.append((center, one.lower(), int(two), i + 1))
+                data.append((center, one.lower(), int(two), i + 1))
     # Now through this data (2 loops mainly because of 'sp' shells)
     cnt, shell, pcntr = 0, 0, 0
-    for cntr, lval, npr, pdx in master:
+    for cntr, lval, npr, pdx in data:
         # Reset shell counter if atom changed
         if pcntr != cntr: shell = 0
         # l is lval except when lval is 'sp'
@@ -403,6 +408,7 @@ def _basis_set(raw):
     df = pd.concat(unique).reset_index(drop=True)
     # And now 'center' is 'set' and we must map the setmap onto atom
     df.rename(columns={'center': 'set'}, inplace=True)
+    df['set'] = df['set'].map(setmap)
     # TODO : extend to multiple frames or assume a single basis set?
     df['frame'] = 0
     return df, setmap
