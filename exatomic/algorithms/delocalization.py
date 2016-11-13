@@ -82,12 +82,12 @@ def compute_curvature(*args, neut=None, tag='', extras=True):
         raise Exception("Must have at least 2 systems "
                         "differing in electron number.")
     nargs = len(args)
-    neut = nargs // 2 if neut None else neut
+    neut = nargs // 2 if neut is None else neut
     # Len (nargs) arrays
     totens, aorbs, borbs = [], [], []
     # Len (nargs - 1) arrays
     lumos, homos, js, diffs, es, cs = [], [], [], [], [], []
-    for job in jobs:
+    for job in args:
         # Get the total energy of the system
         totens.append(job.frame['E_tot'].values[-1])
         # Get the highest occupied molecular orbital of the system
@@ -96,7 +96,7 @@ def compute_curvature(*args, neut=None, tag='', extras=True):
         try: borbs.append(job.orbital.get_orbital(spin=1))
         except IndexError: borbs.append(aorbs[-1])
     # Cycle over the orbitals to find the right energies
-    for job, alo, ahi, blo, bhi in zip(args, aorbs, aorbs[:1], borbs, borbs[:1]):
+    for job, alo, ahi, blo, bhi in zip(args, aorbs, aorbs[1:], borbs, borbs[1:]):
         # Ionization from alpha orbitals
         if alo.vector < ahi.vector:
             lumos.append(job.orbital.get_orbital(index=alo.name + 1).energy)
@@ -114,7 +114,7 @@ def compute_curvature(*args, neut=None, tag='', extras=True):
         js.append(homo - diffs[-1])
     j2 = sum([j ** 2 for j in js])
     # Compute E(n) and curvature coefficients
-    atv = exatomic.Energy['Ha', 'eV']
+    atv = Energy['Ha', 'eV']
     n = np.linspace(0, 1, 51)
     # Energy adjustments so everything is relative to neut
     aboves = [ sum(diffs[neut:i]) for i in range(len(homos))]

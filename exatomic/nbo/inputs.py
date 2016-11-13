@@ -10,26 +10,18 @@ import numpy as np
 import pandas as pd
 
 from exa.relational.isotope import symbol_to_z
-
 symbol_to_Z = symbol_to_z()
 
-import exatomic
-from exatomic.editor import Editor as ExatomicEditor
-#from exatomic.algorithms.basis import (spher_ml_count, cart_ml_count,
-#                                       spher_lml_count, cart_lml_count,
-#                                       lmap, lorder, _vec_normalize)
-#from exatomic.orbital import DensityMatrix
-#from exatomic.atom import Atom
-#from exatomic.container import Universe
-#from exatomic.frame import minimal_frame
-from exatomic.basis import (solid_harmonics,
-                            cart_lml_count,
-                            spher_lml_count)
+from exatomic import __version__
+from .editor import Editor
+from exatomic.orbital import DensityMatrix
+from exatomic.basis import (solid_harmonics, lorder,
+                            cart_lml_count, spher_lml_count)
 from itertools import combinations_with_replacement as cwr
 
-exaver = 'exatomic.v' + exatomic.__version__
+_exaver = 'exatomic.v' + __version__
 
-_template = """\
+_header = """\
 $GENNBO NATOMS={nat}    NBAS={nbas}  UPPER  BODM BOHR $END
 $NBO BNDIDX NLMO AONBO=W AONLMO=W $END
 $COORD
@@ -42,12 +34,12 @@ $BASIS
 $END
 $CONTRACT
  NSHELL = {nshell:>7}
-   NEXP = {nexp:>7}
-  NCOMP = {ncomp}
-  NPRIM = {nprim}
-   NPTR = {nptr}
-    EXP = {exponents}
-{coefs}
+   NEXP = {nexpnt:>7}
+  NCOMP = {ncomps}
+  NPRIM = {nprims}
+   NPTR = {npntrs}
+    EXP = {expnts}
+{coeffs}
 $END"""
 
 _matrices = """
@@ -176,69 +168,88 @@ def _obtain_arrays(uni):
 class Input(Editor):
 
     @classmethod
-    def from_universe(cls, uni, name=''):
-        """Generate an NBO input from a properly populated universe."""
+    def from_universe(cls, uni, occvec=None, name=''):
+        """
+        Generate an NBO input from a properly populated universe.
+        uni must have atom, basis_set, basis_set_order, overlap,
+        momatrix and occupation_vector information.
+
+        Args
+            uni (:class:`~exatomic.container.Universe`): containing the above attributes
+            occvec (np.array): occupation vector that relates momatrix to density matrix
+
+        Returns
+            editor (:class:`~exatomic.nbo.Input`)
+        """
+        # Grab all array data from new orbital code
         kwargs = _obtain_arrays(uni)
+        # Manicure it slightly for NBO inputs
+        kwargs['exaver'] = _exaver
         kwargs['name'] = name
         kwargs['center'] += 1
         kwargs['nat'] = kwargs['center'].max()
         kwargs['nbas'] = len(kwargs['center'])
-        kwargs['exacer'] = exaver
         kwargs['check'] = ''
         kwargs['atom'] = uni.atom.to_xyz()
+        # Assign appropriate NBO basis function labels
         if 'ml' in kwargs:
-            kwargs['label'] = _get_labels(kwargs['L'], mls=kwargs['ml'])
+            labargs = {'mls': kwargs['ml']}
         else:
-            raise NotImplementedError('cartesian functions soon')
-        return cls(_header.format(**kwargs) + _matrices)
+            labards = {'ls': kwargs['l'],
+                       'ms': kwargs['m'],
+                       'ns': kwargs['n']}
+        kwargs['label'] = _get_labels(kwargs['L'], **labargs)
+        # Clean the arrays to strings for a text input file
+        kwargs['label'] = _clean_to_string(kwargs['label'], ncol=10, width=5)
+        kwargs['center'] = _clean_to_string(kwargs['center'], ncol=10, width=5)
+        kwargs['ncomps'] = _clean_to_string(kwargs['ncomps'], ncol=10, width=5)
+        kwargs['nprims'] = _clean_to_string(kwargs['nprims'], ncol=10, width=5)
+        kwargs['npntrs'] = _clean_to_string(kwargs['npntrs'], ncol=10, width=5)
+        kwargs['expnts'] = _clean_to_string(kwargs['expnts'], decimals=6)
+        kwargs['coeffs'] = _clean_coeffs(kwargs['coeffs'])
+        # Separated matrices for debugging the top half when these
+        # arrays are harder to come by. NBO has strict precision
+        # requirements so overlap/density must be very precise (12 decimals).
+        matargs = {'overlap': '', 'density': ''}
+        if hasattr(uni, '_overlap'):
+            matargs['overlap'] = uni.overlap
+        # Still no clean solution for an occupation vector yet
+        if hasattr(uni, 'occupation_vector'):
+            d = DensityMatrix.from_momatrix(uni.momatrix, uni.occupation_vector)
+            matargs['density'] = _clean_to_string(d['coef'].values, decimals=6)
+        elif occvec is not None:
+            d = DensityMatrix.from_momatrix(uni.momatrix, occvec)
+            matargs['density'] = _clean_to_string(d['coef'].values, decimals=6)
+        # Compute tr[P*S] must be equal to number of electrons
+        if matargs['density']:
+            kwargs['check'] = np.trace(np.dot(d.square(), uni.overlap.square()))
+        return cls(_header.format(**kwargs) + _matrices.format(**matargs))
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-#class NBOInput(ExatomicEditor):
-#    '''
-#    Base NBO input editor class
-#    '''
-#    pass
-#
-#class NBOInputGenerator(NBOInput):
-#    '''
-#    A class that can be constructed by calling the
-#    function write_nbo_input with an :class:`~exatomic.universe.Universe`
-#    or similar subclass of :class:`~exatomic.editor.Editor`.  The universe
-#    must contain the following properties:
-#    * atom
-#    * basis_set_summary
-#    * basis_set_order
-#    * gaussian_basis_set
-#    * overlap
-#    * momatrix
-#    * density
-#
-#    See Also:
-#        :func:`~exnbo.inputs.write_nbo_input`
-#    '''
-#
-#    def __init__(self, *args, **kwargs):
-#        super().__init__(*args, **kwargs)
-#
-#
-#
-#def _format_helper(data, field, ncol, just=True):
-#    ret = ''
-#    cnt = 0
-#    for datum in data:
-#        ret = ''.join([ret, field.format(datum)])
-#        cnt += 1
-#        if cnt == ncol:
-#            if not just:
-#                ret += '\n'
-#            else:
-#                ret += '\n' + ' ' * 10
-#            cnt = 0
-#    return ret
-#
-#
+def _clean_coeffs(arr, width=16, decimals=6):
+    # Format C(shell) for coeffs
+    ls = ['     {} = '.format('C' + l.upper()) for l in lorder]
+    # Clean to string by shell
+    dat = [''.join([l, _clean_to_string(ar, decimals=decimals), '\n'])
+           for l, ar in zip(ls, arr)]
+    # Return the whole minus the last line break
+    return ''.join(dat)[:-1]
+
+def _clean_to_string(arr, ncol=4, width=16, decimals='', just=True):
+    # Justify the data arrays with the tags in the template
+    pad = ' ' * 10 if just else ''
+    # Some flexibility in how this function handles int/floats
+    dec = '.' + str(decimals) + 'E' if decimals else decimals
+    # A format string for the numbers in the array
+    fmt = ''.join(['{:>', str(width), dec, '}'])
+    # The formmatted array with tabs and new line breaks
+    dat = [''.join(['\n', pad, fmt.format(a)]) if not i % ncol and i > 0
+           else fmt.format(a) for i, a in enumerate(arr)]
+    return ''.join(dat)
+
+
 #lmltolabels = {
 #    'spherical': {
 #        'canonical': {

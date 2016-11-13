@@ -12,13 +12,18 @@ from io import StringIO
 
 from exa.relational.isotope import symbol_to_z, z_to_symbol
 
-from exa import Editor
+from .editor import Editor
 from exatomic import Length
 from exatomic.basis import GaussianBasisSet
 
 csv_args = {'delim_whitespace': True}
 
 class Output(Editor):
+
+    _to_universe = Editor.to_universe
+
+    def to_universe(self):
+        raise NotImplementedError('This editor has no parse_atom method.')
 
     def parse_nao(self):
         found = self.find(_re_nao_start, _re_nao_stop01)
@@ -74,6 +79,10 @@ class MOMatrix(Editor):
     possible to add this momatrix to a corresponding universe's momatrix and
     view these orbitals.
     """
+    _to_universe = Editor.to_universe
+
+    def to_universe(self):
+        raise NotImplementedError('This editor has no parse_atom method.')
 
     def parse_momatrix(self, nbas, column_name=None):
         start = 3

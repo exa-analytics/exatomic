@@ -280,9 +280,9 @@ class Output(Editor):
             freqs = np.repeat(freqs, df.shape[0])
             fdx += nfreqs
             # Put it all together
-            stacked = pd.DataFrame.from_dict({'Z': zs, 'label': labels,
-                                             'dx': dx, 'dy': dy, 'dz': dz,
-                                             'frequency': freqs, 'freqdx': freqdxs})
+            stacked = pd.DataFrame({'Z': zs, 'label': labels,
+                                    'dx': dx, 'dy': dy, 'dz': dz,
+                                    'frequency': freqs, 'freqdx': freqdxs})
             stacked['symbol'] = stacked['Z'].map(z_to_symbol)
             dfs.append(stacked)
         # Now put all our frequencies together
@@ -346,7 +346,7 @@ def _basis_set(raw):
     # Fortran scientific notation
     raw[0] = raw[0].str.replace('D', 'E')
     raw[1] = raw[1].str.replace('D', 'E')
-    raw[2] = raw[2].str.replace('D', 'E')
+    raw[2] = raw[2].astype('O').str.replace('D', 'E')
     # But now we replaced the 'D' shell with 'E' so
     lmap['e'] = 2
     # The data we need

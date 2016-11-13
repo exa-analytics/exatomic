@@ -202,7 +202,7 @@ class Universe(Container, metaclass=Meta):
         self._traits_need_update = True
 
     def update_molecular_orbitals(self, field_params=None, mocoefs=None,
-                                  vector=None, frame=frame):
+                                  vector=None, frame=None):
         """
         Updates the molecular orbitals with new field_params, different MO
         coefficients or different eigenvectors. Significantly faster than
