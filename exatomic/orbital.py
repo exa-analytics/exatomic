@@ -205,10 +205,10 @@ class MOMatrix(DataFrame):
             orbital (int): orbital index
         """
         tmp = self[self['frame'] == frame].groupby('orbital').get_group(orbital)
-        return tmp[abs(tmp['coefficient']) > tol]
+        return tmp[abs(tmp['coef']) > tol]
 
 
-    def square(self, frame=0, column='coefficient'):
+    def square(self, frame=0, column='coef'):
         """
         Returns a square dataframe corresponding to the canonical C matrix
         representation.
@@ -233,18 +233,18 @@ class DensityMatrix(DataFrame):
     +-------------------+----------+-------------------------------------------+
     | chi2              | int      | second basis function                     |
     +-------------------+----------+-------------------------------------------+
-    | coefficient       | float    | overlap matrix element                    |
+    | coef              | float    | overlap matrix element                    |
     +-------------------+----------+-------------------------------------------+
     | frame             | category | non-unique integer (req.)                 |
     +-------------------+----------+-------------------------------------------+
     """
-    _columns = ['chi1', 'chi2', 'coefficient']
+    _columns = ['chi1', 'chi2', 'coef']
     _cardinal = ('frame', np.int64)
     _index = 'index'
 
     def square(self, frame=0):
         """Returns a square dataframe of the density matrix."""
-        denvec = self[self['frame'] == frame]['coefficient'].values
+        denvec = self[self['frame'] == frame]['coef'].values
         square = pd.DataFrame(density_as_square(denvec))
         square.index.name = 'chi1'
         square.columns.name = 'chi2'
@@ -269,4 +269,4 @@ class DensityMatrix(DataFrame):
         cmat = momatrix.square().values
         chi1, chi2, dens, frame = density_from_momatrix(cmat, occvec)
         return cls.from_dict({'chi1': chi1, 'chi2': chi2,
-                              'coefficient': dens, 'frame': frame})
+                              'coef': dens, 'frame': frame})

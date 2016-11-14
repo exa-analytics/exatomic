@@ -94,6 +94,27 @@ def _get_labels(Ls, mls=None, ls=None, ms=None, ns=None):
                      (cart['n'] == n)]['label'].iloc[0]
                      for L, l, m, n in zip(Ls, ls, ms, ns)]
 
+def _clean_coeffs(arr, width=16, decimals=6):
+    # Format C(shell) for coeffs
+    ls = ['     {} = '.format('C' + l.upper()) for l in lorder]
+    # Clean to string by shell
+    dat = [''.join([l, _clean_to_string(ar, decimals=decimals), '\n'])
+           for l, ar in zip(ls, arr)]
+    # Return the whole minus the last line break
+    return ''.join(dat)[:-1]
+
+def _clean_to_string(arr, ncol=4, width=16, decimals='', just=True):
+    # Justify the data arrays with the tags in the template
+    pad = ' ' * 10 if just else ''
+    # Some flexibility in how this function handles int/floats
+    dec = '.' + str(decimals) + 'E' if decimals else decimals
+    # A format string for the numbers in the array
+    fmt = ''.join(['{:>', str(width), dec, '}'])
+    # The formmatted array with tabs and new line breaks
+    dat = [''.join(['\n', pad, fmt.format(a)]) if not i % ncol and i > 0
+           else fmt.format(a) for i, a in enumerate(arr)]
+    return ''.join(dat)
+
 def _obtain_arrays(uni):
     kwargs = {}
     # Get number of functions by shell
@@ -190,7 +211,10 @@ class Input(Editor):
         kwargs['nat'] = kwargs['center'].max()
         kwargs['nbas'] = len(kwargs['center'])
         kwargs['check'] = ''
-        kwargs['atom'] = uni.atom.to_xyz()
+        columns = ('Z', 'Z', 'x', 'y', 'z')
+        if 'Zeff' in uni.atom.columns:
+            columns = ('Z', 'Zeff', 'x', 'y', 'z')
+        kwargs['atom'] = uni.atom.to_xyz(columns=columns)
         # Assign appropriate NBO basis function labels
         if 'ml' in kwargs:
             labargs = {'mls': kwargs['ml']}
@@ -211,15 +235,17 @@ class Input(Editor):
         # arrays are harder to come by. NBO has strict precision
         # requirements so overlap/density must be very precise (12 decimals).
         matargs = {'overlap': '', 'density': ''}
+        margs = {'decimals': 6, 'just': False}
         if hasattr(uni, '_overlap'):
-            matargs['overlap'] = uni.overlap
+            o = uni.overlap['coef'].values
+            matargs['overlap'] = _clean_to_string(o, **margs)
         # Still no clean solution for an occupation vector yet
         if hasattr(uni, 'occupation_vector'):
             d = DensityMatrix.from_momatrix(uni.momatrix, uni.occupation_vector)
-            matargs['density'] = _clean_to_string(d['coef'].values, decimals=6)
+            matargs['density'] = _clean_to_string(d['coef'].values, **margs)
         elif occvec is not None:
             d = DensityMatrix.from_momatrix(uni.momatrix, occvec)
-            matargs['density'] = _clean_to_string(d['coef'].values, decimals=6)
+            matargs['density'] = _clean_to_string(d['coef'].values, **margs)
         # Compute tr[P*S] must be equal to number of electrons
         if matargs['density']:
             kwargs['check'] = np.trace(np.dot(d.square(), uni.overlap.square()))
@@ -227,222 +253,3 @@ class Input(Editor):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-
-def _clean_coeffs(arr, width=16, decimals=6):
-    # Format C(shell) for coeffs
-    ls = ['     {} = '.format('C' + l.upper()) for l in lorder]
-    # Clean to string by shell
-    dat = [''.join([l, _clean_to_string(ar, decimals=decimals), '\n'])
-           for l, ar in zip(ls, arr)]
-    # Return the whole minus the last line break
-    return ''.join(dat)[:-1]
-
-def _clean_to_string(arr, ncol=4, width=16, decimals='', just=True):
-    # Justify the data arrays with the tags in the template
-    pad = ' ' * 10 if just else ''
-    # Some flexibility in how this function handles int/floats
-    dec = '.' + str(decimals) + 'E' if decimals else decimals
-    # A format string for the numbers in the array
-    fmt = ''.join(['{:>', str(width), dec, '}'])
-    # The formmatted array with tabs and new line breaks
-    dat = [''.join(['\n', pad, fmt.format(a)]) if not i % ncol and i > 0
-           else fmt.format(a) for i, a in enumerate(arr)]
-    return ''.join(dat)
-
-
-#lmltolabels = {
-#    'spherical': {
-#        'canonical': {
-#            0: [1],
-#            1: list(range(101, 104)),
-#            2: list(range(251, 256)),
-#            3: list(range(351, 358)),
-#            4: list(range(451, 460)),
-#            5: list(range(551, 562)),
-#            6: list(range(651, 664))
-#        },
-#        'increasingml': {
-#            0: [1],
-#            1: [101, 102, 103],
-#            2: [251, 253, 255, 252, 254],
-#            3: [357, 355, 353, 351, 352, 354, 356],
-#            4: [459, 457, 455, 453, 451, 452, 454, 456, 458],
-#            5: [561, 559, 557, 555, 553, 551, 552, 554, 556, 558, 560],
-#            6: [663, 661, 659, 657, 655, 653, 651, 652, 654, 656, 658, 660, 662],
-#        },
-#        'exgaussian': {
-#            0: [1],
-#            1: [101, 102, 103],
-#            2: [255, 252, 253, 254, 251],
-#            3: list(range(351, 358)),
-#            4: list(range(451, 460)),
-#            5: list(range(551, 562)),
-#            6: list(range(651, 664)),
-#        }
-#    },
-#    'cartesian': {
-#        'canonical': {
-#            0: [1],
-#            1: list(range(101, 104)),
-#            2: list(range(201, 207)),
-#            3: list(range(301, 311)),
-#            4: list(range(401, 416))
-#        },
-#    }
-#}
-### In the general case, the basis function ordering scheme coming from
-### different computational codes does not need to be the canonical ordering
-### scheme according to the NBO code. See the exgaussian entry as an example
-#lmltolabels['spherical']['exnwchem'] = lmltolabels['spherical']['increasingml']
-#lmltolabels['spherical']['exmolcas'] = lmltolabels['spherical']['increasingml']
-#lmltolabels['cartesian']['exnwchem'] = lmltolabels['cartesian']['canonical']
-#lmltolabels['cartesian']['exmolcas'] = lmltolabels['cartesian']['canonical']
-#lmltolabels['cartesian']['exgaussian'] = lmltolabels['cartesian']['canonical']
-#
-#def _nbas_arrays(universe, nbas, fmt, kwargs):
-#    center = np.empty(nbas, dtype=np.int64)
-#    label = np.empty(nbas, dtype=np.int64)
-#    bases = universe.gaussian_basis_set[abs(universe.gaussian_basis_set['d']) > 0].groupby('set')
-#    cnt, lbl = 0, 0
-#    for seht, cent in zip(universe.atom['set'],
-#                          universe.atom['label'].astype(np.int64) + 1):
-#        summ = universe.basis_set_summary.ix[seht]
-#        b = bases.get_group(seht).groupby('shell_function')
-#        degen = 'cartesian'
-#        ml_count = cart_ml_count
-#        ibas = summ.cart_per_atom
-#        if summ.spherical:
-#            degen = 'spherical'
-#            ml_count = spher_ml_count
-#            ibas = summ.func_per_atom
-#        for i in range(ibas):
-#            center[cnt] = cent
-#            cnt += 1
-#        if universe.meta['program'] == 'exnwchem':
-#            for lval, grp in b:
-#                if len(grp) == 0: continue
-#                lval = grp['L'].values[0]
-#                for lab in lmltolabels[degen][universe.meta['program']][lval]:
-#                    label[lbl] = lab
-#                    lbl += 1
-#        elif universe.meta['program'] == 'exmolcas':
-#            for l, shell in enumerate(lorder):
-#                chk = 'bas_' + shell
-#                if chk in summ:
-#                    repeat = getattr(summ, chk)
-#                    for i in range(ml_count[shell]):
-#                        for j in range(repeat):
-#                            label[lbl] = lmltolabels[degen][universe.meta['program']][l][i]
-#                            lbl += 1
-#
-#    kwargs.update({'center': _format_helper(center, fmt, 10),
-#                    'label': _format_helper(label, fmt, 10)})
-#
-#
-#def _nshell_arrays(universe, nshell, fmt, kwargs):
-#    ncomp = np.empty(nshell, dtype=np.int64)
-#    nprim = np.empty(nshell, dtype=np.int64)
-#    nptr = np.empty(nshell, dtype=np.int64)
-#    bases = universe.gaussian_basis_set[abs(universe.gaussian_basis_set['d']) > 0].groupby('set')
-#    cnt, ptr = 0, 1
-#    for seht, center in zip(universe.atom['set'], universe.atom['label'].astype(np.int64) + 1):
-#        summ = universe.basis_set_summary.ix[seht]
-#        if summ.spherical:
-#            comp_lookup = spher_lml_count
-#        else:
-#            comp_lookup = cart_lml_count
-#        b = bases.get_group(seht)
-#        for sh, grp in b.groupby('shell_function'):
-#            if len(grp) == 0: continue
-#            ncomp[cnt] = comp_lookup[grp['L'].values[0]]
-#            nprim[cnt] = grp.shape[0]
-#            nptr[cnt] = ptr
-#            ptr += nprim[cnt]
-#            cnt += 1
-#    kwargs.update({'ncomp': _format_helper(ncomp, fmt, 10),
-#                   'nprim': _format_helper(nprim, fmt, 10),
-#                    'nptr': _format_helper(nptr, fmt, 10)})
-#
-#
-#def _nexp_arrays(universe, nexp, fmt, kwargs):
-#    exponents = np.empty(nexp, dtype=np.float64)
-#    lmax = universe.gaussian_basis_set['L'].cat.as_ordered().max()
-#    ds = [np.empty(nexp, dtype=np.float64) for i in range(lmax + 1)]
-#    bases = universe.gaussian_basis_set[abs(universe.gaussian_basis_set['d']) > 0].groupby('set')
-#    exp = 0
-#    for seht, center in zip(universe.atom['set'], universe.atom['label'].astype(np.int64) + 1):
-#        summ = universe.basis_set_summary.ix[seht]
-#        b = bases.get_group(seht)
-#        for l, d, exponent in zip(b['L'], b['d'], b['alpha']):
-#            exponents[exp] = exponent
-#            for i, shell in enumerate(ds):
-#                if i == l:
-#                    ds[i][exp] = d
-#                else:
-#                    ds[i][exp] = 0.
-#            exp += 1
-#    ds = '\n'.join(['{:>8} ='.format('C' + lorder[i].upper()) + _format_helper(shell, fmt, 4)
-#                    for i, shell in enumerate(ds)])
-#    kwargs.update({'exponents': _format_helper(exponents, fmt, 4),
-#                       'coefs': ds})
-#
-#def write_nbo_input(universe, fp=None):
-#    '''
-#    Args
-#        universe: universe must have the following attributes
-#                  atom, basis_set_summary, basis_set,
-#                  overlap, momatrix, occupations, code (string specifying which comp. code the universe came from)
-#    Returns
-#        if fp is not None, write the file to that path,
-#        else return the editor object.
-#    '''
-#    # setup
-#    fmt = '{:>7}'
-#    ffmt = '{:> 16.8E}'
-#    fffmt = '{:> 20.12E}'
-#    fl = NBOInputGenerator(_template)
-#    keys = [key.split('}')[0].split(':')[0] for key in _template.split('{')[1:]]
-#    kwargs = {key: '' for key in keys}
-#    nat = universe.atom.shape[0]
-#    nbas = universe.basis_set_summary['function_count'].sum()
-#    kwargs['nat'] = nat
-#    kwargs['nbas'] = nbas
-#    if universe.name is None:
-#        kwargs['name'] = universe.meta['program']
-#    else:
-#        kwargs['name'] = universe.name
-#    kwargs['exaver'] = exaver
-#
-#    # coordinates
-#    universe.atom['Z'] = universe.atom['symbol'].map(symbol_to_Z).astype(np.int64)
-#    acols = ['Z', 'Zeff', 'x', 'y', 'z'] if 'Zeff' in universe.atom.columns else ['Z', 'Z', 'x', 'y', 'z']
-#    kwargs['atom'] = universe.atom[acols].to_string(index=None, header=None)
-#
-#    # nshell and nexp
-#    select = [i for i in universe.basis_set_summary.columns if 'bas_' in i]
-#    nshell = (universe.basis_set_summary[select].sum(axis=1) * universe.atom['set'].value_counts()).sum()
-#    nexp = (universe.gaussian_basis_set[abs(universe.gaussian_basis_set['d']) > 0].groupby('set').apply(
-#                               lambda x: x.shape[0]) * universe.atom['set'].value_counts()).sum()
-#    kwargs['nshell'] = nshell
-#    kwargs['nexp'] = nexp
-#
-#    _nbas_arrays(universe, nbas, fmt, kwargs)
-#    _nshell_arrays(universe, nshell, fmt, kwargs)
-#    _nexp_arrays(universe, nexp, ffmt, kwargs)
-#
-#    try:
-#        kwargs['overlap'] = _format_helper(universe.overlap['coefficient'].values, fffmt, 4, just=False)
-#    except AttributeError:
-#        kwargs['overlap'] = '{overlap}'
-#    try:
-#        kwargs['density'] = _format_helper(universe.density['coefficient'].values, fffmt, 4, just=False)
-#        kwargs['check'] = np.trace(np.dot(universe.density.square(), universe.overlap.square()))
-#    except AttributeError:
-#        kwargs['density'] = '{density}'
-#        kwargs['check'] = 'density not provided'
-#
-#    if fp is not None:
-#        fl.write(fp, **kwargs)
-#    else:
-#        return fl.format(inplace=True, **kwargs)
-#

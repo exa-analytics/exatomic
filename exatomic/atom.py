@@ -12,7 +12,7 @@ import numpy as np
 import pandas as pd
 from traitlets import Dict, Unicode
 from exa.numerical import DataFrame, SparseDataFrame, Series
-from exa.relational.isotope import (symbol_to_color, symbol_to_radius,
+from exa.relational.isotope import (symbol_to_color, symbol_to_radius, symbol_to_z,
                                     symbol_to_element_mass)
 from exatomic import Length
 from exatomic.error import PeriodicUniverseError
@@ -68,7 +68,7 @@ class Atom(DataFrame):
         """Return the last frame of the atom table."""
         return self[self['frame'] == self.frames - 1]
 
-    def to_xyz(self, tag='symbol', header=False, comment='',
+    def to_xyz(self, tag='symbol', header=False, comment='', columns=None,
                frame=None, units='A'):
         """
         Return atomic data in XYZ format, by default without the first 2 lines.
@@ -85,11 +85,16 @@ class Atom(DataFrame):
         Returns
             ret (str): XYZ formatted atomic data
         """
+        columns = (tag, 'x', 'y', 'z') if columns is None else columns
         frame = self.frames - 1 if frame is None else frame
         if isinstance(frame, Integral): frame = [frame]
         if not isinstance(comment, list): comment = [comment]
         if len(comment) == 1: comment = comment * len(frame)
         df = self[self['frame'].isin(frame)].copy()
+        if tag not in df.columns:
+            if tag == 'Z':
+                stoz = symbol_to_z()
+                df[tag] = df['symbol'].map(stoz)
         df['x'] *= Length['au', units]
         df['y'] *= Length['au', units]
         df['z'] *= Length['au', units]
