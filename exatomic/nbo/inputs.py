@@ -1,10 +1,10 @@
 # -*- coding: utf-8 -*-
 # Copyright (c) 2015-2016, Exa Analytics Development Team
 # Distributed under the terms of the Apache License 2.0
-'''
+"""
 exnbo Input Generator and Parser
 ===================================
-'''
+"""
 
 import numpy as np
 import pandas as pd
@@ -51,6 +51,7 @@ $DENSITY
 $END"""
 
 def _nbo_labels():
+    """Generate data frames of L, (ml | l, m, n), NBO label."""
     sph = pd.DataFrame(list(solid_harmonics(6).keys()),
                        columns=('L', 'ml'))
     # See the NBO 6.0 manual for more details
@@ -83,6 +84,7 @@ def _nbo_labels():
 spher, cart = _nbo_labels()
 
 def _get_labels(Ls, mls=None, ls=None, ms=None, ns=None):
+    """Get the NBO labels corresponding to L, (ml | l, m, n)."""
     if mls is not None:
         return [spher[(spher['L'] == l) &
                       (spher['ml'] == ml)]['label'].iloc[0]
@@ -95,6 +97,7 @@ def _get_labels(Ls, mls=None, ls=None, ms=None, ns=None):
                      for L, l, m, n in zip(Ls, ls, ms, ns)]
 
 def _clean_coeffs(arr, width=16, decimals=6):
+    """Call _clean_to_string for each shell."""
     # Format C(shell) for coeffs
     ls = ['     {} = '.format('C' + l.upper()) for l in lorder]
     # Clean to string by shell
@@ -104,6 +107,7 @@ def _clean_coeffs(arr, width=16, decimals=6):
     return ''.join(dat)[:-1]
 
 def _clean_to_string(arr, ncol=4, width=16, decimals='', just=True):
+    """Convert a numerical array into nicely formatted text block."""
     # Justify the data arrays with the tags in the template
     pad = ' ' * 10 if just else ''
     # Some flexibility in how this function handles int/floats
@@ -116,6 +120,7 @@ def _clean_to_string(arr, ncol=4, width=16, decimals='', just=True):
     return ''.join(dat)
 
 def _obtain_arrays(uni):
+    """Get numerical arrays of information from a universe."""
     kwargs = {}
     # Get number of functions by shell
     shells = uni.basis_set.functions_by_shell()

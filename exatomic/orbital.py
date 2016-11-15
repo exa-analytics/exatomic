@@ -20,6 +20,7 @@ method to return the matrix as we see it on a piece of paper.
 import numpy as np
 import pandas as pd
 from exa import DataFrame
+from exatomic import Energy
 from exatomic.algorithms.orbital import (density_from_momatrix,
                                          density_as_square,
                                          momatrix_as_square)
@@ -27,10 +28,12 @@ from exatomic.field import AtomicField
 
 class _Convolve(DataFrame):
 
+    @staticmethod
     def _gauss(sigma, en, en0):
         return (1.0 / (sigma * np.sqrt(2 * np.pi))) * \
                np.exp(-(en - en0) ** 2 / (2 * sigma ** 2))
 
+    @staticmethod
     def _lorentz(gamma, en, en0):
         return gamma / (2 * np.pi * (en - en0) ** 2 + (gamma / 2) ** 2)
 
@@ -63,14 +66,19 @@ class _Convolve(DataFrame):
         maxe = lg + padding * broaden
         enrg = np.linspace(mine, maxe, npoints)
         spec = np.zeros(npoints)
-        smdf = self[(self[units] > sm) & (self[units] < lg)]
-        if self.__name__ == 'Excitation':
+        if self.__class__.__name__ == 'Excitation':
+            smdf = self[(self[units] > sm) & (self[units] < lg)]
             for osc, en0 in zip(smdf['osc'], smdf[units]):
                 spec += osc * choices[func](broaden, enrg, en0)
         else:
+            smdf = self[(self[units] > sm) & (self[units] < lg) &
+                        (self['occupation'] > 0)]
             for en0 in smdf[units]:
                 spec += choices[func](broaden, enrg, en0)
-        spec /= spec.max()
+        if np.isclose(spec.max(), 0):
+            print('Spectrum is all zeros, check energy window.')
+        else:
+            spec /= spec.max()
         name = 'signal' if name is None else name
         return pd.DataFrame.from_dict({units: enrg, name: spec})
 
