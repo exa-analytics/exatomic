@@ -18,14 +18,14 @@ from exa.container import TypedMeta, Container
 from exatomic.error import BasisSetNotFoundError
 from exatomic.widget import UniverseWidget
 from exatomic.frame import Frame, compute_frame_from_atom
-from exatomic.atom import Atom, UnitAtom, ProjectedAtom, VisualAtom
+from exatomic.atom import Atom, UnitAtom, ProjectedAtom, VisualAtom, Frequency
 from exatomic.two import (AtomTwo, MoleculeTwo, compute_atom_two,
                           compute_bond_count, compute_molecule_two)
 from exatomic.molecule import (Molecule, compute_molecule, compute_molecule_com,
                                compute_molecule_count)
 from exatomic.widget import UniverseWidget
 from exatomic.field import AtomicField
-from exatomic.orbital import Orbital, MOMatrix, DensityMatrix
+from exatomic.orbital import Orbital, Excitation, MOMatrix, DensityMatrix
 from exatomic.basis import (Overlap, GaussianBasisSet, BasisSetOrder)
 from exatomic.algorithms.orbital import add_mos_to_universe as _add_mos_to_universe
 from exatomic.algorithms.orbital import update_molecular_orbitals as _update_mos
@@ -44,12 +44,14 @@ class Meta(TypedMeta):
     unit_atom = UnitAtom
     projected_atom = ProjectedAtom
     visual_atom = VisualAtom
+    frequency = Frequency
     molecule = Molecule
     molecule_two = MoleculeTwo
     field = AtomicField
     orbital = Orbital
     overlap = Overlap
     momatrix = MOMatrix
+    excitation = Excitation
     density = DensityMatrix
     basis_set_order = BasisSetOrder
     gaussian_basis_set = GaussianBasisSet
@@ -181,7 +183,8 @@ class Universe(Container, metaclass=Meta):
             raise TypeError('field must be an instance of exatomic.field.AtomicField or a list of them')
         self._traits_need_update = True
 
-    def add_molecular_orbitals(self, field_params=None, mocoefs=None, vector=None):
+    def add_molecular_orbitals(self, field_params=None, mocoefs=None,
+                               vector=None, frame=None):
         """
         Adds molecular orbitals to universe. field_params define the numerical
         field and may be a tuple of (min, max, nsteps) or a series containing
@@ -194,10 +197,12 @@ class Universe(Container, metaclass=Meta):
             raise AttributeError("universe must have a momatrix to make MOs")
         if not hasattr(self, '_basis_set_order'):
             print('Warning: without the basis_set_order, MOs may be incorrect.')
-        _add_mos_to_universe(self, field_params=field_params, mocoefs=mocoefs, vector=vector)
+        _add_mos_to_universe(self, field_params=field_params, mocoefs=mocoefs,
+                             vector=vector, frame=frame)
         self._traits_need_update = True
 
-    def update_molecular_orbitals(self, field_params=None, mocoefs=None, vector=None):
+    def update_molecular_orbitals(self, field_params=None, mocoefs=None,
+                                  vector=None, frame=None):
         """
         Updates the molecular orbitals with new field_params, different MO
         coefficients or different eigenvectors. Significantly faster than
@@ -207,8 +212,10 @@ class Universe(Container, metaclass=Meta):
             Removes any existing field attribute of the universe.
         """
         if not hasattr(self, 'basis_functions'):
-            raise AttributeError('Universe has no basis functions, add_molecular_orbitals first')
-        _update_mos(self, field_params=field_params, mocoefs=mocoefs, vector=vector)
+            raise AttributeError('Universe has no basis functions, '
+                                 'add_molecular_orbitals first')
+        _update_mos(self, field_params=field_params, mocoefs=mocoefs,
+                    vector=vector, frame=frame)
         self._traits_need_update = True
 
     def _custom_traits(self):

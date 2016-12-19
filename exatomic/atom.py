@@ -7,12 +7,14 @@ Atomic Position Data
 This module provides a collection of dataframes supporting nuclear positions,
 forces, velocities, symbols, etc. (all data associated with atoms as points).
 """
+from numbers import Integral
 import numpy as np
 import pandas as pd
 from traitlets import Dict, Unicode
 from exa.numerical import DataFrame, SparseDataFrame, Series
-from exa.relational.isotope import (symbol_to_color, symbol_to_radius,
+from exa.relational.isotope import (symbol_to_color, symbol_to_radius, symbol_to_z,
                                     symbol_to_element_mass)
+from exatomic import Length
 from exatomic.error import PeriodicUniverseError
 from exatomic.algorithms.distance import minimal_image_counts
 from exatomic.algorithms.geometry import make_small_molecule
@@ -56,31 +58,59 @@ class Atom(DataFrame):
     _traits = ['x', 'y', 'z', 'set']
     _columns = ['x', 'y', 'z', 'symbol']
 
-    def to_xyz(self, tag='symbol', header=False, comment='', frame=0):
+    @property
+    def frames(self):
+        """Return the total number of frames in the atom table."""
+        return self['frame'].cat.as_ordered().max() + 1
+
+    @property
+    def last_frame(self):
+        """Return the last frame of the atom table."""
+        return self[self['frame'] == self.frames - 1]
+
+    def to_xyz(self, tag='symbol', header=False, comment='', columns=None,
+               frame=None, units='A'):
         """
         Return atomic data in XYZ format, by default without the first 2 lines.
-        If multiple frames are specified, return an XYZ trajectory format.
-        
+        If multiple frames are specified, return an XYZ trajectory format. If
+        frame is not specified, by default returns the last frame in the table.
+
         Args
             tag (str): column name to use in place of 'symbol'
-            header (bool): if True, return the first 2 lines of XYZ format 
-            comment (str): a comment to put in the comment line
-            frame (int,list,tup,range): frame or frames to return
-        
+            header (bool): if True, return the first 2 lines of XYZ format
+            comment (str,list): comment(s) to put in the comment line
+            frame (int,iter): frame or frames to return
+            units (str): units (default angstroms)
+
         Returns
-            string: XYZ formatted atomic data
+            ret (str): XYZ formatted atomic data
         """
-        try:
-            frame = int(frame)
-            hdr = ''
-            if header or comment:
-                hdr = '\n'.join([str(len(self)), comment, ''])
-            return hdr + self[self['frame'] == 0].to_string(columns=(tag, 'x', 'y', 'z'),
-                                                            header=False, index=False, 
-                                                            formatters={tag: lambda x: '{:<5}'.format(x)})
-        except TypeError:
-            raise NotImplementedError('I dont deal with trajectories :D')
-            
+        columns = (tag, 'x', 'y', 'z') if columns is None else columns
+        frame = self.frames - 1 if frame is None else frame
+        if isinstance(frame, Integral): frame = [frame]
+        if not isinstance(comment, list): comment = [comment]
+        if len(comment) == 1: comment = comment * len(frame)
+        df = self[self['frame'].isin(frame)].copy()
+        if tag not in df.columns:
+            if tag == 'Z':
+                stoz = symbol_to_z()
+                df[tag] = df['symbol'].map(stoz)
+        df['x'] *= Length['au', units]
+        df['y'] *= Length['au', units]
+        df['z'] *= Length['au', units]
+        grps = df.groupby('frame')
+        ret = ''
+        columns = (tag, 'x', 'y', 'z')
+        formatter = {tag: lambda x: '{:<5}'.format(x)}
+        stargs = {'columns': columns, 'header': False,
+                  'index': False, 'formatters': formatter}
+        t = 0
+        for f, grp in grps:
+            if not len(grp): continue
+            tru = (header or comment[t] or len(frame) > 1)
+            hdr = '\n'.join([str(len(grp)), c, '']) if tru else ''
+            ret = ''.join([ret, hdr, grp.to_string(**stargs), '\n'])
+        return ret
 
     def get_element_masses(self):
         """Compute and return element masses from symbols."""
@@ -212,3 +242,54 @@ class VisualAtom(SparseDataFrame):
             atom = atom[atom != universe.atom[['x', 'y', 'z']]].to_sparse()
             return cls(atom)
         raise PeriodicUniverseError()
+
+
+class Frequency(DataFrame):
+    """
+    The Frequency dataframe.
+
+    +-------------------+----------+-------------------------------------------+
+    | Column            | Type     | Description                               |
+    +===================+==========+===========================================+
+    | frame             | category | non-unique integer (req.)                 |
+    +-------------------+----------+-------------------------------------------+
+    | frequency         | float    | frequency of oscillation (cm-1) (req.)    |
+    +-------------------+----------+-------------------------------------------+
+    | freqdx            | int      | index of frequency of oscillation (req.)  |
+    +-------------------+----------+-------------------------------------------+
+    | dx                | float    | atomic displacement in x direction (req.) |
+    +-------------------+----------+-------------------------------------------+
+    | dy                | float    | atomic displacement in y direction (req.) |
+    +-------------------+----------+-------------------------------------------+
+    | dz                | float    | atomic displacement in z direction (req.) |
+    +-------------------+----------+-------------------------------------------+
+    | symbol            | str      | atomic symbol (req.)                      |
+    +-------------------+----------+-------------------------------------------+
+    | label             | int      | atomic identifier                         |
+    +-------------------+----------+-------------------------------------------+
+    """
+    def displacement(self, freqdx):
+        return self[self['freqdx'] == freqdx][['dx', 'dy', 'dz', 'symbol']]
+
+def add_vibrational_mode(uni, freqdx):
+    displacements = uni.frequency.displacements(freqdx)
+    if not all(displacements['symbol'] == uni.atom['symbol']):
+        print('Mismatch in ordering of atoms and frequencies.')
+        return
+    displaced = []
+    frames = []
+    # Should these only be absolute values?
+    factor = np.abs(np.sin(np.linspace(-4*np.pi, 4*np.pi, 200)))
+    for fac in factor:
+        moved = uni.atom.copy()
+        moved['x'] += displacements['dx'].values * fac
+        moved['y'] += displacements['dy'].values * fac
+        moved['z'] += displacements['dz'].values * fac
+        displaced.append(moved)
+        frames.append(uni.frame)
+    movie = pd.concat(displaced).reset_index()
+    movie['frame'] = np.repeat(range(len(factor)), len(uni.atom))
+    uni.frame = pd.concat(frames).reset_index()
+    uni.atom = movie
+    uni._traits_need_update = True
+    uni._update_traits()

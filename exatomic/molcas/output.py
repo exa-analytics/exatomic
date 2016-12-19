@@ -8,12 +8,11 @@ Multiple frames are not currently supported
 '''
 import re
 import os
-from os import sep
 import pandas as pd
 import numpy as np
 from io import StringIO
 
-from .editor import MolcasEditor
+from .editor import Editor
 
 from exatomic.atom import Atom
 from exatomic.basis import GaussianBasisSet, BasisSetOrder, Overlap
@@ -27,7 +26,7 @@ symbol_to_Z = symbol_to_z()
 Z_to_symbol = z_to_symbol()
 rlmap = {value: key for key, value in lmap.items()}
 
-class Base(MolcasEditor):
+class Base(Editor):
 
     def _parse_momatrix(self):
         dim = int(self[5])
@@ -99,12 +98,10 @@ class Orb(Base):
         super().__init__(*args, **kwargs)
 
 
-class Output(MolcasEditor):
+class Output(Editor):
 
     def parse_atom(self):
-        '''
-        Parses the atom list generated in SEWARD.
-        '''
+        '''Parses the atom list generated in SEWARD.'''
         start = self.find(_re_atom, keys_only=True)[0] + 8
         stop = self._find_break(start, finds=['****', '--'])
         atom = self.pandas_dataframe(start, stop, 8)
@@ -271,25 +268,7 @@ def _fix_basis_set_order(df, shls, sets, funcs):
     return df
 
 
-def _parse_ovl(fp):
-    ovl = pd.read_csv(fp, header=None)
-    ovl.columns = ['coefficient']
-    nbas = np.round(np.roots((1, 1, -2 * ovl.shape[0]))[1]).astype(np.int64)
-    chi1 = np.empty(ovl.shape[0], dtype=np.int64)
-    chi2 = np.empty(ovl.shape[0], dtype=np.int64)
-    cnt = 0
-    for i in range(nbas):
-        for j in range(i + 1):
-            chi1[cnt] = i
-            chi2[cnt] = j
-            cnt += 1
-    ovl['chi1'] = chi1
-    ovl['chi2'] = chi2
-    ovl['frame'] = 0
-    return ovl
-
-
-def parse_molcas(file_path, momatrix=None, overlap=None, occvec=None, density=None, **kwargs):
+def parse_molcas(fp, momatrix=None, overlap=None, occvec=None, **kwargs):
     """
     Will parse a Molcas output file. Optionally it will attempt
     to parse additional information obtained from the same directory
@@ -297,43 +276,30 @@ def parse_molcas(file_path, momatrix=None, overlap=None, occvec=None, density=No
     If density keyword is specified, the momatrix keyword is ignored.
 
     Args
-        file_path (str): Path to output file
+        fp (str): Path to output file
         momatrix (str): file name of the C matrix of interest
         overlap (str): file name of the overlap matrix
-        density (str): file name of the density matrix
+        occvec (str): an occupation vector
 
     Returns
         parsed (Editor): contains many attributes similar to the
             exatomic universe
     """
-    uni1 = Output(file_path, **kwargs)
-    dirtree = sep.join(file_path.split(sep)[:-1])
-    if density is not None:
-        fp = sep.join([dirtree, density])
+    uni = Output(fp, **kwargs)
+    adir = os.sep.join(fp.split(os.sep)[:-1])
+    if momatrix is not None:
+        fp = os.sep.join([adir, momatrix])
         if os.path.isfile(fp):
-            dens = DensityMatrix(_parse_ovl(fp))
-            uni1.density = dens
+            orb = Orb(fp)
+            uni.momatrix = orb.momatrix
+            uni.occupation_vector = orb.occupation_vector
+            occvec = occvec if occvec is not None else orb.occupation_vector
+            d = DensityMatrix.from_momatrix(orb.momatrix, occvec)
+            uni.density = d
         else:
-            print('Is {} in the same directory as {}?'.format(density, file_path))
-    if momatrix is not None and density is None:
-        fp = sep.join([dirtree, momatrix])
-        if os.path.isfile(fp):
-            orbs = Orb(fp)
-            orbs.parse_momatrix()
-            if occvec is not None:
-                dens = DensityMatrix.from_momatrix(orbs.momatrix, occvec)
-            else:
-                dens = DensityMatrix.from_momatrix(orbs.momatrix, orbs.occupation_vector)
-            uni1.momatrix = orbs.momatrix
-            uni1.occupation_vector = orbs.occupation_vector
-            uni1.density = dens
-        else:
-            print('Is {} in the same directory as {}?'.format(momatrix, file_path))
+            print('Is {} in the same directory as {}?'.format(momatrix, fp))
     if overlap is not None:
-        fp = sep.join([dirtree, overlap])
-        if os.path.isfile(fp):
-            ovl = _parse_ovl(fp)
-            uni1.overlap = ovl
-        else:
-            print('Is {} in the same directory as {}?'.format(overlap, file_path))
-    return uni1
+        fp = os.sep.join([adir, overlap])
+        if os.path.isfile(fp): uni.overlap = Overlap.from_file(fp)
+        else: print('Is {} in the same directory as {}?'.format(overlap, fp))
+    return uni

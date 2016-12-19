@@ -6,7 +6,7 @@ Input Generator and Parser
 ###############################
 '''
 
-from .editor import MolcasEditor
+from .editor import Editor
 
 _template = """\
 {seward}
@@ -76,7 +76,7 @@ _rassi = """\
 End of input
 """
 
-class InputGenerator(MolcasEditor):
+class InputGenerator(Editor):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)

@@ -45,7 +45,7 @@ def add_molecular_orbitals(universe, params=None, vectors=None):
         c2s = [spherical(l, ml) for l, ml in zip(lvalues, mlvalues)]
     else:
         centers, lvalues, ivalues, jvalues, kvalues, compnt, nprims, npntrs, expnts, ds = _obtain_arrays(universe)
-        c2s = [cartesian(l) for l in ]
+        #c2s = [cartesian(l) for l in ]
         #print(centers, lvalues, ivalues, jvalues, kvalues, compnt, nprims, npntrs, expnts, ds, sep='\n\n')
     nx = len(x)
     nv = len(vectors)

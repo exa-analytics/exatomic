@@ -15,13 +15,11 @@ See Also:
 """
 import pandas as pd
 import numpy as np
-from collections import OrderedDict
-from traitlets import Float, Int, Dict, Unicode
 from exa import DataFrame
 
 from exatomic.algorithms.basis import (lmap, spher_ml_count, enum_cartesian,
                                        cart_lml_count, spher_lml_count,
-                                       _vec_normalize, _wrap_overlap, lorder,
+                                       _vec_sloppy_normalize, _wrap_overlap, lorder,
                                        solid_harmonics, car2sph_transform_matrices)
 
 class BasisSet(DataFrame):
@@ -179,7 +177,6 @@ class Overlap(DataFrame):
     square symmetric, only n_basis_functions * (n_basis_functions + 1) / 2
     rows are stored.
 
-
     See Gramian matrix for more on the general properties of the overlap matrix.
 
     +-------------------+----------+-------------------------------------------+
@@ -191,16 +188,37 @@ class Overlap(DataFrame):
     +-------------------+----------+-------------------------------------------+
     | chi2              | int      | second basis function                     |
     +-------------------+----------+-------------------------------------------+
-    | coefficient       | float    | overlap matrix element                    |
+    | coef              | float    | overlap matrix element                    |
     +-------------------+----------+-------------------------------------------+
     """
-    _columns = ['chi1', 'chi2', 'coefficient', 'frame']
+    _columns = ['chi1', 'chi2', 'coef', 'frame']
     _index = 'index'
 
     def square(self, frame=0):
         nbas = np.round(np.roots([1, 1, -2 * self.shape[0]])[1]).astype(np.int64)
-        tri = self[self['frame'] == frame].pivot('chi1', 'chi2', 'coefficient').fillna(value=0)
+        tri = self[self['frame'] == frame].pivot('chi1', 'chi2', 'coef').fillna(value=0)
         return tri + tri.T - np.eye(nbas)
+
+    @classmethod
+    def from_file(cls, fp):
+        """Create an Overlap from a file with just the array of coefficients."""
+        # Assuming the file is only triangular elements of the overlap matrix
+        ovl = pd.read_csv(fp, header=None, names=('coef',))
+        # Reverse engineer the number of basis functions given len(ovl) = n * (n + 1) / 2
+        nbas = np.round(np.roots((1, 1, -2 * ovl.shape[0]))[1]).astype(np.int64)
+        # Index chi1 and chi2, they are interchangeable as overlap is symmetric
+        chi1 = np.empty(ovl.shape[0], dtype=np.int64)
+        chi2 = np.empty(ovl.shape[0], dtype=np.int64)
+        cnt = 0
+        for i in range(nbas):
+            for j in range(i + 1):
+                chi1[cnt] = i
+                chi2[cnt] = j
+                cnt += 1
+        ovl['chi1'] = chi1
+        ovl['chi2'] = chi2
+        ovl['frame'] = 0
+        return cls(ovl)
 
     @classmethod
     def from_square(cls, df):
@@ -209,7 +227,7 @@ class Overlap(DataFrame):
         arlen = ndim * (ndim + 1) // 2
         ret = np.empty((arlen,), dtype=[('chi1', 'i8'),
                                         ('chi2', 'i8'),
-                                        ('coefficient', 'f8'),
+                                        ('coef', 'f8'),
                                         ('frame', 'i8')])
         cnt = 0
         for i in range(ndim):
@@ -482,7 +500,7 @@ class Primitive(DataFrame):
                                              self['n'].astype(np.int64).values,
                                              self['N'].values, self['alpha'].values)
         return Overlap.from_dict({'chi1': chi1, 'chi2': chi2,
-                                  'coefficient': overlap,
+                                  'coef': overlap,
                                   'frame': [0] * len(chi1)})
 
 
