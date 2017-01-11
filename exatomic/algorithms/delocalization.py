@@ -23,8 +23,8 @@ sns.mpl.pyplot.rcParams.update({'text.usetex': True,
 
 def _deltaE(col):
     if col.name == 'n': return col
-    cat = np.linspace(col.max(), 0, 51)
-    an = np.linspace(0, col.min(), 51)
+    cat = np.linspace(col.values[0], 0, 51)
+    an = np.linspace(0, col.values[-1], 51)
     return col - np.hstack([cat, an[1:]])
 
 def plot_en(deloc, title='', delta=None, xlabel='$\Delta$N',

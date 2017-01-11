@@ -57,7 +57,7 @@ class Output(Editor):
 
     def parse_gaussian_basis_set(self):
         # First check if gfinput was specified
-        check = self.regex(_rebas01, stop=250, flags=re.IGNORECASE)
+        check = self.regex(_rebas01, stop=1000, flags=re.IGNORECASE)
         if not check: return
         # Find where the basis set is printed
         found = self.find(_rebas02[:-1], _rebas03)
@@ -96,7 +96,7 @@ class Output(Editor):
             for i in _orbslice:
                 en = ln[28:][i]
                 if en:
-                    occ = 1 if 'occ' in ln else 0
+                    occ = ('occ' in ln) + (not os)
                     spn = 0 if 'Alpha' in ln else 1
                     data[cnt] = (en, occ, vec, spn, idx)
                     cnt += 1
@@ -104,7 +104,9 @@ class Output(Editor):
                     if cnt == idxchk: idx += 1
                     if vec == nbas: vec = 0
         orbital = pd.DataFrame(data)
-        orbital['frame'] = 0
+        frame = np.repeat(range(len(orbital)//nbas), nbas)
+        if os: frame = np.repeat(range(len(orbital)//(nbas * 2)), nbas * 2)
+        orbital['frame'] = frame
         # Symmetry labels
         if found[_reorb02]:
             # Gaussian seems to print out a lot of these blocks
@@ -145,7 +147,7 @@ class Output(Editor):
         """
         if hasattr(self, '_momatrix'): return
         # Check if a full MO matrix was specified in the input
-        check = self.regex(_remomat01, stop=250, flags=re.IGNORECASE)
+        check = self.regex(_remomat01, stop=1000, flags=re.IGNORECASE)
         if not check: return
         # Find approximately where our data is
         found = self.find(_remomat02, _rebas02)
@@ -209,8 +211,11 @@ class Output(Editor):
         # Extract just the total SCF energies
         ens = [float(ln.split()[4]) for lno, ln in found[_retoten]]
         # If 'SCF Done' prints out more times than frames
-        ens = ens if len(self.frame) == len(ens) else ens[-len(self.frame):]
-        self.frame['E_tot'] = ens
+        try:
+            ens = ens if len(self.frame) == len(ens) else ens[-len(self.frame):]
+            self.frame['E_tot'] = ens
+        except:
+            pass
         # We will assume number of electrons doesn't change per frame
         ae, x, x, be, x, x = found[_realphaelec][0][1].split()
         self.frame['N_e'] = int(ae) + int(be)
@@ -228,12 +233,12 @@ class Output(Editor):
 
 
     def parse_excitation(self):
-        chk = self.find(_retddft, stop=250, keys_only=True)
+        chk = self.find(_retddft, stop=1000, keys_only=True)
         if not chk: return
         # Find the data
         found = self.find(_reexcst)
         # Allocate the array
-        dtype = [('eV', 'f8'), ('oscstr', 'f8'), ('occ', 'i8'),
+        dtype = [('eV', 'f8'), ('osc', 'f8'), ('occ', 'i8'),
                  ('virt', 'i8'), ('kind', 'O'), ('symmetry', 'O')]
         data = np.empty((len(found),), dtype=dtype)
         # Iterate over what we found
@@ -253,7 +258,7 @@ class Output(Editor):
 
 
     def parse_frequency(self):
-        found = self.regex(_refreq, stop=250, flags=re.IGNORECASE)
+        found = self.regex(_refreq, stop=1000, flags=re.IGNORECASE)
         if not found: return
         # Don't need the input deck or 2 from the summary at the end
         found = self.find(_refreq)[1:-2]
@@ -280,7 +285,7 @@ class Output(Editor):
             freqs = np.repeat(freqs, df.shape[0])
             fdx += nfreqs
             # Put it all together
-            stacked = pd.DataFrame({'Z': zs, 'label': labels,
+            stacked = pd.DataFrame.from_dict({'Z': zs, 'label': labels,
                                     'dx': dx, 'dy': dy, 'dz': dz,
                                     'frequency': freqs, 'freqdx': freqdxs})
             stacked['symbol'] = stacked['Z'].map(z_to_symbol)
