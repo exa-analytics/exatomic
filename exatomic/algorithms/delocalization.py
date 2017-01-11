@@ -10,10 +10,12 @@ require results from 3 different quantum chemical calculations on
 an (N-1), N, and (N+1) electron system.
 """
 
+import os
 import numpy as np
 import pandas as pd
 import seaborn as sns
-from exatomic import Energy
+from exatomic import Energy, gaussian, nwchem
+from exatomic.mpl import plot_j2_surface, plot_j2_contour
 
 sns.mpl.pyplot.rcParams.update({'text.usetex': True,
                                 'font.family': 'serif',
@@ -143,115 +145,78 @@ def compute_curvature(*args, neut=None, tag='', extras=True):
         data.ens = es
     return data
 
-#def compute_deloc(cat, neut, an, tag='', debug=False, jtype=None):
-#    """
-#    Computes the curvature of the energy of a system as a function
-#    of the number of electrons in the system E(N).
-#
-#    Args
-#        cat (exatomic.Universe): N-1 electron system
-#        neut (exatomic.Universe): N electron system
-#        an (exatomic.Universe): N+1 electron system
-#        debug (bool): verbose printing
-#        jtype (str): 'IP' or 'EA' if not both
-#
-#    Returns
-#        ret (pd.DataFrame): The energy as a function of N
-#    """
-#    cat_en = cat.frame.ix[0].total_energy
-#    neut_en = neut.frame.ix[0].total_energy
-#    an_en = an.frame.ix[0].total_energy
-#
-#    # Get the highest occupied molecular orbitals of each system
-#    alpha_cat_homo = cat.orbital.get_orbital()
-#    alpha_neut_homo = neut.orbital.get_orbital()
-#    alpha_an_homo = an.orbital.get_orbital()
-#
-#    # Check for open shell nature of any of the systems
-#    try:
-#        beta_cat_homo = cat.orbital.get_orbital(spin=1)
-#    except IndexError:
-#        beta_cat_homo = alpha_cat_homo
-#    try:
-#        beta_neut_homo = neut.orbital.get_orbital(spin=1)
-#    except IndexError:
-#        beta_neut_homo = alpha_neut_homo
-#    try:
-#        beta_an_homo = an.orbital.get_orbital(spin=1)
-#    except IndexError:
-#        beta_an_homo = alpha_an_homo
-#
-#    # Find the right orbital energies
-#    if alpha_cat_homo.vector < alpha_neut_homo.vector:
-#        lumoca = cat.orbital.get_orbital(index=alpha_cat_homo.name + 1).energy
-#        homone = alpha_neut_homo.energy
-#    if beta_cat_homo.vector < beta_neut_homo.vector:
-#        lumoca = cat.orbital.get_orbital(index=beta_cat_homo.name + 1).energy
-#        homone = beta_neut_homo.energy
-#    if alpha_neut_homo.vector < alpha_an_homo.vector:
-#        lumone = neut.orbital.get_orbital(index=alpha_neut_homo.name + 1).energy
-#        homoan = alpha_an_homo.energy
-#    if beta_neut_homo.vector < beta_an_homo.vector:
-#        lumone = neut.orbital.get_orbital(index=beta_neut_homo.name + 1).energy
-#        homoan = beta_an_homo.energy
-#
-#    #Compute J^2
-#    jone = homone + (cat_en - neut_en)
-#    jtwo = homoan + (neut_en - an_en)
-#    jtype = None
-#    j2 = jone ** 2 + jtwo ** 2
-#    if jtype == 'EA':
-#        j2 = jone ** 2
-#    elif jtype == 'IP':
-#        j2 = jtwo ** 2
-#
-#    #Compute E(n) and curvature coefficients
-#    q = np.linspace(0, 1, 51)
-#    negdE = an_en - neut_en
-#    posdE = neut_en - cat_en
-#    autoev = Energy['Ha', 'eV']
-#    negE = (negdE*q + ((lumone - negdE)*(1 - q) + (negdE - homoan)*q)*q*(1 - q)) * autoev
-#    posE = (-posdE*q + ((lumoca - posdE)*(1 - q) + (posdE - homone)*q)*q*(1 - q)) * autoev
-#    ancur = (np.sum((lumone - negdE)*(6*q - 4) + (negdE - homoan)*(2 - 6*q)))/(len(q)*2) * autoev
-#    catcur = (np.sum((lumoca - posdE)*(6*q - 4) + (posdE - homone)*(2 - 6*q)))/(len(q)*2) * autoev
-#    colname = '{} ({:.2f},{:.2f})'.format(tag, catcur, ancur)
-#    data = np.empty((len(q)*2 - 1,), dtype = [('n', 'f8'), (colname, 'f8')])
-#    data['n'] = np.concatenate((np.fliplr([-q])[0][:-1], q))
-#    data[colname] = np.concatenate((np.fliplr([posE])[0][:-1], negE))
-#
-#    #Proper object and tack on tidbits
-#    ret = pd.DataFrame(data)
-#    ret.ancur = ancur
-#    ret.catcur = catcur
-#    ret.j2 = j2
-#    ret.name = tag
-#    ret.colname = colname
-#    if debug:
-#        print('============', tag, '============')
-#        print('alpha cation HOMO =', alpha_cat_homo, sep='\n')
-#        print('beta cation HOMO =', beta_cat_homo, sep='\n')
-#        if alpha_cat_homo.vector < alpha_neut_homo.vector:
-#            print('lumoca =',
-#                  cat.orbital.get_orbital(index=alpha_cat_homo.name + 1), sep='\n')
-#        if beta_cat_homo.vector < beta_neut_homo.vector:
-#            print('lumoca =',
-#                  cat.orbital.get_orbital(index=beta_cat_homo.name + 1), sep='\n')
-#        print('alpha neutral HOMO =', alpha_neut_homo, sep='\n')
-#        print('beta neutral HOMO =', beta_neut_homo, sep='\n')
-#        if alpha_neut_homo.vector < alpha_an_homo.vector:
-#            print('lumone =',
-#                  neut.orbital.get_orbital(index=alpha_an_homo.name + 1), sep='\n')
-#        if beta_neut_homo.vector < beta_an_homo.vector:
-#            print('lumone =',
-#                  neut.orbital.get_orbital(index=beta_an_homo.name + 1), sep='\n')
-#        print('alpha anion HOMO =', alpha_an_homo, sep='\n')
-#        print('beta anion HOMO =', beta_an_homo, sep='\n')
-#        print('lumoca energy = ', lumoca)
-#        print('homone energy = ', homone)
-#        print('lumone energy = ', lumone)
-#        print('homoan energy = ', homoan)
-#        print('cat energy = ', cat_en)
-#        print('neut energy = ', neut_en)
-#        print('an energy = ', an_en)
-#    return ret
-#
+
+def _dir_to_dict(adir):
+    if not adir.endswith(os.sep): adir += os.sep
+    files = {}
+    for fl in os.listdir(adir):
+        if os.path.isdir(adir + fl): continue
+        if fl.startswith('.'): continue
+        comp, func, chgext = fl.split('-')
+        files.setdefault(func, {})
+        files[func][chgext.split('.')[0]] = adir + fl
+    return files
+
+
+def curvature_by_functional(adir, code='gaussian', ip=False,
+                            ea=False, tags=None, timer=True):
+    if ip and ea: raise Exception("Can't do just ip as well as just ea.")
+    codemap = {'gaussian': gaussian.Output,
+                 'nwchem': nwchem.Output}
+    if ip: keys = ['cat', 'neut']
+    elif ea: keys = ['neut', 'an']
+    else: keys = ['cat', 'neut', 'an']
+    delocs = []
+    files = _dir_to_dict(adir)
+    for func in files:
+        if len(files[func]) != 3: continue
+        if timer: print('|', end='')
+        outs = [codemap[code](files[func][chg]) for chg in keys]
+        tag = tags[func] if tags is not None else ''
+        delocs.append(compute_curvature(*outs, tag=tag))
+    return delocs
+
+
+
+def tuning_results(adir, code='gaussian', ip=False, ea=False,
+                   deep=False, debug=0):
+    """
+    Given a directory containing output files with systematic file names,
+    return a dataframe containing summary information about the calculations.
+
+    Args
+        adir (str): path to the directory containing outputs
+        ip (bool): if true only consider (N-1, N) systems
+        ea (bool): if true only consider (N, N+1) systems
+        deep (bool): if true must have (N-2, N-1, N, N+1, N+2) systems
+        ext (str): output file extension
+
+    Returns
+        data (pd.DataFrame): summarized results
+    """
+    if ip and ea: raise Exception("Can't do just ip as well as just ea.")
+    codemap = {'gaussian': gaussian.Output,
+                 'nwchem': nwchem.Output}
+    if ip: keys = ['cat', 'neut']
+    elif ea: keys = ['neut', 'an']
+    else:
+        if deep: keys = ['cat2', 'cat', 'neut', 'an', 'an2']
+        else: keys = ['cat', 'neut', 'an']
+    files = _dir_to_dict(adir)
+    together = list(zip(*(files[key] for key in keys)))
+    dtype = [('gamma', 'f8'), ('alpha', 'f8'), ('j2', 'f8'),
+             ('cat2cur', 'f8'), ('catcur', 'f8'), ('ancur', 'f8'),
+             ('an2cur', 'f8')]
+    data = np.empty((len(together),), dtype=dtype)
+    for i, mix in enumerate(together):
+        comp, gam, alp, ion = mix[0].split('-')
+        tag = '-'.join([gam, alp])
+        if debug: print(mix)
+        outs = [codemap[code](m) for m in mix]
+        deloc = compute_curvature(*outs, tag=tag, debug=debug)
+        miss = 4 - len(deloc.curs)
+        pre = miss // 2 + miss % 2
+        pos = miss // 2
+        curs = (0,) * pre + tuple(deloc.curs) + (0,) * pos
+        data[i] = (gam, alp, deloc.j2) + curs
+    return pd.DataFrame(data)

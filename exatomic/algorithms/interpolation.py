@@ -8,6 +8,8 @@ Hidden wrapper function that makes it convenient to choose
 an interpolation scheme available in scipy.
 """
 
+import numpy as np
+import pandas as pd
 from scipy.interpolate import (interp1d, interp2d, griddata,
                                pchip_interpolate, krogh_interpolate,
                                barycentric_interpolate, Akima1DInterpolator,
@@ -47,7 +49,7 @@ def _interpolate(df, x, y, z, method, kind, yfirst, dim, minimum):
         interpz = convenience[method](xdat, ydat, zdat)
         newz = interpz(newx, newy).T
     elif method == 'interp2d':
-        interpz = convenience[mehtod](xdat, ydat, zdat.T, kind=kind)
+        interpz = convenience[method](xdat, ydat, zdat.T, kind=kind)
         newz = interpz(newx, newy)
     elif method in ['griddata', 'cloughtocher', 'regulargrid']:
         meshx, meshy = np.meshgrid(xdat, ydat)
@@ -68,40 +70,40 @@ def _interpolate(df, x, y, z, method, kind, yfirst, dim, minimum):
             newz = convenience[method](points, zdat.flatten(), newpoints)
             newz = newz.reshape((dim, dim), order='F')
     # 1D interpolation applied across both x and y
-else:
-    # Not sure if we need this complexity but interesting to see if
-    # the order of interpolation matters (based on method)
-    newz = np.empty((dim, dim), dtype=np.float64)
-    kwargs = {'kind': kind} if method == 'interp1d' else {}
-    if yfirst:
-        partz = np.empty((xdat.shape[0], dim), dtype=np.float64)
-        if method in ['interp1d', 'akima']:
-            for i in range(xdat.shape[0]):
-                zfunc = convenience[method](ydat, zdat[i,:], **kwargs)
-                partz[i] = zfunc(newy)
-            for i in range(dim):
-                zfunc = convenience[method](xdat, partz[:,i], **kwargs)
-                newz[i,:] = zfunc(newy)
-            newz = newz[::-1,::-1]
-        else:
-            for i in range(xdat.shape[0]):
-                partz[i] = convenience[method](ydat, zdat[i,:], newy)
-            for i in range(dim):
-                newz[i,:] = convenience[method](xdat, partz[:,i], newx)
     else:
-        partz = np.empty((ydat.shape[0], dim), dtype=np.float64)
-        if method in ['interp1d', 'akima']:
-            for i in range(ydat.shape[0]):
-                zfunc = convenience[method](xdat, zdat[:,i], **kwargs)
-                partz[i] = zfunc(newx)
-            for i in range(dim):
-                zfunc = convenience[method](ydat, partz[:,i], **kwargs)
-                newz[:,i] = zfunc(newy)
+        # Not sure if we need this complexity but interesting to see if
+        # the order of interpolation matters (based on method)
+        newz = np.empty((dim, dim), dtype=np.float64)
+        kwargs = {'kind': kind} if method == 'interp1d' else {}
+        if yfirst:
+            partz = np.empty((xdat.shape[0], dim), dtype=np.float64)
+            if method in ['interp1d', 'akima']:
+                for i in range(xdat.shape[0]):
+                    zfunc = convenience[method](ydat, zdat[i,:], **kwargs)
+                    partz[i] = zfunc(newy)
+                for i in range(dim):
+                    zfunc = convenience[method](xdat, partz[:,i], **kwargs)
+                    newz[i,:] = zfunc(newy)
+                newz = newz[::-1,::-1]
+            else:
+                for i in range(xdat.shape[0]):
+                    partz[i] = convenience[method](ydat, zdat[i,:], newy)
+                for i in range(dim):
+                    newz[i,:] = convenience[method](xdat, partz[:,i], newx)
         else:
-            for i in range(ydat.shape[0]):
-                partz[i] = convenience[method](xdat, zdat[:,i], newx)
-            for i in range(dim):
-                newz[:,i] = convenience[method](ydat, partz[:,i], newy)
+            partz = np.empty((ydat.shape[0], dim), dtype=np.float64)
+            if method in ['interp1d', 'akima']:
+                for i in range(ydat.shape[0]):
+                    zfunc = convenience[method](xdat, zdat[:,i], **kwargs)
+                    partz[i] = zfunc(newx)
+                for i in range(dim):
+                    zfunc = convenience[method](ydat, partz[:,i], **kwargs)
+                    newz[:,i] = zfunc(newy)
+            else:
+                for i in range(ydat.shape[0]):
+                    partz[i] = convenience[method](xdat, zdat[:,i], newx)
+                for i in range(dim):
+                    newz[:,i] = convenience[method](ydat, partz[:,i], newy)
     # Find minimum values for the interpolated data set
     minima = None
     if minimum:

@@ -68,7 +68,12 @@ class Atom(DataFrame):
         """Return the last frame of the atom table."""
         return self[self['frame'] == self.frames - 1]
 
-    def to_xyz(self, tag='symbol', header=False, comment='', columns=None,
+    @property
+    def last_frame_atoms(self):
+        """Return unique atom symbols of the last frame."""
+        return self.last_frame['symbol'].unique()
+
+    def to_xyz(self, tag='symbol', header=False, comments='', columns=None,
                frame=None, units='A'):
         """
         Return atomic data in XYZ format, by default without the first 2 lines.
@@ -88,8 +93,8 @@ class Atom(DataFrame):
         columns = (tag, 'x', 'y', 'z') if columns is None else columns
         frame = self.frames - 1 if frame is None else frame
         if isinstance(frame, Integral): frame = [frame]
-        if not isinstance(comment, list): comment = [comment]
-        if len(comment) == 1: comment = comment * len(frame)
+        if not isinstance(comments, list): comments = [comments]
+        if len(comments) == 1: comments = comments * len(frame)
         df = self[self['frame'].isin(frame)].copy()
         if tag not in df.columns:
             if tag == 'Z':
@@ -100,16 +105,16 @@ class Atom(DataFrame):
         df['z'] *= Length['au', units]
         grps = df.groupby('frame')
         ret = ''
-        columns = (tag, 'x', 'y', 'z')
         formatter = {tag: lambda x: '{:<5}'.format(x)}
         stargs = {'columns': columns, 'header': False,
                   'index': False, 'formatters': formatter}
         t = 0
         for f, grp in grps:
             if not len(grp): continue
-            tru = (header or comment[t] or len(frame) > 1)
-            hdr = '\n'.join([str(len(grp)), c, '']) if tru else ''
+            tru = (header or comments[t] or len(frame) > 1)
+            hdr = '\n'.join([str(len(grp)), comments[t], '']) if tru else ''
             ret = ''.join([ret, hdr, grp.to_string(**stargs), '\n'])
+            t += 1
         return ret
 
     def get_element_masses(self):

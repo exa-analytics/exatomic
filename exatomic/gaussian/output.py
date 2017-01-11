@@ -314,7 +314,7 @@ def _basis_set_order(chunk):
     # and label once for all basis functions
     nas = (np.nan, np.nan)
     lsp = len(chunk[0]) - len(chunk[0].lstrip(' ')) + 2
-    centers = [(ln[lsp:lsp + 3], ln[lsp + 3:lsp + 6])
+    centers = [(ln[lsp:lsp + 3].strip(), ln[lsp + 3:lsp + 6].strip())
                if ln[lsp:lsp + 3].strip() else nas for ln in chunk]
     # pandas takes care of that
     basord = pd.DataFrame(centers, columns=('center', 'tag')).fillna(method='pad')

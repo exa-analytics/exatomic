@@ -52,7 +52,7 @@ class Base(Editor):
             for i, (start, stop) in enumerate(zip(orbstarts, orbstops)):
                 coefs[i*dim:i*dim + dim] = self.pandas_dataframe(start, stop, nrcol).stack().values
             occvec[:] = self.pandas_dataframe(occstart, occstop, nrcolocc).stack().values
-        momatrix = pd.DataFrame.from_dict({'coefficient': coefs,
+        momatrix = pd.DataFrame.from_dict({'coef': coefs,
                                            'orbital': np.repeat(range(dim), dim),
                                            'chi': np.tile(range(dim), dim),
                                            'frame': 0})
