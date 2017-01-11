@@ -6,10 +6,6 @@ Custom Axes
 ###################
 """
 
-#from exa.mpl import ExAxes
-
-#class PESAx(ExAxes):
-
 def photoelectron_spectrum(ax, unis, window=[-10, 0], broaden=0.6,
                            shift=0, label='', color=None, stepe=1, units='eV',
                            loc='upper left', fontsize=26, peaks=True,
