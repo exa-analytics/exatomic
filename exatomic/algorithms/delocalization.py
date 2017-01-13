@@ -14,6 +14,7 @@ import os
 import numpy as np
 import pandas as pd
 import seaborn as sns
+from exa.mpl import _gen_figure
 from exatomic import Energy, gaussian, nwchem
 from exatomic.mpl import plot_j2_surface, plot_j2_contour
 
@@ -23,42 +24,54 @@ sns.mpl.pyplot.rcParams.update({'text.usetex': True,
                                 'ytick.labelsize': 24,
                                 'xtick.labelsize': 24})
 
-def _deltaE(col):
-    if col.name == 'n': return col
-    cat = np.linspace(col.values[0], 0, 51)
-    an = np.linspace(0, col.values[-1], 51)
-    return col - np.hstack([cat, an[1:]])
 
-def plot_en(deloc, title='', delta=None, xlabel='$\Delta$N',
-            ylabel='$\Delta$E (eV)', figsize=(5,5), legpos=[1.1,-0.0]):
-    fig = sns.mpl.pyplot.figure(figsize=figsize)
-    ax = fig.add_subplot(111)
-    color = sns.color_palette('viridis', deloc.shape[1] - 1)
+def plot_en(curv, title='', delta=None, xlabel='$\Delta$N',
+            ylabel='$\Delta$E (eV)', figsize=(5,5), legpos=[1.1,-0.0],
+            nxlabel=5, nylabel=6, color=None):
+    """
+    Accepts the output of compute_curvature or combine_curvature and 
+    returns a figure with appropriate styling.
+    """
+    def _deltaE(col):
+        if col.name == 'n': return col
+        cat = np.linspace(col.values[0], 0, 51)
+        an = np.linspace(0, col.values[-1], 51)
+        return col - np.hstack([cat, an])
+    figargs = {'figsize': figsize}
+    fig = _gen_figure(nxlabel=nxlabel, nylabel=nylabel, figargs=figargs)
+    color = sns.color_palette('cubehelix', curv.shape[1] - 1) \
+            if color is None else color
+    dargs = {'legend': False} if not legpos else {}
     if delta is not None:
-        deloc.apply(_deltaE).plot(ax=ax, x='n', color=color, title=title)
+        curvy = curv.apply(_deltaE)
+        curv.apply(_deltaE).plot(ax=ax, x='n', color=color, title=title, **dargs)
+        del curvy['n']
+        ax.set_ylim([curvy.min().min(), curvy.max().max()])
+        ax.set_ylabel('$\Delta \Delta$E (eV)', fontsize=fontsize)
     else:
-        deloc.plot(ax=ax, x='n', color=color, title=title)
-    ax.set_xlabel(xlabel)
-    ax.set_ylabel(ylabel)
-    sns.mpl.pyplot.legend(loc=legpos)
+        curv.plot(ax=ax, x='n', color=color, title=title)
+        ax.set_ylim([curv.min().min(), curv.max().max()])
+        ax.set_ylabel(ylabel, fontsize=fontsize)
+    ax.set_xlabel(xlabel), fontsize=fontsize)
+    ax.legend(*ax.get_legend_handles_labels(), loc=legpos)
     return fig
 
 
-def combine_deloc(delocs, order=None):
+def combine_curvature(curvs, order=None):
     """
-    Given a list of the results of compute_deloc, return a single
+    Given a list of the results of compute_curvature, return a single
     dataframe containing all of the E(N) results.
     """
     if order is not None:
-        oldorder = [deloc.name for deloc in delocs]
+        oldorder = [curv.name for curv in curvs]
         reordered = []
         for ordr in order:
             for i, old in enumerate(oldorder):
                 if ordr.upper() == old.upper():
-                    reordered.append(delocs[i])
+                    reordered.append(curvs[i])
     else:
-        reordered = delocs
-    for i, deloc in enumerate(reordered):
+        reordered = curvs
+    for i, curv in enumerate(reordered):
         if i > 0:
             try:
                 reordered[i].drop('n', axis=1, inplace=True)
@@ -146,35 +159,39 @@ def compute_curvature(*args, neut=None, tag='', extras=True):
     return data
 
 
-def _dir_to_dict(adir):
+def _dir_to_dict(adir, tuning=False):
     if not adir.endswith(os.sep): adir += os.sep
     files = {}
     for fl in os.listdir(adir):
         if os.path.isdir(adir + fl): continue
         if fl.startswith('.'): continue
-        comp, func, chgext = fl.split('-')
+        if tuning:
+            comp, gam, alp, chgext = fl.split('-')
+            func = '-'.join([gam, alp])
+        else:
+            comp, func, chgext = fl.split('-')
         files.setdefault(func, {})
         files[func][chgext.split('.')[0]] = adir + fl
     return files
 
 
-def curvature_by_functional(adir, code='gaussian', ip=False,
-                            ea=False, tags=None, timer=True):
+def functional_results(adir, code='gaussian', ip=False,
+                       ea=False, labels=None, timer=True):
     if ip and ea: raise Exception("Can't do just ip as well as just ea.")
     codemap = {'gaussian': gaussian.Output,
                  'nwchem': nwchem.Output}
     if ip: keys = ['cat', 'neut']
     elif ea: keys = ['neut', 'an']
     else: keys = ['cat', 'neut', 'an']
-    delocs = []
+    curvs = []
     files = _dir_to_dict(adir)
     for func in files:
         if len(files[func]) != 3: continue
         if timer: print('|', end='')
         outs = [codemap[code](files[func][chg]) for chg in keys]
-        tag = tags[func] if tags is not None else ''
-        delocs.append(compute_curvature(*outs, tag=tag))
-    return delocs
+        tag = labels[func] if labels is not None else ''
+        curvs.append(compute_curvature(*outs, tag=tag))
+    return curvs
 
 
 
@@ -206,17 +223,17 @@ def tuning_results(adir, code='gaussian', ip=False, ea=False,
     together = list(zip(*(files[key] for key in keys)))
     dtype = [('gamma', 'f8'), ('alpha', 'f8'), ('j2', 'f8'),
              ('cat2cur', 'f8'), ('catcur', 'f8'), ('ancur', 'f8'),
-             ('an2cur', 'f8')]
+    together = [[fls[key] for key in keys] for func, fls in files.items()]
     data = np.empty((len(together),), dtype=dtype)
     for i, mix in enumerate(together):
         comp, gam, alp, ion = mix[0].split('-')
         tag = '-'.join([gam, alp])
         if debug: print(mix)
         outs = [codemap[code](m) for m in mix]
-        deloc = compute_curvature(*outs, tag=tag, debug=debug)
-        miss = 4 - len(deloc.curs)
+        curv = compute_curvature(*outs, tag=tag, debug=debug)
+        miss = 4 - len(curv.curs)
         pre = miss // 2 + miss % 2
         pos = miss // 2
-        curs = (0,) * pre + tuple(deloc.curs) + (0,) * pos
-        data[i] = (gam, alp, deloc.j2) + curs
+        curs = (0,) * pre + tuple(curv.curs) + (0,) * pos
+        data[i] = (gam, alp, curv.j2) + curs
     return pd.DataFrame(data)

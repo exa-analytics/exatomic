@@ -108,8 +108,11 @@ def _interpolate(df, x, y, z, method, kind, yfirst, dim, minimum):
     minima = None
     if minimum:
         minima = np.empty((dim, 3), dtype=np.float64)
-        window = dim - (1 - dim % 2)
+        for i, arr in enumerate(newz):
+            minima[i] = (newx[arr.argmin()], newy[i], arr.min())
+        minima = pd.DataFrame(minima)
         # Smooth this out as it can be quite jagged
+        window = dim - (1 - dim % 2)
         minima[1] = savgol_filter(minima[1], window, 3)
     return {'x': newx, 'y': newy, 'z': newz, 'min': minima}
 

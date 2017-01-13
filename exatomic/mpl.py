@@ -64,7 +64,7 @@ def plot_j2_contour(data, vmin=None, vmax=None, key='j2', figsize=(8,6),
     fig, cbar = _plot_contour(data['alpha'], data['gamma'], data[key],
                               nxlabel, nylabel, method, colorbar, figargs, axargs)
     ax = fig.gca()
-    if (minline or midpoint) and 'min' in data:
+    if (minline or minpoint) and 'min' in data:
         mindf = _get_minimum(data['min'])
         if minline:
             ax.plot(mindf[0], mindf[1], label='Min.(J$^{2}$)', color='k', zorder=2)

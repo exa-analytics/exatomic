@@ -14,6 +14,7 @@ from io import StringIO
 from exatomic import Length
 from .editor import Editor
 from exa.relational.isotope import z_to_symbol
+from exatomic import Energy
 from exatomic.frame import compute_frame_from_atom
 from exatomic.algorithms.basis import lmap
 
@@ -96,7 +97,9 @@ class Output(Editor):
             for i in _orbslice:
                 en = ln[28:][i]
                 if en:
-                    occ = ('occ' in ln) + (not os)
+                    if 'occ' in ln:
+                        occ = 1 if os else 2
+                    else: occ = 0
                     spn = 0 if 'Alpha' in ln else 1
                     data[cnt] = (en, occ, vec, spn, idx)
                     cnt += 1
@@ -453,128 +456,181 @@ _refreq = 'Freq'
 _retddft = 'TD'
 _reexcst = 'Excited State'
 
-#class Fchk(Editor):
-#
-#    def parse_atom(self):
-#        nat = int(self[2].split()[-1])
-#        found = self.find(_reznum, _reposition, keys_only=True)
-#        start = found[_reznum][0] + 1
-#        col = min(len(self[start].split()), nat)
-#        stop = np.ceil(start + nat / col).astype(np.int64)
-#        znums = self.pandas_dataframe(start, stop, col).stack()
-#        symbols = znums.map(z_to_symbol).values
-#        start = found[_reposition][0] + 1
-#        col = min(len(self[start].split()), nat * 3)
-#        stop = np.ceil(start + nat * 3 / col).astype(np.int64)
-#        pos = self.pandas_dataframe(start, stop, col).stack().values.reshape(nat, 3)
-#        self.atom = pd.DataFrame.from_dict({'symbol': symbols,
-#                                            'x': pos[:,0], 'y': pos[:,1], 'z': pos[:,2],
-#                                            'frame': [0] * len(znums)})
-#
-#    def parse_gaussian_basis_set(self):
-#        found = self.find(_rebasdim, _reshelltype, _reprimpershell,
-#                          _reshelltoatom, _reprimexp, _recontcoef,
-#                          _recrdshell)
-#        nbas = int(found[_rebasdim][0][1].split()[-1])
-#        dim1 = int(found[_reshelltype][0][1].split()[-1])
-#        dim2 = int(found[_reprimexp][0][1].split()[-1])
-#        dim3 = int(found[_recrdshell][0][1].split()[-1])
-#        # Shell types
-#        start = found[_reshelltype][0][0] + 1
-#        col = len(self[start].split())
-#        stop = np.ceil(start + dim1 / col).astype(np.int64)
-#        shelltypes = self.pandas_dataframe(start, stop, col).stack().values
-#        # Primitives per shell
-#        start = found[_reprimpershell][0][0] + 1
-#        col = len(self[start].split())
-#        stop = np.ceil(start + dim1 / col).astype(np.int64)
-#        primpershell = self.pandas_dataframe(start, stop, col).stack().values
-#        # Shell to atom map
-#        start = found[_reshelltoatom][0][0] + 1
-#        col = len(self[start].split())
-#        stop = np.ceil(start + dim1 / col).astype(np.int64)
-#        shelltoatom = self.pandas_dataframe(start, stop, col).stack().values
-#        # Primitive exponents
-#        start = found[_reprimexp][0][0] + 1
-#        col = len(self[start].split())
-#        stop = np.ceil(start + dim2 / col).astype(np.int64)
-#        primexps = self.pandas_dataframe(start, stop, col).stack().values
-#        # Contraction coefficients
-#        start = found[_recontcoef][0][0] + 1
-#        col = len(self[start].split())
-#        stop = np.ceil(start + dim2 / col).astype(np.int64)
-#        contcoefs = self.pandas_dataframe(start, stop, col).stack().values
-#        # Coordinates of each shell
-#        start = found[_recrdshell][0][0] + 1
-#        col = len(self[start].split())
-#        stop = np.ceil(start + dim3 / col).astype(np.int64)
-#        crdshells = self.pandas_dataframe(start, stop, col).stack().values
-#        print('shell types    :', shelltypes.shape, shelltypes.sum())
-#        print('primpershell   :', primpershell.shape, primpershell.sum())
-#        print('shelltoatom    :', shelltoatom.shape, shelltoatom.sum())
-#        print('primexps       :', primexps.shape, primexps.sum())
-#        print('contcoefs      :', contcoefs.shape, contcoefs.sum())
-#        print('crdshells      :', crdshells.shape, crdshells.sum())
-#        self.shelltypes = shelltypes
-#        self.primpershell = primpershell
-#        self.shelltoatom = shelltoatom
-#        self.primexps = primexps
-#        self.contcoefs = contcoefs
-#        self.crdshells = crdshells
-#
-#
-#    def parse_orbital(self):
-#        found = self.find(_realphaen)
-#
-#    def parse_momatrix(self):
-#        found = self.find(_rebasdim, _reindepdim, _reamomatrix)
-#        nbas = int(found[_rebasdim][0][1].split()[-1])
-#        try:
-#            ninp = int(found[_reindepdim][0][1].split()[-1])
-#        except IndexError:
-#            ninp = nbas
-#        ncoef = int(found[_reamomatrix][0][1].split()[-1])
-#        if nbas * ninp != ncoef:
-#            raise Exception('Dimensions are inconsistent.')
-#            return
-#        start = found[_reamomatrix][0][0] + 1
-#        col = len(self[start].split())
-#        stop = np.ceil(start + ncoef / col).astype(np.int64)
-#        coefs = self.pandas_dataframe(start, stop, col).stack().values
-#        chis = np.tile(range(nbas), ninp)
-#        orbitals = np.repeat(range(ninp), nbas)
-#        frame = np.zeros(ncoef, dtype=np.int64)
-#        self.momatrix = pd.DataFrame.from_dict({'chi': chis, 'orbital': orbitals,
-#                                                'coefficient': coefs, 'frame': frame})
-#
-#
-#    def __init__(self, *args, **kwargs):
-#        super().__init__(*args, **kwargs)
-#
-## Atom regex
-#_reznum = 'Atomic numbers'
-#_reposition = 'Current cartesian coordinates'
-#
-## Basis set regex
-#_rebasdim = 'Number of basis functions'
-#_recontdim = 'Number of contracted shells'
-#_reprimdim = 'Number of primitive shells'
-#_reshelltype = 'Shell types'
-#_reprimpershell = 'Number of primitives per shell'
-#_reshelltoatom = 'Shell to atom map'
-#_reprimexp = 'Primitive exponents'
-#_recontcoef = 'Contraction coefficients'
-#_repcontcoef = 'P\(S=P\) Contraction coefficients'
-#_recrdshell = 'Coordinates of each shell'
-#
-## MOMatrix regex
-## also uses _rebasdim
-#_reindepdim = 'Number of independant functions'
-#_realphaen = 'Alpha Orbital Energies'
-#_reamomatrix = 'Alpha MO coefficients'
-#
-#def _construct_basis_set_order(shelltypes, primpershell, shelltoatom):
-#    #for sh, p, s
-#    pass
-#
-#
+class Fchk(Editor):
+
+    def _intme(self, fitem):
+        """Helper gets an integer of interest."""
+        return int(self[fitem[0]].split()[-1])
+
+    def _dfme(self, fitem, dim):
+        """Helper gets an array of interest."""
+        start = fitem[0] + 1
+        col = min(len(self[start].split()), dim)
+        stop = np.ceil(start + dim / col).astype(np.int64)
+        return self.pandas_dataframe(start, stop, col).stack().values
+
+    def parse_atom(self):
+        # Find line numbers of interest
+        found = self.find(_renat, _reznum, _rezeff, _reposition,
+                          stop=100, keys_only=True)
+        # Number of atoms in current geometry
+        nat = self._intme(found[_renat])
+        # Atom identifiers
+        znums = self._dfme(found[_reznum], nat)
+        # Atomic symbols
+        symbols = list(map(lambda x: ztos[x], znums))
+        # Z effective if ECPs are used
+        zeffs = self._dfme(found[_rezeff], nat)
+        # Atomic positions
+        pos = self._dfme(found[_reposition], nat * 3).reshape(nat, 3)
+        frame = np.zeros(len(symbols), dtype=np.int64)
+        self.atom = pd.DataFrame.from_dict({'symbol': symbols, 'Zeff': zeffs,
+                                            'frame': frame, 'x': pos[:,0],
+                                            'y': pos[:,1], 'z': pos[:,2],
+                                            'set': range(len(symbols))})
+
+    def parse_gaussian_basis_set(self):
+        found = self.find(_rebasdim, _reshelltype, _reprimpershell,
+                          _reshelltoatom, _reprimexp, _recontcoef,
+                          keys_only=True)
+        # Number of basis functions
+        nbas = self._intme(found[_rebasdim])
+        # Number of 'shell to atom' mappings
+        dim1 = self._intme(found[_reshelltype])
+        # Number of primitive exponents
+        dim2 = self._intme(found[_reprimexp])
+        # Handle cartesian vs. spherical here
+        # only spherical for now
+        shelltypes = np.abs(self._dfme(found[_reshelltype], dim1))
+        primpershell = self._dfme(found[_reprimpershell], dim1)
+        primexps = self._dfme(found[_reprimexp], dim2)
+        contcoefs = self._dfme(found[_recontcoef], dim2)
+        # Keep track of some things
+        ptr, prevatom, shell, cnt = 0, 0, 0, 0
+        sets, setmap = [], {}
+        # Temporary storage of basis set data
+        ddict = {'d': [], 'alpha': [], 'shell': [],
+                 'L': [], 'center': []}
+        for atom, nprim, shelltype in zip(shelltoatom, primpershell, shelltypes):
+            if atom != prevatom:
+                # New atom, check if basis set exists
+                seht = pd.DataFrame.from_dict(ddict)
+                sets, cnt = _dedup(seht, sets, setmap, cnt, prevatom)
+                # Reset data storage for next basis set
+                ddict = {key: [] for key, value in ddict.items()}
+                prevatom, shell = atom, 0
+            # Collect the data for this basis set
+            step = ptr + nprim
+            ddict['d'] += contcoefs[ptr:step].tolist()
+            ddict['alpha'] += primexps[ptr:step].tolist()
+            ddict['shell'] += [shell] * nprim
+            ddict['L'] += [shelltype] * nprim
+            ddict['center'] += [atom] * nprim
+            ptr += nprim
+            shell += 1
+        # Last basis set to be collected
+        seht = pd.DataFrame.from_dict(ddict)
+        sets, cnt = _dedup(seht, sets, setmap, cnt, prevatom)
+        # Tidy up the resultant basis sets
+        df = pd.concat(sets).reset_index(drop=True)
+        df.rename(columns={'center': 'set'}, inplace=True)
+        df['set'] = df['set'].map(setmap)
+        df['frame'] = 0
+        self.gaussian_basis_set = df
+        self.atom['set'] = self.atom['set'].map(setmap)
+
+    def parse_orbital(self):
+        found = self.find(_realphaen)
+        pass
+
+    def parse_basis_set_order(self):
+        # Unique basis sets
+        sets = self.gaussian_basis_set.groupby('set')
+        data = []
+        # Gaussian orders basis functions strangely
+        # Will likely need an additional mapping for cartesian
+        lmap = {0: [0], 1: [1, -1, 0],
+                2: [0, 1, -1, 2, -2],
+                3: [0, 1, -1, 2, -2, 3, -3],
+                4: [0, 1, -1, 2, -2, 3, -3, 4, -4],
+                5: [0, 1, -1, 2, -2, 3, -3, 4, -4, 5, -5]}
+        # What was tag column for in basis set order?
+        key = 'tag' if 'tag' in self.atom.columns else 'symbol'
+        # Iterate over atoms
+        for cent, bset, tag in zip(self.atom.index.values, self.atom['set'], self.atom[key]):
+            seht = sets.get_group(bset).groupby('shell')
+            # Iterate over basis set
+            for shell, grp in seht:
+                L = grp['L'].values[0]
+                # Iterate over m_l values
+                for ml in lmap[L]:
+                    data.append([cent, tag, L, ml, shell, 0])
+        columns = ('center', 'tag', 'L', 'ml', 'shell', 'frame')
+        self.basis_set_order = pd.DataFrame(data, columns=columns)
+
+    def parse_momatrix(self):
+        found = self.find(_rebasdim, _reindepdim, _reamomatrix, _rebmomatrix,
+                          keys_only=True)
+        # Again number of basis functions
+        nbas = self._intme(found[_rebasdim])
+        try:
+            ninp = self._intme(found[_reindepdim])
+        except IndexError:
+            ninp = nbas
+        ncoef = self._intme(found[_reamomatrix])
+        if nbas * ninp != ncoef:
+            raise Exception('Dimensions are inconsistent.')
+            return
+        # Alpha or closed shell MO coefficients
+        coefs = self._dfme(found[_reamomatrix], ncoef)
+        # Beta MO coefficients if they exist
+        bcoefs = self._dfme(found[_rebmomatrix], ncoef) if found[_rebmomatrix] else None
+        # Indexing
+        chis = np.tile(range(nbas), ninp)
+        orbitals = np.repeat(range(ninp), nbas)
+        frame = np.zeros(ncoef, dtype=np.int64)
+        self.momatrix = pd.DataFrame.from_dict({'chi': chis, 'orbital': orbitals,
+                                                'coef': coefs, 'frame': frame})
+        if bcoefs is not None:
+            self.momatrix['coef1'] = bcoefs
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+
+def _dedup(seht, others, setmap, cnt, prevatom):
+    chk = ['alpha', 'd']
+    for i, other in enumerate(others):
+        if other.shape != seht.shape: continue
+        if np.allclose(other[chk], seht[chk]):
+            setmap[prevatom] = i
+            break
+    else:
+        others.append(seht)
+        setmap[prevatom] = cnt
+        cnt += 1
+    return others, cnt
+
+
+# Atom regex
+_reznum = 'Atomic numbers'
+_rezeff = 'Nuclear charges'
+_reposition = 'Current cartesian coordinates'
+
+# Basis set regex
+_rebasdim = 'Number of basis functions'
+_recontdim = 'Number of contracted shells'
+_reprimdim = 'Number of primitive shells'
+_reshelltype = 'Shell types'
+_reprimpershell = 'Number of primitives per shell'
+_reshelltoatom = 'Shell to atom map'
+_reprimexp = 'Primitive exponents'
+_recontcoef = 'Contraction coefficients'
+_repcontcoef = 'P\(S=P\) Contraction coefficients'
+
+# MOMatrix regex
+# also uses _rebasdim
+_reindepdim = 'Number of independant functions'
+_realphaen = 'Alpha Orbital Energies'
+_reamomatrix = 'Alpha MO coefficients'
+_rebmomatrix = 'Beta MO coefficients'

@@ -23,7 +23,10 @@ from exatomic.algorithms.basis import (lmap, spher_ml_count, enum_cartesian,
                                        solid_harmonics, car2sph_transform_matrices)
 
 class BasisSet(DataFrame):
-    pass
+
+    @property 
+    def lmax(self):
+        return self['L'].astype(np.int64).max()
 
 class GaussianBasisSet(BasisSet):
     """
