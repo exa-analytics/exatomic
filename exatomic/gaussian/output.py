@@ -107,9 +107,11 @@ class Output(Editor):
                     if cnt == idxchk: idx += 1
                     if vec == nbas: vec = 0
         orbital = pd.DataFrame(data)
-        frame = np.repeat(range(len(orbital)//nbas), nbas)
-        if os: frame = np.repeat(range(len(orbital)//(nbas * 2)), nbas * 2)
-        orbital['frame'] = frame
+        # Still no good way of dealing with multiple orbital sets per frame
+        # Handled temporarily by the use of 'index' rather than 'frame'
+        #frmstride = nbas * 2 if os else nbas
+        #orbital['frame'] = np.repeat(range(len(orbital)//frmstride), frmstride)
+        orbital['frame'] = 0
         # Symmetry labels
         if found[_reorb02]:
             # Gaussian seems to print out a lot of these blocks
@@ -247,7 +249,7 @@ class Output(Editor):
         # Iterate over what we found
         for i, (lno, ln) in enumerate(found):
             # Split this line up into what we want and x
-            x, x, x, kind, en, x, x, x, osc, x = line.split()
+            x, x, x, kind, en, x, x, x, osc, x = ln.split()
             # Same for the line right after it
             occ, x, virt, x = self[ln + 1].split()
             # Assign the values
@@ -397,8 +399,7 @@ def _basis_set(raw):
     chk = ['alpha', 'd']
     unique, setmap, cnt = [], {}, 0
     # Over the sets
-    for center, seht in sets:
-        # Over the unique sets
+    for center, seht in sets: # Over the unique sets
         for i, other in enumerate(unique):
             # First check shapes to avoid exception
             if other.shape != seht.shape: continue
@@ -503,6 +504,7 @@ class Fchk(Editor):
         # only spherical for now
         shelltypes = np.abs(self._dfme(found[_reshelltype], dim1))
         primpershell = self._dfme(found[_reprimpershell], dim1)
+        shelltoatom = self._dfme(found[_reshelltoatom], dim1)
         primexps = self._dfme(found[_reprimexp], dim2)
         contcoefs = self._dfme(found[_recontcoef], dim2)
         # Keep track of some things
@@ -613,6 +615,7 @@ def _dedup(seht, others, setmap, cnt, prevatom):
 
 
 # Atom regex
+_renat = 'Number of atoms'
 _reznum = 'Atomic numbers'
 _rezeff = 'Nuclear charges'
 _reposition = 'Current cartesian coordinates'

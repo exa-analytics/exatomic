@@ -83,24 +83,47 @@ def plot_j2_contour(data, vmin=None, vmax=None, key='j2', figsize=(8,6),
         ax.set_title(title)
     return fig
 
-def photoelectron_spectrum(unis, broaden=0.06, window=None, shift=0,
-                           label=None, color=None, stepe=1, units='eV',
-                           fontsize=20, peaklabels=True, xlim=None, ylim=None,
-                           extra=None, figsize=(10,10)):
-    unis = [unis] if not isinstance(unis, list) else unis
-    if window is None:
-        window = []
-        for i, uni in enumerate(unis):
-            uni.orbital[units] = uni.orbital['energy'] * Energy['Ha', units]
-            window.append([uni.orbital.get_orbital(orb=-15)[units],
-                           uni.orbital.get_orbital()[units]])
-    else:
-        if not isinstance(window, list): window = window * len(unis)
-    if shift or not isinstance(shift, list):
-        shift = [shift] * len(unis)
-    else:
-        if not isinstance(shift, list): shift = shift * len(unis)
+def photoelectron_spectrum(*unis, filters=None, broaden=0.06, color=None,
+                           stepe=1, units='eV', fontsize=20, peaklabels=True,
+                           xlim=None, extra=None, figsize=(10,10)):
+    """
+    Plot what is essentially a density of states for any number of universes,
+    attempting to associate symmetry labels in order of peak positions.
 
+    Args
+        unis (exatomic.container.Universe): any number of universes with orbitals
+        filters (dict,list): dict or list of dicts for each universe
+            accepted kwargs: 'shift', uni.orbital column names
+            special kwargs: 'shift' shifts energies,
+                ['energy', 'eV', units] must be in the form of [min, max]
+            Note: values can be strings defining relationships like
+                {'occupation': '> 0'}
+        units (str): the units in which to display the spectrum
+        broaden (float): how broad to convolute each orbital energy (FWHM gaussian)
+        color (list): commonly sns.color_palette or ['r', 'g', 'b', ...]
+        stepe (int,float): how far to separate symmetry labels on plot (modify for
+            units other than 'eV')
+        fontsize (int): font size of text on plot (symmetry labels are fontsize - 2)
+        peaklabels (bool): if True and symmetry in uni.orbital, put labels on plots
+        xlim (tuple): (xmin, xmax)
+        extra (dict): Custom plot of additional data on the same figure object
+            accepted kwargs: ['x', 'y', 'color', 'label']
+        figsize (tuple): matplotlib.figure.Figure figuresize keyword arg
+
+    Returns
+        fig (matplotlib.figure.Figure): the plot
+    """
+    pass
+#    unis = [unis] if not isinstance(unis, list) else unis
+#    if window is None:
+#        window = []
+#        for i, uni in enumerate(unis):
+#            uni.orbital[units] = uni.orbital['energy'] * Energy['Ha', units]
+#            window.append([uni.orbital.get_orbital(orb=-15)[units],
+#                           uni.orbital.get_orbital()[units]])
+#    else:
+#        if not isinstance(window, list): window = window * len(unis)
+#    if shift or not isinstance(shift, list):
 #def photoelectron_spectrum(ax, unis, window=[-10, 0], broaden=0.6,
 #                           shift=0, label='', color=None, stepe=1, units='eV',
 #                           loc='upper left', fontsize=26, peaks=True,

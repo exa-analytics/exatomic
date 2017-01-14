@@ -20,14 +20,14 @@ from exatomic.mpl import plot_j2_surface, plot_j2_contour
 
 sns.mpl.pyplot.rcParams.update({'text.usetex': True,
                                 'font.family': 'serif',
-                                'font.serif': ['Times'],
-                                'ytick.labelsize': 24,
-                                'xtick.labelsize': 24})
+                                'font.serif': ['Times']})
+#                                'ytick.labelsize': 24,
+#                                'xtick.labelsize': 24})
 
 
 def plot_en(curv, title='', delta=None, xlabel='$\Delta$N',
             ylabel='$\Delta$E (eV)', figsize=(5,5), legpos=[1.1,-0.0],
-            nxlabel=5, nylabel=6, color=None):
+            nxlabel=5, nylabel=6, color=None, fontsize=24):
     """
     Accepts the output of compute_curvature or combine_curvature and 
     returns a figure with appropriate styling.
@@ -38,7 +38,9 @@ def plot_en(curv, title='', delta=None, xlabel='$\Delta$N',
         an = np.linspace(0, col.values[-1], 51)
         return col - np.hstack([cat, an])
     figargs = {'figsize': figsize}
-    fig = _gen_figure(nxlabel=nxlabel, nylabel=nylabel, figargs=figargs)
+    fig = _gen_figure(nxlabel=nxlabel, nylabel=nylabel, figargs=figargs,
+                      fontsize=fontsize)
+    ax = fig.gca()
     color = sns.color_palette('cubehelix', curv.shape[1] - 1) \
             if color is None else color
     dargs = {'legend': False} if not legpos else {}
@@ -219,8 +221,7 @@ def tuning_results(adir, code='gaussian', ip=False, ea=False,
     else:
         if deep: keys = ['cat2', 'cat', 'neut', 'an', 'an2']
         else: keys = ['cat', 'neut', 'an']
-    files = _dir_to_dict(adir)
-    together = list(zip(*(files[key] for key in keys)))
+    files = _dir_to_dict(adir, tuning=True)
     dtype = [('gamma', 'f8'), ('alpha', 'f8'), ('j2', 'f8'),
              ('cat2cur', 'f8'), ('catcur', 'f8'), ('ancur', 'f8'),
     together = [[fls[key] for key in keys] for func, fls in files.items()]
