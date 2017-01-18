@@ -108,7 +108,7 @@ class Output(Editor):
             coefs = pd.concat(dfs, axis=1).unstack().values
             chis = np.tile(range(nbas), nbas)
             orbitals = np.repeat(range(nbas), nbas)
-            self.momatrix = pd.DataFrame.from_dict({'coefficient': coefs,
+            self.momatrix = pd.DataFrame.from_dict({'coef': coefs,
                                                     'orbital': orbitals,
                                                     'chi': chis,
                                                     'frame': [0] * nbas ** 2})
@@ -283,7 +283,7 @@ class Ecce(Editor):
                         return
         vals = [chi for mo in vals for chi in mo]
         vals = pd.DataFrame(vals)
-        vals.columns = ['coefficient']
+        vals.columns = ['coef']
         vals['chi'] = np.tile(list(range(ndim)), ndim)
         vals['orbital'] = np.repeat(list(range(ndim)), ndim)
         vals['frame'] = 0

@@ -260,7 +260,8 @@ def concat(*universes, name=None, description=None, meta=None):
     return Universe(**kwargs)
 
 
-def basis_function_contributions(universe, mo, tol=0.01, ao=None, frame=0):
+def basis_function_contributions(universe, mo, mocoefs='coef',
+                                 tol=0.01, ao=None, frame=0):
     """
     Provided a universe with momatrix and basis_set_order attributes,
     return the major basis function contributions of a particular
@@ -269,6 +270,7 @@ def basis_function_contributions(universe, mo, tol=0.01, ao=None, frame=0):
     Args
         universe (exatomic.container.Universe): a universe
         mo (int): molecular orbital index
+        mocoefs (str): column of interest in universe.momatrix
         tol (float): minimum value of coefficient by which to filter
         frame (int): frame of the universe (default is zero)
 
@@ -277,7 +279,7 @@ def basis_function_contributions(universe, mo, tol=0.01, ao=None, frame=0):
     """
     small = universe.momatrix.contributions(mo, tol=tol, frame=frame)
     chis = small['chi'].values
-    coefs = small['coefficient']
+    coefs = small[mocoefs]
     coefs.index = chis
     together = pd.concat([universe.basis_set_order.ix[chis], coefs], axis=1)
     if ao is None:

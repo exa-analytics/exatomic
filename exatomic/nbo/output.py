@@ -38,21 +38,13 @@ class Output(Editor):
         dfs = []
         spins = [-1, 0, 1]
         nrcol = len(self[starts[0]].replace("( ", "(").split()) + 1
-        for i, (start, stop) in enumerate(zip(starts, stops)):
-            columns = found[_re_nao_start][i][1].split()
-            lines = ''
-            if len(columns) < len(found[_re_nao_start][0][1].split()):
-                for line in self[start:stop]:
-                    if line.strip():
-                        lines += line.replace('( ', '(') + ' ' + spins[i] + '\n'
-                dfs.append(pd.read_csv(StringIO(lines), name=columns + ['Spin'], **csv_args))
-            else:
-                for line in self[start:stop]:
-                    if line.strip():
-                        lines += line.replace('( ', '(') + '\n'
-                dfs.append(pd.read_csv(StringIO(lines), names=columns, **csv_args))
+        for (lno, col), start, stop, spin in zip(found[_re_nao_start], starts, stops, spins):
+            columns = col.split()
+            lines = [line.replace("( ", "(") for line in self[start:stop]]
+            dfs.append(pd.read_csv(StringIO('\n'.join(lines)), names=columns, **csv_args))
+            dfs[-1]['spin'] = spin
         df = pd.concat(dfs).reset_index(drop=True)
-        split = df['Type(AO)'].str.extract('([A-z]{3})\((.*)\.)', expand=False)
+        split = df['Type(AO)'].str.extract('([A-z]{3})\((.*)\)', expand=False)
         split.columns = ['type', 'ao']
         del df['Type(AO)']
         self.nao = pd.concat([df, split], axis=1)
@@ -99,8 +91,8 @@ class MOMatrix(Editor):
         occstop = occstart + occrows
         momat = self.pandas_dataframe(start, stop, range(ncol)).stack().reset_index(drop=True)
         occvec = self.pandas_dataframe(occstart, occstop, range(ncol)).stack().reset_index(drop=True)
-        momat.index.name = column_name if column_name is not None else 'coefficient1'
-        occvec.index.name = column_name if column_name is not None else 'coefficient1'
+        momat.index.name = column_name if column_name is not None else 'coef1'
+        occvec.index.name = column_name if column_name is not None else 'coef1'
         self.momatrix = momat
         self.occupation_vector = occvec
 
