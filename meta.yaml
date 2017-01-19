@@ -1,9 +1,12 @@
 package:
     name: exatomic
-    version: "0.3.6"
+    version: "0.4.0.dev0"
+
+app:
+    entry: exatomic
 
 source:
-    git_rev: v0.3.6
+    git_rev: v0.4.0.dev0
     git_url: https://github.com/exa-analytics/exatomic.git
 
 requirements:
