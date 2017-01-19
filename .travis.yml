@@ -15,10 +15,14 @@ before_install:
   - ./miniconda.sh -b
   - export PATH=/home/travis/miniconda3/bin:$PATH
   - conda update --yes conda
+  - git clone https://github.com/avmarchenko/exa
 install:
   - conda install --yes python=$TRAVIS_PYTHON_VERSION
   - conda install --yes -c cpcloud npm
-  - conda install --yes -c exaanalytics exa
+  - cd exa
+  - pip install -e .
+  - cd ../
+  #- conda install --yes -c exaanalytics exa
   - pip install sphinxcontrib-autoanysrc sphinx_rtd_theme coverage python-coveralls travis-sphinx codacy-coverage recommonmark
   - python setup.py install
 script:

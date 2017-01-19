@@ -166,8 +166,11 @@ setup_args = {
     "download_url": "https://github.com/exa-analytics/exatomic/tarball/v{}".format(version_ns["__version__"]),
     "keywords": [
         "quantum",
-        "mechanics",
+        "quantum mechanics",
+        "chemistry",
+        "computational chemistry",
         "visualization",
+        "big data",
         "analytics",
     ],
     "classifiers": [
