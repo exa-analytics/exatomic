@@ -88,10 +88,10 @@ class Output(Editor):
         # Allocate a numpy array to store it
         # index is arbitrary for the momentum
         dtypes = [('energy', 'f8'), ('occupation', 'f8'), ('vector', 'f8'),
-                  ('spin', 'i8'), ('index', 'i8')]
+                  ('spin', 'i8'), ('group', 'i8')]
         data = np.empty((nbas * nrows,), dtype=dtypes)
-        cnt, vec, idx = 0, 0, 0
-        idxchk = 2 * nbas if os else nbas
+        cnt, vec, grp = 0, 0, 0
+        grpchk = 2 * nbas if os else nbas
         # Populate and increment accordingly
         for lno, ln in found[_reorb01]:
             for i in _orbslice:
@@ -101,10 +101,10 @@ class Output(Editor):
                         occ = 1 if os else 2
                     else: occ = 0
                     spn = 0 if 'Alpha' in ln else 1
-                    data[cnt] = (en, occ, vec, spn, idx)
+                    data[cnt] = (en, occ, vec, spn, grp)
                     cnt += 1
                     vec += 1
-                    if cnt == idxchk: idx += 1
+                    if cnt == grpchk: grp += 1
                     if vec == nbas: vec = 0
         orbital = pd.DataFrame(data)
         # Still no good way of dealing with multiple orbital sets per frame
@@ -259,6 +259,7 @@ class Output(Editor):
         excitation['energy'] = excitation['eV'] * Energy['eV', 'Ha']
         # Frame not really implemented here
         excitation['frame'] = 0
+        excitation['group'] = 0
         self.excitation = excitation
 
 

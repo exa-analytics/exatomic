@@ -79,7 +79,8 @@ class Output(Editor):
             stops = np.array(self.find(_remo03, keys_only=True), dtype=np.int64) - 1
             orbital = self._parse_orbital(starts, stops)
             orbital['spin'] = 0
-        self._orbital = Orbital(orbital)
+        orbital['group'] = 0
+        self.orbital = Orbital(orbital)
 
     def parse_momatrix(self):
         """
