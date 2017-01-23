@@ -172,7 +172,9 @@ class Output(Editor):
         keep = np.empty((df.shape[0],), dtype=dtype)
         seht, cnt = -1, 0
         tags = {}
+        print(df)
         for i, (shell, l, alpha, d) in enumerate(zip(df[0], df[1], df[2], df[3])):
+            print(d)
             if len(shell) == 8:
                 seht += 1
                 tags[df[0].values[i - 2]] = seht

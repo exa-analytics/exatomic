@@ -19,12 +19,12 @@ from exa import DataFrame
 
 from exatomic.algorithms.basis import (lmap, spher_ml_count, enum_cartesian,
                                        cart_lml_count, spher_lml_count,
-                                       _vec_sloppy_normalize, _wrap_overlap, lorder,
+                                       _vec_normalize, _wrap_overlap, lorder,
                                        solid_harmonics, car2sph_transform_matrices)
 
 class BasisSet(DataFrame):
 
-    @property 
+    @property
     def lmax(self):
         return self['L'].astype(np.int64).max()
 
@@ -76,6 +76,10 @@ class GaussianBasisSet(BasisSet):
     _cardinal = ('frame', np.int64)
     _index = 'primitive'
     _categories = {'L': np.int64, 'set': np.int64, 'frame': np.int64}
+
+    @property
+    def lmax(self):
+        return self['L'].cat.as_ordered().max()
 
     def _normalize(self):
         """Normalization coefficients."""
@@ -138,6 +142,7 @@ class GaussianBasisSet(BasisSet):
     def __init__(self, *args, spherical=True, **kwargs):
         super().__init__(*args, **kwargs)
         self.spherical = spherical
+        self['N'] = _vec_normalize(self['alpha'].values, self['L'].values)
 
 
 
@@ -416,10 +421,7 @@ class Primitive(DataFrame):
         '''
         Often primitives come unnormalized. This fixes that.
         '''
-        self['N'] = _vec_normalize(self['alpha'].values,
-                                   self['l'].astype(np.int64).values,
-                                   self['m'].astype(np.int64).values,
-                                   self['n'].astype(np.int64).values)
+        self['N'] = _vec_normalize(self['alpha'].values, self['L'].values)
 
 
     def _cartesian_contraction_matrix(self, l=False):

@@ -26,8 +26,8 @@ sns.mpl.pyplot.rcParams.update({'text.usetex': True,
 
 
 def plot_en(curv, title='', delta=None, xlabel='$\Delta$N',
-            ylabel='$\Delta$E (eV)', figsize=(5,5), legpos=[1.1,-0.0],
-            nxlabel=5, nylabel=6, color=None, fontsize=24):
+            ylabel='$\Delta$E (eV)', figsize=(5,6), loc=[1.1,-0.0],
+            nxlabel=5, nylabel=6, color=None, fontsize=24, legend=False):
     """
     Accepts the output of compute_curvature or combine_curvature and 
     returns a figure with appropriate styling.
@@ -43,19 +43,21 @@ def plot_en(curv, title='', delta=None, xlabel='$\Delta$N',
     ax = fig.gca()
     color = sns.color_palette('cubehelix', curv.shape[1] - 1) \
             if color is None else color
-    dargs = {'legend': False} if not legpos else {}
     if delta is not None:
         curvy = curv.apply(_deltaE)
-        curv.apply(_deltaE).plot(ax=ax, x='n', color=color, title=title, **dargs)
+        curv.apply(_deltaE).plot(ax=ax, x='n', color=color, title=title,
+                                 legend=False)
         del curvy['n']
         ax.set_ylim([curvy.min().min(), curvy.max().max()])
         ax.set_ylabel('$\Delta \Delta$E (eV)', fontsize=fontsize)
     else:
-        curv.plot(ax=ax, x='n', color=color, title=title)
+        curv.plot(ax=ax, x='n', color=color, title=title, legend=False)
         ax.set_ylim([curv.min().min(), curv.max().max()])
         ax.set_ylabel(ylabel, fontsize=fontsize)
-    ax.set_xlabel(xlabel), fontsize=fontsize)
-    ax.legend(*ax.get_legend_handles_labels(), loc=legpos)
+    ax.set_xlabel(xlabel, fontsize=fontsize)
+    if legend:
+        dargs = {'loc': loc} if loc is not None else {}
+    ax.legend(*ax.get_legend_handles_labels(), **dargs)
     return fig
 
 
@@ -188,7 +190,7 @@ def functional_results(adir, code='gaussian', ip=False,
     curvs = []
     files = _dir_to_dict(adir)
     for func in files:
-        if len(files[func]) != 3: continue
+        if any((key not in files[func] for key in keys)): continue
         if timer: print('|', end='')
         outs = [codemap[code](files[func][chg]) for chg in keys]
         tag = labels[func] if labels is not None else ''
@@ -224,14 +226,20 @@ def tuning_results(adir, code='gaussian', ip=False, ea=False,
     files = _dir_to_dict(adir, tuning=True)
     dtype = [('gamma', 'f8'), ('alpha', 'f8'), ('j2', 'f8'),
              ('cat2cur', 'f8'), ('catcur', 'f8'), ('ancur', 'f8'),
+             ('an2cur', 'f8')]
     together = [[fls[key] for key in keys] for func, fls in files.items()]
     data = np.empty((len(together),), dtype=dtype)
     for i, mix in enumerate(together):
-        comp, gam, alp, ion = mix[0].split('-')
+        comp, gam, alp, ion = mix[0].split(os.sep)[-1].split('-')
         tag = '-'.join([gam, alp])
         if debug: print(mix)
         outs = [codemap[code](m) for m in mix]
-        curv = compute_curvature(*outs, tag=tag, debug=debug)
+        try:
+            curv = compute_curvature(*outs, tag=tag)
+        except:
+            print(comp, tag, 'not computed')
+            data[i] = (gam, alp) + (np.nan,) *(len(dtype)-2)
+            continue
         miss = 4 - len(curv.curs)
         pre = miss // 2 + miss % 2
         pos = miss // 2

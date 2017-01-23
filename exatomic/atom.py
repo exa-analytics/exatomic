@@ -64,6 +64,10 @@ class Atom(DataFrame):
         return self['frame'].cat.as_ordered().max() + 1
 
     @property
+    def maxframe(self):
+        return self.frames
+
+    @property
     def last_frame(self):
         """Return the last frame of the atom table."""
         return self[self['frame'] == self.frames - 1]

@@ -78,7 +78,7 @@ class _Convolve(DataFrame):
         spec = np.zeros(npoints)
         if self.__class__.__name__ == 'Excitation':
             smdf = self[(self[units] > sm) & (self[units] < lg) &
-                         self['frame'] == frame) & self['group'] == group]
+                        (self['frame'] == frame) & self['group'] == group]
             for osc, en0 in zip(smdf['osc'], smdf[units]):
                 spec += osc * choices[func](broaden, enrg, en0)
         else:

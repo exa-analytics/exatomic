@@ -134,7 +134,7 @@ IOP(3/76={b}{a})"""
     # Make the obtuse strings that Gaussian requires
     gammas = [str(int(np.round(g * 10000, decimals=4))).zfill(5) for g in gammas]
     alphas = [str(int(np.round(a * 10000, decimals=4))).zfill(5) for a in alphas]
-    betas = [(str(10000 - int(a)).zfill(5) for a in alphas]
+    betas = [str(10000 - int(a)).zfill(5) for a in alphas]
     # A systematic input file naming scheme
     chgnms = ['cat', 'neut', 'an']
     # Auxiliary job information
@@ -148,32 +148,32 @@ IOP(3/76={b}{a})"""
     link_opts = [('NProc', nproc), ('Mem', str(mem) + 'gb')]
     editors = []
     for gamma in gammas:
-    for alpha, beta in zip(alphas, betas):
-        for chgnm, chg, mult in zip(chgnms, chgs, mults):
-            ndecgam = max(len(str(int(gamma) / 10000)) - 2, 2)
-            ndecalp = max(len(str(int(alpha) / 10000)) - 2, 2)
-            gam = ('{:.' + str(ndecgam) + 'f}').format(int(gamma) / 10000)
-            alp = ('{:.' + str(ndecalp) + 'f}').format(int(alpha) / 10000)
-            jobname = '-'.join([name, gam, alp, chgnm])
-            this_link = [('chk', jobname + '.chk')]
-            if np.isclose(int(gamma), 0):
-                this_route = [globalt.format(a=alpha, b=beta)]
-            else:
-                this_route = [rangedt.format(w=gamma, a=alpha, b=beta)]
-            opts = {'charge': chg, 'mult': mult, 'basis': basis, 
-                    'title': jobname, 'writedir': writedir}
-            if field is not None:
-                opts['postatom'] = field
-                this_route += ['Charge']
-            if isinstance(route, list):
-                opts['route'] = route_opts + route + this_route
-            else:
-                opts['route'] = route_opts + this_route
-            if isinstance(link0, list):
-                opts['link0'] = link_opts + link0 + this_link
-            else:
-                opts['link0'] = link_opts + this_link
-            editors.append(Input.from_universe(uni, **opts))
+        for alpha, beta in zip(alphas, betas):
+            for chgnm, chg, mult in zip(chgnms, chgs, mults):
+                ndecgam = max(len(str(int(gamma) / 10000)) - 2, 2)
+                ndecalp = max(len(str(int(alpha) / 10000)) - 2, 2)
+                gam = ('{:.' + str(ndecgam) + 'f}').format(int(gamma) / 10000)
+                alp = ('{:.' + str(ndecalp) + 'f}').format(int(alpha) / 10000)
+                jobname = '-'.join([name, gam, alp, chgnm])
+                this_link = [('chk', jobname + '.chk')]
+                if np.isclose(int(gamma), 0):
+                    this_route = [globalt.format(a=alpha, b=beta)]
+                else:
+                    this_route = [rangedt.format(w=gamma, a=alpha, b=beta)]
+                opts = {'charge': chg, 'mult': mult, 'basis': basis, 
+                        'title': jobname, 'writedir': writedir}
+                if field is not None:
+                    opts['postatom'] = field
+                    this_route += ['Charge']
+                if isinstance(route, list):
+                    opts['route'] = route_opts + route + this_route
+                else:
+                    opts['route'] = route_opts + this_route
+                if isinstance(link0, list):
+                    opts['link0'] = link_opts + link0 + this_link
+                else:
+                    opts['link0'] = link_opts + this_link
+                editors.append(Input.from_universe(uni, **opts))
     return editors
 
 
