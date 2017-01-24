@@ -25,11 +25,10 @@ sns.mpl.pyplot.rcParams.update({'text.usetex': True,
 #                                'xtick.labelsize': 24})
 
 
-def plot_en(curv, title='', delta=None, xlabel='$\Delta$N',
-            ylabel='$\Delta$E (eV)', figsize=(5,6), loc=[1.1,-0.0],
-            nxlabel=5, nylabel=6, color=None, fontsize=24, legend=False):
+def plot_energy(curv, color=None, title='', figsize=(21,5),
+                nylabel=3, fontsize=24):
     """
-    Accepts the output of compute_curvature or combine_curvature and 
+    Accepts the output of compute_curvature or combine_curvature and
     returns a figure with appropriate styling.
     """
     def _deltaE(col):
@@ -38,26 +37,25 @@ def plot_en(curv, title='', delta=None, xlabel='$\Delta$N',
         an = np.linspace(0, col.values[-1], 51)
         return col - np.hstack([cat, an])
     figargs = {'figsize': figsize}
-    fig = _gen_figure(nxlabel=nxlabel, nylabel=nylabel, figargs=figargs,
-                      fontsize=fontsize)
-    ax = fig.gca()
+    fig = _gen_figure(nxplot=1, nyplot=3, nxlabel=nxlabel,
+                      figargs=figargs, fontsize=fontsize)
+    ax, axnone, ax1 = fig.get_axes()
+    axnone.set_visible(False)
     color = sns.color_palette('cubehelix', curv.shape[1] - 1) \
             if color is None else color
-    if delta is not None:
-        curvy = curv.apply(_deltaE)
-        curv.apply(_deltaE).plot(ax=ax, x='n', color=color, title=title,
-                                 legend=False)
-        del curvy['n']
-        ax.set_ylim([curvy.min().min(), curvy.max().max()])
-        ax.set_ylabel('$\Delta \Delta$E (eV)', fontsize=fontsize)
-    else:
-        curv.plot(ax=ax, x='n', color=color, title=title, legend=False)
-        ax.set_ylim([curv.min().min(), curv.max().max()])
-        ax.set_ylabel(ylabel, fontsize=fontsize)
-    ax.set_xlabel(xlabel, fontsize=fontsize)
-    if legend:
-        dargs = {'loc': loc} if loc is not None else {}
-    ax.legend(*ax.get_legend_handles_labels(), **dargs)
+    plargs = {'x': 'n', 'color': color, 'title': title, 'legend': False}
+    curvy = curv.apply(_deltaE)
+    curv.plot(ax=ax, **plargs)
+    ax.set_ylim([curv.min().min(), curv.max().max()])
+    ax.set_ylabel('$\Delta$E (eV)', fontsize=fontsize)
+    ax.set_xlabel('$\Delta$N', fontsize=fontsize)
+    curvy.plot(ax=ax1, **plargs)
+    del curvy['n']
+    ax1.set_ylim([curvy.min().min(), curvy.max().max()])
+    ax1.set_ylabel('$\Delta \Delta$E (eV)', fontsize=fontsize)
+    ax.set_xlabel('$\Delta$N', fontsize=fontsize)
+    loc = [1.2, (9 - curv.shape[1]) / 25]
+    ax.legend(*ax.get_legend_handles_labels(), loc=loc)
     return fig
 
 
@@ -189,12 +187,16 @@ def functional_results(adir, code='gaussian', ip=False,
     else: keys = ['cat', 'neut', 'an']
     curvs = []
     files = _dir_to_dict(adir)
+    comp = files[list(files.keys())[0]][keys[0]].split(os.sep)[-1].split('-')[0]
     for func in files:
         if any((key not in files[func] for key in keys)): continue
         if timer: print('|', end='')
         outs = [codemap[code](files[func][chg]) for chg in keys]
         tag = labels[func] if labels is not None else ''
-        curvs.append(compute_curvature(*outs, tag=tag))
+        try:
+            curvs.append(compute_curvature(*outs, tag=tag))
+        except:
+            print(comp, func 'not computed')
     return curvs
 
 

@@ -128,6 +128,14 @@ class Orbital(_Convolve):
     _cardinal = ('frame', np.int64)
     _categories = {'spin': np.int64, 'frame': np.int64, 'group': np.int64}
 
+    @property
+    def last_frame(self):
+        return self.frame.cat.as_ordered().max()
+
+    @property
+    def last_group(self):
+        return self[self.frame == self.last_frame].group.cat.as_ordered().max()
+
     def get_orbital(self, orb=-1, spin=0, index=None, group=None, frame=None):
         """
         Returns a specific orbital.
@@ -151,7 +159,7 @@ class Orbital(_Convolve):
             LUMO+1, etc.
         """
         frame = self.last_frame if frame is None else frame
-        group = self.last_group if frame is None else group
+        group = self.last_group if group is None else group
         if index is None:
             if orb > -1:
                 return self[(self['frame'] == frame) &

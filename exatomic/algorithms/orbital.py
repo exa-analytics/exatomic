@@ -335,13 +335,13 @@ def gen_basfns(universe, frame=None):
         bas = bases.get_group(seht).groupby('L')
         basord = centers.get_group(i)
         if universe.basis_set.spherical:
-            # Iterate over atom-centered basis functions
+            # Iterate over spherical atom-centered basis functions
             for L, ml, shfunc in zip(basord['L'], basord['ml'], basord['shell']):
                 grp = bas.get_group(L).groupby('shell').get_group(shfunc)
                 prefacs = _sphr_prefac(sh, L, ml, nucpos)
                 basfns.append(gen_basfn(prefacs, grp, r2str))
         else:
-            # Iterate over atom-centered basis functions
+            # Iterate over cartesian atom-centered basis functions
             for L, l, m, n, shfunc in zip(basord['L'], basord['l'], basord['m'],
                                           basord['n'], basord['shell']):
                 grp = bas.get_group(L).groupby('shell').get_group(shfunc)
