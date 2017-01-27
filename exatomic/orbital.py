@@ -287,7 +287,7 @@ class DensityMatrix(DataFrame):
         return square
 
     @classmethod
-    def from_momatrix(cls, momatrix, occvec):
+    def from_momatrix(cls, momatrix, occvec, column='coef'):
         """
         A density matrix can be constructed from an MOMatrix by:
         .. math::
@@ -302,7 +302,7 @@ class DensityMatrix(DataFrame):
         Returns:
             ret (:class:`~exatomic.orbital.DensityMatrix`): The density matrix
         """
-        cmat = momatrix.square().values
+        cmat = momatrix.square(column=column).values
         chi1, chi2, dens, frame = density_from_momatrix(cmat, occvec)
         return cls.from_dict({'chi1': chi1, 'chi2': chi2,
                               'coef': dens, 'frame': frame})

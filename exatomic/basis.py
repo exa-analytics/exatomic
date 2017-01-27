@@ -573,57 +573,66 @@ class Primitive(DataFrame):
 #    _categories = {'center': np.int64, 'symbol': str}
 #
 #
-#class Overlap(DataFrame):
-#    """
-#    Overlap enumerates the overlap matrix elements between basis functions in
-#    a contracted basis set. Currently nothing disambiguates between the
-#    primitive overlap matrix and the contracted overlap matrix. As it is
-#    square symmetric, only n_basis_functions * (n_basis_functions + 1) / 2
-#    rows are stored.
-#
-#
-#    See Gramian matrix for more on the general properties of the overlap matrix.
-#
-#    +-------------------+----------+-------------------------------------------+
-#    | Column            | Type     | Description                               |
-#    +===================+==========+===========================================+
-#    | frame             | int/cat  | non-unique integer                        |
-#    +-------------------+----------+-------------------------------------------+
-#    | chi1              | int      | first basis function                      |
-#    +-------------------+----------+-------------------------------------------+
-#    | chi2              | int      | second basis function                     |
-#    +-------------------+----------+-------------------------------------------+
-#    | coefficient       | float    | overlap matrix element                    |
-#    +-------------------+----------+-------------------------------------------+
-#    """
-#    _columns = ['chi1', 'chi2', 'coefficient', 'frame']
-#    _index = 'index'
-#
-#    def square(self, frame=0):
-#        nbas = np.round(np.roots([1, 1, -2 * self.shape[0]])[1]).astype(np.int64)
-#        tri = self[self['frame'] == frame].pivot('chi1', 'chi2', 'coefficient').fillna(value=0)
-#        return tri + tri.T - np.eye(nbas)
-#
-#    @classmethod
-#    def from_square(cls, df):
-#        ndim = df.shape[0]
-#        arr = df.values
-#        arlen = ndim * (ndim + 1) // 2
-#        #chi1 = np.empty(arlen, dtype=np.int64)
-#        #chi2 = np.empty(arlen, dtype=np.int64)
-#        #coef = np.empty(arlen, dtype=np.float64)
-#        ret = np.empty((arlen,), dtype=[('chi1', 'i8'),
-#                                        ('chi2', 'i8'),
-#                                        ('coefficient', 'f8'),
-#                                        ('frame', 'i8')])
-#        cnt = 0
-#        for i in range(ndim):
-#            for j in range(i + 1):
-#                ret[cnt] = (i, j, arr[i, j], 0)
-#                cnt += 1
-#        return cls(ret)
-#
-#
+class Overlap(DataFrame):
+    """
+    Overlap enumerates the overlap matrix elements between basis functions in
+    a contracted basis set. Currently nothing disambiguates between the
+    primitive overlap matrix and the contracted overlap matrix. As it is
+    square symmetric, only n_basis_functions * (n_basis_functions + 1) / 2
+    rows are stored.
+
+
+    See Gramian matrix for more on the general properties of the overlap matrix.
+
+    +-------------------+----------+-------------------------------------------+
+    | Column            | Type     | Description                               |
+    +===================+==========+===========================================+
+    | frame             | int/cat  | non-unique integer                        |
+    +-------------------+----------+-------------------------------------------+
+    | chi1              | int      | first basis function                      |
+    +-------------------+----------+-------------------------------------------+
+    | chi2              | int      | second basis function                     |
+    +-------------------+----------+-------------------------------------------+
+    | coefficient       | float    | overlap matrix element                    |
+    +-------------------+----------+-------------------------------------------+
+    """
+    _columns = ['chi1', 'chi2', 'coefficient', 'frame']
+    _index = 'index'
+
+    def square(self, frame=0):
+        nbas = np.round(np.roots([1, 1, -2 * self.shape[0]])[1]).astype(np.int64)
+        tri = self[self['frame'] == frame].pivot('chi1', 'chi2', 'coefficient').fillna(value=0)
+        return tri + tri.T - np.eye(nbas)
+
+    @classmethod
+    def from_column_dump(cls, path):
+        vals = pd.read_csv(path, header=None).values.flatten()
+        nbas = np.round(np.roots([1, 1, -2 * self.shape[0]])[1]).astype(np.int64)
+        chi1 = [i for i in range(nbas) for i in range(i + 1)]
+        chi2 = [i for i in range(nbas) for j in range(i + 1)]
+        return cls.pd.DataFrame.from_dict({'chi1': chi1, 'chi2': chi2,
+                                           'coef': vals, 'frame': np.zeros(len(vals))})
+
+    @classmethod
+    def from_square(cls, df):
+        ndim = df.shape[0]
+        arr = df.values
+        arlen = ndim * (ndim + 1) // 2
+        #chi1 = np.empty(arlen, dtype=np.int64)
+        #chi2 = np.empty(arlen, dtype=np.int64)
+        #coef = np.empty(arlen, dtype=np.float64)
+        ret = np.empty((arlen,), dtype=[('chi1', 'i8'),
+                                        ('chi2', 'i8'),
+                                        ('coefficient', 'f8'),
+                                        ('frame', 'i8')])
+        cnt = 0
+        for i in range(ndim):
+            for j in range(i + 1):
+                ret[cnt] = (i, j, arr[i, j], 0)
+                cnt += 1
+        return cls(ret)
+
+
 #
 #class PlanewaveBasisSet(BasisSet):
 #    """
