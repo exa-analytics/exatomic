@@ -30,9 +30,9 @@ guide for the types of data found in two body tables provided by this module
 import numpy as np
 import pandas as pd
 from traitlets import Unicode
-from exa.numerical import DataFrame, SparseDataFrame
-from exa.relational.isotope import symbol_to_radius
-from exa.math.vector.cartesian import pdist_euc_dxyz_idx
+from exa.core.numerical import DataFrame, SparseDataFrame
+from exa.cms.isotope import symbol_to_radius
+#from exa.math.vector.cartesian import pdist_euc_dxyz_idx
 from exatomic.algorithms.distance import periodic_pdist_euc_dxyz_idx
 
 
@@ -126,43 +126,42 @@ def compute_atom_two(universe, mapper=None, bond_extra=0.45):
     return compute_free_two_si(universe, mapper, bond_extra)
 
 
-def compute_free_two_si(universe, mapper=None, bond_extra=0.45):
-    """
-    Serial, in memory computation of two body properties for free boundary
-    condition systems.
-    """
-    n = universe.frame['atom_count'].astype(np.int64)
-    n = (n*(n - 1)//2).sum()
-    dx = np.empty((n, ), dtype=np.float64)
-    dy = np.empty((n, ), dtype=np.float64)
-    dz = np.empty((n, ), dtype=np.float64)
-    distance = np.empty((n, ), dtype=np.float64)
-    atom0 = np.empty((n, ), dtype=np.int64)
-    atom1 = np.empty((n, ), dtype=np.int64)
-    fdx = np.empty((n, ), dtype=np.int64)
-    start = 0
-    stop = 0
-    for frame, group in universe.atom.cardinal_groupby():
-        x = group['x'].values.astype(np.float64)
-        y = group['y'].values.astype(np.float64)
-        z = group['z'].values.astype(np.float64)
-        idx = group.index.values.astype(np.int64)
-        dxx, dyy, dzz, dist, a0, a1 = pdist_euc_dxyz_idx(x, y, z, idx)
-        stop += len(dxx)
-        dx[start:stop] = dxx
-        dy[start:stop] = dyy
-        dz[start:stop] = dzz
-        atom0[start:stop] = a0
-        atom1[start:stop] = a1
-        distance[start:stop] = dist
-        fdx[start:stop] = frame
-        start = stop
-    atom0 = pd.Series(atom0, dtype='category')
-    atom1 = pd.Series(atom1, dtype='category')
-    fdx = pd.Series(fdx, dtype='category')
-    two = pd.DataFrame.from_dict({'dx': dx, 'dy': dy, 'dz': dz, 'distance': distance,
-                                  'atom0': atom0, 'atom1': atom1, 'frame': fdx})
-    two = AtomTwo(two)
+#def compute_free_two_si(universe, mapper=None, bond_extra=0.45):
+#    """
+#    Serial, in memory computation of two body properties for free boundary
+#    condition systems.
+#    """
+#    n = universe.frame['atom_count'].astype(np.int64)
+#    n = (n*(n - 1)//2).sum()
+#    dx = np.empty((n, ), dtype=np.float64)
+#    dy = np.empty((n, ), dtype=np.float64)
+#    dz = np.empty((n, ), dtype=np.float64)
+#    distance = np.empty((n, ), dtype=np.float64)
+#    atom0 = np.empty((n, ), dtype=np.int64)
+#    atom1 = np.empty((n, ), dtype=np.int64)
+#    fdx = np.empty((n, ), dtype=np.int64)
+#    start = 0
+#    stop = 0
+#    for frame, group in universe.atom.cardinal_groupby():
+#        x = group['x'].values.astype(np.float64)
+#        y = group['y'].values.astype(np.float64)
+#        z = group['z'].values.astype(np.float64)
+#        idx = group.index.values.astype(np.int64)
+#        dxx, dyy, dzz, dist, a0, a1 = pdist_euc_dxyz_idx(x, y, z, idx)
+#        stop += len(dxx)
+#        dx[start:stop] = dxx
+#        dy[start:stop] = dyy
+#        dz[start:stop] = dzz
+#        atom0[start:stop] = a0
+#        atom1[start:stop] = a1
+#        distance[start:stop] = dist
+#        fdx[start:stop] = frame
+#        start = stop
+#    atom0 = pd.Series(atom0, dtype='category')
+#    atom1 = pd.Series(atom1, dtype='category')
+#    fdx = pd.Series(fdx, dtype='category')
+#    two = pd.DataFrame.from_dict({'dx': dx, 'dy': dy, 'dz': dz, 'distance': distance,
+##    two = AtomTwo(two)
     two.compute_bonds(universe.atom['symbol'], mapper=mapper)
     return two
 

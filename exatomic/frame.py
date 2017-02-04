@@ -11,8 +11,8 @@ frames by unique atomic coordinates, a different level of theory, etc.
 """
 import numpy as np
 from traitlets import Float
-from exa.numerical import DataFrame
-from exa.math.vector.cartesian import magnitude_xyz
+from exa.core.numerical import DataFrame
+#from exa.math.vector.cartesian import magnitude_xyz
 
 
 class Frame(DataFrame):
@@ -79,13 +79,13 @@ class Frame(DataFrame):
                 return True
         raise PeriodicUniverseError()
 
-    def compute_cell_magnitudes(self):
-        """
-        Compute the magnitudes of the unit cell vectors (rx, ry, rz).
-        """
-        self['rx'] = magnitude_xyz(self['xi'].values, self['yi'].values, self['zi'].values).astype(np.float64)
-        self['ry'] = magnitude_xyz(self['xj'].values, self['yj'].values, self['zj'].values).astype(np.float64)
-        self['rz'] = magnitude_xyz(self['xk'].values, self['yk'].values, self['zk'].values).astype(np.float64)
+    #def compute_cell_magnitudes(self):
+    #    """
+    #    Compute the magnitudes of the unit cell vectors (rx, ry, rz).
+    #    """
+    #    self['rx'] = magnitude_xyz(self['xi'].values, self['yi'].values, self['zi'].values).astype(np.float64)
+    #    self['ry'] = magnitude_xyz(self['xj'].values, self['yj'].values, self['zj'].values).astype(np.float64)
+    #    self['rz'] = magnitude_xyz(self['xk'].values, self['yk'].values, self['zk'].values).astype(np.float64)
 
 
 def compute_frame(universe):

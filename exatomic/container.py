@@ -11,26 +11,27 @@ chemistry experiments in a unified and systematic way. Data is organized into
 simulations), step number (e.g. geometry optimization), or an arbitrary index
 (e.g. density functional theory exchange correlation functional).
 """
-import pandas as pd
+import six
 import numpy as np
-from exa.numerical import Field
-from exa.container import TypedMeta, Container
+import pandas as pd
+from exa.core.base import DataObject
+from exa.core.numerical import Field
+from exa.core.container import Container
 from exatomic.error import BasisSetNotFoundError
-from exatomic.widget import UniverseWidget
 from exatomic.frame import Frame, compute_frame_from_atom
 from exatomic.atom import Atom, UnitAtom, ProjectedAtom, VisualAtom, Frequency
 from exatomic.two import (AtomTwo, MoleculeTwo, compute_atom_two,
                           compute_bond_count, compute_molecule_two)
 from exatomic.molecule import (Molecule, compute_molecule, compute_molecule_com,
                                compute_molecule_count)
-from exatomic.widget import UniverseWidget
+#from exatomic.widget import UniverseWidget
 from exatomic.field import AtomicField
 from exatomic.orbital import Orbital, Excitation, MOMatrix, DensityMatrix
 from exatomic.basis import (Overlap, GaussianBasisSet, BasisSetOrder)
 from exatomic.algorithms.orbital import add_molecular_orbitals
 
 
-class Meta(TypedMeta):
+class Meta(DataObject):
     """
     Defines strongly typed attributes of the :class:`~exatomic.universe.Universe`
     and :class:`~exatomic.editor.AtomicEditor` objects. All "aliases" below are
@@ -55,7 +56,7 @@ class Meta(TypedMeta):
     basis_set_order = BasisSetOrder
     gaussian_basis_set = GaussianBasisSet
 
-class Universe(Container, metaclass=Meta):
+class Universe(Container, six.with_metaclass(Meta)):
     """
     The atomic container is called a universe because it represents everything
     known about the atomistic simulation (whether quantum or classical). This
@@ -65,7 +66,7 @@ class Universe(Container, metaclass=Meta):
     Attributes:
         atom (:class:`~exatomic.atom.Atom`): Atomic coordinates, symbols, forces, etc.
     """
-    _widget_class = UniverseWidget
+    #_widget_class = UniverseWidget
     _cardinal = 'frame'
 
     @property
@@ -215,7 +216,7 @@ class Universe(Container, metaclass=Meta):
         return len(self.frame)
 
 
-def concat(*universes, name=None, description=None, meta=None):
+def concat(name=None, description=None, meta=None, *universes):
     """
     Warning:
         This function is not fully featured or tested yet!
