@@ -171,15 +171,7 @@ def fac2(n):
         n -= 2
     return np.prod(ns)
 
-def normalize(alpha, l, m, n):
-    prefac = (2 / np.pi) ** (0.75)
-    numer = 2 ** (l + m + n) * alpha ** ((l + m + n + 1.5) / 2)
-    denom = (fac2(2 * l - 1) *
-             fac2(2 * m - 1) *
-             fac2(2 * n - 1)) ** (0.5)
-    return prefac * numer / denom
-
-def sloppy_normalize(alpha, L):
+def normalize(alpha, L):
     prefac = (2 / np.pi) ** (0.75)
     numer = 2 ** (L) * alpha ** ((L + 1.5) / 2)
     denom = (fac2(2 * L - 1)) ** (0.5)
@@ -191,15 +183,7 @@ def _vec_fac(n):
 def _vec_fac2(n):
     return fac2(n)
 
-def _vec_normalize(alpha, l, m, n):
-    prefac = (2 / np.pi) ** (0.75)
-    numer = 2 ** (l + m + n) * alpha ** ((l + m + n + 1.5) / 2)
-    denom = (_vec_fac2(2 * l - 1) *
-             _vec_fac2(2 * m - 1) *
-             _vec_fac2(2 * n - 1)) ** (0.5)
-    return prefac * numer / denom
-
-def _vec_sloppy_normalize(alpha, L):
+def _vec_normalize(alpha, L):
     prefac = (2 / np.pi) ** (0.75)
     numer = 2 ** (L) * alpha ** ((L + 1.5) / 2)
     denom = (_vec_fac2(2 * L - 1)) ** (0.5)
@@ -356,11 +340,9 @@ if config['dynamic']['numba'] == 'true':
     fac = jit(nopython=True)(fac)
     fac2 = jit(nopython=True)(fac2)
     normalize = jit(nopython=True)(normalize)
-    sloppy_normalize = jit(nopython=True)(sloppy_normalize)
     _vec_fac = vectorize(['int64(int64)'])(_vec_fac)
     _vec_fac2 = vectorize(['int64(int64)'])(_vec_fac2)
-    _vec_normalize = vectorize(['float64(float64,int64,int64,int64)'])(_vec_normalize)
-    _vec_sloppy_normalize = vectorize(['float64(float64,int64)'])(_vec_sloppy_normalize)
+    _vec_normalize = vectorize(['float64(float64,int64)'])(_vec_normalize)
     _overlap = vectorize(['float64(float64,float64,float64,float64,float64,float64,int64, \
                           int64,int64,int64,int64,int64,float64,float64,float64,float64)'])(_overlap)
     _wrap_overlap = jit()(_wrap_overlap)

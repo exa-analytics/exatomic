@@ -59,19 +59,29 @@ class Atom(DataFrame):
     _columns = ['x', 'y', 'z', 'symbol']
 
     @property
-    def frames(self):
+    def nframes(self):
         """Return the total number of frames in the atom table."""
-        return self['frame'].cat.as_ordered().max() + 1
+        return self.frame.cat.as_ordered().max() + 1
 
     @property
     def last_frame(self):
         """Return the last frame of the atom table."""
-        return self[self['frame'] == self.frames - 1]
+        return self[self.frame == self.nframes - 1]
 
     @property
-    def last_frame_atoms(self):
+    def unique_atoms(self):
         """Return unique atom symbols of the last frame."""
-        return self.last_frame['symbol'].unique()
+        return self.last_frame.symbol.unique()
+
+    def center(self, idx, frame=None):
+        if frame is None: frame = self.last_frame.copy()
+        else: frame = self[self.frame == frame].copy()
+        center = frame.ix[idx]
+        for r in ['x', 'y', 'z']:
+            if center[r] > 0: frame[r] = frame[r] - center[r]
+            else: frame[r] = frame[r] + np.abs(center[r])
+        return frame
+
 
     def to_xyz(self, tag='symbol', header=False, comments='', columns=None,
                frame=None, units='A'):
@@ -91,7 +101,7 @@ class Atom(DataFrame):
             ret (str): XYZ formatted atomic data
         """
         columns = (tag, 'x', 'y', 'z') if columns is None else columns
-        frame = self.frames - 1 if frame is None else frame
+        frame = self.nframes - 1 if frame is None else frame
         if isinstance(frame, Integral): frame = [frame]
         if not isinstance(comments, list): comments = [comments]
         if len(comments) == 1: comments = comments * len(frame)
@@ -147,7 +157,7 @@ class Atom(DataFrame):
         grps = self.cardinal_groupby()
         symbols = grps.apply(lambda g: g['symbol'].cat.codes.values)    # Pass integers rather than string symbols
         kwargs['atom_symbols'] = Unicode(symbols.to_json(orient='values')).tag(sync=True)
-        symmap = {i: v for i, v in enumerate(self['symbol'].cat.categories)}
+        symmap = {i: v for i, v in enumerate(self['symbol'].cat.categories) if v in self.unique_atoms}
         sym2rad = symbol_to_radius()
         radii = sym2rad[self['symbol'].unique()]
         kwargs['atom_radii'] = Dict({i: radii[v] for i, v in symmap.items()}).tag(sync=True)  # (Int) symbol radii

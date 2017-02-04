@@ -37,8 +37,16 @@ class _Convolve(DataFrame):
     def _lorentz(gamma, en, en0):
         return gamma / (2 * np.pi * (en - en0) ** 2 + (gamma / 2) ** 2)
 
+    @property
+    def last_frame(self):
+        return self['frame'].cat.as_ordered().max()
+
+    @property
+    def last_group(self):
+        return self['group'].cat.as_ordered().max()
+
     def convolve(self, func='gauss', units='eV', ewin=None, broaden=0.13,
-                 padding=5, npoints=1001, name=None):
+                 padding=5, npoints=1001, group=None, frame=None, name=None):
         """
         Compute a spectrum based on excitation energies and oscillator strengths.
 
@@ -54,6 +62,8 @@ class _Convolve(DataFrame):
             df (pd.DataFrame): contains x and y values of a spectrum
                                (signal and energy)
         """
+        frame = self.last_frame if frame is None else frame
+        group = self.last_group if group is None else group
         if func not in ['gauss', 'lorentz']:
             raise NotImplementedError('Convolution must be one of "gauss" or "lorentz".')
         choices = {'gauss': self._gauss, 'lorentz': self._lorentz}
@@ -67,7 +77,8 @@ class _Convolve(DataFrame):
         enrg = np.linspace(mine, maxe, npoints)
         spec = np.zeros(npoints)
         if self.__class__.__name__ == 'Excitation':
-            smdf = self[(self[units] > sm) & (self[units] < lg)]
+            smdf = self[(self[units] > sm) & (self[units] < lg) &
+                        (self['frame'] == frame) & self['group'] == group]
             for osc, en0 in zip(smdf['osc'], smdf[units]):
                 spec += osc * choices[func](broaden, enrg, en0)
         else:
@@ -90,6 +101,8 @@ class Orbital(_Convolve):
     +===================+==========+===========================================+
     | frame             | category | non-unique integer (req.)                 |
     +-------------------+----------+-------------------------------------------+
+    | group             | category | like frame but for same geometry          |
+    +-------------------+----------+-------------------------------------------+
     | orbital           | int      | vector of MO coefficient matrix           |
     +-------------------+----------+-------------------------------------------+
     | label             | int      | label of orbital                          |
@@ -110,20 +123,29 @@ class Orbital(_Convolve):
     Note:
         Spin zero means alpha spin or unknown and spin one means beta spin.
     """
-    _columns = ['frame', 'energy', 'occupation', 'vector', 'spin']
+    _columns = ['frame', 'group', 'energy', 'occupation', 'vector', 'spin']
     _index = 'orbital'
     _cardinal = ('frame', np.int64)
-    _categories = {'spin': np.int64}
+    _categories = {'spin': np.int64, 'frame': np.int64, 'group': np.int64}
 
-    def get_orbital(self, frame=0, orb=-1, spin=0, index=None):
+    @property
+    def last_frame(self):
+        return self.frame.cat.as_ordered().max()
+
+    @property
+    def last_group(self):
+        return self[self.frame == self.last_frame].group.cat.as_ordered().max()
+
+    def get_orbital(self, orb=-1, spin=0, index=None, group=None, frame=None):
         """
         Returns a specific orbital.
 
         Args
             orb (int): See note below (default HOMO)
             spin (int): 0, no spin or alpha (default); 1, beta
-            index (int): Orbital index (default None)
-            frame (int): The frame of the universe (default 0)
+            index (int): Orbital dataframe index (default None)
+            frame (int): The frame of the universe (default max(frame))
+            group (int): The group of orbitals within a given frame
 
         Returns
             orbital (exatomic.orbital.Orbital): Orbital row
@@ -136,13 +158,17 @@ class Orbital(_Convolve):
             returns the HOMO-1; 0 returns the LUMO, 1 returns the
             LUMO+1, etc.
         """
+        frame = self.last_frame if frame is None else frame
+        group = self.last_group if group is None else group
         if index is None:
             if orb > -1:
                 return self[(self['frame'] == frame) &
+                            (self['group'] == group) &
                             (self['occupation'] == 0) &
                             (self['spin'] == spin)].iloc[orb]
             else:
                 return self[(self['frame'] == frame) &
+                            (self['group'] == group) &
                             (self['occupation'] > 0) &
                             (self['spin'] == spin)].iloc[orb]
         else:
@@ -169,11 +195,13 @@ class Excitation(_Convolve):
     +-------------------+----------+-------------------------------------------+
     | frame             | int      | non-unique integer (req.)                 |
     +-------------------+----------+-------------------------------------------+
+    | group             | int      | like frame but for same geometry          |
+    +-------------------+----------+-------------------------------------------+
     """
-    _columns = ['energy', 'osc', 'frame']
+    _columns = ['energy', 'osc', 'frame', 'group']
     _index = 'excitation'
     _cardinal = ('frame', np.int64)
-    _categories = {}
+    _categories = {'frame': np.int64, 'group': np.int64}
 
 
 class MOMatrix(DataFrame):
@@ -259,7 +287,7 @@ class DensityMatrix(DataFrame):
         return square
 
     @classmethod
-    def from_momatrix(cls, momatrix, occvec):
+    def from_momatrix(cls, momatrix, occvec, column='coef'):
         """
         A density matrix can be constructed from an MOMatrix by:
         .. math::
@@ -274,7 +302,7 @@ class DensityMatrix(DataFrame):
         Returns:
             ret (:class:`~exatomic.orbital.DensityMatrix`): The density matrix
         """
-        cmat = momatrix.square().values
+        cmat = momatrix.square(column=column).values
         chi1, chi2, dens, frame = density_from_momatrix(cmat, occvec)
         return cls.from_dict({'chi1': chi1, 'chi2': chi2,
                               'coef': dens, 'frame': frame})

@@ -79,7 +79,8 @@ class Output(Editor):
             stops = np.array(self.find(_remo03, keys_only=True), dtype=np.int64) - 1
             orbital = self._parse_orbital(starts, stops)
             orbital['spin'] = 0
-        self._orbital = Orbital(orbital)
+        orbital['group'] = 0
+        self.orbital = Orbital(orbital)
 
     def parse_momatrix(self):
         """
@@ -171,7 +172,9 @@ class Output(Editor):
         keep = np.empty((df.shape[0],), dtype=dtype)
         seht, cnt = -1, 0
         tags = {}
+        print(df)
         for i, (shell, l, alpha, d) in enumerate(zip(df[0], df[1], df[2], df[3])):
+            print(d)
             if len(shell) == 8:
                 seht += 1
                 tags[df[0].values[i - 2]] = seht

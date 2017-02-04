@@ -139,7 +139,7 @@ def _obtain_arrays(uni):
     nexpnt = uni.atom['set'].map(expnts).sum()
     kwargs['nexpnt'] = nexpnt
     # Grab already correct arrays from basis_set_order
-    kwargs['center'] = uni.basis_set_order['center'].values
+    kwargs['center'] = uni.basis_set_order['center'].values.copy()
     kwargs['L'] = uni.basis_set_order['L'].values
     if uni.basis_set.spherical:
         # Spherical basis set
@@ -245,12 +245,13 @@ class Input(Editor):
             o = uni.overlap['coef'].values
             matargs['overlap'] = _clean_to_string(o, **margs)
         # Still no clean solution for an occupation vector yet
-        if hasattr(uni, 'occupation_vector'):
+        if hasattr(uni, '_density'):
+            d = uni.density
+        elif hasattr(uni, 'occupation_vector'):
             d = DensityMatrix.from_momatrix(uni.momatrix, uni.occupation_vector)
-            matargs['density'] = _clean_to_string(d['coef'].values, **margs)
         elif occvec is not None:
             d = DensityMatrix.from_momatrix(uni.momatrix, occvec)
-            matargs['density'] = _clean_to_string(d['coef'].values, **margs)
+        matargs['density'] = _clean_to_string(d['coef'].values, **margs)
         # Compute tr[P*S] must be equal to number of electrons
         if matargs['density']:
             kwargs['check'] = np.trace(np.dot(d.square(), uni.overlap.square()))

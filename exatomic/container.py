@@ -27,8 +27,7 @@ from exatomic.widget import UniverseWidget
 from exatomic.field import AtomicField
 from exatomic.orbital import Orbital, Excitation, MOMatrix, DensityMatrix
 from exatomic.basis import (Overlap, GaussianBasisSet, BasisSetOrder)
-from exatomic.algorithms.orbital import add_mos_to_universe as _add_mos_to_universe
-from exatomic.algorithms.orbital import update_molecular_orbitals as _update_mos
+from exatomic.algorithms.orbital import add_molecular_orbitals
 
 
 class Meta(TypedMeta):
@@ -193,30 +192,13 @@ class Universe(Container, metaclass=Meta):
         Warning:
             Removes any existing field attribute of the universe.
         """
-        if not hasattr(self, '_momatrix'):
-            raise AttributeError("universe must have a momatrix to make MOs")
-        if not hasattr(self, '_basis_set_order'):
-            print('Warning: without the basis_set_order, MOs may be incorrect.')
-        _add_mos_to_universe(self, field_params=field_params, mocoefs=mocoefs,
-                             vector=vector, frame=frame)
+        for attr in ['momatrix', 'basis_set', 'basis_set_order']:
+            if not hasattr(self, attr):
+                raise AttributeError("universe must have {} attribute.".format(attr))
+        add_molecular_orbitals(self, field_params=field_params,
+                               mocoefs=mocoefs, vector=vector, frame=frame)
         self._traits_need_update = True
 
-    def update_molecular_orbitals(self, field_params=None, mocoefs=None,
-                                  vector=None, frame=None):
-        """
-        Updates the molecular orbitals with new field_params, different MO
-        coefficients or different eigenvectors. Significantly faster than
-        add_molecular_orbitals as the basis functions have already been compiled.
-
-        Warning:
-            Removes any existing field attribute of the universe.
-        """
-        if not hasattr(self, 'basis_functions'):
-            raise AttributeError('Universe has no basis functions, '
-                                 'add_molecular_orbitals first')
-        _update_mos(self, field_params=field_params, mocoefs=mocoefs,
-                    vector=vector, frame=frame)
-        self._traits_need_update = True
 
     def _custom_traits(self):
         """

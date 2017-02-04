@@ -88,10 +88,10 @@ class Output(Editor):
         # Allocate a numpy array to store it
         # index is arbitrary for the momentum
         dtypes = [('energy', 'f8'), ('occupation', 'f8'), ('vector', 'f8'),
-                  ('spin', 'i8'), ('index', 'i8')]
+                  ('spin', 'i8'), ('group', 'i8')]
         data = np.empty((nbas * nrows,), dtype=dtypes)
-        cnt, vec, idx = 0, 0, 0
-        idxchk = 2 * nbas if os else nbas
+        cnt, vec, grp = 0, 0, 0
+        grpchk = 2 * nbas if os else nbas
         # Populate and increment accordingly
         for lno, ln in found[_reorb01]:
             for i in _orbslice:
@@ -101,10 +101,10 @@ class Output(Editor):
                         occ = 1 if os else 2
                     else: occ = 0
                     spn = 0 if 'Alpha' in ln else 1
-                    data[cnt] = (en, occ, vec, spn, idx)
+                    data[cnt] = (en, occ, vec, spn, grp)
                     cnt += 1
                     vec += 1
-                    if cnt == idxchk: idx += 1
+                    if cnt == grpchk: grp += 1
                     if vec == nbas: vec = 0
         orbital = pd.DataFrame(data)
         # Still no good way of dealing with multiple orbital sets per frame
@@ -259,6 +259,7 @@ class Output(Editor):
         excitation['energy'] = excitation['eV'] * Energy['eV', 'Ha']
         # Frame not really implemented here
         excitation['frame'] = 0
+        excitation['group'] = 0
         self.excitation = excitation
 
 
@@ -393,33 +394,7 @@ def _basis_set(raw):
     df = pd.DataFrame(df[:cnt])
     # Now to deduplicate identical basis sets
     # Gaussian prints out every single atomic basis set
-    centers = df['center'].unique()
-    sets = df.groupby('center')
-    # What defines an identical basis set
-    chk = ['alpha', 'd']
-    unique, setmap, cnt = [], {}, 0
-    # Over the sets
-    for center, seht in sets: # Over the unique sets
-        for i, other in enumerate(unique):
-            # First check shapes to avoid exception
-            if other.shape != seht.shape: continue
-            # Check for identical alphas and ds
-            if np.allclose(other[chk], seht[chk]):
-                setmap[center] = i
-                break
-        else:
-            # Add it to the list of unique basis sets
-            unique.append(seht)
-            # And df track of which center corresponds to which set
-            setmap[center] = cnt
-            cnt += 1
-    # Now slap 'em all together and reset the index
-    df = pd.concat(unique).reset_index(drop=True)
-    # And now 'center' is 'set' and we must map the setmap onto atom
-    df.rename(columns={'center': 'set'}, inplace=True)
-    df['set'] = df['set'].map(setmap)
-    # TODO : extend to multiple frames or assume a single basis set?
-    df['frame'] = 0
+    df, setmap = _dedup(df)
     return df, setmap
 
 
@@ -479,21 +454,21 @@ class Fchk(Editor):
         # Atom identifiers
         znums = self._dfme(found[_reznum], nat)
         # Atomic symbols
-        symbols = list(map(lambda x: ztos[x], znums))
+        symbols = list(map(lambda x: z_to_symbol[x], znums))
         # Z effective if ECPs are used
-        zeffs = self._dfme(found[_rezeff], nat)
+        zeffs = self._dfme(found[_rezeff], nat).astype(np.int64)
         # Atomic positions
         pos = self._dfme(found[_reposition], nat * 3).reshape(nat, 3)
         frame = np.zeros(len(symbols), dtype=np.int64)
         self.atom = pd.DataFrame.from_dict({'symbol': symbols, 'Zeff': zeffs,
                                             'frame': frame, 'x': pos[:,0],
                                             'y': pos[:,1], 'z': pos[:,2],
-                                            'set': range(len(symbols))})
+                                            'set': range(1, len(symbols) + 1)})
 
     def parse_gaussian_basis_set(self):
         found = self.find(_rebasdim, _reshelltype, _reprimpershell,
                           _reshelltoatom, _reprimexp, _recontcoef,
-                          keys_only=True)
+                          _repcontcoef, keys_only=True)
         # Number of basis functions
         nbas = self._intme(found[_rebasdim])
         # Number of 'shell to atom' mappings
@@ -502,43 +477,41 @@ class Fchk(Editor):
         dim2 = self._intme(found[_reprimexp])
         # Handle cartesian vs. spherical here
         # only spherical for now
-        shelltypes = np.abs(self._dfme(found[_reshelltype], dim1))
-        primpershell = self._dfme(found[_reprimpershell], dim1)
-        shelltoatom = self._dfme(found[_reshelltoatom], dim1)
+        shelltypes = self._dfme(found[_reshelltype], dim1).astype(np.int64)
+        primpershell = self._dfme(found[_reprimpershell], dim1).astype(np.int64)
+        shelltoatom = self._dfme(found[_reshelltoatom], dim1).astype(np.int64)
         primexps = self._dfme(found[_reprimexp], dim2)
         contcoefs = self._dfme(found[_recontcoef], dim2)
+        pcontcoefs = self._dfme(found[_repcontcoef], dim2)
         # Keep track of some things
-        ptr, prevatom, shell, cnt = 0, 0, 0, 0
-        sets, setmap = [], {}
+        ptr, prevatom, shell, sp = 0, 0, 0, False
         # Temporary storage of basis set data
         ddict = {'d': [], 'alpha': [], 'shell': [],
                  'L': [], 'center': []}
         for atom, nprim, shelltype in zip(shelltoatom, primpershell, shelltypes):
             if atom != prevatom:
-                # New atom, check if basis set exists
-                seht = pd.DataFrame.from_dict(ddict)
-                sets, cnt = _dedup(seht, sets, setmap, cnt, prevatom)
-                # Reset data storage for next basis set
-                ddict = {key: [] for key, value in ddict.items()}
                 prevatom, shell = atom, 0
             # Collect the data for this basis set
+            if shelltype == -1:
+                shelltype, sp = 0, True
             step = ptr + nprim
             ddict['d'] += contcoefs[ptr:step].tolist()
             ddict['alpha'] += primexps[ptr:step].tolist()
-            ddict['shell'] += [shell] * nprim
-            ddict['L'] += [shelltype] * nprim
             ddict['center'] += [atom] * nprim
+            ddict['shell'] += [shell] * nprim
+            ddict['L'] += [np.abs(shelltype)] * nprim
+            if sp:
+                shell += 1
+                ddict['d'] += pcontcoefs[ptr:step].tolist()
+                ddict['alpha'] += primexps[ptr:step].tolist()
+                ddict['center'] += [atom] * nprim
+                ddict['shell'] += [shell] * nprim
+                ddict['L'] += [1] * nprim
             ptr += nprim
             shell += 1
-        # Last basis set to be collected
-        seht = pd.DataFrame.from_dict(ddict)
-        sets, cnt = _dedup(seht, sets, setmap, cnt, prevatom)
-        # Tidy up the resultant basis sets
-        df = pd.concat(sets).reset_index(drop=True)
-        df.rename(columns={'center': 'set'}, inplace=True)
-        df['set'] = df['set'].map(setmap)
-        df['frame'] = 0
-        self.gaussian_basis_set = df
+            sp = False
+        sets, setmap = _dedup(pd.DataFrame.from_dict(ddict))
+        self.gaussian_basis_set = sets
         self.atom['set'] = self.atom['set'].map(setmap)
 
     def parse_orbital(self):
@@ -586,7 +559,8 @@ class Fchk(Editor):
         # Alpha or closed shell MO coefficients
         coefs = self._dfme(found[_reamomatrix], ncoef)
         # Beta MO coefficients if they exist
-        bcoefs = self._dfme(found[_rebmomatrix], ncoef) if found[_rebmomatrix] else None
+        bcoefs = self._dfme(found[_rebmomatrix], ncoef) \
+                 if found[_rebmomatrix] else None
         # Indexing
         chis = np.tile(range(nbas), ninp)
         orbitals = np.repeat(range(ninp), nbas)
@@ -600,19 +574,25 @@ class Fchk(Editor):
         super().__init__(*args, **kwargs)
 
 
-def _dedup(seht, others, setmap, cnt, prevatom):
+def _dedup(sets):
+    unique, setmap, cnt = [], {}, 0
+    sets = sets.groupby('center')
     chk = ['alpha', 'd']
-    for i, other in enumerate(others):
-        if other.shape != seht.shape: continue
-        if np.allclose(other[chk], seht[chk]):
-            setmap[prevatom] = i
-            break
-    else:
-        others.append(seht)
-        setmap[prevatom] = cnt
-        cnt += 1
-    return others, cnt
-
+    for center, seht in sets:
+        for i, other in enumerate(unique):
+            if other.shape != seht.shape: continue
+            if np.allclose(other[chk], seht[chk]):
+                setmap[center] = i
+                break
+        else:
+            unique.append(seht)
+            setmap[center] = cnt
+            cnt += 1
+    sets = pd.concat(unique).reset_index(drop=True)
+    sets.rename(columns={'center': 'set'}, inplace=True)
+    sets['set'] = sets['set'].map(setmap)
+    sets['frame'] = 0
+    return sets, setmap
 
 # Atom regex
 _renat = 'Number of atoms'
@@ -629,7 +609,7 @@ _reprimpershell = 'Number of primitives per shell'
 _reshelltoatom = 'Shell to atom map'
 _reprimexp = 'Primitive exponents'
 _recontcoef = 'Contraction coefficients'
-_repcontcoef = 'P\(S=P\) Contraction coefficients'
+_repcontcoef = 'P(S=P) Contraction coefficients'
 
 # MOMatrix regex
 # also uses _rebasdim
