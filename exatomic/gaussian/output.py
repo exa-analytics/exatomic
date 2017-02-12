@@ -20,7 +20,44 @@ from exatomic.algorithms.basis import lmap
 
 z_to_symbol = z_to_symbol()
 
+from numba import jit, int64
+@jit(nopython=True, cache=True)
+def _triangular_indices(ncol, nbas, ndim):
+    idx = np.empty((dim, 3), dtype=np.int64)
+    cnt = 0
+    for i in range(ncol):
+        for j in range(i, nbas, ncol):
+            for k in range(j, nbas):
+                idx[cnt,0] = j
+                idx[cnt,1] = k
+                idx[cnt,2] = 0
+                cnt += 1
+    return idx
+
 class Output(Editor):
+
+    def _parse_triangular_matrix(self, regex, column='coef', values_only=False):
+        found = self.find_next(_rebas02, keys_only=True)
+        nbas = int(self[found].split()[0])
+        found = self.find_next(regex, keys_only=True)
+        if not found: return
+        ncol = len(self[found + 1].split())
+        start = found + 2
+        rmdr = nbas % ncol
+        skips = np.array(list(reversed(range(rmdr, nbas + rmdr, ncol))))
+        skips = np.cumsum(skips) + np.arange(len(skips))
+        stop = start + skips[-1]
+        matrix = self.pandas_dataframe(start, stop, ncol + 1,
+                                       index_col=0, skiprows=skips,
+                                       ).unstack().dropna().apply(
+                                       lambda x: x.replace('D', 'E')
+                                       ).astype(np.float64).values
+        if values_only: return matrix
+        idxs = _triangular_indices(ncol, nbas, matrix.shape[0])
+        return pd.DataFrame.from_dict({'chi0': idxs[:,0],
+                                       'chi1': idxs[:,1],
+                                      'frame': idxs[:,2],
+                                       column: matrix})
 
     def parse_atom(self):
         # Find our data
@@ -310,6 +347,18 @@ class Output(Editor):
         self.frequency = frequency
 
 
+    def parse_overlap(self):
+        overlap = self._parse_triangular_matrix(_reovl01, 'coef')
+        if overlap is not None: self.overlap = overlap
+
+    def parse_multipole(self):
+        mltpl = self._parse_triangular_matrix(self, _reixn.format(1), 'ix1')
+        if mltpl is not None:
+            mltpl['ix2'] = self._parse_triangular_matrix(self, _reixn.format(2), 'ix2', True)
+            mltpl['ix3'] = self._parse_triangular_matrix(self, _reixn.format(3), 'ix3', True)
+            self.multipole = mltpl
+
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
@@ -431,6 +480,9 @@ _refreq = 'Freq'
 # TDDFT flags
 _retddft = 'TD'
 _reexcst = 'Excited State'
+# Triangular matrices -- One electron integrals
+_reovl01 = '*** Overlap ***'
+_reixn = 'IX=    {}'
 
 class Fchk(Editor):
 

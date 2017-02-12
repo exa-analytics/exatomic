@@ -172,7 +172,7 @@ class Triangle(_Symmetric):
         Correctly adds a column, ensuring that if index ordering
         is not the same between two instances, that it is remedied.
         """
-        if not isinstance(other, Triangle, column=None):
+        if not isinstance(other, Triangle):
             other = Triangle(other)
         idx0, idx1 = self.indices
         ocol = other.defaultcolumn if column is None else column

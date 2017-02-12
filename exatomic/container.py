@@ -29,6 +29,7 @@ from exatomic.field import AtomicField
 from exatomic.orbital import Orbital, Excitation, MOMatrix, DensityMatrix
 from exatomic.basis import (Overlap, GaussianBasisSet, BasisSetOrder)
 from exatomic.algorithms.orbital import add_molecular_orbitals
+from exatomic.interfaces.cclib import universe_from_cclib
 
 
 class Meta(DataObject):
@@ -78,6 +79,10 @@ class Universe(Container, six.with_metaclass(Meta)):
             return self.gaussian_basis_set
         else:
             raise BasisSetNotFoundError()
+
+    @classmethod
+    def from_cclib(cls, ccobj):
+        return cls(universe_from_cclib(ccobj))
 
     # Note that compute_* function may be called automatically by typed
     # properties defined in UniverseMeta
