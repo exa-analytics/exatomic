@@ -28,8 +28,9 @@ if 'exatomic' not in config:
 
 
 if config['exatomic']['update'] == '1':
+    key = 'root' if 'root' in config['dynamic'] else 'exa_root'
     shutil.copyfile(os.sep.join([config['dynamic']['exatomic_pkgdir'], '_static', 'exatomic_demo.ipynb']),
-                    os.sep.join([config['dynamic']['root'], 'notebooks', 'exatomic_demo.ipynb']))
+                    os.sep.join([config['dynamic'][key], 'notebooks', 'exatomic_demo.ipynb']))
     shutil.copyfile(os.sep.join([config['dynamic']['exatomic_pkgdir'], '_static', 'porphyrin.xyz']),
-                    os.sep.join([config['dynamic']['root'], 'data', 'examples', 'porphyrin.xyz']))
+                    os.sep.join([config['dynamic'][key], 'data', 'examples', 'porphyrin.xyz']))
     atexit.register(del_update)

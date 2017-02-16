@@ -14,9 +14,14 @@ simulations), step number (e.g. geometry optimization), or an arbitrary index
 import six
 import numpy as np
 import pandas as pd
-from exa.core.base import DataObject
-from exa.core.numerical import Field
-from exa.core.container import Container
+try:
+    from exa.core.base import DataObject
+    from exa.core.numerical import Field
+    from exa.core.container import Container
+except ImportError:
+    from exa.container import TypedMeta as DataObject
+    from exa.numerical import Field
+    from exa.container import Container
 from exatomic.error import BasisSetNotFoundError
 from exatomic.frame import Frame, compute_frame_from_atom
 from exatomic.atom import Atom, UnitAtom, ProjectedAtom, VisualAtom, Frequency
@@ -82,7 +87,7 @@ class Universe(Container, six.with_metaclass(Meta)):
 
     @classmethod
     def from_cclib(cls, ccobj):
-        return cls(universe_from_cclib(ccobj))
+        return cls(**universe_from_cclib(ccobj))
 
     # Note that compute_* function may be called automatically by typed
     # properties defined in UniverseMeta

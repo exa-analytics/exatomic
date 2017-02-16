@@ -9,7 +9,6 @@ except:
     from exa.relational.isotope import z_to_symbol
     from exatomic import Length, Energy
 
-from exatomic import Universe
 from exatomic.algorithms.basis import lmap
 
 z_to_symbol = z_to_symbol()
@@ -29,7 +28,7 @@ def universe_from_cclib(ccobj):
     if bso is not None: dfs['basis_set_order'] = bso
     basis_set = parse_ccobj_gaussian_basis_set(data)
     if basis_set is not None: dfs['basis_set'] = basis_set
-    return Universe(**dfs)
+    return dfs
 
 def parse_ccobj_atom(data):
     """Gets atom table information from ccobj."""

@@ -11,9 +11,16 @@ from numbers import Integral
 import numpy as np
 import pandas as pd
 from traitlets import Dict, Unicode
-from exa.core.numerical import DataFrame, SparseDataFrame, Series
-from exa.cms.isotope import (symbol_to_color, symbol_to_radius, symbol_to_znum,
+try:
+    from exa.core.numerical import DataFrame, SparseDataFrame, Series
+    from exa.cms.isotope import (symbol_to_color, symbol_to_radius, symbol_to_znum,
                                     symbol_to_mass)
+except ImportError:
+    from exa.numerical import DataFrame, SparseDataFrame, Series
+    from exa.relational.isotope import (symbol_to_color, symbol_to_radius,
+                                        symbol_to_z, symbol_to_element_mass)
+    symbol_to_znum = symbol_to_z
+    symbol_to_mass = symbol_to_element_mass
 from exatomic import Length
 from exatomic.error import PeriodicUniverseError
 #from exatomic.algorithms.distance import minimal_image_counts

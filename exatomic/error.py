@@ -5,7 +5,11 @@
 Exceptions
 ###############
 """
-from exa.errors import ExaException
+try:
+    from exa.errors import ExaException
+except ImportError:
+    from exa.error import ExaException
+
 
 
 class AtomicException(ExaException):

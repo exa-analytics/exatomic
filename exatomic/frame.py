@@ -11,8 +11,11 @@ frames by unique atomic coordinates, a different level of theory, etc.
 """
 import numpy as np
 from traitlets import Float
-from exa.core.numerical import DataFrame
-#from exa.math.vector.cartesian import magnitude_xyz
+try:
+    from exa.core.numerical import DataFrame
+except ImportError:
+    from exa.numerical import DataFrame
+#    from exa.math.vector.cartesian import magnitude_xyz
 
 
 class Frame(DataFrame):
