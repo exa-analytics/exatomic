@@ -7,10 +7,10 @@ Atomic Editor
 This module provides a text file editor that can be used to transform commonly
 found file formats directly into :class:`~exatomic.container.Universe` objects.
 """
+import six
 from exa.editor import Editor as BaseEditor
 from exatomic.container import Meta, Universe
 from exatomic.frame import compute_frame_from_atom
-
 
 class Editor(BaseEditor, metaclass=Meta):
     """
@@ -35,7 +35,7 @@ class Editor(BaseEditor, metaclass=Meta):
         """
         Convert the editor to a :class:`~exatomic.container.Universe` object.
         """
-        if self.meta is not None:
+        if hasattr(self, 'meta') and self.meta is not None:
             if meta is not None:
                 meta.update(self.meta)
             else:
@@ -50,4 +50,5 @@ class Editor(BaseEditor, metaclass=Meta):
                 pass
             if result is not None:
                 kwargs[attr] = result
+        print(kwargs.keys())
         return Universe(**kwargs)

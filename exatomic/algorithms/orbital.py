@@ -85,19 +85,25 @@ def meshgrid3d(x, y, z):
 class Nucpos(object):
 
     def __str__(self):
-        return 'Nucpos({:.3f},{:.3f},{:.3f})'.format(self.x, self.y, self.z)
+        return 'Nucpos({},{},{},{})'.format(self.x, self.y, self.z, self.pre)
 
-    def __init__(self, x, y, z):
+    def __init__(self, x, y, z, pre=None, prefac=None):
         self.x  = '(x-{:.10f})'.format(x) if not np.isclose(x, 0) else 'x'
         self.y  = '(y-{:.10f})'.format(y) if not np.isclose(y, 0) else 'y'
         self.z  = '(z-{:.10f})'.format(z) if not np.isclose(z, 0) else 'z'
         self.r2 = '({}**2+{}**2+{}**2)'.format(self.x, self.y, self.z)
+        self.r = self.r2 + '**0.5'
+        self.pre = '' if (pre is None or not pre) else '({})**{}*'.format(self.r, self.pre)
+        self.prefac = '' if prefac is None else '{}*'.format(prefac)
 
 
 def make_fps(rmin=None, rmax=None, nr=None, nrfps=1,
              xmin=None, xmax=None, nx=None, frame=0,
              ymin=None, ymax=None, ny=None, field_type=np.nan,
-             zmin=None, zmax=None, nz=None, label=np.nan):
+             zmin=None, zmax=None, nz=None, label=np.nan,
+             ox=None, dxi=None, dxj=None, dxk=None,
+             oy=None, dyi=None, dyj=None, dyk=None,
+             oz=None, dzi=None, dzj=None, dzk=None):
     """
     Generate the necessary field parameters of a numerical grid field
     as an exatomic.field.AtomicField.
@@ -109,35 +115,55 @@ def make_fps(rmin=None, rmax=None, nr=None, nrfps=1,
         nrfps (int): number of field parameters with same dimensions
         xmin (float): minimum in x direction (optional)
         xmax (float): maximum in x direction (optional)
-        nx (int): steps in x direction (optional)
         ymin (float): minimum in y direction (optional)
         ymax (float): maximum in y direction (optional)
-        ny (int): steps in y direction (optional)
         zmin (float): minimum in z direction (optional)
         zmax (float): maximum in z direction (optional)
+        nx (int): steps in x direction (optional)
+        ny (int): steps in y direction (optional)
         nz (int): steps in z direction (optional)
         label (str): an identifier passed to the widget (optional)
         field_type (str): alternative identifier (optional)
+        ox (float): origin in x direction (optional)
+        oy (float): origin in y direction (optional)
+        oz (float): origin in z direction (optional)
+        dxi (float): x-component of x-vector specifying a voxel
+        dxj (float): y-component of x-vector specifying a voxel
+        dxk (float): z-component of x-vector specifying a voxel
+        dyi (float): x-component of y-vector specifying a voxel
+        dyj (float): y-component of y-vector specifying a voxel
+        dyk (float): z-component of y-vector specifying a voxel
+        dzi (float): x-component of z-vector specifying a voxel
+        dzj (float): y-component of z-vector specifying a voxel
+        dzk (float): z-component of z-vector specifying a voxel
 
     Returns
         fps (pd.Series): field parameters
     """
     if any((par is None for par in [rmin, rmax, nr])):
-        raise Exception("Must supply at least rmin, rmax, nr.")
+        if all((par is None for par in (ox, dxi, dxj, dxk))):
+            raise Exception("Must supply at least rmin, rmax, nr or field"
+                            " parameters as specified by a cube file.")
     d = {}
-    allcarts = [['x', xmin, xmax, nx],
-                ['y', ymin, ymax, ny],
-                ['z', zmin, zmax, nz]]
-    for akey, amin, amax, na in allcarts:
-        amin = rmin if amin is None else amin
-        amax = rmax if amax is None else amax
-        na = nr if na is None else na
-        d[akey] = [amin, amax, na, (amax - amin) / na]
-    fp = pd.Series({'ox': d['x'][0],  'oy': d['y'][0],  'oz': d['z'][0],
-                    'nx': d['x'][2],  'ny': d['y'][2],  'nz': d['z'][2],
-                   'dxi': d['x'][3], 'dyj': d['y'][3], 'dzk': d['z'][3],
-                   'dxj': 0, 'dyk': 0, 'dzi': 0, 'frame': frame,
-                   'dxk': 0, 'dyi': 0, 'dzj': 0,})
+    allcarts = [['x', 0, xmin, xmax, nx, ox, (dxi, dxj, dxk)],
+                ['y', 1, ymin, ymax, ny, oy, (dyi, dyj, dyk)],
+                ['z', 2, zmin, zmax, nz, oz, (dzi, dzj, dzk)]]
+    for akey, aix, amin, amax, na, oa, da in allcarts:
+        if oa is None:
+            amin = rmin if amin is None else amin
+            amax = rmax if amax is None else amax
+            na = nr if na is None else na
+        else: amin = oa
+        dz = [0, 0, 0]
+        if all(i is None for i in da): dz[aix] = (amax - amin) / na
+        else: dz = da
+        d[akey] = [amin, amax, na, dz]
+    fp = pd.Series({'ox': d['x'][0],    'oy': d['y'][0],      'oz': d['z'][0],
+                    'nx': d['x'][1],    'ny': d['y'][1],      'nz': d['z'][1],
+                   'dxi': d['x'][2][0], 'dyj': d['y'][2][1], 'dzk': d['z'][2][2],
+                   'dxj': d['x'][2][1], 'dyk': d['y'][2][2], 'dzi': d['z'][2][0],
+                   'dxk': d['x'][2][2], 'dyi': d['y'][2][0], 'dzj': d['z'][2][1],
+                   'frame': frame})
     fp = pd.concat([fp] * nrfps, axis=1).T
     if isinstance(label, list) and len(label) == nrfps:
         fp['label'] = label
@@ -238,8 +264,9 @@ def _cart_prefac(L, l, m, n, nucpos):
     Returns
         prefacs (list): pre-exponential factors
     """
-    if L == 0: return ['']
-    prefac, lin, nlin  = '', '{}*', '{}**{}*'
+    prefac = '{}{}'.format(nucpos.pre, nucpos.prefac)
+    if L == 0: return [prefac]
+    lin, nlin = '{}*', '{}**{}*'
     mapper = OrderedDict([('{nuc.x}', l), ('{nuc.y}', m), ('{nuc.z}', n)])
     for atom, key in mapper.items():
         if not key: continue
@@ -330,7 +357,6 @@ def gen_basfns(universe, frame=None):
                                             universe.atom['y'],   universe.atom['z'])):
         # Atomic position
         nucpos = Nucpos(x, y, z)
-        r2str = nucpos.r2
         # Regroup dataframes
         bas = bases.get_group(seht).groupby('L')
         basord = centers.get_group(i)
@@ -339,14 +365,17 @@ def gen_basfns(universe, frame=None):
             for L, ml, shfunc in zip(basord['L'], basord['ml'], basord['shell']):
                 grp = bas.get_group(L).groupby('shell').get_group(shfunc)
                 prefacs = _sphr_prefac(sh, L, ml, nucpos)
-                basfns.append(gen_basfn(prefacs, grp, r2str))
+                basfns.append(gen_basfn(prefacs, grp, nucpos.r2))
         else:
             # Iterate over cartesian atom-centered basis functions
-            for L, l, m, n, shfunc in zip(basord['L'], basord['l'], basord['m'],
-                                          basord['n'], basord['shell']):
+            for L, l, m, n, shfunc, pre, prefac in zip(basord['L'], basord['l'],
+                                                       basord['m'], basord['n'],
+                                                       basord['shell'], basord['r'],
+                                                       basord['prefac']):
+                nucpos = Nucpos(x, y, z, pre=pre, prefac=prefac)
                 grp = bas.get_group(L).groupby('shell').get_group(shfunc)
                 prefacs = _cart_prefac(L, l, m, n, nucpos)
-                basfns.append(gen_basfn(prefacs, grp, r2str))
+                basfns.append(gen_basfn(prefacs, grp, nucpos.r))
     return basfns
 
 def numerical_grid_from_field_params(field_params):
@@ -395,26 +424,18 @@ def _determine_mocoefs(universe, mocoefs, vector):
         raise Exception('mocoefs must be a column in universe.momatrix')
     return mocoefs
 
-def _evaluate_basis(universe, basis_values, x, y, z):
-    for name, basis_function in universe.basis_functions.items():
-        basis_values[:,int(name[2:])] = basis_function(x, y, z)
-    return basis_values
-
-def _evaluate_fields(universe, basis_values, vector, field_data, mocoefs):
+def _evaluate_fields(universe, vector, mocoefs, npoints, nbas, x, y, z):
+    bvals = np.zeros((npoints, nbas), dtype=np.float64)
+    fvals = np.zeros((npoints, len(vector)), dtype=np.float64)
     vectors = universe.momatrix.groupby('orbital')
+    for name, bf in universe.basis_functions.items():
+        bvals[:,int(name[2:])] = bf(x, y, z)
     for i, vno in enumerate(vector):
         vec = vectors.get_group(vno)
         for chi, coef in zip(vec['chi'], vec[mocoefs]):
-            field_data[:, i] += coef * basis_values[:, chi]
+            if np.abs(coef) > 1e-10:
+                field_data[:, i] += coef * basis_values[:, chi]
     return field_data
-
-def _compute_mos(basis_values, coefs, vector):
-    nfield = len(vector)
-    field_data = np.zeros((basis_values.shape[0], nfield), dtype=np.float64)
-    for i, vec in enumerate(vector):
-        for j, bs in enumerate(coefs):
-            field_data[:, i] += basis_values[:, j] * coefs[:, j]
-    return [field_data[:, j] for j in range(nfield)]
 
 def add_molecular_orbitals(universe, field_params=None, mocoefs=None,
                            vector=None, frame=None):
@@ -442,8 +463,11 @@ def add_molecular_orbitals(universe, field_params=None, mocoefs=None,
     field_params = _determine_field_params(universe, field_params, len(vector))
     # Array dimensions
     lastatom = universe.atom.last_frame
-    nbas = lastatom['set'].map(universe.basis_set.functions().to_dict()).sum()
-    nprim = lastatom['set'].map(universe.basis_set.primitives().to_dict()).sum()
+    nbas = len(universe.basis_set_order.index)
+    try:
+        nprim = lastatom['set'].map(universe.basis_set.primitives().to_dict()).sum()
+    except:
+        nprim = None
 
     if not hasattr(universe, 'basis_functions'):
         print('Warning: not extensively tested. Please be careful.')
@@ -462,11 +486,7 @@ def add_molecular_orbitals(universe, field_params=None, mocoefs=None,
     npoints = len(x)
     nvec = len(vector)
 
-    basis_values = np.zeros((npoints, nbas), dtype=np.float64)
-    basis_values = _evaluate_basis(universe, basis_values, x, y, z)
-
-    field_data = np.zeros((npoints, nvec), dtype=np.float64)
-    field_data = _evaluate_fields(universe, basis_values, vector, field_data, mocoefs)
+    field_data = _evaluate_fields(universe, vector, mocoefs, npoints, nbas, x, y, z)
     universe.field = AtomicField(field_params, field_values=[field_data[:, i]
                                  for i in range(nvec)])
     t2 = datetime.now()

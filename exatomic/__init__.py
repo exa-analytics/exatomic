@@ -26,7 +26,7 @@ try:
     from exa.cms import (Length, Mass, Time, Current, Amount, Luminosity, Isotope,
                          Dose, Acceleration, Charge, Dipole, Energy, Force,
                          Frequency, MolarMass)
-except: 
+except:
     from exa.relational import Isotope, Length, Energy, Time, Amount, Constant, Mass
 from exatomic import _config
 from exatomic import error
@@ -45,5 +45,6 @@ from exatomic.algorithms import pcf
 from exatomic import molcas
 from exatomic import nwchem
 from exatomic import gaussian
+from exatomic import adf
 from exatomic import nbo
 from exatomic import mpl

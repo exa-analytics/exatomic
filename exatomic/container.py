@@ -62,7 +62,7 @@ class Meta(DataObject):
     basis_set_order = BasisSetOrder
     gaussian_basis_set = GaussianBasisSet
 
-class Universe(Container, six.with_metaclass(Meta)):
+class Universe(Container, metaclass=Meta):
     """
     The atomic container is called a universe because it represents everything
     known about the atomistic simulation (whether quantum or classical). This

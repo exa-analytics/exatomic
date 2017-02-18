@@ -6,6 +6,7 @@ Output Parser
 #####################
 Multiple frames are not currently supported
 '''
+import numpy as np
 import pandas as pd
 
 from exa.relational.isotope import symbol_to_z
@@ -20,11 +21,11 @@ class Output(Editor):
 
     def parse_atom(self):
         # TODO : only supports single frame, gets last atomic positions
-        start = stop = self.find(_re_atm_00, keys_only=True)[-1] + 2
-        while '<' not in self[stop]: stop += 1
-        columns = ['tag', 'x', 'y', 'z']
-        atom = self.pandas_dataframe(start, stop, columns)
-        atom['symbol'] = atom['tag'].str.extract('.*\.(.*)', expand=False)
+        start = stop = self.find(_re_bso_00, keys_only=True)[0] + 2
+        while self[stop].strip(): stop += 1
+        atom = self.pandas_dataframe(start, stop, 7)
+        atom.drop([0, 2, 3], axis=1, inplace=True)
+        atom.columns = ['symbol', 'x', 'y', 'z']
         for c in ['x', 'y', 'z']:
             atom[c] *= Length['A', 'au']
         atom['Z'] = atom['symbol'].map(symbol_to_z)
@@ -32,10 +33,6 @@ class Output(Editor):
         self.atom = atom
 
     def parse_basis_set(self):
-        frpi = 4 * np.pi
-        ds = {0: np.sqrt(1/frpi), 1: np.sqrt(3/frpi),
-              2: np.sqrt(5/frpi), 3: np.sqrt(7/frpi),
-              4: np.sqrt(9/frpi), 5: np.sqrt(11/frpi)}
         dfs, basmap = [], {}
         start = self.find(_re_bas_00, keys_only=True)[-1] + 3
         stop = self.find_next(_re_bas_01, start=start, keys_only=True)
@@ -55,10 +52,11 @@ class Output(Editor):
         df = self.pandas_dataframe(start, stop, ['n', 'L', 'alpha'],
                                    skiprows=skips)
         df['L'] = df['L'].str.lower().map(lmap)
+        df['d'] = np.sqrt((2 * df['L'] + 1) / (4 * np.pi))
         df['shell'] = shells
         df['set'] = sets
         df['frame'] = 0
-        df['d'] = df['L'].map(ds)
+        df['r'] = df['n'] - (df['L'] + 1)
         self.basis_set = BasisSet(df, gaussian=False, spherical=False)
         self.atom['set'] = self.atom['symbol'].map(basmap)
 
@@ -66,14 +64,20 @@ class Output(Editor):
         data = {'center': [], 'symbol': [],
                   'seht': [],  'shell': [],
                      'L': [],      'l': [],
-                     'm': [],      'n': []}
+                     'm': [],      'n': [],
+                     'r': [], 'prefac': []}
         sets = self.basis_set.groupby('set')
         for center, symbol, seht in zip(self.atom.index,
                                         self.atom['symbol'],
                                         self.atom['set']):
             bas = sets.get_group(seht)
-            for L, shell in zip(bas['L'], bas['shell']):
+            for L, shell, N, pre in zip(bas['L'], bas['shell'],
+                                        bas['N'], bas['n']):
                 for l, m, n in enum_cartesian[L]:
+                    if any(i == L for i in (l, m, n)):
+                        prefac = N
+                    else:
+                        prefac = N * np.sqrt(pre)
                     for key in data.keys():
                         data[key].append(eval(key))
         data['set'] = data.pop('seht')
@@ -105,30 +109,34 @@ class Output(Editor):
         starts = np.array(found) + 1
         ncol = len(self[starts[0] + 1].split()) - 1
         nchi = starts[1] - starts[0] - 3
-        stop = starts[-1] + nchi
-        skips = [i + j for i in list(starts[1:] - starts[0] - 3)
-                       for j in range(3)]
-        os = len(starts) * ncol > nchi * 1.5
-        if os:
-            brk = len(starts) // 2 - 1
-            midskips = list(range(starts[brk] + nchi - starts[0],
-                                  starts[brk + 1] - starts[0] - 3))
-            skips = skips[:brk * 3] + midskips + skips[brk * 3:]
-        data = self.pandas_dataframe(starts[0], stop, ncol + 1,
-                                     skiprows=skips)
-        data = data.drop(0, axis=1).unstack().dropna().values
-        norb = data.shape[0] // (nchi * 2) if os else data.shape[0] // nchi
-        arlen = data.shape[0]//2 if os else data.shape[0]
-        cycle = np.ceil(nchi / ncol).astype(np.int64)
-        chis = np.tile(range(nchi), norb)
-        orbs = np.concatenate([np.repeat(range(i, norb, ncol), nchi)
-                              for i in range(cycle)])
-        self.momatrix = pd.DataFrame.from_dict({
-                'coef': data[:arlen], 'chi': chis,
-                'orbital': orbs[:arlen], 'frame': 0})
-        if os: self.momatrix['coef1'] = data[arlen:]
+        ncol = len(self[starts[0] + 1].split()) - 1
+        if len(starts) % 2: os = False
+        else:
+            anchor = starts[len(starts)//2 - 1] + nchi
+            sail = starts[len(starts)//2]
+            os = True if self.find('SPIN 2', start=anchor, stop=sail) else False
+        blocks = [starts] if not os else [starts[:len(starts)//2],
+                                          starts[len(starts)//2:]]
+        data = pd.DataFrame()
+        for i, block in enumerate(blocks):
+            stop = block[-1] + nchi
+            skips = [i + j for i in list(block[1:] - block[0] - 3) for j in range(3)]
+            col = 'coef' if not i else 'coef{}'.format(i)
+            data[col] = self.pandas_dataframe(block[0], stop, ncol + 1,
+                                              skiprows=skips).drop(0, axis=1,
+                                              ).unstack().dropna().reset_index(drop=True)
+        norb = len(data.index) // nchi
+        print(data.shape)
+        print(norb)
+        print(nchi)
+        data['chi'] = np.tile(range(nchi), norb)
+        data['orbital'] = np.concatenate([np.repeat(range(i, norb, ncol), nchi)
+                                          for i in range(ncol)])
+        data['frame'] = 0
+        self.momatrix = data
 
 
+_re_bso_00 = 'Atoms in this Fragment     Cart. coord.s (Angstrom)'
 _re_atm_00 = 'Coordinates'
 _re_bas_00 = '(Slater-type)  F U N C T I O N S'
 _re_bas_01 = 'BAS: List of all Elementary Cartesian Basis Functions'
