@@ -70,16 +70,13 @@ class Output(Editor):
         for center, symbol, seht in zip(self.atom.index,
                                         self.atom['symbol'],
                                         self.atom['set']):
-            bas = sets.get_group(seht)
-            for L, shell, N, pre in zip(bas['L'], bas['shell'],
-                                        bas['N'], bas['n']):
+            bas = sets.get_group(seht).groupby('L')
+            for L, grp in bas:
                 for l, m, n in enum_cartesian[L]:
-                    if any(i == L for i in (l, m, n)):
-                        prefac = N
-                    else:
-                        prefac = N * np.sqrt(pre)
-                    for key in data.keys():
-                        data[key].append(eval(key))
+                    prefac = 0 if any(i == L for i in (l, m, n)) else None
+                    for shell, r in zip(grp['shell'], grp['r']):
+                       if prefac is None: prefac = np.sqrt(L + r + 1)
+                       for key in data.keys(): data[key].append(eval(key))
         data['set'] = data.pop('seht')
         self.basis_set_order = pd.DataFrame.from_dict(data)
 
@@ -126,9 +123,6 @@ class Output(Editor):
                                               skiprows=skips).drop(0, axis=1,
                                               ).unstack().dropna().reset_index(drop=True)
         norb = len(data.index) // nchi
-        print(data.shape)
-        print(norb)
-        print(nchi)
         data['chi'] = np.tile(range(nchi), norb)
         data['orbital'] = np.concatenate([np.repeat(range(i, norb, ncol), nchi)
                                           for i in range(ncol)])

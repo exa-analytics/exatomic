@@ -93,8 +93,8 @@ class Nucpos(object):
         self.z  = '(z-{:.10f})'.format(z) if not np.isclose(z, 0) else 'z'
         self.r2 = '({}**2+{}**2+{}**2)'.format(self.x, self.y, self.z)
         self.r = self.r2 + '**0.5'
-        self.pre = '' if (pre is None or not pre) else '({})**{}*'.format(self.r, self.pre)
-        self.prefac = '' if prefac is None else '{}*'.format(prefac)
+        self.pre = '' if (pre is None or not pre) else '({})**{}*'.format(self.r, pre)
+        self.prefac = '' if (prefac is None or not prefac) else '{}*'.format(prefac)
 
 
 def make_fps(rmin=None, rmax=None, nr=None, nrfps=1,
@@ -109,10 +109,10 @@ def make_fps(rmin=None, rmax=None, nr=None, nrfps=1,
     as an exatomic.field.AtomicField.
 
     Args
+        nrfps (int): number of field parameters with same dimensions
         rmin (float): minimum value in an arbitrary cartesian direction
         rmax (float): maximum value in an arbitrary cartesian direction
         nr (int): number of grid points between rmin and rmax
-        nrfps (int): number of field parameters with same dimensions
         xmin (float): minimum in x direction (optional)
         xmax (float): maximum in x direction (optional)
         ymin (float): minimum in y direction (optional)
@@ -122,8 +122,6 @@ def make_fps(rmin=None, rmax=None, nr=None, nrfps=1,
         nx (int): steps in x direction (optional)
         ny (int): steps in y direction (optional)
         nz (int): steps in z direction (optional)
-        label (str): an identifier passed to the widget (optional)
-        field_type (str): alternative identifier (optional)
         ox (float): origin in x direction (optional)
         oy (float): origin in y direction (optional)
         oz (float): origin in z direction (optional)
@@ -136,6 +134,8 @@ def make_fps(rmin=None, rmax=None, nr=None, nrfps=1,
         dzi (float): x-component of z-vector specifying a voxel
         dzj (float): y-component of z-vector specifying a voxel
         dzk (float): z-component of z-vector specifying a voxel
+        label (str): an identifier passed to the widget (optional)
+        field_type (str): alternative identifier (optional)
 
     Returns
         fps (pd.Series): field parameters
@@ -157,7 +157,7 @@ def make_fps(rmin=None, rmax=None, nr=None, nrfps=1,
         dz = [0, 0, 0]
         if all(i is None for i in da): dz[aix] = (amax - amin) / na
         else: dz = da
-        d[akey] = [amin, amax, na, dz]
+        d[akey] = [amin, na, dz]
     fp = pd.Series({'ox': d['x'][0],    'oy': d['y'][0],      'oz': d['z'][0],
                     'nx': d['x'][1],    'ny': d['y'][1],      'nz': d['z'][1],
                    'dxi': d['x'][2][0], 'dyj': d['y'][2][1], 'dzk': d['z'][2][2],
@@ -276,7 +276,7 @@ def _cart_prefac(L, l, m, n, nucpos):
         prefac += fmt.format(*stargs)
     return [prefac.format(nuc=nucpos)]
 
-def gen_basfn(prefacs, group, r2str):
+def gen_basfn(prefacs, group, expnt):
     """
     Given a list of pre-exponential factors and a group of
     primitive functions (slice of basis set table), return
@@ -284,14 +284,14 @@ def gen_basfn(prefacs, group, r2str):
 
     Args
         prefacs (list): string of pre-exponential factors
-        group (exatomic.basis.GaussianBasisSet): a slice of the basis set table
-        r2str (str): the r**2 term in the exponent (including atomic position)
+        group (exatomic.basis.BasisSet): a slice of the basis set table
+        expnt (str): the exponential term (including atomic position)
     Returns
         basis function (str)
     """
     bastr = '{prefac}({prims})'
     bastrs = []
-    primitive = '{{N:.8f}}*{{d:.8f}}*np.exp(-{{alpha:.8f}}*{r2str})'.format(r2str=r2str)
+    primitive = '{{N:.8f}}*{{d:.8f}}*np.exp(-{{alpha:.8f}}*{expnt})'.format(expnt=expnt)
     for p, prefac in enumerate(prefacs):
         primitives = group.apply(lambda x: primitive.format(alpha=x.alpha, d=x.d, N=x.N), axis=1)
         bastrs.append(bastr.format(prefac=prefac, prims='+'.join(primitives.values)))
@@ -368,10 +368,14 @@ def gen_basfns(universe, frame=None):
                 basfns.append(gen_basfn(prefacs, grp, nucpos.r2))
         else:
             # Iterate over cartesian atom-centered basis functions
-            for L, l, m, n, shfunc, pre, prefac in zip(basord['L'], basord['l'],
-                                                       basord['m'], basord['n'],
-                                                       basord['shell'], basord['r'],
-                                                       basord['prefac']):
+            args = ['L', 'l', 'm', 'n', 'shell']
+            kwargs = {'pre': None, 'prefac': None}
+            if 'pre' in basord.columns: 
+                args.append('pre')
+                if 'prefac' in basord.columns: args.append('prefac')
+            for row in zip(*[basord[i] for i in args]): 
+                L, l, m, n, shfunc = row[:5]
+                pre, prefac = row[5:6], row[6:7]
                 nucpos = Nucpos(x, y, z, pre=pre, prefac=prefac)
                 grp = bas.get_group(L).groupby('shell').get_group(shfunc)
                 prefacs = _cart_prefac(L, l, m, n, nucpos)
@@ -414,7 +418,7 @@ def _determine_vectors(universe, vector):
         if homo < 15:
             return range(0, homo + 15)
         else:
-            return range(homo - 15, nclosed + 5)
+            return range(homo - 15, homo + 5)
     else:
         raise TypeError('Try specifying vector as a list or int')
 
@@ -434,8 +438,8 @@ def _evaluate_fields(universe, vector, mocoefs, npoints, nbas, x, y, z):
         vec = vectors.get_group(vno)
         for chi, coef in zip(vec['chi'], vec[mocoefs]):
             if np.abs(coef) > 1e-10:
-                field_data[:, i] += coef * basis_values[:, chi]
-    return field_data
+                fvals[:, i] += coef * bvals[:, chi]
+    return fvals
 
 def add_molecular_orbitals(universe, field_params=None, mocoefs=None,
                            vector=None, frame=None):
@@ -459,7 +463,7 @@ def add_molecular_orbitals(universe, field_params=None, mocoefs=None,
     # Preliminary setup for minimal input parameters
     vector = _determine_vectors(universe, vector)
     mocoefs = _determine_mocoefs(universe, mocoefs, vector)
-    frame = universe.atom.maxframe if frame is None else frame
+    frame = universe.atom.nframes + 1 if frame is None else frame
     field_params = _determine_field_params(universe, field_params, len(vector))
     # Array dimensions
     lastatom = universe.atom.last_frame

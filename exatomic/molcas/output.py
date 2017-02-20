@@ -123,9 +123,9 @@ class Output(Editor):
         basis_set_order = self.pandas_dataframe(start, stop, 4)
         basis_set_order.drop(0, 1, inplace=True)
         basis_set_order.columns = ['tag', 'type', 'center']
-        shls = self.gaussian_basis_set.nshells()
+        shls = self.basis_set.nshells
         sets = self.atom['set']
-        funcs = self.gaussian_basis_set.functions_by_shell()
+        funcs = self.basis_set.functions_by_shell()
         self.basis_set_order = _fix_basis_set_order(basis_set_order, shls, sets, funcs)
 
     def _basis_set_map(self):
@@ -165,7 +165,7 @@ class Output(Editor):
         return basis_map
 
 
-    def parse_gaussian_basis_set(self):
+    def parse_basis_set(self):
         '''
         Parses the primitive exponents, coefficients and shell if BSSHOW specified in SEWARD.
         '''
@@ -207,14 +207,12 @@ class Output(Editor):
             block = pd.concat(prims)
             block['set'] = sdx
             blocks.append(block)
-        gaussian_basis_set = pd.concat(blocks).reset_index(drop=True)
-        gaussian_basis_set['frame'] = 0
-        self.gaussian_basis_set = gaussian_basis_set
+        basis_set = pd.concat(blocks).reset_index(drop=True)
+        basis_set['frame'] = 0
+        self.basis_set = basis_set
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.parse_atom()
-        self.parse_gaussian_basis_set()
 
 
 _re_bas_order = 'Basis Label        Type   Center'

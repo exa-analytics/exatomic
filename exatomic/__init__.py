@@ -48,3 +48,5 @@ from exatomic import gaussian
 from exatomic import adf
 from exatomic import nbo
 from exatomic import mpl
+
+from .adf import TestEditor, TestOrbital

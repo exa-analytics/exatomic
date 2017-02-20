@@ -50,5 +50,4 @@ class Editor(BaseEditor, metaclass=Meta):
                 pass
             if result is not None:
                 kwargs[attr] = result
-        print(kwargs.keys())
         return Universe(**kwargs)

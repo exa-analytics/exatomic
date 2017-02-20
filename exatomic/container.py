@@ -32,7 +32,7 @@ from exatomic.molecule import (Molecule, compute_molecule, compute_molecule_com,
 from exatomic.widget import UniverseWidget
 from exatomic.field import AtomicField
 from exatomic.orbital import Orbital, Excitation, MOMatrix, DensityMatrix
-from exatomic.basis import (Overlap, GaussianBasisSet, BasisSetOrder)
+from exatomic.basis import Overlap, BasisSet, BasisSetOrder
 from exatomic.algorithms.orbital import add_molecular_orbitals
 from exatomic.interfaces.cclib import universe_from_cclib
 
@@ -60,7 +60,7 @@ class Meta(DataObject):
     excitation = Excitation
     density = DensityMatrix
     basis_set_order = BasisSetOrder
-    gaussian_basis_set = GaussianBasisSet
+    basis_set = BasisSet
 
 class Universe(Container, metaclass=Meta):
     """
@@ -74,16 +74,6 @@ class Universe(Container, metaclass=Meta):
     """
     _widget_class = UniverseWidget
     _cardinal = 'frame'
-
-    @property
-    def basis_set(self):
-        """
-        Attempts to find the correct basis set table for the universe.
-        """
-        if hasattr(self, '_gaussian_basis_set'):
-            return self.gaussian_basis_set
-        else:
-            raise BasisSetNotFoundError()
 
     @classmethod
     def from_cclib(cls, ccobj):

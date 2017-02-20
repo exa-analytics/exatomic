@@ -1,0 +1,33 @@
+# -*- coding: utf-8 -*-
+# Copyright (c) 2015-2016, Exa Analytics Development Team
+# Distributed under the terms of the Apache License 2.0
+
+try:
+    from exa.test.tester import UnitTester
+except:
+    from exa.tester import UnitTester
+from exatomic.adf.output import Output
+from exatomic import Cube
+from glob import glob
+import numpy as np
+
+
+class TestOrbital(UnitTester):
+    """Tests that orbitals are generated correctly for ADF."""
+    def setUp(self):
+        self.uni = Output('kr.log').to_universe()
+        cubs = sorted(glob("*cube"))
+        self.cub = Cube(cubs[0]).to_universe()
+        for fl in cubs[1:]: self.cub.add_field(Cube(fl).field)
+        self.uni.add_molecular_orbitals(vector=range(25), 
+                       field_params=self.cub.field.ix[0])
+
+
+    def test_field_values(self):
+        target = len(self.uni.field.field_values[0]) - 5
+        for fld, cub in zip(self.uni.field.field_values,
+                            self.cub.field.field_values):
+            matches = (np.isclose(fld,  cub, rtol=0.0001).sum(),
+                       np.isclose(fld, -cub, rtol=0.0001).sum())
+            self.assertTrue(any(i > target for i in matches))
+            
