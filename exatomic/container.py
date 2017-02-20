@@ -29,7 +29,7 @@ from exatomic.two import (AtomTwo, MoleculeTwo, compute_atom_two,
                           compute_bond_count, compute_molecule_two)
 from exatomic.molecule import (Molecule, compute_molecule, compute_molecule_com,
                                compute_molecule_count)
-#from exatomic.widget import UniverseWidget
+from exatomic.widget import UniverseWidget
 from exatomic.field import AtomicField
 from exatomic.orbital import Orbital, Excitation, MOMatrix, DensityMatrix
 from exatomic.basis import (Overlap, GaussianBasisSet, BasisSetOrder)
@@ -72,7 +72,7 @@ class Universe(Container, metaclass=Meta):
     Attributes:
         atom (:class:`~exatomic.atom.Atom`): Atomic coordinates, symbols, forces, etc.
     """
-    #_widget_class = UniverseWidget
+    _widget_class = UniverseWidget
     _cardinal = 'frame'
 
     @property
