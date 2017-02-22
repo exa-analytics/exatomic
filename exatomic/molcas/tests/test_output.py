@@ -17,7 +17,7 @@ class TestOutput(UnitTester):
 
     def setUp(self):
         cd = os.path.abspath(__file__).split(os.sep)[:-1]
-        self.uo2sp = Output(os.sep.join(cd + ['molcas-uo2.out']))
+        self.uo2sp = Output(os.sep.join(cd + ['mol-uo2-anomb.out']))
 
     def test_parse_atom(self):
         """Test the atom table parser."""
@@ -37,9 +37,9 @@ class TestOutput(UnitTester):
         self.assertEqual(df.shape, (6, 5))
         self.assertTrue(np.all(pd.notnull(df)))
 
-    def test_parse_gaussian_basis_set(self):
+    def test_parse_basis_set(self):
         """Test the gaussian basis set table parser."""
-        self.uo2sp.parse_gaussian_basis_set()
+        self.uo2sp.parse_basis_set()
         self.assertEqual(self.uo2sp.gaussian_basis_set.shape, (451, 6))
         self.assertTrue(np.all(pd.notnull(self.uo2sp.gaussian_basis_set)))
 
@@ -49,7 +49,7 @@ class TestOrb(UnitTester):
 
     def setUp(self):
         cd = os.path.abspath(__file__).split(os.sep)[:-1]
-        self.uo2sporb = Orb(os.sep.join(cd + ['molcas-uo2.Orb']))
+        self.uo2sporb = Orb(os.sep.join(cd + ['mol-uo2-anomb.Orb']))
 
     def test_parse_momatrix(self):
         """Test the momatrix table parser."""
