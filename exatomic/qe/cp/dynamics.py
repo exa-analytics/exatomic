@@ -19,7 +19,7 @@ from exa.relational.unit import Time
 from exatomic.atom import Atom
 from exatomic.frame import Frame
 from exatomic.container import Universe
-from exqe.cp.error import CPException
+from exatomic.qe.cp.error import CPException
 
 
 # Default columns

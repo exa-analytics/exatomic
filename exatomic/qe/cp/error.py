@@ -3,7 +3,7 @@
 Errors, Exceptions, and Warnings for QE's cp.x Module
 =======================================================
 '''
-from exqe.error import QEException
+from extomic.qe.error import QEException
 
 
 class CPException(QEException):
