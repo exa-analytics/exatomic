@@ -30,7 +30,7 @@ enum_cartesian = {0: [[0, 0, 0]],
                   2: [[2, 0, 0], [1, 1, 0], [1, 0, 1],
                       [0, 2, 0], [0, 1, 1], [0, 0, 2]],
                   3: [[3, 0, 0], [2, 1, 0], [2, 0, 1],
-                      [1, 2, 0], [1, 0, 2], [1, 1, 1],
+                      [1, 2, 0], [1, 1, 1], [1, 0, 2], 
                       [0, 3, 0], [0, 2, 1], [0, 1, 2], [0, 0, 3]],
                   4: [[4, 0, 0], [3, 1, 0], [3, 0, 1], [2, 2, 0], [2, 1, 1],
                       [2, 0, 2], [1, 3, 0], [1, 2, 1], [1, 1, 2], [1, 0, 3],
@@ -40,39 +40,6 @@ enum_cartesian = {0: [[0, 0, 0]],
                       [1, 4, 0], [1, 3, 1], [1, 2, 2], [1, 1, 3], [1, 0, 4],
                       [0, 5, 0], [0, 4, 1], [0, 3, 2], [0, 2, 3], [0, 1, 4],
                       [0, 0, 5]]}
-
-#def cartesian_gtf_exponents(l):
-#    '''
-#    Generic generation of cartesian Gaussian type function exponents.
-#
-#    Generates the linearly dependent, :math:`i`, :math:`j`, :math:`k`, values for the Gaussian
-#    type functions of the form:
-#
-#    .. math::
-#
-#        f(x, y, z) = x^{i}y^{j}z^{k}e^{-\alpha r^{2}}
-#
-#    Args:
-#        l (int): Orbital angular momentum
-#
-#    Returns:
-#        array: Array of i, j, k values for cartesian Gaussian type functions
-#
-#    Note:
-#        This returns the linearly dependent indices (array) in arbitrary
-#        order.
-#    '''
-#    m = l + 1
-#    n = (m + 1) * m // 2
-#    values = np.empty((n, 3), dtype=np.int64)
-#    h = 0
-#    for i in range(m):
-#        for j in range(m):
-#            for k in range(m):
-#                if i + j + k == l:
-#                    values[h] = [k, j, i]
-#                    h += 1
-#    return values
 
 
 def solid_harmonics(l_max):
@@ -150,7 +117,6 @@ def car2sph_transform_matrices(sh, l_tot):
                     if power == nexpr[1]:
                         ndict[lcur][moff, powers.index(power)] = nexpr[0]
     return ndict
-#from numba import jit, vectorize, int64, float64
 
 def fac(n):
     if n < 0: return 0
@@ -177,6 +143,9 @@ def normalize(alpha, L):
     denom = (fac2(2 * L - 1)) ** (0.5)
     return prefac * numer / denom
 
+def sto_normalize(alpha, n):
+    return (2 * alpha) ** n * ((2 * alpha) / fac(2 * n)) ** 0.5
+
 def _vec_fac(n):
     return fac(n)
 
@@ -184,10 +153,20 @@ def _vec_fac2(n):
     return fac2(n)
 
 def _vec_normalize(alpha, L):
-    prefac = (2 / np.pi) ** (0.75)
-    numer = 2 ** (L) * alpha ** ((L + 1.5) / 2)
-    denom = (_vec_fac2(2 * L - 1)) ** (0.5)
-    return prefac * numer / denom
+    return normalize(alpha, L)
+
+def _vec_sto_normalize(alpha, n):
+    return sto_normalize(alpha, n)
+
+def _ovl_indices(nbas, nel):
+    chis = np.empty((nel, 2), dtype=np.int64)
+    cnt = 0
+    for i in range(nbas):
+        for j in range(i + 1): 
+            chis[cnt, 0] = i
+            chis[cnt, 1] = j
+    return chis
+    
 
 def _overlap(x1, x2, y1, y2, z1, z2, l1, l2, m1, m2, n1, n2, N1, N2, alpha1, alpha2):
     '''
@@ -340,9 +319,12 @@ if config['dynamic']['numba'] == 'true':
     fac = jit(nopython=True)(fac)
     fac2 = jit(nopython=True)(fac2)
     normalize = jit(nopython=True)(normalize)
+    sto_normalize = jit(nopython=True)(sto_normalize)
+    _ovl_indices = jit(nopython=True)(_ovl_indices)
     _vec_fac = vectorize(['int64(int64)'])(_vec_fac)
     _vec_fac2 = vectorize(['int64(int64)'])(_vec_fac2)
     _vec_normalize = vectorize(['float64(float64,int64)'])(_vec_normalize)
+    _vec_sto_normalize = vectorize(['float64(float64,int64)'])(_vec_sto_normalize)
     _overlap = vectorize(['float64(float64,float64,float64,float64,float64,float64,int64, \
                           int64,int64,int64,int64,int64,float64,float64,float64,float64)'])(_overlap)
     _wrap_overlap = jit()(_wrap_overlap)

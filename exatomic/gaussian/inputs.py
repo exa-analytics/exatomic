@@ -8,6 +8,7 @@ Editor class and helper function for writing input files.
 """
 
 import os
+import numpy as np
 from .editor import Editor
 from exatomic import __version__
 
@@ -28,7 +29,7 @@ class Input(Editor):
 
     @classmethod
     def from_universe(cls, uni, link0='', route='#P HF/6-31G(d)', title='', name='',
-                      charge=0, mult=1, basis='', ecp='', options='', fp=None):
+                      charge=0, mult=1, basis='', ecp='', options='', writedir=None):
         """
         Generate an input Editor from a universe. Arguments can either be strings
         or iterables of key, value pairs (dict, list, tuple) and/or just strings.
@@ -115,7 +116,7 @@ def tuning_inputs(uni, name, mult, charge, basis, gammas, alphas,
     Returns
         editors (list): input files as exa.Editors
     """
-    inuni = set(uni.atom.last_frame_atoms)
+    inuni = set(uni.atom.unique_atoms)
     try:
         inbas = set([atom for atom, bas in basis])
         if inuni != inbas:

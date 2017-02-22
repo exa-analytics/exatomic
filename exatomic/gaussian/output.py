@@ -20,7 +20,44 @@ from exatomic.algorithms.basis import lmap
 
 z_to_symbol = z_to_symbol()
 
+from numba import jit, int64
+@jit(nopython=True, cache=True)
+def _triangular_indices(ncol, nbas, ndim):
+    idx = np.empty((dim, 3), dtype=np.int64)
+    cnt = 0
+    for i in range(ncol):
+        for j in range(i, nbas, ncol):
+            for k in range(j, nbas):
+                idx[cnt,0] = j
+                idx[cnt,1] = k
+                idx[cnt,2] = 0
+                cnt += 1
+    return idx
+
 class Output(Editor):
+
+    def _parse_triangular_matrix(self, regex, column='coef', values_only=False):
+        found = self.find_next(_rebas02, keys_only=True)
+        nbas = int(self[found].split()[0])
+        found = self.find_next(regex, keys_only=True)
+        if not found: return
+        ncol = len(self[found + 1].split())
+        start = found + 2
+        rmdr = nbas % ncol
+        skips = np.array(list(reversed(range(rmdr, nbas + rmdr, ncol))))
+        skips = np.cumsum(skips) + np.arange(len(skips))
+        stop = start + skips[-1]
+        matrix = self.pandas_dataframe(start, stop, ncol + 1,
+                                       index_col=0, skiprows=skips,
+                                       ).unstack().dropna().apply(
+                                       lambda x: x.replace('D', 'E')
+                                       ).astype(np.float64).values
+        if values_only: return matrix
+        idxs = _triangular_indices(ncol, nbas, matrix.shape[0])
+        return pd.DataFrame.from_dict({'chi0': idxs[:,0],
+                                       'chi1': idxs[:,1],
+                                      'frame': idxs[:,2],
+                                       column: matrix})
 
     def parse_atom(self):
         # Find our data
@@ -56,7 +93,7 @@ class Output(Editor):
         atom['symbol'] = atom['Z'].map(z_to_symbol)
         self.atom = atom
 
-    def parse_gaussian_basis_set(self):
+    def parse_basis_set(self):
         # First check if gfinput was specified
         check = self.regex(_rebas01, stop=1000, flags=re.IGNORECASE)
         if not check: return
@@ -68,7 +105,7 @@ class Output(Editor):
         while not len(self[start].split()) > 4: start -= 1
         # Call out to the mess that actually parses it
         df = self.pandas_dataframe(start + 1, stop, 4)
-        self.gaussian_basis_set, setmap = _basis_set(df)
+        self.basis_set, setmap = _basis_set(df)
         # Map the unique basis sets on atomic centers
         self.atom['set'] = self.atom['set'].map(setmap)
 
@@ -310,6 +347,18 @@ class Output(Editor):
         self.frequency = frequency
 
 
+    def parse_overlap(self):
+        overlap = self._parse_triangular_matrix(_reovl01, 'coef')
+        if overlap is not None: self.overlap = overlap
+
+    def parse_multipole(self):
+        mltpl = self._parse_triangular_matrix(self, _reixn.format(1), 'ix1')
+        if mltpl is not None:
+            mltpl['ix2'] = self._parse_triangular_matrix(self, _reixn.format(2), 'ix2', True)
+            mltpl['ix3'] = self._parse_triangular_matrix(self, _reixn.format(3), 'ix3', True)
+            self.multipole = mltpl
+
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
@@ -431,6 +480,9 @@ _refreq = 'Freq'
 # TDDFT flags
 _retddft = 'TD'
 _reexcst = 'Excited State'
+# Triangular matrices -- One electron integrals
+_reovl01 = '*** Overlap ***'
+_reixn = 'IX=    {}'
 
 class Fchk(Editor):
 
@@ -465,7 +517,7 @@ class Fchk(Editor):
                                             'y': pos[:,1], 'z': pos[:,2],
                                             'set': range(1, len(symbols) + 1)})
 
-    def parse_gaussian_basis_set(self):
+    def parse_basis_set(self):
         found = self.find(_rebasdim, _reshelltype, _reprimpershell,
                           _reshelltoatom, _reprimexp, _recontcoef,
                           _repcontcoef, keys_only=True)
@@ -482,7 +534,7 @@ class Fchk(Editor):
         shelltoatom = self._dfme(found[_reshelltoatom], dim1).astype(np.int64)
         primexps = self._dfme(found[_reprimexp], dim2)
         contcoefs = self._dfme(found[_recontcoef], dim2)
-        pcontcoefs = self._dfme(found[_repcontcoef], dim2)
+        if found[_repcontcoef]: pcontcoefs = self._dfme(found[_repcontcoef], dim2)
         # Keep track of some things
         ptr, prevatom, shell, sp = 0, 0, 0, False
         # Temporary storage of basis set data
@@ -511,7 +563,7 @@ class Fchk(Editor):
             shell += 1
             sp = False
         sets, setmap = _dedup(pd.DataFrame.from_dict(ddict))
-        self.gaussian_basis_set = sets
+        self.basis_set = sets
         self.atom['set'] = self.atom['set'].map(setmap)
 
     def parse_orbital(self):
@@ -520,7 +572,7 @@ class Fchk(Editor):
 
     def parse_basis_set_order(self):
         # Unique basis sets
-        sets = self.gaussian_basis_set.groupby('set')
+        sets = self.basis_set.groupby('set')
         data = []
         # Gaussian orders basis functions strangely
         # Will likely need an additional mapping for cartesian

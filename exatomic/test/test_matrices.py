@@ -8,10 +8,10 @@ Testing for Matrix base classes and numba funcs.
 """
 
 from exa.test import UnitTester
-from exa.matrices import (_symmetric_from_square,
-                          _symmetric_to_square,
-                          _square_from_square,
-                          _square_to_square)
+from exatomic.matrices import (_symmetric_from_square,
+                               _symmetric_to_square,
+                               _square_from_square,
+                               _square_to_square)
 
 
 class TestNumbaFuncs(UnitTester):

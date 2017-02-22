@@ -196,7 +196,7 @@ def functional_results(adir, code='gaussian', ip=False,
         try:
             curvs.append(compute_curvature(*outs, tag=tag))
         except:
-            print(comp, func 'not computed')
+            print(comp, func, 'not computed')
     return curvs
 
 

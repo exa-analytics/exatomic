@@ -10,8 +10,13 @@ import pandas as pd
 import networkx as nx
 import warnings
 from networkx.algorithms.components import connected_components
-from exa.numerical import DataFrame
-from exa.relational.isotope import symbol_to_element_mass
+try:
+    from exa.core.numerical import DataFrame
+    from exa.cms.isotope import symbol_to_mass
+    symbol_to_element_mass = symbol_to_mass
+except ImportError:
+    from exa.numerical import DataFrame
+    from exa.relational.isotope import symbol_to_element_mass
 from exatomic.formula import string_to_dict, dict_to_string
 
 

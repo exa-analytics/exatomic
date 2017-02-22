@@ -11,12 +11,19 @@ from numbers import Integral
 import numpy as np
 import pandas as pd
 from traitlets import Dict, Unicode
-from exa.numerical import DataFrame, SparseDataFrame, Series
-from exa.relational.isotope import (symbol_to_color, symbol_to_radius, symbol_to_z,
-                                    symbol_to_element_mass)
+try:
+    from exa.core.numerical import DataFrame, SparseDataFrame, Series
+    from exa.cms.isotope import (symbol_to_color, symbol_to_radius, symbol_to_znum,
+                                    symbol_to_mass)
+except ImportError:
+    from exa.numerical import DataFrame, SparseDataFrame, Series
+    from exa.relational.isotope import (symbol_to_color, symbol_to_radius,
+                                        symbol_to_z, symbol_to_element_mass)
+    symbol_to_znum = symbol_to_z
+    symbol_to_mass = symbol_to_element_mass
 from exatomic import Length
 from exatomic.error import PeriodicUniverseError
-from exatomic.algorithms.distance import minimal_image_counts
+#from exatomic.algorithms.distance import minimal_image_counts
 from exatomic.algorithms.geometry import make_small_molecule
 
 
@@ -201,22 +208,22 @@ class UnitAtom(SparseDataFrame):
     _index = 'atom'
     _columns = ['x', 'y', 'z']
 
-    @classmethod
-    def from_universe(cls, universe):
-        """
-        """
-        if universe.frame.is_periodic():
-            xyz = universe.atom[['x', 'y', 'z']].values.astype(np.float64)
-            if 'rx' not in universe.frame:
-                universe.frame.compute_cell_magnitudes()
-            counts = universe.frame['atom_count'].values.astype(np.int64)
-            rxyz = universe.frame[['rx', 'ry', 'rz']].values.astype(np.float64)
-            oxyz = universe.frame[['ox', 'oy', 'oz']].values.astype(np.float64)
-            unit = pd.DataFrame(minimal_image_counts(xyz, rxyz, oxyz, counts), columns=['x', 'y', 'z'])
-            unit = unit[unit != xyz].astype(np.float64).to_sparse()
-            unit.index = universe.atom.index
-            return cls(unit)
-        raise PeriodicUniverseError()
+#    @classmethod
+#    def from_universe(cls, universe):
+#        """
+#        """
+#        if universe.frame.is_periodic():
+#            xyz = universe.atom[['x', 'y', 'z']].values.astype(np.float64)
+#            if 'rx' not in universe.frame:
+#                universe.frame.compute_cell_magnitudes()
+#            counts = universe.frame['atom_count'].values.astype(np.int64)
+#            rxyz = universe.frame[['rx', 'ry', 'rz']].values.astype(np.float64)
+#            oxyz = universe.frame[['ox', 'oy', 'oz']].values.astype(np.float64)
+#            unit = pd.DataFrame(minimal_image_counts(xyz, rxyz, oxyz, counts), columns=['x', 'y', 'z'])
+#            unit = unit[unit != xyz].astype(np.float64).to_sparse()
+#            unit.index = universe.atom.index
+#            return cls(unit)
+#        raise PeriodicUniverseError()
 
 
 class ProjectedAtom(SparseDataFrame):

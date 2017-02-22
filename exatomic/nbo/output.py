@@ -76,7 +76,7 @@ class MOMatrix(Editor):
     def to_universe(self):
         raise NotImplementedError('This editor has no parse_atom method.')
 
-    def parse_momatrix(self, nbas, column_name=None):
+    def parse_momatrix(self, nbas, column=None):
         start = 3
         ncol = len(self[start].split())
         if nbas <= ncol:
@@ -91,8 +91,8 @@ class MOMatrix(Editor):
         occstop = occstart + occrows
         momat = self.pandas_dataframe(start, stop, range(ncol)).stack().reset_index(drop=True)
         occvec = self.pandas_dataframe(occstart, occstop, range(ncol)).stack().reset_index(drop=True)
-        momat.index.name = column_name if column_name is not None else 'coef1'
-        occvec.index.name = column_name if column_name is not None else 'coef1'
+        momat.index.name = column if column is not None else 'coef1'
+        occvec.index.name = column if column is not None else 'coef1'
         self.momatrix = momat
         self.occupation_vector = occvec
 

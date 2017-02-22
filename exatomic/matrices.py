@@ -31,7 +31,7 @@ def _symmetric_to_square(ix0, ix1, values):
     for i, j, val in zip(ix0, ix1, values):
         square[i, j] = val
         square[j, i] = val
-    retun square
+    return square
 
 @jit(nopython=True, cache=True)
 def _square_from_square(square):
@@ -81,7 +81,7 @@ class _Matrix(DataFrame):
         return self.columns_to_order[0]
 
     @property
-    def columns_to_order
+    def columns_to_order(self):
         if not hasattr(self, '_data'): return
         notcols = set(self.indices).union(self._categories.keys())
         return list(set(self.columns).difference(notcols))
@@ -172,7 +172,7 @@ class Triangle(_Symmetric):
         Correctly adds a column, ensuring that if index ordering
         is not the same between two instances, that it is remedied.
         """
-        if not isinstance(other, Triangle, column=None):
+        if not isinstance(other, Triangle):
             other = Triangle(other)
         idx0, idx1 = self.indices
         ocol = other.defaultcolumn if column is None else column

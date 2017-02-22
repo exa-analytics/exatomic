@@ -11,12 +11,18 @@ chemistry experiments in a unified and systematic way. Data is organized into
 simulations), step number (e.g. geometry optimization), or an arbitrary index
 (e.g. density functional theory exchange correlation functional).
 """
-import pandas as pd
+import six
 import numpy as np
-from exa.numerical import Field
-from exa.container import TypedMeta, Container
+import pandas as pd
+try:
+    from exa.core.base import DataObject
+    from exa.core.numerical import Field
+    from exa.core.container import Container
+except ImportError:
+    from exa.container import TypedMeta as DataObject
+    from exa.numerical import Field
+    from exa.container import Container
 from exatomic.error import BasisSetNotFoundError
-from exatomic.widget import UniverseWidget
 from exatomic.frame import Frame, compute_frame_from_atom
 from exatomic.atom import Atom, UnitAtom, ProjectedAtom, VisualAtom, Frequency
 from exatomic.two import (AtomTwo, MoleculeTwo, compute_atom_two,
@@ -26,11 +32,12 @@ from exatomic.molecule import (Molecule, compute_molecule, compute_molecule_com,
 from exatomic.widget import UniverseWidget
 from exatomic.field import AtomicField
 from exatomic.orbital import Orbital, Excitation, MOMatrix, DensityMatrix
-from exatomic.basis import (Overlap, GaussianBasisSet, BasisSetOrder)
+from exatomic.basis import Overlap, BasisSet, BasisSetOrder
 from exatomic.algorithms.orbital import add_molecular_orbitals
+from exatomic.interfaces.cclib import universe_from_cclib
 
 
-class Meta(TypedMeta):
+class Meta(DataObject):
     """
     Defines strongly typed attributes of the :class:`~exatomic.universe.Universe`
     and :class:`~exatomic.editor.AtomicEditor` objects. All "aliases" below are
@@ -53,7 +60,7 @@ class Meta(TypedMeta):
     excitation = Excitation
     density = DensityMatrix
     basis_set_order = BasisSetOrder
-    gaussian_basis_set = GaussianBasisSet
+    basis_set = BasisSet
 
 class Universe(Container, metaclass=Meta):
     """
@@ -68,15 +75,9 @@ class Universe(Container, metaclass=Meta):
     _widget_class = UniverseWidget
     _cardinal = 'frame'
 
-    @property
-    def basis_set(self):
-        """
-        Attempts to find the correct basis set table for the universe.
-        """
-        if hasattr(self, '_gaussian_basis_set'):
-            return self.gaussian_basis_set
-        else:
-            raise BasisSetNotFoundError()
+    @classmethod
+    def from_cclib(cls, ccobj):
+        return cls(**universe_from_cclib(ccobj))
 
     # Note that compute_* function may be called automatically by typed
     # properties defined in UniverseMeta
@@ -215,7 +216,7 @@ class Universe(Container, metaclass=Meta):
         return len(self.frame)
 
 
-def concat(*universes, name=None, description=None, meta=None):
+def concat(name=None, description=None, meta=None, *universes):
     """
     Warning:
         This function is not fully featured or tested yet!

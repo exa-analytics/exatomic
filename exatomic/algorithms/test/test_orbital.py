@@ -4,6 +4,8 @@
 """
 Tests for building molecular orbitals
 """
+import numpy as np
+import pandas as pd
 
 from exa.test import UnitTester
 from exatomic.algorithms.orbital import (make_fps, solid_harmonics, clean_sh,

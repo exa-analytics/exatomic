@@ -19,7 +19,10 @@ method to return the matrix as we see it on a piece of paper.
 '''
 import numpy as np
 import pandas as pd
-from exa import DataFrame
+try:
+    from exa.core.dataframe import DataFrame
+except ImportError:
+    from exa.numerical import DataFrame
 from exatomic import Energy
 from exatomic.algorithms.orbital import (density_from_momatrix,
                                          density_as_square,

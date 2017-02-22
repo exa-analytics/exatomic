@@ -194,7 +194,7 @@ def _obtain_arrays(uni):
 class Input(Editor):
 
     @classmethod
-    def from_universe(cls, uni, occvec=None, name=''):
+    def from_universe(cls, uni, occvec=None, column=None, name=''):
         """
         Generate an NBO input from a properly populated universe.
         uni must have atom, basis_set, basis_set_order, overlap,
@@ -250,7 +250,9 @@ class Input(Editor):
         elif hasattr(uni, 'occupation_vector'):
             d = DensityMatrix.from_momatrix(uni.momatrix, uni.occupation_vector)
         elif occvec is not None:
-            d = DensityMatrix.from_momatrix(uni.momatrix, occvec)
+            if column is None:
+                raise Exception("Must provide column name if providing occvec.")
+            d = DensityMatrix.from_momatrix(uni.momatrix, occvec, column=column)
         matargs['density'] = _clean_to_string(d['coef'].values, **margs)
         # Compute tr[P*S] must be equal to number of electrons
         if matargs['density']:

@@ -11,8 +11,11 @@ frames by unique atomic coordinates, a different level of theory, etc.
 """
 import numpy as np
 from traitlets import Float
-from exa.numerical import DataFrame
-from exa.math.vector.cartesian import magnitude_xyz
+try:
+    from exa.core.numerical import DataFrame
+except ImportError:
+    from exa.numerical import DataFrame
+#    from exa.math.vector.cartesian import magnitude_xyz
 
 
 class Frame(DataFrame):
@@ -44,20 +47,6 @@ class Frame(DataFrame):
     # Note that adding "frame" below turns the index of this dataframe into a trait
     _traits = ['xi', 'xj', 'xk', 'yi', 'yj', 'yk', 'zi', 'zj', 'zk',
                'ox', 'oy', 'oz', 'frame']
-
-    def create_cubic_lattice(self, a, ox=0.0, oy=0.0, oz=0.0):
-        """
-        Create a static cubic cell lattice for the current universe.
-        """
-        self['ox'] = ox
-        self['oy'] = oy
-        self['oz'] = oz
-        for i, xyz in enumerate(["x", "y", "z"]):
-            for j, ijk in enumerate(["i", "j", "k"]):
-                if i == j:
-                    self[xyz+ijk] = a
-                else:
-                    self[xyz+ijk] = 0.0
 
     def is_periodic(self, how='all'):
         """
@@ -93,13 +82,13 @@ class Frame(DataFrame):
                 return True
         raise PeriodicUniverseError()
 
-    def compute_cell_magnitudes(self):
-        """
-        Compute the magnitudes of the unit cell vectors (rx, ry, rz).
-        """
-        self['rx'] = magnitude_xyz(self['xi'].values, self['yi'].values, self['zi'].values).astype(np.float64)
-        self['ry'] = magnitude_xyz(self['xj'].values, self['yj'].values, self['zj'].values).astype(np.float64)
-        self['rz'] = magnitude_xyz(self['xk'].values, self['yk'].values, self['zk'].values).astype(np.float64)
+    #def compute_cell_magnitudes(self):
+    #    """
+    #    Compute the magnitudes of the unit cell vectors (rx, ry, rz).
+    #    """
+    #    self['rx'] = magnitude_xyz(self['xi'].values, self['yi'].values, self['zi'].values).astype(np.float64)
+    #    self['ry'] = magnitude_xyz(self['xj'].values, self['yj'].values, self['zj'].values).astype(np.float64)
+    #    self['rz'] = magnitude_xyz(self['xk'].values, self['yk'].values, self['zk'].values).astype(np.float64)
 
 
 def compute_frame(universe):
@@ -131,3 +120,4 @@ def compute_frame_from_atom(atom):
     frame.index = frame.index.astype(np.int64)
     frame.columns = ['atom_count']
     return Frame(frame)
+>>>>>>> exa-analytics/master

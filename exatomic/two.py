@@ -30,8 +30,12 @@ guide for the types of data found in two body tables provided by this module
 import numpy as np
 import pandas as pd
 from traitlets import Unicode
-from exa.numerical import DataFrame, SparseDataFrame
-from exa.relational.isotope import symbol_to_radius
+try:
+    from exa.core.numerical import DataFrame, SparseDataFrame
+    from exa.cms.isotope import symbol_to_radius
+except ImportError:
+    from exa.numerical import DataFrame, SparseDataFrame
+    from exa.relational.isotope import symbol_to_radius
 from exa.math.vector.cartesian import pdist_euc_dxyz_idx
 from exatomic.algorithms.distance import periodic_pdist_euc_dxyz_idx
 
@@ -161,7 +165,7 @@ def compute_free_two_si(universe, mapper=None, bond_extra=0.45):
     atom1 = pd.Series(atom1, dtype='category')
     fdx = pd.Series(fdx, dtype='category')
     two = pd.DataFrame.from_dict({'dx': dx, 'dy': dy, 'dz': dz, 'distance': distance,
-                                  'atom0': atom0, 'atom1': atom1, 'frame': fdx})
+                                  'atom0': atom0, 'atom1': atom1, 'frame': frame})
     two = AtomTwo(two)
     two.compute_bonds(universe.atom['symbol'], mapper=mapper)
     return two
