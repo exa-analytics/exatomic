@@ -4,3 +4,6 @@
 from exatomic.adf import tests
 
 from .output import Output
+import warnings
+
+warnings.warn("Alpha release, bugs may be present")
