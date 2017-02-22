@@ -18,7 +18,7 @@ class TestOrbital(UnitTester):
     """Tests that orbitals are generated correctly for ADF."""
     def setUp(self):
         cd = os.path.abspath(__file__).split(os.sep)[:-1]
-        self.uni = Output(os.sep.join(cd + ['kr.log']).to_universe()
+        self.uni = Output(os.sep.join(cd + ['kr.out']).to_universe()
         cubs = sorted(glob(os.sep.join(cd + ["*cube"])))
         self.cub = Cube(cubs[0]).to_universe()
         for fl in cubs[1:]: self.cub.add_field(Cube(fl).field)
