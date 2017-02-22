@@ -19,8 +19,8 @@ class TestOrbital(UnitTester):
         cubs = sorted(glob("*cube"))
         self.cub = Cube(cubs[0]).to_universe()
         for fl in cubs[1:]: self.cub.add_field(Cube(fl).field)
-        self.uni.add_molecular_orbitals(vector=range(25), 
-                       field_params=self.cub.field.ix[0])
+        self.uni.add_molecular_orbitals(vector=range(len(cubs)), 
+                              field_params=self.cub.field.ix[0])
 
 
     def test_field_values(self):
