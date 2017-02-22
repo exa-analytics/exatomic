@@ -81,7 +81,7 @@ class _Matrix(DataFrame):
         return self.columns_to_order[0]
 
     @property
-    def columns_to_order
+    def columns_to_order(self):
         if not hasattr(self, '_data'): return
         notcols = set(self.indices).union(self._categories.keys())
         return list(set(self.columns).difference(notcols))
