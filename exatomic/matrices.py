@@ -31,7 +31,7 @@ def _symmetric_to_square(ix0, ix1, values):
     for i, j, val in zip(ix0, ix1, values):
         square[i, j] = val
         square[j, i] = val
-    retun square
+    return square
 
 @jit(nopython=True, cache=True)
 def _square_from_square(square):
