@@ -111,57 +111,40 @@ class Output(Editor):
 
     def parse_orbital(self):
         # Find where our data is
-        found = self.regex(_reorb01, _reorb02, _rebas02)
-        # Basis dimension
-        nbas = int(found[_rebas02][0][1].split()[0])
+        found = self.regex(_reorb01, _reorb02, _rebas02, _realphaelec)
         # If no orbital energies, quit
         if not found[_reorb01]: return
+        # Basis dimension
+        nbas = int(found[_rebas02][0][1].split()[0])
         # Check if open shell
         os = any(('Beta' in ln for lno, ln in found[_reorb01]))
-        # Find out how big our data is
-        # 5 eigenvalues are printed per line
-        nrows = len(found[_reorb01]) * 5 // nbas
-        nsets = nrows // 2 if os else nrows
-        # Allocate a numpy array to store it
-        # index is arbitrary for the momentum
-        dtypes = [('energy', 'f8'), ('occupation', 'f8'), ('vector', 'f8'),
-                  ('spin', 'i8'), ('group', 'i8')]
-        data = np.empty((nbas * nrows,), dtype=dtypes)
-        cnt, vec, grp = 0, 0, 0
-        grpchk = 2 * nbas if os else nbas
-        # Populate and increment accordingly
-        for lno, ln in found[_reorb01]:
-            for i in _orbslice:
-                en = ln[28:][i]
-                if en:
-                    if 'occ' in ln:
-                        occ = 1 if os else 2
-                    else: occ = 0
-                    spn = 0 if 'Alpha' in ln else 1
-                    data[cnt] = (en, occ, vec, spn, grp)
-                    cnt += 1
-                    vec += 1
-                    if cnt == grpchk: grp += 1
-                    if vec == nbas: vec = 0
-        orbital = pd.DataFrame(data)
-        # Still no good way of dealing with multiple orbital sets per frame
-        # Handled temporarily by the use of 'index' rather than 'frame'
-        #frmstride = nbas * 2 if os else nbas
-        #orbital['frame'] = np.repeat(range(len(orbital)//frmstride), frmstride)
-        orbital['frame'] = 0
+        occ = 1 if os else 2
+        # Find number of electrons
+        ae, x, x, be, x, x = found[_realphaelec][0][1].split()
+        ae, be = int(ae), int(be)
+        # Get orbital energies
+        ens = '\n'.join([ln.split('--')[1][1:] for i, ln in found[_reorb01]])
+        ens = pd.read_fwf(StringIO(ens), header=None, 
+                          widths=np.repeat(10, 5)).stack().values
+        # Other arrays
+        if os:
+            norbs = len(ens) // 2
+            vecs = np.concatenate((range(norbs), range(norbs)))
+            occs = np.concatenate((np.repeat(occ, ae), np.repeat(0, norbs - ae),
+                                   np.repeat(occ, be), np.repeat(0, norbs - be)))
+            spin = np.concatenate((np.repeat(0, norbs), np.repeat(1, norbs)))
+        else:
+            norbs = len(ens)
+            vecs = range(norbs)
+            occs = np.concatenate((np.repeat(occ, ae), np.repeat(0, norbs - ae)))
+            spin = np.repeat(0, norbs)
+        orbital = pd.DataFrame.from_dict({'energy': ens, 'occupation': occs,
+                                          'vector': vecs, 'spin': spin, 'frame': 0,
+                                          'group': 0})
         # Symmetry labels
         if found[_reorb02]:
             # Gaussian seems to print out a lot of these blocks
-            # try to get a handle on them
-            if len(found[_reorb02]) != nsets:
-                if nsets == 1:
-                    found[_reorb02] = found[_reorb02][-1:]
-                elif nsets == 2:
-                    found[_reorb02] = found[_reorb02][:1] + found[_reorb02][-1:]
-                else:
-                    print('Mismatch in eigenvalue and symmetry blocks. '
-                          'Continuing without symmetry.')
-                    found[_reorb02] = []
+            # maybe a better way to deal with this
             allsyms = []
             match = ['(', 'Orbitals']
             for i, (start, ln) in enumerate(found[_reorb02]):
@@ -176,7 +159,7 @@ class Output(Editor):
                 # cat the syms for each block together
                 allsyms += syms
             # Add it to our dataframe
-            orbital['symmetry'] = allsyms
+            orbital['symmetry'] = allsyms[-orbital.shape[0]:]
         self.orbital = orbital
 
 

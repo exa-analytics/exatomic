@@ -168,10 +168,18 @@ def _dir_to_dict(adir, tuning=False):
         if os.path.isdir(adir + fl): continue
         if fl.startswith('.'): continue
         if tuning:
-            comp, gam, alp, chgext = fl.split('-')
-            func = '-'.join([gam, alp])
+            try:
+                comp, gam, alp, chgext = fl.split('-')
+                func = '-'.join([gam, alp])
+            except ValueError:
+                print('{} is ignored.'.format(fl))
+                continue
         else:
-            comp, func, chgext = fl.split('-')
+            try:
+                comp, func, chgext = fl.split('-')
+            except ValueError:
+                print('{} is ignored.'.format(fl))
+                continue
         files.setdefault(func, {})
         files[func][chgext.split('.')[0]] = adir + fl
     return files
