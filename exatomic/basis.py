@@ -36,7 +36,7 @@ class BasisSet(DataFrame):
 
     def shells(self):
         return [lorder[l] for l in self.L.unique()]
-    
+
     @property
     def nshells(self):
         return len(self.shells())
@@ -70,6 +70,7 @@ class BasisSet(DataFrame):
         norm = _vec_normalize if gaussian else _vec_sto_normalize
         colm = 'L' if gaussian else 'n'
         self['N'] = norm(self['alpha'].values, self[colm].values)
+        self['Nd'] = self['d'] * self['N']
 
 
 class GaussianBasisSet(BasisSet):
@@ -150,6 +151,7 @@ class BasisSetOrder(DataFrame):
     """
     _columns = ['center', 'L', 'shell']
     _index = 'chi'
+    _cardinal = ('frame', np.int64)
     _categories = {'L': np.int64}
 
 
