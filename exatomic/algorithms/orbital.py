@@ -24,10 +24,11 @@ from exa import Series
 from exatomic._config import config
 from exatomic.field import AtomicField
 from exa.relational.isotope import symbol_to_z
-from exatomic.algorithms.basis import solid_harmonics, _vec_normalize
+from exatomic.algorithms.basis import solid_harmonics, clean_sh
 
 symbol_to_z = symbol_to_z()
 halfmem = virtual_memory().total / 2
+solhar = clean_sh(solid_harmonics(6))
 
 #####################################################################
 # Numba vectorized operations for Orbital, MOMatrix, Density tables #
@@ -166,27 +167,6 @@ def make_fps(rmin=None, rmax=None, nr=None, nrfps=1,
         })
     return pd.concat([fp] * nrfps, axis=1).T
 
-def clean_sh(sh):
-    """Turns symbolic solid harmonic functions into string representations
-    to be using in generating basis functions.
-
-    Args
-        sh (OrderedDict): Output from exatomic.algorithms.basis.solid_harmonics
-
-    Returns
-        clean (OrderedDict): cleaned strings
-    """
-    _replace = {'x': '{x}', 'y': '{y}', 'z': '{z}', ' - ': ' -'}
-    _repatrn = re.compile('|'.join(_replace.keys()))
-    clean = OrderedDict()
-    for key, sym in sh.items():
-        if isinstance(sym, (Mul, Add)):
-            string = str(sym.expand()).replace(' + ', ' ').replace('1.0*', '')
-            string = _repat.sub(lambda x: _replace[x.group(0)], string)
-            clean[key] = [pre + '*' for pre in string.split()]
-        else: clean[key] = ['']
-    return clean
-
 
 def _sphr_prefac(L, ml, nuc, sh):
     """
@@ -286,7 +266,7 @@ def gen_basfns(uni, frame=None):
         ordrcols = ['L', 'ml', 'shell']
         prefunc = _sphr_prefac
         # Get the string versions of the symbolic solid harmonics
-        larg[key] = clean_sh(solid_harmonics(uni.basis_set.lmax))
+        larg[key] = solhar
         # To avoid bool checking for each basis function
         lkey = 'sh'
     else:
