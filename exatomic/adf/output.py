@@ -6,8 +6,10 @@ Output Parser
 #####################
 Multiple frames are not currently supported
 '''
+import re
 import numpy as np
 import pandas as pd
+from io import StringIO
 
 from exa.relational.isotope import symbol_to_z
 from exatomic.algorithms.basis import lmap, enum_cartesian
@@ -41,8 +43,8 @@ class Output(Editor):
         try: stop = min(stopa, stopb)
         except TypeError: stop = stopa
         # Grab everything
-        df = pd.read_fwf(StringIO('\n'.join(self[start:stop]),
-                         widths=[4, 2, 14, 4],
+        df = pd.read_fwf(StringIO('\n'.join(self[start:stop])),
+                         widths=[4, 2, 12, 4],
                          names=['n', 'L', 'alpha', 'symbol'])
         # Where atom types change
         idxs = [0] + df['n'][df['n'] == '---'].index.tolist() + [df.shape[0]]
@@ -57,6 +59,7 @@ class Output(Editor):
         basmap = basmap[basmap.str.endswith(')')].str.strip(')')
         basmap = {val: df['set'][key] + 1 for
                   key, val in basmap.to_dict().items()}
+        print(basmap)
         # Discard the garbage
         drop = df['n'].str.strip().str.isnumeric().fillna(False)
         df.drop(drop[drop == False].index, inplace=True)
@@ -97,6 +100,7 @@ class Output(Editor):
                     for shell, r in zip(grp['shell'], grp['r']):
                         for key in data.keys(): data[key].append(eval(key))
         data['set'] = data.pop('seht')
+        data['frame'] = 0
         self.basis_set_order = pd.DataFrame.from_dict(data)
 
 
@@ -118,8 +122,8 @@ class Output(Editor):
         self.orbital = df
 
 
-    def parse_contributions(self):
-        # MO contributions by percentage
+    def parse_contribution(self):
+        # MO contribution by percentage
         found = self.find(_re_con_00, keys_only=True)
         starts = [i + 3 for i in found]
         widths = [12, 6, 6, 6, 11, 6, 10, 12, 6, 6, 3]
@@ -130,9 +134,9 @@ class Output(Editor):
         for i, start in enumerate(starts):
             stop = start
             while self[stop].strip(): stop += 1
-            dfs.append(pd.read_fwf(StringIO('\n'.join(self[start:stop]),
+            dfs.append(pd.read_fwf(StringIO('\n'.join(self[start:stop])),
                                    delim_whitespace=True, widths=widths,
-                                   names=names)))
+                                   names=names))
             dfs[-1]['spin'] = i
         dfs = pd.concat(dfs).reset_index(drop=True)
         # Maybe a better way to do this
@@ -156,17 +160,11 @@ class Output(Editor):
     def parse_excitation(self):
         found = self.find_next(_re_exc_00, keys_only=True)
         if not found: return
+        # First table of interest here
         start = found + 4
         stop = self.find_next(_re_exc_01, keys_only=True) - 3
         adf = self.pandas_dataframe(start, stop, 9)
         adf.drop(3, axis=1, inplace=True)
-        start = stop + 5
-        stop = start
-        while self[stop].strip(): stop += 1
-        cols = _re_exc_01.split()
-        df = self.pandas_dataframe(start, stop + 1, cols)
-        df.drop(cols[0], axis=1, inplace=True)
-        df.columns = ['energy', 'eV', 'osc', 'symmetry']
         adf[0] = adf[0].str[:-1].astype(np.int64) - 1
         adf[1] = adf[1].map({'Alph': 0, 'Beta': 1})
         adf[[2, 'occsym']] = adf[2].str.extract('([0-9]*)(.*)', expand=True)
@@ -176,6 +174,15 @@ class Output(Editor):
         adf.rename(columns={0: 'excitation', 1: 'spin', 2: 'occ', 4: 'virt',
                             5: 'weight', 6: 'TDMx', 7: 'TDMy', 8: 'TDMz'},
                             inplace=True)
+        # Second one here
+        start = stop + 5
+        stop = start
+        while self[stop].strip(): stop += 1
+        cols = _re_exc_01.split()
+        df = self.pandas_dataframe(start, stop + 1, cols)
+        df.drop(cols[0], axis=1, inplace=True)
+        df.columns = ['energy', 'eV', 'osc', 'symmetry']
+        # Expand the second table to fit the original
         for col in df.columns: adf[col] = adf.excitation.map(df[col])
         adf['occ'] -= 1
         adf['virt'] -= 1
@@ -206,10 +213,10 @@ class Output(Editor):
                 skips = [i + j for i in list(block[1:] - block[0] - 3) for j in range(3)]
                 name = 'coef' if not i else 'coef{}'.format(i)
                 col = self.pandas_dataframe(block[0], stop, ncol + 1,
-                                            skiprows=skip).drop(0, axis=1,
+                                            skiprows=skips).drop(0, axis=1,
                                             ).unstack().dropna().reset_index(drop=True)
                 data[name] = col
-            norb = len(data.index) // chi
+            norb = len(data.index) // nchi
             data['orbital'] = np.concatenate([np.repeat(range(i, norb, ncol), nchi)
                                               for i in range(ncol)])
             data['chi'] = np.tile(range(nchi), norb)

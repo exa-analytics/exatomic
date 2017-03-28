@@ -46,10 +46,11 @@ class _Convolve(DataFrame):
 
     @property
     def last_group(self):
-        return self['group'].cat.as_ordered().max()
+        return self[self.frame == self.last_frame].group.cat.as_ordered().max()
 
     def convolve(self, func='gauss', units='eV', ewin=None, broaden=0.13,
-                 padding=5, npoints=1001, group=None, frame=None, name=None):
+                 padding=5, npoints=1001, group=None, frame=None, name=None,
+                 normalize=True):
         """
         Compute a spectrum based on excitation energies and oscillator strengths.
 
@@ -60,6 +61,7 @@ class _Convolve(DataFrame):
             broaden (float): how broad to make the peaks (FWHM, default in eV)
             npoints (int): "resolution" of the spectrum
             name (str): optional - name the column of returned data
+            normalize (bool): set the largest value of signal equal to 1.0
 
         Returns
             df (pd.DataFrame): contains x and y values of a spectrum
@@ -92,7 +94,8 @@ class _Convolve(DataFrame):
         if np.isclose(spec.max(), 0):
             print('Spectrum is all zeros, check energy window.')
         else:
-            spec /= spec.max()
+            if normalize:
+                spec /= spec.max()
         name = 'signal' if name is None else name
         return pd.DataFrame.from_dict({units: enrg, name: spec})
 
@@ -131,13 +134,6 @@ class Orbital(_Convolve):
     _cardinal = ('frame', np.int64)
     _categories = {'spin': np.int64, 'frame': np.int64, 'group': np.int64}
 
-    @property
-    def last_frame(self):
-        return self.frame.cat.as_ordered().max()
-
-    @property
-    def last_group(self):
-        return self[self.frame == self.last_frame].group.cat.as_ordered().max()
 
     def get_orbital(self, orb=-1, spin=0, index=None, group=None, frame=None):
         """

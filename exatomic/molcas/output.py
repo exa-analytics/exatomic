@@ -263,6 +263,7 @@ def _fix_basis_set_order(df, shls, sets, funcs):
                 shfuncs += list(range(tot, n + tot))
             tot += n
     df['shell'] = shfuncs
+    df['frame'] = 0
     return df
 
 

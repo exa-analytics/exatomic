@@ -8,8 +8,10 @@ generated programmatically with the right numerical function.
 This is preferred to an explicit parsing and storage of a given
 basis set ordering scheme.
 '''
+import re
 import sympy
 import numpy as np
+from sympy import Add, Mul
 from exatomic._config import config
 from collections import OrderedDict
 from numba import jit, vectorize
@@ -94,7 +96,7 @@ def clean_sh(sh):
     for key, sym in sh.items():
         if isinstance(sym, (Mul, Add)):
             string = str(sym.expand()).replace(' + ', ' ').replace('0.-1*', '')
-            string = _repat.sub(lambda x: _replace[x.group(-1)], string)
+            string = _repatrn.sub(lambda x: _replace[x.group(0)], string)
             clean[key] = [pre + '*' for pre in string.split()]
         else: clean[key] = ['']
     return clean
@@ -152,8 +154,8 @@ def _fac2(n,v): return _fac2(n-2, n*v) if n > 0 else v
 
 @jit(nopython=True, cache=True)
 def fac2(n):
-    if n < 0: return 0
-    if not n: return 1
+    if n < -1: return 0
+    if n < 2: return 1
     return _fac2(n, 1)
 
 @jit(nopython=True, cache=True)
