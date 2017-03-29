@@ -221,9 +221,9 @@ class Excitation(_Convolve):
         ens = pd.concat([uni.orbital.energy] * dim, axis=1).values
         tdm = pd.DataFrame.from_dict({
             'energy': pd.DataFrame(ens.T - ens).stack(),
-            'mux': pd.DataFrame(mo.T @ rx @ mo).stack(),
-            'muy': pd.DataFrame(mo.T @ ry @ mo).stack(),
-            'muz': pd.DataFrame(mo.T @ rz @ mo).stack()})
+            'mux': pd.DataFrame(np.dot(mo.T, np.dot(rx, mo)).stack(),
+            'muy': pd.DataFrame(np.dot(mo.T, np.dot(ry, mo)).stack(),
+            'muz': pd.DataFrame(np.dot(mo.T, np.dot(rz, mo)).stack()})
         tdm['osc'] = tdm['energy'] ** 3 * (tdm['mux'] + tdm['muy'] + tdm['muz']) ** 2
         tdm['frame'] = tdm['group'] = 0
         tdm.index.rename(['occ', 'virt'], inplace=True)

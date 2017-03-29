@@ -112,7 +112,6 @@ class _Symmetric(_Matrix):
                                            idx1: idxs[:,1],
                                         'frame': idxs[:,2],
                                          column: arr})
-        return cls(df)
 
 
 class _Square(_Matrix):

@@ -28,7 +28,7 @@ class TestOutput(UnitTester):
     def test_parse_basis_set_order(self):
         """Test the basis set order table parser."""
         self.uo2sp.parse_basis_set_order()
-        self.assertEqual(self.uo2sp.basis_set_order.shape, (69, 7))
+        self.assertEqual(self.uo2sp.basis_set_order.shape, (69, 8))
         self.assertTrue(np.all(pd.notnull(self.uo2sp.basis_set_order)))
 
     def test__basis_set_map(self):
@@ -40,8 +40,8 @@ class TestOutput(UnitTester):
     def test_parse_basis_set(self):
         """Test the gaussian basis set table parser."""
         self.uo2sp.parse_basis_set()
-        self.assertEqual(self.uo2sp.gaussian_basis_set.shape, (451, 6))
-        self.assertTrue(np.all(pd.notnull(self.uo2sp.gaussian_basis_set)))
+        self.assertEqual(self.uo2sp.basis_set.shape, (451, 6))
+        self.assertTrue(np.all(pd.notnull(self.uo2sp.basis_set)))
 
 
 class TestOrb(UnitTester):
@@ -49,7 +49,7 @@ class TestOrb(UnitTester):
 
     def setUp(self):
         cd = os.path.abspath(__file__).split(os.sep)[:-1]
-        self.uo2sporb = Orb(os.sep.join(cd + ['mol-uo2-anomb.Orb']))
+        self.uo2sporb = Orb(os.sep.join(cd + ['mol-uo2-anomb.scforb']))
 
     def test_parse_momatrix(self):
         """Test the momatrix table parser."""
