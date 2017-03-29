@@ -59,7 +59,6 @@ class Output(Editor):
         basmap = basmap[basmap.str.endswith(')')].str.strip(')')
         basmap = {val: df['set'][key] + 1 for
                   key, val in basmap.to_dict().items()}
-        print(basmap)
         # Discard the garbage
         drop = df['n'].str.strip().str.isnumeric().fillna(False)
         df.drop(drop[drop == False].index, inplace=True)

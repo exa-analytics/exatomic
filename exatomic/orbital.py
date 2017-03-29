@@ -231,7 +231,7 @@ class MOMatrix(DataFrame):
     _cardinal = ('frame', np.int64)
     _index = 'index'
 
-    def contributions(self, orbital, tol=0.01, frame=0):
+    def contributions(self, orbital, mocoefs='coef', tol=0.01, frame=0):
         """
         Returns a slice containing all non-negligible basis function
         contributions to a specific orbital.
@@ -240,7 +240,7 @@ class MOMatrix(DataFrame):
             orbital (int): orbital index
         """
         tmp = self[self['frame'] == frame].groupby('orbital').get_group(orbital)
-        return tmp[abs(tmp['coef']) > tol]
+        return tmp[np.abs(tmp[mocoefs]) > tol]
 
 
     def square(self, frame=0, column='coef'):

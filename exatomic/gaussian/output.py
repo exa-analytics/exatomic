@@ -16,13 +16,14 @@ from .editor import Editor
 from exa.relational.isotope import z_to_symbol
 from exatomic import Energy
 from exatomic.frame import compute_frame_from_atom
-from exatomic.algorithms.basis import lmap
+from exatomic.basis import BasisSet
+from exatomic.algorithms.basis import lmap, lorder
 
 z_to_symbol = z_to_symbol()
 
 from numba import jit, int64
 @jit(nopython=True, cache=True)
-def _triangular_indices(ncol, nbas, ndim):
+def _triangular_indices(ncol, nbas, dim):
     idx = np.empty((dim, 3), dtype=np.int64)
     cnt = 0
     for i in range(ncol):
@@ -94,20 +95,67 @@ class Output(Editor):
         self.atom = atom
 
     def parse_basis_set(self):
-        # First check if gfinput was specified
-        check = self.regex(_rebas01, stop=1000, flags=re.IGNORECASE)
-        if not check: return
-        # Find where the basis set is printed
-        found = self.find(_rebas02[:-1], _rebas03)
-        stop = found[_rebas02[:-1]][0][0] - 1
-        start = stop - 1
-        # Find where the data actually starts
-        while not len(self[start].split()) > 4: start -= 1
-        # Call out to the mess that actually parses it
-        df = self.pandas_dataframe(start + 1, stop, 4)
-        self.basis_set, setmap = _basis_set(df)
-        # Map the unique basis sets on atomic centers
+        # Find the basis set
+        found = self.regex(_rebas02, _rebas03, keys_only=True)
+        start = stop = found[_rebas02][0] + 1
+        # Dimension checking is probably a good thing
+        chks = self[start-2].split()
+        chkdim = int(chks[6]) - int(chks[1])
+        while self[stop].strip(): stop += 1
+        # Raw data
+        df = self.pandas_dataframe(start, stop, 4)
+        def _padx(srs): return [0] + srs.tolist() + [df.shape[0]]
+        # Get some indices for appropriate columns
+        setdx = _padx(df[0][df[0] == '****'].index)
+        shldx = _padx(df[3][~np.isnan(df[3])].index)
+        lindx = _df[0][df[0].str.lower().isin(lorder + ['sp'])]
+        # Populate the df
+        df['L'] = lindx.str.lower().map(lmap)
+        df['L'] = df['L'].fillna(method='ffill').fillna(
+                                 method='bfill').astype(np.int64)
+        df['center'] = np.concatenate([np.repeat(i, stop - start)
+                       for i, (start, stop) in enumerate(zip(setdx, setdx[1:]))])
+        df['shell'] = np.concatenate([np.repeat(i-1, stop - start)
+                      for i, (start, stop) in enumerate(zip(shldx, shldx[1:]))])
+        # Complicated way to get shells but it is flat
+        maxshl = df.groupby('center').apply(lambda x: x.shell.max() + 1)
+        maxshl.index += 1
+        maxshl[0] = 0
+        df['shell'] = df['shell'] - df['center'].map(maxshl)
+        # Drop all the garbage
+        todrop = setdx[:-1] + [i+1 for i in setdx[:-2]] + lindx.index.tolist()
+        df.drop(todrop, inplace=True)
+        # I knew checking was a good idea
+        if df.shape[0] != chkdim: raise Exception('Dimension mismatch')
+        # Keep cleaning
+        df[0] = df[0].str.replace('D', 'E').astype(np.float64)
+        df[1] = df[1].str.replace('D', 'E').astype(np.float64)
+        try: sp = np.isnan(df[2]).sum() == df.shape[0]
+        except TypeError:
+            df[2] = df[2].str.replace('D', 'E').astype(np.float64)
+            sp = True
+        # Deduplicate basis sets and expand 'SP' shells if present
+        df, setmap = _dedup(df, sp=sp)
+        spherial = '5D' in self[found[_rebas03][0]]
+        self.basis_set = BasisSet(_dedup(df), spherical=spherical)
         self.atom['set'] = self.atom['set'].map(setmap)
+
+
+    # def parse_basis_set(self):
+    #     # First check if gfinput was specified
+    #     check = self.regex(_rebas01, stop=1000, flags=re.IGNORECASE)
+    #     if not check: return
+    #     # Find where the basis set is printed
+    #     found = self.find(_rebas02[:-1], _rebas03)
+    #     stop = found[_rebas02[:-1]][0][0] - 1
+    #     start = stop - 1
+    #     # Find where the data actually starts
+    #     while not len(self[start].split()) > 4: start -= 1
+    #     # Call out to the mess that actually parses it
+    #     df = self.pandas_dataframe(start + 1, stop, 4)
+    #     self.basis_set, setmap = _basis_set(df)
+    #     # Map the unique basis sets on atomic centers
+    #     self.atom['set'] = self.atom['set'].map(setmap)
 
     def parse_orbital(self):
         # Find where our data is
@@ -124,7 +172,7 @@ class Output(Editor):
         ae, be = int(ae), int(be)
         # Get orbital energies
         ens = '\n'.join([ln.split('--')[1][1:] for i, ln in found[_reorb01]])
-        ens = pd.read_fwf(StringIO(ens), header=None, 
+        ens = pd.read_fwf(StringIO(ens), header=None,
                           widths=np.repeat(10, 5)).stack().values
         # Other arrays
         if os:
@@ -385,49 +433,49 @@ def _basis_set_order(chunk):
     del basord['n']
     return basord
 
-def _basis_set(raw):
-    # Fortran scientific notation
-    raw[0] = raw[0].str.replace('D', 'E')
-    raw[1] = raw[1].str.replace('D', 'E')
-    raw[2] = raw[2].astype('O').str.replace('D', 'E')
-    # But now we replaced the 'D' shell with 'E' so
-    lmap['e'] = 2
-    # The data we need
-    dtype = [('alpha', 'f8'), ('d', 'f8'), ('center', 'i8'),
-             ('shell', 'i8'), ('L', 'i8')]
-    df = np.empty((raw.shape[0],), dtype=dtype)
-    # The data we deserve
-    data = []
-    for i, (one, two) in enumerate(zip(raw[0], raw[1])):
-        # See if it is int-able (an atom center in this case)
-        try:
-            center = int(one) - 1
-        except ValueError:
-            # See if it is a string corresponding to L eg. 'S'
-            if one.isalpha():
-                # Collect (atom, shell, number of primitives, index)
-                data.append((center, one.lower(), int(two), i + 1))
-    # Now through this data (2 loops mainly because of 'sp' shells)
-    cnt, shell, pcntr = 0, 0, 0
-    for cntr, lval, npr, pdx in data:
-        # Reset shell counter if atom changed
-        if pcntr != cntr: shell = 0
-        # l is lval except when lval is 'sp'
-        for c, l in enumerate(lval):
-            l = lmap[l]
-            # Get all the prims per shell
-            for i in range(pdx, pdx + npr):
-                df[cnt] = (raw[0][i], raw[c + 1][i], cntr, shell, l)
-                cnt += 1
-            shell += 1
-        # Previous center is now center
-        pcntr = cntr
-    # Chop off what we don't need
-    df = pd.DataFrame(df[:cnt])
-    # Now to deduplicate identical basis sets
-    # Gaussian prints out every single atomic basis set
-    df, setmap = _dedup(df)
-    return df, setmap
+# def _basis_set(raw):
+#     # Fortran scientific notation
+#     raw[0] = raw[0].str.replace('D', 'E')
+#     raw[1] = raw[1].str.replace('D', 'E')
+#     raw[2] = raw[2].astype('O').str.replace('D', 'E')
+#     # But now we replaced the 'D' shell with 'E' so
+#     lmap['e'] = 2
+#     # The data we need
+#     dtype = [('alpha', 'f8'), ('d', 'f8'), ('center', 'i8'),
+#              ('shell', 'i8'), ('L', 'i8')]
+#     df = np.empty((raw.shape[0],), dtype=dtype)
+#     # The data we deserve
+#     data = []
+#     for i, (one, two) in enumerate(zip(raw[0], raw[1])):
+#         # See if it is int-able (an atom center in this case)
+#         try:
+#             center = int(one) - 1
+#         except ValueError:
+#             # See if it is a string corresponding to L eg. 'S'
+#             if one.isalpha():
+#                 # Collect (atom, shell, number of primitives, index)
+#                 data.append((center, one.lower(), int(two), i + 1))
+#     # Now through this data (2 loops mainly because of 'sp' shells)
+#     cnt, shell, pcntr = 0, 0, 0
+#     for cntr, lval, npr, pdx in data:
+#         # Reset shell counter if atom changed
+#         if pcntr != cntr: shell = 0
+#         # l is lval except when lval is 'sp'
+#         for c, l in enumerate(lval):
+#             l = lmap[l]
+#             # Get all the prims per shell
+#             for i in range(pdx, pdx + npr):
+#                 df[cnt] = (raw[0][i], raw[c + 1][i], cntr, shell, l)
+#                 cnt += 1
+#             shell += 1
+#         # Previous center is now center
+#         pcntr = cntr
+#     # Chop off what we don't need
+#     df = pd.DataFrame(df[:cnt])
+#     # Now to deduplicate identical basis sets
+#     # Gaussian prints out every single atomic basis set
+#     df, setmap = _dedup(df)
+#     return df, setmap
 
 
 _csv_args = {'delim_whitespace': True, 'header': None}
@@ -448,9 +496,8 @@ _remomat01 = r'pop.*(?=full|no)'
 _remomat02 = 'Orbital Coefficients'
 # Basis flags
 _rebas01 = r'gfinput'
-_rebas02 = 'basis functions,'
-_rebas03 = ' ****'
-_rebas04 = 'General basis'
+_rebas02 = 'AO basis set in the form of general basis input (Overlap normalization)'
+_rebas03 = '(Standard|General) basis .*'
 _basrep = {'D 0': 'D0', 'F 0': 'F0',
            'G 0': 'G0', 'H 0': 'H0', 'I 0': 'I0'}
 _rebaspat = re.compile('|'.join(_basrep.keys()))
@@ -521,7 +568,7 @@ class Fchk(Editor):
         # Keep track of some things
         ptr, prevatom, shell, sp = 0, 0, 0, False
         # Temporary storage of basis set data
-        ddict = {'d': [], 'alpha': [], 'shell': [],
+        ddict = {1: [], 0: [], 'shell': [],
                  'L': [], 'center': []}
         for atom, nprim, shelltype in zip(shelltoatom, primpershell, shelltypes):
             if atom != prevatom:
@@ -530,15 +577,15 @@ class Fchk(Editor):
             if shelltype == -1:
                 shelltype, sp = 0, True
             step = ptr + nprim
-            ddict['d'] += contcoefs[ptr:step].tolist()
-            ddict['alpha'] += primexps[ptr:step].tolist()
+            ddict[1] += contcoefs[ptr:step].tolist()
+            ddict[0] += primexps[ptr:step].tolist()
             ddict['center'] += [atom] * nprim
             ddict['shell'] += [shell] * nprim
             ddict['L'] += [np.abs(shelltype)] * nprim
             if sp:
                 shell += 1
-                ddict['d'] += pcontcoefs[ptr:step].tolist()
-                ddict['alpha'] += primexps[ptr:step].tolist()
+                ddict[1] += pcontcoefs[ptr:step].tolist()
+                ddict[0] += primexps[ptr:step].tolist()
                 ddict['center'] += [atom] * nprim
                 ddict['shell'] += [shell] * nprim
                 ddict['L'] += [1] * nprim
@@ -559,7 +606,7 @@ class Fchk(Editor):
         data = []
         # Gaussian orders basis functions strangely
         # Will likely need an additional mapping for cartesian
-        lmap = {0: [0], 1: [1, -1, 0],
+        lamp = {0: [0], 1: [1, -1, 0],
                 2: [0, 1, -1, 2, -2],
                 3: [0, 1, -1, 2, -2, 3, -3],
                 4: [0, 1, -1, 2, -2, 3, -3, 4, -4],
@@ -573,7 +620,7 @@ class Fchk(Editor):
             for shell, grp in seht:
                 L = grp['L'].values[0]
                 # Iterate over m_l values
-                for ml in lmap[L]:
+                for ml in lamp[L]:
                     data.append([cent, tag, L, ml, shell, 0])
         columns = ('center', 'tag', 'L', 'ml', 'shell', 'frame')
         self.basis_set_order = pd.DataFrame(data, columns=columns)
@@ -609,10 +656,10 @@ class Fchk(Editor):
         super().__init__(*args, **kwargs)
 
 
-def _dedup(sets):
+def _dedup(sets, sp=False):
     unique, setmap, cnt = [], {}, 0
     sets = sets.groupby('center')
-    chk = ['alpha', 'd']
+    chk = [0, 1]
     for center, seht in sets:
         for i, other in enumerate(unique):
             if other.shape != seht.shape: continue
@@ -623,8 +670,26 @@ def _dedup(sets):
             unique.append(seht)
             setmap[center] = cnt
             cnt += 1
+        if sp:
+            expand = []
+            for seht in unique:
+                if np.isnan(seht[2]).sum() == seht.shape[0]:
+                    expand.append(seht)
+                    continue
+                sps = seht[2][~np.isnan(seht[2])].index
+                dupl = seht.ix[sps[0]:sps[-1]].copy()
+                dupl['d'] = dupls[2]
+                dupl['L'] = 1
+                dupl['shell'] += 2
+                last = seht.ix[sps[-1] + 1:].copy()
+                last['shell'] += 2
+                expand.append(pd.concat([seht.ix[:sps[0] - 1],
+                                         seht.ix[sps[0]:sps[-1]],
+                                         dupl, last]))
+            unique = expand
     sets = pd.concat(unique).reset_index(drop=True)
-    sets.rename(columns={'center': 'set'}, inplace=True)
+    sets.rename(columns={'center': 'set', 0: 'alpha', 1: 'd'}, inplace=True)
+    sets.drop([2, 3], inplace=True)
     sets['set'] = sets['set'].map(setmap)
     sets['frame'] = 0
     return sets, setmap

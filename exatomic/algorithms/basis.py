@@ -194,6 +194,7 @@ def _ovl_indices(nbas, nel):
         for j in range(i + 1):
             chis[cnt, 0] = i
             chis[cnt, 1] = j
+            cnt += 1
     return chis
 
 
