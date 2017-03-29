@@ -1,16 +1,46 @@
 # -*- coding: utf-8 -*-
 # Copyright (c) 2015-2016, Exa Analytics Development Team
 # Distributed under the terms of the Apache License 2.0
-#"""
-#PDB File I/O
-#=======================
-#"""
-#import os
-#import sys
-#import numpy as np
-#import pandas as pd
-#from requests import get as _get
-#from json import load
+"""
+PDB File I/O
+=======================
+"""
+import pandas as pd
+from json import load
+from io import StringIO
+from requests import get as _get
+
+from exa._config import config
+from exatomic import Editor, Length
+
+base = config['dynamic']['exatomic_pkgdir']
+pdbr = '{}/{}/{}'.format(base, '_static', 'pdb-min.json')
+with open(pdbr) as f: records = load(f)
+
+class PDB(Editor):
+
+    def _pandas_fwf(self, start=None, stop=None, linenos=None, **kwargs):
+        if linenos is not None:
+            piece = StringIO('\n'.join([self[lno] for lno in linenos]))
+        elif start is not None and stop is not None:
+            piece = StringIO('\n'.join(self[start:stop]))
+        else:
+            raise Exception('Must pass start and stop or linenos')
+        return pd.read_fwf(piece, **kwargs)
+
+    def parse_atom(self):
+        print('No deduplication of atoms occurs at the moment.')
+        found = self.regex('^ATOM', keys_only=True)
+        widths = [(i[0], i[1]) for i in records['ATOM']]
+        names = [i[2] for i in records['ATOM']]
+        df = self._pandas_fwf(linenos=found, colspecs=widths, names=names)
+        df['x'] *= Length['A', 'au']
+        df['y'] *= Length['A', 'au']
+        df['z'] *= Length['A', 'au']
+        df['frame'] = 0
+        self.atom = df
+
+
 #from warnings import warn as _warn
 #
 #from exa.utils import mkpath

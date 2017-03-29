@@ -166,7 +166,7 @@ def make_fps(rmin=None, rmax=None, nr=None, nrfps=1,
     return pd.concat([fp] * nrfps, axis=1).T
 
 
-def _sphr_prefac(L, ml, nuc, sh):
+def _sphr_prefac(nuc, sh, L, ml):
     """
     Create strings of the pre-exponential factor of a given
     spherical basis function as a function of l, ml quantum numbers.
@@ -183,7 +183,7 @@ def _sphr_prefac(L, ml, nuc, sh):
     return [pre.format(**nuc) for pre in sh[(L, ml)]]
 
 
-def _cart_prefac(L, l, m, n, nuc, pre):
+def _cart_prefac(nuc, pre, L, l, m, n):
     """
     As with _sphr_prefac, create the string version of the pre-exponential
     factor in a given basis function, this time as a function of cartesian
@@ -306,7 +306,7 @@ def gen_basfns(uni, frame=None):
                 # Otherwise it's useless
                 larg['pre'] = ''
             # The pre-exponential factors (besides the additional ADF ones)
-            prefacs = prefunc(*args[rgslice], nuc, larg[lkey])
+            prefacs = prefunc(nuc, larg[lkey], *args[rgslice])
             # Put together the basis function
             basfns.append(gen_basfn(prefacs, shell, nuc[exkey]))
     return basfns

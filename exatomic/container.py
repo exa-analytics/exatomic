@@ -56,6 +56,7 @@ class Meta(DataObject):
     field = AtomicField
     orbital = Orbital
     overlap = Overlap
+    multipole = DataFrame
     momatrix = MOMatrix
     excitation = Excitation
     density = DensityMatrix

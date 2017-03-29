@@ -202,6 +202,28 @@ class Excitation(_Convolve):
     _cardinal = ('frame', np.int64)
     _categories = {'frame': np.int64, 'group': np.int64}
 
+    @classmethod
+    def from_universe(cls, uni, initial=None, final=None):
+        """
+        Generate the zeroth order approximation to excitation energies
+        via the transition dipole method (provided a universe contains
+        an MOMatrix and dipole moment integrals already).
+        """
+        nbas = len(uni.basis_set_order.index)
+        fix = (np.ones((nbas, nbas)) - np.eye(nbas, nbas) / 2)
+        rx = ((uni.multipole.pivot('chi0', 'chi1', 'ix1').fillna(0.0)
+             + uni.multipole.pivot('chi0', 'chi1', 'ix1').T.fillna(0.0)) * fix).values
+        ry = ((uni.multipole.pivot('chi0', 'chi1', 'ix2').fillna(0.0)
+             + uni.multipole.pivot('chi0', 'chi1', 'ix2').T.fillna(0.0)) * fix).values
+        rz = ((uni.multipole.pivot('chi0', 'chi1', 'ix3').fillna(0.0)
+             + uni.multipole.pivot('chi0', 'chi1', 'ix3').T.fillna(0.0)) * fix).values
+        mo = uni.momatrix.square().values
+        ens = pd.concat([uni.orbital.energy] * dim, axis=1).values
+        tdm = pd.DataFrame.from_dict({
+            'energy': pd.DataFrame(ens.T - ens).stack(),
+        })
+        pass
+
 
 class MOMatrix(DataFrame):
     """

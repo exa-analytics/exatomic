@@ -38,7 +38,7 @@ def _triangular_indices(ncol, nbas, dim):
 class Output(Editor):
 
     def _parse_triangular_matrix(self, regex, column='coef', values_only=False):
-        found = self.find_next(_rebas02, keys_only=True)
+        found = self.find_next(_rebas01, keys_only=True)
         nbas = int(self[found].split()[0])
         found = self.find_next(regex, keys_only=True)
         if not found: return
@@ -98,9 +98,6 @@ class Output(Editor):
         # Find the basis set
         found = self.regex(_rebas02, _rebas03, keys_only=True)
         start = stop = found[_rebas02][0] + 1
-        # Dimension checking is probably a good thing
-        chks = self[start-2].split()
-        chkdim = int(chks[6]) - int(chks[1])
         while self[stop].strip(): stop += 1
         # Raw data
         df = self.pandas_dataframe(start, stop, 4)
@@ -108,7 +105,7 @@ class Output(Editor):
         # Get some indices for appropriate columns
         setdx = _padx(df[0][df[0] == '****'].index)
         shldx = _padx(df[3][~np.isnan(df[3])].index)
-        lindx = _df[0][df[0].str.lower().isin(lorder + ['sp'])]
+        lindx = df[0][df[0].str.lower().isin(lorder + ['sp'])]
         # Populate the df
         df['L'] = lindx.str.lower().map(lmap)
         df['L'] = df['L'].fillna(method='ffill').fillna(
@@ -125,8 +122,6 @@ class Output(Editor):
         # Drop all the garbage
         todrop = setdx[:-1] + [i+1 for i in setdx[:-2]] + lindx.index.tolist()
         df.drop(todrop, inplace=True)
-        # I knew checking was a good idea
-        if df.shape[0] != chkdim: raise Exception('Dimension mismatch')
         # Keep cleaning
         df[0] = df[0].str.replace('D', 'E').astype(np.float64)
         df[1] = df[1].str.replace('D', 'E').astype(np.float64)
@@ -136,34 +131,18 @@ class Output(Editor):
             sp = True
         # Deduplicate basis sets and expand 'SP' shells if present
         df, setmap = _dedup(df, sp=sp)
-        spherial = '5D' in self[found[_rebas03][0]]
-        self.basis_set = BasisSet(_dedup(df), spherical=spherical)
+        spherical = '5D' in self[found[_rebas03][0]]
+        self.basis_set = BasisSet(df, spherical=spherical)
         self.atom['set'] = self.atom['set'].map(setmap)
 
 
-    # def parse_basis_set(self):
-    #     # First check if gfinput was specified
-    #     check = self.regex(_rebas01, stop=1000, flags=re.IGNORECASE)
-    #     if not check: return
-    #     # Find where the basis set is printed
-    #     found = self.find(_rebas02[:-1], _rebas03)
-    #     stop = found[_rebas02[:-1]][0][0] - 1
-    #     start = stop - 1
-    #     # Find where the data actually starts
-    #     while not len(self[start].split()) > 4: start -= 1
-    #     # Call out to the mess that actually parses it
-    #     df = self.pandas_dataframe(start + 1, stop, 4)
-    #     self.basis_set, setmap = _basis_set(df)
-    #     # Map the unique basis sets on atomic centers
-    #     self.atom['set'] = self.atom['set'].map(setmap)
-
     def parse_orbital(self):
         # Find where our data is
-        found = self.regex(_reorb01, _reorb02, _rebas02, _realphaelec)
+        found = self.regex(_reorb01, _reorb02, _rebas01, _realphaelec)
         # If no orbital energies, quit
         if not found[_reorb01]: return
         # Basis dimension
-        nbas = int(found[_rebas02][0][1].split()[0])
+        nbas = int(found[_rebas01][0][1].split()[0])
         # Check if open shell
         os = any(('Beta' in ln for lno, ln in found[_reorb01]))
         occ = 1 if os else 2
@@ -223,12 +202,12 @@ class Output(Editor):
         check = self.regex(_remomat01, stop=1000, flags=re.IGNORECASE)
         if not check: return
         # Find approximately where our data is
-        found = self.find(_remomat02, _rebas02)
+        found = self.find(_remomat02, _rebas01)
         # Get some dimensions
         ndim = len(found[_remomat02])
         # If something goes wrong
         if not ndim: return
-        nbas = int(found[_rebas02][0][1].split()[0])
+        nbas = int(found[_rebas01][0][1].split()[0])
         nblocks = np.int64(np.ceil(nbas / 5))
         # Allocate a big ol' array
         coefs = np.empty((nbas ** 2, ndim), dtype=np.float64)
@@ -383,10 +362,10 @@ class Output(Editor):
         if overlap is not None: self.overlap = overlap
 
     def parse_multipole(self):
-        mltpl = self._parse_triangular_matrix(self, _reixn.format(1), 'ix1')
+        mltpl = self._parse_triangular_matrix(_reixn.format(1), 'ix1')
         if mltpl is not None:
-            mltpl['ix2'] = self._parse_triangular_matrix(self, _reixn.format(2), 'ix2', True)
-            mltpl['ix3'] = self._parse_triangular_matrix(self, _reixn.format(3), 'ix3', True)
+            mltpl['ix2'] = self._parse_triangular_matrix(_reixn.format(2), 'ix2', True)
+            mltpl['ix3'] = self._parse_triangular_matrix(_reixn.format(3), 'ix3', True)
             self.multipole = mltpl
 
 
@@ -431,51 +410,8 @@ def _basis_set_order(chunk):
     basord['shell'] = shfns
     # Get rid of n because it isn't even n anymore
     del basord['n']
+    basord['frame'] = 0
     return basord
-
-# def _basis_set(raw):
-#     # Fortran scientific notation
-#     raw[0] = raw[0].str.replace('D', 'E')
-#     raw[1] = raw[1].str.replace('D', 'E')
-#     raw[2] = raw[2].astype('O').str.replace('D', 'E')
-#     # But now we replaced the 'D' shell with 'E' so
-#     lmap['e'] = 2
-#     # The data we need
-#     dtype = [('alpha', 'f8'), ('d', 'f8'), ('center', 'i8'),
-#              ('shell', 'i8'), ('L', 'i8')]
-#     df = np.empty((raw.shape[0],), dtype=dtype)
-#     # The data we deserve
-#     data = []
-#     for i, (one, two) in enumerate(zip(raw[0], raw[1])):
-#         # See if it is int-able (an atom center in this case)
-#         try:
-#             center = int(one) - 1
-#         except ValueError:
-#             # See if it is a string corresponding to L eg. 'S'
-#             if one.isalpha():
-#                 # Collect (atom, shell, number of primitives, index)
-#                 data.append((center, one.lower(), int(two), i + 1))
-#     # Now through this data (2 loops mainly because of 'sp' shells)
-#     cnt, shell, pcntr = 0, 0, 0
-#     for cntr, lval, npr, pdx in data:
-#         # Reset shell counter if atom changed
-#         if pcntr != cntr: shell = 0
-#         # l is lval except when lval is 'sp'
-#         for c, l in enumerate(lval):
-#             l = lmap[l]
-#             # Get all the prims per shell
-#             for i in range(pdx, pdx + npr):
-#                 df[cnt] = (raw[0][i], raw[c + 1][i], cntr, shell, l)
-#                 cnt += 1
-#             shell += 1
-#         # Previous center is now center
-#         pcntr = cntr
-#     # Chop off what we don't need
-#     df = pd.DataFrame(df[:cnt])
-#     # Now to deduplicate identical basis sets
-#     # Gaussian prints out every single atomic basis set
-#     df, setmap = _dedup(df)
-#     return df, setmap
 
 
 _csv_args = {'delim_whitespace': True, 'header': None}
@@ -495,9 +431,9 @@ _symrep[')'] = ''
 _remomat01 = r'pop.*(?=full|no)'
 _remomat02 = 'Orbital Coefficients'
 # Basis flags
-_rebas01 = r'gfinput'
-_rebas02 = 'AO basis set in the form of general basis input (Overlap normalization)'
-_rebas03 = '(Standard|General) basis .*'
+_rebas01 = r'basis functions,'
+_rebas02 = 'AO basis set in the form of general basis input \(Overlap normalization\)'
+_rebas03 = ' (Standard|General) basis'
 _basrep = {'D 0': 'D0', 'F 0': 'F0',
            'G 0': 'G0', 'H 0': 'H0', 'I 0': 'I0'}
 _rebaspat = re.compile('|'.join(_basrep.keys()))
@@ -689,7 +625,8 @@ def _dedup(sets, sp=False):
             unique = expand
     sets = pd.concat(unique).reset_index(drop=True)
     sets.rename(columns={'center': 'set', 0: 'alpha', 1: 'd'}, inplace=True)
-    sets.drop([2, 3], inplace=True)
+    try: sets.drop([2, 3], axis=1, inplace=True)
+    except ValueError: pass
     sets['set'] = sets['set'].map(setmap)
     sets['frame'] = 0
     return sets, setmap

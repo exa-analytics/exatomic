@@ -14,5 +14,6 @@ ipyparallel
 sphinx
 nose
 numba
+psutil
 sphinxcontrib-autoanysrc
 exa
