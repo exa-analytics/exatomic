@@ -203,14 +203,14 @@ class Excitation(_Convolve):
     _categories = {'frame': np.int64, 'group': np.int64}
 
     @classmethod
-    def from_universe(cls, uni, initial=None, final=None):
+    def from_universe(cls, uni, initial=None, final=None, spin=0):
         """
         Generate the zeroth order approximation to excitation energies
         via the transition dipole method (provided a universe contains
         an MOMatrix and dipole moment integrals already).
         """
-        nbas = len(uni.basis_set_order.index)
-        fix = (np.ones((nbas, nbas)) - np.eye(nbas, nbas) / 2)
+        dim = len(uni.basis_set_order.index)
+        fix = (np.ones((dim, dim)) - np.eye(dim, dim) / 2)
         rx = ((uni.multipole.pivot('chi0', 'chi1', 'ix1').fillna(0.0)
              + uni.multipole.pivot('chi0', 'chi1', 'ix1').T.fillna(0.0)) * fix).values
         ry = ((uni.multipole.pivot('chi0', 'chi1', 'ix2').fillna(0.0)
@@ -218,12 +218,12 @@ class Excitation(_Convolve):
         rz = ((uni.multipole.pivot('chi0', 'chi1', 'ix3').fillna(0.0)
              + uni.multipole.pivot('chi0', 'chi1', 'ix3').T.fillna(0.0)) * fix).values
         mo = uni.momatrix.square().values
-        ens = pd.concat([uni.orbital.energy] * dim, axis=1).values
+        ens = pd.concat([uni.orbital[uni.orbital.spin == spin].energy] * dim, axis=1).values
         tdm = pd.DataFrame.from_dict({
             'energy': pd.DataFrame(ens.T - ens).stack(),
-            'mux': pd.DataFrame(np.dot(mo.T, np.dot(rx, mo)).stack(),
-            'muy': pd.DataFrame(np.dot(mo.T, np.dot(ry, mo)).stack(),
-            'muz': pd.DataFrame(np.dot(mo.T, np.dot(rz, mo)).stack()})
+            'mux': pd.DataFrame(np.dot(mo.T, np.dot(rx, mo))).stack(),
+            'muy': pd.DataFrame(np.dot(mo.T, np.dot(ry, mo))).stack(),
+            'muz': pd.DataFrame(np.dot(mo.T, np.dot(rz, mo))).stack()})
         tdm['osc'] = tdm['energy'] ** 3 * (tdm['mux'] + tdm['muy'] + tdm['muz']) ** 2
         tdm['frame'] = tdm['group'] = 0
         tdm.index.rename(['occ', 'virt'], inplace=True)

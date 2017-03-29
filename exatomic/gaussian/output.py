@@ -23,7 +23,8 @@ z_to_symbol = z_to_symbol()
 
 from numba import jit, int64
 @jit(nopython=True, cache=True)
-def _triangular_indices(ncol, nbas, dim):
+def _triangular_indices(ncol, nbas):
+    dim = nbas * (nbas + 1) // 2
     idx = np.empty((dim, 3), dtype=np.int64)
     cnt = 0
     for i in range(ncol):
@@ -45,7 +46,7 @@ class Output(Editor):
         ncol = len(self[found + 1].split())
         start = found + 2
         rmdr = nbas % ncol
-        skips = np.array(list(reversed(range(rmdr, nbas + rmdr, ncol))))
+        skips = np.array(list(reversed(range(rmdr, nbas + max(1, rmdr), ncol))))
         skips = np.cumsum(skips) + np.arange(len(skips))
         stop = start + skips[-1]
         matrix = self.pandas_dataframe(start, stop, ncol + 1,
