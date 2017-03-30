@@ -19,22 +19,22 @@ class Testatompos(UnitTester):
         self.precs = _atompos(1, -2.1111111, 3, precision=4)
 
     def test_zero(self):
-        self.assertEqual(self.zeros.x, 'x')
-        self.assertEqual(self.zeros.y, 'y')
-        self.assertEqual(self.zeros.z, 'z')
-        self.assertEqual(self.zeros.r2, '(x**2+y**2+z**2)')
-        self.assertEqual(self.zeros.r2, '(x**2+y**2+z**2)**0.5')
+        self.assertEqual(self.zeros['x'], 'x')
+        self.assertEqual(self.zeros['y'], 'y')
+        self.assertEqual(self.zeros['z'], 'z')
+        self.assertEqual(self.zeros['r2'], '(x**2+y**2+z**2)')
+        self.assertEqual(self.zeros['r'], '(x**2+y**2+z**2)**0.5')
 
     def  test_nonz(self):
-        self.assertEqual(self.nonzs.x, '(x-1.)')
-        self.assertEqual(self.nonzs.y, '(y+2.)')
-        self.assertEqual(self.nonzs.z, '(z-3.)')
-        self.assertEqual(self.nonzs.r2, '((x-1.)**2+(y-2.)**2+(z-3.)**2)')
-        self.assertEqual(self.nonzs.r2, '((x-1.)**2+(y-2.)**2+(z-3.)**2)**0.5')
+        self.assertEqual(self.nonzs['x'], '(x-1.)')
+        self.assertEqual(self.nonzs['y'], '(y+2.)')
+        self.assertEqual(self.nonzs['z'], '(z-3.)')
+        self.assertEqual(self.nonzs['r2'], '((x-1.)**2+(y-2.)**2+(z-3.)**2)')
+        self.assertEqual(self.nonzs['r'], '((x-1.)**2+(y-2.)**2+(z-3.)**2)**0.5')
 
     def test_precs(self):
-        self.assertEqual(self.precs.y, '(y+2.1111)')
-        self.assertEqual(self.precs.y, '((x-1.)**2+(2.1111)**2+(z-3.)**2)')
+        self.assertEqual(self.precs['y'], '(y+2.1111)')
+        self.assertEqual(self.precs['r2'], '((x-1.)**2+(2.1111)**2+(z-3.)**2)')
 
 
 class TestMakeFps(UnitTester):
@@ -87,9 +87,9 @@ class TestCleanSH(UnitTester):
 
     def test_clean(self):
         self.assertEqual(self.sh[(0,  0)], [''])
-        self.assertEqual(self.sh[(1, -1)], ['{y}*'])
-        self.assertEqual(self.sh[(1,  0)], ['{z}*'])
-        self.assertEqual(self.sh[(1,  1)], ['{x}*'])
+        self.assertEqual(self.sh[(1, -1)], ['1.0*{y}*'])
+        self.assertEqual(self.sh[(1,  0)], ['1.0*{z}*'])
+        self.assertEqual(self.sh[(1,  1)], ['1.0*{x}*'])
         self.assertEqual(self.sh[(2, -2)], ['1.7320508076*{x}*{y}*'])
         self.assertEqual(self.sh[(2, -1)], ['1.7320508076*{y}*{z}*'])
         self.assertEqual(self.sh[(2,  1)], ['1.7320508076*{x}*{z}*'])
@@ -102,14 +102,14 @@ class TestSphrPrefac(UnitTester):
         self.nuc = _atompos(0, 0, 0)
 
     def test_sphr_prefac(self):
-        self.assertEqual(_sphr_prefac(self.csh, 0,  0, self.nuc), [''])
-        self.assertEqual(_sphr_prefac(self.csh, 1, -1, self.nuc), ['y*'])
-        self.assertEqual(_sphr_prefac(self.csh, 1,  0, self.nuc), ['z*'])
-        self.assertEqual(_sphr_prefac(self.csh, 1,  1, self.nuc), ['x*'])
-        self.assertEqual(_sphr_prefac(self.csh, 2, -2, self.nuc), ['1.7320508076*x*y*'])
-        self.assertEqual(_sphr_prefac(self.csh, 2, -1, self.nuc), ['1.7320508076*y*z*'])
-        self.assertEqual(_sphr_prefac(self.csh, 2,  1, self.nuc), ['1.7320508076*x*z*'])
-        self.assertEqual(_sphr_prefac(self.csh, 3, -2, self.nuc), ['3.8729833462*x*y*z*'])
+        self.assertEqual(_sphr_prefac(self.nuc, self.csh, 0,  0), [''])
+        self.assertEqual(_sphr_prefac(self.nuc, self.csh, 1, -1), ['y*'])
+        self.assertEqual(_sphr_prefac(self.nuc, self.csh, 1,  0), ['z*'])
+        self.assertEqual(_sphr_prefac(self.nuc, self.csh, 1,  1), ['x*'])
+        self.assertEqual(_sphr_prefac(self.nuc, self.csh, 2, -2), ['1.7320508076*x*y*'])
+        self.assertEqual(_sphr_prefac(self.nuc, self.csh, 2, -1), ['1.7320508076*y*z*'])
+        self.assertEqual(_sphr_prefac(self.nuc, self.csh, 2,  1), ['1.7320508076*x*z*'])
+        self.assertEqual(_sphr_prefac(self.nuc, self.csh, 3, -2), ['3.8729833462*x*y*z*'])
 
 
 class TestCartPrefac(UnitTester):
@@ -118,21 +118,22 @@ class TestCartPrefac(UnitTester):
         self.nor = _atompos(0.5,0.5,0.5)
 
     def test_cart_prefac(self):
-        self.assertEqual(_cart_prefac(0, 0, 0, 0, self.org), [''])
-        self.assertEqual(_cart_prefac(1, 1, 0, 0, self.org), ['x*'])
-        self.assertEqual(_cart_prefac(1, 0, 1, 0, self.org), ['y*'])
-        self.assertEqual(_cart_prefac(1, 0, 0, 1, self.org), ['z*'])
-        self.assertEqual(_cart_prefac(2, 2, 0, 0, self.org), ['x**2*'])
-        self.assertEqual(_cart_prefac(2, 1, 1, 0, self.org), ['x*y*'])
-        self.assertEqual(_cart_prefac(2, 1, 0, 1, self.org), ['x*z*'])
-        self.assertEqual(_cart_prefac(2, 0, 1, 1, self.org), ['y*z*'])
-        self.assertEqual(_cart_prefac(2, 0, 2, 0, self.org), ['y**2*'])
-        self.assertEqual(_cart_prefac(2, 0, 0, 2, self.org), ['z**2*'])
-        self.assertEqual(_cart_prefac(1, 1, 0, 0, self.nor), ['(x-0.5)*'])
-        self.assertEqual(_cart_prefac(1, 0, 1, 0, self.nor), ['(y-0.5)*'])
-        self.assertEqual(_cart_prefac(1, 0, 0, 1, self.nor), ['(z-0.5)*'])
-        self.assertEqual(_cart_prefac(2, 2, 0, 0, self.nor), ['(x-0.5)**2*'])
-        self.assertEqual(_cart_prefac(2, 1, 1, 0, self.nor), ['(x-0.5)*(y-0.5)*'])
+        self.assertEqual(_cart_prefac(self.org, '', 0, 0, 0, 0,), [''])
+        self.assertEqual(_cart_prefac(self.org, '', 1, 1, 0, 0,), ['x*'])
+        self.assertEqual(_cart_prefac(self.org, '', 1, 0, 1, 0,), ['y*'])
+        self.assertEqual(_cart_prefac(self.org, '', 1, 0, 0, 1,), ['z*'])
+        self.assertEqual(_cart_prefac(self.org, '', 2, 2, 0, 0,), ['x**2*'])
+        self.assertEqual(_cart_prefac(self.org, '', 2, 1, 1, 0,), ['x*y*'])
+        self.assertEqual(_cart_prefac(self.org, '', 2, 1, 0, 1,), ['x*z*'])
+        self.assertEqual(_cart_prefac(self.org, '', 2, 0, 1, 1,), ['y*z*'])
+        self.assertEqual(_cart_prefac(self.org, '', 2, 0, 2, 0,), ['y**2*'])
+        self.assertEqual(_cart_prefac(self.org, '', 2, 0, 0, 2,), ['z**2*'])
+        self.assertEqual(_cart_prefac(self.nor, '', 1, 1, 0, 0,), ['(x-0.5)*'])
+        self.assertEqual(_cart_prefac(self.nor, '', 1, 0, 1, 0,), ['(y-0.5)*'])
+        self.assertEqual(_cart_prefac(self.nor, '', 1, 0, 0, 1,), ['(z-0.5)*'])
+        self.assertEqual(_cart_prefac(self.nor, '', 2, 2, 0, 0,), ['(x-0.5)**2*'])
+        self.assertEqual(_cart_prefac(self.nor, '', 2, 1, 1, 0,), ['(x-0.5)*(y-0.5)*'])
+        self.assertEqual(_cart_prefac(self.nor, '1.0', 2, 1, 1, 0,), ['1.0*(x-0.5)*(y-0.5)*'])
 
 
 class TestGenBsfn(UnitTester):
@@ -144,8 +145,10 @@ class TestGenBsfn(UnitTester):
         self.r2str = _atompos(0,0,0).r2
 
     def test_gen_basfn(self):
-        self.assertEqual(gen_basfn([''], self.uncontdf, self.r2str),
+        self.assertEqual(gen_basfn([''], self.uncontdf, self.r2str['r2']),
                          '(1.*np.exp(-1.*(x**2+y**2+z**2)))')
-        self.assertEqual(gen_basfn([''], self.contdf, self.r2str),
+        self.assertEqual(gen_basfn([''], self.uncontdf, self.r2str['r']),
+                         '(1.*np.exp(-1.*(x**2+y**2+z**2)**0.5))')
+        self.assertEqual(gen_basfn([''], self.contdf, self.r2str['r2']),
                          '(1.*np.exp(-1.*(x**2+y**2+z**2))+'
                           '4.*np.exp(-2.*(x**2+y**2+z**2)))')

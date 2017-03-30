@@ -7,6 +7,8 @@ Matrices
 For handling matrices of common dimensionality in QM calcs.
 """
 
+import numpy as np
+import pandas as pd
 from exa import DataFrame
 from numba import jit
 
