@@ -173,6 +173,29 @@ class Orbital(_Convolve):
         else:
             return self.iloc[index]
 
+    @classmethod
+    def from_energies(cls, energies, nbas, alphae, betae):
+        try: ae, be = int(alphae), int(betae)
+        except: raise NotImplementedError('Only integer occupation')
+        lens = energies.shape[0]
+        if lens == nbas:
+            spin = np.zeros(nbas, dtype=np.int64)
+            vector = range(nbas)
+            occs = np.concatenate((np.repeat(2, ae),
+                                   np.zeros(nbas - ae)))
+            frame = group = np.zeros(nbas, dtype=np.int64)
+        elif lens == nbas * 2:
+            hens = lens // 2
+            spin = np.concatenate((np.zeros(hens), np.ones(hens)))
+            vector = np.concatenate((range(nbas), range(nbas)))
+            occs = np.concatenate((np.ones(ae), np.zeros(nbas - ae),
+                                   np.ones(be), np.zeros(nbas - be)))
+            frame = group = np.zeros(nbas * 2, dtype=np.int64)
+        else: raise Exception('Passed energies.shape is not 1 or 2 * nbas')
+        return cls.from_dict({'frame': frame, 'group': group,
+                              'energy': energies, 'spin': spin,
+                              'occupation': occs, 'vector': vector})
+
 class Excitation(_Convolve):
     """
     +-------------------+----------+-------------------------------------------+
@@ -209,6 +232,9 @@ class Excitation(_Convolve):
         via the transition dipole method (provided a universe contains
         an MOMatrix and dipole moment integrals already).
         """
+        if not hasattr(uni, 'multipole'):
+            print('Universe must have dipole integrals.')
+            return
         dim = len(uni.basis_set_order.index)
         fix = (np.ones((dim, dim)) - np.eye(dim, dim) / 2)
         rx = ((uni.multipole.pivot('chi0', 'chi1', 'ix1').fillna(0.0)
@@ -227,7 +253,7 @@ class Excitation(_Convolve):
         tdm['osc'] = tdm['energy'] ** 3 * (tdm['mux'] + tdm['muy'] + tdm['muz']) ** 2
         tdm['frame'] = tdm['group'] = 0
         tdm.index.rename(['occ', 'virt'], inplace=True)
-        return cls(tdm)
+        return cls(tdm.reset_index())
 
 
 class MOMatrix(DataFrame):

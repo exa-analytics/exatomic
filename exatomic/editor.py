@@ -46,6 +46,8 @@ class Editor(BaseEditor, metaclass=Meta):
             result = None
             try:
                 result = getattr(self, attr)
+            except (IndexError, NameError) as e:
+                print('{} failed with : {}'.format(attr, e))
             except AttributeError:
                 pass
             if result is not None:

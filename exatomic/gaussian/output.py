@@ -17,6 +17,7 @@ from exa.relational.isotope import z_to_symbol
 from exatomic import Energy
 from exatomic.frame import compute_frame_from_atom
 from exatomic.basis import BasisSet
+from exatomic.orbital import Orbital
 from exatomic.algorithms.basis import lmap, lorder
 
 z_to_symbol = z_to_symbol()
@@ -55,7 +56,7 @@ class Output(Editor):
                                        lambda x: x.replace('D', 'E')
                                        ).astype(np.float64).values
         if values_only: return matrix
-        idxs = _triangular_indices(ncol, nbas, matrix.shape[0])
+        idxs = _triangular_indices(ncol, nbas)
         return pd.DataFrame.from_dict({'chi0': idxs[:,0],
                                        'chi1': idxs[:,1],
                                       'frame': idxs[:,2],
@@ -98,6 +99,7 @@ class Output(Editor):
     def parse_basis_set(self):
         # Find the basis set
         found = self.regex(_rebas02, _rebas03, keys_only=True)
+        if not found[_rebas02]: return
         start = stop = found[_rebas02][0] + 1
         while self[stop].strip(): stop += 1
         # Raw data
@@ -217,7 +219,8 @@ class Output(Editor):
         # Iterate over where the data was found
         # c counts the column in the resulting momatrix table
         for c, (lno, ln) in enumerate(found[_remomat02]):
-            start = self.find_next('Eigenvalues', start=lno, keys_only=True) + 1
+            start = self.find_next('Eigenvalues', 'EIGENVALUES',
+                                    start=lno, keys_only=True) + 1
             stop = start + nbas
             # The basis set order is printed with every chunk of eigenvectors
             if c == 0: self.basis_set_order = _basis_set_order(self[start:stop])
@@ -297,9 +300,10 @@ class Output(Editor):
         # Iterate over what we found
         for i, (lno, ln) in enumerate(found):
             # Split this line up into what we want and x
-            x, x, x, kind, en, x, x, x, osc, x = ln.split()
+            ll = ln.split()
+            kind, en, osc = ll[3], ll[4], ll[8]
             # Same for the line right after it
-            occ, x, virt, x = self[ln + 1].split()
+            occ, x, virt, x = self[lno + 1].split()
             # Assign the values
             data[i] = (en, osc.replace('f=', ''), occ, virt) + tuple(kind.split('-'))
         excitation = pd.DataFrame(data)
@@ -313,9 +317,9 @@ class Output(Editor):
 
     def parse_frequency(self):
         found = self.regex(_refreq, stop=1000, flags=re.IGNORECASE)
-        if not found: return
         # Don't need the input deck or 2 from the summary at the end
         found = self.find(_refreq)[1:-2]
+        if not found: return
         # Total lines per block minus the unnecessary ones
         span = found[1][0] - found[0][0] - 7
         dfs, fdx = [], 0
@@ -533,10 +537,6 @@ class Fchk(Editor):
         self.basis_set = sets
         self.atom['set'] = self.atom['set'].map(setmap)
 
-    def parse_orbital(self):
-        found = self.find(_realphaen)
-        pass
-
     def parse_basis_set_order(self):
         # Unique basis sets
         sets = self.basis_set.groupby('set')
@@ -572,9 +572,6 @@ class Fchk(Editor):
         except IndexError:
             ninp = nbas
         ncoef = self._intme(found[_reamomatrix])
-        if nbas * ninp != ncoef:
-            raise Exception('Dimensions are inconsistent.')
-            return
         # Alpha or closed shell MO coefficients
         coefs = self._dfme(found[_reamomatrix], ncoef)
         # Beta MO coefficients if they exist
@@ -588,6 +585,17 @@ class Fchk(Editor):
                                                 'coef': coefs, 'frame': frame})
         if bcoefs is not None:
             self.momatrix['coef1'] = bcoefs
+
+
+    def parse_orbital(self):
+        found = self.find(_reorben, _reorboc, keys_only=True)
+        ae = self._intme(found[_reorboc], idx=1)
+        be = self._intme(found[_reorboc], idx=2)
+        nbas = self._intme(found[_reorben])
+        ens = np.concatenate([self._dfme(start, nbas, idx=i)
+                              for i, start in enumerate(found[_reorben])])
+        self.orbital = Orbital.from_energies(ens, nbas, ae, be)
+
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -607,23 +615,7 @@ def _dedup(sets, sp=False):
             unique.append(seht)
             setmap[center] = cnt
             cnt += 1
-        if sp:
-            expand = []
-            for seht in unique:
-                if np.isnan(seht[2]).sum() == seht.shape[0]:
-                    expand.append(seht)
-                    continue
-                sps = seht[2][~np.isnan(seht[2])].index
-                dupl = seht.ix[sps[0]:sps[-1]].copy()
-                dupl['d'] = dupls[2]
-                dupl['L'] = 1
-                dupl['shell'] += 2
-                last = seht.ix[sps[-1] + 1:].copy()
-                last['shell'] += 2
-                expand.append(pd.concat([seht.ix[:sps[0] - 1],
-                                         seht.ix[sps[0]:sps[-1]],
-                                         dupl, last]))
-            unique = expand
+    if sp: unique = _expand_sp(unique)
     sets = pd.concat(unique).reset_index(drop=True)
     sets.rename(columns={'center': 'set', 0: 'alpha', 1: 'd'}, inplace=True)
     try: sets.drop([2, 3], axis=1, inplace=True)
@@ -631,6 +623,24 @@ def _dedup(sets, sp=False):
     sets['set'] = sets['set'].map(setmap)
     sets['frame'] = 0
     return sets, setmap
+
+def _expand_sp(unique):
+    expand = []
+    for seht in unique:
+        if np.isnan(seht[2]).sum() == seht.shape[0]:
+            expand.append(seht)
+            continue
+        sps = seht[2][~np.isnan(seht[2])].index
+        dupl = seht.ix[sps[0]:sps[-1]].copy()
+        dupl['d'] = dupl[2]
+        dupl['L'] = 1
+        dupl['shell'] += 2
+        last = seht.ix[sps[-1] + 1:].copy()
+        last['shell'] += 2
+        expand.append(pd.concat([seht.ix[:sps[0] - 1],
+                                 seht.ix[sps[0]:sps[-1]],
+                                 dupl, last]))
+    return expand
 
 # Atom regex
 _renat = 'Number of atoms'
@@ -655,3 +665,7 @@ _reindepdim = 'Number of independant functions'
 _realphaen = 'Alpha Orbital Energies'
 _reamomatrix = 'Alpha MO coefficients'
 _rebmomatrix = 'Beta MO coefficients'
+
+# Orbital regex
+_reorboc = 'Number of .*electrons'
+_reorben = 'Orbital Energies'
