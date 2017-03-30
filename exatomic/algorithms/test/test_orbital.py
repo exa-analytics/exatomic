@@ -8,6 +8,7 @@ import numpy as np
 import pandas as pd
 
 from exa.test import UnitTester
+from exatomic.algorithms.basis import clean_sh, solid_harmonics
 from exatomic.algorithms.orbital import (make_fps, _atompos, _sphr_prefac,
                                          _cart_prefac, gen_basfn)
 
@@ -80,25 +81,25 @@ class TestMakeFps(UnitTester):
         self.assertEqual(self.all.dzj[0], 0)
 
 
-# class TestCleanSH(UnitTester):
-#     def setUp(self):
-#         self.sh = clean_sh(solid_harmonics(3))
-#
-#     def test_clean(self):
-#         self.assertEqual(self.sh[(0,  0)], [''])
-#         self.assertEqual(self.sh[(1, -1)], ['{nuc.y}*'])
-#         self.assertEqual(self.sh[(1,  0)], ['{nuc.z}*'])
-#         self.assertEqual(self.sh[(1,  1)], ['{nuc.x}*'])
-#         self.assertEqual(self.sh[(2, -2)], ['1.7320508076*{nuc.x}*{nuc.y}*'])
-#         self.assertEqual(self.sh[(2, -1)], ['1.7320508076*{nuc.y}*{nuc.z}*'])
-#         self.assertEqual(self.sh[(2,  1)], ['1.7320508076*{nuc.x}*{nuc.z}*'])
-#         self.assertEqual(self.sh[(3, -2)], ['3.8729833462*{nuc.x}*{nuc.y}*{nuc.z}*'])
+ class TestCleanSH(UnitTester):
+     def setUp(self):
+         self.sh = clean_sh(solid_harmonics(3))
+
+     def test_clean(self):
+         self.assertEqual(self.sh[(0,  0)], [''])
+         self.assertEqual(self.sh[(1, -1)], ['{y}*'])
+         self.assertEqual(self.sh[(1,  0)], ['{z}*'])
+         self.assertEqual(self.sh[(1,  1)], ['{x}*'])
+         self.assertEqual(self.sh[(2, -2)], ['1.7320508076*{x}*{y}*'])
+         self.assertEqual(self.sh[(2, -1)], ['1.7320508076*{y}*{z}*'])
+         self.assertEqual(self.sh[(2,  1)], ['1.7320508076*{x}*{z}*'])
+         self.assertEqual(self.sh[(3, -2)], ['3.8729833462*{x}*{y}*{z}*'])
 
 
 class TestSphrPrefac(UnitTester):
     def setUp(self):
         self.csh = clean_sh(solid_harmonics(3))
-        self.nuc = Nucpos(0, 0, 0)
+        self.nuc = _atompos(0, 0, 0)
 
     def test_sphr_prefac(self):
         self.assertEqual(_sphr_prefac(self.csh, 0,  0, self.nuc), [''])
@@ -113,8 +114,8 @@ class TestSphrPrefac(UnitTester):
 
 class TestCartPrefac(UnitTester):
     def setUp(self):
-        self.org = Nucpos(0, 0, 0)
-        self.nor = Nucpos(0.5,0.5,0.5)
+        self.org = _atompos(0, 0, 0)
+        self.nor = _atompos(0.5,0.5,0.5)
 
     def test_cart_prefac(self):
         self.assertEqual(_cart_prefac(0, 0, 0, 0, self.org), [''])
@@ -140,7 +141,7 @@ class TestGenBsfn(UnitTester):
         self.contdf = pd.DataFrame.from_dict({'N': [1, 2], 'd': [1, 2], 'alpha': [1, 2]})
         self.uncontdf['Nd'] = self.uncontdf['N'] * self.uncontdf['d']
         self.contdf['Nd'] = self.contdf['N'] * self.contdf['d']
-        self.r2str = Nucpos(0,0,0).r2
+        self.r2str = _atompos(0,0,0).r2
 
     def test_gen_basfn(self):
         self.assertEqual(gen_basfn([''], self.uncontdf, self.r2str),

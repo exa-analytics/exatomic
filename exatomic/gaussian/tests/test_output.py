@@ -38,7 +38,7 @@ class TestOutput(UnitTester):
     def test_parse_basis_set(self):
         """Test the gaussian basis set table parser."""
         self.uo2sp.parse_basis_set()
-        self.assertEqual(self.uo2sp.basis_set.shape, (49, 6))
+        self.assertEqual(self.uo2sp.basis_set.shape[0], 49)
         self.assertTrue(np.all(pd.notnull(self.uo2sp.basis_set)))
 
     def test_parse_orbital(self):

@@ -110,6 +110,7 @@ class Output(Editor):
         shldx = _padx(df[3][~np.isnan(df[3])].index)
         lindx = df[0][df[0].str.lower().isin(lorder + ['sp'])]
         # Populate the df
+        print(df)
         df['L'] = lindx.str.lower().map(lmap)
         df['L'] = df['L'].fillna(method='ffill').fillna(
                                  method='bfill').astype(np.int64)
@@ -135,6 +136,8 @@ class Output(Editor):
         # Deduplicate basis sets and expand 'SP' shells if present
         df, setmap = _dedup(df, sp=sp)
         spherical = '5D' in self[found[_rebas03][0]]
+        print(df)
+        print(df.dtypes)
         self.basis_set = BasisSet(df, spherical=spherical)
         self.atom['set'] = self.atom['set'].map(setmap)
 

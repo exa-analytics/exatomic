@@ -111,7 +111,7 @@ class _Symmetric(_Matrix):
         return cls(pd.DataFrame.from_dict({idx0: idxs[:,0],
                                            idx1: idxs[:,1],
                                         'frame': idxs[:,2],
-                                         column: arr})
+                                         column: arr}))
 
 
 class _Square(_Matrix):

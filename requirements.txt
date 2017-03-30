@@ -15,5 +15,6 @@ sphinx
 nose
 numba
 psutil
+numexpr
 sphinxcontrib-autoanysrc
 exa
