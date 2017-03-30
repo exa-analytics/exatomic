@@ -31,6 +31,18 @@ class Editor(BaseEditor, metaclass=Meta):
         """
         self.frame = compute_frame_from_atom(self.atom)
 
+    def _find_break(self, start, finds=[]):
+        stop = start
+        if finds:
+            while True:
+                stop += 1
+                if any((find in self[stop] for find in finds)):
+                    return stop
+        while True:
+            stop += 1
+            if not self[stop].strip():
+                return stop
+
     def to_universe(self, name=None, description=None, meta=None):
         """
         Convert the editor to a :class:`~exatomic.container.Universe` object.

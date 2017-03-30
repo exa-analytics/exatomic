@@ -110,7 +110,6 @@ class Output(Editor):
         shldx = _padx(df[3][~np.isnan(df[3])].index)
         lindx = df[0][df[0].str.lower().isin(lorder + ['sp'])]
         # Populate the df
-        print(df)
         df['L'] = lindx.str.lower().map(lmap)
         df['L'] = df['L'].fillna(method='ffill').fillna(
                                  method='bfill').astype(np.int64)
@@ -136,8 +135,6 @@ class Output(Editor):
         # Deduplicate basis sets and expand 'SP' shells if present
         df, setmap = _dedup(df, sp=sp)
         spherical = '5D' in self[found[_rebas03][0]]
-        print(df)
-        print(df.dtypes)
         self.basis_set = BasisSet(df, spherical=spherical)
         self.atom['set'] = self.atom['set'].map(setmap)
 
@@ -222,8 +219,7 @@ class Output(Editor):
         # Iterate over where the data was found
         # c counts the column in the resulting momatrix table
         for c, (lno, ln) in enumerate(found[_remomat02]):
-            start = self.find_next('Eigenvalues', 'EIGENVALUES',
-                                    start=lno, keys_only=True) + 1
+            start = self._find_break(lno, finds=['Eigenvalues', 'EIGENVALUES']) + 1
             stop = start + nbas
             # The basis set order is printed with every chunk of eigenvectors
             if c == 0: self.basis_set_order = _basis_set_order(self[start:stop])
@@ -385,41 +381,69 @@ class Output(Editor):
 def _basis_set_order(chunk):
     # Gaussian only prints the atom center
     # and label once for all basis functions
-    nas = (np.nan, np.nan)
-    lsp = len(chunk[0]) - len(chunk[0].lstrip(' ')) + 2
-    centers = [(ln[lsp:lsp + 3].strip(), ln[lsp + 3:lsp + 6].strip())
-               if ln[lsp:lsp + 3].strip() else nas for ln in chunk]
-    # pandas takes care of that
-    basord = pd.DataFrame(centers, columns=('center', 'tag')).fillna(method='pad')
-    basord['center'] = basord['center'].astype(np.int64)
-    # Zero based indexing
-    basord['center'] -= 1
-    # nlml defines the type of basis function
-    types = '\n'.join([ln[10:20].strip() for ln in chunk])
-    # Gaussian prints 'D 0' so replace with 'D0'
-    types = _rebaspat.sub(lambda m: _basrep[m.group(0)], types)
-    types = pd.Series(types.splitlines())
-    # Now pull it apart into n, l, ml columns
-    split = r"([0-9]{1,})([A-z])(.*)"
-    basord[['n', 'L', 'ml']] = types.str.extract(split, expand=True)
-    # And clean it up -- don't really need n but can use it for shells
-    basord['n'] = basord['n'].astype(np.int64) - 1
-    basord['L'] = basord['L'].str.lower().map(lmap).astype(np.int64)
-    basord['ml'].update(basord['ml'].map({'': 0, 'X': 1, 'Y': -1, 'Z': 0}))
-    basord['ml'] = basord['ml'].astype(np.int64)
-    # Finally get shells -- why so difficult
-    shfns = []
-    shl, pcen, pl, pn = -1, -1, -1, -1
-    for cen, n, l in zip(basord['center'], basord['n'], basord['L']):
+    df = pd.read_fwf(StringIO('\n'.join(chunk)),
+                     widths=[4, 4, 3, 2, 4], header=None)
+    df[1].fillna(method='ffill', inplace=True)
+    df[1] = df[1].astype(np.int64) - 1
+    df[2].fillna(method='ffill', inplace=True)
+    df.rename(columns={1: 'center', 3: 'N', 4: 'ang'}, inplace=True)
+    df['N'] = df['N'].astype(np.int64) - 1
+    cart = 'XX' in df['ang'].values
+    if cart:
+        df[['L', 'l', 'm', 'n']] = df['ang'].map({'S': [0, 0, 0, 0],
+                'XX': [2, 2, 0, 0], 'XY': [2, 1, 1, 0], 'XZ': [2, 1, 0, 1],
+                'YY': [2, 0, 2, 0], 'YZ': [2, 0, 1, 1], 'ZZ': [2, 0, 0, 2],
+                'PX': [1, 1, 0, 0], 'PY': [1, 0, 1, 0], 'PZ': [1, 0, 0, 1],
+                }).apply(tuple).apply(pd.Series)
+    else:
+        df['L'] = df['ang'].str[:1].str.lower().map(lmap).astype(np.int64)
+        df['ml'] = df['ang'].str[1:]
+        df['ml'].update(df['ml'].map({'': 0, 'X': 1, 'Y': -1, 'Z': 0}))
+        df['ml'] = df['ml'].astype(np.int64)
+    shl, pcen, pl, pn, shfns = -1, -1, -1, -1, []
+    for cen, n, l in zip(df['center'], df['N'], df['L']):
         if not pcen == cen: shl = -1
         if (not pl == l) or (not pn == n): shl += 1
         shfns.append(shl)
         pcen, pl, pn = cen, l, n
-    basord['shell'] = shfns
-    # Get rid of n because it isn't even n anymore
-    del basord['n']
-    basord['frame'] = 0
-    return basord
+    df['shell'] = shfns
+    df.drop([0, 2, 'N', 'ang'], axis=1, inplace=True)
+    df['frame'] = 0
+    return df
+    # nas = (np.nan, np.nan)
+    # lsp = len(chunk[0]) - len(chunk[0].lstrip(' ')) + 2
+    # centers = [(ln[lsp:lsp + 3].strip(), ln[lsp + 3:lsp + 6].strip())
+    #            if ln[lsp:lsp + 3].strip() else nas for ln in chunk]
+    # # pandas takes care of that
+    # basord = pd.DataFrame(centers, columns=('center', 'tag')).fillna(method='pad')
+    # basord['center'] = basord['center'].astype(np.int64)
+    # # Zero based indexing
+    # basord['center'] -= 1
+    # # nlml defines the type of basis function
+    # types = '\n'.join([ln[10:20].strip() for ln in chunk])
+    # # Gaussian prints 'D 0' so replace with 'D0'
+    # types = _rebaspat.sub(lambda m: _basrep[m.group(0)], types)
+    # types = pd.Series(types.splitlines())
+    # # Now pull it apart into n, l, ml columns
+    # split = r"([0-9]{1,})([A-z])(.*)"
+    # print(basord)
+    # basord[['n', 'L', 'ml']] = types.str.extract(split, expand=True)
+    # # And clean it up -- don't really need n but can use it for shells
+    # basord['n'] = basord['n'].astype(np.int64) - 1
+    # basord['L'] = basord['L'].str.lower().map(lmap).astype(np.int64)
+    # # Finally get shells -- why so difficult
+    # shfns = []
+    # shl, pcen, pl, pn = -1, -1, -1, -1
+    # for cen, n, l in zip(basord['center'], basord['n'], basord['L']):
+    #     if not pcen == cen: shl = -1
+    #     if (not pl == l) or (not pn == n): shl += 1
+    #     shfns.append(shl)
+    #     pcen, pl, pn = cen, l, n
+    # basord['shell'] = shfns
+    # # Get rid of n because it isn't even n anymore
+    # del basord['n']
+    # basord['frame'] = 0
+    # return basord
 
 
 _csv_args = {'delim_whitespace': True, 'header': None}
@@ -440,7 +464,7 @@ _remomat01 = r'pop.*(?=full|no)'
 _remomat02 = 'Orbital Coefficients'
 # Basis flags
 _rebas01 = r'basis functions,'
-_rebas02 = 'AO basis set in the form of general basis input \(Overlap normalization\)'
+_rebas02 = 'AO basis set in the form of general basis input'
 _rebas03 = ' (Standard|General) basis'
 _basrep = {'D 0': 'D0', 'F 0': 'F0',
            'G 0': 'G0', 'H 0': 'H0', 'I 0': 'I0'}
@@ -620,9 +644,9 @@ def _dedup(sets, sp=False):
             cnt += 1
     if sp: unique = _expand_sp(unique)
     sets = pd.concat(unique).reset_index(drop=True)
-    sets.rename(columns={'center': 'set', 0: 'alpha', 1: 'd'}, inplace=True)
     try: sets.drop([2, 3], axis=1, inplace=True)
     except ValueError: pass
+    sets.rename(columns={'center': 'set', 0: 'alpha', 1: 'd'}, inplace=True)
     sets['set'] = sets['set'].map(setmap)
     sets['frame'] = 0
     return sets, setmap
@@ -634,12 +658,13 @@ def _expand_sp(unique):
             expand.append(seht)
             continue
         sps = seht[2][~np.isnan(seht[2])].index
+        shls = len(seht.ix[sps]['shell'].unique())
         dupl = seht.ix[sps[0]:sps[-1]].copy()
-        dupl['d'] = dupl[2]
+        dupl[1] = dupl[2]
         dupl['L'] = 1
-        dupl['shell'] += 2
+        dupl['shell'] += shls
         last = seht.ix[sps[-1] + 1:].copy()
-        last['shell'] += 2
+        last['shell'] += shls
         expand.append(pd.concat([seht.ix[:sps[0] - 1],
                                  seht.ix[sps[0]:sps[-1]],
                                  dupl, last]))

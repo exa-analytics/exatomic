@@ -27,18 +27,6 @@ class Editor(AtomicEditor):
                 df.append([shell.lower(), int(nprim), int(nbas), seht, True])
         return pd.DataFrame(df)
 
-    def _find_break(self, start, finds=[]):
-        stop = start
-        if finds:
-            while True:
-                stop += 1
-                if any((find in self[stop] for find in finds)):
-                    return stop
-        while True:
-            stop += 1
-            if not self[stop].strip():
-                return stop
-
     def to_universe(self, *args, **kwargs):
         uni = self._to_universe(self, *args, **kwargs)
         try:

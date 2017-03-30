@@ -81,19 +81,19 @@ class TestMakeFps(UnitTester):
         self.assertEqual(self.all.dzj[0], 0)
 
 
- class TestCleanSH(UnitTester):
-     def setUp(self):
-         self.sh = clean_sh(solid_harmonics(3))
+class TestCleanSH(UnitTester):
+    def setUp(self):
+        self.sh = clean_sh(solid_harmonics(3))
 
-     def test_clean(self):
-         self.assertEqual(self.sh[(0,  0)], [''])
-         self.assertEqual(self.sh[(1, -1)], ['{y}*'])
-         self.assertEqual(self.sh[(1,  0)], ['{z}*'])
-         self.assertEqual(self.sh[(1,  1)], ['{x}*'])
-         self.assertEqual(self.sh[(2, -2)], ['1.7320508076*{x}*{y}*'])
-         self.assertEqual(self.sh[(2, -1)], ['1.7320508076*{y}*{z}*'])
-         self.assertEqual(self.sh[(2,  1)], ['1.7320508076*{x}*{z}*'])
-         self.assertEqual(self.sh[(3, -2)], ['3.8729833462*{x}*{y}*{z}*'])
+    def test_clean(self):
+        self.assertEqual(self.sh[(0,  0)], [''])
+        self.assertEqual(self.sh[(1, -1)], ['{y}*'])
+        self.assertEqual(self.sh[(1,  0)], ['{z}*'])
+        self.assertEqual(self.sh[(1,  1)], ['{x}*'])
+        self.assertEqual(self.sh[(2, -2)], ['1.7320508076*{x}*{y}*'])
+        self.assertEqual(self.sh[(2, -1)], ['1.7320508076*{y}*{z}*'])
+        self.assertEqual(self.sh[(2,  1)], ['1.7320508076*{x}*{z}*'])
+        self.assertEqual(self.sh[(3, -2)], ['3.8729833462*{x}*{y}*{z}*'])
 
 
 class TestSphrPrefac(UnitTester):
