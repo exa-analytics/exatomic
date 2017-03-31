@@ -214,7 +214,7 @@ def _cart_prefac(nuc, pre, L, l, m, n):
         pre += fmt.format(*stargs)
     return [pre.format(**nuc)]
 
-def gen_basfn(prefacs, shell, rexp):
+def gen_basfn(prefacs, shell, rexp, precision=10):
     """
     Given a list of pre-exponential factors and a shell of
     primitive functions (slice of basis set table), return
@@ -231,8 +231,9 @@ def gen_basfn(prefacs, shell, rexp):
     """
     bastr = '{prefac}({prims})'
     bastrs = []
-    primitive = '{{Nd:.8f}}*exp' \
-                '(-{{alpha:.8f}}*{rexp})'.format(rexp=rexp)
+    primitive = '{{Nd:.{precision}f}}*exp' \
+                '(-{{alpha:.{precision}f}}*{rexp})'.format(rexp=rexp,
+                                                           precision=precision)
     for prefac in prefacs:
         primitives = shell.apply(lambda x: primitive.format(**x), axis=1)
         bastrs.append(bastr.format(prefac=prefac,

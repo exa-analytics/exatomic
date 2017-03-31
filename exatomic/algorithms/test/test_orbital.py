@@ -145,10 +145,10 @@ class TestGenBsfn(UnitTester):
         self.atom = _atompos(0,0,0)
 
     def test_gen_basfn(self):
-        self.assertEqual(gen_basfn([''], self.uncontdf, self.atom['r2']),
-                         '(1.*np.exp(-1.*(x**2+y**2+z**2)))')
-        self.assertEqual(gen_basfn([''], self.uncontdf, self.atom['r']),
-                         '(1.*np.exp(-1.*(x**2+y**2+z**2)**0.5))')
-        self.assertEqual(gen_basfn([''], self.contdf, self.atom['r2']),
-                         '(1.*np.exp(-1.*(x**2+y**2+z**2))+'
-                          '4.*np.exp(-2.*(x**2+y**2+z**2)))')
+        self.assertEqual(gen_basfn([''], self.uncontdf, self.atom['r2'], precision=0),
+                         '(1*np.exp(-1*(x**2+y**2+z**2)))')
+        self.assertEqual(gen_basfn([''], self.uncontdf, self.atom['r'], precision=1),
+                         '(1.0*np.exp(-1.0*(x**2+y**2+z**2)**0.5))')
+        self.assertEqual(gen_basfn([''], self.contdf, self.atom['r2'], precision=2),
+                         '(1.00*np.exp(-1.00*(x**2+y**2+z**2))+'
+                          '4.00*np.exp(-2.00*(x**2+y**2+z**2)))')
