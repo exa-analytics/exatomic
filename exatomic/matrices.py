@@ -7,6 +7,8 @@ Matrices
 For handling matrices of common dimensionality in QM calcs.
 """
 
+import numpy as np
+import pandas as pd
 from exa import DataFrame
 from numba import jit
 
@@ -111,8 +113,7 @@ class _Symmetric(_Matrix):
         return cls(pd.DataFrame.from_dict({idx0: idxs[:,0],
                                            idx1: idxs[:,1],
                                         'frame': idxs[:,2],
-                                         column: arr})
-        return cls(df)
+                                         column: arr}))
 
 
 class _Square(_Matrix):

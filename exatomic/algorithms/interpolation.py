@@ -16,6 +16,7 @@ from scipy.interpolate import (interp1d, interp2d, griddata,
                                CloughTocher2DInterpolator, RectBivariateSpline,
                                RegularGridInterpolator)
 from scipy.signal import savgol_filter
+from scipy.optimize import curve_fit
 
 def _interpolate(df, x, y, z, method, kind, yfirst, dim, minimum):
     # Check that columns are in df
@@ -37,6 +38,36 @@ def _interpolate(df, x, y, z, method, kind, yfirst, dim, minimum):
         raise Exception('method must be in {}'.format(convenience.keys()))
     # Shape the data in df
     pivot = df.pivot(x, y, z)
+    if pivot.isnull().values.any():
+        print('Missing data is interpolated with a 3rd order piecewise polynomial.\n'
+              'End points are extrapolated with a fit function of 3rd order.')
+        pivot.interpolate(method='piecewise_polynomial', order=3, axis=1, inplace=True)
+        # Obtained from SO: http://stackoverflow.com/questions/22491628/extrapolate-values-in-pandas-dataframe
+        # Function to curve fit to the data
+        def func(x, a, b, c, d):
+                return a * (x ** 3) + b * (x ** 2) + c * x + d
+        # Initial parameter guess, just to kick off the optimization
+        guess = (0.5, 0.5, 0.5, 0.5)
+        # Create copy of data to remove NaNs for curve fitting
+        fit_df = pivot.dropna()
+        # Place to store function parameters for each column
+        col_params = {}
+        # Curve fit each column
+        for col in fit_df.columns:
+            # Get x & y
+            x = fit_df.index.astype(float).values
+            y = fit_df[col].values
+            # Curve fit column and get curve parameters
+            params = curve_fit(func, x, y, guess)
+            # Store optimized parameters
+            col_params[col] = params[0]
+        # Extrapolate each column
+        for col in pivot.columns:
+        # Get the index values for NaNs in the column
+            x = pivot[pd.isnull(pivot[col])].index.astype(float).values
+            # Extrapolate those points with the fitted function
+            pivot.loc[x, col] = func(x, *col_params[col])
+
     xdat = pivot.index.values
     ydat = pivot.columns.values
     zdat = pivot.values

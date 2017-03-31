@@ -13,23 +13,27 @@ from exatomic import Energy
 
 
 def _get_minimum(mindf):
-    absmin = mindf[mindf[2] == mindf[2].min()]
-    idxs = mindf[(mindf[0] > 0) & (mindf[1] > 0)].index.values
-    id0, id1 = idxs[:2]
-    cnt = 1
-    try:
-        while np.isclose(id0 + 1, id1):
-            id0, id1 = idxs[cnt:cnt + 2]
-            cnt += 1
-        slc = slice(idxs[0], id0 + 1)
-        amin = mindf.ix[idxs[0]:id0 + 1]
-    except:
-        if absmin.index[0] in idxs:
-            slc = list(idxs) + [idxs[-1] + 1]
-            amin = mindf.ix[idxs]
-        else:
-            slc = list(idxs) + list(absmin.index.values)
-    return mindf.ix[slc]
+#    absmin = mindf[mindf[2] == mindf[2].min()]
+#    idxs = mindf[(mindf[0] > 0) & (mindf[1] > 0)].index.values
+#    id0, id1 = idxs[:2]
+#    cnt = 1
+#    try:
+#        while np.isclose(id0 + 1, id1):
+#            id0, id1 = idxs[cnt:cnt + 2]
+#            cnt += 1
+#        slc = slice(idxs[0], id0 + 1)
+#        amin = mindf.ix[idxs[0]:id0 + 1]
+#    except:
+#        if absmin.index[0] in idxs:
+#            slc = list(idxs) + [idxs[-1] + 1]
+#            amin = mindf.ix[idxs]
+#        else:
+#            slc = list(idxs) + list(absmin.index.values)
+#    return mindf.ix[slc]
+    return mindf[(mindf[0] < mindf[0].max() - 0.01) &
+                 (mindf[0] > mindf[0].min() + 0.01) &
+                 (mindf[1] < mindf[1].max() - 0.01) &
+                 (mindf[1] > mindf[1].min() + 0.01)]
 
 
 def plot_j2_surface(data, key='j2', method='wireframe', nxlabel=6,
@@ -54,14 +58,16 @@ def plot_j2_surface(data, key='j2', method='wireframe', nxlabel=6,
 
 def plot_j2_contour(data, vmin=None, vmax=None, key='j2', figsize=(8,6),
                     nxlabel=6, nylabel=6, method='pcolor', cmap=None, title=None,
-                    minline=False, minpoint=False, legend=False, colorbar=False):
+                    minline=False, minpoint=False, legend=False, colorbar=False,
+                    cbarlabel=None, ncbarlabel=None, ncbardecimal=None):
     vmin = data[key].min() if vmin is None else vmin
     vmax = data[key].max() if vmax is None else vmax
     cmap = sns.mpl.pyplot.cm.get_cmap('coolwarm') if cmap is None else cmap
     figargs = {'figsize': figsize}
     axargs = {'vmin': vmin, 'vmax': vmax, 'cmap': cmap,
               'zorder': 1, 'rasterized': True}
-    fig, cbar = _plot_contour(data['alpha'], data['gamma'], data[key],
+    fig, cbar = _plot_contour(data['alpha'], data['gamma'], data[key], vmin, vmax,
+                              cbarlabel, ncbarlabel, ncbardecimal,
                               nxlabel, nylabel, method, colorbar, figargs, axargs)
     ax = fig.gca()
     if (minline or minpoint) and 'min' in data:

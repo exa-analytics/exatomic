@@ -8,10 +8,13 @@ generated programmatically with the right numerical function.
 This is preferred to an explicit parsing and storage of a given
 basis set ordering scheme.
 '''
+import re
 import sympy
 import numpy as np
+from sympy import Add, Mul
 from exatomic._config import config
 from collections import OrderedDict
+from numba import jit, vectorize
 
 x, y, z = sympy.symbols('x y z')
 
@@ -30,7 +33,7 @@ enum_cartesian = {0: [[0, 0, 0]],
                   2: [[2, 0, 0], [1, 1, 0], [1, 0, 1],
                       [0, 2, 0], [0, 1, 1], [0, 0, 2]],
                   3: [[3, 0, 0], [2, 1, 0], [2, 0, 1],
-                      [1, 2, 0], [1, 1, 1], [1, 0, 2], 
+                      [1, 2, 0], [1, 1, 1], [1, 0, 2],
                       [0, 3, 0], [0, 2, 1], [0, 1, 2], [0, 0, 3]],
                   4: [[4, 0, 0], [3, 1, 0], [3, 0, 1], [2, 2, 0], [2, 1, 1],
                       [2, 0, 2], [1, 3, 0], [1, 2, 1], [1, 1, 2], [1, 0, 3],
@@ -77,6 +80,28 @@ def solid_harmonics(l_max):
     return sh
 
 
+def clean_sh(sh):
+    """Turns symbolic solid harmonic functions into string representations
+    to be using in generating basis functions.
+
+    Args
+        sh (OrderedDict): Output from exatomic.algorithms.basis.solid_harmonics
+
+    Returns
+        clean (OrderedDict): cleaned strings
+    """
+    _replace = {'x': '{x}', 'y': '{y}', 'z': '{z}', ' - ': ' -'}
+    _repatrn = re.compile('|'.join(_replace.keys()))
+    clean = OrderedDict()
+    for key, sym in sh.items():
+        if isinstance(sym, (Mul, Add)):
+            string = str(sym.expand()).replace(' + ', ' ')#.replace(' - ', ' -')
+            string = _repatrn.sub(lambda x: _replace[x.group(0)], string)
+            clean[key] = [pre + '*' for pre in string.split()]
+        else: clean[key] = ['']
+    return clean
+
+
 def car2sph_transform_matrices(sh, l_tot):
     '''
     Generates cartesian to spherical transformation matrices as an ordered dict
@@ -118,56 +143,63 @@ def car2sph_transform_matrices(sh, l_tot):
                         ndict[lcur][moff, powers.index(power)] = nexpr[0]
     return ndict
 
-def fac(n):
-    if n < 0: return 0
-    if n == 0: return 1
-    ns = np.empty((n), dtype=np.int64)
-    for i in enumerate(ns):
-        ns[i[0]] = n
-        n -= 1
-    return np.prod(ns)
+@jit(nopython=True, cache=True)
+def _fac(n,v): return _fac(n-1, n*v) if n else v
 
+@jit(nopython=True, cache=True)
+def fac(n): return _fac(n, 1)
 
+@jit(nopython=True, cache=True)
+def _fac2(n,v): return _fac2(n-2, n*v) if n > 0 else v
+
+@jit(nopython=True, cache=True)
 def fac2(n):
     if n < -1: return 0
     if n < 2: return 1
-    ns = np.empty((n//2,), dtype=np.int64)
-    for i in enumerate(ns):
-        ns[i[0]] = n
-        n -= 2
-    return np.prod(ns)
+    return _fac2(n, 1)
 
+@jit(nopython=True, cache=True)
 def normalize(alpha, L):
     prefac = (2 / np.pi) ** (0.75)
     numer = 2 ** (L) * alpha ** ((L + 1.5) / 2)
     denom = (fac2(2 * L - 1)) ** (0.5)
     return prefac * numer / denom
 
+@jit(nopython=True, cache=True)
 def sto_normalize(alpha, n):
     return (2 * alpha) ** n * ((2 * alpha) / fac(2 * n)) ** 0.5
 
+@vectorize(['int64(int64)'])
 def _vec_fac(n):
     return fac(n)
 
+@vectorize(['int64(int64)'])
 def _vec_fac2(n):
     return fac2(n)
 
+@vectorize(['float64(float64,int64)'])
 def _vec_normalize(alpha, L):
     return normalize(alpha, L)
 
+@vectorize(['float64(float64,int64)'])
 def _vec_sto_normalize(alpha, n):
     return sto_normalize(alpha, n)
 
+### Is this necessary?
+@jit(nopython=True)
 def _ovl_indices(nbas, nel):
     chis = np.empty((nel, 2), dtype=np.int64)
     cnt = 0
     for i in range(nbas):
-        for j in range(i + 1): 
+        for j in range(i + 1):
             chis[cnt, 0] = i
             chis[cnt, 1] = j
+            cnt += 1
     return chis
-    
 
+
+@vectorize(['float64(float64,float64,float64,float64,float64,float64,int64, \
+            int64,int64,int64,int64,int64,float64,float64,float64,float64)'])
 def _overlap(x1, x2, y1, y2, z1, z2, l1, l2, m1, m2, n1, n2, N1, N2, alpha1, alpha2):
     '''
     Pardon the Fortran style that follows. This was translated from the snafu
@@ -266,6 +298,7 @@ def _overlap(x1, x2, y1, y2, z1, z2, l1, l2, m1, m2, n1, n2, N1, N2, alpha1, alp
     return s12
 
 
+@jit(nopython=True)
 def _wrap_overlap(x, y, z, l, m, n, N, alpha):
     nprim = len(x)
     arlen = nprim * (nprim + 1) // 2
@@ -312,19 +345,3 @@ def _wrap_overlap(x, y, z, l, m, n, N, alpha):
     overlap = _overlap(f1x, f2x, f1y, f2y, f1z, f2z, f1l, f2l,
                        f1m, f2m, f1n, f2n, f1N, f2N, f1a, f2a)
     return chi1, chi2, overlap
-
-
-if config['dynamic']['numba'] == 'true':
-    from numba import jit, vectorize
-    fac = jit(nopython=True)(fac)
-    fac2 = jit(nopython=True)(fac2)
-    normalize = jit(nopython=True)(normalize)
-    sto_normalize = jit(nopython=True)(sto_normalize)
-    _ovl_indices = jit(nopython=True)(_ovl_indices)
-    _vec_fac = vectorize(['int64(int64)'])(_vec_fac)
-    _vec_fac2 = vectorize(['int64(int64)'])(_vec_fac2)
-    _vec_normalize = vectorize(['float64(float64,int64)'])(_vec_normalize)
-    _vec_sto_normalize = vectorize(['float64(float64,int64)'])(_vec_sto_normalize)
-    _overlap = vectorize(['float64(float64,float64,float64,float64,float64,float64,int64, \
-                          int64,int64,int64,int64,int64,float64,float64,float64,float64)'])(_overlap)
-    _wrap_overlap = jit()(_wrap_overlap)

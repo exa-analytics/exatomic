@@ -116,13 +116,13 @@ def tuning_inputs(uni, name, mult, charge, basis, gammas, alphas,
     Returns
         editors (list): input files as exa.Editors
     """
-    inuni = set(uni.atom.unique_atoms)
-    try:
-        inbas = set([atom for atom, bas in basis])
-        if inuni != inbas:
-            print("Warning: specific basis sets not the same as atom types")
-    except:
-        print("Warning: did not validate basis sets against atoms in universe")
+    #inuni = set(uni.atom.unique_atoms)
+    #try:
+    #    inbas = set([atom for atom, bas in basis])
+    #    if inuni != inbas:
+    #        print("Warning: specific basis sets not the same as atom types")
+    #except:
+    #    print("Warning: did not validate basis sets against atoms in universe")
     rangedt = """
 IOP(3/107={w}00000)
 IOP(3/108={w}00000)
@@ -141,14 +141,29 @@ IOP(3/76={b}{a})"""
     # Auxiliary job information
     chgs = [charge + 1, charge, charge - 1]
     mults = [2, 1, 2] if mult == 1 else [mult - 1, mult, mult + 1]
-    # Some recommended default keywords for Gaussian DFT jobs
-    route_opts = [('LC-PBEPBE/Genecp', ''),
-                  ('gfinput', ''),
-                  ('Guess', 'read'),
-                  ('IOP(3/75=5)', '')]
     link_opts = [('NProc', nproc), ('Mem', str(mem) + 'gb')]
+    ecp = False
+    for bas in basis:
+        try:
+            atom, bas = bas
+            ecp = 'ecp' in bas.lower()
+        except ValueError:
+            ecp = 'ecp' in bas.lower()
+    gen = 'Genecp' if ecp else 'Gen'
     editors = []
     for gamma in gammas:
+        # Some recommended default keywords for Gaussian DFT jobs
+        func = 'LC-PBEPBE/{}' if not np.isclose(int(gamma)/10000, 0) else 'PBEPBE/{}'
+        if len(basis) == 1:
+            route_opts = [(func.format(basis[0][1]), '')]
+            dobasis = False
+        else:
+            route_opts = [(func.format(gen), '')]
+            dobasis = True
+        route_opts = route_opts + [
+                      ('gfinput', ''),
+                      ('Guess', 'read'),
+                      ('IOP(3/75=5)', '')]
         for alpha, beta in zip(alphas, betas):
             for chgnm, chg, mult in zip(chgnms, chgs, mults):
                 ndecgam = max(len(str(int(gamma) / 10000)) - 2, 2)
@@ -161,8 +176,9 @@ IOP(3/76={b}{a})"""
                     this_route = [globalt.format(a=alpha, b=beta)]
                 else:
                     this_route = [rangedt.format(w=gamma, a=alpha, b=beta)]
-                opts = {'charge': chg, 'mult': mult, 'basis': basis, 
+                opts = {'charge': chg, 'mult': mult,
                         'title': jobname, 'writedir': writedir}
+                if dobasis: opts['basis'] = basis
                 if field is not None:
                     opts['postatom'] = field
                     this_route += ['Charge']

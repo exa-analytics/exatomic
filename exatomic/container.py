@@ -16,11 +16,11 @@ import numpy as np
 import pandas as pd
 try:
     from exa.core.base import DataObject
-    from exa.core.numerical import Field
+    from exa.core.numerical import Field, DataFrame
     from exa.core.container import Container
 except ImportError:
     from exa.container import TypedMeta as DataObject
-    from exa.numerical import Field
+    from exa.numerical import Field, DataFrame
     from exa.container import Container
 from exatomic.error import BasisSetNotFoundError
 from exatomic.frame import Frame, compute_frame_from_atom
@@ -56,9 +56,11 @@ class Meta(DataObject):
     field = AtomicField
     orbital = Orbital
     overlap = Overlap
+    multipole = DataFrame
     momatrix = MOMatrix
     excitation = Excitation
     density = DensityMatrix
+    contribution = DataFrame
     basis_set_order = BasisSetOrder
     basis_set = BasisSet
 

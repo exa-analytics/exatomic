@@ -46,10 +46,11 @@ class _Convolve(DataFrame):
 
     @property
     def last_group(self):
-        return self['group'].cat.as_ordered().max()
+        return self[self.frame == self.last_frame].group.cat.as_ordered().max()
 
     def convolve(self, func='gauss', units='eV', ewin=None, broaden=0.13,
-                 padding=5, npoints=1001, group=None, frame=None, name=None):
+                 padding=5, npoints=1001, group=None, frame=None, name=None,
+                 normalize=True):
         """
         Compute a spectrum based on excitation energies and oscillator strengths.
 
@@ -60,6 +61,7 @@ class _Convolve(DataFrame):
             broaden (float): how broad to make the peaks (FWHM, default in eV)
             npoints (int): "resolution" of the spectrum
             name (str): optional - name the column of returned data
+            normalize (bool): set the largest value of signal equal to 1.0
 
         Returns
             df (pd.DataFrame): contains x and y values of a spectrum
@@ -92,7 +94,8 @@ class _Convolve(DataFrame):
         if np.isclose(spec.max(), 0):
             print('Spectrum is all zeros, check energy window.')
         else:
-            spec /= spec.max()
+            if normalize:
+                spec /= spec.max()
         name = 'signal' if name is None else name
         return pd.DataFrame.from_dict({units: enrg, name: spec})
 
@@ -131,13 +134,6 @@ class Orbital(_Convolve):
     _cardinal = ('frame', np.int64)
     _categories = {'spin': np.int64, 'frame': np.int64, 'group': np.int64}
 
-    @property
-    def last_frame(self):
-        return self.frame.cat.as_ordered().max()
-
-    @property
-    def last_group(self):
-        return self[self.frame == self.last_frame].group.cat.as_ordered().max()
 
     def get_orbital(self, orb=-1, spin=0, index=None, group=None, frame=None):
         """
@@ -177,6 +173,29 @@ class Orbital(_Convolve):
         else:
             return self.iloc[index]
 
+    @classmethod
+    def from_energies(cls, energies, nbas, alphae, betae):
+        try: ae, be = int(alphae), int(betae)
+        except: raise NotImplementedError('Only integer occupation')
+        lens = energies.shape[0]
+        if lens == nbas:
+            spin = np.zeros(nbas, dtype=np.int64)
+            vector = range(nbas)
+            occs = np.concatenate((np.repeat(2, ae),
+                                   np.zeros(nbas - ae)))
+            frame = group = np.zeros(nbas, dtype=np.int64)
+        elif lens == nbas * 2:
+            hens = lens // 2
+            spin = np.concatenate((np.zeros(hens), np.ones(hens)))
+            vector = np.concatenate((range(nbas), range(nbas)))
+            occs = np.concatenate((np.ones(ae), np.zeros(nbas - ae),
+                                   np.ones(be), np.zeros(nbas - be)))
+            frame = group = np.zeros(nbas * 2, dtype=np.int64)
+        else: raise Exception('Passed energies.shape is not 1 or 2 * nbas')
+        return cls.from_dict({'frame': frame, 'group': group,
+                              'energy': energies, 'spin': spin,
+                              'occupation': occs, 'vector': vector})
+
 class Excitation(_Convolve):
     """
     +-------------------+----------+-------------------------------------------+
@@ -205,6 +224,36 @@ class Excitation(_Convolve):
     _index = 'excitation'
     _cardinal = ('frame', np.int64)
     _categories = {'frame': np.int64, 'group': np.int64}
+
+    @classmethod
+    def from_universe(cls, uni, initial=None, final=None, spin=0):
+        """
+        Generate the zeroth order approximation to excitation energies
+        via the transition dipole method (provided a universe contains
+        an MOMatrix and dipole moment integrals already).
+        """
+        if not hasattr(uni, 'multipole'):
+            print('Universe must have dipole integrals.')
+            return
+        dim = len(uni.basis_set_order.index)
+        fix = (np.ones((dim, dim)) - np.eye(dim, dim) / 2)
+        rx = ((uni.multipole.pivot('chi0', 'chi1', 'ix1').fillna(0.0)
+             + uni.multipole.pivot('chi0', 'chi1', 'ix1').T.fillna(0.0)) * fix).values
+        ry = ((uni.multipole.pivot('chi0', 'chi1', 'ix2').fillna(0.0)
+             + uni.multipole.pivot('chi0', 'chi1', 'ix2').T.fillna(0.0)) * fix).values
+        rz = ((uni.multipole.pivot('chi0', 'chi1', 'ix3').fillna(0.0)
+             + uni.multipole.pivot('chi0', 'chi1', 'ix3').T.fillna(0.0)) * fix).values
+        mo = uni.momatrix.square().values
+        ens = pd.concat([uni.orbital[uni.orbital.spin == spin].energy] * dim, axis=1).values
+        tdm = pd.DataFrame.from_dict({
+            'energy': pd.DataFrame(ens.T - ens).stack(),
+            'mux': pd.DataFrame(np.dot(mo.T, np.dot(rx, mo))).stack(),
+            'muy': pd.DataFrame(np.dot(mo.T, np.dot(ry, mo))).stack(),
+            'muz': pd.DataFrame(np.dot(mo.T, np.dot(rz, mo))).stack()})
+        tdm['osc'] = tdm['energy'] ** 3 * (tdm['mux'] + tdm['muy'] + tdm['muz']) ** 2
+        tdm['frame'] = tdm['group'] = 0
+        tdm.index.rename(['occ', 'virt'], inplace=True)
+        return cls(tdm.reset_index())
 
 
 class MOMatrix(DataFrame):
@@ -235,7 +284,7 @@ class MOMatrix(DataFrame):
     _cardinal = ('frame', np.int64)
     _index = 'index'
 
-    def contributions(self, orbital, tol=0.01, frame=0):
+    def contributions(self, orbital, mocoefs='coef', tol=0.01, frame=0):
         """
         Returns a slice containing all non-negligible basis function
         contributions to a specific orbital.
@@ -244,7 +293,7 @@ class MOMatrix(DataFrame):
             orbital (int): orbital index
         """
         tmp = self[self['frame'] == frame].groupby('orbital').get_group(orbital)
-        return tmp[abs(tmp['coef']) > tol]
+        return tmp[np.abs(tmp[mocoefs]) > tol]
 
 
     def square(self, frame=0, column='coef'):
