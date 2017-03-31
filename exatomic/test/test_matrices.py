@@ -6,7 +6,7 @@ Matrix Tests
 ###############
 Testing for Matrix base classes and numba funcs.
 """
-
+import numpy as np
 from exa.test import UnitTester
 from exatomic.matrices import (_symmetric_from_square,
                                _symmetric_to_square,

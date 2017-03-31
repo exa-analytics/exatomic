@@ -29,12 +29,12 @@ class Testatompos(UnitTester):
         self.assertEqual(self.nonzs['x'], '(x-1.)')
         self.assertEqual(self.nonzs['y'], '(y+2.)')
         self.assertEqual(self.nonzs['z'], '(z-3.)')
-        self.assertEqual(self.nonzs['r2'], '((x-1.)**2+(y-2.)**2+(z-3.)**2)')
-        self.assertEqual(self.nonzs['r'], '((x-1.)**2+(y-2.)**2+(z-3.)**2)**0.5')
+        self.assertEqual(self.nonzs['r2'], '((x-1.)**2+(y+2.)**2+(z-3.)**2)')
+        self.assertEqual(self.nonzs['r'], '((x-1.)**2+(y+2.)**2+(z-3.)**2)**0.5')
 
     def test_precs(self):
         self.assertEqual(self.precs['y'], '(y+2.1111)')
-        self.assertEqual(self.precs['r2'], '((x-1.)**2+(2.1111)**2+(z-3.)**2)')
+        self.assertEqual(self.precs['r2'], '((x-1.)**2+(y+2.1111)**2+(z-3.)**2)')
 
 
 class TestMakeFps(UnitTester):
@@ -90,26 +90,26 @@ class TestCleanSH(UnitTester):
         self.assertEqual(self.sh[(1, -1)], ['1.0*{y}*'])
         self.assertEqual(self.sh[(1,  0)], ['1.0*{z}*'])
         self.assertEqual(self.sh[(1,  1)], ['1.0*{x}*'])
-        self.assertEqual(self.sh[(2, -2)], ['1.7320508076*{x}*{y}*'])
-        self.assertEqual(self.sh[(2, -1)], ['1.7320508076*{y}*{z}*'])
-        self.assertEqual(self.sh[(2,  1)], ['1.7320508076*{x}*{z}*'])
-        self.assertEqual(self.sh[(3, -2)], ['3.8729833462*{x}*{y}*{z}*'])
+        self.assertEqual(self.sh[(2, -2)], ['1.73205080756888*{x}*{y}*'])
+        self.assertEqual(self.sh[(2, -1)], ['1.73205080756888*{y}*{z}*'])
+        self.assertEqual(self.sh[(2,  1)], ['1.73205080756888*{x}*{z}*'])
+        self.assertEqual(self.sh[(3, -2)], ['3.87298334620742*{x}*{y}*{z}*'])
 
 
 class TestSphrPrefac(UnitTester):
     def setUp(self):
         self.csh = clean_sh(solid_harmonics(3))
-        self.nuc = _atompos(0, 0, 0)
+        self.nuc = _atompos(0, 0.5, 0)
 
     def test_sphr_prefac(self):
         self.assertEqual(_sphr_prefac(self.nuc, self.csh, 0,  0), [''])
-        self.assertEqual(_sphr_prefac(self.nuc, self.csh, 1, -1), ['y*'])
-        self.assertEqual(_sphr_prefac(self.nuc, self.csh, 1,  0), ['z*'])
-        self.assertEqual(_sphr_prefac(self.nuc, self.csh, 1,  1), ['x*'])
-        self.assertEqual(_sphr_prefac(self.nuc, self.csh, 2, -2), ['1.7320508076*x*y*'])
-        self.assertEqual(_sphr_prefac(self.nuc, self.csh, 2, -1), ['1.7320508076*y*z*'])
-        self.assertEqual(_sphr_prefac(self.nuc, self.csh, 2,  1), ['1.7320508076*x*z*'])
-        self.assertEqual(_sphr_prefac(self.nuc, self.csh, 3, -2), ['3.8729833462*x*y*z*'])
+        self.assertEqual(_sphr_prefac(self.nuc, self.csh, 1, -1), ['1.0*(y-0.5)*'])
+        self.assertEqual(_sphr_prefac(self.nuc, self.csh, 1,  0), ['1.0*z*'])
+        self.assertEqual(_sphr_prefac(self.nuc, self.csh, 1,  1), ['1.0*x*'])
+        self.assertEqual(_sphr_prefac(self.nuc, self.csh, 2, -2), ['1.73205080756888*x*y*'])
+        self.assertEqual(_sphr_prefac(self.nuc, self.csh, 2, -1), ['1.73205080756888*(y-0.5)*z*'])
+        self.assertEqual(_sphr_prefac(self.nuc, self.csh, 2,  1), ['1.73205080756888*x*z*'])
+        self.assertEqual(_sphr_prefac(self.nuc, self.csh, 3, -2), ['3.87298334620742*x*(y-0.5)*z*'])
 
 
 class TestCartPrefac(UnitTester):
@@ -142,7 +142,7 @@ class TestGenBsfn(UnitTester):
         self.contdf = pd.DataFrame.from_dict({'N': [1, 2], 'd': [1, 2], 'alpha': [1, 2]})
         self.uncontdf['Nd'] = self.uncontdf['N'] * self.uncontdf['d']
         self.contdf['Nd'] = self.contdf['N'] * self.contdf['d']
-        self.r2str = _atompos(0,0,0).r2
+        self.r2str = _atompos(0,0,0)['r2']
 
     def test_gen_basfn(self):
         self.assertEqual(gen_basfn([''], self.uncontdf, self.r2str['r2']),

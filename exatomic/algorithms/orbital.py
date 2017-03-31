@@ -180,6 +180,7 @@ def _sphr_prefac(nuc, sh, L, ml):
     Returns
         prefacs (list): pre-exponential factors
     """
+
     return [pre.format(**nuc) for pre in sh[(L, ml)]]
 
 
@@ -201,6 +202,7 @@ def _cart_prefac(nuc, pre, L, l, m, n):
         prefacs (list): pre-exponential factors
     """
     if not L: return [pre]
+    pre = '' if np.isclose(pre, 1.0) else '{}*'.format(pre)
     lin, nlin = '{}*', '{}**{}*'
     for cart, powr in OrderedDict([('{x}', l),
                                    ('{y}', m),

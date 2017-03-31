@@ -95,7 +95,7 @@ def clean_sh(sh):
     clean = OrderedDict()
     for key, sym in sh.items():
         if isinstance(sym, (Mul, Add)):
-            string = str(sym.expand()).replace(' + ', ' ').replace('0.-1*', '')
+            string = str(sym.expand()).replace(' + ', ' ')#.replace(' - ', ' -')
             string = _repatrn.sub(lambda x: _replace[x.group(0)], string)
             clean[key] = [pre + '*' for pre in string.split()]
         else: clean[key] = ['']
