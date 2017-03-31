@@ -106,7 +106,7 @@ class TestSphrPrefac(UnitTester):
         self.assertEqual(_sphr_prefac(self.nuc, self.csh, 1, -1), ['1.0*(y-0.5)*'])
         self.assertEqual(_sphr_prefac(self.nuc, self.csh, 1,  0), ['1.0*z*'])
         self.assertEqual(_sphr_prefac(self.nuc, self.csh, 1,  1), ['1.0*x*'])
-        self.assertEqual(_sphr_prefac(self.nuc, self.csh, 2, -2), ['1.73205080756888*x*y*'])
+        self.assertEqual(_sphr_prefac(self.nuc, self.csh, 2, -2), ['1.73205080756888*x*(y-0.5)*'])
         self.assertEqual(_sphr_prefac(self.nuc, self.csh, 2, -1), ['1.73205080756888*(y-0.5)*z*'])
         self.assertEqual(_sphr_prefac(self.nuc, self.csh, 2,  1), ['1.73205080756888*x*z*'])
         self.assertEqual(_sphr_prefac(self.nuc, self.csh, 3, -2), ['3.87298334620742*x*(y-0.5)*z*'])
