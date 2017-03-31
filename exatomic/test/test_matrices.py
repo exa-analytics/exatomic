@@ -59,10 +59,10 @@ class TestNumbaFuncs(UnitTester):
         gss = _square_to_square(self.sidx1, self.sidx0, self.svals)
         self.assertTrue(np.allclose(gss, self.schkf))
 
-    def test__square_from_square(self):
-        """Tests that square arrays are flattened and indexed correctly."""
-        gsdx, gss = _square_from_square(self.schks)
-        self.assertTrue(np.allclose(gsdx[:,0], self.sidx0))
-        self.assertTrue(np.allclose(gsdx[:,1], self.sidx1))
-        self.assertTrue(np.allclose(gsdx[:,2], np.zeros(len(gsdx))))
-        self.assertTrue(np.allclose(gss, self.svals))
+    # def test__square_from_square(self):
+    #     """Tests that square arrays are flattened and indexed correctly."""
+    #     gsdx, gss = _square_from_square(self.schks)
+    #     self.assertTrue(np.allclose(gsdx[:,0], self.sidx0))
+    #     self.assertTrue(np.allclose(gsdx[:,1], self.sidx1))
+    #     self.assertTrue(np.allclose(gsdx[:,2], np.zeros(len(gsdx))))
+    #     self.assertTrue(np.allclose(gss, self.svals))

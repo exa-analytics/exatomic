@@ -142,13 +142,13 @@ class TestGenBsfn(UnitTester):
         self.contdf = pd.DataFrame.from_dict({'N': [1, 2], 'd': [1, 2], 'alpha': [1, 2]})
         self.uncontdf['Nd'] = self.uncontdf['N'] * self.uncontdf['d']
         self.contdf['Nd'] = self.contdf['N'] * self.contdf['d']
-        self.r2str = _atompos(0,0,0)['r2']
+        self.atom = _atompos(0,0,0)
 
     def test_gen_basfn(self):
-        self.assertEqual(gen_basfn([''], self.uncontdf, self.r2str['r2']),
+        self.assertEqual(gen_basfn([''], self.uncontdf, self.atom['r2']),
                          '(1.*np.exp(-1.*(x**2+y**2+z**2)))')
-        self.assertEqual(gen_basfn([''], self.uncontdf, self.r2str['r']),
+        self.assertEqual(gen_basfn([''], self.uncontdf, self.atom['r']),
                          '(1.*np.exp(-1.*(x**2+y**2+z**2)**0.5))')
-        self.assertEqual(gen_basfn([''], self.contdf, self.r2str['r2']),
+        self.assertEqual(gen_basfn([''], self.contdf, self.atom['r2']),
                          '(1.*np.exp(-1.*(x**2+y**2+z**2))+'
                           '4.*np.exp(-2.*(x**2+y**2+z**2)))')
