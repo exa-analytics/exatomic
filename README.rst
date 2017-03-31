@@ -62,8 +62,8 @@ Legal
 .. _pypi: https://pypi.python.org/pypi
 .. _sphinx: http://www.sphinx-doc.org/en/stable/
 
-.. |logo| image:: doc/source/_static/logo.png
-    :target: doc/source/_static/logo.png
+.. |logo| image:: docs/source/_static/logo.png
+    :target: docsFix/source/_static/logo.png
     :alt: Exatomic Analytics
 
 .. |build| image:: https://travis-ci.org/exa-analytics/exatomic.svg?branch=master
