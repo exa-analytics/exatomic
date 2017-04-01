@@ -30,6 +30,8 @@ win-64
 linux-32
 linux-64
 osx-64
+js/node_modules/
+node_modules/
 
 # PyInstaller
 #  Usually these files are written by a python script from a template

@@ -217,6 +217,11 @@ class Universe(Container, metaclass=Meta):
     def __len__(self):
         return len(self.frame)
 
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self._widget = self._widget_class(self)
+
+
 
 def concat(name=None, description=None, meta=None, *universes):
     """

@@ -5,7 +5,10 @@ field.js
 ###############
 */
 'use strict';
+var field = require("jupyter-exawidgets").field;
+var num = require("jupyter-exawidgets").num;
 
+/*
 require.config({
     shim: {
         'nbextensions/exa/field': {
@@ -16,24 +19,27 @@ require.config({
         }
     },
 });
+*/
 
-
+/*
 define([
     'nbextensions/exa/field',
     'nbextensions/exa/num'
-], function(field, num) {
-    class AtomicField extends field.ScalarField {
-        /*"""
-        AtomicField
-        =============
-        JS repr. of .cube file field values and dimensions.
-        */
-        constructor(dimensions, values) {
-            super(dimensions, values);
-        };
-
+],
+*/
+// function(field, num) {
+class AtomicField extends field.ScalarField {
+    /*"""
+    AtomicField
+    =============
+    JS repr. of .cube file field values and dimensions.
+    */
+    constructor(dimensions, values) {
+        super(dimensions, values);
     };
 
-    return AtomicField;
+};
 
-});
+module.exports = {
+    "AtomicField": AtomicField
+}

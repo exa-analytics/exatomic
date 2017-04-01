@@ -5,7 +5,7 @@
 Universe Notebook Widget
 #########################
 """
-import atexit
+import os
 import subprocess
 import pandas as pd
 from glob import glob
@@ -13,7 +13,9 @@ from os import sep, getcwd, path
 from base64 import b64decode
 from traitlets import Unicode
 from notebook.nbextensions import jupyter_data_dir
-from exa.widget import ContainerWidget, install_notebook_widgets
+#from exa.widget import ContainerWidget, install_notebook_widgets
+#import atexit
+from exawidgets import ContainerWidget
 from exa.utility import mkp
 from exatomic._config import config, del_update
 
@@ -64,10 +66,15 @@ class UniverseWidget(ContainerWidget):
         except:
             pass
 
-
-if config['exatomic']['update'] == '1':
-    verbose = True if config['log']['level'] != '0' else False
-    pkg_nbext = mkp(config['dynamic']['exatomic_pkgdir'], "_nbextension")
-    sys_nbext = mkp(jupyter_data_dir(), "nbextensions", "exa", "exatomic")
-    install_notebook_widgets(pkg_nbext, sys_nbext, verbose)
-    atexit.register(del_update)
+#cd = __file__.replace('widget.py', '')
+#pkg_nbext = os.sep.join([cd, '_nbextension'])
+#sys_nbext = os.sep.join([jupyter_data_dir(), 'nbextensions', 'exawidgets', 'exatomic'])
+#if not os.path.isdir(sys_nbext):
+#    install_notebook_widgets(pkg_nbext, sys_nbext, verbose=True)
+#
+#if config['exatomic']['update'] == '1':
+#    verbose = True if config['log']['level'] != '0' else False
+#    pkg_nbext = mkp(config['dynamic']['exatomic_pkgdir'], "_nbextension")
+#    sys_nbext = mkp(jupyter_data_dir(), "nbextensions", "exa", "exatomic")
+#    install_notebook_widgets(pkg_nbext, sys_nbext, verbose)
+#    atexit.register(del_update)
