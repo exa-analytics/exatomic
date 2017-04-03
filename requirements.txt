@@ -1,3 +1,4 @@
 exa
+exawidgets
 psutil
 numexpr
