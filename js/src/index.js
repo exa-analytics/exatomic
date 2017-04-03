@@ -11,12 +11,8 @@ var __webpack_public_path__ = document.querySelector("body").getAttribute("data-
 var _ = require("underscore");
 module.exports = _.extend(
     {},
-    require("./ao.js"),
     require("./app.js"),
-    require("./field.js"),
-    //require("./gaussian.js"),
-    require("./gtf.js"),
-    require("./harmonics.js"),
+    require("./functions.js"),
     require("./universe.js"),
     require("./test.js")
 );

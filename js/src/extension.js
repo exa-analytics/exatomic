@@ -8,7 +8,6 @@ if (window.require) {
         map: {
             "*" : {
                 "jupyter-exatomic": "nbextensions/jupyter-exatomic/index",
-		            "jupyter-exawidgets": "nbextensions/jupyter-exawidgets/extension",
                 "jupyter-js-widgets": "nbextensions/jupyter-js-widgets/extension"
             }
         }

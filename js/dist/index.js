@@ -55,15 +55,11 @@ define(["jupyter-js-widgets"], function(__WEBPACK_EXTERNAL_MODULE_5__) { return 
 	module.exports = _.extend(
 	    {},
 	    __webpack_require__(2),
+	    __webpack_require__(20),
 	    __webpack_require__(21),
-	    __webpack_require__(22),
-	    //require("./gaussian.js"),
-	    __webpack_require__(23),
-	    __webpack_require__(24),
-	    __webpack_require__(25),
-	    __webpack_require__(26)
+	    __webpack_require__(22)
 	);
-	module.exports["version"] = __webpack_require__(27).version;
+	module.exports["version"] = __webpack_require__(23).version;
 
 
 /***/ },
@@ -1627,259 +1623,379 @@ define(["jupyter-js-widgets"], function(__WEBPACK_EXTERNAL_MODULE_5__) { return 
 	// Copyright (c) 2015-2016, Exa Analytics Development Team
 	// Distributed under the terms of the Apache License 2.0
 	/*"""
-	================
-	ao.js
-	================
+	========================
+	Universe Application
+	========================
+	This module defines the JavaScript application that is loaded when a user
+	requests the HTML representation of a universe data container.
 	*/
-	'use strict';
+	"use strict";
+	var exawidgets = __webpack_require__(3);
 	
-	var field = __webpack_require__(3).field;
-	
-	/*
-	require.config({
-	    shim: {
-	        "nbextensions/exa/field": {exports: 'field'}
-	    },
-	});
-	*/
-	/*
-	define([
-	    "nbextensions/exa/field"
-	],
-	*/
-	//function(field) {
-	class AO extends field.ScalarField {
+	class UniverseApp {
 	    /*"""
-	    AO
-	    ----------
+	    UniverseApp
+	    =============
+	    Notebook widget application for visualization of the universe container.
 	    */
-	    constructor(dimensions, which) {
-	        super(dimensions, hydrogen[which]);
-	        //this.function = which;
+	    constructor(view) {
+	        console.log("init2");
+	        this.view = view;
+	        this.view.create_canvas();
+	        this.update_vars();
+	        this.app3d = new exawidgets.App3D(this.view.canvas);
+	        this.create_gui();
+	
+	        this.update_fields();
+	        //this.update_orbitals();
+	        this.render_current_frame();
+	        this.app3d.set_camera({"x": 15.0, "y": 15.0, "z": 15.0});
+	        this.view.container.append(this.gui.domElement);
+	        this.view.container.append(this.gui.custom_css);
+	        this.view.container.append(this.view.canvas);
+	        var view_self = this.view;
+	        this.app3d.render();
+	        this.view.on("displayed", function() {
+	            view_self.app.app3d.animate();
+	            view_self.app.app3d.controls.handleResize();
+	        });
+	        this.app3d.set_camera_from_scene();
 	    };
-	};
 	
-	var hydrogen = {
-	    '1s': function(x, y, z) {
-	        var r = Math.sqrt(x * x + y * y + z * z);
-	        var Z = 1;
-	        var sigma = Z * r
-	        return 1 / Math.sqrt(Math.PI) * Math.pow(Z, 3/2) * Math.exp(-sigma);
-	    },
+	    update_display_params() {
+	        console.log("Inside update_display_params");
+	        console.log(this);
+	        console.log(self);
+	    };
 	
-	    '2s': function(x, y, z) {
-	        var r = Math.sqrt(x * x + y * y + z * z);
-	        var Z = 1;
-	        var sigma = Z * r
-	        var norm = 1 / (4 * Math.sqrt(2 * Math.PI)) * Math.pow(Z, 3/2)
-	        return norm * (2 - sigma) * Math.exp(-sigma / 2);
-	    },
+	    resize() {
+	        this.app3d.resize();
+	    };
 	
-	    '2pz': function(x, y, z) {
-	        var r = Math.sqrt(x * x + y * y + z * z);
-	        var Z = 1;
-	        var sigma = Z * r
-	        var norm = 1 / (4 * Math.sqrt(2 * Math.PI)) * Math.pow(Z, 3/2)
-	        return norm * Z * z * Math.exp(-sigma / 2);
-	    },
+	    gv(obj, index) {
+	        /*"""
+	        gv
+	        ---------------
+	        Helper function for retrieving data from the view.
+	        */
+	        if (obj === undefined) {
+	            return undefined;
+	        } else {
+	            var value = obj[index];
+	            if (value === undefined) {
+	                return obj;
+	            };
+	            return value;
+	        };
+	    };
 	
-	    '2px': function(x, y, z) {
-	        var r = Math.sqrt(x * x + y * y + z * z);
-	        var Z = 1;
-	        var sigma = Z * r
-	        var norm = 1 / (4 * Math.sqrt(2 * Math.PI)) * Math.pow(Z, 3/2)
-	        return norm * Z * x * Math.exp(-sigma / 2);
-	    },
+	    update_vars() {
+	        /*"""
+	        init_vars
+	        ----------------
+	        Set up some application variables.
+	        */
+	        this.last_index = this.view.framelist.length - 1;
+	        this.atoms_meshes = [];
+	        this.bonds_meshes = [];
+	        this.cell_meshes = [];
+	        this.field_meshes = [];
+	        this.axis_meshes = [];
+	    };
 	
-	    '2py': function(x, y, z) {
-	        var r = Math.sqrt(x * x + y * y + z * z);
-	        var Z = 1;
-	        var sigma = Z * r
-	        var norm = 1 / (4 * Math.sqrt(2 * Math.PI)) * Math.pow(Z, 3/2)
-	        return norm * Z * y * Math.exp(-sigma / 2);
-	    },
+	    create_gui() {
+	        /*"""
+	        create_gui
+	        ------------------
+	        Create the application's control set.
+	        */
+	        var self = this;
+	        this.playing = false;
+	        this.play_id = undefined;
+	        this.gui = new exawidgets.ContainerGUI(this.view.gui_width);
 	
-	    '3s': function(x, y, z) {
-	        var r = Math.sqrt(x * x + y * y + z * z);
-	        var Z = 1;
-	        var sigma = Z * r
-	        var norm = 1 / (81 * Math.sqrt(3 * Math.PI)) * Math.pow(Z, 3/2)
-	        var prefac = (27 - 18 * sigma + 2 * Math.pow(sigma, 2))
-	        return norm * prefac * Math.exp(-sigma / 3);
-	    },
+	        this.top = {
+	            "pause": function() {
+	                self.playing = false;
+	                clearInterval(self.play_id);
+	                self.top.frame_dropdown.setValue(self.view.framelist[self.top.index]);
+	            },
+	            "play": function() {
+	                if (self.playing === true) {
+	                    self.top.pause()
+	                } else {
+	                    self.playing = true;
+	                    if (self.top.index === self.last_index) {
+	                        self.top.index_slider.setValue(0);
+	                    };
+	                    self.play_id = setInterval(function() {
+	                        if (self.top.index < self.last_index) {
+	                            self.top.index_slider.setValue(self.top.index+1);
+	                        } else {
+	                            self.top.pause();
+	                        };
+	                    }, 1000 / self.top.fps);
+	                };
+	            },
+	            "save image": function() {
+	                self.app3d.renderer.setSize(1920, 1080);
+	                self.app3d.camera.aspect = 1920 / 1080;
+	                self.app3d.camera.updateProjectionMatrix();
+	                //self.app3d.add_unit_axis();
+	                self.app3d.render();
+	                var imgdat = self.app3d.renderer.domElement.toDataURL("image/png");
+	                self.view.send({"type": "image", "content": imgdat});
+	                self.app3d.renderer.setSize(self.app3d.width, self.app3d.height);
+	                self.app3d.camera.aspect = self.app3d.width / self.app3d.height;
+	                self.app3d.camera.updateProjectionMatrix();
+	            },
+	            "index": 0,
+	            "frame": this.view.framelist[0],
+	            "fps": this.view.fps,
+	        };
+	        this.top["play_button"] = this.gui.add(this.top, "play");
+	        this.top["save_image"] = this.gui.add(this.top, "save image");
+	        this.top["index_slider"] = this.gui.add(this.top, "index").min(0).max(this.last_index).step(1);
+	        this.top["frame_dropdown"] = this.gui.add(this.top, "frame", this.view.framelist);
+	        this.top["fps_slider"] = this.gui.add(this.top, "fps").min(1).max(240).step(1);
+	        this.top.index_slider.onChange(function(index) {
+	            self.top.index = index;
+	            self.top.frame = self.view.framelist[self.top.index];
+	            self.update_fields();
+	            //self.update_orbitals();
+	            self.render_current_frame();
+	        });
+	        this.top.index_slider.onFinishChange(function(index) {
+	            self.top.index = index;
+	            self.top.frame = self.view.framelist[self.top.index];
+	            self.top.frame_dropdown.setValue(self.top.frame);
+	        })
+	        this.top.fps_slider.onFinishChange(function(value) {
+	            self.top.fps = value;
+	        });
+	        this.top.frame_dropdown.onFinishChange(function(value) {
+	            self.top.frame = parseInt(value);
+	            self.top.index = self.view.framelist.indexOf(self.top.frame);
+	            self.top.index_slider.setValue(self.top.index);
+	        });
 	
-	    '3pz': function(x, y, z) {
-	        var r = Math.sqrt(x * x + y * y + z * z);
-	        var Z = 1;
-	        var sigma = Z * r
-	        var norm = Math.sqrt(2) / (81 * Math.sqrt(Math.PI)) * Math.pow(Z, 3/2)
-	        var prefac = Z * (6 - sigma)
-	        return norm * prefac * z * Math.exp(-sigma / 3);
-	    },
+	        this.display = {
+	            //"labels": false,
+	            //"symbols": false,
+	            "cell": false,
+	            "axis": false,
+	            "spheres": false,
+	        };
+	        this.display["folder"] = this.gui.addFolder("display");
+	        //this.display["labels_checkbox"] = this.display.folder.add(this.display, "labels");
+	        //this.display["symbols_checkbox"] = this.display.folder.add(this.display, "symbols");
+	        this.display["cell_checkbox"] = this.display.folder.add(this.display, "cell");
+	        this.display["axis_checkbox"] = this.display.folder.add(this.display, "axis");
+	        this.display["spheres_checkbox"] = this.display.folder.add(this.display, "spheres");
 	
-	    '3py': function(x, y, z) {
-	        var r = Math.sqrt(x * x + y * y + z * z);
-	        var Z = 1;
-	        var sigma = Z * r
-	        var norm = Math.sqrt(2) / (81 * Math.sqrt(Math.PI)) * Math.pow(Z, 3/2)
-	        var prefac = Z * (6 - sigma)
-	        return norm * prefac * y * Math.exp(-sigma / 3);
-	    },
+	        /*this.display.labels_checkbox.onFinishChange(function(value) {
+	            self.display.labels = value;
+	            if (value === false) {
+	                self.app3d.remove(self.label_meshes);
+	            } else {
+	                self.render_labels();
+	            };
+	        });*/
 	
-	    '3px': function(x, y, z) {
-	        var r = Math.sqrt(x * x + y * y + z * z);
-	        var Z = 1;
-	        var sigma = Z * r
-	        var norm = Math.sqrt(2) / (81 * Math.sqrt(Math.PI)) * Math.pow(Z, 3/2)
-	        var prefac = Z * (6 - sigma)
-	        return norm * prefac * x * Math.exp(-sigma / 3);
-	    },
+	        this.display.cell_checkbox.onFinishChange(function(value) {
+	            self.display.cell = value;
+	            if (value === false) {
+	                self.app3d.remove_meshes(self.cell_meshes);
+	            } else {
+	                self.render_cell();
+	            };
+	        });
+	        this.display.axis_checkbox.onFinishChange(function(value) {
+	            self.display.axis = value;
+	            if (value === false) {
+	                self.app3d.remove_meshes(self.axis_meshes);
+	            } else {
+	                self.axis_meshes = self.app3d.add_unit_axis();
+	            };
+	        });
+	        this.display.spheres_checkbox.onFinishChange(function(value) {
+	            self.display.spheres = value;
+	            self.update_display_params();
+	            self.render_current_frame();
+	        });
 	
-	    '3d0': function(x, y, z) {
-	        var x2 = x * x;
-	        var y2 = y * y;
-	        var z2 = z * z;
-	        var r2 = x2 + y2 + z2;
-	        var r = Math.sqrt(r2);
-	        var Z = 1;
-	        var sigma = Z * r;
-	        var rnorm = 1 / Math.sqrt(2430);
-	        var rbody = Math.pow(Z, 3 / 2) * Math.pow(2 / 3 * sigma, 2) * Math.exp(-sigma / 3);
-	        var ynorm = 1 / 4 * Math.sqrt(5 / Math.PI);
-	        var ybody = (-x2 -y2 + 2 * z2) / r2;
-	        return ynorm * ybody * rnorm * rbody;
-	    },
+	        this.fields = {
+	            "isovalue": 0.03,
+	            "field": null,
+	            "label": 0,
+	            "cur_fields": [null]
+	        };
+	        this.fields["folder"] = this.gui.addFolder("fields");
+	        this.fields["isovalue_slider"] = this.fields.folder.add(this.fields, "isovalue", 0.0001, 0.5);
+	        this.fields["field_dropdown"] = this.fields.folder.add(this.fields, "field", this.fields["cur_fields"]);
+	        this.fields["label_dropdown"] = this.fields.folder.add(this.fields, "label", this.fields["label"]);
+	        this.fields.field_dropdown.onFinishChange(function(field_index) {
+	            self.fields["field"] = field_index;
+	            self.render_field();
+	        });
+	        this.fields.label_dropdown.onFinishChange(function(label_index) {
+	            self.fields["label"] = label_index;
+	            self.render_field();
+	        });
+	        this.fields.isovalue_slider.onFinishChange(function(value) {
+	            self.fields.isovalue = value;
+	            self.render_field();
+	        });
+	    };
 	
-	    '3d+1': function(x, y, z) {
-	        var x2 = x * x;
-	        var y2 = y * y;
-	        var z2 = z * z;
-	        var r2 = x2 + y2 + z2;
-	        var r = Math.sqrt(r2);
-	        var Z = 1;
-	        var sigma = Z * r;
-	        var rnorm = 1 / Math.sqrt(2430);
-	        var rbody = Math.pow(Z, 3 / 2) * Math.pow(2 / 3 * sigma, 2) * Math.exp(-sigma / 3);
-	        var ynorm = 1 / 2 * Math.sqrt(15 / Math.PI);
-	        var ybody = z * x / r2;
-	        return ynorm * ybody * rnorm * rbody;
-	    },
+	    update_fields() {
+	        /*"""
+	        update_fields
+	        ---------------
+	        Updates available fields for the given frame and selection
+	        */
+	        var self = this;
+	        var field_indices = this.gv(this.view.field_indices, this.top.index);
+	        if (field_indices === undefined) {
+	            field_indices = [];
+	        };
+	        field_indices.push(null);
+	        var label_indices = this.gv(this.view.label_indices, this.top.index);
+	        if (label_indices !== undefined) {
+	            field_indices = label_indices;
+	        };
+	        this.fields["cur_fields"] = field_indices;
+	        this.fields["field"] = field_indices[0];
+	        this.fields.folder.__controllers[1].remove();
+	        this.fields.folder.__controllers.splice(1, 1);
+	        this.fields["field_dropdown"] = this.fields.folder.add(this.fields, "field", this.fields["cur_fields"]);
+	        this.fields.field_dropdown.onFinishChange(function(field_index) {
+	            self.fields["field"] = field_index;
+	            self.render_field();
+	        });
+	    };
 	
-	    '3d-1': function(x, y, z) {
-	        var sigma = Z * r;
-	        var x2 = x * x;
-	        var y2 = y * y;
-	        var z2 = z * z;
-	        var r2 = x2 + y2 + z2;
-	        var r = Math.sqrt(r2);
-	        var Z = 1;
-	        var sigma = Z * r;
-	        var rnorm = 1 / Math.sqrt(2430);
-	        var rbody = Math.pow(Z, 3 / 2) * Math.pow(2 / 3 * sigma, 2) * Math.exp(-sigma / 3);
-	        var ynorm = 1 / 2 * Math.sqrt(15 / Math.PI);
-	        var ybody = y * z / r2;
-	        return rnorm * rbody * ynorm * ybody;
-	    },
 	
-	    '3d+2': function(x, y, z) {
-	        var x2 = x * x;
-	        var y2 = y * y;
-	        var z2 = z * z;
-	        var r2 = x2 + y2 + z2;
-	        var r = Math.sqrt(r2);
-	        var Z = 1;
-	        var sigma = Z * r;
-	        var rnorm = 1 / Math.sqrt(2430);
-	        var rbody = Math.pow(Z, 3 / 2) * Math.pow(2 / 3 * sigma, 2) * Math.exp(-sigma / 3);
-	        var ynorm = 1 / 4 * Math.sqrt(15 / Math.PI);
-	        var ybody = (x2 - y2) / r2;
-	        return rnorm * rbody * ynorm * ybody;
-	    },
+	    render_field() {
+	        /*"""
+	        render_field
+	        --------------
+	        */
+	        var nx = this.gv(this.view.atomicfield_nx, this.top.index);
+	        var ny = this.gv(this.view.atomicfield_ny, this.top.index);
+	        var nz = this.gv(this.view.atomicfield_nz, this.top.index);
+	        var ox = this.gv(this.view.atomicfield_ox, this.top.index);
+	        var oy = this.gv(this.view.atomicfield_oy, this.top.index);
+	        var oz = this.gv(this.view.atomicfield_oz, this.top.index);
+	        var dxi = this.gv(this.view.atomicfield_dxi, this.top.index);
+	        var dxj = this.gv(this.view.atomicfield_dxj, this.top.index);
+	        var dxk = this.gv(this.view.atomicfield_dxk, this.top.index);
+	        var dyi = this.gv(this.view.atomicfield_dyi, this.top.index);
+	        var dyj = this.gv(this.view.atomicfield_dyj, this.top.index);
+	        var dyk = this.gv(this.view.atomicfield_dyk, this.top.index);
+	        var dzi = this.gv(this.view.atomicfield_dzi, this.top.index);
+	        var dzj = this.gv(this.view.atomicfield_dzj, this.top.index);
+	        var dzk = this.gv(this.view.atomicfield_dzk, this.top.index);
+	        var values = this.gv(this.view.field_values, this.fields["field"]);
+	        this.cube_field = new exawidgets.ScalarField({
+	            "ox": ox, "oy": oy, "oz": oz,
+	            "nx": nx, "ny": ny, "nz": nz,
+	            "dxi": dxi, "dxj": dxj, "dxk": dxk,
+	            "dyi": dyi, "dyj": dyj, "dyk": dyk,
+	            "dzi": dzi, "dzj": dzj, "dzk": dzk}, values);
+	        this.app3d.remove_meshes(this.cube_field_mesh);
+	        this.cube_like = "field";
+	        this.cube_field_mesh = this.app3d.add_scalar_field(this.cube_field, this.fields.isovalue, 2);
+	    };
 	
-	    '3d-2': function(x, y, z) {
-	        var x2 = x * x;
-	        var y2 = y * y;
-	        var z2 = z * z;
-	        var r2 = x2 + y2 + z2;
-	        var r = Math.sqrt(r2);
-	        var Z = 1;
-	        var sigma = Z * r;
-	        var rnorm = 1 / Math.sqrt(2430);
-	        var rbody = Math.pow(Z, 3 / 2) * Math.pow(sigma, 2) * Math.exp(-sigma / 3);
-	        var ynorm = 1 / 2 * Math.sqrt(15 / Math.PI);
-	        var ybody = x * y / r2;
-	        return rnorm * rbody * ynorm * ybody;
-	    },
-	    /*
-	    '3dz2': function(x, y, z) {
-	        var r = Math.sqrt(x * x + y * y + z * z);
-	        var Z = 1;
-	        var sigma = Z * r;
-	        var norm = 1 / (81 * Math.sqrt(6 * Math.PI)) * Math.pow(Z, 3/2);
-	        var prefac = Math.pow(sigma, 2) * (3 * Math.pow(z / r, 2) - 1);
-	        return norm * prefac * Math.exp(-sigma / 3);
-	    },
+	    render_current_frame() {
+	        /*"""
+	        render_current_frame
+	        -----------------------
+	        Renders atoms and bonds in the current frame (using the frame index).
 	
-	    '3dxz': function(x, y, z) {
-	        var x2 = x * x;
-	        var y2 = y * y;
-	        var z2 = z * z;
-	        var r2 = x2 + y2 + z2;
-	        var r = Math.sqrt(r2);
-	        var Z = 1;
-	        var sigma = Z * r;
-	        var norm = Math.sqrt(2) / (81 * Math.sqrt(Math.PI)) * Math.pow(Z, 3/2);
-	        var prefac = Math.pow(Z, 2) * x2 * (r2 - z2) / (y2 * Math.sqrt((x2 + y2) / y2));
-	        return norm * prefac * Math.exp(-sigma / 3);
-	    },
+	        Args:
+	            spheres (bool): True for sphere geometries rather than points (default)
+	        */
+	        var symbols = this.gv(this.view.atom_symbols, this.top.index);
+	        var radii = exawidgets.mapper(symbols, this.view.atom_radii_dict);
+	        var n = radii.length;
+	        for (var i=0; i<n; i++) {
+	            radii[i] *= 0.5;
+	        };
+	        var colors = exawidgets.mapper(symbols, this.view.atom_colors_dict);
+	        var x = this.gv(this.view.atom_x, this.top.index);
+	        var y = this.gv(this.view.atom_y, this.top.index);
+	        var z = this.gv(this.view.atom_z, this.top.index);
+	        var v0 = this.gv(this.view.two_bond0, this.top.index);
+	        var v1 = this.gv(this.view.two_bond1, this.top.index);
+	        if (this.cube_field !== undefined) {
+	            if (this.cube_like === "field") {
+	                this.app3d.remove_meshes(this.cube_field_mesh);
+	                this.cube_field_mesh = this.app3d.add_scalar_field(this.cube_field, this.fields.isovalue, 2);
+	            } //else if (this.cube_like === "orbital") {
+	              //  this.render_orbital();
+	                //this.app3d.remove_meshes(this.cube_field_mesh);
+	                //this.cube_field_mesh = this.app3d.add_scalar_field(this.cube_field, this.orbitals.isovalue, 2);
+	        };
+	        this.app3d.remove_meshes(this.bond_meshes);
+	        if (v0 !== undefined && v1 !== undefined) {
+	            if (this.display.spheres === true) {
+	                this.bond_meshes = this.app3d.add_cylinders(v0, v1, x, y, z, colors, 0.12);
+	            } else {
+	                this.bond_meshes = this.app3d.add_lines(v0, v1, x, y, z, colors);
+	            };
+	        };
+	        this.app3d.remove_meshes(this.atom_meshes);
+	        if (this.display.spheres === true) {
+	            this.atom_meshes = this.app3d.add_spheres(x, y, z, colors, radii);
+	        } else {
+	            this.atom_meshes = this.app3d.add_points(x, y, z, colors, radii);
+	        };
+	        //if (this.top.index === 0) {
+	        //    if (this.display.spheres === true) {
+	        //        this.app3d.set_camera_from_scene();
+	        //    } else {
+	        //        this.app3d.set_camera_from_mesh(this.atom_meshes[0], 4.0, 4.0, 4.0);
+	        //    };
+	        //};
+	    };
 	
-	    '3dyz': function(x, y, z) {
-	        var x2 = x * x;
-	        var y2 = y * y;
-	        var z2 = z * z;
-	        var r2 = x2 + y2 + z2;
-	        var r = Math.sqrt(r2);
-	        var Z = 1;
-	        var sigma = Z * r;
-	        var norm = Math.sqrt(2) / (81 * Math.sqrt(Math.PI)) * Math.pow(Z, 3/2);
-	        var prefac = Math.pow(Z, 2) * x * (r2 - z2) / (y * Math.sqrt((x2 + y2) / y2));
-	        return norm * prefac * Math.exp(-sigma / 3);
-	    },
-	
-	    '3dx2-y2': function(x, y, z) {
-	        var x2 = x * x;
-	        var y2 = y * y;
-	        var z2 = z * z;
-	        var r2 = x2 + y2 + z2;
-	        var r = Math.sqrt(r2);
-	        var Z = 1;
-	        var sigma = Z * r;
-	        var norm = Math.sqrt(2) / (81 * Math.sqrt(Math.PI)) * Math.pow(Z, 3/2);
-	        var prefac = Math.pow(Z, 2) * (r2 - z2) * (x2 - y2) / (x2 + y2);
-	        return norm * prefac * Math.exp(-sigma / 3);
-	    },
-	
-	    '3dxy': function(x, y, z) {
-	        var x2 = x * x;
-	        var y2 = y * y;
-	        var z2 = z * z;
-	        var r2 = x2 + y2 + z2;
-	        var r = Math.sqrt(r2);
-	        var Z = 1;
-	        var sigma = Z * r;
-	        var norm = Math.sqrt(2) / (81 * Math.sqrt(Math.PI)) * Math.pow(Z, 3/2);
-	        var prefac = Math.pow(Z, 2) * 2 * x * y * (r2 - z2) /(x2 + y2);
-	        return norm * prefac * Math.exp(-sigma / 3);
-	    },
-	    */
+	    render_cell() {
+	        /*"""
+	        render_cell
+	        -----------
+	        Custom rendering function that adds the unit cell.
+	        */
+	        var ox = this.gv(this.view.frame_ox, this.top.index);
+	        if (ox === undefined) {
+	            return;
+	        };
+	        var oy = this.gv(this.view.frame_oy, this.top.index);
+	        var oz = this.gv(this.view.frame_oz, this.top.index);
+	        var xi = this.gv(this.view.frame_xi, this.top.index);
+	        var xj = this.gv(this.view.frame_xj, this.top.index);
+	        var xk = this.gv(this.view.frame_xk, this.top.index);
+	        var yi = this.gv(this.view.frame_yi, this.top.index);
+	        var yj = this.gv(this.view.frame_yj, this.top.index);
+	        var yk = this.gv(this.view.frame_yk, this.top.index);
+	        var zi = this.gv(this.view.frame_zi, this.top.index);
+	        var zj = this.gv(this.view.frame_zj, this.top.index);
+	        var zk = this.gv(this.view.frame_zk, this.top.index);
+	        var vertices = [];
+	        vertices.push([ox, oy, oz]);
+	        vertices.push([xi, xj, xk]);
+	        vertices.push([yi, yj, yk]);
+	        vertices.push([zi, zj, zk]);
+	        this.app3d.remove_meshes(this.cell_meshes);
+	        this.cell_meshes = this.app3d.add_wireframe(vertices);
+	    };
 	
 	};
 	
 	module.exports = {
-	    "AO": AO
+	    "UniverseApp": UniverseApp
 	}
-	//    return AO;
-	//});
 
 
 /***/ },
@@ -1900,1258 +2016,246 @@ define(["jupyter-js-widgets"], function(__WEBPACK_EXTERNAL_MODULE_5__) { return 
 	module.exports = _.extend(
 	    {},
 	    __webpack_require__(4),
-	    __webpack_require__(10),
+	    __webpack_require__(8),
 	    __webpack_require__(17),
 	    __webpack_require__(12),
 	    __webpack_require__(18),
-	    __webpack_require__(19),
-	    __webpack_require__(11),
-	    __webpack_require__(16)
+	    __webpack_require__(7),
+	    __webpack_require__(16),
+	    __webpack_require__(11)
 	);
-	module.exports["version"] = __webpack_require__(20).version;
+	module.exports["version"] = __webpack_require__(19).version;
 
 
 /***/ },
 /* 4 */
 /***/ function(module, exports, __webpack_require__) {
 
-	// Copyright (c) 2015-2016, Exa Analytics Development Team
+	// Copyright (c) 2015-2017, Exa Analytics Development Team
 	// Distributed under the terms of the Apache License 2.0
 	/*"""
-	3D Visualization
-	##################
+	=================
+	container.js
+	=================
+	JavaScript "frontend" complement of exawidget's Container for use within
+	the Jupyter notebook interface. This "module" standardizes bidirectional
+	communication logic for all container widget views.
 	
+	The structure of the frontend is to generate an HTML widget ("container" - see
+	create_container) and then populate its canvas with an application ("app")
+	appropriate to the type of container. If the (backend) container is empty, then
+	populate the HTML widget with the test application.
 	*/
-	'use strict';
+	"use strict";
 	var widgets = __webpack_require__(5);
 	var THREE = __webpack_require__(6);
-	var TrackballControls = __webpack_require__(7);
-	var utility = __webpack_require__(9);
+	var _ = __webpack_require__(1);
+	var TestApp = __webpack_require__(7).TestApp;
 	
-	/*
-	require.config({
-	    shim: {
-	        "nbextensions/exa/lib/three.min": {
-	            exports: 'THREE'
-	        },
-	
-	        "nbextensions/exa/lib/TrackballControls": {
-	            deps: ["nbextensions/exa/lib/three.min"],
-	            exports: 'THREE.TrackballControls'
-	        },
-	
-	        "nbextensions/exa/utility": {
-	            exports: 'utility'
-	        },
-	    },
-	});
-	*/
-	/*
-	define([
-	    "nbextensions/exa/lib/three.min",
-	    "nbextensions/exa/lib/TrackballControls",
-	    "nbextensions/exa/utility"
-	],
-	*/
-	//function(THREE, TrackballControls, utility) {
-	class App3D {
-	    /*"""
-	    App3D
-	    =========
-	    A 3D visualization application built on top of threejs
-	    */
-	    constructor(canvas) {
-	        this.canvas = canvas;
-	        this.width = this.canvas.width();
-	        this.height = this.canvas.height();
-	
-	        this.renderer = new THREE.WebGLRenderer({
-	            canvas: this.canvas.get(0),
-	            antialias: true,
+	class BaseModel extends widgets.DOMWidgetModel {
+	    get defaults() {
+	      return _.extend({}, widgets.DOMWidgetModel.prototype.defaults, {
+	            _model_module: "jupyter-exawidgets",
+	            _view_module: "jupyter-exawidgets",
+	            _model_name: "BaseModel",
+	            _view_name: "BaseView",
+	            width: 800,
+	            height: 500
 	        });
-	        this.renderer.setClearColor(0xFFFFFF);
-	        this.renderer.setPixelRatio(window.devicePixelRatio);
-	        this.renderer.setSize(this.width, this.height);
+	    }
+	}
 	
-	        this.scene = new THREE.Scene();
+	class BaseView extends widgets.DOMWidgetView {
 	
-	        this.camera = new THREE.PerspectiveCamera(30, this.width / this.height, 1, 100000);
+	}
 	
-	        this.controls = new TrackballControls(this.camera, this.canvas.get(0));
-	        this.controls.rotateSpeed = 10.0;
-	        this.controls.zoomSpeed = 5.0;
-	        this.controls.panSpeed = 0.5;
-	        this.controls.noZoom = false;
-	        this.controls.noPan = false;
-	        this.controls.staticMoving = true;
-	        this.controls.dynamicDampingFactor = 0.3;
-	        this.controls.keys = [65, 83, 68];
-	        this.controls.addEventListener('change', this.render.bind(this));
+	class ContainerModel extends BaseModel {
+	    get defaults() {
+	      return _.extend({}, BaseModel.prototype.defaults, {
+	            _model_module: "jupyter-exawidgets",
+	            _view_module: "jupyter-exawidgets",
+	            _model_name: "ContainerModel",
+	            _view_name: "ContainerView",
+	            gui_width: 250,
+	        });
+	    }
+	}
 	
-	        this.dlight0 = new THREE.DirectionalLight(0xFFFFFF, 0.3);
-	        this.dlight0.position.set(-100, -100, -100);
-	        this.scene.add(this.dlight0);
-	        this.dlight1 = new THREE.DirectionalLight(0xFFFFFF, 0.3);
-	        this.dlight1.position.set(100, 100, 100);
-	        this.scene.add(this.dlight1);
-	        this.ambient_light = new THREE.AmbientLight(0xFFFFFF, 0.5);
-	        this.scene.add(this.ambient_light);
-	    };
+	class ContainerView extends BaseView {
+	    /*"""
+	    ContainerView
+	    ===============
+	    Base view for creating data specific container widgets used within the
+	    Jupyter notebook. All logic related to communication (between Python
+	    and JavaScript) should be located here. This class provides a number
+	    of commonly used functions for such logic.
 	
-	    test_mesh(phong) {
-	        /*"""
-	        test_mesh
-	        ---------------
-	        Example of a render
-	        */
-	        if (phong === undefined) {
-	            phong = false;
-	        };
-	        var test_geometry = new THREE.BoxGeometry(2.0, 2.0, 2.0);
-	        var test_material;
-	        if (phong === true) {
-	            test_material = new THREE.MeshPhongMaterial({
-	                color: 0x005500,
-	                specular: 0x005500
-	            });
-	        } else {
-	            test_material = new THREE.MeshLambertMaterial({color: 0x005500});
-	        };
-	        var test_material2 = new THREE.MeshBasicMaterial({wireframe: true, color: 0x909090});
-	        var test_outline = new THREE.Mesh(test_geometry, test_material2);
-	        var test_cube = new THREE.Mesh(test_geometry, test_material);
-	        this.scene.add(test_cube);
-	        this.scene.add(test_outline);
-	        this.set_camera_from_mesh(test_cube);
-	        return [test_cube, test_outline];
-	    };
-	
+	    Warning:
+	        Do not override the DOMWidgetView constructor ("initialize").
+	    */
 	    render() {
 	        /*"""
 	        render
-	        -----------
-	        Render the 3D application
-	        */
-	        this.renderer.render(this.scene, this.camera);
-	    };
-	
-	    animate() {
-	        /*"""
-	        animate
-	        ------------
-	        Start the animation.
-	        */
-	        window.requestAnimationFrame(this.animate.bind(this));
-	        this.render();
-	        this.controls.update();
-	    };
-	
-	    resize() {
-	        /*"""
-	        resize
-	        ------------
-	        Resizing of the renderer and controls
-	        */
-	        this.width = this.canvas.width();
-	        this.height = this.canvas.height();
-	        this.renderer.setSize(this.width, this.height);
-	        this.camera.aspect = this.width / this.height;
-	        this.camera.updateProjectionMatrix();
-	        this.controls.handleResize();
-	        this.render();
-	    };
-	
-	    remove_meshes(meshes) {
-	        /*"""
-	        remove_meshes
-	        ----------------
-	        Iterates over the meshes and removes each from the scene.
-	        */
-	        if (meshes !== undefined) {
-	            for (var mesh of meshes) {
-	                this.scene.remove(mesh);
-	            };
-	        };
-	    };
-	
-	    add_points(x, y, z, colors, radii) {
-	        /*"""
-	        add_points
-	        ---------------
-	        Create a point cloud from x, y, z coordinates and colors and radii
-	        (optional).
-	
-	        Args:
-	            x (array-like): Array like object of x values
-	            y (array-like): Array like object of y values
-	            z (array-like): Array like object of z values
-	            colors (object): List like colors corresponding to every object
-	            radii (object): List like radii corresponding to every object
-	
-	        Returns:
-	            points (THREE.Points): Reference to added points object
-	
-	        Tip:
-	            By tracking the returned object, one can create animations.
-	
-	        Warning:
-	            On a modern machine attempting to render >5 million (approximately)
-	            objects can cause a slowdown of the browser and framerate of the
-	            application.
-	        */
-	        if (colors === undefined) {
-	            colors = 0x808080;
-	        };
-	        if (radii == undefined) {
-	            radii = 1;
-	        }
-	        var geometry = new THREE.BufferGeometry();
-	        var material = new THREE.ShaderMaterial({
-	            vertexShader: this.vertex_shader,
-	            fog: true,
-	            fragmentShader: this.point_frag_shader,
-	            transparent: true,
-	            opacity: 1.0
-	        });
-	        var xyz = utility.create_float_array_xyz(x, y, z);
-	        var n = Math.floor(xyz.length / 3);
-	        if (!colors.hasOwnProperty('length')) {
-	            colors = utility.repeat_object(colors, n);
-	        };
-	        if (!radii.hasOwnProperty('length')) {
-	            radii = utility.repeat_float(radii, n);
-	        };
-	        colors = this.flatten_color(colors);
-	        radii = new Float32Array(radii);
-	        geometry.addAttribute('position', new THREE.BufferAttribute(xyz, 3));
-	        geometry.addAttribute('color', new THREE.BufferAttribute(colors, 3));
-	        geometry.addAttribute('size', new THREE.BufferAttribute(radii, 1));
-	        var points = new THREE.Points(geometry, material);
-	        this.scene.add(points);
-	        return [points];
-	    };
-	
-	    add_spheres(x, y, z, colors, radii) {
-	        /*"""
-	        add_spheres
-	        ---------------
-	        Create a point cloud from x, y, z coordinates and colors and radii
-	        (optional).
-	
-	        Args:
-	            x (array-like): Array like object of x values
-	            y (array-like): Array like object of y values
-	            z (array-like): Array like object of z values
-	            colors (object): List like colors corresponding to every object
-	            radii (object): List like radii corresponding to every object
-	
-	        Returns:
-	            spheres (list): List of THREE.Mesh objects
-	        */
-	        var n = 1;
-	        if (x.hasOwnProperty('length')) {
-	            n = x.length;
-	        } else if (y.hasOwnProperty('length')) {
-	            n = y.length;
-	        } else if (z.hasOwnProperty('length')) {
-	            n = z.length;
-	        };
-	        if (colors === undefined) {
-	            colors = 0x808080;
-	        };
-	        if (radii == undefined) {
-	            radii = 1;
-	        }
-	        if (!colors.hasOwnProperty('length')) {
-	            colors = utility.repeat_object(colors, n);
-	        };
-	        if (!radii.hasOwnProperty('length')) {
-	            radii = utility.repeat_float(radii, n);
-	        };
-	        var geometries = {};
-	        var materials = {};
-	        for (var i=0; i<n; i++) {
-	            var color = colors[i];
-	            var radius = radii[i];
-	            if (geometries.hasOwnProperty(color) === false) {
-	                geometries[color] = new THREE.SphereGeometry(radius, 24, 24);
-	            };
-	            if (materials.hasOwnProperty(color) === false) {
-	                materials[color] = new THREE.MeshPhongMaterial({
-	                    color: color,
-	                    specular: color,
-	                    shininess: 5
-	                });
-	            };
-	        };
-	        var xyz = utility.create_float_array_xyz(x, y, z);
-	        var meshes = [];
-	        for (var i=0, i3=0; i<n; i++, i3+=3) {
-	            var color = colors[i];
-	            var mesh = new THREE.Mesh(geometries[color], materials[color]);
-	            mesh.position.set(xyz[i3], xyz[i3+1], xyz[i3+2]);
-	            meshes.push(mesh);
-	            //mesh.geometry.computeBoundingBox();
-	            this.scene.add(mesh);
-	            //console.log(mesh.geometry.boundingBox);
-	        };
-	        return meshes;
-	    };
-	
-	    add_cylinders(v0, v1, x, y, z, colors, radius) {
-	        /*"""
-	        add_lines
-	        ------------
-	        Add lines between pairs of points.
-	
-	        Args:
-	            v0 (array): Array of first vertex in pair
-	            v1 (array): Array of second vertex
-	            x (array): Position in x of vertices
-	            y (array): Position in y of vertices
-	            z (array): Position in z of vertices
-	            colors (array): Colors of vertices
-	
-	        Returns:
-	            linesegs (THREE.LineSegments): Line segment objects
-	        */
-	        if (radius === undefined) {
-	            radius = 1;
-	        };
-	        var material = new THREE.MeshPhongMaterial({
-	            vertexColors: THREE.VertexColors,
-	            color: 0x606060,
-	            specular: 0x606060,
-	            shininess: 5,
-	        });
-	        var meshes = [];
-	        var n = v0.length;
-	        for (var i=0; i<n; i++) {
-	            var j = v0[i];
-	            var k = v1[i];
-	            var vector0 = new THREE.Vector3(x[j], y[j], z[j]);
-	            var vector1 = new THREE.Vector3(x[k], y[k], z[k]);
-	            var direction = new THREE.Vector3().subVectors(vector0, vector1);
-	            var center = new THREE.Vector3().addVectors(vector0, vector1);
-	            center.divideScalar(2.0);
-	            var geometry = new THREE.CylinderGeometry(radius, radius, direction.length());
-	            geometry.applyMatrix(new THREE.Matrix4().makeRotationX( Math.PI / 2));
-	            /*var nn = geometry.faces.length;
-	            var color0 = new THREE.Color(colors[j]);
-	            var color1 = new THREE.Color(colors[k]);
-	            geometry.colors.push(color0.clone());
-	            geometry.colors.push(color1.clone());
-	            for (var l=0; l<nn; l++) {
-	                geometry.faces[l].vertexColors[0] =
-	            };*/
-	            var mesh = new THREE.Mesh(geometry, material);
-	            mesh.position.set(center.x, center.y, center.z);
-	            mesh.lookAt(vector1);
-	            meshes.push(mesh);
-	            this.scene.add(mesh);
-	        };
-	        return meshes;
-	    };
-	
-	    add_lines(v0, v1, x, y, z, colors) {
-	        /*"""
-	        add_lines
-	        ------------
-	        Add lines between pairs of points.
-	
-	        Args:
-	            v0 (array): Array of first vertex in pair
-	            v1 (array): Array of second vertex
-	            x (array): Position in x of vertices
-	            y (array): Position in y of vertices
-	            z (array): Position in z of vertices
-	            colors (array): Colors of vertices
-	
-	        Returns:
-	            linesegs (THREE.LineSegments): Line segment objects
-	        */
-	        var material = new THREE.LineBasicMaterial({
-	            vertexColors: THREE.VertexColors,
-	            linewidth: 4,
-	        });
-	        var geometry = new THREE.Geometry();
-	        var n = v0.length;
-	        for (var i=0; i<n; i++) {
-	            var j = v0[i];
-	            var k = v1[i];
-	            var vector0 = new THREE.Vector3(x[j], y[j], z[j]);
-	            var vector1 = new THREE.Vector3(x[k], y[k], z[k]);
-	            geometry.vertices.push(vector0);
-	            geometry.vertices.push(vector1);
-	            geometry.colors.push(new THREE.Color(colors[j]));
-	            geometry.colors.push(new THREE.Color(colors[k]));
-	        };
-	        var lines = new THREE.LineSegments(geometry, material);
-	        this.scene.add(lines);
-	        return [lines];
-	    };
-	
-	    add_wireframe(vertices, color) {
-	        /*"""
-	        add_wireframe
-	        -----------------
-	        Create a wireframe object
-	        */
-	        if (color === undefined) {
-	            color = 0x808080;
-	        };
-	        var geometry = new THREE.Geometry();
-	        for (var vertex of vertices) {
-	            geometry.vertices.push(new THREE.Vector3(vertex[0], vertex[1], vertex[2]));
-	        };
-	        var material = new THREE.MeshBasicMaterial({
-	            transparent: true,
-	            opacity: 0.2,
-	            wireframeLinewidth: 8,
-	            wireframe: true
-	        });
-	        var cell = new THREE.Mesh(geometry, material);
-	        cell = new THREE.BoxHelper(cell);
-	        cell.material.color.set(color);
-	        this.scene.add(cell);
-	        return [cell];
-	    };
-	
-	    flatten_color(colors) {
-	        /*"""
-	        flatten_color
-	        ------------------
-	        */
-	        var n = colors.length;
-	        var flat = new Float32Array(n * 3);
-	        for (var i=0, i3=0; i<n; i++, i3+=3) {
-	            var color = new THREE.Color(colors[i]);
-	            flat[i3] = color.r;
-	            flat[i3+1] = color.g;
-	            flat[i3+2] = color.b;
-	        };
-	        return flat;
-	    };
-	
-	    set_camera(kwargs) {
-	        /*"""
-	        set_camera
-	        ------------------
-	        Set the camera in the default position and have it look at the origin.
-	
-	        Args:
-	            kwargs: {'x': x, 'y': y, ..., 'ox': ox, ...}
-	        */
-	        if (kwargs === undefined) {
-	            kwargs = {};
-	        };
-	        for (var key of ['x', 'y', 'z']) {
-	            if (!kwargs.hasOwnProperty(key)) {
-	                kwargs[key] = 60.0;
-	            } else {
-	                if (kwargs[key] === undefined || isNaN(kwargs[key]) || !isFinite(kwargs[key])) {
-	                    kwargs[key] = 60.0;
-	                };
-	            };
-	        };
-	        for (var key of ['rx', 'ry', 'rz']) {
-	            if (!kwargs.hasOwnProperty(key)) {
-	                kwargs[key] = 0.5;
-	            } else {
-	                if (kwargs[key] === undefined || isNaN(kwargs[key]) || !isFinite(kwargs[key])) {
-	                    kwargs[key] = 0.5;
-	                };
-	            };
-	        };
-	        for (var key of ['ox', 'oy', 'oz']) {
-	            if (!kwargs.hasOwnProperty(key)) {
-	                kwargs[key] = 0.0;
-	            } else {
-	                if (kwargs[key] === undefined || isNaN(kwargs[key]) || !isFinite(kwargs[key])) {
-	                    kwargs[key] = 0.0;
-	                };
-	            };
-	        };
-	
-	        var x = kwargs['x'] + kwargs['rx'];
-	        var y = kwargs['y'] + kwargs['ry'];
-	        var z = kwargs['z'] + kwargs['rz'];
-	        var ox = kwargs['ox'];
-	        var oy = kwargs['oy'];
-	        var oz = kwargs['oz'];
-	        this.camera.position.set(x, y, z);
-	        this.target = new THREE.Vector3(ox, oy, oz);
-	        this.camera.lookAt(this.target);
-	        this.controls.target = this.target;
-	    };
-	
-	    set_camera_from_mesh(mesh, rx, ry, rz) {
-	        /*"""
-	        */
-	        if (rx === undefined) {
-	            rx = 2.0;
-	        }
-	        if (ry === undefined) {
-	            ry = 2.0;
-	        }
-	        if (rz === undefined) {
-	            rz = 2.0;
-	        }
-	        var position;
-	        if (mesh.geometry.type === 'BufferGeometry') {
-	            position = mesh.geometry.attributes.position.array;
-	        } else {
-	            var n = mesh.geometry.vertices.length;
-	            position = new Float32Array(n * 3);
-	            for (var i=0; i<n; i+=3) {
-	                position[i] = mesh.geometry.vertices[i].x;
-	                position[i+1] = mesh.geometry.vertices[i].y;
-	                position[i+2] = mesh.geometry.vertices[i].z;
-	            }
-	        };
-	        var n = position.length / 3;
-	        var i = n;
-	        var oxyz = [0.0, 0.0, 0.0];
-	        while (i--) {
-	            oxyz[0] += position[3 * i];
-	            oxyz[1] += position[3 * i + 1];
-	            oxyz[2] += position[3 * i + 2];
-	        };
-	        oxyz[0] /= n;
-	        oxyz[1] /= n;
-	        oxyz[2] /= n;
-	        mesh.geometry.computeBoundingBox();
-	        var bbox = mesh.geometry.boundingBox;
-	        var xyz = bbox.max;
-	        xyz.x *= 1.2;
-	        xyz.x += rx;
-	        xyz.y *= 1.2;
-	        xyz.y += ry;
-	        xyz.z *= 1.2;
-	        xyz.z += rz;
-	        var kwargs = {'x': xyz.x, 'y': xyz.y, 'z': xyz.z,
-	                      'ox': oxyz[0], 'oy': oxyz[1], 'oz': oxyz[2]};
-	        this.set_camera(kwargs);
-	    };
-	
-	    set_camera_from_scene() {
-	        /*"""
-	        set_camera_from_scene
-	        ------------------------
-	        */
-	        var bbox = new THREE.Box3().setFromObject(this.scene);
-	        var min = bbox.min;
-	        var max = bbox.max;
-	        var ox = (max.x + min.x) / 2;
-	        var oy = (max.y + min.y) / 2;
-	        var oz = (max.z + min.z) / 2;
-	        max.x *= 1.2;
-	        max.y *= 1.2;
-	        max.z *= 1.2;
-	        var kwargs = {'x': max.x, 'y': max.y, 'z': max.z,
-	                      'ox': ox, 'oy': oy, 'oz': oz};
-	        this.set_camera(kwargs);
-	    };
-	
-	    add_scalar_field(field, isovalue, sides, algorithm) {
-	        /*"""
-	        add_scalar_field
-	        -------------------------
-	        Create an isosurface of a scalar field.
-	
-	        When given a scalar field, creating a surface requires selecting a set
-	        of vertices that intersect the provided field magnitude (isovalue).
-	        There are a couple of algorithms that do this.
-	        */
-	        if (isovalue === undefined) {
-	            isovalue = 0;
-	        };
-	        if (algorithm === undefined) {
-	            algorithm = 'mc';
-	        };
-	        if (sides === undefined) {
-	            sides = 1;
-	        };
-	
-	        if (algorithm == 'mc' && sides == 1) {
-	            var field_mesh = this.march_cubes1(field, isovalue);
-	            //this.scene.add(field_mesh);
-	            return field_mesh;
-	        } else if (algorithm == 'mc' && sides == 2) {
-	            var field_meshes = this.march_cubes2(field, isovalue);
-	            return field_meshes;
-	        } else {
-	            console.log('NotImplementedError');
-	        };
-	    };
-	
-	    add_unit_axis() {
-	        /*"""
-	        add_unit_axis
-	        ---------------
-	        Adds a unit length coordinate axis at the origin
-	        */
-	        var origin = new THREE.Vector3(0, 0, 0);
-	        var xdir = new THREE.Vector3(1, 0, 0);
-	        var ydir = new THREE.Vector3(0, 1, 0);
-	        var zdir = new THREE.Vector3(0, 0, 1);
-	        var x = new THREE.ArrowHelper(xdir, origin, 1.0, 0xFF0000);
-	        var y = new THREE.ArrowHelper(ydir, origin, 1.0, 0x00FF00);
-	        var z = new THREE.ArrowHelper(zdir, origin, 1.0, 0x0000FF);
-	        //var x = new THREE.ArrowHelper(xdir, origin, 6.0, 0xFF0000, 1.5, 1.5);
-	        //var y = new THREE.ArrowHelper(ydir, origin, 6.0, 0x00FF00, 1.5, 1.5);
-	        //var z = new THREE.ArrowHelper(zdir, origin, 6.0, 0x0000FF, 1.5, 1.5);
-	        x.line.material.linewidth = 5;
-	        y.line.material.linewidth = 5;
-	        z.line.material.linewidth = 5;
-	        this.scene.add(x);
-	        this.scene.add(y);
-	        this.scene.add(z);
-	        return [x, y, z];
-	    };
-	
-	    march_cubes1(field, isovalue) {
-	        /*"""
-	        march_cubes1
-	        ------------------------
-	        Run the marching cubes algorithm finding the volumetric shell that is
-	        smaller than the isovalue.
-	
-	        The marching cubes algorithm takes a scalar field and for each field
-	        vertex looks at the nearest indices (in an evenly space field this
-	        forms a cube), determines along what edges the scalar field is less
-	        than the isovalue, and creates new vertices along the edges of the
-	        field's cube. The at each point in the field, a cube is created with
-	        vertices numbered:
-	               4-------5
-	             / |     / |
-	            7-------6  |
-	            |  0----|--1
-	            | /     | /
-	            3-------2
-	        Field values are given for each field vertex. Edges are
-	        labeled as follows (see the lookup table below).
-	
-	                                            4
-	               o-------o                o-------o
-	             / |     / |            7 / | 6   / |  5
-	            o-------o  |             o-------o  |
-	            |  o----|--o             |  o----|--o
-	          3 | /   0 | / 1            | /     | /
-	            o-------o                o-------o
-	               2
-	        Edges 8, 9, 10, and 11 wrap around (clockwise looking from the top
-	        as drawn) the vertical edges of the cube, with 8 being the vertical
-	        edge between vertex 0 and 4 (see above).
+	        -------------
+	        Main entry point (called immediately after initialize) for
+	        (ipywidgets) DOMWidgetView objects.
 	
 	        Note:
-	            Scalar fields are assumed to be in row major order (also known C
-	            style, and implies that the last index is changing the fastest).
+	            This function  can be overwritten by container specific code,
+	            but it is more common to overwrite the **init** function.
 	
 	        See Also:
-	            **field.js**
+	            **init()**
 	        */
-	        console.log('march_cubes1');
-	        console.log(Math.min(...field.values));
-	        console.log(Math.max(...field.values));
-	        var nx = field.nx;
-	        var ny = field.ny;
-	        var nz = field.nz;
-	        var nnx = nx - 1;
-	        var nny = ny - 1;
-	        var nnz = nz - 1;
-	        // Field cube objects
-	        var xyz = new Array(8);                    // vertex coordinates
-	        var values = new Float32Array(8);          // vertex values (magnitudes)
-	        var value_index;
-	        var cube_index = 0;
-	        var integer = 0;
-	        var alpha = 0.5;
-	        var check = 1;
-	        // Resulting vertices
-	        var face_vertices = new Int32Array(12);    // vertices of the resultant faces
-	        // THREE
-	        var geometry = new THREE.Geometry();
-	        for (var i=0; i<nnx; i++) {
-	            for (var j=0; j<nny; j++) {
-	                for (var k=0; k<nnz; k++) {
-	                    cube_index = 0;
-	                    for (var m=0; m<8; m++) {    // Search the field cube
-	                        var offset = this.cube_vertices[m];
-	                        var oi = offset[0];
-	                        var oj = offset[1];
-	                        var ok = offset[2];
-	                        var ii = i + oi;
-	                        var jj = j + oj;
-	                        var kk = k + ok;
-	                        xyz[m] = new THREE.Vector3(field.x[ii], field.y[jj], field.z[kk]);
-	                        var value_index = i * ny * nz + j * nz + k + oi * ny * nz + oj * nz + ok;
-	                        values[m] = field.values[value_index];
-	                        if (values[m] < isovalue) {
-	                            cube_index |= this.bits[m];
-	                        };
-	                    };
-	                    integer = this.edge_table[cube_index];
-	                    if (integer === 0) continue;
-	                    alpha = 0.5;
-	                    for (var m=0; m<12; m++) {
-	                        check = 1 << m;
-	                        if (integer & check) {
-	                            face_vertices[m] = geometry.vertices.length;
-	                            var vertex_pair = this.cube_edges[m];
-	                            var a = vertex_pair[0];
-	                            var b = vertex_pair[1];
-	                            var xyz_a = xyz[a];
-	                            var xyz_b = xyz[b];
-	                            var val_a = values[a];
-	                            var val_b = values[b];
-	                            alpha = (isovalue - val_a) / (val_b - val_a);
-	                            var vertex = xyz_a.clone().lerp(xyz_b, alpha);    // Clone is critical otherwise reference to Vector3 object gets obfusticated
-	                            geometry.vertices.push(vertex);
-	                        };
-	                    };
-	
-	                    var cur_face_verts = this.tri_table[cube_index];
-	                    var num_face_verts = cur_face_verts.length;
-	                    for (var m=0; m<num_face_verts; m+=3) {
-	                        var i0 = face_vertices[cur_face_verts[m]];
-	                        var i1 = face_vertices[cur_face_verts[m+1]];
-	                        var i2 = face_vertices[cur_face_verts[m+2]];
-	                        var face = new THREE.Face3(i0, i1, i2);
-	                        geometry.faces.push(face);
-	                    };
-	                };
-	            };
-	        };
-	        geometry.mergeVertices();
-	        geometry.computeFaceNormals();
-	        geometry.computeVertexNormals();
-	        var material = new THREE.MeshLambertMaterial({color:0x303030});
-	        var mat = new THREE.MeshBasicMaterial({color: 0x909090, wireframe: true});
-	        var frame = new THREE.Mesh(geometry, mat);
-	        var filled = new THREE.Mesh(geometry, material);
-	        this.scene.add(filled);
-	        this.scene.add(frame);
-	        console.log(frame.geometry.vertices.length);
-	        console.log(frame.geometry.faces.length);
-	        return [filled, frame];
+	        this.default_listeners();
+	        this.create_container();
+	        this.init();              // Specific to the data container
+	        this.setElement(this.container);
 	    };
 	
-	    march_cubes2(field, isovalue) {
+	    init() {
 	        /*"""
-	        march_cubes2
-	        ------------------------
-	        Similar to the above but for finding positive and negative surfaces.
+	        init
+	        -------------
+	        Container view classes that extend this class can overwrite this
+	        method to customize the behavior of their data specific view.
 	        */
-	        console.log('march_cubes2');
-	        var nx = field.nx;
-	        var ny = field.ny;
-	        var nz = field.nz;
-	        var nnx = nx - 1;
-	        var nny = ny - 1;
-	        var nnz = nz - 1;
-	        // Field cube objects
-	        var xyz = new Array(8);                    // vertex coordinates
-	        var values = new Float32Array(8);          // vertex values (magnitudes)
-	        var value_index;
-	        var p_cube_index = 0;
-	        var n_cube_index = 0;
-	        var p_integer = 0;
-	        var n_integer = 0;
-	        var alpha = 0.5;
-	        var check = 1;
-	        // Resulting vertices
-	        var face_vertices = new Int32Array(12);    // vertices of the resultant faces
-	        // THREE
-	        var p_geometry = new THREE.Geometry();
-	        var n_geometry = new THREE.Geometry();
-	        for (var i=0; i<nnx; i++) {
-	            for (var j=0; j<nny; j++) {
-	                for (var k=0; k<nnz; k++) {
-	                    p_cube_index = 0;
-	                    n_cube_index = 0;
-	                    for (var m=0; m<8; m++) {    // Search the field cube
-	                        var offset = this.cube_vertices[m];
-	                        var oi = offset[0];
-	                        var oj = offset[1];
-	                        var ok = offset[2];
-	                        var ii = i + oi;
-	                        var jj = j + oj;
-	                        var kk = k + ok;
-	                        xyz[m] = new THREE.Vector3(field.x[ii], field.y[jj], field.z[kk]);
-	                        var value_index = i * ny * nz + j * nz + k + oi * ny * nz + oj * nz + ok;
-	                        values[m] = field.values[value_index];
-	                        if (values[m] < isovalue) {
-	                            p_cube_index |= this.bits[m];
-	                        };
-	                        if (values[m] < -isovalue) {
-	                            n_cube_index |= this.bits[m];
-	                        };
-	                    };
+	        this.if_empty();
+	    };
 	
-	                    p_integer = this.edge_table[p_cube_index];
-	                    if (p_integer !== 0) {
-	                        alpha = 0.5;
-	                        for (var m=0; m<12; m++) {
-	                            check = 1 << m;
-	                            if (p_integer & check) {
-	                                face_vertices[m] = p_geometry.vertices.length;
-	                                var vertex_pair = this.cube_edges[m];
-	                                var a = vertex_pair[0];
-	                                var b = vertex_pair[1];
-	                                var xyz_a = xyz[a];
-	                                var xyz_b = xyz[b];
-	                                var val_a = values[a];
-	                                var val_b = values[b];
-	                                alpha = (isovalue - val_a) / (val_b - val_a);
-	                                var vertex = xyz_a.clone().lerp(xyz_b, alpha);    // Clone is critical otherwise reference to Vector3 object gets obfusticated
-	                                p_geometry.vertices.push(vertex);
-	                            };
-	                        };
-	
-	                        var cur_face_verts = this.tri_table[p_cube_index];
-	                        var num_face_verts = cur_face_verts.length;
-	                        for (var m=0; m<num_face_verts; m+=3) {
-	                            var i0 = face_vertices[cur_face_verts[m]];
-	                            var i1 = face_vertices[cur_face_verts[m+1]];
-	                            var i2 = face_vertices[cur_face_verts[m+2]];
-	                            var face = new THREE.Face3(i0, i1, i2);
-	                            p_geometry.faces.push(face);
-	                        };
-	                    };
-	
-	                    n_integer = this.edge_table[n_cube_index];
-	                    if (n_integer !== 0) {
-	                        alpha = 0.5;
-	                        for (var m=0; m<12; m++) {
-	                            check = 1 << m;
-	                            if (n_integer & check) {
-	                                face_vertices[m] = n_geometry.vertices.length;
-	                                var vertex_pair = this.cube_edges[m];
-	                                var a = vertex_pair[0];
-	                                var b = vertex_pair[1];
-	                                var xyz_a = xyz[a];
-	                                var xyz_b = xyz[b];
-	                                var val_a = values[a];
-	                                var val_b = values[b];
-	                                alpha = (-isovalue - val_a) / (val_b - val_a);
-	                                var vertex = xyz_a.clone().lerp(xyz_b, alpha);    // Clone is critical otherwise reference to Vector3 object gets obfusticated
-	                                n_geometry.vertices.push(vertex);
-	                            };
-	                        };
-	
-	                        var cur_face_verts = this.tri_table[n_cube_index];
-	                        var num_face_verts = cur_face_verts.length;
-	                        for (var m=0; m<num_face_verts; m+=3) {
-	                            var i0 = face_vertices[cur_face_verts[m]];
-	                            var i1 = face_vertices[cur_face_verts[m+1]];
-	                            var i2 = face_vertices[cur_face_verts[m+2]];
-	                            var face = new THREE.Face3(i0, i1, i2);
-	                            n_geometry.faces.push(face);
-	                        };
-	
-	                    }
-	                };
+	    get_trait(name) {
+	        /*"""
+	        get_trait
+	        -------------
+	        Wrapper around the DOMWidgetView (Backbone.js) "model.get" function,
+	        that attempts to convert JSON strings to objects.
+	        */
+	        var obj = this.model.get(name);
+	        if (typeof obj === "string") {
+	            try {
+	                obj = JSON.parse(obj);
+	            } catch(err) {
+	                console.log(err);
 	            };
 	        };
-	        p_geometry.mergeVertices();
-	        p_geometry.computeFaceNormals();
-	        p_geometry.computeVertexNormals();
-	        n_geometry.mergeVertices();
-	        n_geometry.computeFaceNormals();
-	        n_geometry.computeVertexNormals();
-	        var p_material = new THREE.MeshPhongMaterial({
-	            color: 0x003399,
-	            specular: 0x003399,
-	            transparent: true,
-	            opacity: 0.7,
-	            shininess: 30,
-	            side: THREE.FrontSide
+	        return obj;
+	    };
+	
+	    set_trait(name, value) {
+	        /*"""
+	        set_trait
+	        ----------
+	        Wrapper around the DOMWidgetView "model.set" function to correctly
+	        set json strings.
+	        */
+	        if (typeof value === Object) {
+	            try {
+	                value = JSON.stringify(value);
+	            } catch(err) {
+	                console.log(err);
+	            };
+	        };
+	        this.model.set(name, value);
+	    };
+	
+	    if_empty() {
+	        /*"""
+	        if_empty
+	        ----------------
+	        If the (exa) container object is empty, render the test application
+	        widget.
+	        */
+	        var check = this.get_trait("test");
+	        if (check === true) {
+	            console.log("Empty container, displaying test interface!");
+	            this.app = new TestApp(this);
+	        };
+	    };
+	
+	    default_listeners() {
+	        /*"""
+	        default_listeners
+	        -------------------
+	        Set up listeners for basic variables related to the window dimensions
+	        and system settings.
+	        */
+	        this.get_width();
+	        this.get_height();
+	        this.get_gui_width();
+	        this.get_fps();
+	        this.get_field_values();
+	        this.get_field_indices();
+	        this.listenTo(this.model, "change:width", this.get_width);
+	        this.listenTo(this.model, "change:height", this.get_height);
+	        this.listenTo(this.model, "change:gui_width", this.get_gui_width);
+	        this.listenTo(this.model, "change:fps", this.get_fps);
+	        this.listenTo(this.model, "change:field_values", this.get_field_values);
+	        this.listenTo(this.model, "change:field_indices", this.get_field_indices);
+	    };
+	
+	    create_container() {
+	        /*"""
+	        create_container
+	        ------------------
+	        Create a resizable container.
+	        */
+	        var self = this;
+	        this.container = $("<div/>").width(this.width).height(this.height).resizable({
+	            aspectRatio: false,
+	            resize: function(event, ui) {
+	                self.width = ui.size.width - self.gui_width;
+	                self.height = ui.size.height;
+	                self.set_trait("width", self.width);
+	                self.set_trait("height", self.height);
+	                self.canvas.width(self.width);
+	                self.canvas.height(self.height);
+	                self.app.resize();
+	            },
 	        });
-	        var n_material = new THREE.MeshPhongMaterial({
-	            color: 0xFF9900,
-	            specular: 0xFF9900,
-	            transparent: true,
-	            opacity: 0.7,
-	            shininess: 30,
-	            side: THREE.BackSide
-	        });
-	        var material1 = new THREE.MeshBasicMaterial({color: 0x909090, wireframe: true});
-	        var material2 = new THREE.MeshBasicMaterial({color: 0x909090, wireframe: true});
-	        var mesh1 = new THREE.Mesh(p_geometry, p_material);
-	        var mesh2 = new THREE.Mesh(n_geometry, n_material);
-	        this.scene.add(mesh1);
-	        this.scene.add(mesh2);
-	        return [mesh1, mesh2];
+	    };
+	    create_canvas() {
+	        /*"""
+	        create_canvas
+	        ----------------
+	        Create a canvas for WebGL.
+	        */
+	        this.canvas = $("<canvas/>").width(this.width - this.gui_width).height(this.height);
+	        this.canvas.css("position", "absolute");
+	        this.canvas.css("top", 0);
+	        this.canvas.css("left", this.gui_width);
+	    };
+	
+	    get_gui_width() {
+	        this.gui_width = this.get_trait("gui_width");
+	    };
+	
+	    get_fps() {
+	        this.fps = this.get_trait("fps");
+	    };
+	
+	    get_width() {
+	        this.width = this.get_trait("width");
+	    };
+	
+	    get_height() {
+	        this.height = this.get_trait("height");
+	    };
+	
+	    get_field_values() {
+	        this.field_values = this.get_trait("field_values");
+	    };
+	
+	    get_field_indices() {
+	        this.field_indices = this.get_trait("field_indices");
 	    };
 	};
-	
-	
-	// These are shaders written in GLSL (GLslang: OpenGL Shading Language).
-	// This code is executed on the GPU.
-	App3D.prototype.vertex_shader = "\
-	    attribute float size;\
-	    attribute vec3 color;\
-	    varying vec3 vColor;\
-	    \
-	    void main() {\
-	        vColor = color;\
-	        vec4 mvPosition = modelViewMatrix * vec4(position, 1.0);\
-	        gl_PointSize = size * (2000.0 / length(mvPosition.xyz));\
-	        gl_Position = projectionMatrix * mvPosition;\
-	    }\
-	";
-	
-	App3D.prototype.point_frag_shader = "\
-	    varying vec3 vColor;\
-	    \
-	    void main() {\
-	        if (length(gl_PointCoord * 2.0 - 1.0) > 1.0)\
-	            discard;\
-	        gl_FragColor = vec4(vColor, 1.0);\
-	    }\
-	";
-	
-	App3D.prototype.circle_frag_shader = "\
-	    varying vec3 vColor;\
-	    \
-	    void main() {\
-	        if (length(gl_PointCoord * 2.0 - 1.0) > 1.0)\
-	            discard;\
-	        if (length(gl_PointCoord * 2.0 - 1.0) < 0.9)\
-	            discard;\
-	        gl_FragColor = vec4(vColor, 1.0);\
-	    }\
-	";
-	
-	App3D.prototype.line_frag_shader = "\
-	    uniform vec3 color;\
-	    uniform float opacity;\
-	    \
-	    vary vec3 vColor;\
-	    void main() {\
-	        gl_FragColor = vec4(vColor * color, opacity);\
-	    }\
-	";
-	
-	App3D.prototype.line_vertex_shader = "\
-	    uniform float amplitude;\
-	    attribute vec3 displacement;\
-	    attribute vec3 customColor;\
-	    varying vec3 vColor;\
-	    \
-	    void main() {\
-	        vec3 newPosition = position + amplitude * displacement;\
-	        vColor = customColor;\
-	        gl_Position = projectionMatrix * modelViewMatrix * vec4(newPosition, 1.0);\
-	    }\
-	";
-	
-	App3D.prototype.edge_table = new Uint32Array([
-	    0x0  , 0x109, 0x203, 0x30a, 0x406, 0x50f, 0x605, 0x70c,
-	    0x80c, 0x905, 0xa0f, 0xb06, 0xc0a, 0xd03, 0xe09, 0xf00,
-	    0x190, 0x99 , 0x393, 0x29a, 0x596, 0x49f, 0x795, 0x69c,
-	    0x99c, 0x895, 0xb9f, 0xa96, 0xd9a, 0xc93, 0xf99, 0xe90,
-	    0x230, 0x339, 0x33 , 0x13a, 0x636, 0x73f, 0x435, 0x53c,
-	    0xa3c, 0xb35, 0x83f, 0x936, 0xe3a, 0xf33, 0xc39, 0xd30,
-	    0x3a0, 0x2a9, 0x1a3, 0xaa , 0x7a6, 0x6af, 0x5a5, 0x4ac,
-	    0xbac, 0xaa5, 0x9af, 0x8a6, 0xfaa, 0xea3, 0xda9, 0xca0,
-	    0x460, 0x569, 0x663, 0x76a, 0x66 , 0x16f, 0x265, 0x36c,
-	    0xc6c, 0xd65, 0xe6f, 0xf66, 0x86a, 0x963, 0xa69, 0xb60,
-	    0x5f0, 0x4f9, 0x7f3, 0x6fa, 0x1f6, 0xff , 0x3f5, 0x2fc,
-	    0xdfc, 0xcf5, 0xfff, 0xef6, 0x9fa, 0x8f3, 0xbf9, 0xaf0,
-	    0x650, 0x759, 0x453, 0x55a, 0x256, 0x35f, 0x55 , 0x15c,
-	    0xe5c, 0xf55, 0xc5f, 0xd56, 0xa5a, 0xb53, 0x859, 0x950,
-	    0x7c0, 0x6c9, 0x5c3, 0x4ca, 0x3c6, 0x2cf, 0x1c5, 0xcc ,
-	    0xfcc, 0xec5, 0xdcf, 0xcc6, 0xbca, 0xac3, 0x9c9, 0x8c0,
-	    0x8c0, 0x9c9, 0xac3, 0xbca, 0xcc6, 0xdcf, 0xec5, 0xfcc,
-	    0xcc , 0x1c5, 0x2cf, 0x3c6, 0x4ca, 0x5c3, 0x6c9, 0x7c0,
-	    0x950, 0x859, 0xb53, 0xa5a, 0xd56, 0xc5f, 0xf55, 0xe5c,
-	    0x15c, 0x55 , 0x35f, 0x256, 0x55a, 0x453, 0x759, 0x650,
-	    0xaf0, 0xbf9, 0x8f3, 0x9fa, 0xef6, 0xfff, 0xcf5, 0xdfc,
-	    0x2fc, 0x3f5, 0xff , 0x1f6, 0x6fa, 0x7f3, 0x4f9, 0x5f0,
-	    0xb60, 0xa69, 0x963, 0x86a, 0xf66, 0xe6f, 0xd65, 0xc6c,
-	    0x36c, 0x265, 0x16f, 0x66 , 0x76a, 0x663, 0x569, 0x460,
-	    0xca0, 0xda9, 0xea3, 0xfaa, 0x8a6, 0x9af, 0xaa5, 0xbac,
-	    0x4ac, 0x5a5, 0x6af, 0x7a6, 0xaa , 0x1a3, 0x2a9, 0x3a0,
-	    0xd30, 0xc39, 0xf33, 0xe3a, 0x936, 0x83f, 0xb35, 0xa3c,
-	    0x53c, 0x435, 0x73f, 0x636, 0x13a, 0x33 , 0x339, 0x230,
-	    0xe90, 0xf99, 0xc93, 0xd9a, 0xa96, 0xb9f, 0x895, 0x99c,
-	    0x69c, 0x795, 0x49f, 0x596, 0x29a, 0x393, 0x99 , 0x190,
-	    0xf00, 0xe09, 0xd03, 0xc0a, 0xb06, 0xa0f, 0x905, 0x80c,
-	    0x70c, 0x605, 0x50f, 0x406, 0x30a, 0x203, 0x109, 0x0
-	]);
-	
-	App3D.prototype.tri_table = [
-	    [],
-	    [0, 8, 3],
-	    [0, 1, 9],
-	    [1, 8, 3, 9, 8, 1],
-	    [1, 2, 10],
-	    [0, 8, 3, 1, 2, 10],
-	    [9, 2, 10, 0, 2, 9],
-	    [2, 8, 3, 2, 10, 8, 10, 9, 8],
-	    [3, 11, 2],
-	    [0, 11, 2, 8, 11, 0],
-	    [1, 9, 0, 2, 3, 11],
-	    [1, 11, 2, 1, 9, 11, 9, 8, 11],
-	    [3, 10, 1, 11, 10, 3],
-	    [0, 10, 1, 0, 8, 10, 8, 11, 10],
-	    [3, 9, 0, 3, 11, 9, 11, 10, 9],
-	    [9, 8, 10, 10, 8, 11],
-	    [4, 7, 8],
-	    [4, 3, 0, 7, 3, 4],
-	    [0, 1, 9, 8, 4, 7],
-	    [4, 1, 9, 4, 7, 1, 7, 3, 1],
-	    [1, 2, 10, 8, 4, 7],
-	    [3, 4, 7, 3, 0, 4, 1, 2, 10],
-	    [9, 2, 10, 9, 0, 2, 8, 4, 7],
-	    [2, 10, 9, 2, 9, 7, 2, 7, 3, 7, 9, 4],
-	    [8, 4, 7, 3, 11, 2],
-	    [11, 4, 7, 11, 2, 4, 2, 0, 4],
-	    [9, 0, 1, 8, 4, 7, 2, 3, 11],
-	    [4, 7, 11, 9, 4, 11, 9, 11, 2, 9, 2, 1],
-	    [3, 10, 1, 3, 11, 10, 7, 8, 4],
-	    [1, 11, 10, 1, 4, 11, 1, 0, 4, 7, 11, 4],
-	    [4, 7, 8, 9, 0, 11, 9, 11, 10, 11, 0, 3],
-	    [4, 7, 11, 4, 11, 9, 9, 11, 10],
-	    [9, 5, 4],
-	    [9, 5, 4, 0, 8, 3],
-	    [0, 5, 4, 1, 5, 0],
-	    [8, 5, 4, 8, 3, 5, 3, 1, 5],
-	    [1, 2, 10, 9, 5, 4],
-	    [3, 0, 8, 1, 2, 10, 4, 9, 5],
-	    [5, 2, 10, 5, 4, 2, 4, 0, 2],
-	    [2, 10, 5, 3, 2, 5, 3, 5, 4, 3, 4, 8],
-	    [9, 5, 4, 2, 3, 11],
-	    [0, 11, 2, 0, 8, 11, 4, 9, 5],
-	    [0, 5, 4, 0, 1, 5, 2, 3, 11],
-	    [2, 1, 5, 2, 5, 8, 2, 8, 11, 4, 8, 5],
-	    [10, 3, 11, 10, 1, 3, 9, 5, 4],
-	    [4, 9, 5, 0, 8, 1, 8, 10, 1, 8, 11, 10],
-	    [5, 4, 0, 5, 0, 11, 5, 11, 10, 11, 0, 3],
-	    [5, 4, 8, 5, 8, 10, 10, 8, 11],
-	    [9, 7, 8, 5, 7, 9],
-	    [9, 3, 0, 9, 5, 3, 5, 7, 3],
-	    [0, 7, 8, 0, 1, 7, 1, 5, 7],
-	    [1, 5, 3, 3, 5, 7],
-	    [9, 7, 8, 9, 5, 7, 10, 1, 2],
-	    [10, 1, 2, 9, 5, 0, 5, 3, 0, 5, 7, 3],
-	    [8, 0, 2, 8, 2, 5, 8, 5, 7, 10, 5, 2],
-	    [2, 10, 5, 2, 5, 3, 3, 5, 7],
-	    [7, 9, 5, 7, 8, 9, 3, 11, 2],
-	    [9, 5, 7, 9, 7, 2, 9, 2, 0, 2, 7, 11],
-	    [2, 3, 11, 0, 1, 8, 1, 7, 8, 1, 5, 7],
-	    [11, 2, 1, 11, 1, 7, 7, 1, 5],
-	    [9, 5, 8, 8, 5, 7, 10, 1, 3, 10, 3, 11],
-	    [5, 7, 0, 5, 0, 9, 7, 11, 0, 1, 0, 10, 11, 10, 0],
-	    [11, 10, 0, 11, 0, 3, 10, 5, 0, 8, 0, 7, 5, 7, 0],
-	    [11, 10, 5, 7, 11, 5],
-	    [10, 6, 5],
-	    [0, 8, 3, 5, 10, 6],
-	    [9, 0, 1, 5, 10, 6],
-	    [1, 8, 3, 1, 9, 8, 5, 10, 6],
-	    [1, 6, 5, 2, 6, 1],
-	    [1, 6, 5, 1, 2, 6, 3, 0, 8],
-	    [9, 6, 5, 9, 0, 6, 0, 2, 6],
-	    [5, 9, 8, 5, 8, 2, 5, 2, 6, 3, 2, 8],
-	    [2, 3, 11, 10, 6, 5],
-	    [11, 0, 8, 11, 2, 0, 10, 6, 5],
-	    [0, 1, 9, 2, 3, 11, 5, 10, 6],
-	    [5, 10, 6, 1, 9, 2, 9, 11, 2, 9, 8, 11],
-	    [6, 3, 11, 6, 5, 3, 5, 1, 3],
-	    [0, 8, 11, 0, 11, 5, 0, 5, 1, 5, 11, 6],
-	    [3, 11, 6, 0, 3, 6, 0, 6, 5, 0, 5, 9],
-	    [6, 5, 9, 6, 9, 11, 11, 9, 8],
-	    [5, 10, 6, 4, 7, 8],
-	    [4, 3, 0, 4, 7, 3, 6, 5, 10],
-	    [1, 9, 0, 5, 10, 6, 8, 4, 7],
-	    [10, 6, 5, 1, 9, 7, 1, 7, 3, 7, 9, 4],
-	    [6, 1, 2, 6, 5, 1, 4, 7, 8],
-	    [1, 2, 5, 5, 2, 6, 3, 0, 4, 3, 4, 7],
-	    [8, 4, 7, 9, 0, 5, 0, 6, 5, 0, 2, 6],
-	    [7, 3, 9, 7, 9, 4, 3, 2, 9, 5, 9, 6, 2, 6, 9],
-	    [3, 11, 2, 7, 8, 4, 10, 6, 5],
-	    [5, 10, 6, 4, 7, 2, 4, 2, 0, 2, 7, 11],
-	    [0, 1, 9, 4, 7, 8, 2, 3, 11, 5, 10, 6],
-	    [9, 2, 1, 9, 11, 2, 9, 4, 11, 7, 11, 4, 5, 10, 6],
-	    [8, 4, 7, 3, 11, 5, 3, 5, 1, 5, 11, 6],
-	    [5, 1, 11, 5, 11, 6, 1, 0, 11, 7, 11, 4, 0, 4, 11],
-	    [0, 5, 9, 0, 6, 5, 0, 3, 6, 11, 6, 3, 8, 4, 7],
-	    [6, 5, 9, 6, 9, 11, 4, 7, 9, 7, 11, 9],
-	    [10, 4, 9, 6, 4, 10],
-	    [4, 10, 6, 4, 9, 10, 0, 8, 3],
-	    [10, 0, 1, 10, 6, 0, 6, 4, 0],
-	    [8, 3, 1, 8, 1, 6, 8, 6, 4, 6, 1, 10],
-	    [1, 4, 9, 1, 2, 4, 2, 6, 4],
-	    [3, 0, 8, 1, 2, 9, 2, 4, 9, 2, 6, 4],
-	    [0, 2, 4, 4, 2, 6],
-	    [8, 3, 2, 8, 2, 4, 4, 2, 6],
-	    [10, 4, 9, 10, 6, 4, 11, 2, 3],
-	    [0, 8, 2, 2, 8, 11, 4, 9, 10, 4, 10, 6],
-	    [3, 11, 2, 0, 1, 6, 0, 6, 4, 6, 1, 10],
-	    [6, 4, 1, 6, 1, 10, 4, 8, 1, 2, 1, 11, 8, 11, 1],
-	    [9, 6, 4, 9, 3, 6, 9, 1, 3, 11, 6, 3],
-	    [8, 11, 1, 8, 1, 0, 11, 6, 1, 9, 1, 4, 6, 4, 1],
-	    [3, 11, 6, 3, 6, 0, 0, 6, 4],
-	    [6, 4, 8, 11, 6, 8],
-	    [7, 10, 6, 7, 8, 10, 8, 9, 10],
-	    [0, 7, 3, 0, 10, 7, 0, 9, 10, 6, 7, 10],
-	    [10, 6, 7, 1, 10, 7, 1, 7, 8, 1, 8, 0],
-	    [10, 6, 7, 10, 7, 1, 1, 7, 3],
-	    [1, 2, 6, 1, 6, 8, 1, 8, 9, 8, 6, 7],
-	    [2, 6, 9, 2, 9, 1, 6, 7, 9, 0, 9, 3, 7, 3, 9],
-	    [7, 8, 0, 7, 0, 6, 6, 0, 2],
-	    [7, 3, 2, 6, 7, 2],
-	    [2, 3, 11, 10, 6, 8, 10, 8, 9, 8, 6, 7],
-	    [2, 0, 7, 2, 7, 11, 0, 9, 7, 6, 7, 10, 9, 10, 7],
-	    [1, 8, 0, 1, 7, 8, 1, 10, 7, 6, 7, 10, 2, 3, 11],
-	    [11, 2, 1, 11, 1, 7, 10, 6, 1, 6, 7, 1],
-	    [8, 9, 6, 8, 6, 7, 9, 1, 6, 11, 6, 3, 1, 3, 6],
-	    [0, 9, 1, 11, 6, 7],
-	    [7, 8, 0, 7, 0, 6, 3, 11, 0, 11, 6, 0],
-	    [7, 11, 6],
-	    [7, 6, 11],
-	    [3, 0, 8, 11, 7, 6],
-	    [0, 1, 9, 11, 7, 6],
-	    [8, 1, 9, 8, 3, 1, 11, 7, 6],
-	    [10, 1, 2, 6, 11, 7],
-	    [1, 2, 10, 3, 0, 8, 6, 11, 7],
-	    [2, 9, 0, 2, 10, 9, 6, 11, 7],
-	    [6, 11, 7, 2, 10, 3, 10, 8, 3, 10, 9, 8],
-	    [7, 2, 3, 6, 2, 7],
-	    [7, 0, 8, 7, 6, 0, 6, 2, 0],
-	    [2, 7, 6, 2, 3, 7, 0, 1, 9],
-	    [1, 6, 2, 1, 8, 6, 1, 9, 8, 8, 7, 6],
-	    [10, 7, 6, 10, 1, 7, 1, 3, 7],
-	    [10, 7, 6, 1, 7, 10, 1, 8, 7, 1, 0, 8],
-	    [0, 3, 7, 0, 7, 10, 0, 10, 9, 6, 10, 7],
-	    [7, 6, 10, 7, 10, 8, 8, 10, 9],
-	    [6, 8, 4, 11, 8, 6],
-	    [3, 6, 11, 3, 0, 6, 0, 4, 6],
-	    [8, 6, 11, 8, 4, 6, 9, 0, 1],
-	    [9, 4, 6, 9, 6, 3, 9, 3, 1, 11, 3, 6],
-	    [6, 8, 4, 6, 11, 8, 2, 10, 1],
-	    [1, 2, 10, 3, 0, 11, 0, 6, 11, 0, 4, 6],
-	    [4, 11, 8, 4, 6, 11, 0, 2, 9, 2, 10, 9],
-	    [10, 9, 3, 10, 3, 2, 9, 4, 3, 11, 3, 6, 4, 6, 3],
-	    [8, 2, 3, 8, 4, 2, 4, 6, 2],
-	    [0, 4, 2, 4, 6, 2],
-	    [1, 9, 0, 2, 3, 4, 2, 4, 6, 4, 3, 8],
-	    [1, 9, 4, 1, 4, 2, 2, 4, 6],
-	    [8, 1, 3, 8, 6, 1, 8, 4, 6, 6, 10, 1],
-	    [10, 1, 0, 10, 0, 6, 6, 0, 4],
-	    [4, 6, 3, 4, 3, 8, 6, 10, 3, 0, 3, 9, 10, 9, 3],
-	    [10, 9, 4, 6, 10, 4],
-	    [4, 9, 5, 7, 6, 11],
-	    [0, 8, 3, 4, 9, 5, 11, 7, 6],
-	    [5, 0, 1, 5, 4, 0, 7, 6, 11],
-	    [11, 7, 6, 8, 3, 4, 3, 5, 4, 3, 1, 5],
-	    [9, 5, 4, 10, 1, 2, 7, 6, 11],
-	    [6, 11, 7, 1, 2, 10, 0, 8, 3, 4, 9, 5],
-	    [7, 6, 11, 5, 4, 10, 4, 2, 10, 4, 0, 2],
-	    [3, 4, 8, 3, 5, 4, 3, 2, 5, 10, 5, 2, 11, 7, 6],
-	    [7, 2, 3, 7, 6, 2, 5, 4, 9],
-	    [9, 5, 4, 0, 8, 6, 0, 6, 2, 6, 8, 7],
-	    [3, 6, 2, 3, 7, 6, 1, 5, 0, 5, 4, 0],
-	    [6, 2, 8, 6, 8, 7, 2, 1, 8, 4, 8, 5, 1, 5, 8],
-	    [9, 5, 4, 10, 1, 6, 1, 7, 6, 1, 3, 7],
-	    [1, 6, 10, 1, 7, 6, 1, 0, 7, 8, 7, 0, 9, 5, 4],
-	    [4, 0, 10, 4, 10, 5, 0, 3, 10, 6, 10, 7, 3, 7, 10],
-	    [7, 6, 10, 7, 10, 8, 5, 4, 10, 4, 8, 10],
-	    [6, 9, 5, 6, 11, 9, 11, 8, 9],
-	    [3, 6, 11, 0, 6, 3, 0, 5, 6, 0, 9, 5],
-	    [0, 11, 8, 0, 5, 11, 0, 1, 5, 5, 6, 11],
-	    [6, 11, 3, 6, 3, 5, 5, 3, 1],
-	    [1, 2, 10, 9, 5, 11, 9, 11, 8, 11, 5, 6],
-	    [0, 11, 3, 0, 6, 11, 0, 9, 6, 5, 6, 9, 1, 2, 10],
-	    [11, 8, 5, 11, 5, 6, 8, 0, 5, 10, 5, 2, 0, 2, 5],
-	    [6, 11, 3, 6, 3, 5, 2, 10, 3, 10, 5, 3],
-	    [5, 8, 9, 5, 2, 8, 5, 6, 2, 3, 8, 2],
-	    [9, 5, 6, 9, 6, 0, 0, 6, 2],
-	    [1, 5, 8, 1, 8, 0, 5, 6, 8, 3, 8, 2, 6, 2, 8],
-	    [1, 5, 6, 2, 1, 6],
-	    [1, 3, 6, 1, 6, 10, 3, 8, 6, 5, 6, 9, 8, 9, 6],
-	    [10, 1, 0, 10, 0, 6, 9, 5, 0, 5, 6, 0],
-	    [0, 3, 8, 5, 6, 10],
-	    [10, 5, 6],
-	    [11, 5, 10, 7, 5, 11],
-	    [11, 5, 10, 11, 7, 5, 8, 3, 0],
-	    [5, 11, 7, 5, 10, 11, 1, 9, 0],
-	    [10, 7, 5, 10, 11, 7, 9, 8, 1, 8, 3, 1],
-	    [11, 1, 2, 11, 7, 1, 7, 5, 1],
-	    [0, 8, 3, 1, 2, 7, 1, 7, 5, 7, 2, 11],
-	    [9, 7, 5, 9, 2, 7, 9, 0, 2, 2, 11, 7],
-	    [7, 5, 2, 7, 2, 11, 5, 9, 2, 3, 2, 8, 9, 8, 2],
-	    [2, 5, 10, 2, 3, 5, 3, 7, 5],
-	    [8, 2, 0, 8, 5, 2, 8, 7, 5, 10, 2, 5],
-	    [9, 0, 1, 5, 10, 3, 5, 3, 7, 3, 10, 2],
-	    [9, 8, 2, 9, 2, 1, 8, 7, 2, 10, 2, 5, 7, 5, 2],
-	    [1, 3, 5, 3, 7, 5],
-	    [0, 8, 7, 0, 7, 1, 1, 7, 5],
-	    [9, 0, 3, 9, 3, 5, 5, 3, 7],
-	    [9, 8, 7, 5, 9, 7],
-	    [5, 8, 4, 5, 10, 8, 10, 11, 8],
-	    [5, 0, 4, 5, 11, 0, 5, 10, 11, 11, 3, 0],
-	    [0, 1, 9, 8, 4, 10, 8, 10, 11, 10, 4, 5],
-	    [10, 11, 4, 10, 4, 5, 11, 3, 4, 9, 4, 1, 3, 1, 4],
-	    [2, 5, 1, 2, 8, 5, 2, 11, 8, 4, 5, 8],
-	    [0, 4, 11, 0, 11, 3, 4, 5, 11, 2, 11, 1, 5, 1, 11],
-	    [0, 2, 5, 0, 5, 9, 2, 11, 5, 4, 5, 8, 11, 8, 5],
-	    [9, 4, 5, 2, 11, 3],
-	    [2, 5, 10, 3, 5, 2, 3, 4, 5, 3, 8, 4],
-	    [5, 10, 2, 5, 2, 4, 4, 2, 0],
-	    [3, 10, 2, 3, 5, 10, 3, 8, 5, 4, 5, 8, 0, 1, 9],
-	    [5, 10, 2, 5, 2, 4, 1, 9, 2, 9, 4, 2],
-	    [8, 4, 5, 8, 5, 3, 3, 5, 1],
-	    [0, 4, 5, 1, 0, 5],
-	    [8, 4, 5, 8, 5, 3, 9, 0, 5, 0, 3, 5],
-	    [9, 4, 5],
-	    [4, 11, 7, 4, 9, 11, 9, 10, 11],
-	    [0, 8, 3, 4, 9, 7, 9, 11, 7, 9, 10, 11],
-	    [1, 10, 11, 1, 11, 4, 1, 4, 0, 7, 4, 11],
-	    [3, 1, 4, 3, 4, 8, 1, 10, 4, 7, 4, 11, 10, 11, 4],
-	    [4, 11, 7, 9, 11, 4, 9, 2, 11, 9, 1, 2],
-	    [9, 7, 4, 9, 11, 7, 9, 1, 11, 2, 11, 1, 0, 8, 3],
-	    [11, 7, 4, 11, 4, 2, 2, 4, 0],
-	    [11, 7, 4, 11, 4, 2, 8, 3, 4, 3, 2, 4],
-	    [2, 9, 10, 2, 7, 9, 2, 3, 7, 7, 4, 9],
-	    [9, 10, 7, 9, 7, 4, 10, 2, 7, 8, 7, 0, 2, 0, 7],
-	    [3, 7, 10, 3, 10, 2, 7, 4, 10, 1, 10, 0, 4, 0, 10],
-	    [1, 10, 2, 8, 7, 4],
-	    [4, 9, 1, 4, 1, 7, 7, 1, 3],
-	    [4, 9, 1, 4, 1, 7, 0, 8, 1, 8, 7, 1],
-	    [4, 0, 3, 7, 4, 3],
-	    [4, 8, 7],
-	    [9, 10, 8, 10, 11, 8],
-	    [3, 0, 9, 3, 9, 11, 11, 9, 10],
-	    [0, 1, 10, 0, 10, 8, 8, 10, 11],
-	    [3, 1, 10, 11, 3, 10],
-	    [1, 2, 11, 1, 11, 9, 9, 11, 8],
-	    [3, 0, 9, 3, 9, 11, 1, 2, 9, 2, 11, 9],
-	    [0, 2, 11, 8, 0, 11],
-	    [3, 2, 11],
-	    [2, 3, 8, 2, 8, 10, 10, 8, 9],
-	    [9, 10, 2, 0, 9, 2],
-	    [2, 3, 8, 2, 8, 10, 0, 1, 8, 1, 10, 8],
-	    [1, 10, 2],
-	    [1, 3, 8, 9, 1, 8],
-	    [0, 9, 1],
-	    [0, 3, 8],
-	    []
-	];
-	
-	App3D.prototype.cube_vertices = [[0, 0, 0], [1, 0, 0], [1, 1, 0], [0, 1, 0],
-	                                 [0, 0, 1], [1, 0, 1], [1, 1, 1], [0, 1, 1]];
-	App3D.prototype.cube_edges = [[0, 1], [1, 2], [2, 3], [3, 0], [4, 5], [5, 6],
-	                              [6, 7], [7, 4], [0, 4], [1, 5], [2, 6], [3, 7]];
-	App3D.prototype.bits = [1, 2, 4, 8, 16, 32, 64, 128];
 	
 	module.exports = {
-	    "App3D" : App3D
-	};
-	//});
-	//});
+	    "BaseModel": BaseModel,
+	    "BaseView": BaseView,
+	    "ContainerView": ContainerView,
+	    "ContainerModel": ContainerModel
+	}
 
 
 /***/ },
@@ -45467,6 +44571,1369 @@ define(["jupyter-js-widgets"], function(__WEBPACK_EXTERNAL_MODULE_5__) { return 
 /* 7 */
 /***/ function(module, exports, __webpack_require__) {
 
+	// Copyright (c) 2015-2016, Exa Analytics Development Team
+	// Distributed under the terms of the Apache License 2.0
+	/*"""
+	=============
+	test.js
+	=============
+	A test application called when an empty container widget is rendered in a
+	Jupyter notebook environment.
+	*/
+	"use strict";
+	var App3D = __webpack_require__(8).App3D;
+	var ContainerGUI = __webpack_require__(12).ContainerGUI;
+	var num = __webpack_require__(16);
+	var field = __webpack_require__(17);
+	
+	class TestApp {
+	    /*"""
+	    TestContainer
+	    ==============
+	    A test application for the container
+	    */
+	    constructor(view) {
+	        this.view = view;
+	        this.view.create_canvas();
+	        this.meshes = [];
+	        this.app3d = new App3D(this.view.canvas);
+	        this.create_gui();
+	        this.view.container.append(this.gui.domElement);
+	        this.view.container.append(this.gui.custom_css);
+	        this.view.container.append(this.view.canvas);
+	        var view_self = this.view;
+	        this.app3d.render();
+	        this.view.on("displayed", function() {
+	            view_self.app.app3d.animate();
+	            view_self.app.app3d.controls.handleResize();
+	        });
+	        this.view.send({"type": "message",
+	                        "app": "TestApp",
+	                        "content": "True",
+	                        "data": "test app message"});
+	    };
+	
+	    create_gui() {
+	        /*"""
+	        create_gui
+	        ------------
+	        Creates the gui
+	        */
+	        var self = this;
+	        this.gui = new ContainerGUI(this.view.gui_width);
+	
+	        // GUI levels are the heirarchy of folders in dat gui 0: top level
+	        this.top = {
+	            "clear": function() {
+	                self.app3d.remove_meshes(self.meshes);
+	            },
+	
+	            "test mesh": function() {
+	                self.app3d.remove_meshes(self.meshes);
+	                self.meshes = self.app3d.test_mesh();
+	            },
+	
+	            "test phong": function() {
+	                self.app3d.remove_meshes(self.meshes);
+	                self.meshes = self.app3d.test_mesh(true);
+	            },
+	        };
+	        this.top.clear_button = this.gui.add(this.top, "clear");
+	        this.top.test_mesh_button = this.gui.add(this.top, "test mesh");
+	        this.top.test_phong_button = this.gui.add(this.top, "test phong");
+	
+	        this.fields = {
+	            "field type": null,
+	            "isovalue": 1.0, "boxsize": 3,
+	            "nx": 13,   "ny": 13,   "nz": 13,
+	            "ox": -3.0, "oy": -3.0, "oz": -3.0,
+	            "fx":  3.0, "fy":  3.0, "fz":  3.0,
+	            "dxi": 0.5, "dyj": 0.5, "dzk": 0.5,
+	            "dxj": 0.0, "dyi": 0.0, "dzi": 0.0,
+	            "dxk": 0.0, "dyk": 0.0, "dzj": 0.0,
+	        };
+	        this.fields["folder"] = this.gui.addFolder("fields");
+	        this.fields["field_type_dropdown"] = this.fields.folder.add(this.fields, "field type", num.function_list_3d);
+	        this.fields["isovalue_slider"] = this.fields.folder.add(this.fields, "isovalue", 0.1, 10.0);
+	        this.fields["boxsize_slider"] = this.fields.folder.add(this.fields, "boxsize", 3, 5);
+	        this.fields["nx_slider"] = this.fields.folder.add(this.fields, "nx").min(5).max(25).step(1);
+	        this.fields["ny_slider"] = this.fields.folder.add(this.fields, "ny").min(5).max(25).step(1);
+	        this.fields["nz_slider"] = this.fields.folder.add(this.fields, "nz").min(5).max(25).step(1);
+	        this.fields.field_type_dropdown.onFinishChange(function(field_type) {
+	            self.fields["field type"] = field_type;
+	            self.fields.field = new field.ScalarField(self.fields, num[field_type]);
+	            self.render_field();
+	        });
+	        this.fields.isovalue_slider.onFinishChange(function(value) {
+	            self.fields.isovalue = value;
+	            self.render_field();
+	        });
+	        this.fields.boxsize_slider.onFinishChange(function(value) {
+	            self.fields.fx = value;
+	            self.fields.fy = value;
+	            self.fields.fz = value;
+	            self.fields.ox = -value;
+	            self.fields.oy = -value;
+	            self.fields.oz = -value;
+	            self.fields.field.x = num.linspace(self.fields.ox, self.fields.fx, self.fields.nx);
+	            self.fields.field.y = num.linspace(self.fields.oy, self.fields.fy, self.fields.ny);
+	            self.fields.field.z = num.linspace(self.fields.oz, self.fields.fz, self.fields.nz);
+	            self.fields.field.update();
+	            self.render_field();
+	        });
+	        this.fields.nx_slider.onFinishChange(function(value) {
+	            self.fields.nx = value;
+	            self.fields.field.x = num.linspace(self.fields.ox,
+	                                               self.fields.fx,
+	                                               self.fields.nx);
+	            self.fields.field.update();
+	            self.render_field();
+	        });
+	        this.fields.ny_slider.onFinishChange(function(value) {
+	            self.fields.ny = value;
+	            self.fields.field.y = num.linspace(self.fields.oy,
+	                                               self.fields.fy,
+	                                               self.fields.ny);
+	            self.fields.field.update();
+	            self.render_field();
+	        });
+	        this.fields.nz_slider.onFinishChange(function(value) {
+	            self.fields.nz = value;
+	            self.fields.field.z = num.linspace(self.fields.oz,
+	                                               self.fields.fz,
+	                                               self.fields.nz);
+	            self.fields.field.update();
+	            self.render_field();
+	        });
+	    };
+	
+	    resize() {
+	        this.app3d.resize();
+	    };
+	
+	    render_field() {
+	        this.app3d.remove_meshes(this.meshes);
+	        this.meshes = this.app3d.add_scalar_field(this.fields.field, this.fields.isovalue, this.fields.sides);
+	        this.app3d.set_camera({"x": 5.0, "y": 5.0, "z": 5.0});
+	    };
+	};
+	
+	module.exports = {
+	    "TestApp": TestApp
+	}
+
+
+/***/ },
+/* 8 */
+/***/ function(module, exports, __webpack_require__) {
+
+	// Copyright (c) 2015-2016, Exa Analytics Development Team
+	// Distributed under the terms of the Apache License 2.0
+	/*"""
+	3D Visualization
+	##################
+	
+	*/
+	"use strict";
+	var widgets = __webpack_require__(5);
+	var THREE = __webpack_require__(6);
+	var TrackballControls = __webpack_require__(9);
+	var utility = __webpack_require__(11);
+	
+	class App3D {
+	    /*"""
+	    App3D
+	    =========
+	    A 3D visualization application built on top of threejs
+	    */
+	    constructor(canvas) {
+	        this.canvas = canvas;
+	        this.width = this.canvas.width();
+	        this.height = this.canvas.height();
+	
+	        this.renderer = new THREE.WebGLRenderer({
+	            canvas: this.canvas.get(0),
+	            antialias: true,
+	        });
+	        this.renderer.setClearColor(0xFFFFFF);
+	        this.renderer.setPixelRatio(window.devicePixelRatio);
+	        this.renderer.setSize(this.width, this.height);
+	
+	        this.scene = new THREE.Scene();
+	
+	        this.camera = new THREE.PerspectiveCamera(30, this.width / this.height, 1, 100000);
+	
+	        this.controls = new TrackballControls(this.camera, this.canvas.get(0));
+	        this.controls.rotateSpeed = 10.0;
+	        this.controls.zoomSpeed = 5.0;
+	        this.controls.panSpeed = 0.5;
+	        this.controls.noZoom = false;
+	        this.controls.noPan = false;
+	        this.controls.staticMoving = true;
+	        this.controls.dynamicDampingFactor = 0.3;
+	        this.controls.keys = [65, 83, 68];
+	        this.controls.addEventListener("change", this.render.bind(this));
+	
+	        this.dlight0 = new THREE.DirectionalLight(0xFFFFFF, 0.3);
+	        this.dlight0.position.set(-100, -100, -100);
+	        this.scene.add(this.dlight0);
+	        this.dlight1 = new THREE.DirectionalLight(0xFFFFFF, 0.3);
+	        this.dlight1.position.set(100, 100, 100);
+	        this.scene.add(this.dlight1);
+	        this.ambient_light = new THREE.AmbientLight(0xFFFFFF, 0.5);
+	        this.scene.add(this.ambient_light);
+	    };
+	
+	    test_mesh(phong) {
+	        /*"""
+	        test_mesh
+	        ---------------
+	        Example of a render
+	        */
+	        if (phong === undefined) {
+	            phong = false;
+	        };
+	        var test_geometry = new THREE.BoxGeometry(2.0, 2.0, 2.0);
+	        var test_material;
+	        if (phong === true) {
+	            test_material = new THREE.MeshPhongMaterial({
+	                color: 0x005500,
+	                specular: 0x005500
+	            });
+	        } else {
+	            test_material = new THREE.MeshLambertMaterial({color: 0x005500});
+	        };
+	        var test_material2 = new THREE.MeshBasicMaterial({wireframe: true, color: 0x909090});
+	        var test_outline = new THREE.Mesh(test_geometry, test_material2);
+	        var test_cube = new THREE.Mesh(test_geometry, test_material);
+	        this.scene.add(test_cube);
+	        this.scene.add(test_outline);
+	        this.set_camera_from_mesh(test_cube);
+	        return [test_cube, test_outline];
+	    };
+	
+	    render() {
+	        /*"""
+	        render
+	        -----------
+	        Render the 3D application
+	        */
+	        this.renderer.render(this.scene, this.camera);
+	    };
+	
+	    animate() {
+	        /*"""
+	        animate
+	        ------------
+	        Start the animation.
+	        */
+	        window.requestAnimationFrame(this.animate.bind(this));
+	        this.render();
+	        this.controls.update();
+	    };
+	
+	    resize() {
+	        /*"""
+	        resize
+	        ------------
+	        Resizing of the renderer and controls
+	        */
+	        this.width = this.canvas.width();
+	        this.height = this.canvas.height();
+	        this.renderer.setSize(this.width, this.height);
+	        this.camera.aspect = this.width / this.height;
+	        this.camera.updateProjectionMatrix();
+	        this.controls.handleResize();
+	        this.render();
+	    };
+	
+	    remove_meshes(meshes) {
+	        /*"""
+	        remove_meshes
+	        ----------------
+	        Iterates over the meshes and removes each from the scene.
+	        */
+	        if (meshes !== undefined) {
+	            for (var mesh of meshes) {
+	                this.scene.remove(mesh);
+	            };
+	        };
+	    };
+	
+	    add_points(x, y, z, colors, radii) {
+	        /*"""
+	        add_points
+	        ---------------
+	        Create a point cloud from x, y, z coordinates and colors and radii
+	        (optional).
+	
+	        Args:
+	            x (array-like): Array like object of x values
+	            y (array-like): Array like object of y values
+	            z (array-like): Array like object of z values
+	            colors (object): List like colors corresponding to every object
+	            radii (object): List like radii corresponding to every object
+	
+	        Returns:
+	            points (THREE.Points): Reference to added points object
+	
+	        Tip:
+	            By tracking the returned object, one can create animations.
+	
+	        Warning:
+	            On a modern machine attempting to render >5 million (approximately)
+	            objects can cause a slowdown of the browser and framerate of the
+	            application.
+	        */
+	        if (colors === undefined) {
+	            colors = 0x808080;
+	        };
+	        if (radii == undefined) {
+	            radii = 1;
+	        }
+	        var geometry = new THREE.BufferGeometry();
+	        var material = new THREE.ShaderMaterial({
+	            vertexShader: this.vertex_shader,
+	            fog: true,
+	            fragmentShader: this.point_frag_shader,
+	            transparent: true,
+	            opacity: 1.0
+	        });
+	        var xyz = utility.create_float_array_xyz(x, y, z);
+	        var n = Math.floor(xyz.length / 3);
+	        if (!colors.hasOwnProperty("length")) {
+	            colors = utility.repeat_object(colors, n);
+	        };
+	        if (!radii.hasOwnProperty("length")) {
+	            radii = utility.repeat_float(radii, n);
+	        };
+	        colors = this.flatten_color(colors);
+	        radii = new Float32Array(radii);
+	        geometry.addAttribute("position", new THREE.BufferAttribute(xyz, 3));
+	        geometry.addAttribute("color", new THREE.BufferAttribute(colors, 3));
+	        geometry.addAttribute("size", new THREE.BufferAttribute(radii, 1));
+	        var points = new THREE.Points(geometry, material);
+	        this.scene.add(points);
+	        return [points];
+	    };
+	
+	    add_spheres(x, y, z, colors, radii) {
+	        /*"""
+	        add_spheres
+	        ---------------
+	        Create a point cloud from x, y, z coordinates and colors and radii
+	        (optional).
+	
+	        Args:
+	            x (array-like): Array like object of x values
+	            y (array-like): Array like object of y values
+	            z (array-like): Array like object of z values
+	            colors (object): List like colors corresponding to every object
+	            radii (object): List like radii corresponding to every object
+	
+	        Returns:
+	            spheres (list): List of THREE.Mesh objects
+	        */
+	        var n = 1;
+	        if (x.hasOwnProperty("length")) {
+	            n = x.length;
+	        } else if (y.hasOwnProperty("length")) {
+	            n = y.length;
+	        } else if (z.hasOwnProperty("length")) {
+	            n = z.length;
+	        };
+	        if (colors === undefined) {
+	            colors = 0x808080;
+	        };
+	        if (radii == undefined) {
+	            radii = 1;
+	        }
+	        if (!colors.hasOwnProperty("length")) {
+	            colors = utility.repeat_object(colors, n);
+	        };
+	        if (!radii.hasOwnProperty("length")) {
+	            radii = utility.repeat_float(radii, n);
+	        };
+	        var geometries = {};
+	        var materials = {};
+	        for (var i=0; i<n; i++) {
+	            var color = colors[i];
+	            var radius = radii[i];
+	            if (geometries.hasOwnProperty(color) === false) {
+	                geometries[color] = new THREE.SphereGeometry(radius, 24, 24);
+	            };
+	            if (materials.hasOwnProperty(color) === false) {
+	                materials[color] = new THREE.MeshPhongMaterial({
+	                    color: color,
+	                    specular: color,
+	                    shininess: 5
+	                });
+	            };
+	        };
+	        var xyz = utility.create_float_array_xyz(x, y, z);
+	        var meshes = [];
+	        for (var i=0, i3=0; i<n; i++, i3+=3) {
+	            var color = colors[i];
+	            var mesh = new THREE.Mesh(geometries[color], materials[color]);
+	            mesh.position.set(xyz[i3], xyz[i3+1], xyz[i3+2]);
+	            meshes.push(mesh);
+	            //mesh.geometry.computeBoundingBox();
+	            this.scene.add(mesh);
+	            //console.log(mesh.geometry.boundingBox);
+	        };
+	        return meshes;
+	    };
+	
+	    add_cylinders(v0, v1, x, y, z, colors, radius) {
+	        /*"""
+	        add_lines
+	        ------------
+	        Add lines between pairs of points.
+	
+	        Args:
+	            v0 (array): Array of first vertex in pair
+	            v1 (array): Array of second vertex
+	            x (array): Position in x of vertices
+	            y (array): Position in y of vertices
+	            z (array): Position in z of vertices
+	            colors (array): Colors of vertices
+	
+	        Returns:
+	            linesegs (THREE.LineSegments): Line segment objects
+	        */
+	        if (radius === undefined) {
+	            radius = 1;
+	        };
+	        var material = new THREE.MeshPhongMaterial({
+	            vertexColors: THREE.VertexColors,
+	            color: 0x606060,
+	            specular: 0x606060,
+	            shininess: 5,
+	        });
+	        var meshes = [];
+	        var n = v0.length;
+	        for (var i=0; i<n; i++) {
+	            var j = v0[i];
+	            var k = v1[i];
+	            var vector0 = new THREE.Vector3(x[j], y[j], z[j]);
+	            var vector1 = new THREE.Vector3(x[k], y[k], z[k]);
+	            var direction = new THREE.Vector3().subVectors(vector0, vector1);
+	            var center = new THREE.Vector3().addVectors(vector0, vector1);
+	            center.divideScalar(2.0);
+	            var geometry = new THREE.CylinderGeometry(radius, radius, direction.length());
+	            geometry.applyMatrix(new THREE.Matrix4().makeRotationX( Math.PI / 2));
+	            /*var nn = geometry.faces.length;
+	            var color0 = new THREE.Color(colors[j]);
+	            var color1 = new THREE.Color(colors[k]);
+	            geometry.colors.push(color0.clone());
+	            geometry.colors.push(color1.clone());
+	            for (var l=0; l<nn; l++) {
+	                geometry.faces[l].vertexColors[0] =
+	            };*/
+	            var mesh = new THREE.Mesh(geometry, material);
+	            mesh.position.set(center.x, center.y, center.z);
+	            mesh.lookAt(vector1);
+	            meshes.push(mesh);
+	            this.scene.add(mesh);
+	        };
+	        return meshes;
+	    };
+	
+	    add_lines(v0, v1, x, y, z, colors) {
+	        /*"""
+	        add_lines
+	        ------------
+	        Add lines between pairs of points.
+	
+	        Args:
+	            v0 (array): Array of first vertex in pair
+	            v1 (array): Array of second vertex
+	            x (array): Position in x of vertices
+	            y (array): Position in y of vertices
+	            z (array): Position in z of vertices
+	            colors (array): Colors of vertices
+	
+	        Returns:
+	            linesegs (THREE.LineSegments): Line segment objects
+	        */
+	        var material = new THREE.LineBasicMaterial({
+	            vertexColors: THREE.VertexColors,
+	            linewidth: 4,
+	        });
+	        var geometry = new THREE.Geometry();
+	        var n = v0.length;
+	        for (var i=0; i<n; i++) {
+	            var j = v0[i];
+	            var k = v1[i];
+	            var vector0 = new THREE.Vector3(x[j], y[j], z[j]);
+	            var vector1 = new THREE.Vector3(x[k], y[k], z[k]);
+	            geometry.vertices.push(vector0);
+	            geometry.vertices.push(vector1);
+	            geometry.colors.push(new THREE.Color(colors[j]));
+	            geometry.colors.push(new THREE.Color(colors[k]));
+	        };
+	        var lines = new THREE.LineSegments(geometry, material);
+	        this.scene.add(lines);
+	        return [lines];
+	    };
+	
+	    add_wireframe(vertices, color) {
+	        /*"""
+	        add_wireframe
+	        -----------------
+	        Create a wireframe object
+	        */
+	        if (color === undefined) {
+	            color = 0x808080;
+	        };
+	        var geometry = new THREE.Geometry();
+	        for (var vertex of vertices) {
+	            geometry.vertices.push(new THREE.Vector3(vertex[0], vertex[1], vertex[2]));
+	        };
+	        var material = new THREE.MeshBasicMaterial({
+	            transparent: true,
+	            opacity: 0.2,
+	            wireframeLinewidth: 8,
+	            wireframe: true
+	        });
+	        var cell = new THREE.Mesh(geometry, material);
+	        cell = new THREE.BoxHelper(cell);
+	        cell.material.color.set(color);
+	        this.scene.add(cell);
+	        return [cell];
+	    };
+	
+	    flatten_color(colors) {
+	        /*"""
+	        flatten_color
+	        ------------------
+	        */
+	        var n = colors.length;
+	        var flat = new Float32Array(n * 3);
+	        for (var i=0, i3=0; i<n; i++, i3+=3) {
+	            var color = new THREE.Color(colors[i]);
+	            flat[i3] = color.r;
+	            flat[i3+1] = color.g;
+	            flat[i3+2] = color.b;
+	        };
+	        return flat;
+	    };
+	
+	    set_camera(kwargs) {
+	        /*"""
+	        set_camera
+	        ------------------
+	        Set the camera in the default position and have it look at the origin.
+	
+	        Args:
+	            kwargs: {"x": x, "y": y, ..., "ox": ox, ...}
+	        */
+	        if (kwargs === undefined) {
+	            kwargs = {};
+	        };
+	        for (var key of ["x", "y", "z"]) {
+	            if (!kwargs.hasOwnProperty(key)) {
+	                kwargs[key] = 60.0;
+	            } else {
+	                if (kwargs[key] === undefined || isNaN(kwargs[key]) || !isFinite(kwargs[key])) {
+	                    kwargs[key] = 60.0;
+	                };
+	            };
+	        };
+	        for (var key of ["rx", "ry", "rz"]) {
+	            if (!kwargs.hasOwnProperty(key)) {
+	                kwargs[key] = 0.5;
+	            } else {
+	                if (kwargs[key] === undefined || isNaN(kwargs[key]) || !isFinite(kwargs[key])) {
+	                    kwargs[key] = 0.5;
+	                };
+	            };
+	        };
+	        for (var key of ["ox", "oy", "oz"]) {
+	            if (!kwargs.hasOwnProperty(key)) {
+	                kwargs[key] = 0.0;
+	            } else {
+	                if (kwargs[key] === undefined || isNaN(kwargs[key]) || !isFinite(kwargs[key])) {
+	                    kwargs[key] = 0.0;
+	                };
+	            };
+	        };
+	
+	        var x = kwargs["x"] + kwargs["rx"];
+	        var y = kwargs["y"] + kwargs["ry"];
+	        var z = kwargs["z"] + kwargs["rz"];
+	        var ox = kwargs["ox"];
+	        var oy = kwargs["oy"];
+	        var oz = kwargs["oz"];
+	        this.camera.position.set(x, y, z);
+	        this.target = new THREE.Vector3(ox, oy, oz);
+	        this.camera.lookAt(this.target);
+	        this.controls.target = this.target;
+	    };
+	
+	    set_camera_from_mesh(mesh, rx, ry, rz) {
+	        /*"""
+	        */
+	        if (rx === undefined) {
+	            rx = 2.0;
+	        }
+	        if (ry === undefined) {
+	            ry = 2.0;
+	        }
+	        if (rz === undefined) {
+	            rz = 2.0;
+	        }
+	        var position;
+	        if (mesh.geometry.type === "BufferGeometry") {
+	            position = mesh.geometry.attributes.position.array;
+	        } else {
+	            var n = mesh.geometry.vertices.length;
+	            position = new Float32Array(n * 3);
+	            for (var i=0; i<n; i+=3) {
+	                position[i] = mesh.geometry.vertices[i].x;
+	                position[i+1] = mesh.geometry.vertices[i].y;
+	                position[i+2] = mesh.geometry.vertices[i].z;
+	            }
+	        };
+	        var n = position.length / 3;
+	        var i = n;
+	        var oxyz = [0.0, 0.0, 0.0];
+	        while (i--) {
+	            oxyz[0] += position[3 * i];
+	            oxyz[1] += position[3 * i + 1];
+	            oxyz[2] += position[3 * i + 2];
+	        };
+	        oxyz[0] /= n;
+	        oxyz[1] /= n;
+	        oxyz[2] /= n;
+	        mesh.geometry.computeBoundingBox();
+	        var bbox = mesh.geometry.boundingBox;
+	        var xyz = bbox.max;
+	        xyz.x *= 1.2;
+	        xyz.x += rx;
+	        xyz.y *= 1.2;
+	        xyz.y += ry;
+	        xyz.z *= 1.2;
+	        xyz.z += rz;
+	        var kwargs = {"x": xyz.x, "y": xyz.y, "z": xyz.z,
+	                      "ox": oxyz[0], "oy": oxyz[1], "oz": oxyz[2]};
+	        this.set_camera(kwargs);
+	    };
+	
+	    set_camera_from_scene() {
+	        /*"""
+	        set_camera_from_scene
+	        ------------------------
+	        */
+	        var bbox = new THREE.Box3().setFromObject(this.scene);
+	        var min = bbox.min;
+	        var max = bbox.max;
+	        var ox = (max.x + min.x) / 2;
+	        var oy = (max.y + min.y) / 2;
+	        var oz = (max.z + min.z) / 2;
+	        max.x *= 1.2;
+	        max.y *= 1.2;
+	        max.z *= 1.2;
+	        var kwargs = {"x": max.x, "y": max.y, "z": max.z,
+	                      "ox": ox, "oy": oy, "oz": oz};
+	        this.set_camera(kwargs);
+	    };
+	
+	    add_scalar_field(field, isovalue, sides, algorithm) {
+	        /*"""
+	        add_scalar_field
+	        -------------------------
+	        Create an isosurface of a scalar field.
+	
+	        When given a scalar field, creating a surface requires selecting a set
+	        of vertices that intersect the provided field magnitude (isovalue).
+	        There are a couple of algorithms that do this.
+	        */
+	        if (isovalue === undefined) {
+	            isovalue = 0;
+	        };
+	        if (algorithm === undefined) {
+	            algorithm = "mc";
+	        };
+	        if (sides === undefined) {
+	            sides = 1;
+	        };
+	
+	        if (algorithm == "mc" && sides == 1) {
+	            var field_mesh = this.march_cubes1(field, isovalue);
+	            //this.scene.add(field_mesh);
+	            return field_mesh;
+	        } else if (algorithm == "mc" && sides == 2) {
+	            var field_meshes = this.march_cubes2(field, isovalue);
+	            return field_meshes;
+	        } else {
+	            console.log("NotImplementedError");
+	        };
+	    };
+	
+	    add_unit_axis() {
+	        /*"""
+	        add_unit_axis
+	        ---------------
+	        Adds a unit length coordinate axis at the origin
+	        */
+	        var origin = new THREE.Vector3(0, 0, 0);
+	        var xdir = new THREE.Vector3(1, 0, 0);
+	        var ydir = new THREE.Vector3(0, 1, 0);
+	        var zdir = new THREE.Vector3(0, 0, 1);
+	        var x = new THREE.ArrowHelper(xdir, origin, 1.0, 0xFF0000);
+	        var y = new THREE.ArrowHelper(ydir, origin, 1.0, 0x00FF00);
+	        var z = new THREE.ArrowHelper(zdir, origin, 1.0, 0x0000FF);
+	        //var x = new THREE.ArrowHelper(xdir, origin, 6.0, 0xFF0000, 1.5, 1.5);
+	        //var y = new THREE.ArrowHelper(ydir, origin, 6.0, 0x00FF00, 1.5, 1.5);
+	        //var z = new THREE.ArrowHelper(zdir, origin, 6.0, 0x0000FF, 1.5, 1.5);
+	        x.line.material.linewidth = 5;
+	        y.line.material.linewidth = 5;
+	        z.line.material.linewidth = 5;
+	        this.scene.add(x);
+	        this.scene.add(y);
+	        this.scene.add(z);
+	        return [x, y, z];
+	    };
+	
+	    march_cubes1(field, isovalue) {
+	        /*"""
+	        march_cubes1
+	        ------------------------
+	        Run the marching cubes algorithm finding the volumetric shell that is
+	        smaller than the isovalue.
+	
+	        The marching cubes algorithm takes a scalar field and for each field
+	        vertex looks at the nearest indices (in an evenly space field this
+	        forms a cube), determines along what edges the scalar field is less
+	        than the isovalue, and creates new vertices along the edges of the
+	        field's cube. The at each point in the field, a cube is created with
+	        vertices numbered:
+	               4-------5
+	             / |     / |
+	            7-------6  |
+	            |  0----|--1
+	            | /     | /
+	            3-------2
+	        Field values are given for each field vertex. Edges are
+	        labeled as follows (see the lookup table below).
+	
+	                                            4
+	               o-------o                o-------o
+	             / |     / |            7 / | 6   / |  5
+	            o-------o  |             o-------o  |
+	            |  o----|--o             |  o----|--o
+	          3 | /   0 | / 1            | /     | /
+	            o-------o                o-------o
+	               2
+	        Edges 8, 9, 10, and 11 wrap around (clockwise looking from the top
+	        as drawn) the vertical edges of the cube, with 8 being the vertical
+	        edge between vertex 0 and 4 (see above).
+	
+	        Note:
+	            Scalar fields are assumed to be in row major order (also known C
+	            style, and implies that the last index is changing the fastest).
+	
+	        See Also:
+	            **field.js**
+	        */
+	        console.log("mc1");
+	        var nx = field.nx;
+	        var ny = field.ny;
+	        var nz = field.nz;
+	        var nnx = nx - 1;
+	        var nny = ny - 1;
+	        var nnz = nz - 1;
+	        // Field cube objects
+	        var xyz = new Array(8);                    // vertex coordinates
+	        var values = new Float32Array(8);          // vertex values (magnitudes)
+	        var value_index;
+	        var cube_index = 0;
+	        var integer = 0;
+	        var alpha = 0.5;
+	        var check = 1;
+	        // Resulting vertices
+	        var face_vertices = new Int32Array(12);    // vertices of the resultant faces
+	        // THREE
+	        var geometry = new THREE.Geometry();
+	        for (var i=0; i<nnx; i++) {
+	            for (var j=0; j<nny; j++) {
+	                for (var k=0; k<nnz; k++) {
+	                    cube_index = 0;
+	                    for (var m=0; m<8; m++) {    // Search the field cube
+	                        var offset = this.cube_vertices[m];
+	                        var oi = offset[0];
+	                        var oj = offset[1];
+	                        var ok = offset[2];
+	                        var ii = i + oi;
+	                        var jj = j + oj;
+	                        var kk = k + ok;
+	                        xyz[m] = new THREE.Vector3(field.x[ii], field.y[jj], field.z[kk]);
+	                        var value_index = i * ny * nz + j * nz + k + oi * ny * nz + oj * nz + ok;
+	                        values[m] = field.values[value_index];
+	                        if (values[m] < isovalue) {
+	                            cube_index |= this.bits[m];
+	                        };
+	                    };
+	                    integer = this.edge_table[cube_index];
+	                    if (integer === 0) continue;
+	                    alpha = 0.5;
+	                    for (var m=0; m<12; m++) {
+	                        check = 1 << m;
+	                        if (integer & check) {
+	                            face_vertices[m] = geometry.vertices.length;
+	                            var vertex_pair = this.cube_edges[m];
+	                            var a = vertex_pair[0];
+	                            var b = vertex_pair[1];
+	                            var xyz_a = xyz[a];
+	                            var xyz_b = xyz[b];
+	                            var val_a = values[a];
+	                            var val_b = values[b];
+	                            alpha = (isovalue - val_a) / (val_b - val_a);
+	                            var vertex = xyz_a.clone().lerp(xyz_b, alpha);    // Clone is critical otherwise reference to Vector3 object gets obfusticated
+	                            geometry.vertices.push(vertex);
+	                        };
+	                    };
+	
+	                    var cur_face_verts = this.tri_table[cube_index];
+	                    var num_face_verts = cur_face_verts.length;
+	                    for (var m=0; m<num_face_verts; m+=3) {
+	                        var i0 = face_vertices[cur_face_verts[m]];
+	                        var i1 = face_vertices[cur_face_verts[m+1]];
+	                        var i2 = face_vertices[cur_face_verts[m+2]];
+	                        var face = new THREE.Face3(i0, i1, i2);
+	                        geometry.faces.push(face);
+	                    };
+	                };
+	            };
+	        };
+	        geometry.mergeVertices();
+	        geometry.computeFaceNormals();
+	        geometry.computeVertexNormals();
+	        var material = new THREE.MeshLambertMaterial({color:0x606060,
+	                                                      side: THREE.DoubleSide});
+	        var mat = new THREE.MeshBasicMaterial({color: 0x909090,
+	                                               wireframe: true});
+	        var frame = new THREE.Mesh(geometry, mat);
+	        var filled = new THREE.Mesh(geometry, material);
+	        this.scene.add(filled);
+	        this.scene.add(frame);
+	        return [filled, frame];
+	    };
+	
+	    march_cubes2(field, isovalue) {
+	        /*"""
+	        march_cubes2
+	        ------------------------
+	        Similar to the above but for finding positive and negative surfaces.
+	        */
+	        console.log("mc2");
+	        var nx = field.nx;
+	        var ny = field.ny;
+	        var nz = field.nz;
+	        var nnx = nx - 1;
+	        var nny = ny - 1;
+	        var nnz = nz - 1;
+	        // Field cube objects
+	        var xyz = new Array(8);                    // vertex coordinates
+	        var values = new Float32Array(8);          // vertex values (magnitudes)
+	        var value_index;
+	        var p_cube_index = 0;
+	        var n_cube_index = 0;
+	        var p_integer = 0;
+	        var n_integer = 0;
+	        var alpha = 0.5;
+	        var check = 1;
+	        // Resulting vertices
+	        var face_vertices = new Int32Array(12);    // vertices of the resultant faces
+	        // THREE
+	        var p_geometry = new THREE.Geometry();
+	        var n_geometry = new THREE.Geometry();
+	        for (var i=0; i<nnx; i++) {
+	            for (var j=0; j<nny; j++) {
+	                for (var k=0; k<nnz; k++) {
+	                    p_cube_index = 0;
+	                    n_cube_index = 0;
+	                    for (var m=0; m<8; m++) {    // Search the field cube
+	                        var offset = this.cube_vertices[m];
+	                        var oi = offset[0];
+	                        var oj = offset[1];
+	                        var ok = offset[2];
+	                        var ii = i + oi;
+	                        var jj = j + oj;
+	                        var kk = k + ok;
+	                        xyz[m] = new THREE.Vector3(field.x[ii], field.y[jj], field.z[kk]);
+	                        var value_index = i * ny * nz + j * nz + k + oi * ny * nz + oj * nz + ok;
+	                        values[m] = field.values[value_index];
+	                        if (values[m] < isovalue) {
+	                            p_cube_index |= this.bits[m];
+	                        };
+	                        if (values[m] < -isovalue) {
+	                            n_cube_index |= this.bits[m];
+	                        };
+	                    };
+	
+	                    p_integer = this.edge_table[p_cube_index];
+	                    if (p_integer !== 0) {
+	                        alpha = 0.5;
+	                        for (var m=0; m<12; m++) {
+	                            check = 1 << m;
+	                            if (p_integer & check) {
+	                                face_vertices[m] = p_geometry.vertices.length;
+	                                var vertex_pair = this.cube_edges[m];
+	                                var a = vertex_pair[0];
+	                                var b = vertex_pair[1];
+	                                var xyz_a = xyz[a];
+	                                var xyz_b = xyz[b];
+	                                var val_a = values[a];
+	                                var val_b = values[b];
+	                                alpha = (isovalue - val_a) / (val_b - val_a);
+	                                var vertex = xyz_a.clone().lerp(xyz_b, alpha);    // Clone is critical otherwise reference to Vector3 object gets obfusticated
+	                                p_geometry.vertices.push(vertex);
+	                            };
+	                        };
+	
+	                        var cur_face_verts = this.tri_table[p_cube_index];
+	                        var num_face_verts = cur_face_verts.length;
+	                        for (var m=0; m<num_face_verts; m+=3) {
+	                            var i0 = face_vertices[cur_face_verts[m]];
+	                            var i1 = face_vertices[cur_face_verts[m+1]];
+	                            var i2 = face_vertices[cur_face_verts[m+2]];
+	                            var face = new THREE.Face3(i0, i1, i2);
+	                            p_geometry.faces.push(face);
+	                        };
+	                    };
+	
+	                    n_integer = this.edge_table[n_cube_index];
+	                    if (n_integer !== 0) {
+	                        alpha = 0.5;
+	                        for (var m=0; m<12; m++) {
+	                            check = 1 << m;
+	                            if (n_integer & check) {
+	                                face_vertices[m] = n_geometry.vertices.length;
+	                                var vertex_pair = this.cube_edges[m];
+	                                var a = vertex_pair[0];
+	                                var b = vertex_pair[1];
+	                                var xyz_a = xyz[a];
+	                                var xyz_b = xyz[b];
+	                                var val_a = values[a];
+	                                var val_b = values[b];
+	                                alpha = (-isovalue - val_a) / (val_b - val_a);
+	                                var vertex = xyz_a.clone().lerp(xyz_b, alpha);    // Clone is critical otherwise reference to Vector3 object gets obfusticated
+	                                n_geometry.vertices.push(vertex);
+	                            };
+	                        };
+	
+	                        var cur_face_verts = this.tri_table[n_cube_index];
+	                        var num_face_verts = cur_face_verts.length;
+	                        for (var m=0; m<num_face_verts; m+=3) {
+	                            var i0 = face_vertices[cur_face_verts[m]];
+	                            var i1 = face_vertices[cur_face_verts[m+1]];
+	                            var i2 = face_vertices[cur_face_verts[m+2]];
+	                            var face = new THREE.Face3(i0, i1, i2);
+	                            n_geometry.faces.push(face);
+	                        };
+	
+	                    }
+	                };
+	            };
+	        };
+	        p_geometry.mergeVertices();
+	        p_geometry.computeFaceNormals();
+	        p_geometry.computeVertexNormals();
+	        n_geometry.mergeVertices();
+	        n_geometry.computeFaceNormals();
+	        n_geometry.computeVertexNormals();
+	        var p_material = new THREE.MeshPhongMaterial({
+	            color: 0x003399,
+	            specular: 0x003399,
+	            side: THREE.DoubleSide,
+	            shininess: 15
+	        });
+	        var n_material = new THREE.MeshPhongMaterial({
+	            color: 0xFF9900,
+	            specular: 0xFF9900,
+	            side: THREE.DoubleSide,
+	            shininess: 15
+	        });
+	        var mesh1 = new THREE.Mesh(p_geometry, p_material);
+	        var mesh2 = new THREE.Mesh(n_geometry, n_material);
+	        this.scene.add(mesh1);
+	        this.scene.add(mesh2);
+	        return [mesh1, mesh2];
+	    };
+	};
+	
+	
+	// These are shaders written in GLSL (GLslang: OpenGL Shading Language).
+	// This code is executed on the GPU.
+	App3D.prototype.vertex_shader = "\
+	    attribute float size;\
+	    attribute vec3 color;\
+	    varying vec3 vColor;\
+	    \
+	    void main() {\
+	        vColor = color;\
+	        vec4 mvPosition = modelViewMatrix * vec4(position, 1.0);\
+	        gl_PointSize = size * (2000.0 / length(mvPosition.xyz));\
+	        gl_Position = projectionMatrix * mvPosition;\
+	    }\
+	";
+	
+	App3D.prototype.point_frag_shader = "\
+	    varying vec3 vColor;\
+	    \
+	    void main() {\
+	        if (length(gl_PointCoord * 2.0 - 1.0) > 1.0)\
+	            discard;\
+	        gl_FragColor = vec4(vColor, 1.0);\
+	    }\
+	";
+	
+	App3D.prototype.circle_frag_shader = "\
+	    varying vec3 vColor;\
+	    \
+	    void main() {\
+	        if (length(gl_PointCoord * 2.0 - 1.0) > 1.0)\
+	            discard;\
+	        if (length(gl_PointCoord * 2.0 - 1.0) < 0.9)\
+	            discard;\
+	        gl_FragColor = vec4(vColor, 1.0);\
+	    }\
+	";
+	
+	App3D.prototype.line_frag_shader = "\
+	    uniform vec3 color;\
+	    uniform float opacity;\
+	    \
+	    vary vec3 vColor;\
+	    void main() {\
+	        gl_FragColor = vec4(vColor * color, opacity);\
+	    }\
+	";
+	
+	App3D.prototype.line_vertex_shader = "\
+	    uniform float amplitude;\
+	    attribute vec3 displacement;\
+	    attribute vec3 customColor;\
+	    varying vec3 vColor;\
+	    \
+	    void main() {\
+	        vec3 newPosition = position + amplitude * displacement;\
+	        vColor = customColor;\
+	        gl_Position = projectionMatrix * modelViewMatrix * vec4(newPosition, 1.0);\
+	    }\
+	";
+	
+	App3D.prototype.edge_table = new Uint32Array([
+	    0x0  , 0x109, 0x203, 0x30a, 0x406, 0x50f, 0x605, 0x70c,
+	    0x80c, 0x905, 0xa0f, 0xb06, 0xc0a, 0xd03, 0xe09, 0xf00,
+	    0x190, 0x99 , 0x393, 0x29a, 0x596, 0x49f, 0x795, 0x69c,
+	    0x99c, 0x895, 0xb9f, 0xa96, 0xd9a, 0xc93, 0xf99, 0xe90,
+	    0x230, 0x339, 0x33 , 0x13a, 0x636, 0x73f, 0x435, 0x53c,
+	    0xa3c, 0xb35, 0x83f, 0x936, 0xe3a, 0xf33, 0xc39, 0xd30,
+	    0x3a0, 0x2a9, 0x1a3, 0xaa , 0x7a6, 0x6af, 0x5a5, 0x4ac,
+	    0xbac, 0xaa5, 0x9af, 0x8a6, 0xfaa, 0xea3, 0xda9, 0xca0,
+	    0x460, 0x569, 0x663, 0x76a, 0x66 , 0x16f, 0x265, 0x36c,
+	    0xc6c, 0xd65, 0xe6f, 0xf66, 0x86a, 0x963, 0xa69, 0xb60,
+	    0x5f0, 0x4f9, 0x7f3, 0x6fa, 0x1f6, 0xff , 0x3f5, 0x2fc,
+	    0xdfc, 0xcf5, 0xfff, 0xef6, 0x9fa, 0x8f3, 0xbf9, 0xaf0,
+	    0x650, 0x759, 0x453, 0x55a, 0x256, 0x35f, 0x55 , 0x15c,
+	    0xe5c, 0xf55, 0xc5f, 0xd56, 0xa5a, 0xb53, 0x859, 0x950,
+	    0x7c0, 0x6c9, 0x5c3, 0x4ca, 0x3c6, 0x2cf, 0x1c5, 0xcc ,
+	    0xfcc, 0xec5, 0xdcf, 0xcc6, 0xbca, 0xac3, 0x9c9, 0x8c0,
+	    0x8c0, 0x9c9, 0xac3, 0xbca, 0xcc6, 0xdcf, 0xec5, 0xfcc,
+	    0xcc , 0x1c5, 0x2cf, 0x3c6, 0x4ca, 0x5c3, 0x6c9, 0x7c0,
+	    0x950, 0x859, 0xb53, 0xa5a, 0xd56, 0xc5f, 0xf55, 0xe5c,
+	    0x15c, 0x55 , 0x35f, 0x256, 0x55a, 0x453, 0x759, 0x650,
+	    0xaf0, 0xbf9, 0x8f3, 0x9fa, 0xef6, 0xfff, 0xcf5, 0xdfc,
+	    0x2fc, 0x3f5, 0xff , 0x1f6, 0x6fa, 0x7f3, 0x4f9, 0x5f0,
+	    0xb60, 0xa69, 0x963, 0x86a, 0xf66, 0xe6f, 0xd65, 0xc6c,
+	    0x36c, 0x265, 0x16f, 0x66 , 0x76a, 0x663, 0x569, 0x460,
+	    0xca0, 0xda9, 0xea3, 0xfaa, 0x8a6, 0x9af, 0xaa5, 0xbac,
+	    0x4ac, 0x5a5, 0x6af, 0x7a6, 0xaa , 0x1a3, 0x2a9, 0x3a0,
+	    0xd30, 0xc39, 0xf33, 0xe3a, 0x936, 0x83f, 0xb35, 0xa3c,
+	    0x53c, 0x435, 0x73f, 0x636, 0x13a, 0x33 , 0x339, 0x230,
+	    0xe90, 0xf99, 0xc93, 0xd9a, 0xa96, 0xb9f, 0x895, 0x99c,
+	    0x69c, 0x795, 0x49f, 0x596, 0x29a, 0x393, 0x99 , 0x190,
+	    0xf00, 0xe09, 0xd03, 0xc0a, 0xb06, 0xa0f, 0x905, 0x80c,
+	    0x70c, 0x605, 0x50f, 0x406, 0x30a, 0x203, 0x109, 0x0
+	]);
+	
+	App3D.prototype.tri_table = [
+	    [],
+	    [0, 8, 3],
+	    [0, 1, 9],
+	    [1, 8, 3, 9, 8, 1],
+	    [1, 2, 10],
+	    [0, 8, 3, 1, 2, 10],
+	    [9, 2, 10, 0, 2, 9],
+	    [2, 8, 3, 2, 10, 8, 10, 9, 8],
+	    [3, 11, 2],
+	    [0, 11, 2, 8, 11, 0],
+	    [1, 9, 0, 2, 3, 11],
+	    [1, 11, 2, 1, 9, 11, 9, 8, 11],
+	    [3, 10, 1, 11, 10, 3],
+	    [0, 10, 1, 0, 8, 10, 8, 11, 10],
+	    [3, 9, 0, 3, 11, 9, 11, 10, 9],
+	    [9, 8, 10, 10, 8, 11],
+	    [4, 7, 8],
+	    [4, 3, 0, 7, 3, 4],
+	    [0, 1, 9, 8, 4, 7],
+	    [4, 1, 9, 4, 7, 1, 7, 3, 1],
+	    [1, 2, 10, 8, 4, 7],
+	    [3, 4, 7, 3, 0, 4, 1, 2, 10],
+	    [9, 2, 10, 9, 0, 2, 8, 4, 7],
+	    [2, 10, 9, 2, 9, 7, 2, 7, 3, 7, 9, 4],
+	    [8, 4, 7, 3, 11, 2],
+	    [11, 4, 7, 11, 2, 4, 2, 0, 4],
+	    [9, 0, 1, 8, 4, 7, 2, 3, 11],
+	    [4, 7, 11, 9, 4, 11, 9, 11, 2, 9, 2, 1],
+	    [3, 10, 1, 3, 11, 10, 7, 8, 4],
+	    [1, 11, 10, 1, 4, 11, 1, 0, 4, 7, 11, 4],
+	    [4, 7, 8, 9, 0, 11, 9, 11, 10, 11, 0, 3],
+	    [4, 7, 11, 4, 11, 9, 9, 11, 10],
+	    [9, 5, 4],
+	    [9, 5, 4, 0, 8, 3],
+	    [0, 5, 4, 1, 5, 0],
+	    [8, 5, 4, 8, 3, 5, 3, 1, 5],
+	    [1, 2, 10, 9, 5, 4],
+	    [3, 0, 8, 1, 2, 10, 4, 9, 5],
+	    [5, 2, 10, 5, 4, 2, 4, 0, 2],
+	    [2, 10, 5, 3, 2, 5, 3, 5, 4, 3, 4, 8],
+	    [9, 5, 4, 2, 3, 11],
+	    [0, 11, 2, 0, 8, 11, 4, 9, 5],
+	    [0, 5, 4, 0, 1, 5, 2, 3, 11],
+	    [2, 1, 5, 2, 5, 8, 2, 8, 11, 4, 8, 5],
+	    [10, 3, 11, 10, 1, 3, 9, 5, 4],
+	    [4, 9, 5, 0, 8, 1, 8, 10, 1, 8, 11, 10],
+	    [5, 4, 0, 5, 0, 11, 5, 11, 10, 11, 0, 3],
+	    [5, 4, 8, 5, 8, 10, 10, 8, 11],
+	    [9, 7, 8, 5, 7, 9],
+	    [9, 3, 0, 9, 5, 3, 5, 7, 3],
+	    [0, 7, 8, 0, 1, 7, 1, 5, 7],
+	    [1, 5, 3, 3, 5, 7],
+	    [9, 7, 8, 9, 5, 7, 10, 1, 2],
+	    [10, 1, 2, 9, 5, 0, 5, 3, 0, 5, 7, 3],
+	    [8, 0, 2, 8, 2, 5, 8, 5, 7, 10, 5, 2],
+	    [2, 10, 5, 2, 5, 3, 3, 5, 7],
+	    [7, 9, 5, 7, 8, 9, 3, 11, 2],
+	    [9, 5, 7, 9, 7, 2, 9, 2, 0, 2, 7, 11],
+	    [2, 3, 11, 0, 1, 8, 1, 7, 8, 1, 5, 7],
+	    [11, 2, 1, 11, 1, 7, 7, 1, 5],
+	    [9, 5, 8, 8, 5, 7, 10, 1, 3, 10, 3, 11],
+	    [5, 7, 0, 5, 0, 9, 7, 11, 0, 1, 0, 10, 11, 10, 0],
+	    [11, 10, 0, 11, 0, 3, 10, 5, 0, 8, 0, 7, 5, 7, 0],
+	    [11, 10, 5, 7, 11, 5],
+	    [10, 6, 5],
+	    [0, 8, 3, 5, 10, 6],
+	    [9, 0, 1, 5, 10, 6],
+	    [1, 8, 3, 1, 9, 8, 5, 10, 6],
+	    [1, 6, 5, 2, 6, 1],
+	    [1, 6, 5, 1, 2, 6, 3, 0, 8],
+	    [9, 6, 5, 9, 0, 6, 0, 2, 6],
+	    [5, 9, 8, 5, 8, 2, 5, 2, 6, 3, 2, 8],
+	    [2, 3, 11, 10, 6, 5],
+	    [11, 0, 8, 11, 2, 0, 10, 6, 5],
+	    [0, 1, 9, 2, 3, 11, 5, 10, 6],
+	    [5, 10, 6, 1, 9, 2, 9, 11, 2, 9, 8, 11],
+	    [6, 3, 11, 6, 5, 3, 5, 1, 3],
+	    [0, 8, 11, 0, 11, 5, 0, 5, 1, 5, 11, 6],
+	    [3, 11, 6, 0, 3, 6, 0, 6, 5, 0, 5, 9],
+	    [6, 5, 9, 6, 9, 11, 11, 9, 8],
+	    [5, 10, 6, 4, 7, 8],
+	    [4, 3, 0, 4, 7, 3, 6, 5, 10],
+	    [1, 9, 0, 5, 10, 6, 8, 4, 7],
+	    [10, 6, 5, 1, 9, 7, 1, 7, 3, 7, 9, 4],
+	    [6, 1, 2, 6, 5, 1, 4, 7, 8],
+	    [1, 2, 5, 5, 2, 6, 3, 0, 4, 3, 4, 7],
+	    [8, 4, 7, 9, 0, 5, 0, 6, 5, 0, 2, 6],
+	    [7, 3, 9, 7, 9, 4, 3, 2, 9, 5, 9, 6, 2, 6, 9],
+	    [3, 11, 2, 7, 8, 4, 10, 6, 5],
+	    [5, 10, 6, 4, 7, 2, 4, 2, 0, 2, 7, 11],
+	    [0, 1, 9, 4, 7, 8, 2, 3, 11, 5, 10, 6],
+	    [9, 2, 1, 9, 11, 2, 9, 4, 11, 7, 11, 4, 5, 10, 6],
+	    [8, 4, 7, 3, 11, 5, 3, 5, 1, 5, 11, 6],
+	    [5, 1, 11, 5, 11, 6, 1, 0, 11, 7, 11, 4, 0, 4, 11],
+	    [0, 5, 9, 0, 6, 5, 0, 3, 6, 11, 6, 3, 8, 4, 7],
+	    [6, 5, 9, 6, 9, 11, 4, 7, 9, 7, 11, 9],
+	    [10, 4, 9, 6, 4, 10],
+	    [4, 10, 6, 4, 9, 10, 0, 8, 3],
+	    [10, 0, 1, 10, 6, 0, 6, 4, 0],
+	    [8, 3, 1, 8, 1, 6, 8, 6, 4, 6, 1, 10],
+	    [1, 4, 9, 1, 2, 4, 2, 6, 4],
+	    [3, 0, 8, 1, 2, 9, 2, 4, 9, 2, 6, 4],
+	    [0, 2, 4, 4, 2, 6],
+	    [8, 3, 2, 8, 2, 4, 4, 2, 6],
+	    [10, 4, 9, 10, 6, 4, 11, 2, 3],
+	    [0, 8, 2, 2, 8, 11, 4, 9, 10, 4, 10, 6],
+	    [3, 11, 2, 0, 1, 6, 0, 6, 4, 6, 1, 10],
+	    [6, 4, 1, 6, 1, 10, 4, 8, 1, 2, 1, 11, 8, 11, 1],
+	    [9, 6, 4, 9, 3, 6, 9, 1, 3, 11, 6, 3],
+	    [8, 11, 1, 8, 1, 0, 11, 6, 1, 9, 1, 4, 6, 4, 1],
+	    [3, 11, 6, 3, 6, 0, 0, 6, 4],
+	    [6, 4, 8, 11, 6, 8],
+	    [7, 10, 6, 7, 8, 10, 8, 9, 10],
+	    [0, 7, 3, 0, 10, 7, 0, 9, 10, 6, 7, 10],
+	    [10, 6, 7, 1, 10, 7, 1, 7, 8, 1, 8, 0],
+	    [10, 6, 7, 10, 7, 1, 1, 7, 3],
+	    [1, 2, 6, 1, 6, 8, 1, 8, 9, 8, 6, 7],
+	    [2, 6, 9, 2, 9, 1, 6, 7, 9, 0, 9, 3, 7, 3, 9],
+	    [7, 8, 0, 7, 0, 6, 6, 0, 2],
+	    [7, 3, 2, 6, 7, 2],
+	    [2, 3, 11, 10, 6, 8, 10, 8, 9, 8, 6, 7],
+	    [2, 0, 7, 2, 7, 11, 0, 9, 7, 6, 7, 10, 9, 10, 7],
+	    [1, 8, 0, 1, 7, 8, 1, 10, 7, 6, 7, 10, 2, 3, 11],
+	    [11, 2, 1, 11, 1, 7, 10, 6, 1, 6, 7, 1],
+	    [8, 9, 6, 8, 6, 7, 9, 1, 6, 11, 6, 3, 1, 3, 6],
+	    [0, 9, 1, 11, 6, 7],
+	    [7, 8, 0, 7, 0, 6, 3, 11, 0, 11, 6, 0],
+	    [7, 11, 6],
+	    [7, 6, 11],
+	    [3, 0, 8, 11, 7, 6],
+	    [0, 1, 9, 11, 7, 6],
+	    [8, 1, 9, 8, 3, 1, 11, 7, 6],
+	    [10, 1, 2, 6, 11, 7],
+	    [1, 2, 10, 3, 0, 8, 6, 11, 7],
+	    [2, 9, 0, 2, 10, 9, 6, 11, 7],
+	    [6, 11, 7, 2, 10, 3, 10, 8, 3, 10, 9, 8],
+	    [7, 2, 3, 6, 2, 7],
+	    [7, 0, 8, 7, 6, 0, 6, 2, 0],
+	    [2, 7, 6, 2, 3, 7, 0, 1, 9],
+	    [1, 6, 2, 1, 8, 6, 1, 9, 8, 8, 7, 6],
+	    [10, 7, 6, 10, 1, 7, 1, 3, 7],
+	    [10, 7, 6, 1, 7, 10, 1, 8, 7, 1, 0, 8],
+	    [0, 3, 7, 0, 7, 10, 0, 10, 9, 6, 10, 7],
+	    [7, 6, 10, 7, 10, 8, 8, 10, 9],
+	    [6, 8, 4, 11, 8, 6],
+	    [3, 6, 11, 3, 0, 6, 0, 4, 6],
+	    [8, 6, 11, 8, 4, 6, 9, 0, 1],
+	    [9, 4, 6, 9, 6, 3, 9, 3, 1, 11, 3, 6],
+	    [6, 8, 4, 6, 11, 8, 2, 10, 1],
+	    [1, 2, 10, 3, 0, 11, 0, 6, 11, 0, 4, 6],
+	    [4, 11, 8, 4, 6, 11, 0, 2, 9, 2, 10, 9],
+	    [10, 9, 3, 10, 3, 2, 9, 4, 3, 11, 3, 6, 4, 6, 3],
+	    [8, 2, 3, 8, 4, 2, 4, 6, 2],
+	    [0, 4, 2, 4, 6, 2],
+	    [1, 9, 0, 2, 3, 4, 2, 4, 6, 4, 3, 8],
+	    [1, 9, 4, 1, 4, 2, 2, 4, 6],
+	    [8, 1, 3, 8, 6, 1, 8, 4, 6, 6, 10, 1],
+	    [10, 1, 0, 10, 0, 6, 6, 0, 4],
+	    [4, 6, 3, 4, 3, 8, 6, 10, 3, 0, 3, 9, 10, 9, 3],
+	    [10, 9, 4, 6, 10, 4],
+	    [4, 9, 5, 7, 6, 11],
+	    [0, 8, 3, 4, 9, 5, 11, 7, 6],
+	    [5, 0, 1, 5, 4, 0, 7, 6, 11],
+	    [11, 7, 6, 8, 3, 4, 3, 5, 4, 3, 1, 5],
+	    [9, 5, 4, 10, 1, 2, 7, 6, 11],
+	    [6, 11, 7, 1, 2, 10, 0, 8, 3, 4, 9, 5],
+	    [7, 6, 11, 5, 4, 10, 4, 2, 10, 4, 0, 2],
+	    [3, 4, 8, 3, 5, 4, 3, 2, 5, 10, 5, 2, 11, 7, 6],
+	    [7, 2, 3, 7, 6, 2, 5, 4, 9],
+	    [9, 5, 4, 0, 8, 6, 0, 6, 2, 6, 8, 7],
+	    [3, 6, 2, 3, 7, 6, 1, 5, 0, 5, 4, 0],
+	    [6, 2, 8, 6, 8, 7, 2, 1, 8, 4, 8, 5, 1, 5, 8],
+	    [9, 5, 4, 10, 1, 6, 1, 7, 6, 1, 3, 7],
+	    [1, 6, 10, 1, 7, 6, 1, 0, 7, 8, 7, 0, 9, 5, 4],
+	    [4, 0, 10, 4, 10, 5, 0, 3, 10, 6, 10, 7, 3, 7, 10],
+	    [7, 6, 10, 7, 10, 8, 5, 4, 10, 4, 8, 10],
+	    [6, 9, 5, 6, 11, 9, 11, 8, 9],
+	    [3, 6, 11, 0, 6, 3, 0, 5, 6, 0, 9, 5],
+	    [0, 11, 8, 0, 5, 11, 0, 1, 5, 5, 6, 11],
+	    [6, 11, 3, 6, 3, 5, 5, 3, 1],
+	    [1, 2, 10, 9, 5, 11, 9, 11, 8, 11, 5, 6],
+	    [0, 11, 3, 0, 6, 11, 0, 9, 6, 5, 6, 9, 1, 2, 10],
+	    [11, 8, 5, 11, 5, 6, 8, 0, 5, 10, 5, 2, 0, 2, 5],
+	    [6, 11, 3, 6, 3, 5, 2, 10, 3, 10, 5, 3],
+	    [5, 8, 9, 5, 2, 8, 5, 6, 2, 3, 8, 2],
+	    [9, 5, 6, 9, 6, 0, 0, 6, 2],
+	    [1, 5, 8, 1, 8, 0, 5, 6, 8, 3, 8, 2, 6, 2, 8],
+	    [1, 5, 6, 2, 1, 6],
+	    [1, 3, 6, 1, 6, 10, 3, 8, 6, 5, 6, 9, 8, 9, 6],
+	    [10, 1, 0, 10, 0, 6, 9, 5, 0, 5, 6, 0],
+	    [0, 3, 8, 5, 6, 10],
+	    [10, 5, 6],
+	    [11, 5, 10, 7, 5, 11],
+	    [11, 5, 10, 11, 7, 5, 8, 3, 0],
+	    [5, 11, 7, 5, 10, 11, 1, 9, 0],
+	    [10, 7, 5, 10, 11, 7, 9, 8, 1, 8, 3, 1],
+	    [11, 1, 2, 11, 7, 1, 7, 5, 1],
+	    [0, 8, 3, 1, 2, 7, 1, 7, 5, 7, 2, 11],
+	    [9, 7, 5, 9, 2, 7, 9, 0, 2, 2, 11, 7],
+	    [7, 5, 2, 7, 2, 11, 5, 9, 2, 3, 2, 8, 9, 8, 2],
+	    [2, 5, 10, 2, 3, 5, 3, 7, 5],
+	    [8, 2, 0, 8, 5, 2, 8, 7, 5, 10, 2, 5],
+	    [9, 0, 1, 5, 10, 3, 5, 3, 7, 3, 10, 2],
+	    [9, 8, 2, 9, 2, 1, 8, 7, 2, 10, 2, 5, 7, 5, 2],
+	    [1, 3, 5, 3, 7, 5],
+	    [0, 8, 7, 0, 7, 1, 1, 7, 5],
+	    [9, 0, 3, 9, 3, 5, 5, 3, 7],
+	    [9, 8, 7, 5, 9, 7],
+	    [5, 8, 4, 5, 10, 8, 10, 11, 8],
+	    [5, 0, 4, 5, 11, 0, 5, 10, 11, 11, 3, 0],
+	    [0, 1, 9, 8, 4, 10, 8, 10, 11, 10, 4, 5],
+	    [10, 11, 4, 10, 4, 5, 11, 3, 4, 9, 4, 1, 3, 1, 4],
+	    [2, 5, 1, 2, 8, 5, 2, 11, 8, 4, 5, 8],
+	    [0, 4, 11, 0, 11, 3, 4, 5, 11, 2, 11, 1, 5, 1, 11],
+	    [0, 2, 5, 0, 5, 9, 2, 11, 5, 4, 5, 8, 11, 8, 5],
+	    [9, 4, 5, 2, 11, 3],
+	    [2, 5, 10, 3, 5, 2, 3, 4, 5, 3, 8, 4],
+	    [5, 10, 2, 5, 2, 4, 4, 2, 0],
+	    [3, 10, 2, 3, 5, 10, 3, 8, 5, 4, 5, 8, 0, 1, 9],
+	    [5, 10, 2, 5, 2, 4, 1, 9, 2, 9, 4, 2],
+	    [8, 4, 5, 8, 5, 3, 3, 5, 1],
+	    [0, 4, 5, 1, 0, 5],
+	    [8, 4, 5, 8, 5, 3, 9, 0, 5, 0, 3, 5],
+	    [9, 4, 5],
+	    [4, 11, 7, 4, 9, 11, 9, 10, 11],
+	    [0, 8, 3, 4, 9, 7, 9, 11, 7, 9, 10, 11],
+	    [1, 10, 11, 1, 11, 4, 1, 4, 0, 7, 4, 11],
+	    [3, 1, 4, 3, 4, 8, 1, 10, 4, 7, 4, 11, 10, 11, 4],
+	    [4, 11, 7, 9, 11, 4, 9, 2, 11, 9, 1, 2],
+	    [9, 7, 4, 9, 11, 7, 9, 1, 11, 2, 11, 1, 0, 8, 3],
+	    [11, 7, 4, 11, 4, 2, 2, 4, 0],
+	    [11, 7, 4, 11, 4, 2, 8, 3, 4, 3, 2, 4],
+	    [2, 9, 10, 2, 7, 9, 2, 3, 7, 7, 4, 9],
+	    [9, 10, 7, 9, 7, 4, 10, 2, 7, 8, 7, 0, 2, 0, 7],
+	    [3, 7, 10, 3, 10, 2, 7, 4, 10, 1, 10, 0, 4, 0, 10],
+	    [1, 10, 2, 8, 7, 4],
+	    [4, 9, 1, 4, 1, 7, 7, 1, 3],
+	    [4, 9, 1, 4, 1, 7, 0, 8, 1, 8, 7, 1],
+	    [4, 0, 3, 7, 4, 3],
+	    [4, 8, 7],
+	    [9, 10, 8, 10, 11, 8],
+	    [3, 0, 9, 3, 9, 11, 11, 9, 10],
+	    [0, 1, 10, 0, 10, 8, 8, 10, 11],
+	    [3, 1, 10, 11, 3, 10],
+	    [1, 2, 11, 1, 11, 9, 9, 11, 8],
+	    [3, 0, 9, 3, 9, 11, 1, 2, 9, 2, 11, 9],
+	    [0, 2, 11, 8, 0, 11],
+	    [3, 2, 11],
+	    [2, 3, 8, 2, 8, 10, 10, 8, 9],
+	    [9, 10, 2, 0, 9, 2],
+	    [2, 3, 8, 2, 8, 10, 0, 1, 8, 1, 10, 8],
+	    [1, 10, 2],
+	    [1, 3, 8, 9, 1, 8],
+	    [0, 9, 1],
+	    [0, 3, 8],
+	    []
+	];
+	
+	App3D.prototype.cube_vertices = [[0, 0, 0], [1, 0, 0], [1, 1, 0], [0, 1, 0],
+	                                 [0, 0, 1], [1, 0, 1], [1, 1, 1], [0, 1, 1]];
+	App3D.prototype.cube_edges = [[0, 1], [1, 2], [2, 3], [3, 0], [4, 5], [5, 6],
+	                              [6, 7], [7, 4], [0, 4], [1, 5], [2, 6], [3, 7]];
+	App3D.prototype.bits = [1, 2, 4, 8, 16, 32, 64, 128];
+	
+	module.exports = {
+	    "App3D" : App3D
+	};
+
+
+/***/ },
+/* 9 */
+/***/ function(module, exports, __webpack_require__) {
+
 	/**
 	 * @author Eberhard Graether / http://egraether.com/
 	 * @author Mark Lundin 	/ http://mark-lundin.com
@@ -45477,7 +45944,7 @@ define(["jupyter-js-widgets"], function(__WEBPACK_EXTERNAL_MODULE_5__) { return 
 	 ** @author Jon Lim / http://jonlim.ca
 	 */
 	
-	var THREE = window.THREE || __webpack_require__(8);
+	var THREE = window.THREE || __webpack_require__(10);
 	
 	module.exports = TrackballControls = function ( object, domElement ) {
 	
@@ -46110,7 +46577,7 @@ define(["jupyter-js-widgets"], function(__WEBPACK_EXTERNAL_MODULE_5__) { return 
 
 
 /***/ },
-/* 8 */
+/* 10 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_RESULT__;var self = self || {};// File:src/Three.js
@@ -86684,10 +87151,10 @@ define(["jupyter-js-widgets"], function(__WEBPACK_EXTERNAL_MODULE_5__) { return 
 
 
 /***/ },
-/* 9 */
-/***/ function(module, exports, __webpack_require__) {
+/* 11 */
+/***/ function(module, exports) {
 
-	var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;// Copyright (c) 2015-2016, Exa Analytics Development Team
+	// Copyright (c) 2015-2016, Exa Analytics Development Team
 	// Distributed under the terms of the Apache License 2.0
 	/*"""
 	================
@@ -86695,506 +87162,118 @@ define(["jupyter-js-widgets"], function(__WEBPACK_EXTERNAL_MODULE_5__) { return 
 	================
 	Helper functions used by custom notebook JS.
 	*/
-	'use strict';
+	"use strict";
 	
-	/*require.config({
-	    shim: {
-	    },
-	});*/
-	
-	!(__WEBPACK_AMD_DEFINE_ARRAY__ = [], __WEBPACK_AMD_DEFINE_RESULT__ = function() {
-	    var flatten_to_array = function(obj) {
-	        /*"""
-	        flatten_to_array
-	        ==================
-	        Flattens an array-like object into a 1-D Float32Array object.
-	
-	        Args:
-	            obj (object): Array like object to be flattened
-	        */
-	        var n = obj.length;
-	        var m = obj[0].length;
-	        var flat = new Float32Array(n * m);
-	        var h = 0;
-	        for (var i=0; i<n; i++) {
-	            for (var j=0; j<m; j++) {
-	                flat[h] = obj[i][j];
-	                h += 1;
-	            };
-	        };
-	        return flat;
-	    };
-	
-	    var create_float_array_xyz = function(x, y, z) {
-	        /*"""
-	        create_float_array_xyz
-	        ==========================
-	        Create a 1D array from 3D data.
-	        */
-	        var nx = x.length || 1;
-	        var ny = y.length || 1;
-	        var nz = z.length || 1;
-	        var n = Math.max(nx, ny, nz);
-	        if (nx == 1) {
-	            x = repeat_float(x, n);
-	        };
-	        if (ny == 1) {
-	            y = repeat_float(y, n);
-	        };
-	        if (nz == 1) {
-	            z = repeat_float(z, n);
-	        };
-	        var xyz = new Float32Array(n * 3)
-	        for (var i=0, i3=0; i<n; i++, i3+=3) {
-	            xyz[i3] = x[i];
-	            xyz[i3+1] = y[i];
-	            xyz[i3+2] = z[i];
-	        };
-	        return xyz;
-	    };
-	
-	    var repeat_float = function(value, n) {
-	        /*"""
-	        repeat_float
-	        ==================
-	        Repeat a value n times.
-	        */
-	        var array = new Float32Array(n);
-	        for (var i=0; i<n; i++) {
-	            array[i] = value
-	        };
-	        return array;
-	    };
-	
-	    var repeat_int = function(value, n) {
-	        /*"""
-	        repeat_float
-	        ==================
-	        Repeat a value n times.
-	        */
-	        var array = new Int32Array(n);
-	        for (var i=0; i<n; i++) {
-	            array[i] = value
-	        };
-	        return array;
-	    };
-	
-	    var repeat_object = function(value, n) {
-	        /*"""
-	        repeat_object
-	        ==============
-	        Repeat an object n time.
-	        */
-	        var obj = [];
-	        for (var i=0; i<n; i++) {
-	            obj.push(value);
-	        };
-	        return obj;
-	    };
-	
-	    var mapper = function(indices, map) {
-	        /*"""
-	        mapper
-	        --------
-	        */
-	        var n = indices.length;
-	        var mapped = [];
-	        for (var i=0; i<n; i++) {
-	            mapped.push(map[indices[i]])
-	        };
-	        return mapped;
-	    };
-	
-	    return {
-	        'flatten_to_array': flatten_to_array,
-	        'create_float_array_xyz': create_float_array_xyz,
-	        'repeat_float': repeat_float,
-	        'repeat_int': repeat_int,
-	        'repeat_object': repeat_object,
-	        'mapper': mapper,
-	    };
-	}.apply(exports, __WEBPACK_AMD_DEFINE_ARRAY__), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__));
-
-
-/***/ },
-/* 10 */
-/***/ function(module, exports, __webpack_require__) {
-
-	// Copyright (c) 2015-2016, Exa Analytics Development Team
-	// Distributed under the terms of the Apache License 2.0
-	/*"""
-	=================
-	container.js
-	=================
-	JavaScript "frontend" counterpart of exa's Container object for use within
-	the Jupyter notebook interface. This "module" standardizes bidirectional
-	communication logic for all container widget views.
-	
-	The structure of the frontend is to generate an HTML widget ("container" - see
-	create_container) and then populate its canvas with an application ("app")
-	appropriate to the type of container. If the (backend) container is empty, then
-	populate the HTML widget with the test application. If the container is not
-	empty but doesn't have a dedicated application, the info application (info.js)
-	is used.
-	*/
-	'use strict';
-	var widgets = __webpack_require__(5);
-	var TestApp = __webpack_require__(11);
-	
-	
-	class ContainerView extends widgets.DOMWidgetView {
+	var flatten_to_array = function(obj) {
 	    /*"""
-	    ContainerView
-	    ===============
-	    Base view for creating data specific container widgets used within the
-	    Jupyter notebook. All logic related to communication (between Python
-	    and JavaScript) should be located here. This class provides a number
-	    of commonly used functions for such logic.
+	    flatten_to_array
+	    ==================
+	    Flattens an array-like object into a 1-D Float32Array object.
 	
-	    Warning:
-	        Do not override the DOMWidgetView constructor ("initialize").
+	    Args:
+	        obj (object): Array like object to be flattened
 	    */
-	
-	    render() {
-	        /*"""
-	        render
-	        -------------
-	        Main entry point (called immediately after initialize) for
-	        (ipywidgets) DOMWidgetView objects.
-	
-	        Note:
-	            This function  can be overwritten by container specific code,
-	            but it is more common to overwrite the **init** function.
-	
-	        See Also:
-	            **init()**
-	        */
-	        this.default_listeners();
-	        this.create_container();
-	        this.init();              // Specific to the data container
-	        this.setElement(this.container);
-	    };
-	
-	    init() {
-	        /*"""
-	        init
-	        -------------
-	        Container view classes that extend this class can overwrite this
-	        method to customize the behavior of their data specific view.
-	        */
-		console.log('WE ARE CONTAINER');
-	        this.if_empty();
-	    };
-	
-	    get_trait(name) {
-	        /*"""
-	        get_trait
-	        -------------
-	        Wrapper around the DOMWidgetView (Backbone.js) "model.get" function,
-	        that attempts to convert JSON strings to objects.
-	        */
-	        var obj = this.model.get(name);
-	        if (typeof obj === 'string') {
-	            try {
-	                obj = JSON.parse(obj);
-	            } catch(err) {
-	                console.log(err);
-	            };
-	        };
-	        return obj;
-	    };
-	
-	    set_trait(name, value) {
-	        /*"""
-	        set_trait
-	        ----------
-	        Wrapper around the DOMWidgetView "model.set" function to correctly
-	        set json strings.
-	        */
-	        if (typeof value === Object) {
-	            try {
-	                value = JSON.stringify(value);
-	            } catch(err) {
-	                console.log(err);
-	            };
-	        };
-	        this.model.set(name, value);
-	    };
-	
-	    if_empty() {
-	        /*"""
-	        if_empty
-	        ----------------
-	        If the (exa) container object is empty, render the test application
-	        widget.
-	        */
-	        var check = this.get_trait('test');
-	        if (check === true) {
-	            console.log("Empty container, displaying test interface!");
-	            this.app = new TestApp(this);
+	    var n = obj.length;
+	    var m = obj[0].length;
+	    var flat = new Float32Array(n * m);
+	    var h = 0;
+	    for (var i=0; i<n; i++) {
+	        for (var j=0; j<m; j++) {
+	            flat[h] = obj[i][j];
+	            h += 1;
 	        };
 	    };
-	
-	    default_listeners() {
-	        /*"""
-	        default_listeners
-	        -------------------
-	        Set up listeners for basic variables related to the window dimensions
-	        and system settings.
-	        */
-	        this.get_width();
-	        this.get_height();
-	        this.get_gui_width();
-	        this.get_fps();
-	        this.get_field_values();
-	        this.get_field_indices();
-	        this.listenTo(this.model, 'change:width', this.get_width);
-	        this.listenTo(this.model, 'change:height', this.get_height);
-	        this.listenTo(this.model, 'change:gui_width', this.get_gui_width);
-	        this.listenTo(this.model, 'change:fps', this.get_fps);
-	        this.listenTo(this.model, 'change:field_values', this.get_field_values);
-	        this.listenTo(this.model, 'change:field_indices', this.get_field_indices);
-	    };
-	
-	    create_container() {
-	        /*"""
-	        create_container
-	        ------------------
-	        Create a resizable container.
-	        */
-	        var self = this;
-	        this.container = $('<div/>').width(this.width).height(this.height).resizable({
-	            aspectRatio: false,
-	            resize: function(event, ui) {
-	                self.width = ui.size.width - self.gui_width;
-	                self.height = ui.size.height;
-	                self.set_trait('width', self.width);
-	                self.set_trait('height', self.height);
-	                self.canvas.width(self.width);
-	                self.canvas.height(self.height);
-	                self.app.resize();
-	            },
-	        });
-	    };
-	    create_canvas() {
-	        /*"""
-	        create_canvas
-	        ----------------
-	        Create a canvas for WebGL.
-	        */
-	        this.canvas = $('<canvas/>').width(this.width - this.gui_width).height(this.height);
-	        this.canvas.css('position', 'absolute');
-	        this.canvas.css('top', 0);
-	        this.canvas.css('left', this.gui_width);
-	    };
-	
-	    get_gui_width() {
-	        this.gui_width = this.get_trait('gui_width');
-	    };
-	
-	    get_fps() {
-	        this.fps = this.get_trait('fps');
-	    };
-	
-	    get_width() {
-	        this.width = this.get_trait('width');
-	    };
-	
-	    get_height() {
-	        this.height = this.get_trait('height');
-	    };
-	
-	    get_field_values() {
-	        this.field_values = this.get_trait('field_values');
-	    };
-	
-	    get_field_indices() {
-	        this.field_indices = this.get_trait('field_indices');
-	    };
+	    return flat;
 	};
 	
-	module.exports = {
-	    "ContainerView": ContainerView
-	};
-	//});
-
-
-/***/ },
-/* 11 */
-/***/ function(module, exports, __webpack_require__) {
-
-	// Copyright (c) 2015-2016, Exa Analytics Development Team
-	// Distributed under the terms of the Apache License 2.0
-	/*"""
-	=============
-	test.js
-	=============
-	A test application called when an empty container widget is rendered in a
-	Jupyter notebook environment.
-	*/
-	'use strict';
-	var App3D = __webpack_require__(4);
-	var ContainerGUI = __webpack_require__(12);
-	var num = __webpack_require__(16);
-	var field = __webpack_require__(17);
-	
-	/*
-	require.config({
-	    shim: {
-	        "nbextensions/exa/app3d": {exports: 'App3D'},
-	        "nbextensions/exa/gui": {exports: 'ContainerGUI'},
-	        "nbextensions/exa/num": {exports: 'num'},
-	        "nbextensions/exa/field": {exports: 'field'},
-	    },
-	});
-	*/
-	/*
-	define([
-	    "nbextensions/exa/app3d",
-	    "nbextensions/exa/gui",
-	    "nbextensions/exa/num",
-	    "nbextensions/exa/field"
-	],
-	*/
-	class TestApp {
+	var create_float_array_xyz = function(x, y, z) {
 	    /*"""
-	    TestContainer
+	    create_float_array_xyz
+	    ==========================
+	    Create a 1D array from 3D data.
+	    */
+	    var nx = x.length || 1;
+	    var ny = y.length || 1;
+	    var nz = z.length || 1;
+	    var n = Math.max(nx, ny, nz);
+	    if (nx == 1) {
+	        x = repeat_float(x, n);
+	    };
+	    if (ny == 1) {
+	        y = repeat_float(y, n);
+	    };
+	    if (nz == 1) {
+	        z = repeat_float(z, n);
+	    };
+	    var xyz = new Float32Array(n * 3)
+	    for (var i=0, i3=0; i<n; i++, i3+=3) {
+	        xyz[i3] = x[i];
+	        xyz[i3+1] = y[i];
+	        xyz[i3+2] = z[i];
+	    };
+	    return xyz;
+	};
+	
+	var repeat_float = function(value, n) {
+	    /*"""
+	    repeat_float
+	    ==================
+	    Repeat a value n times.
+	    */
+	    var array = new Float32Array(n);
+	    for (var i=0; i<n; i++) {
+	        array[i] = value
+	    };
+	    return array;
+	};
+	
+	var repeat_int = function(value, n) {
+	    /*"""
+	    repeat_float
+	    ==================
+	    Repeat a value n times.
+	    */
+	    var array = new Int32Array(n);
+	    for (var i=0; i<n; i++) {
+	        array[i] = value
+	    };
+	    return array;
+	};
+	
+	var repeat_object = function(value, n) {
+	    /*"""
+	    repeat_object
 	    ==============
-	    A test application for the container
+	    Repeat an object n time.
 	    */
-	    constructor(view) {
-	        this.view = view;
-	        this.view.create_canvas();
-	        this.meshes = [];
-	        this.app3d = new App3D.App3D(this.view.canvas);
-	        this.create_gui();
-	        this.view.container.append(this.gui.domElement);
-	        this.view.container.append(this.gui.custom_css);
-	        this.view.container.append(this.view.canvas);
-	        var view_self = this.view;
-	        this.app3d.render();
-	        this.view.on('displayed', function() {
-	            view_self.app.app3d.animate();
-	            view_self.app.app3d.controls.handleResize();
-	        });
-	        this.view.send({'type': 'message',
-	                        'app': 'TestApp',
-	                        'content': 'True',
-	                        'data': 'test app message'});
+	    var obj = [];
+	    for (var i=0; i<n; i++) {
+	        obj.push(value);
 	    };
+	    return obj;
+	};
 	
-	    create_gui() {
-	        /*"""
-	        create_gui
-	        ------------
-	        Creates the gui
-	        */
-	        var self = this;
-	        this.gui = new ContainerGUI(this.view.gui_width);
-	
-	        // GUI levels are the heirarchy of folders in dat gui 0: top level
-	        this.top = {
-	            'clear': function() {
-	                self.app3d.remove_meshes(self.meshes);
-	            },
-	
-	            'test mesh': function() {
-	                self.app3d.remove_meshes(self.meshes);
-	                self.meshes = self.app3d.test_mesh();
-	            },
-	
-	            'test phong': function() {
-	                self.app3d.remove_meshes(self.meshes);
-	                self.meshes = self.app3d.test_mesh(true);
-	            },
-	        };
-	        this.top.clear_button = this.gui.add(this.top, 'clear');
-	        this.top.test_mesh_button = this.gui.add(this.top, 'test mesh');
-	        this.top.test_phong_button = this.gui.add(this.top, 'test phong');
-	
-	        this.fields = {
-	            'field type': null,
-	            'isovalue': 1.0, 'boxsize': 3,
-	            'nx': 13,   'ny': 13,   'nz': 13,
-	            'ox': -3.0, 'oy': -3.0, 'oz': -3.0,
-	            'fx':  3.0, 'fy':  3.0, 'fz':  3.0,
-	            'dxi': 0.5, 'dyj': 0.5, 'dzk': 0.5,
-	            'dxj': 0.0, 'dyi': 0.0, 'dzi': 0.0,
-	            'dxk': 0.0, 'dyk': 0.0, 'dzj': 0.0,
-	        };
-	        this.fields['folder'] = this.gui.addFolder('fields');
-	        this.fields['field_type_dropdown'] = this.fields.folder.add(this.fields, 'field type', num.function_list_3d);
-	        this.fields['isovalue_slider'] = this.fields.folder.add(this.fields, 'isovalue', 0.1, 10.0);
-	        this.fields['boxsize_slider'] = this.fields.folder.add(this.fields, 'boxsize', 3, 5);
-	        this.fields['nx_slider'] = this.fields.folder.add(this.fields, 'nx').min(5).max(25).step(1);
-	        this.fields['ny_slider'] = this.fields.folder.add(this.fields, 'ny').min(5).max(25).step(1);
-	        this.fields['nz_slider'] = this.fields.folder.add(this.fields, 'nz').min(5).max(25).step(1);
-	        this.fields.field_type_dropdown.onFinishChange(function(field_type) {
-	            self.fields['field type'] = field_type;
-	            self.fields.field = new field.ScalarField(self.fields, num[field_type]);
-	            self.render_field();
-	        });
-	        this.fields.isovalue_slider.onFinishChange(function(value) {
-	            self.fields.isovalue = value;
-	            self.render_field();
-	        });
-	        this.fields.boxsize_slider.onFinishChange(function(value) {
-	            self.fields.fx = value;
-	            self.fields.fy = value;
-	            self.fields.fz = value;
-	            self.fields.ox = -value;
-	            self.fields.oy = -value;
-	            self.fields.oz = -value;
-	            self.fields.field.x = num.linspace(self.fields.ox, self.fields.fx, self.fields.nx);
-	            self.fields.field.y = num.linspace(self.fields.oy, self.fields.fy, self.fields.ny);
-	            self.fields.field.z = num.linspace(self.fields.oz, self.fields.fz, self.fields.nz);
-	            self.fields.field.update();
-	            self.render_field();
-	        });
-	        this.fields.nx_slider.onFinishChange(function(value) {
-	            self.fields.nx = value;
-	            self.fields.field.x = num.linspace(self.fields.ox,
-	                                               self.fields.fx,
-	                                               self.fields.nx);
-	            self.fields.field.update();
-	            self.render_field();
-	        });
-	        this.fields.ny_slider.onFinishChange(function(value) {
-	            self.fields.ny = value;
-	            self.fields.field.y = num.linspace(self.fields.oy,
-	                                               self.fields.fy,
-	                                               self.fields.ny);
-	            self.fields.field.update();
-	            self.render_field();
-	        });
-	        this.fields.nz_slider.onFinishChange(function(value) {
-	            self.fields.nz = value;
-	            self.fields.field.z = num.linspace(self.fields.oz,
-	                                               self.fields.fz,
-	                                               self.fields.nz);
-	            self.fields.field.update();
-	            self.render_field();
-	        });
+	var mapper = function(indices, map) {
+	    /*"""
+	    mapper
+	    --------
+	    */
+	    var n = indices.length;
+	    var mapped = [];
+	    for (var i=0; i<n; i++) {
+	        mapped.push(map[indices[i]])
 	    };
-	
-	    resize() {
-	        this.app3d.resize();
-	    };
-	
-	    render_field() {
-	        this.app3d.remove_meshes(this.meshes);
-	        //console.log('rendering field with array dimensions');
-	        //console.log('x length', this.fields.field.x.length);
-	        //console.log('y length', this.fields.field.y.length);
-	        //console.log('z length', this.fields.field.z.length);
-	        this.meshes = this.app3d.add_scalar_field(this.fields.field, this.fields.isovalue, this.fields.sides);
-	        this.app3d.set_camera({'x': 5.0, 'y': 5.0, 'z': 5.0});
-	    };
+	    return mapped;
 	};
 	
 	module.exports = {
-	    "TestApp": TestApp
-	}
+	    "flatten_to_array": flatten_to_array,
+	    "create_float_array_xyz": create_float_array_xyz,
+	    "repeat_float": repeat_float,
+	    "repeat_int": repeat_int,
+	    "repeat_object": repeat_object,
+	    "mapper": mapper,
+	};
 
 
 /***/ },
@@ -87209,24 +87288,10 @@ define(["jupyter-js-widgets"], function(__WEBPACK_EXTERNAL_MODULE_5__) { return 
 	============
 	Basic gui for container views.
 	*/
-	'use strict';
+	"use strict";
 	var dat = __webpack_require__(13);
 	
-	/*
-	require.config({
-	    shim: {
-	        "nbextensions/exa/lib/dat.gui.min": {
-	            exports: 'dat'
-	        },
-	    },
-	});
-	*/
-	/*
-	define([
-	    "nbextensions/exa/lib/dat.gui.min",
-	],
-	*/
-	//function(dat) {
+	
 	class ContainerGUI extends dat.GUI {
 	    /*"""
 	    ContainerGUI
@@ -87234,7 +87299,7 @@ define(["jupyter-js-widgets"], function(__WEBPACK_EXTERNAL_MODULE_5__) { return 
 	    */
 	    constructor(width) {
 	        super({autoPlace: false, width: width});
-	        this.custom_css = document.createElement('style');
+	        this.custom_css = document.createElement("style");
 	        this.custom_css.innerHTML = this.gui_style;
 	    };
 	};
@@ -91791,9 +91856,9 @@ define(["jupyter-js-widgets"], function(__WEBPACK_EXTERNAL_MODULE_5__) { return 
 
 /***/ },
 /* 16 */
-/***/ function(module, exports, __webpack_require__) {
+/***/ function(module, exports) {
 
-	var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;// Copyright (c) 2015-2016, Exa Analytics Development Team
+	// Copyright (c) 2015-2016, Exa Analytics Development Team
 	// Distributed under the terms of the Apache License 2.0
 	/*"""
 	=============
@@ -91801,233 +91866,197 @@ define(["jupyter-js-widgets"], function(__WEBPACK_EXTERNAL_MODULE_5__) { return 
 	=============
 	Numerical utilities
 	*/
-	'use strict';
+	"use strict";
 	
 	
-	!(__WEBPACK_AMD_DEFINE_ARRAY__ = [], __WEBPACK_AMD_DEFINE_RESULT__ = function() {
+	var linspace = function(min, max, n) {
+	    /*"""
+	    linspace
+	    ================
+	    Create a linearly spaced array of the form [min, max] with n linearly
+	    spaced elements.
 	
-	    var hstack = function(arrays) {
-	        /*"""
-	        hstack
-	        ===========
-	        Horizontally concatenate a list of arrays.
-	        */
-	        console.log('NotImplementedError')
+	    Args:
+	        min (number): Starting number
+	        max (number): Ending number (inclusive)
+	        n (number): Number of elements
+	
+	    Returns:
+	        array (array): Array of values
+	    */
+	    var n1 = n - 1;
+	    var step = (max - min) / n1;
+	    var array = [min];
+	    for (var i=0; i<n1; i++) {
+	        min += step;
+	        array.push(min);
 	    };
+	    return new Float32Array(array);
+	};
 	
-	    var minspace = function(min, space, n) {
-	        /*"""
-	        minspace
-	        ================
-	        Creates a linearly spaced array with knowledge of the length,
-	        origin and spacing of the array.
-	
-	        Args:
-	            min (number): origin
-	            space (number): spacing
-	            n (number): length of array
-	
-	        */
-	        var n1 = n - 1;
-	        var fol = min;
-	        var arr = [min];
-	        for (var i = 0; i < n1; i++) {
-	            fol += space;
-	            arr.push(fol);
-	        };
-	        return new Float32Array(arr);
+	var arange = function(min, max, step) {
+	    /*"""
+	    arange
+	    ================
+	    */
+	    var array = [min];
+	    while (min < max) {
+	        min += step;
+	        array.push(min);
 	    };
+	    return new Float32Array(array);
+	};
 	
-	    var linspace = function(min, max, n) {
-	        /*"""
-	        linspace
-	        ================
-	        Create a linearly spaced array of the form [min, max] with n linearly
-	        spaced elements.
-	
-	        Args:
-	            min (number): Starting number
-	            max (number): Ending number (inclusive)
-	            n (number): Number of elements
-	
-	        Returns:
-	            array (array): Array of values
-	        */
-	        var n1 = n - 1;
-	        var step = (max - min) / n1;
-	        var array = [min];
-	        for (var i=0; i<n1; i++) {
-	            min += step;
-	            array.push(min);
-	        };
-	        return new Float32Array(array);
-	    };
-	
-	    var arange = function(min, max, step) {
-	        /*"""
-	        arange
-	        ================
-	        */
-	        var array = [min];
-	        while (min < max) {
-	            min += step;
-	            array.push(min);
-	        };
-	        return new Float32Array(array);
-	    };
-	
-	    var meshgrid3d = function(x, y, z) {
-	        /*"""
-	        meshgrid3d
-	        ============
-	        From three discrete dimensions, create a set of
-	        3d gridpoints
-	        */
-	        var nx = x.length;
-	        var ny = y.length;
-	        var nz = z.length;
-	        var n = nx * ny * nz;
-	        var xx = new Float32Array(n);
-	        var yy = new Float32Array(n);
-	        var zz = new Float32Array(n);
-	        var h = 0;
-	        for (var i of x) {
-	            for (var j of y) {
-	                for (var k of z) {
-	                    xx[h] = i;
-	                    yy[h] = j;
-	                    zz[h] = k;
-	                    h += 1;
-	                };
+	var meshgrid3d = function(x, y, z) {
+	    /*"""
+	    meshgrid3d
+	    ============
+	    From three discrete dimensions, create a set of
+	    3d gridpoints
+	    */
+	    var nx = x.length;
+	    var ny = y.length;
+	    var nz = z.length;
+	    var n = nx * ny * nz;
+	    var xx = new Float32Array(n);
+	    var yy = new Float32Array(n);
+	    var zz = new Float32Array(n);
+	    var h = 0;
+	    for (var i of x) {
+	        for (var j of y) {
+	            for (var k of z) {
+	                xx[h] = i;
+	                yy[h] = j;
+	                zz[h] = k;
+	                h += 1;
 	            };
 	        };
-	        return {x: xx, y: yy, z: zz};
 	    };
+	    return {x: xx, y: yy, z: zz};
+	};
 	
-	    var ellipsoid = function(x, y, z, a, b, c) {
-	        /*"""
-	        ellipsoid
-	        ===========
-	        */
-	        if (a === undefined) {
-	            a = 2.0;
-	        };
-	        if (b === undefined) {
-	            b = 1.75;
-	        };
-	        if (c === undefined) {
-	            c = 1.5;
-	        };
-	        return 2 * ((x * x) / (a * a) + (y * y) / (b * b) + (z * z) / (c * c))
+	var ellipsoid = function(x, y, z, a, b, c) {
+	    /*"""
+	    ellipsoid
+	    ===========
+	    */
+	    if (a === undefined) {
+	        a = 2.0;
 	    };
+	    if (b === undefined) {
+	        b = 1.75;
+	    };
+	    if (c === undefined) {
+	        c = 1.5;
+	    };
+	    return 2 * ((x * x) / (a * a) + (y * y) / (b * b) + (z * z) / (c * c))
+	};
 	
-	    var sphere = function(x, y, z) {
-	        /*"""
-	        sphere
-	        ================
-	        */
-	        return (x * x + y * y + z * z) //* Math.exp( -0.5 * (x * x + y * y + z * z));
-	    }
+	var sphere = function(x, y, z) {
+	    /*"""
+	    sphere
+	    ================
+	    */
+	    return (x * x + y * y + z * z) //* Math.exp( -0.5 * (x * x + y * y + z * z));
+	}
 	
-	    var torus = function(x, y, z, c) {
-	        /*"""
-	        torus
-	        ================
-	        */
-	        if (c === undefined) {
-	            c = 1.0;
-	        };
-	        return  Math.pow(c - Math.sqrt(x * x + y * y), 2) + z * z;
-	    }
+	var torus = function(x, y, z, c) {
+	    /*"""
+	    torus
+	    ================
+	    */
+	    if (c === undefined) {
+	        c = 1.0;
+	    };
+	    return  Math.pow(c - Math.sqrt(x * x + y * y), 2) + z * z;
+	}
 	
-	    var compute_field = function(xs, ys, zs, n, func) {
-	        /*"""
-	        compute_field
-	        ==============
-	        */
-	        var values = new Float32Array(n);
-	        var norm = 0;
-	        var dv = (xs[1] - xs[0]) * (ys[1] - ys[0]) * (zs[1] - zs[0]);
-	        var i = 0;
-	        for (var x of xs) {
-	            for (var y of ys) {
-	                for (var z of zs) {
-	                    var tmp = func(x, y, z);
-	                    values[i] = tmp;
-	                    norm += (tmp * tmp * dv);
-	                    i += 1;
-	                };
+	var compute_field = function(xs, ys, zs, n, func) {
+	    /*"""
+	    compute_field
+	    ==============
+	    */
+	    var values = new Float32Array(n);
+	    var norm = 0;
+	    var dv = (xs[1] - xs[0]) * (ys[1] - ys[0]) * (zs[1] - zs[0]);
+	    var i = 0;
+	    for (var x of xs) {
+	        for (var y of ys) {
+	            for (var z of zs) {
+	                var tmp = func(x, y, z);
+	                values[i] = tmp;
+	                norm += (tmp * tmp * dv);
+	                i += 1;
 	            };
 	        };
-	        norm = 1 / Math.pow(norm, (1/2));
-	        return {'values': values, 'norm': norm}
 	    };
+	    norm = 1 / Math.pow(norm, (1/2));
+	    return {"values": values, "norm": norm}
+	};
 	
-	    var gen_array = function(nr, or, dx, dy, dz) {
-	        /*"""
-	        gen_array
-	        =============
-	        Generates discrete spatial points in space. Used to generate
-	        x, y, z spatial values for the cube field. In most cases, for the x
-	        basis vector, dy and dz are zero ("cube-like").
-	        */
-	        var r = new Float32Array(nr);
-	        r[0] = or;
-	        for (var i=1; i<nr; i++) {
-	            r[i] = r[i-1] + dx + dy + dz;
+	var gen_array = function(nr, or, dx, dy, dz) {
+	    /*"""
+	    gen_array
+	    =============
+	    Generates discrete spatial points in space. Used to generate
+	    x, y, z spatial values for the cube field. In most cases, for the x
+	    basis vector, dy and dz are zero ("cube-like").
+	    */
+	    var r = new Float32Array(nr);
+	    r[0] = or;
+	    for (var i=1; i<nr; i++) {
+	        r[i] = r[i-1] + dx + dy + dz;
+	    };
+	    return r;
+	};
+	
+	var normalize_gaussian = function(alpha, L) {
+	    /*"""
+	    normalize_gaussian
+	    ===================
+	    Given an exponent and a pre-exponential power, return the
+	    normalization constant of a given gaussian type function.
+	    */
+	    var prefac = Math.pow((2 / Math.PI), 0.75);
+	    var numer = Math.pow(2, L) * Math.pow(alpha, ((L + 1.5) / 2));
+	    var denom = Math.pow(this.factorial2(2 * L - 1), 0.5);
+	    return prefac * numer / denom;
+	};
+	
+	var factorial2 = function(n) {
+	    /*"""
+	    factorial2
+	    ============
+	    Returns the factorial2 of an integer.
+	    */
+	    if (n < -1) {
+	        return 0;
+	    } else if (n < 2) {
+	        return 1;
+	    } else {
+	        var prod = 1;
+	        while (n > 0) {
+	            prod *= n;
+	            n -= 2;
 	        };
-	        return r;
+	        return prod;
 	    };
-	
-	    var normalize_gaussian = function(alpha, L) {
-	        /*"""
-	        normalize_gaussian
-	        ===================
-	        Given an exponent and a pre-exponential power, return the
-	        normalization constant of a given gaussian type function.
-	        */
-	        var prefac = Math.pow((2 / Math.PI), 0.75);
-	        var numer = Math.pow(2, L) * Math.pow(alpha, ((L + 1.5) / 2));
-	        var denom = Math.pow(this.factorial2(2 * L - 1), 0.5);
-	        return prefac * numer / denom;
-	    };
-	
-	    var factorial2 = function(n) {
-	        /*"""
-	        factorial2
-	        ============
-	        Returns the factorial2 of an integer.
-	        */
-	        if (n < -1) {
-	            return 0;
-	        } else if (n < 2) {
-	            return 1;
-	        } else {
-	            var prod = 1;
-	            while (n > 0) {
-	                prod *= n;
-	                n -= 2;
-	            };
-	            return prod;
-	        };
-	    };
+	};
 	
 	
-	    return {
-	        meshgrid3d: meshgrid3d,
-	        linspace: linspace,
-	        minspace: minspace,
-	        arange: arange,
-	        sphere: sphere,
-	        ellipsoid: ellipsoid,
-	        torus: torus,
-	        gen_array: gen_array,
-	        compute_field: compute_field,
-	        factorial2: factorial2,
-	        normalize_gaussian: normalize_gaussian,
-	        function_list_3d: [null, 'sphere', 'torus', 'ellipsoid'],
-	    };
-	}.apply(exports, __WEBPACK_AMD_DEFINE_ARRAY__), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__));
+	module.exports = {
+	        "meshgrid3d": meshgrid3d,
+	        "linspace": linspace,
+	        "arange": arange,
+	        "sphere": sphere,
+	        "ellipsoid": ellipsoid,
+	        "torus": torus,
+	        "gen_array": gen_array,
+	        "compute_field": compute_field,
+	        "factorial2": factorial2,
+	        "normalize_gaussian": normalize_gaussian,
+	        "function_list_3d": [null, "sphere", "torus", "ellipsoid"],
+	}
 
 
 /***/ },
@@ -92044,24 +92073,9 @@ define(["jupyter-js-widgets"], function(__WEBPACK_EXTERNAL_MODULE_5__) { return 
 	standardizing how field data is stored, marching cubes (or other surface
 	computing algorithms) are easier to work with.
 	*/
-	'use strict';
+	"use strict";
 	var num = __webpack_require__(16);
 	
-	/*
-	require.config({
-	    shim: {
-	        "nbextensions/exa/num": {
-	            exports: 'num'
-	        },
-	    },
-	});
-	*/
-	/*
-	define([
-	    "nbextensions/exa/num",
-	],
-	*/
-	//function(num) {
 	class Field {
 	    /*"""
 	    Field
@@ -92069,19 +92083,19 @@ define(["jupyter-js-widgets"], function(__WEBPACK_EXTERNAL_MODULE_5__) { return 
 	    Base class for dealing with scalar and vector field data
 	
 	    Args:
-	        dimensions: {'ox': ox, 'nx': nx, 'dxi': dxi, 'dxj': dxj, 'dxk': dxk,
-	                     'oy': oy, 'ny': ny, 'dyi': dyi, 'dyj': dyj, 'dyk': dyk,
-	                     'oz': oz, 'nz': nz, 'dzi': dzi, 'dzj': dzj, 'dzk': dzk}
+	        dimensions: {"ox": ox, "nx": nx, "dxi": dxi, "dxj": dxj, "dxk": dxk,
+	                     "oy": oy, "ny": ny, "dyi": dyi, "dyj": dyj, "dyk": dyk,
+	                     "oz": oz, "nz": nz, "dzi": dzi, "dzj": dzj, "dzk": dzk}
 	
 	    Note:
 	        The dimensions argument can alternatively be
-	        {'x': xarray, 'y': yarray, 'z': zarray}
+	        {"x": xarray, "y": yarray, "z": zarray}
 	        if they have already been constructed but in this
 	        case the arrays should form cubic discrete points
 	    */
 	    constructor(dimensions, func_or_values) {
 	        this.func = {};
-	        if (dimensions.hasOwnProperty('x') === true) {
+	        if (dimensions.hasOwnProperty("x")) {
 	            this.x = dimensions.x;
 	            this.ox = Math.min(...this.x);
 	            this.fx = Math.max(...this.x);
@@ -92095,16 +92109,20 @@ define(["jupyter-js-widgets"], function(__WEBPACK_EXTERNAL_MODULE_5__) { return 
 	            this.dxi = dimensions.dxi;
 	            this.dxj = dimensions.dxj;
 	            this.dxk = dimensions.dxk;
-	            this.x = num.minspace(this.ox, this.dxi, this.nx);
-	            this.fx = Math.max(...this.x);
+	            if (dimensions.hasOwnProperty("fx")) {
+	                this.fx = dimensions.fx;
+	            } else {
+	                this.fx = this.ox + (this.nx - 1) * this.dxi;
+	            };
+	            this.x = num.linspace(this.ox, this.fx, this.nx);
 	        };
-	        if (dimensions.hasOwnProperty('y') === true) {
+	        if (dimensions.hasOwnProperty("y")) {
 	            this.y = dimensions.y;
 	            this.oy = Math.min(...this.y);
 	            this.fy = Math.max(...this.y);
 	            this.ny = this.y.length;
-	            this.dyi = this.y[1] - this.y[0];
-	            this.dyj = 0;
+	            this.dyi = 0;
+	            this.dyj = this.y[1] - this.y[0];
 	            this.dyk = 0;
 	        } else {
 	            this.oy = dimensions.oy;
@@ -92112,30 +92130,38 @@ define(["jupyter-js-widgets"], function(__WEBPACK_EXTERNAL_MODULE_5__) { return 
 	            this.dyi = dimensions.dyi;
 	            this.dyj = dimensions.dyj;
 	            this.dyk = dimensions.dyk;
-	            this.y = num.minspace(this.oy, this.dyj, this.ny);
-	            this.fy = Math.max(...this.y);
+	            if (dimensions.hasOwnProperty("fy")) {
+	                this.fy = dimensions.fy;
+	            } else {
+	                this.fy = this.oy + (this.ny - 1) * this.dyj;
+	            };
+	            this.y = num.linspace(this.oy, this.fy, this.ny);
 	        };
-	        if (dimensions.hasOwnProperty('z') === true) {
+	        if (dimensions.hasOwnProperty("z")) {
 	            this.z = dimensions.z;
 	            this.oz = Math.min(...this.z);
 	            this.fz = Math.max(...this.z);
 	            this.nz = this.z.length;
-	            this.dzi = this.z[1] - this.z[0];
+	            this.dzi = 0;
 	            this.dzj = 0;
-	            this.dzk = 0;
+	            this.dzk = this.z[1] - this.z[0];
 	        } else {
 	            this.oz = dimensions.oz;
 	            this.nz = dimensions.nz;
 	            this.dzi = dimensions.dzi;
 	            this.dzj = dimensions.dzj;
 	            this.dzk = dimensions.dzk;
-	            this.z = num.minspace(this.oz, this.dzk, this.nz);
-	            this.fz = Math.max(...this.z);
+	            if (dimensions.hasOwnProperty("fz")) {
+	                this.fz = dimensions.fz;
+	            } else {
+	                this.fz = this.oz + (this.nz - 1) * this.dzk;
+	            };
+	            this.z = num.linspace(this.oz, this.fz, this.nz);
 	        };
 	        this.n = this.nx * this.ny * this.nz;
-	        if (typeof func_or_values === 'function') {
+	        if (typeof func_or_values === "function") {
 	            this.func = func_or_values;
-	            this.values = num.compute_field(this.x, this.y, this.z, this.n, this.func)['values'];
+	            this.values = num.compute_field(this.x, this.y, this.z, this.n, this.func)["values"];
 	        } else {
 	            this.values = new Float32Array(func_or_values);
 	        };
@@ -92150,13 +92176,14 @@ define(["jupyter-js-widgets"], function(__WEBPACK_EXTERNAL_MODULE_5__) { return 
 	        this.nx = this.x.length;
 	        this.ny = this.y.length;
 	        this.nz = this.z.length;
+	        this.n = this.nx * this.ny * this.nz;
 	        this.ox = Math.min(...this.x);
 	        this.oy = Math.min(...this.y);
 	        this.oz = Math.min(...this.z);
 	        this.fx = Math.max(...this.x);
 	        this.fy = Math.max(...this.y);
 	        this.fz = Math.max(...this.z);
-	        this.values = num.compute_field(this.x, this.y, this.z, this.n, this.func)['values'];
+	        this.values = num.compute_field(this.x, this.y, this.z, this.n, this.func)["values"];
 	    };
 	
 	};
@@ -92176,42 +92203,10 @@ define(["jupyter-js-widgets"], function(__WEBPACK_EXTERNAL_MODULE_5__) { return 
 	        "Field": Field,
 	        "ScalarField": ScalarField
 	};
-	//});
 
 
 /***/ },
 /* 18 */
-/***/ function(module, exports) {
-
-	// Copyright (c) 2015-2016, Exa Analytics Development Team
-	// Distributed under the terms of the Apache License 2.0
-	/*""""
-	================
-	info.js
-	================
-	The default container view; displays container information (number of data
-	objects, size, and relationships) in a dynamic fashion.
-	*/
-	/*
-	'use strict';
-	
-	
-	require.config({
-	    shim: {
-	    },
-	});
-	
-	
-	define([], function() {
-	    class InfoApp {};
-	
-	    return InfoApp;
-	});
-	*/
-
-
-/***/ },
-/* 19 */
 /***/ function(module, exports) {
 
 	/*"""
@@ -92220,7 +92215,7 @@ define(["jupyter-js-widgets"], function(__WEBPACK_EXTERNAL_MODULE_5__) { return 
 	========================
 	
 	*/
-	'use strict';
+	"use strict";
 	
 	var Contour = function(data, dims, orig, scale, val, ncont, contlims, axis) {
 	
@@ -92255,16 +92250,16 @@ define(["jupyter-js-widgets"], function(__WEBPACK_EXTERNAL_MODULE_5__) { return 
 	        var x = [];
 	        var y = [];
 	        var dat = [];
-	        // Default to the 'z' axis
+	        // Default to the "z" axis
 	        var xidx = 0;
 	        var yidx = 1;
 	        var plidx = 2;
 	
-	        if (axis == 'x') {
+	        if (axis == "x") {
 	            xidx = 0;
 	            yidx = 2;
 	            plidx = 1;
-	        } else if (axis == 'y') {
+	        } else if (axis == "y") {
 	            xidx = 1;
 	            yidx = 2;
 	            plidx = 0;
@@ -92296,7 +92291,7 @@ define(["jupyter-js-widgets"], function(__WEBPACK_EXTERNAL_MODULE_5__) { return 
 	            };
 	        };
 	
-	        if (axis == 'z') {
+	        if (axis == "z") {
 	            for(var nx = 0; nx < dims[0]; nx++) {
 	                var tmp = [];
 	                for(var ny = 0; ny < dims[1]; ny++) {
@@ -92304,7 +92299,7 @@ define(["jupyter-js-widgets"], function(__WEBPACK_EXTERNAL_MODULE_5__) { return 
 	                };
 	                dat.push(tmp);
 	            };
-	        } else if (axis == 'x') {
+	        } else if (axis == "x") {
 	            for(var nx = 0; nx < dims[0]; nx++) {
 	                var tmp = [];
 	                for(var nz = 0; nz < dims[2]; nz++) {
@@ -92312,7 +92307,7 @@ define(["jupyter-js-widgets"], function(__WEBPACK_EXTERNAL_MODULE_5__) { return 
 	                };
 	                dat.push(tmp);
 	            };
-	        } else if (axis == 'y') {
+	        } else if (axis == "y") {
 	            for(var ny = 0; ny < dims[1]; ny++) {
 	                var tmp = [];
 	                for(var nz = 0; nz < dims[2]; nz++) {
@@ -92321,7 +92316,7 @@ define(["jupyter-js-widgets"], function(__WEBPACK_EXTERNAL_MODULE_5__) { return 
 	                dat.push(tmp);
 	            };
 	        };
-	        return {'dat': dat, 'x': x, 'y': y};
+	        return {"dat": dat, "x": x, "y": y};
 	    };
 	
 	    // Interpolate a value along the side of a square
@@ -92515,14 +92510,14 @@ define(["jupyter-js-widgets"], function(__WEBPACK_EXTERNAL_MODULE_5__) { return 
 	        };
 	    };
 	    // Default behavior of algorithm
-	    if (axis == 'z') {
+	    if (axis == "z") {
 	        return cverts;
 	    // cverts is populated assuming x, y correspond to x, y
 	    // dimensions in the cube file, but to avoid a double nested
 	    // if else inside the tight O(N^2) loop, just move around the
 	    // elements accordingly afterwards according to the axis of
 	    // interest
-	    } else if (axis == 'x') {
+	    } else if (axis == "x") {
 	        var rear = [];
 	        for(var c = 0; c < nc; c++) {
 	            rear.push([]);
@@ -92531,7 +92526,7 @@ define(["jupyter-js-widgets"], function(__WEBPACK_EXTERNAL_MODULE_5__) { return 
 	                rear[c].push([cverts[c][v][0], val, cverts[c][v][1]]);
 	            };
 	        };
-	    } else if (axis == 'y') {
+	    } else if (axis == "y") {
 	        var rear = [];
 	        for(var c = 0; c < nc; c++) {
 	            rear.push([]);
@@ -92543,35 +92538,39 @@ define(["jupyter-js-widgets"], function(__WEBPACK_EXTERNAL_MODULE_5__) { return 
 	    };
 	    return rear;
 	};
+	
+	module.exports = {
+	    "Contour": Contour
+	}
 
 
 /***/ },
-/* 20 */
+/* 19 */
 /***/ function(module, exports) {
 
 	module.exports = {
 		"_args": [
 			[
 				{
-					"raw": "jupyter-exawidgets@^0.1.0",
+					"raw": "jupyter-exawidgets@^0.1.3",
 					"scope": null,
 					"escapedName": "jupyter-exawidgets",
 					"name": "jupyter-exawidgets",
-					"rawSpec": "^0.1.0",
-					"spec": ">=0.1.0 <0.2.0",
+					"rawSpec": "^0.1.3",
+					"spec": ">=0.1.3 <0.2.0",
 					"type": "range"
 				},
 				"C:\\Users\\thoma\\github\\exatomic\\js"
 			]
 		],
-		"_from": "jupyter-exawidgets@>=0.1.0 <0.2.0",
-		"_id": "jupyter-exawidgets@0.1.0",
+		"_from": "jupyter-exawidgets@>=0.1.3 <0.2.0",
+		"_id": "jupyter-exawidgets@0.1.3",
 		"_inCache": true,
 		"_location": "/jupyter-exawidgets",
 		"_nodeVersion": "6.9.4",
 		"_npmOperationalInternal": {
 			"host": "packages-18-east.internal.npmjs.com",
-			"tmp": "tmp/jupyter-exawidgets-0.1.0.tgz_1491029708644_0.3005839390680194"
+			"tmp": "tmp/jupyter-exawidgets-0.1.3.tgz_1491177331208_0.041911963606253266"
 		},
 		"_npmUser": {
 			"name": "tjduigna",
@@ -92580,21 +92579,21 @@ define(["jupyter-js-widgets"], function(__WEBPACK_EXTERNAL_MODULE_5__) { return 
 		"_npmVersion": "3.10.10",
 		"_phantomChildren": {},
 		"_requested": {
-			"raw": "jupyter-exawidgets@^0.1.0",
+			"raw": "jupyter-exawidgets@^0.1.3",
 			"scope": null,
 			"escapedName": "jupyter-exawidgets",
 			"name": "jupyter-exawidgets",
-			"rawSpec": "^0.1.0",
-			"spec": ">=0.1.0 <0.2.0",
+			"rawSpec": "^0.1.3",
+			"spec": ">=0.1.3 <0.2.0",
 			"type": "range"
 		},
 		"_requiredBy": [
 			"/"
 		],
-		"_resolved": "https://registry.npmjs.org/jupyter-exawidgets/-/jupyter-exawidgets-0.1.0.tgz",
-		"_shasum": "244a9ecdda070849c0aab493f5938b260ae6b716",
+		"_resolved": "https://registry.npmjs.org/jupyter-exawidgets/-/jupyter-exawidgets-0.1.3.tgz",
+		"_shasum": "cf703155c8132b5bb7908219c3784c5a95743927",
 		"_shrinkwrap": null,
-		"_spec": "jupyter-exawidgets@^0.1.0",
+		"_spec": "jupyter-exawidgets@^0.1.3",
 		"_where": "C:\\Users\\thoma\\github\\exatomic\\js",
 		"author": {
 			"name": "Thomas J. Duignan and Alex Marchenko"
@@ -92619,8 +92618,8 @@ define(["jupyter-js-widgets"], function(__WEBPACK_EXTERNAL_MODULE_5__) { return 
 		},
 		"directories": {},
 		"dist": {
-			"shasum": "244a9ecdda070849c0aab493f5938b260ae6b716",
-			"tarball": "https://registry.npmjs.org/jupyter-exawidgets/-/jupyter-exawidgets-0.1.0.tgz"
+			"shasum": "cf703155c8132b5bb7908219c3784c5a95743927",
+			"tarball": "https://registry.npmjs.org/jupyter-exawidgets/-/jupyter-exawidgets-0.1.3.tgz"
 		},
 		"homepage": "https://github.com/exa-analytics/exawidgets#readme",
 		"keywords": [
@@ -92645,798 +92644,52 @@ define(["jupyter-js-widgets"], function(__WEBPACK_EXTERNAL_MODULE_5__) { return 
 			"prepublish": "webpack",
 			"test": "echo \"Error: no test specified\" && exit 1"
 		},
-		"version": "0.1.0"
+		"version": "0.1.3"
 	};
 
 /***/ },
-/* 21 */
+/* 20 */
 /***/ function(module, exports, __webpack_require__) {
 
 	// Copyright (c) 2015-2016, Exa Analytics Development Team
 	// Distributed under the terms of the Apache License 2.0
 	/*"""
-	========================
-	Universe Application
-	========================
-	This module defines the JavaScript application that is loaded when a user
-	requests the HTML representation of a universe data container.
+	===============
+	functions.js
+	===============
 	*/
-	'use strict';
+	"use strict";
 	var exawidgets = __webpack_require__(3);
-	var gui = exawidgets.ContainerGUI;
-	var app3D = exawidgets.App3D;
-	var utility = exawidgets.utility;
-	var gaussian = exawidgets.gaussian;
-	var field = exawidgets.field;
-	var num = exawidgets.num;
 	
-	/*
-	require.config({
-	    shim: {
-	        "nbextensions/exa/gui": {exports: 'ContainerGUI'},
-	        "nbextensions/exa/app3d": {exports: 'App3D'},
-	        "nbextensions/exa/utility": {exports: 'utility'},
-	        "nbextensions/exa/num": {exports: 'num'},
-	        "nbextensions/exa/exatomic/gaussian": {exports: 'gaussian'},
-	        "nbextensions/exa/exatomic/field": {exports: 'AtomicField'}
-	    },
-	});
-	*/
-	/*
-	define([
-	    "nbextensions/exa/gui",
-	    "nbextensions/exa/app3d",
-	    "nbextensions/exa/utility",
-	    "nbextensions/exa/num",
-	    "nbextensions/exa/exatomic/gaussian",
-	    "nbextensions/exa/exatomic/field"
-	],
-	*/
-	//1function(ContainerGUI, App3D, utility, num, gaussian, AtomicField) {
-	class UniverseApp {
+	class GTF extends exawidgets.ScalarField {
 	    /*"""
-	    UniverseApp
-	    =============
-	    Notebook widget application for visualization of the universe container.
-	    */
-	    constructor(view) {
-	        console.log('init2');
-	        this.view = view;
-	        this.view.create_canvas();
-	        this.update_vars();
-	        this.app3d = new App3D(this.view.canvas);
-	        this.create_gui();
-	
-	        this.update_fields();
-	        this.update_orbitals();
-	        this.render_current_frame();
-	        this.app3d.set_camera({'x': 15.0, 'y': 15.0, 'z': 15.0});
-	        this.view.container.append(this.gui.domElement);
-	        this.view.container.append(this.gui.custom_css);
-	        this.view.container.append(this.view.canvas);
-	        var view_self = this.view;
-	        this.app3d.render();
-	        this.view.on('displayed', function() {
-	            view_self.app.app3d.animate();
-	            view_self.app.app3d.controls.handleResize();
-	        });
-	        this.app3d.set_camera_from_scene();
-	    };
-	
-	    update_display_params() {
-	        console.log('Inside update_display_params');
-	        console.log(this);
-	        console.log(self);
-	    };
-	
-	    resize() {
-	        this.app3d.resize();
-	    };
-	
-	    gv(obj, index) {
-	        /*"""
-	        gv
-	        ---------------
-	        Helper function for retrieving data from the view.
-	        */
-	        if (obj === undefined) {
-	            return undefined;
-	        } else {
-	            var value = obj[index];
-	            if (value === undefined) {
-	                return obj;
-	            };
-	            return value;
-	        };
-	    };
-	
-	    update_vars() {
-	        /*"""
-	        init_vars
-	        ----------------
-	        Set up some application variables.
-	        */
-	        this.last_index = this.view.framelist.length - 1;
-	        this.atoms_meshes = [];
-	        this.bonds_meshes = [];
-	        this.cell_meshes = [];
-	        this.field_meshes = [];
-	        this.axis_meshes = [];
-	    };
-	
-	    create_gui() {
-	        /*"""
-	        create_gui
-	        ------------------
-	        Create the application's control set.
-	        */
-	        var self = this;
-	        this.playing = false;
-	        this.play_id = undefined;
-	        this.gui = new ContainerGUI(this.view.gui_width);
-	
-	        this.top = {
-	            'pause': function() {
-	                self.playing = false;
-	                clearInterval(self.play_id);
-	                self.top.frame_dropdown.setValue(self.view.framelist[self.top.index]);
-	            },
-	            'play': function() {
-	                if (self.playing === true) {
-	                    self.top.pause()
-	                } else {
-	                    self.playing = true;
-	                    if (self.top.index === self.last_index) {
-	                        self.top.index_slider.setValue(0);
-	                    };
-	                    self.play_id = setInterval(function() {
-	                        if (self.top.index < self.last_index) {
-	                            self.top.index_slider.setValue(self.top.index+1);
-	                        } else {
-	                            self.top.pause();
-	                        };
-	                    }, 1000 / self.top.fps);
-	                };
-	            },
-	            'save image': function() {
-	                self.app3d.renderer.setSize(1920, 1080);
-	                self.app3d.camera.aspect = 1920 / 1080;
-	                self.app3d.camera.updateProjectionMatrix();
-	                //self.app3d.add_unit_axis();
-	                self.app3d.render();
-	                var imgdat = self.app3d.renderer.domElement.toDataURL('image/png');
-	                self.view.send({'type': 'image', 'content': imgdat});
-	                self.app3d.renderer.setSize(self.app3d.width, self.app3d.height);
-	                self.app3d.camera.aspect = self.app3d.width / self.app3d.height;
-	                self.app3d.camera.updateProjectionMatrix();
-	            },
-	            'index': 0,
-	            'frame': this.view.framelist[0],
-	            'fps': this.view.fps,
-	        };
-	        this.top['play_button'] = this.gui.add(this.top, 'play');
-	        this.top['save_image'] = this.gui.add(this.top, 'save image');
-	        this.top['index_slider'] = this.gui.add(this.top, 'index').min(0).max(this.last_index).step(1);
-	        this.top['frame_dropdown'] = this.gui.add(this.top, 'frame', this.view.framelist);
-	        this.top['fps_slider'] = this.gui.add(this.top, 'fps').min(1).max(240).step(1);
-	        this.top.index_slider.onChange(function(index) {
-	            self.top.index = index;
-	            self.top.frame = self.view.framelist[self.top.index];
-	            self.update_fields();
-	            self.update_orbitals();
-	            self.render_current_frame();
-	        });
-	        this.top.index_slider.onFinishChange(function(index) {
-	            self.top.index = index;
-	            self.top.frame = self.view.framelist[self.top.index];
-	            self.top.frame_dropdown.setValue(self.top.frame);
-	        })
-	        this.top.fps_slider.onFinishChange(function(value) {
-	            self.top.fps = value;
-	        });
-	        this.top.frame_dropdown.onFinishChange(function(value) {
-	            self.top.frame = parseInt(value);
-	            self.top.index = self.view.framelist.indexOf(self.top.frame);
-	            self.top.index_slider.setValue(self.top.index);
-	        });
-	
-	        this.display = {
-	            'labels': false,
-	            'symbols': false,
-	            'cell': false,
-	            'axis': false,
-	            'spheres': false,
-	        };
-	        this.display['folder'] = this.gui.addFolder('display');
-	        this.display['labels_checkbox'] = this.display.folder.add(this.display, 'labels');
-	        this.display['symbols_checkbox'] = this.display.folder.add(this.display, 'symbols');
-	        this.display['cell_checkbox'] = this.display.folder.add(this.display, 'cell');
-	        this.display['axis_checkbox'] = this.display.folder.add(this.display, 'axis');
-	        this.display['spheres_checkbox'] = this.display.folder.add(this.display, 'spheres');
-	
-	        /*this.display.labels_checkbox.onFinishChange(function(value) {
-	            self.display.labels = value;
-	            if (value === false) {
-	                self.app3d.remove(self.label_meshes);
-	            } else {
-	                self.render_labels();
-	            };
-	        });*/
-	
-	        this.display.cell_checkbox.onFinishChange(function(value) {
-	            self.display.cell = value;
-	            if (value === false) {
-	                self.app3d.remove_meshes(self.cell_meshes);
-	            } else {
-	                self.render_cell();
-	            };
-	        });
-	        this.display.axis_checkbox.onFinishChange(function(value) {
-	            self.display.axis = value;
-	            if (value === false) {
-	                self.app3d.remove_meshes(self.axis_meshes);
-	            } else {
-	                self.axis_meshes = self.app3d.add_unit_axis();
-	            };
-	        });
-	        this.display.spheres_checkbox.onFinishChange(function(value) {
-	            self.display.spheres = value;
-	            self.update_display_params();
-	            self.render_current_frame();
-	        });
-	
-	        this.fields = {
-	            'isovalue': 0.03,
-	            'field': null,
-	            'label': 0,
-	            'cur_fields': [null]
-	        };
-	        this.fields['folder'] = this.gui.addFolder('fields');
-	        this.fields['isovalue_slider'] = this.fields.folder.add(this.fields, 'isovalue', 0.0001, 0.5);
-	        this.fields['field_dropdown'] = this.fields.folder.add(this.fields, 'field', this.fields['cur_fields']);
-	        this.fields['label_dropdown'] = this.fields.folder.add(this.fields, 'label', this.fields['label']);
-	        this.fields.field_dropdown.onFinishChange(function(field_index) {
-	            self.fields['field'] = field_index;
-	            self.render_field();
-	        });
-	        this.fields.label_dropdown.onFinishChange(function(label_index) {
-	            self.fields['label'] = label_index;
-	            self.render_field();
-	        });
-	        this.fields.isovalue_slider.onFinishChange(function(value) {
-	            self.fields.isovalue = value;
-	            self.render_field();
-	        });
-	
-	        this.orbitals = {
-	            'orbital': 0,
-	            'isovalue': 0.03,
-	            'cur_orbitals': [null],
-	            'ox': -10.0, 'oy': -10.0, 'oz': -10.0,
-	            'nx':  52,   'ny':  52,   'nz':  52,
-	            'dxi':  0.4, 'dyi':  0.0, 'dzi':  0.0,
-	            'dxj':  0.0, 'dyj':  0.5, 'dzj':  0.0,
-	            'dxk':  0.0, 'dyk':  0.0, 'dzk':  0.4
-	        };
-	        this.orbitals['folder'] = this.gui.addFolder('orbitals');
-	        this.orbitals['isovalue_slider'] = this.orbitals.folder.add(this.orbitals, 'isovalue', 0.0001, 0.5);
-	        this.orbitals['orbital_dropdown'] = this.orbitals.folder.add(this.orbitals, 'orbital', this.orbitals['cur_orbitals']);
-	        /*
-	        this.orbitals['ox_slider'] = this.orbitals.folder.add(this.orbitals, 'ox', -15.0, -5.0);
-	        this.orbitals['oy_slider'] = this.orbitals.folder.add(this.orbitals, 'oy', -15.0, -5.0);
-	        this.orbitals['oz_slider'] = this.orbitals.folder.add(this.orbitals, 'oz', -15.0, -5.0);
-	        this.orbitals['dxi_slider'] = this.orbitals.folder.add(this.orbitals, 'dxi', 0.3, 0.5);
-	        this.orbitals['dyj_slider'] = this.orbitals.folder.add(this.orbitals, 'dyj', 0.3, 0.7);
-	        this.orbitals['dzk_slider'] = this.orbitals.folder.add(this.orbitals, 'dzk', 0.3, 0.5);
-	        */
-	        this.orbitals.orbital_dropdown.onFinishChange(function(orbital_index) {
-	            self.orbitals['orbital'] = orbital_index;
-	            self.render_orbital();
-	        });
-	        this.orbitals.isovalue_slider.onFinishChange(function(value) {
-	            self.orbitals['isovalue'] = value;
-	            self.render_orbital();
-	        });
-	        /*
-	        this.orbitals.ox_slider.onFinishChange(function(value) {
-	            self.orbitals['ox'] = value;
-	            self.render_orbital();
-	        });
-	        this.orbitals.oy_slider.onFinishChange(function(value) {
-	            self.orbitals['oy'] = value;
-	            self.render_orbital();
-	        });
-	        this.orbitals.oz_slider.onFinishChange(function(value) {
-	            self.orbitals['oz'] = value;
-	            self.render_orbital();
-	        });
-	        this.orbitals.dxi_slider.onFinishChange(function(value) {
-	            self.orbitals['dxi'] = value;
-	            self.render_orbital();
-	        });
-	        this.orbitals.dyj_slider.onFinishChange(function(value) {
-	            self.orbitals['dyj'] = value;
-	            self.render_orbital();
-	        });
-	        this.orbitals.dzk_slider.onFinishChange(function(value) {
-	            self.orbitals['dzk'] = value;
-	            self.render_orbital();
-	        });
-	        */
-	
-	    };
-	
-	    update_fields() {
-	        /*"""
-	        update_fields
-	        ---------------
-	        Updates available fields for the given frame and selection
-	        */
-	        var self = this;
-	        var field_indices = this.gv(this.view.field_indices, this.top.index);
-	        console.log('field_indices');
-	        console.log(field_indices);
-	        if (field_indices === undefined) {
-	            field_indices = [];
-	        };
-	        field_indices.push(null);
-	        var label_indices = this.gv(this.view.label_indices, this.top.index);
-	        if (label_indices !== undefined) {
-	            field_indices = label_indices;
-	        };
-	        //this.fields['field'] = null;
-	        console.log('label_indices');
-	        console.log(label_indices);
-	        this.fields['cur_fields'] = field_indices;
-	        this.fields['field'] = field_indices[0];
-	        console.log('fields field');
-	        console.log(this.fields['field']);
-	        this.fields.folder.__controllers[1].remove();
-	        //this.fields.folder.__controllers[1].remove();
-	        this.fields['field_dropdown'] = this.fields.folder.add(this.fields, 'field', this.fields['cur_fields']);
-	        //this.fields['label_dropdown'] = this.fields.folder.add(this.fields, 'label', this.fields['cur_fields']);
-	        this.fields.field_dropdown.onFinishChange(function(field_index) {
-	            self.fields['field'] = field_index;
-	            self.render_field();
-	        });
-	        //this.fields.label_dropdown.onFinishChange(function(label_index) {
-	        //    self.fields['label'] = label_index;
-	        //    self.render_field();
-	        //});
-	    };
-	
-	    update_orbitals() {
-	        /*"""
-	        update_orbitals
-	        ==================
-	        Updates the available orbitals per frame
-	        */
-	        var self = this;
-	        var coefs = this.gv(this.view.momatrix_coefficient, this.top.index);
-	        if (coefs === undefined) {
-	            return;
-	        };
-	        var nbfns = coefs.length;
-	        var orbital_indices = [];
-	        for (var i = 0; i < nbfns; i++) {
-	            orbital_indices.push(i);
-	        };
-	        this.orbitals['cur_orbitals'] = orbital_indices;
-	        this.orbitals.folder.__controllers[1].remove();
-	        this.orbitals['orbital_dropdown'] = this.orbitals.folder.add(this.orbitals, 'orbital', this.orbitals['cur_orbitals']);
-	        this.orbitals.orbital_dropdown.onFinishChange(function(orbital_index) {
-	            self.orbitals['orbital'] = orbital_index;
-	            self.render_orbital();
-	        });
-	    };
-	
-	    // render_orbital() {
-	    //     //console.log('entering render orbital');
-	    //     var coefs = this.gv(this.view.momatrix_coefficient, this.top.index);
-	    //     if (coefs === undefined) {
-	    //         //console.log('exiting render orbital');
-	    //         return;
-	    //     };
-	    //     var nbfns = coefs.length;
-	    //     var sgto = this.gv(this.view.sphericalgtforder_ml, this.top.index);
-	    //     var pl = this.gv(this.view.cartesiangtforder_x, this.top.index);
-	    //     var pm = this.gv(this.view.cartesiangtforder_y, this.top.index);
-	    //     var pn = this.gv(this.view.cartesiangtforder_z, this.top.index);
-	    //     var xs = this.gv(this.view.atom_x, this.top.index);
-	    //     var ys = this.gv(this.view.atom_y, this.top.index);
-	    //     var zs = this.gv(this.view.atom_z, this.top.index);
-	    //     var ds = this.gv(this.view.gaussianbasisset_d, this.top.index);
-	    //     var ls = this.gv(this.view.gaussianbasisset_l, this.top.index);
-	    //     var alphas = this.gv(this.view.gaussianbasisset_alpha, this.top.index);
-	    //
-	    //     var nat = 0;
-	    //     var to_expand = [];
-	    //     if (typeof xs === 'number') {
-	    //         to_expand.push('xs');
-	    //     } else {
-	    //         nat = xs.length;
-	    //     };
-	    //     if (typeof ys === 'number') {
-	    //         to_expand.push('ys');
-	    //     } else {
-	    //         nat = ys.length;
-	    //     };
-	    //     if (typeof zs === 'number') {
-	    //         to_expand.push('zs');
-	    //     } else {
-	    //         nat = zs.length;
-	    //     };
-	    //     for (var thing of to_expand) {
-	    //         if (thing === 'xs') {
-	    //             xs = utility.repeat_float(xs, nat);
-	    //         } else if (thing === 'ys') {
-	    //             ys = utility.repeat_float(ys, nat);
-	    //         } else if (thing === 'zs') {
-	    //             zs = utility.repeat_float(zs, nat);
-	    //         };
-	    //     };
-	    //     var sets = this.gv(this.view.atom_set, this.top.index);
-	    //     if (typeof sets === 'number') {
-	    //         sets = utility.repeat_int(sets, nat);
-	    //     };
-	    //
-	    //     var dims = {
-	    //         'ox': this.orbitals['ox'], 'oy': this.orbitals['oy'], 'oz': this.orbitals['oz'],
-	    //         'nx': this.orbitals['nx'], 'ny': this.orbitals['ny'], 'nz': this.orbitals['nz'],
-	    //         'dxi': this.orbitals['dxi'], 'dyj': this.orbitals['dyj'], 'dzk': this.orbitals['dzk'],
-	    //         'dxj': 0.0, 'dyk': 0.0, 'dzi': 0.0,
-	    //         'dxk': 0.0, 'dyi': 0.0, 'dzj': 0.0,
-	    //     };
-	    //     dims['x'] = num.gen_array(dims.nx, dims.ox, dims.dxi, dims.dyi, dims.dzi);
-	    //     dims['y'] = num.gen_array(dims.ny, dims.oy, dims.dxj, dims.dyj, dims.dzj);
-	    //     dims['z'] = num.gen_array(dims.nz, dims.oz, dims.dxk, dims.dyk, dims.dzk);
-	    //     dims['n'] = dims.nx * dims.ny * dims.nz;
-	    //
-	    //     var bfns = gaussian.order_gtf_basis(xs, ys, zs, sets, nbfns, ds, ls, alphas, pl, pm, pn, sgto);
-	    //     var mos = gaussian.construct_mos(bfns, coefs, dims);
-	    //     this.cube_field = new gaussian.GaussianOrbital(dims, mos[this.orbitals['orbital']]);
-	    //     this.cube_like = 'orbital';
-	    //     this.app3d.remove_meshes(this.cube_field_mesh);
-	    //     this.cube_field_mesh = this.app3d.add_scalar_field(this.cube_field, this.orbitals.isovalue, 2);
-	    // };
-	
-	    render_field() {
-	        /*"""
-	        render_field
-	        --------------
-	        */
-	        var nx = this.gv(this.view.atomicfield_nx, this.top.index);
-	        var ny = this.gv(this.view.atomicfield_ny, this.top.index);
-	        var nz = this.gv(this.view.atomicfield_nz, this.top.index);
-	        var ox = this.gv(this.view.atomicfield_ox, this.top.index);
-	        var oy = this.gv(this.view.atomicfield_oy, this.top.index);
-	        var oz = this.gv(this.view.atomicfield_oz, this.top.index);
-	        var dxi = this.gv(this.view.atomicfield_dxi, this.top.index);
-	        var dxj = this.gv(this.view.atomicfield_dxj, this.top.index);
-	        var dxk = this.gv(this.view.atomicfield_dxk, this.top.index);
-	        var dyi = this.gv(this.view.atomicfield_dyi, this.top.index);
-	        var dyj = this.gv(this.view.atomicfield_dyj, this.top.index);
-	        var dyk = this.gv(this.view.atomicfield_dyk, this.top.index);
-	        var dzi = this.gv(this.view.atomicfield_dzi, this.top.index);
-	        var dzj = this.gv(this.view.atomicfield_dzj, this.top.index);
-	        var dzk = this.gv(this.view.atomicfield_dzk, this.top.index);
-	        var values = this.gv(this.view.field_values, this.fields['field']);
-	        this.cube_field = new AtomicField({'ox': ox, 'oy': oy, 'oz': oz,
-	                                           'nx': nx, 'ny': ny, 'nz': nz,
-	                                           'dxi': dxi, 'dxj': dxj, 'dxk': dxk,
-	                                           'dyi': dyi, 'dyj': dyj, 'dyk': dyk,
-	                                           'dzi': dzi, 'dzj': dzj, 'dzk': dzk},
-	                                           values);
-	        this.app3d.remove_meshes(this.cube_field_mesh);
-	        this.cube_like = 'field';
-	        this.cube_field_mesh = this.app3d.add_scalar_field(this.cube_field, this.fields.isovalue, 2);
-	    };
-	
-	    render_current_frame() {
-	        /*"""
-	        render_current_frame
-	        -----------------------
-	        Renders atoms and bonds in the current frame (using the frame index).
-	
-	        Args:
-	            spheres (bool): True for sphere geometries rather than points (default)
-	        */
-	        var symbols = this.gv(this.view.atom_symbols, this.top.index);
-	        var radii = utility.mapper(symbols, this.view.atom_radii_dict);
-	        var n = radii.length;
-	        for (var i=0; i<n; i++) {
-	            radii[i] *= 0.5;
-	        };
-	        var colors = utility.mapper(symbols, this.view.atom_colors_dict);
-	        var x = this.gv(this.view.atom_x, this.top.index);
-	        var y = this.gv(this.view.atom_y, this.top.index);
-	        var z = this.gv(this.view.atom_z, this.top.index);
-	        var v0 = this.gv(this.view.two_bond0, this.top.index);
-	        var v1 = this.gv(this.view.two_bond1, this.top.index);
-	        if (this.cube_field !== undefined) {
-	            if (this.cube_like === 'field') {
-	                this.app3d.remove_meshes(this.cube_field_mesh);
-	                this.cube_field_mesh = this.app3d.add_scalar_field(this.cube_field, this.fields.isovalue, 2);
-	            } else if (this.cube_like === 'orbital') {
-	                this.render_orbital();
-	                //this.app3d.remove_meshes(this.cube_field_mesh);
-	                //this.cube_field_mesh = this.app3d.add_scalar_field(this.cube_field, this.orbitals.isovalue, 2);
-	            };
-	        };
-	        this.app3d.remove_meshes(this.bond_meshes);
-	        if (v0 !== undefined && v1 !== undefined) {
-	            if (this.display.spheres === true) {
-	                this.bond_meshes = this.app3d.add_cylinders(v0, v1, x, y, z, colors, 0.12);
-	            } else {
-	                this.bond_meshes = this.app3d.add_lines(v0, v1, x, y, z, colors);
-	            };
-	        };
-	        this.app3d.remove_meshes(this.atom_meshes);
-	        if (this.display.spheres === true) {
-	            this.atom_meshes = this.app3d.add_spheres(x, y, z, colors, radii);
-	        } else {
-	            this.atom_meshes = this.app3d.add_points(x, y, z, colors, radii);
-	        };
-	        //if (this.top.index === 0) {
-	        //    if (this.display.spheres === true) {
-	        //        this.app3d.set_camera_from_scene();
-	        //    } else {
-	        //        this.app3d.set_camera_from_mesh(this.atom_meshes[0], 4.0, 4.0, 4.0);
-	        //    };
-	        //};
-	    };
-	
-	    render_cell() {
-	        /*"""
-	        render_cell
-	        -----------
-	        Custom rendering function that adds the unit cell.
-	        */
-	        var ox = this.gv(this.view.frame_ox, this.top.index);
-	        if (ox === undefined) {
-	            return;
-	        };
-	        var oy = this.gv(this.view.frame_oy, this.top.index);
-	        var oz = this.gv(this.view.frame_oz, this.top.index);
-	        var xi = this.gv(this.view.frame_xi, this.top.index);
-	        var xj = this.gv(this.view.frame_xj, this.top.index);
-	        var xk = this.gv(this.view.frame_xk, this.top.index);
-	        var yi = this.gv(this.view.frame_yi, this.top.index);
-	        var yj = this.gv(this.view.frame_yj, this.top.index);
-	        var yk = this.gv(this.view.frame_yk, this.top.index);
-	        var zi = this.gv(this.view.frame_zi, this.top.index);
-	        var zj = this.gv(this.view.frame_zj, this.top.index);
-	        var zk = this.gv(this.view.frame_zk, this.top.index);
-	        var vertices = [];
-	        vertices.push([ox, oy, oz]);
-	        vertices.push([xi, xj, xk]);
-	        vertices.push([yi, yj, yk]);
-	        vertices.push([zi, zj, zk]);
-	        this.app3d.remove_meshes(this.cell_meshes);
-	        this.cell_meshes = this.app3d.add_wireframe(vertices);
-	    };
-	
-	};
-	
-	module.exports = {
-	    "UniverseApp": UniverseApp
-	}
-	//    return UniverseApp;
-	//});
-
-
-/***/ },
-/* 22 */
-/***/ function(module, exports, __webpack_require__) {
-
-	// Copyright (c) 2015-2016, Exa Analytics Development Team
-	// Distributed under the terms of the Apache License 2.0
-	/*"""
-	field.js
-	###############
-	*/
-	'use strict';
-	var field = __webpack_require__(3).field;
-	var num = __webpack_require__(3).num;
-	
-	/*
-	require.config({
-	    shim: {
-	        'nbextensions/exa/field': {
-	            exports: 'field'
-	        },
-	        'nbextensions/exa/num': {
-	            exports: 'num'
-	        }
-	    },
-	});
-	*/
-	
-	/*
-	define([
-	    'nbextensions/exa/field',
-	    'nbextensions/exa/num'
-	],
-	*/
-	// function(field, num) {
-	class AtomicField extends field.ScalarField {
-	    /*"""
-	    AtomicField
-	    =============
-	    JS repr. of .cube file field values and dimensions.
-	    */
-	    constructor(dimensions, values) {
-	        super(dimensions, values);
-	    };
-	
-	};
-	
-	module.exports = {
-	    "AtomicField": AtomicField
-	}
-
-
-/***/ },
-/* 23 */
-/***/ function(module, exports, __webpack_require__) {
-
-	// Copyright (c) 2015-2016, Exa Analytics Development Team
-	// Distributed under the terms of the Apache License 2.0
-	/*"""
-	===============
-	gtf.js
-	===============
-	*/
-	'use strict';
-	var num = __webpack_require__(3).num;
-	var field = __webpack_require__(3).field;
-	
-	/*
-	require.config({
-	    shim: {
-	        "nbextensions/exa/num": {exports: 'num'},
-	        "nbextensions/exa/field": {exports: 'field'}
-	    },
-	});
-	*/
-	/*
-	define([
-	    "nbextensions/exa/num",
-	    "nbextensions/exa/field"
-	],
-	*/
-	//function(num, field) {
-	class GTF extends field.ScalarField {
-	    /*"""
+	    GTF
+	    ----------
+	    Gaussian type functions with exp(-r^2) radial dependence
 	    */
 	    constructor(dimensions, which) {
 	        super(dimensions, primitives[which]);
-	        this.function = which;
 	    };
 	};
 	
-	var primitives = {
-	    's': function(x, y, z) {
-	        var x2 = x*x;
-	        var y2 = y*y;
-	        var z2 = z*z;
-	        var r2 = x2 + y2 + z2;
-	        return num.normalize_gaussian(25000, 0) * Math.exp(-r2);
-	    },
-	    'px': function(x, y, z) {
-	        var x2 = x*x;
-	        var y2 = y*y;
-	        var z2 = z*z;
-	        var r2 = x2 + y2 + z2;
-	        return num.normalize_gaussian(25000, 1) * x * Math.exp(-r2);
-	    },
-	
-	    'py': function(x, y, z) {
-	        var x2 = x*x;
-	        var y2 = y*y;
-	        var z2 = z*z;
-	        var r2 = x2 + y2 + z2;
-	        return num.normalize_gaussian(25000, 1) * y * Math.exp(-r2);
-	    },
-	
-	    'pz': function(x, y, z) {
-	        var x2 = x*x;
-	        var y2 = y*y;
-	        var z2 = z*z;
-	        var r2 = x2 + y2 + z2;
-	        return num.normalize_gaussian(25000, 1) * z * Math.exp(-r2);
-	    },
-	
-	    'd200': function(x, y, z) {
-	        var x2 = x*x;
-	        var y2 = y*y;
-	        var z2 = z*z;
-	        var r2 = x2 + y2 + z2;
-	        return num.normalize_gaussian(25000, 2) * x2 * Math.exp(-r2);
-	    },
-	
-	    'd110': function(x, y, z) {
-	        var x2 = x*x;
-	        var y2 = y*y;
-	        var z2 = z*z;
-	        var r2 = x2 + y2 + z2;
-	        var r = Math.sqrt(r2);
-	        return num.normalize_gaussian(25000, 2) * x * y * Math.exp(-r2);
-	    },
-	
-	    'd101': function(x, y, z) {
-	        var x2 = x*x;
-	        var y2 = y*y;
-	        var z2 = z*z;
-	        var r2 = x2 + y2 + z2;
-	        return num.normalize_gaussian(25000, 2) * x * z * Math.exp(-r2);
-	    },
-	
-	
-	    'd020': function(x, y, z) {
-	        var x2 = x*x;
-	        var y2 = y*y;
-	        var z2 = z*z;
-	        var r2 = x2 + y2 + z2;
-	        return num.normalize_gaussian(25000, 2) * y2 * Math.exp(-r2);
-	    },
-	
-	    'd011': function(x, y, z) {
-	        var x2 = x*x;
-	        var y2 = y*y;
-	        var z2 = z*z;
-	        var r2 = x2 + y2 + z2;
-	        return num.normalize_gaussian(25000, 2) * y * z * Math.exp(-r2);
-	    },
-	
-	    'd002': function(x, y, z) {
-	        var x2 = x*x;
-	        var y2 = y*y;
-	        var z2 = z*z;
-	        var r2 = x2 + y2 + z2;
-	        return num.normalize_gaussian(25000, 2) * z2 * Math.exp(-r2);
-	    },
-	
+	class AO extends exawidgets.ScalarField {
+	    /*"""
+	    AO
+	    ----------
+	    Atomic orbital functions with exp(-r) radial dependence
+	    */
+	    constructor(dimensions, which) {
+	        super(dimensions, hydrogen[which]);
+	    };
 	};
 	
-	module.exports = {
-	    "GTF": GTF
-	}
-
-
-/***/ },
-/* 24 */
-/***/ function(module, exports, __webpack_require__) {
-
-	// Copyright (c) 2015-2016, Exa Analytics Development Team
-	// Distributed under the terms of the Apache License 2.0
-	/*"""
-	======================
-	harmonics.js
-	======================
-	*/
-	'use strict';
-	var field = __webpack_require__(3).field;
-	
-	/*
-	require.config({
-	    shim: {
-	        'nbextensions/exa/field': {
-	            exports: 'field'
-	        },
-	    },
-	});
-	*/
-	/*
-	define([
-	    'nbextensions/exa/field'
-	],
-	*/
-	//function(field) {
-	class SolidHarmonic extends field.ScalarField {
+	class SH extends exawidgets.ScalarField {
+	    /*"""
+	    SH
+	    ----------
+	    Solid harmonic functions combined with an exp(-r) radial dependence
+	    */
 	    constructor(l, m, dimensions) {
-	        console.log(l);
-	        console.log(m);
 	        var sm = String(m);
 	        var sh = solid_harmonics[l][m];
 	        var func = function(x, y, z) {
@@ -93444,19 +92697,273 @@ define(["jupyter-js-widgets"], function(__WEBPACK_EXTERNAL_MODULE_5__) { return 
 	            return sh(x, y, z) * Math.exp(-Math.sqrt(r2));
 	        };
 	        super(dimensions, func);
-	        /*
-	        string = ''
-	        for i in smth:
-	            string = string + 'SolidHarmonic[l0][m0](x, y, z) + d1*SolidHarmonic[l1][m1](x, y, z) * Math.exp(-alpha1 * r2)'
-	         return new Function(string)
-	         */
 	    };
 	};
 	
-	var get_solid_harmonic = function(l, m) {
-	    m = String(m);
-	    return solid_harmonics[l][m];
+	/*
+	Gaussian type functions
+	*/
+	var primitives = {
+	    "s": function(x, y, z) {
+	        var x2 = x*x;
+	        var y2 = y*y;
+	        var z2 = z*z;
+	        var r2 = x2 + y2 + z2;
+	        var alpha = 0.01;
+	        var norm = exawidgets.normalize_gaussian(alpha, 0);
+	        return norm * Math.exp(-alpha * r2);
+	    },
+	    "px": function(x, y, z) {
+	        var x2 = x*x;
+	        var y2 = y*y;
+	        var z2 = z*z;
+	        var r2 = x2 + y2 + z2;
+	        var alpha = 0.01;
+	        var norm = exawidgets.normalize_gaussian(alpha, 1);
+	        return norm * x * Math.exp(-alpha * r2);
+	    },
+	
+	    "py": function(x, y, z) {
+	        var x2 = x*x;
+	        var y2 = y*y;
+	        var z2 = z*z;
+	        var r2 = x2 + y2 + z2;
+	        var alpha = 0.01;
+	        var norm = exawidgets.normalize_gaussian(alpha, 1);
+	        return norm * y * Math.exp(-alpha * r2);
+	    },
+	
+	    "pz": function(x, y, z) {
+	        var x2 = x*x;
+	        var y2 = y*y;
+	        var z2 = z*z;
+	        var r2 = x2 + y2 + z2;
+	        var alpha = 0.01;
+	        var norm = exawidgets.normalize_gaussian(alpha, 1);
+	        return norm * z * Math.exp(-alpha * r2);
+	    },
+	
+	    "d200": function(x, y, z) {
+	        var x2 = x*x;
+	        var y2 = y*y;
+	        var z2 = z*z;
+	        var r2 = x2 + y2 + z2;
+	        var alpha = 0.01;
+	        var norm = exawidgets.normalize_gaussian(alpha, 2);
+	        return norm * x2 * Math.exp(-alpha * r2);
+	    },
+	
+	    "d110": function(x, y, z) {
+	        var x2 = x*x;
+	        var y2 = y*y;
+	        var z2 = z*z;
+	        var r2 = x2 + y2 + z2;
+	        var alpha = 0.01;
+	        var norm = exawidgets.normalize_gaussian(alpha, 2);
+	        return norm * x * y * Math.exp(-alpha * r2);
+	    },
+	
+	    "d101": function(x, y, z) {
+	        var x2 = x*x;
+	        var y2 = y*y;
+	        var z2 = z*z;
+	        var r2 = x2 + y2 + z2;
+	        var alpha = 0.01;
+	        var norm = exawidgets.normalize_gaussian(alpha, 2);
+	        return norm * x * z * Math.exp(-alpha * r2);
+	    },
+	
+	
+	    "d020": function(x, y, z) {
+	        var x2 = x*x;
+	        var y2 = y*y;
+	        var z2 = z*z;
+	        var r2 = x2 + y2 + z2;
+	        var alpha = 0.01;
+	        var norm = exawidgets.normalize_gaussian(alpha, 2);
+	        return norm * y2 * Math.exp(-alpha * r2);
+	    },
+	
+	    "d011": function(x, y, z) {
+	        var x2 = x*x;
+	        var y2 = y*y;
+	        var z2 = z*z;
+	        var r2 = x2 + y2 + z2;
+	        var alpha = 0.01;
+	        var norm = exawidgets.normalize_gaussian(alpha, 2);
+	        return norm * y * z * Math.exp(-alpha * r2);
+	    },
+	
+	    "d002": function(x, y, z) {
+	        var x2 = x*x;
+	        var y2 = y*y;
+	        var z2 = z*z;
+	        var r2 = x2 + y2 + z2;
+	        var alpha = 0.01;
+	        var norm = exawidgets.normalize_gaussian(alpha, 2);
+	        return norm * z2 * Math.exp(-alpha * r2);
+	    },
+	
 	};
+	
+	/*
+	Hydrogenic atomic orbital type functions
+	*/
+	var hydrogen = {
+	    "1s": function(x, y, z) {
+	        var r = Math.sqrt(x * x + y * y + z * z);
+	        var Z = 1;
+	        var sigma = Z * r
+	        return 1 / Math.sqrt(Math.PI) * Math.pow(Z, 3/2) * Math.exp(-sigma);
+	    },
+	
+	    "2s": function(x, y, z) {
+	        var r = Math.sqrt(x * x + y * y + z * z);
+	        var Z = 1;
+	        var sigma = Z * r
+	        var norm = 1 / (4 * Math.sqrt(2 * Math.PI)) * Math.pow(Z, 3/2)
+	        return norm * (2 - sigma) * Math.exp(-sigma / 2);
+	    },
+	
+	    "2pz": function(x, y, z) {
+	        var r = Math.sqrt(x * x + y * y + z * z);
+	        var Z = 1;
+	        var sigma = Z * r
+	        var norm = 1 / (4 * Math.sqrt(2 * Math.PI)) * Math.pow(Z, 3/2)
+	        return norm * Z * z * Math.exp(-sigma / 2);
+	    },
+	
+	    "2px": function(x, y, z) {
+	        var r = Math.sqrt(x * x + y * y + z * z);
+	        var Z = 1;
+	        var sigma = Z * r
+	        var norm = 1 / (4 * Math.sqrt(2 * Math.PI)) * Math.pow(Z, 3/2)
+	        return norm * Z * x * Math.exp(-sigma / 2);
+	    },
+	
+	    "2py": function(x, y, z) {
+	        var r = Math.sqrt(x * x + y * y + z * z);
+	        var Z = 1;
+	        var sigma = Z * r
+	        var norm = 1 / (4 * Math.sqrt(2 * Math.PI)) * Math.pow(Z, 3/2)
+	        return norm * Z * y * Math.exp(-sigma / 2);
+	    },
+	
+	    "3s": function(x, y, z) {
+	        var r = Math.sqrt(x * x + y * y + z * z);
+	        var Z = 1;
+	        var sigma = Z * r
+	        var norm = 1 / (81 * Math.sqrt(3 * Math.PI)) * Math.pow(Z, 3/2)
+	        var prefac = (27 - 18 * sigma + 2 * Math.pow(sigma, 2))
+	        return norm * prefac * Math.exp(-sigma / 3);
+	    },
+	
+	    "3pz": function(x, y, z) {
+	        var r = Math.sqrt(x * x + y * y + z * z);
+	        var Z = 1;
+	        var sigma = Z * r
+	        var norm = Math.sqrt(2) / (81 * Math.sqrt(Math.PI)) * Math.pow(Z, 3/2)
+	        var prefac = Z * (6 - sigma)
+	        return norm * prefac * z * Math.exp(-sigma / 3);
+	    },
+	
+	    "3py": function(x, y, z) {
+	        var r = Math.sqrt(x * x + y * y + z * z);
+	        var Z = 1;
+	        var sigma = Z * r
+	        var norm = Math.sqrt(2) / (81 * Math.sqrt(Math.PI)) * Math.pow(Z, 3/2)
+	        var prefac = Z * (6 - sigma)
+	        return norm * prefac * y * Math.exp(-sigma / 3);
+	    },
+	
+	    "3px": function(x, y, z) {
+	        var r = Math.sqrt(x * x + y * y + z * z);
+	        var Z = 1;
+	        var sigma = Z * r
+	        var norm = Math.sqrt(2) / (81 * Math.sqrt(Math.PI)) * Math.pow(Z, 3/2)
+	        var prefac = Z * (6 - sigma)
+	        return norm * prefac * x * Math.exp(-sigma / 3);
+	    },
+	
+	    "3d0": function(x, y, z) {
+	        var x2 = x * x;
+	        var y2 = y * y;
+	        var z2 = z * z;
+	        var r2 = x2 + y2 + z2;
+	        var r = Math.sqrt(r2);
+	        var Z = 1;
+	        var sigma = Z * r;
+	        var rnorm = 1 / Math.sqrt(2430);
+	        var rbody = Math.pow(Z, 3 / 2) * Math.pow(2 / 3 * sigma, 2) * Math.exp(-sigma / 3);
+	        var ynorm = 1 / 4 * Math.sqrt(5 / Math.PI);
+	        var ybody = (-x2 -y2 + 2 * z2) / r2;
+	        return ynorm * ybody * rnorm * rbody;
+	    },
+	
+	    "3d+1": function(x, y, z) {
+	        var x2 = x * x;
+	        var y2 = y * y;
+	        var z2 = z * z;
+	        var r2 = x2 + y2 + z2;
+	        var r = Math.sqrt(r2);
+	        var Z = 1;
+	        var sigma = Z * r;
+	        var rnorm = 1 / Math.sqrt(2430);
+	        var rbody = Math.pow(Z, 3 / 2) * Math.pow(2 / 3 * sigma, 2) * Math.exp(-sigma / 3);
+	        var ynorm = 1 / 2 * Math.sqrt(15 / Math.PI);
+	        var ybody = z * x / r2;
+	        return ynorm * ybody * rnorm * rbody;
+	    },
+	
+	    "3d-1": function(x, y, z) {
+	        var sigma = Z * r;
+	        var x2 = x * x;
+	        var y2 = y * y;
+	        var z2 = z * z;
+	        var r2 = x2 + y2 + z2;
+	        var r = Math.sqrt(r2);
+	        var Z = 1;
+	        var sigma = Z * r;
+	        var rnorm = 1 / Math.sqrt(2430);
+	        var rbody = Math.pow(Z, 3 / 2) * Math.pow(2 / 3 * sigma, 2) * Math.exp(-sigma / 3);
+	        var ynorm = 1 / 2 * Math.sqrt(15 / Math.PI);
+	        var ybody = y * z / r2;
+	        return rnorm * rbody * ynorm * ybody;
+	    },
+	
+	    "3d+2": function(x, y, z) {
+	        var x2 = x * x;
+	        var y2 = y * y;
+	        var z2 = z * z;
+	        var r2 = x2 + y2 + z2;
+	        var r = Math.sqrt(r2);
+	        var Z = 1;
+	        var sigma = Z * r;
+	        var rnorm = 1 / Math.sqrt(2430);
+	        var rbody = Math.pow(Z, 3 / 2) * Math.pow(2 / 3 * sigma, 2) * Math.exp(-sigma / 3);
+	        var ynorm = 1 / 4 * Math.sqrt(15 / Math.PI);
+	        var ybody = (x2 - y2) / r2;
+	        return rnorm * rbody * ynorm * ybody;
+	    },
+	
+	    "3d-2": function(x, y, z) {
+	        var x2 = x * x;
+	        var y2 = y * y;
+	        var z2 = z * z;
+	        var r2 = x2 + y2 + z2;
+	        var r = Math.sqrt(r2);
+	        var Z = 1;
+	        var sigma = Z * r;
+	        var rnorm = 1 / Math.sqrt(2430);
+	        //var rbody = Math.pow(Z, 3 / 2) * Math.pow(2 / 3 * sigma, 2) * Math.exp(-sigma / 3);
+	        var rbody = Math.pow(Z, 3 / 2) * Math.pow(sigma, 2) * Math.exp(-sigma / 3);
+	        var ynorm = 1 / 4 * Math.sqrt(15 / Math.PI);
+	        //var ynorm = 1 / 2 * Math.sqrt(15 / Math.PI);
+	        var ybody = x * y / r2;
+	        return rnorm * rbody * ynorm * ybody;
+	    },
+	};
+	
 	
 	// Some numerical constants for convenience in the formulas below
 	var t2 = Math.sqrt(2);
@@ -93489,236 +92996,238 @@ define(["jupyter-js-widgets"], function(__WEBPACK_EXTERNAL_MODULE_5__) { return 
 	};
 	
 	
-	// What follows are real regular cartesian solid harmonics
-	// The were computed using the recursion relation provided
-	// in exatomic.algorithms.harmonics
+	/*
+	Real cartesian solid harmonic type functions
+	These were computed using the python side:
+	exatomic.algorithms.basis.solid_harmonics
+	*/
 	var solid_harmonics = {
 	    0: {
-	        '0': function(x, y, z) {
+	        "0": function(x, y, z) {
 	            return 1;
 	        },
 	    },
 	
 	    1: {
-	        '-1': function(x, y, z) {
+	        "-1": function(x, y, z) {
 	            return y;
 	        },
-	        '0': function(x, y, z) {
+	        "0": function(x, y, z) {
 	            return z;
 	        },
-	        '1': function(x, y , z) {
+	        "1": function(x, y , z) {
 	            return x;
 	        },
 	    },
 	
-	    '2': {
-	        '-2': function(x, y, z) {
+	    "2": {
+	        "-2": function(x, y, z) {
 	            return t3*x*y;
 	        },
-	        '-1': function(x, y, z) {
+	        "-1": function(x, y, z) {
 	            return t3*y*z;
 	        },
-	        '0': function(x, y, z) {
+	        "0": function(x, y, z) {
 	            return -x*x/2 - y*y/2 + z*z;
 	        },
-	        '1': function(x, y, z) {
+	        "1": function(x, y, z) {
 	            return t3*x*z;
 	        },
-	        '2': function(x, y, z) {
+	        "2": function(x, y, z) {
 	            return t3/2*(x*x - y*y);
 	        }
 	    },
 	
-	    '3': {
-	        '-3': function(x, y, z) {
+	    "3": {
+	        "-3": function(x, y, z) {
 	            return t10/4*y*(3*x*x - y*y);
 	        },
-	        '-2': function(x, y, z) {
+	        "-2": function(x, y, z) {
 	            return t15*x*y*z;
 	        },
-	        '-1': function(x, y, z) {
+	        "-1": function(x, y, z) {
 	            return t6/4*y*(-x*x - y*y + 4*z*z);
 	        },
-	        '0': function(x, y, z) {
+	        "0": function(x, y, z) {
 	            return z/2*(-3*x*x - 3*y*y + 2*z*z);
 	        },
-	        '1': function(x, y, z) {
+	        "1": function(x, y, z) {
 	            return t6/4*x*(-x*x -y*y + 4*z*z);
 	        },
-	        '2': function(x, y, z) {
+	        "2": function(x, y, z) {
 	            return t15/2*z*(x*x - y*y);
 	        },
-	        '3': function(x, y, z) {
+	        "3": function(x, y, z) {
 	            return t10/4*x*(x*x - 3*y*y);
 	        }
 	    },
 	
-	    '4': {
-	        '-4': function(x, y, z) {
+	    "4": {
+	        "-4": function(x, y, z) {
 	            return t35/2*x*y*(x*x -y*y);
 	        },
-	        '-3': function(x, y, z) {
+	        "-3": function(x, y, z) {
 	            return t70/4*y*z*(3*x*x - y*y);
 	        },
-	        '-2': function(x, y, z) {
+	        "-2": function(x, y, z) {
 	            return t5/2*x*y*(-x*x - y*y +6*z*z);
 	        },
-	        '-1': function(x, y, z) {
+	        "-1": function(x, y, z) {
 	            return t10/4*y*z*(-3*x*x - 3*y*y + 4*z*z);
 	        },
-	        '0': function(x, y, z) {
+	        "0": function(x, y, z) {
 	            return 3*r4(x)/8 + 3*x*x*y*y/4 - 3*x*x*z*z + 3*r4(y)/8 - 3*y*y*z*z + r4(z);
 	        },
-	        '1': function(x, y, z) {
+	        "1": function(x, y, z) {
 	            return t10/4*x*z*(-3*x*x - 3*y*y + 4*z*z);
 	        },
-	        '2': function(x, y, z) {
+	        "2": function(x, y, z) {
 	            return t5/4*(x*x - y*y)*(-x*x - y*y + 6*z*z);
 	        },
-	        '3': function(x, y, z) {
+	        "3": function(x, y, z) {
 	            return t70/4*x*z*(x*x - 3*y*y);
 	        },
-	        '4': function(x, y, z) {
+	        "4": function(x, y, z) {
 	            return t35/8*(r4(x) - 6*x*x*y*y + r4(y));
 	        }
 	    },
 	
-	    '5': {
-	        '-5': function(x, y, z) {
+	    "5": {
+	        "-5": function(x, y, z) {
 	            return 3/16*t14*y*(5*r4(x) - 10*x*x*y*y + r4(y));
 	        },
-	        '-4': function(x, y, z) {
+	        "-4": function(x, y, z) {
 	            return 3/2*t35*x*y*z*(x*x - y*y);
 	        },
-	        '-3': function(x, y, z) {
+	        "-3": function(x, y, z) {
 	            return t70/16*y*(3*x*x - y*y)*(-x*x - y*y + 8*z*z);
 	        },
-	        '-2': function(x, y, z) {
+	        "-2": function(x, y, z) {
 	            return t105/4*z*(x*x - y*y)*(-x*x - y*y + 2*z*z);
 	        },
-	        '-1': function(x, y, z) {
+	        "-1": function(x, y, z) {
 	            return t15/8*y*(r4(x) + 2*x*x*y*y - 12*x*x*z*z + r4(y) - 12*y*y*z*z + 8*r4(z));
 	        },
-	        '0': function(x, y, z) {
+	        "0": function(x, y, z) {
 	            return z/8*(15*r4(x) + 30*x*x*y*y - 40*x*x*z*z + 15*r4(y) - 40*y*y*z*z + 8*r4(z));
 	        },
-	        '1': function(x, y, z) {
+	        "1": function(x, y, z) {
 	            return t15/8*x*(r4(x) + 2*x*x*y*y - 12*x*x*z*z + r4(y) - 12*y*y*z*z + 8*r4(z));
 	        },
-	        '2': function(x, y, z) {
+	        "2": function(x, y, z) {
 	            return t105/4*z*(x*x - y*y)*(-x*x - y*y + 2*z*z);
 	        },
-	        '3': function(x, y, z) {
+	        "3": function(x, y, z) {
 	            return t70/16*x*(9*z*z*(x*x - 3*y*y) + (-x*x + 3*y*y)*(x*x + y*y + z*z));
 	        },
-	        '4': function(x, y, z) {
+	        "4": function(x, y, z) {
 	            return 3/8*t35*z*(r4(x) - 6*x*x*y*y + r4(y));
 	        },
-	        '5': function(x, y, z) {
+	        "5": function(x, y, z) {
 	            return 3/16*t14*x*(r4(x) - 10*x*x*y*y + 5*r4(y));
 	        }
 	    },
 	
-	    '6': {
-	        '-6': function(x, y, z) {
+	    "6": {
+	        "-6": function(x, y, z) {
 	            return t462/16*x*y*(3*r4(x) -10*x*x*y*y + 3*r4(y));
 	        },
-	        '-5': function(x, y, z) {
+	        "-5": function(x, y, z) {
 	            return 3*t154*y*z*(5*r4(x) - 10*x*x*y*y + r4(y))/16;
 	        },
-	        '-4': function(x, y, z) {
+	        "-4": function(x, y, z) {
 	            return 3*t7*x*y*(x*x - y*y)*(-x*x - y*y + 10*z*z)/4;
 	        },
-	        '-3': function(x, y, z) {
+	        "-3": function(x, y, z) {
 	            return t210/16*y*z*(3*x*x - y*y)*(-3*x*x - 3*y*y + 8*z*z);
 	        },
-	        '-2': function(x, y, z) {
+	        "-2": function(x, y, z) {
 	            return t210*x*y*(r4(x) + 2*x*x*y*y - 16*x*x*z*z + r4(y) - 16*y*y*z*z + 16*r4(z))/16;
 	        },
-	        '-1': function(x, y, z) {
+	        "-1": function(x, y, z) {
 	            return t21*y*z*(5*r4(x) + 10*x*x*y*y - 20*x*x*z*z + 5*r4(y) - 20*y*y*z*z + 8*r4(z))/8;
 	        },
-	        '0': function(x, y, z) {
+	        "0": function(x, y, z) {
 	            return -5*r6(x)/16 - 15*r4(x)*y*y/16 + 45*r4(x)*z*z/8 - 15*x*x*r4(y)/16 + 45*x*x*y*y*z*z/4 - 15*x*x*r4(z)/2 - 5*r6(y)/16 + 45*r4(y)*z*z/8 - 15*y*y*r4(z)/2 + r6(z);
 	        },
-	        '1': function(x, y, z) {
+	        "1": function(x, y, z) {
 	            return t21*x*z*(5*r4(x) + 10*x*x*y*y - 20*x*x*z*z + 5*r4(y) - 20*y*y*z*z + 8*r4(z))/8;
 	        },
-	        '2': function(x, y, z) {
+	        "2": function(x, y, z) {
 	            return -t210/32*(x*x - y*y)*(11*z*z*(x*x + y*y - 2*z*z) - (x*x + y*y - 6*z*z)*(x*x + y*y + z*z));
 	        },
-	        '3': function(x, y, z) {
+	        "3": function(x, y, z) {
 	            return t210/16*x*z*(-x*x + 3*y*y)*(3*x*x + 3*y*y - 8*z*z);
 	        },
-	        '4': function(x, y, z) {
+	        "4": function(x, y, z) {
 	            return 3*t7/16*(-r6(x) + 5*r4(x)*y*y + 10*r4(x)*z*z + 5*x*x*r4(y) - 60*x*x*y*y*z*z - r6(y) + 10*r4(y)*z*z);
 	        },
-	        '5': function(x, y, z) {
+	        "5": function(x, y, z) {
 	            return 3/16*t154*x*z*(r4(x) - 10*x*x*y*y + 5*r4(y));
 	        },
-	        '6': function(x, y, z) {
+	        "6": function(x, y, z) {
 	            return t462/32*(r6(x) - 15*r4(x)*y*y + 15*x*x*r4(y) - r6(y));
 	        }
 	    },
 	
 	    7: {
-	        '-7': function(x, y, z) {
+	        "-7": function(x, y, z) {
 	            return t429/32*y*(7*r6(x) - 35*r4(x)*y*y + 21*x*x*r4(y) - r6(y));
 	        },
-	        '-6': function(x, y, z) {
+	        "-6": function(x, y, z) {
 	            return t6006/16*x*y*z*(3*r4(x) - 10*x*x*y*y + 3*r4(y));
 	        },
-	        '-5': function(x, y, z) {
+	        "-5": function(x, y, z) {
 	            return t231/32*y*(-x*x - y*y + 12*z*z)*(-x*x*(-x*x + 3*y*y) + 4*x*x*(x*x - y*y) - y*y*(3*x*x - y*y));
 	        },
-	        '-4': function(x, y, z) {
+	        "-4": function(x, y, z) {
 	            return t231/4*x*y*z*(x*x - y*y)*(-3*x*x - 3*y*y + 10*z*z);
 	        },
-	        '-3': function(x, y, z) {
+	        "-3": function(x, y, z) {
 	            return t21/32*y*(3*x*x - y*y)*(z*z*(-39*x*x - 39*y*y + 104*z*z) - 3*(-x*x - y*y + 8*z*z)*(x*x + y*y + z*z));
 	        },
-	        '-2': function(x, y, z) {
+	        "-2": function(x, y, z) {
 	            return t42/16*x*y*z*(15*r4(x) + 30*x*x*y*y - 80*x*x*z*z + 15*r4(y) - 80*y*y*z*z + 48*r4(z));
 	        },
-	        '-1': function(x, y, z) {
+	        "-1": function(x, y, z) {
 	            return t7/32*y*(-5*r6(x) - 15*r4(x)*y*y + 120*r4(x)*z*z - 15*x*x*r4(y) + 240*x*x*y*y*z*z - 240*x*x*r4(z) - 5*r6(y) + 120*r4(y)*z*z - 240*y*y*r4(z) + 64*r6(z));
 	        },
-	        '0': function(x, y, z) {
+	        "0": function(x, y, z) {
 	            return z/16*(-35*r6(x) - 105*r4(x)*y*y + 210*r4(x)*z*z - 105*x*x*r4(y) + 420*x*x*y*y*z*z - 168*x*x*r4(z) - 35*r6(y) + 210*r4(y)*z*z - 168*y*y*r4(z) + 16*r6(z));
 	        },
-	        '1': function(x, y, z) {
+	        "1": function(x, y, z) {
 	            return t7/32*x*(-5*r6(x) - 15*r4(x)*y*y + 120*r4(x)*z*z - 15*x*x*r4(y) + 240*x*x*y*y*z*z - 240*x*x*r4(z) - 5*r6(y) + 120*r4(y)*z*z - 240*y*y*r4(z) + 64*r6(z));
 	        },
-	        '2': function(x, y, z) {
+	        "2": function(x, y, z) {
 	            return t42/32*z*(15*r6(x) + 15*r4(x)*y*y - 80*r4(x)*z*z - 15*x*x*r4(y) + 48*x*x*r4(z) - 15*r6(y) + 80*r4(y)*z*z - 48*y*y*r4(z));
 	        },
-	        '3': function(x, y, z) {
+	        "3": function(x, y, z) {
 	            return t21/32*x*(-x*x + 3*y*y)*(z*z*(39*x*x + 39*y*y - 104*z*z) + 3*(-x*x - y*y + 8*z*z)*(x*x + y*y + z*z));
 	        },
-	        '4': function(x, y, z) {
+	        "4": function(x, y, z) {
 	            return t231/16*z*(-3*r6(x) + 15*r4(x)*y*y + 10*r4(x)*z*z + 15*x*x*r4(y) - 60*x*x*y*y*z*z - 3*r6(y) + 10*r4(y)*z*z);
 	        },
-	        '5': function(x, y, z) {
+	        "5": function(x, y, z) {
 	            return t231/32*x*(-r6(x) + 9*r4(x)*y*y + 12*r4(x)*z*z + 5*x*x*r4(y) - 120*x*x*y*y*z*z - 5*r6(y) + 60*r4(y)*z*z);
 	        },
-	        '6': function(x, y, z) {
+	        "6": function(x, y, z) {
 	            return t6006/32*z*(r6(x) - 15*r4(x)*y*y + 15*x*x*r4(y) - r6(y));
 	        },
-	        '7': function(x, y, z) {
+	        "7": function(x, y, z) {
 	            return t429/32*x*(r6(x) - 21*r4(x)*y*y + 35*x*x*r4(y) -7*r6(y));
 	        }
 	    }
 	};
 	
 	module.exports = {
-	    "get_solid_harmonic": get_solid_harmonic,
-	    "solid_harmonics": solid_harmonics,
-	    "SolidHarmonic": SolidHarmonic
+	    "AO": AO,
+	    "GTF": GTF,
+	    "SH": SH
 	}
 
 
 /***/ },
-/* 25 */
+/* 21 */
 /***/ function(module, exports, __webpack_require__) {
 
 	// Copyright (c) 2015-2016, Exa Analytics Development Team
@@ -93728,35 +93237,34 @@ define(["jupyter-js-widgets"], function(__WEBPACK_EXTERNAL_MODULE_5__) { return 
 	Universe View
 	=====================
 	*/
-	'use strict';
+	"use strict";
 	var exawidgets = __webpack_require__(3);
-	var base = exawidgets.container;
-	var app = __webpack_require__(21);
-	var test = __webpack_require__(26);
-	/*
-	require.config({
-	    shim: {
-	        "nbextensions/exa/container": {exports: 'base'},
-	        "nbextensions/exa/exatomic/app": {exports: 'UniverseApp'},
-	        "nbextensions/exa/exatomic/test": {exports: 'UniverseTestApp'}
-	    },
-	});
-	*/
-	/*
-	define([
-	    "nbextensions/exa/container",
-	    "nbextensions/exa/exatomic/test",
-	    "nbextensions/exa/exatomic/app"
-	],
-	*/
-	//function(base, UniverseTestApp, UniverseApp) {
-	class UniverseView extends base.ContainerView {
+	var _ = __webpack_require__(1);
+	var app = __webpack_require__(2);
+	var test = __webpack_require__(22);
+	
+	class UniverseModel extends exawidgets.ContainerModel {
+	    get defaults() {
+	      return _.extend({}, exawidgets.ContainerModel.prototype.defaults, {
+	            _model_module: "jupyter-exatomic",
+	            _view_module: "jupyter-exatomic",
+	            _model_name: "UniverseModel",
+	            _view_name: "UniverseView",
+	            gui_width: 250,
+	            width: 800,
+	            height: 500
+	        });
+	    }
+	}
+	
+	
+	class UniverseView extends exawidgets.ContainerView {
 	    /*"""
 	    UniverseView
 	    ================
 	    */
 	    init() {
-	        console.log('init1');
+	        console.log("init1");
 	        this.init_listeners();
 	        this.if_empty();
 	    };
@@ -93767,12 +93275,12 @@ define(["jupyter-js-widgets"], function(__WEBPACK_EXTERNAL_MODULE_5__) { return 
 	        ----------
 	        Create a UniverseTestApp application?
 	        */
-	        var check = this.get_trait('test');
+	        var check = this.get_trait("test");
 	        if (check === true) {
 	            console.log("Empty universe, displaying test interface!");
-	            this.app = new UniverseTestApp(this);
+	            this.app = new test.UniverseTestApp(this);
 	        } else {
-	            this.app = new UniverseApp(this);
+	            this.app = new app.UniverseApp(this);
 	        };
 	    };
 	
@@ -93796,19 +93304,19 @@ define(["jupyter-js-widgets"], function(__WEBPACK_EXTERNAL_MODULE_5__) { return 
 	        this.get_frame_zi();
 	        this.get_frame_zj();
 	        this.get_frame_zk();
-	        this.model.on('change:frame_frame', this.get_framelist, this);
-	        this.model.on('change:frame_ox', this.get_frame_ox, this);
-	        this.model.on('change:frame_oy', this.get_frame_ox, this);
-	        this.model.on('change:frame_oz', this.get_frame_ox, this);
-	        this.model.on('change:frame_xi', this.get_frame_ox, this);
-	        this.model.on('change:frame_xj', this.get_frame_ox, this);
-	        this.model.on('change:frame_xk', this.get_frame_ox, this);
-	        this.model.on('change:frame_yi', this.get_frame_ox, this);
-	        this.model.on('change:frame_yj', this.get_frame_ox, this);
-	        this.model.on('change:frame_yk', this.get_frame_ox, this);
-	        this.model.on('change:frame_zi', this.get_frame_ox, this);
-	        this.model.on('change:frame_zj', this.get_frame_ox, this);
-	        this.model.on('change:frame_zk', this.get_frame_ox, this);
+	        this.model.on("change:frame_frame", this.get_framelist, this);
+	        this.model.on("change:frame_ox", this.get_frame_ox, this);
+	        this.model.on("change:frame_oy", this.get_frame_ox, this);
+	        this.model.on("change:frame_oz", this.get_frame_ox, this);
+	        this.model.on("change:frame_xi", this.get_frame_ox, this);
+	        this.model.on("change:frame_xj", this.get_frame_ox, this);
+	        this.model.on("change:frame_xk", this.get_frame_ox, this);
+	        this.model.on("change:frame_yi", this.get_frame_ox, this);
+	        this.model.on("change:frame_yj", this.get_frame_ox, this);
+	        this.model.on("change:frame_yk", this.get_frame_ox, this);
+	        this.model.on("change:frame_zi", this.get_frame_ox, this);
+	        this.model.on("change:frame_zj", this.get_frame_ox, this);
+	        this.model.on("change:frame_zk", this.get_frame_ox, this);
 	
 	        // Atom, UnitAtom, ...
 	        this.get_atom_x();
@@ -93818,47 +93326,47 @@ define(["jupyter-js-widgets"], function(__WEBPACK_EXTERNAL_MODULE_5__) { return 
 	        this.get_atom_colors_dict();
 	        this.get_atom_symbols();
 	        this.get_atom_set();
-	        this.model.on('change:atom_x', this.get_x, this);
-	        this.model.on('change:atom_y', this.get_y, this);
-	        this.model.on('change:atom_z', this.get_z, this);
-	        this.model.on('change:atom_radii', this.get_atom_radii_dict, this);
-	        this.model.on('change:atom_colors', this.get_atom_colors_dict, this);
-	        this.model.on('change:atom_symbols', this.get_atom_symbols, this);
-	        this.model.on('change:atom_set', this.get_atom_set, this);
+	        this.model.on("change:atom_x", this.get_x, this);
+	        this.model.on("change:atom_y", this.get_y, this);
+	        this.model.on("change:atom_z", this.get_z, this);
+	        this.model.on("change:atom_radii", this.get_atom_radii_dict, this);
+	        this.model.on("change:atom_colors", this.get_atom_colors_dict, this);
+	        this.model.on("change:atom_symbols", this.get_atom_symbols, this);
+	        this.model.on("change:atom_set", this.get_atom_set, this);
 	
 	        // Two, PeriodicTwo
 	        this.get_two_bond0();
 	        this.get_two_bond1();
-	        this.model.on('change:two_bond0', this.get_two_bond0, this);
-	        this.model.on('change:two_bond1', this.get_two_bond1, this);
+	        this.model.on("change:two_bond0", this.get_two_bond0, this);
+	        this.model.on("change:two_bond1", this.get_two_bond1, this);
 	
 	        //Orbital
 	        this.get_gaussianbasisset_d();
 	        this.get_gaussianbasisset_l();
 	        this.get_gaussianbasisset_alpha();
 	        this.get_gaussianbasisset_shell_function();
-	        this.model.on('change:gaussianbasisset_d', this.get_gaussianbasisset_d, this);
-	        this.model.on('change:gaussianbasisset_l', this.get_gaussianbasisset_l, this);
-	        this.model.on('change:gaussianbasisset_alpha', this.get_gaussianbasisset_alpha, this);
-	        this.model.on('change:gaussianbasisset_shell_function', this.get_gaussianbasisset_shell_function, this);
+	        this.model.on("change:gaussianbasisset_d", this.get_gaussianbasisset_d, this);
+	        this.model.on("change:gaussianbasisset_l", this.get_gaussianbasisset_l, this);
+	        this.model.on("change:gaussianbasisset_alpha", this.get_gaussianbasisset_alpha, this);
+	        this.model.on("change:gaussianbasisset_shell_function", this.get_gaussianbasisset_shell_function, this);
 	
 	        // MOMatrix
 	        this.get_momatrix_coefficient();
-	        this.model.on('change:momatrix_coefficient', this.get_momatrix_coefficient, this);
+	        this.model.on("change:momatrix_coefficient", this.get_momatrix_coefficient, this);
 	
 	        //SphericalGTFOrder
 	        this.get_sphericalgtforder_l();
 	        this.get_sphericalgtforder_ml();
-	        this.model.on('change:sphericalgtforder_l', this.get_sphericalgtforder_l, this);
-	        this.model.on('change:sphericalgtforder_ml', this.get_sphericalgtforder_ml, this);
+	        this.model.on("change:sphericalgtforder_l", this.get_sphericalgtforder_l, this);
+	        this.model.on("change:sphericalgtforder_ml", this.get_sphericalgtforder_ml, this);
 	
 	        //CartesianGTFOrder
 	        this.get_cartesiangtforder_x();
 	        this.get_cartesiangtforder_y();
 	        this.get_cartesiangtforder_z();
-	        this.model.on('change:cartesiangtforder_x', this.get_cartesiangtforder_x, this);
-	        this.model.on('change:cartesiangtforder_y', this.get_cartesiangtforder_y, this);
-	        this.model.on('change:cartesiangtforder_z', this.get_cartesiangtforder_z, this);
+	        this.model.on("change:cartesiangtforder_x", this.get_cartesiangtforder_x, this);
+	        this.model.on("change:cartesiangtforder_y", this.get_cartesiangtforder_y, this);
+	        this.model.on("change:cartesiangtforder_z", this.get_cartesiangtforder_z, this);
 	
 	        //UField3D
 	        this.get_atomicfield_ox();
@@ -93876,178 +93384,179 @@ define(["jupyter-js-widgets"], function(__WEBPACK_EXTERNAL_MODULE_5__) { return 
 	        this.get_atomicfield_dzi();
 	        this.get_atomicfield_dzj();
 	        this.get_atomicfield_dzk();
-	        this.model.on('change:atomicfield_ox', this.get_atomicfield_ox, this);
-	        this.model.on('change:atomicfield_oy', this.get_atomicfield_ox, this);
-	        this.model.on('change:atomicfield_oz', this.get_atomicfield_ox, this);
-	        this.model.on('change:atomicfield_nx', this.get_atomicfield_ox, this);
-	        this.model.on('change:atomicfield_ny', this.get_atomicfield_ox, this);
-	        this.model.on('change:atomicfield_nz', this.get_atomicfield_ox, this);
-	        this.model.on('change:atomicfield_dxi', this.get_atomicfield_ox, this);
-	        this.model.on('change:atomicfield_dxj', this.get_atomicfield_ox, this);
-	        this.model.on('change:atomicfield_dxk', this.get_atomicfield_ox, this);
-	        this.model.on('change:atomicfield_dyi', this.get_atomicfield_ox, this);
-	        this.model.on('change:atomicfield_dyj', this.get_atomicfield_ox, this);
-	        this.model.on('change:atomicfield_dyk', this.get_atomicfield_ox, this);
-	        this.model.on('change:atomicfield_dzi', this.get_atomicfield_ox, this);
-	        this.model.on('change:atomicfield_dzj', this.get_atomicfield_ox, this);
-	        this.model.on('change:atomicfield_dzk', this.get_atomicfield_ox, this);
+	        this.model.on("change:atomicfield_ox", this.get_atomicfield_ox, this);
+	        this.model.on("change:atomicfield_oy", this.get_atomicfield_ox, this);
+	        this.model.on("change:atomicfield_oz", this.get_atomicfield_ox, this);
+	        this.model.on("change:atomicfield_nx", this.get_atomicfield_ox, this);
+	        this.model.on("change:atomicfield_ny", this.get_atomicfield_ox, this);
+	        this.model.on("change:atomicfield_nz", this.get_atomicfield_ox, this);
+	        this.model.on("change:atomicfield_dxi", this.get_atomicfield_ox, this);
+	        this.model.on("change:atomicfield_dxj", this.get_atomicfield_ox, this);
+	        this.model.on("change:atomicfield_dxk", this.get_atomicfield_ox, this);
+	        this.model.on("change:atomicfield_dyi", this.get_atomicfield_ox, this);
+	        this.model.on("change:atomicfield_dyj", this.get_atomicfield_ox, this);
+	        this.model.on("change:atomicfield_dyk", this.get_atomicfield_ox, this);
+	        this.model.on("change:atomicfield_dzi", this.get_atomicfield_ox, this);
+	        this.model.on("change:atomicfield_dzj", this.get_atomicfield_ox, this);
+	        this.model.on("change:atomicfield_dzk", this.get_atomicfield_ox, this);
 	    };
 	
 	    get_framelist() {
-	        this.framelist = this.get_trait('frame_frame');
+	        this.framelist = this.get_trait("frame_frame");
 	    };
 	
 	    get_atom_x() {
-	        this.atom_x = this.get_trait('atom_x');
+	        this.atom_x = this.get_trait("atom_x");
 	    };
 	    get_atom_y() {
-	        this.atom_y = this.get_trait('atom_y');
+	        this.atom_y = this.get_trait("atom_y");
 	    };
 	    get_atom_z() {
-	        this.atom_z = this.get_trait('atom_z');
+	        this.atom_z = this.get_trait("atom_z");
 	    };
 	    get_atom_symbols() {
-	        this.atom_symbols = this.get_trait('atom_symbols');
+	        this.atom_symbols = this.get_trait("atom_symbols");
 	    };
 	    get_atom_radii_dict() {
-	        this.atom_radii_dict = this.get_trait('atom_radii');
+	        this.atom_radii_dict = this.get_trait("atom_radii");
 	    };
 	    get_atom_colors_dict() {
-	        this.atom_colors_dict = this.get_trait('atom_colors');
+	        this.atom_colors_dict = this.get_trait("atom_colors");
 	    };
 	    get_atom_set() {
-	        this.atom_set = this.get_trait('atom_set');
+	        this.atom_set = this.get_trait("atom_set");
 	    };
 	
 	    get_two_bond0() {
-	        this.two_bond0 = this.get_trait('two_bond0');
+	        this.two_bond0 = this.get_trait("two_bond0");
 	    };
 	    get_two_bond1() {
-	        this.two_bond1 = this.get_trait('two_bond1');
+	        this.two_bond1 = this.get_trait("two_bond1");
 	    };
 	    get_frame_ox() {
-	        this.frame_ox = this.get_trait('frame_ox');
+	        this.frame_ox = this.get_trait("frame_ox");
 	    };
 	    get_frame_oy() {
-	        this.frame_oy = this.get_trait('frame_oy');
+	        this.frame_oy = this.get_trait("frame_oy");
 	    };
 	    get_frame_oz() {
-	        this.frame_oz = this.get_trait('frame_oz');
+	        this.frame_oz = this.get_trait("frame_oz");
 	    };
 	    get_frame_xi() {
-	        this.frame_xi = this.get_trait('frame_xi');
+	        this.frame_xi = this.get_trait("frame_xi");
 	    };
 	    get_frame_xj() {
-	        this.frame_xj = this.get_trait('frame_xj');
+	        this.frame_xj = this.get_trait("frame_xj");
 	    };
 	    get_frame_xk() {
-	        this.frame_xk = this.get_trait('frame_xk');
+	        this.frame_xk = this.get_trait("frame_xk");
 	    };
 	    get_frame_yi() {
-	        this.frame_yi = this.get_trait('frame_yi');
+	        this.frame_yi = this.get_trait("frame_yi");
 	    };
 	    get_frame_yj() {
-	        this.frame_yj = this.get_trait('frame_yj');
+	        this.frame_yj = this.get_trait("frame_yj");
 	    };
 	    get_frame_yk() {
-	        this.frame_yk = this.get_trait('frame_yk');
+	        this.frame_yk = this.get_trait("frame_yk");
 	    };
 	    get_frame_zi() {
-	        this.frame_zi = this.get_trait('frame_zi');
+	        this.frame_zi = this.get_trait("frame_zi");
 	    };
 	    get_frame_zj() {
-	        this.frame_zj = this.get_trait('frame_zj');
+	        this.frame_zj = this.get_trait("frame_zj");
 	    };
 	    get_frame_zk() {
-	        this.frame_zk = this.get_trait('frame_zk');
+	        this.frame_zk = this.get_trait("frame_zk");
 	    };
 	
 	    get_gaussianbasisset_l() {
-	        this.gaussianbasisset_l = this.get_trait('gaussianbasisset_l');
+	        this.gaussianbasisset_l = this.get_trait("gaussianbasisset_l");
 	    };
 	    get_gaussianbasisset_d() {
-	        this.gaussianbasisset_d = this.get_trait('gaussianbasisset_d');
+	        this.gaussianbasisset_d = this.get_trait("gaussianbasisset_d");
 	    };
 	    get_gaussianbasisset_alpha() {
-	        this.gaussianbasisset_alpha = this.get_trait('gaussianbasisset_alpha');
+	        this.gaussianbasisset_alpha = this.get_trait("gaussianbasisset_alpha");
 	    };
 	    get_gaussianbasisset_shell_function() {
-	        this.gaussianbasisset_shell_function = this.get_trait('gaussianbasisset_shell_function');
+	        this.gaussianbasisset_shell_function = this.get_trait("gaussianbasisset_shell_function");
 	    };
 	
 	    get_momatrix_coefficient() {
-	        this.momatrix_coefficient = this.get_trait('momatrix_coefficient');
+	        this.momatrix_coefficient = this.get_trait("momatrix_coefficient");
 	    };
 	    get_sphericalgtforder_l() {
-	        this.sphericalgtforder_l = this.get_trait('sphericalgtforder_l');
+	        this.sphericalgtforder_l = this.get_trait("sphericalgtforder_l");
 	    };
 	    get_sphericalgtforder_ml() {
-	        this.sphericalgtforder_ml = this.get_trait('sphericalgtforder_ml');
+	        this.sphericalgtforder_ml = this.get_trait("sphericalgtforder_ml");
 	    };
 	    get_cartesiangtforder_x() {
-	        this.cartesiangtforder_x = this.get_trait('cartesiangtforder_x');
+	        this.cartesiangtforder_x = this.get_trait("cartesiangtforder_x");
 	    };
 	    get_cartesiangtforder_y() {
-	        this.cartesiangtforder_y = this.get_trait('cartesiangtforder_y');
+	        this.cartesiangtforder_y = this.get_trait("cartesiangtforder_y");
 	    };
 	    get_cartesiangtforder_z() {
-	        this.cartesiangtforder_z = this.get_trait('cartesiangtforder_z');
+	        this.cartesiangtforder_z = this.get_trait("cartesiangtforder_z");
 	    };
 	
 	    get_atomicfield_ox() {
-	        this.atomicfield_ox = this.get_trait('atomicfield_ox');
+	        this.atomicfield_ox = this.get_trait("atomicfield_ox");
 	    };
 	    get_atomicfield_oy() {
-	        this.atomicfield_oy = this.get_trait('atomicfield_oy');
+	        this.atomicfield_oy = this.get_trait("atomicfield_oy");
 	    };
 	    get_atomicfield_oz() {
-	        this.atomicfield_oz = this.get_trait('atomicfield_oz');
+	        this.atomicfield_oz = this.get_trait("atomicfield_oz");
 	    };
 	    get_atomicfield_nx() {
-	        this.atomicfield_nx = this.get_trait('atomicfield_nx');
+	        this.atomicfield_nx = this.get_trait("atomicfield_nx");
 	    };
 	    get_atomicfield_ny() {
-	        this.atomicfield_ny = this.get_trait('atomicfield_ny');
+	        this.atomicfield_ny = this.get_trait("atomicfield_ny");
 	    };
 	    get_atomicfield_nz() {
-	        this.atomicfield_nz = this.get_trait('atomicfield_nz');
+	        this.atomicfield_nz = this.get_trait("atomicfield_nz");
 	    };
 	    get_atomicfield_dxi() {
-	        this.atomicfield_dxi = this.get_trait('atomicfield_dxi');
+	        this.atomicfield_dxi = this.get_trait("atomicfield_dxi");
 	    };
 	    get_atomicfield_dxj() {
-	        this.atomicfield_dxj = this.get_trait('atomicfield_dxj');
+	        this.atomicfield_dxj = this.get_trait("atomicfield_dxj");
 	    };
 	    get_atomicfield_dxk() {
-	        this.atomicfield_dxk = this.get_trait('atomicfield_dxk');
+	        this.atomicfield_dxk = this.get_trait("atomicfield_dxk");
 	    };
 	    get_atomicfield_dyi() {
-	        this.atomicfield_dyi = this.get_trait('atomicfield_dyi');
+	        this.atomicfield_dyi = this.get_trait("atomicfield_dyi");
 	    };
 	    get_atomicfield_dyj() {
-	        this.atomicfield_dyj = this.get_trait('atomicfield_dyj');
+	        this.atomicfield_dyj = this.get_trait("atomicfield_dyj");
 	    };
 	    get_atomicfield_dyk() {
-	        this.atomicfield_dyk = this.get_trait('atomicfield_dyk');
+	        this.atomicfield_dyk = this.get_trait("atomicfield_dyk");
 	    };
 	    get_atomicfield_dzi() {
-	        this.atomicfield_dzi = this.get_trait('atomicfield_dzi');
+	        this.atomicfield_dzi = this.get_trait("atomicfield_dzi");
 	    };
 	    get_atomicfield_dzj() {
-	        this.atomicfield_dzj = this.get_trait('atomicfield_dzj');
+	        this.atomicfield_dzj = this.get_trait("atomicfield_dzj");
 	    };
 	    get_atomicfield_dzk() {
-	        this.atomicfield_dzk = this.get_trait('atomicfield_dzk');
+	        this.atomicfield_dzk = this.get_trait("atomicfield_dzk");
 	    };
 	};
 	
 	module.exports = {
+	    "UniverseModel": UniverseModel,
 	    "UniverseView": UniverseView
 	}
 
 
 /***/ },
-/* 26 */
+/* 22 */
 /***/ function(module, exports, __webpack_require__) {
 
 	// Copyright (c) 2015-2016, Exa Analytics Development Team
@@ -94058,54 +93567,12 @@ define(["jupyter-js-widgets"], function(__WEBPACK_EXTERNAL_MODULE_5__) { return 
 	==============
 	Test visualization application for the universe container (exatomic package).
 	*/
-	'use strict';
+	"use strict";
 	var exawidgets = __webpack_require__(3);
-	var App3D = exawidgets.App3D;
-	var ContainerGUI = exawidgets.gui.ContainerGUI;
-	var num = exawidgets.num;
-	var ao = __webpack_require__(2);
-	var GTF = __webpack_require__(23);
-	var sh = __webpack_require__(24);
-	/*
-	require.config({
-	    shim: {
-	        'nbextensions/exa/app3d': {
-	            exports: 'App3D'
-	        },
-	        'nbextensions/exa/gui': {
-	            exports: 'ContainerGUI'
-	        },
-	        'nbextensions/exa/num': {
-	            exports: 'num'
-	        },
-	        'nbextensions/exa/exatomic/ao': {
-	            exports: 'AO'
-	        },
-	        'nbextensions/exa/exatomic/gtf': {
-	            exports: 'GTF'
-	        },
-	        'nbextensions/exa/exatomic/gaussian': {
-	            exports: 'gaussian'
-	        },
-	        'nbextensions/exa/exatomic/harmonics': {
-	            exports: 'sh'
-	        },
-	    },
-	});
-	*/
+	var funcs = __webpack_require__(20);
+	var dat = __webpack_require__(13);
 	
-	/*
-	define([
-	    'nbextensions/exa/app3d',
-	    'nbextensions/exa/gui',
-	    'nbextensions/exa/num',
-	    'nbextensions/exa/exatomic/ao',
-	    'nbextensions/exa/exatomic/gtf',
-	    'nbextensions/exa/exatomic/gaussian',
-	    'nbextensions/exa/exatomic/harmonics'
-	],
-	*/
-	//function(App3D, ContainerGUI, num, AO, GTF, gaussian, sh) {
+	
 	class UniverseTestApp {
 	    /*"""
 	    UniverseTestApp
@@ -94124,24 +93591,24 @@ define(["jupyter-js-widgets"], function(__WEBPACK_EXTERNAL_MODULE_5__) { return 
 	        this.axis = [];
 	        this.active_objs = [];
 	        this.dimensions = {
-	            'ox': -25.0,  'oy': -25.0, 'oz': -25.0,
-	            'nx':  52,    'ny':  52,   'nz':  52,
-	            'dxi':  1.0, 'dxj':   0,   'dxk':  0,
-	            'dyi':  0,   'dyj':   1.0, 'dyk':  0,
-	            'dzi':  0,   'dzj':   0,   'dzk':  1.0
+	            "ox": -25.0,  "oy": -25.0, "oz": -25.0,
+	            "nx":  52,    "ny":  52,   "nz":  52,
+	            "dxi":  1.0, "dxj":   0,   "dxk":  0,
+	            "dyi":  0,   "dyj":   1.0, "dyk":  0,
+	            "dzi":  0,   "dzj":   0,   "dzk":  1.0
 	        };
-	        this.field = new AO(this.dimensions, '1s');
-	        this.app3d = new App3D(this.view.canvas);
+	        this.field = new funcs.AO(this.dimensions, "1s");
+	        this.app3d = new exawidgets.App3D(this.view.canvas);
 	        this.create_gui();
 	        this.axis = this.app3d.add_unit_axis();
 	        this.render_ao();
 	        this.ao.folder.open();
-	        this.app3d.set_camera({x: 5.5, y: 5.5, z: 5.5});
+	        this.app3d.set_camera({x: 15.5, y: 15.5, z: 15.5});
 	        this.view.container.append(this.gui.domElement);
 	        this.view.container.append(this.gui.custom_css);
 	        this.view.container.append(this.view.canvas);
 	        var view_self = this.view;
-	        this.view.on('displayed', function() {
+	        this.view.on("displayed", function() {
 	            view_self.app.app3d.animate();
 	            view_self.app.app3d.controls.handleResize();
 	        });
@@ -94156,130 +93623,137 @@ define(["jupyter-js-widgets"], function(__WEBPACK_EXTERNAL_MODULE_5__) { return 
 	        */
 	        var self = this;
 	        self.return = false;
-	        this.gui = new ContainerGUI(this.view.gui_width);
+	        this.gui = new exawidgets.ContainerGUI(this.view.gui_width);
 	
 	        this.top = {
-	            /*
-	            'demo': 'Hydrogen Wave Functions',
-	            'demos': ['Hydrogen Wave Functions', 'Gaussian Type Functions', 'Cube', 'Trajectory'],
-	            'play': function() {
-	                console.log('pushed play');
-	            },
-	            'fps': 24,
-	            */
-	            'save field': function() {
+	            "save field": function() {
 	                var field = {
-	                    'ox': self.field.xmin, 'oy': self.field.ymin, 'oz': self.field.zmin,
-	                    'dxi': self.field.dx, 'dyj': self.field.dy, 'dzk': self.field.dz,
-	                    'nx': self.field.nx, 'ny': self.field.ny, 'nz': self.field.nz,
-	                    'values': JSON.stringify(self.field.values),
-	                    'label': self.field.function
+	                    "ox": self.field.xmin, "oy": self.field.ymin, "oz": self.field.zmin,
+	                    "dxi": self.field.dx, "dyj": self.field.dy, "dzk": self.field.dz,
+	                    "nx": self.field.nx, "ny": self.field.ny, "nz": self.field.nz,
+	                    "values": JSON.stringify(self.field.values),
+	                    "label": self.field.function
 	                }
-	                self.view.send({'type': 'field', 'data': field});
+	                self.view.send({"type": "field", "data": field});
 	            },
-	            'save image': function() {
+	            "save image": function() {
 	                self.app3d.renderer.setSize(1920, 1080);
 	                self.app3d.camera.aspect = 1920 / 1080;
 	                self.app3d.camera.updateProjectionMatrix();
 	                self.app3d.render();
-	                var imgdat = self.app3d.renderer.domElement.toDataURL('image/png');
-	                self.view.send({'type': 'image', 'content': imgdat});
+	                var imgdat = self.app3d.renderer.domElement.toDataURL("image/png");
+	                self.view.send({"type": "image", "content": imgdat});
 	                self.app3d.renderer.setSize(self.app3d.width, self.app3d.height);
 	                self.app3d.camera.aspect = self.app3d.width / self.app3d.height;
 	                self.app3d.camera.updateProjectionMatrix();
 	            }
 	        };
 	        /*
-	        this.top['demo_dropdown'] = this.gui.add(this.top, 'demo', this.top['demos']);
-	        this.top['play_button'] = this.gui.add(this.top, 'play');
-	        this.top['fps_slider'] = this.gui.add(this.top, 'fps', 1, 60);
+	        this.top["demo_dropdown"] = this.gui.add(this.top, "demo", this.top["demos"]);
+	        this.top["play_button"] = this.gui.add(this.top, "play");
+	        this.top["fps_slider"] = this.gui.add(this.top, "fps", 1, 60);
 	        */
-	        this.top['save_image'] = this.gui.add(this.top, 'save image');
-	        this.top['send_button'] = this.gui.add(this.top, 'save field');
+	        this.top["save_image"] = this.gui.add(this.top, "save image");
+	        this.top["send_button"] = this.gui.add(this.top, "save field");
 	        this.ao = {
-	            'function': '1s',
-	            'functions': ['1s', '2s', '2px', '2py', '2pz',
-	                          '3s', '3px', '3py', '3pz',
-	                          '3d-2', '3d-1', '3d0', '3d+1', '3d+2'],
-	            'isovalue': 0.005
+	            "function": "1s",
+	            "functions": ["1s", "2s", "2px", "2py", "2pz",
+	                          "3s", "3px", "3py", "3pz",
+	                          "3d-2", "3d-1", "3d0", "3d+1", "3d+2"],
+	            "isovalue": 0.005
 	        };
-	        this.ao['folder'] = this.gui.addFolder('Hydrogen Wave Functions');
-	        this.ao['func_dropdown'] = this.ao.folder.add(this.ao, 'function', this.ao['functions']);
-	        this.ao['isovalue_slider'] = this.ao.folder.add(this.ao, 'isovalue', 0.0, 0.4);
-	        this.ao['isovalue_slider'].onFinishChange(function(value) {
-	            self.ao['isovalue'] = value;
+	        this.ao["folder"] = this.gui.addFolder("Hydrogen Wave Functions");
+	        this.ao["func_dropdown"] = this.ao.folder.add(this.ao, "function", this.ao["functions"]);
+	        this.ao["isovalue_slider"] = this.ao.folder.add(this.ao, "isovalue", 0.0, 0.4);
+	        this.ao["isovalue_slider"].onFinishChange(function(value) {
+	            self.ao["isovalue"] = value;
 	            self.render_ao();
 	        });
-	        this.ao['func_dropdown'].onFinishChange(function(value) {
-	            self.ao['function'] = value;
+	        this.ao["func_dropdown"].onFinishChange(function(value) {
+	            self.ao["function"] = value;
 	            self.render_ao();
 	        });
 	
 	        this.gtf = {
-	            'function': 's',
-	            'functions': ['s', 'px', 'py', 'pz',
-	                          'd200', 'd110', 'd101', 'd020', 'd011', 'd002'],
-	            'isovalue': 0.005
+	            "function": "s",
+	            "functions": ["s", "px", "py", "pz",
+	                          "d200", "d110", "d101",
+	                          "d020", "d011", "d002"],
+	            "isovalue": 0.005
 	        };
-	        this.gtf['folder'] = this.gui.addFolder('Gaussian Type Functions');
-	        this.gtf['func_dropdown'] = this.gtf.folder.add(this.gtf, 'function', this.gtf['functions']);
-	        this.gtf['isovalue_slider'] = this.gtf.folder.add(this.gtf, 'isovalue', 0.0, 0.4);
-	        this.gtf['isovalue_slider'].onFinishChange(function(value) {
-	            self.gtf['isovalue'] = value;
+	        this.gtf["folder"] = this.gui.addFolder("Gaussian Type Functions");
+	        this.gtf["func_dropdown"] = this.gtf.folder.add(this.gtf, "function", this.gtf["functions"]);
+	        this.gtf["isovalue_slider"] = this.gtf.folder.add(this.gtf, "isovalue", 0.0, 0.4);
+	        this.gtf["isovalue_slider"].onFinishChange(function(value) {
+	            self.gtf["isovalue"] = value;
 	            self.render_gtf();
 	        });
-	        this.gtf['func_dropdown'].onFinishChange(function(value) {
-	            self.gtf['function'] = value;
+	        this.gtf["func_dropdown"].onFinishChange(function(value) {
+	            self.gtf["function"] = value;
 	            self.render_gtf();
 	        });
 	
-	        this.sh = {'l': 0, 'm': 0, 'isovalue': 0.03};
-	        this.sh['folder'] = this.gui.addFolder('Solid Harmonics');
-	        this.sh['isovalue_slider'] = this.sh.folder.add(this.sh, 'isovalue', 0.0001, 1.0);
-	        this.sh['l_slider'] = this.sh.folder.add(this.sh, 'l').min(0).max(7).step(1);
-	        this.sh['ml_slider'] = this.sh.folder.add(this.sh, 'm').min(0).max(0).step(1);
+	        this.sh = {
+	            "ls": [0, 1, 2, 3, 4, 5, 6, 7],
+	            "ms": [0],
+	            "l": 0,
+	            "m": 0,
+	            "isovalue": 0.03
+	        };
+	        this.sh["folder"] = this.gui.addFolder("Solid Harmonics");
+	        this.sh["isovalue_slider"] = this.sh.folder.add(this.sh, "isovalue", 0.0001, 1.0);
+	        this.sh["l_dropdown"] = this.sh.folder.add(this.sh, "l", this.sh["ls"]);
+	        this.sh["m_dropdown"] = this.sh.folder.add(this.sh, "m", this.sh["ms"]);
 	
-	        this.sh['isovalue_slider'].onFinishChange(function(value) {
-	            self.sh['isovalue'] = value;
-	            self.render_solid_harmonic();
+	        this.sh["isovalue_slider"].onFinishChange(function(value) {
+	            self.sh["isovalue"] = value;
+	            self.render_sh();
 	        });
 	
-	        this.sh.l_slider.onFinishChange(function(value) {
-	            self.sh.l = parseInt(value);
+	        this.sh.l_dropdown.onFinishChange(function(value) {
+	            self.sh.l = value;
 	            self.update_m();
-	            self.render_solid_harmonic();
+	            self.render_sh();
+	        });
+	
+	        this.sh.m_dropdown.onFinishChange(function(value) {
+	            self.sh.m = value;
+	            self.render_sh();
 	        });
 	    };
 	
 	    update_m() {
 	        var self = this;
 	        this.sh.folder.__controllers[2].remove();
+	        this.sh.folder.__controllers.splice(2, 1);
 	        this.sh.m = 0;
-	        if (this.sh.l === 0) {
-	            this.sh.m_slider = this.sh.folder.add(this.sh, 'm').min(0).max(0).step(1);
-	        } else {
-	            this.sh.m_slider = this.sh.folder.add(this.sh, 'm').min(-this.sh.l).max(this.sh.l).step(1);
+	        var init = -this.sh.l;
+	        var max = 2 * this.sh.l + 1;
+	        this.sh.ms = [];
+	        while (this.sh.ms.length < max) {
+	            this.sh.ms.push(init++);
 	        };
-	        this.sh.m_slider.onFinishChange(function(value) {
-	            self.sh.m = parseInt(value);
-	            self.render_solid_harmonic();
+	        this.sh["m_dropdown"] = this.sh.folder.add(this.sh, "m", this.sh["ms"]);
+	        this.sh.m_dropdown.onFinishChange(function(value) {
+	            self.sh.m = value;
+	            self.render_sh();
 	        });
 	    };
 	
-	    render_solid_harmonic() {
-	        this.field = new sh.SolidHarmonic(this.sh.l, this.sh.m, this.dimensions);
+	    render_sh() {
+	        this.field = new funcs.SH(this.sh.l, this.sh.m, this.dimensions);
 	        this.app3d.remove_meshes(this.active_objs);
 	        this.active_objs = this.app3d.add_scalar_field(this.field, this.sh.isovalue, 2);
 	    };
 	
 	    render_ao() {
-	        this.field = new AO(this.dimensions, this.ao['function']);
+	        this.field = new funcs.AO(this.dimensions, this.ao["function"]);
 	        this.app3d.remove_meshes(this.active_objs);
 	        this.active_objs = this.app3d.add_scalar_field(this.field, this.ao.isovalue, 2);
 	    };
 	
 	    render_gtf() {
-	        this.field = new GTF(this.dimensions, this.gtf['function']);
+	        this.field = new funcs.GTF(this.dimensions, this.gtf["function"]);
 	        this.app3d.remove_meshes(this.active_objs);
 	        this.active_objs = this.app3d.add_scalar_field(this.field, this.gtf.isovalue, 2);
 	    };
@@ -94296,7 +93770,7 @@ define(["jupyter-js-widgets"], function(__WEBPACK_EXTERNAL_MODULE_5__) { return 
 
 
 /***/ },
-/* 27 */
+/* 23 */
 /***/ function(module, exports) {
 
 	module.exports = {
@@ -94324,7 +93798,13 @@ define(["jupyter-js-widgets"], function(__WEBPACK_EXTERNAL_MODULE_5__) { return 
 		},
 		"dependencies": {
 			"jupyter-js-widgets": "^1.1.1",
-			"jupyter-exawidgets": "^0.1.0"
+			"jupyter-exawidgets": "^0.1.3",
+			"jupyter-threejs": "^0.1.3",
+			"underscore": "^1.8.3",
+			"three": "^0.82.0",
+			"dat-gui": "^0.5.0",
+			"three-trackballcontrols": "^0.0.5",
+			"qunitjs": "^2.1.1"
 		}
 	};
 
