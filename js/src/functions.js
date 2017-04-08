@@ -151,6 +151,106 @@ var primitives = {
         return norm * z2 * Math.exp(-alpha * r2);
     },
 
+    "f300": function(x, y, z) {
+        var x2 = x*x;
+        var y2 = y*y;
+        var z2 = z*z;
+        var r2 = x2 + y2 + z2;
+        var alpha = 0.01;
+        var norm = exawidgets.normalize_gaussian(alpha, 3);
+        return norm * x*x*x * Math.exp(-alpha * r2);
+    },
+
+    "f210": function(x, y, z) {
+        var x2 = x*x;
+        var y2 = y*y;
+        var z2 = z*z;
+        var r2 = x2 + y2 + z2;
+        var alpha = 0.01;
+        var norm = exawidgets.normalize_gaussian(alpha, 3);
+        return norm * x*x*y * Math.exp(-alpha * r2);
+    },
+
+    "f201": function(x, y, z) {
+        var x2 = x*x;
+        var y2 = y*y;
+        var z2 = z*z;
+        var r2 = x2 + y2 + z2;
+        var alpha = 0.01;
+        var norm = exawidgets.normalize_gaussian(alpha, 3);
+        return norm * x*x*z * Math.exp(-alpha * r2);
+    },
+
+    "f120": function(x, y, z) {
+        var x2 = x*x;
+        var y2 = y*y;
+        var z2 = z*z;
+        var r2 = x2 + y2 + z2;
+        var alpha = 0.01;
+        var norm = exawidgets.normalize_gaussian(alpha, 3);
+        return norm * x*y*y * Math.exp(-alpha * r2);
+    },
+
+    "f102": function(x, y, z) {
+        var x2 = x*x;
+        var y2 = y*y;
+        var z2 = z*z;
+        var r2 = x2 + y2 + z2;
+        var alpha = 0.01;
+        var norm = exawidgets.normalize_gaussian(alpha, 3);
+        return norm * x*z*z * Math.exp(-alpha * r2);
+    },
+
+    "f111": function(x, y, z) {
+        var x2 = x*x;
+        var y2 = y*y;
+        var z2 = z*z;
+        var r2 = x2 + y2 + z2;
+        var alpha = 0.01;
+        var norm = exawidgets.normalize_gaussian(alpha, 3);
+        return norm * x*y*z * Math.exp(-alpha * r2);
+    },
+
+    "f030": function(x, y, z) {
+        var x2 = x*x;
+        var y2 = y*y;
+        var z2 = z*z;
+        var r2 = x2 + y2 + z2;
+        var alpha = 0.01;
+        var norm = exawidgets.normalize_gaussian(alpha, 3);
+        return norm * y*y*y * Math.exp(-alpha * r2);
+    },
+
+    "f021": function(x, y, z) {
+        var x2 = x*x;
+        var y2 = y*y;
+        var z2 = z*z;
+        var r2 = x2 + y2 + z2;
+        var alpha = 0.01;
+        var norm = exawidgets.normalize_gaussian(alpha, 3);
+        return norm * y*y*z * Math.exp(-alpha * r2);
+    },
+
+    "f012": function(x, y, z) {
+        var x2 = x*x;
+        var y2 = y*y;
+        var z2 = z*z;
+        var r2 = x2 + y2 + z2;
+        var alpha = 0.01;
+        var norm = exawidgets.normalize_gaussian(alpha, 3);
+        return norm * y*z*z * Math.exp(-alpha * r2);
+    },
+
+    "f003": function(x, y, z) {
+        var x2 = x*x;
+        var y2 = y*y;
+        var z2 = z*z;
+        var r2 = x2 + y2 + z2;
+        var alpha = 0.01;
+        var norm = exawidgets.normalize_gaussian(alpha, 3);
+        return norm * z*z*z * Math.exp(-alpha * r2);
+    },
+
 };
 
 /*

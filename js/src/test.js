@@ -117,7 +117,11 @@ class UniverseTestApp {
             "function": "s",
             "functions": ["s", "px", "py", "pz",
                           "d200", "d110", "d101",
-                          "d020", "d011", "d002"],
+                          "d020", "d011", "d002",
+                          "f300", "f210", "f201",
+                          "f120", "f102", "f111",
+                          "f030", "f021", "f012",
+                          "f003"],
             "isovalue": 0.005
         };
         this.gtf["folder"] = this.gui.addFolder("Gaussian Type Functions");
@@ -166,9 +170,9 @@ class UniverseTestApp {
         this.sh.folder.__controllers[2].remove();
         this.sh.folder.__controllers.splice(2, 1);
         this.sh.m = 0;
+        this.sh.ms = [];
         var init = -this.sh.l;
         var max = 2 * this.sh.l + 1;
-        this.sh.ms = [];
         while (this.sh.ms.length < max) {
             this.sh.ms.push(init++);
         };

@@ -14,6 +14,7 @@ import sys
 import platform
 
 here = os.path.dirname(os.path.abspath(__file__))
+jsbuilddir = os.path.join('exatomic', 'static')
 node_root = os.path.join(here, "js")
 is_repo = os.path.exists(os.path.join(here, ".git"))
 pltfrm = True if platform.system().lower() == 'windows' else False
@@ -91,8 +92,8 @@ class NPM(Command):
     user_options = []
     node_modules = os.path.join(node_root, "node_modules")
     targets = [
-        os.path.join(here, "build", "widgets", "extension.js"),
-        os.path.join(here, "build", "widgets", "index.js")
+        os.path.join(here, jsbuilddir, "extension.js"),
+        os.path.join(here, jsbuilddir, "index.js")
     ]
 
     def initialize_options(self):
@@ -139,9 +140,9 @@ setup_args = {
     "include_package_data": True,
     "data_files": [
         ("share/jupyter/nbextensions/jupyter-exatomic", [
-            "build/widgets/extension.js",
-            "build/widgets/index.js",
-            "build/widgets/index.js.map",
+            os.path.join(jsbuilddir, "extension.js"),
+            os.path.join(jsbuilddir, "index.js"),
+            os.path.join(jsbuilddir, "index.js.map"),
         ]),
     ],
     "install_requires": dependencies,

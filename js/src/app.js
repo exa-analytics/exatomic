@@ -17,7 +17,7 @@ class UniverseApp {
     Notebook widget application for visualization of the universe container.
     */
     constructor(view) {
-        console.log("init2");
+        console.log("Creating universe");
         this.view = view;
         this.view.create_canvas();
         this.update_vars();
@@ -140,7 +140,6 @@ class UniverseApp {
             self.top.index = index;
             self.top.frame = self.view.framelist[self.top.index];
             self.update_fields();
-            //self.update_orbitals();
             self.render_current_frame();
         });
         this.top.index_slider.onFinishChange(function(index) {
@@ -205,23 +204,17 @@ class UniverseApp {
         this.fields = {
             "isovalue": 0.03,
             "field": null,
-            "label": 0,
-            "cur_fields": [null]
+            "current": [null],
         };
         this.fields["folder"] = this.gui.addFolder("fields");
         this.fields["isovalue_slider"] = this.fields.folder.add(this.fields, "isovalue", 0.0001, 0.5);
-        this.fields["field_dropdown"] = this.fields.folder.add(this.fields, "field", this.fields["cur_fields"]);
-        this.fields["label_dropdown"] = this.fields.folder.add(this.fields, "label", this.fields["label"]);
-        this.fields.field_dropdown.onFinishChange(function(field_index) {
-            self.fields["field"] = field_index;
-            self.render_field();
-        });
-        this.fields.label_dropdown.onFinishChange(function(label_index) {
-            self.fields["label"] = label_index;
-            self.render_field();
-        });
+        this.fields["field_dropdown"] = this.fields.folder.add(this.fields, "field", this.fields["current"]);
         this.fields.isovalue_slider.onFinishChange(function(value) {
             self.fields.isovalue = value;
+            self.render_field();
+        });
+        this.fields.field_dropdown.onFinishChange(function(field_index) {
+            self.fields["field"] = field_index;
             self.render_field();
         });
     };
@@ -233,20 +226,17 @@ class UniverseApp {
         Updates available fields for the given frame and selection
         */
         var self = this;
+        console.log(this.view);
         var field_indices = this.gv(this.view.field_indices, this.top.index);
         if (field_indices === undefined) {
             field_indices = [];
         };
         field_indices.push(null);
-        var label_indices = this.gv(this.view.label_indices, this.top.index);
-        if (label_indices !== undefined) {
-            field_indices = label_indices;
-        };
-        this.fields["cur_fields"] = field_indices;
+        this.fields["current"] = field_indices;
         this.fields["field"] = field_indices[0];
         this.fields.folder.__controllers[1].remove();
         this.fields.folder.__controllers.splice(1, 1);
-        this.fields["field_dropdown"] = this.fields.folder.add(this.fields, "field", this.fields["cur_fields"]);
+        this.fields["field_dropdown"] = this.fields.folder.add(this.fields, "field", this.fields["current"]);
         this.fields.field_dropdown.onFinishChange(function(field_index) {
             self.fields["field"] = field_index;
             self.render_field();
@@ -282,7 +272,6 @@ class UniverseApp {
             "dyi": dyi, "dyj": dyj, "dyk": dyk,
             "dzi": dzi, "dzj": dzj, "dzk": dzk}, values);
         this.app3d.remove_meshes(this.cube_field_mesh);
-        this.cube_like = "field";
         this.cube_field_mesh = this.app3d.add_scalar_field(this.cube_field, this.fields.isovalue, 2);
     };
 
@@ -308,13 +297,11 @@ class UniverseApp {
         var v0 = this.gv(this.view.two_bond0, this.top.index);
         var v1 = this.gv(this.view.two_bond1, this.top.index);
         if (this.cube_field !== undefined) {
-            if (this.cube_like === "field") {
-                this.app3d.remove_meshes(this.cube_field_mesh);
-                this.cube_field_mesh = this.app3d.add_scalar_field(this.cube_field, this.fields.isovalue, 2);
-            } //else if (this.cube_like === "orbital") {
-              //  this.render_orbital();
-                //this.app3d.remove_meshes(this.cube_field_mesh);
-                //this.cube_field_mesh = this.app3d.add_scalar_field(this.cube_field, this.orbitals.isovalue, 2);
+            this.app3d.remove_meshes(this.cube_field_mesh);
+            console.log(this.cube_field);
+            this.cube_field_mesh = this.app3d.add_scalar_field(
+                                   this.cube_field, this.fields.isovalue, 2);
+            console.log(this.cube_field_mesh);
         };
         this.app3d.remove_meshes(this.bond_meshes);
         if (v0 !== undefined && v1 !== undefined) {

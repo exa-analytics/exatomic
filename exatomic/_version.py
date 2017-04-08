@@ -7,4 +7,4 @@ Version
 """
 
 version_info = (0, 3, 8)
-__version__ = '.'.join(map(str, version_info))
+__exatomic_version__ = '.'.join(map(str, version_info))

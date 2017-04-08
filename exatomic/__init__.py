@@ -26,13 +26,14 @@ def _jupyter_nbextension_paths():
     """
     return [{
         'section': "notebook",
-        'src': "../build/widgets",
+        'src': "static",
         'dest': "jupyter-exatomic",
         'require': "jupyter-exatomic/extension"
     }]
 
 
-from ._version import __version__
+from ._version import __exatomic_version__
+__version__ = __exatomic_version__
 
 try:
     from exa.cms import (Length, Mass, Time, Current, Amount, Luminosity, Isotope,
