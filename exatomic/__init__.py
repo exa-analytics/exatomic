@@ -11,7 +11,7 @@ programs.
 # Import sub-packages
 
 # Import user/dev API
-#from exatomic._version import __version__, version_info
+from exatomic._version import __version__, version_info
 #try:
 #    from exa.cms import (Length, Mass, Time, Current, Amount, Luminosity, Isotope,
 #                         Dose, Acceleration, Charge, Dipole, Energy, Force,
