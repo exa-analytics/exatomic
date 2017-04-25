@@ -140,24 +140,24 @@ setup_args = {
     "version": version_ns["__version__"],
     "description": "A unified platform for computational chemists.",
     "long_description": long_description,
-    "package_data": {"data": ["*.json"], "html": ["*.html"], "static": ["*.css"]},
+#    "package_data": {"data": ["*.json"], "html": ["*.html"], "static": ["*.css"]},
     "include_package_data": True,
-    "data_files": [
-        ("share/jupyter/nbextensions/jupyter-exatomic", [
-            "build/widgets/extension.js",
-            "build/widgets/index.js",
-            "build/widgets/index.js.map",
-        ]),
-    ],
+#    "data_files": [
+#        ("share/jupyter/nbextensions/jupyter-exatomic", [
+#            "build/widgets/extension.js",
+#            "build/widgets/index.js",
+#            "build/widgets/index.js.map",
+#        ]),
+#    ],
     "install_requires": dependencies,
     "packages": find_packages(),
     "zip_safe": False,
-    "cmdclass": {
-        "build_py": js_prerelease(build_py),
-        "egg_info": js_prerelease(egg_info),
-        "sdist": js_prerelease(sdist, strict=True),
-        "jsdeps": NPM,
-    },
+#    "cmdclass": {
+#        "build_py": js_prerelease(build_py),
+#        "egg_info": js_prerelease(egg_info),
+#        "sdist": js_prerelease(sdist, strict=True),
+#        "jsdeps": NPM,
+#    },
     "license": "Apache License Version 2.0",
     "author": "Thomas J. Duignan and Alex Marchenko",
     "author_email": "exa.data.analytics@gmail.com",

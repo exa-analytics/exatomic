@@ -9,32 +9,42 @@ import six
 import numpy as np
 import pandas as pd
 from exa.core import SectionsMeta, Parser, Sections, DataSeries
+from exatomic.adf.mixin import _OutputMixin
 
 
-class NMROutput(Sections):
+class NMROutput(Sections, _OutputMixin):
     """ADF NMR output file parsing."""
-    name = "N_M_R"
+    name = "NMR"
     description = "Parser (subsections) for an 'N M R' calculation"
-    _key_sep = "################################################################################"
-    _key_sec_names = ["metadata", "info"]
-    _key_convergence = "NOT CONVERGED"
-
-    @property
-    def converged(self):
-        """Checked for convergence."""
-        if self._key_convergence in self:
-            return False
-        return True
+    _key_delim0 = "^#+$"
+    _key_delim1 = "\(LOGFILE\)"
+    _key_sec_names = ["metadata", "__unknown__", "info"]    # Parser names
+    _key_sec_titles = ["version", "blank", "basis"]         # Section titles
+    _key_start = 0
+    _key_nuc_title = 1
+    _key_nuc_title_rep = ("*", "")
+    _key_nuc_name = "NUCLEUS"
+    _key_log_name = "LOGFILE"
+    _key_log_title = "log"
 
     def _parse(self):
         """Determine all sections."""
-        delims = self.find(self._key_sep, which='lineno')[self._key_sep][1:]
-        starts = [delim + 1 for delim in delims]
-        starts.insert(0, 0)
-        ends = delims
+        found = self.regex(self._key_delim0, self._key_delim1, text=False)
+        # Start lines and end lines
+        starts = [self._key_start] + found[self._key_delim0]
+        m = len(self._key_sec_titles)
+        n = len(starts)
+        starts += found[self._key_delim1]
+        ends = starts[1:]
         ends.append(len(self))
-        names = self._key_sec_names + ["nucleus"]*(len(delims) - 1)
-        self.sections = list(zip(names, starts, ends))
+        # Parser names
+        parsers = list(self._key_sec_names) + [self._key_nuc_name]*(n-m) + [self._key_log_name]
+        # Title names
+        titles = list(self._key_sec_titles)
+        titles += [str(self[i+self._key_nuc_title]).replace(*self._key_nuc_title_rep) for i in starts[m:n]]
+        titles.append(self._key_log_title)
+        dct = {'parser': parsers, 'start': starts, 'end': ends, 'title': titles}
+        self._sections_helper(dct)
 
 
 class NMRMetadataParserMeta(SectionsMeta):
@@ -69,18 +79,31 @@ class NMRNucleusParser(Sections):
     """
     Parses the 'N U C L E U S :' subsection of an ADF NMR output.
     """
-    name = "nucleus"
+    name = "NUCLEUS"
     description = "Parses NMR shielding tensors from the nucleus section."
-    _key_sep = "================================================================================"
-    _key_sec_names = ["info", "paramagnetic", "diamagnetic", "total"]
+    _key_sep = "^=+$"
+    _key_start = 0
+    _key_first_sec_name = "info"
+    _key_sec_name_p = 2
+    _key_sec_name_id = 0
+    _key_sec_name_rep = ("-", "")
+    _key_sec_title_rep = ("=== UNSCALED: ", "")
 
     def _parse(self):
-        """Get the section line numbers."""
-        starts = self.find(self._key_sep, which='lineno')[self._key_sep]
-        starts.insert(0, 0)
+        """Parser out what shielding tensor components are present."""
+        starts = [self._key_start] + self.regex(self._key_sep, text=False)[self._key_sep]
         ends = starts[1:]
+        parsers = [self._key_first_sec_name]
+        titles = [self._key_first_sec_name]
+        for start in ends:
+            title = str(self[start + self._key_sec_name_p])
+            title = title.replace(*self._key_sec_title_rep)
+            titles.append(title)
+            parser = title.split()[self._key_sec_name_id]
+            parsers.append(parser)
         ends.append(len(self))
-        self.sections = list(zip(self._key_sec_names, starts, ends))
+        dct = {'start': starts, 'end': ends, 'parser': parsers, 'title': titles}
+        self._sections_helper(dct)
 
 
 class NMRNucleusInfoParserMeta(SectionsMeta):
@@ -102,7 +125,7 @@ class NMRNucleusInfoParser(six.with_metaclass(NMRNucleusInfoParserMeta, Parser))
 
     def _parse(self):
         """Get atom numbering"""
-        for text in self.find(self._key_marker, which='text')[self._key_marker][1:]:
+        for text in self.find(self._key_marker, num=False)[self._key_marker][1:]:
             txt, atom = text.split(self._key_marker)
             symbol, number = atom.replace(*self._key_repmrk).split(self._key_symmrk)
             if "ADF" in txt:
@@ -180,22 +203,20 @@ class NMRNucleusParaParser(six.with_metaclass(NMRNucleusTensorParserMeta, Parser
                                               NMRNucleusTensorParserMixin)):
     """
     """
-    name = "paramagnetic"
+    name = "PARAMAGNETIC"
     description = "Parses the paramagnetic NMR shielding tensors."
-    _key_b1u1 = slice(7, 10)
-    _key_b1u1iso = 11
-    _key_s1gauge = slice(15, 18)
-    _key_s1gaugeiso = 19
-    _key_cart = slice(26, 29)
-    _key_cartiso = 30
-    _key_pas = slice(42, 45)
-    _key_pas3 = 38
+    _key_b1u1 = slice(6, 9)
+    _key_b1u1iso = 10
+    _key_s1gauge = slice(14, 17)
+    _key_s1gaugeiso = 18
+    _key_cart = slice(25, 28)
+    _key_cartiso = 29
+    _key_pas = slice(41, 44)
+    _key_pas3 = 37
     _key_idx_prefix = ["b1", "u1", "s1", "gauge", "cart", "pas"]
 
     def _parse(self):
-        """
-        Parse the paramagnetic shielding tensor.
-        """
+        """Parse the paramagnetic shielding tensor data."""
         b1u1 = self[self._key_b1u1].to_data("fwf", widths=self._key_2tensor,
                                             names=self._key_range8).values.ravel(self._key_forder)
         b1iso, u1iso = str(self[self._key_b1u1iso]).strip().split(self._key_split)[1:]
@@ -219,14 +240,14 @@ class NMRNucleusDiaParser(six.with_metaclass(NMRNucleusTensorParserMeta, Parser,
                                              NMRNucleusTensorParserMixin)):
     """
     """
-    name = "diamagnetic"
+    name = "DIAMAGNETIC"
     description = "Parses the diamagnetic NMR shielding tensors."
-    _key_cv = slice(7, 10)
-    _key_cviso = 11
-    _key_cart = slice(18, 21)
-    _key_cartiso = 22
-    _key_pas = slice(34, 37)
-    _key_pas3 = 30
+    _key_cv = slice(6, 9)
+    _key_cviso = 10
+    _key_cart = slice(17, 20)
+    _key_cartiso = 21
+    _key_pas = slice(33, 36)
+    _key_pas3 = 29
     _key_idx_prefix = ["core", "valence", "cart", "pas"]
 
     def _parse(self):
@@ -246,18 +267,17 @@ class NMRNucleusTotParser(six.with_metaclass(NMRNucleusTensorParserMeta, Parser,
                                              NMRNucleusTensorParserMixin)):
     """
     """
-    name = "total"
+    name = "TOTAL"
     description = "Parses the total NMR shielding tensors."
-    _key_cart = slice(10, 13)
-    _key_cartiso = 14
-    _key_pas = slice(26, 29)
-    _key_pas3 = 22
+    _key_cart = slice(9, 12)
+    _key_cartiso = 13
+    _key_pas = slice(25, 28)
+    _key_pas3 = 21
     _key_idx_prefix = ["cart", "pas"]
 
     def _parse(self):
         """Parse total NMR shielding tensors."""
         self._finalize_parse()
-
 
 
 NMRNucleusParser.add_section_parsers(NMRNucleusInfoParser, NMRNucleusParaParser,
