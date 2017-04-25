@@ -2,12 +2,7 @@
 # Copyright (c) 2015-2017, Exa Analytics Development Team
 # Distributed under the terms of the Apache License 2.0
 """
+ADF Output Editor
+###################################
+Sections editor for 'A D F' calculations.
 """
-from ._composite import CompositeOutput
-
-
-
-#from exatomic.adf import tests
-
-#from .output import Output
-

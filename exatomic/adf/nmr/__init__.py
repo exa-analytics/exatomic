@@ -3,4 +3,4 @@
 # Distributed under the terms of the Apache License 2.0
 """
 """
-from .output import NMR
+from .output import NMROutput

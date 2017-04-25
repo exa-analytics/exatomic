@@ -8,13 +8,13 @@ NMR Output Editors
 import six
 import numpy as np
 import pandas as pd
-from exa.core import SectionsMeta, Parser, Sections, DataSeries, DataFrame
+from exa.core import SectionsMeta, Parser, Sections, DataSeries
 
 
-class NMR(Sections):
+class NMROutput(Sections):
     """ADF NMR output file parsing."""
-    name = "ADF NMR output"
-    description = "Parses an NMR output file"
+    name = "N_M_R"
+    description = "Parser (subsections) for an 'N M R' calculation"
     _key_sep = "################################################################################"
     _key_sec_names = ["metadata", "info"]
     _key_convergence = "NOT CONVERGED"
@@ -260,6 +260,6 @@ class NMRNucleusTotParser(six.with_metaclass(NMRNucleusTensorParserMeta, Parser,
 
 
 
-NMR.add_section_parsers(NMRMetadataParser, NMRInfoParser, NMRNucleusParser)
 NMRNucleusParser.add_section_parsers(NMRNucleusInfoParser, NMRNucleusParaParser,
                                      NMRNucleusDiaParser, NMRNucleusTotParser)
+NMROutput.add_section_parsers(NMRMetadataParser, NMRInfoParser, NMRNucleusParser)
