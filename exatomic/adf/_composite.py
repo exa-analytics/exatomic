@@ -7,18 +7,18 @@ Composite ADF Output File Editor
 """
 import pandas as pd
 from exa.core import Sections
-from .mixin import _OutputMixin
+from .mixin import OutputMixin
 from .nmr.output import NMROutput
 
 
-class CompositeOutput(Sections, _OutputMixin):
+class CompositeOutput(Sections, OutputMixin):
     """
     Most general ADF output file parser.
 
     This object accepts the most general type of ADF output file that contains
     output structures from many different calculations.
     """
-    name = "ADF output"
+    name = "CompositeOutput"
     description = "Generic ADF output file parser"
     _key_exe_delim = " *   Amsterdam Density Functional  (ADF)"
     _key_exe_plus = 7

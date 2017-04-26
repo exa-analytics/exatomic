@@ -9,7 +9,7 @@ editors and parsers.
 """
 
 
-class _OutputMixin(object):
+class OutputMixin(object):
     """Contains some common properties and methods for ADF output objects."""
     _key_convergence = "NOT CONVERGED"
 

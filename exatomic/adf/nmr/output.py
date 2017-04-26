@@ -4,22 +4,58 @@
 """
 NMR Output Editors
 ######################
+This module provides parsing for an 'N M R' calculation block output from ADF's
+``nmr`` executable. The :class:`~exatomic.adf.nmr.output.NMROutput` object
+represents the entirety of this output block. It is divided into subsections
+that contain specific data objects. Generally, the output block has the following
+structure.
+
+.. code-block::
+
+    metadata (version, citations, etc.)
+    ####################################
+    blank
+    ####################################
+    info (xyz, basis, etc.)
+    ####################################
+    nucleus 1
+    ####################################
+    nucleus 2
+    ####################################
+    nucleus ...
+    log
+
 """
 import six
 import numpy as np
 import pandas as pd
 from exa.core import SectionsMeta, Parser, Sections, DataSeries
-from exatomic.adf.mixin import _OutputMixin
+from exatomic.adf.mixin import OutputMixin
 
 
-class NMROutput(Sections, _OutputMixin):
-    """ADF NMR output file parsing."""
+class NMROutputMeta(SectionsMeta):
+    """
+    Defines data objects parsed in this part of an ADF output file. Note that
+    some objects are aggregated from individual sub-section parsers.
+    """
+    shielding_tensors = pd.DataFrame
+    _description = {'shielding_tensors': "Shielding tensor data per atom"}
+
+
+class NMROutput(six.with_metaclass(NMROutputMeta, Sections, OutputMixin)):
+    """
+    The 'N M R' calculation section of a composite (or standalone) ADF output
+    file.
+
+    Attributes:
+        sheilding_tensors (DataFrame): Shielding tensor data (per atom)
+    """
     name = "NMR"
     description = "Parser (subsections) for an 'N M R' calculation"
     _key_delim0 = "^#+$"
     _key_delim1 = "\(LOGFILE\)"
-    _key_sec_names = ["metadata", "__unknown__", "info"]    # Parser names
-    _key_sec_titles = ["version", "blank", "basis"]         # Section titles
+    _key_sec_names = ["metadata", "None", "info"]    # Parser names
+    _key_sec_titles = ["version", "None", "basis"]   # Section titles
     _key_start = 0
     _key_nuc_title = 1
     _key_nuc_title_rep = ("*", "")
@@ -45,6 +81,34 @@ class NMROutput(Sections, _OutputMixin):
         titles.append(self._key_log_title)
         dct = {'parser': parsers, 'start': starts, 'end': ends, 'title': titles}
         self._sections_helper(dct)
+
+    # Note that we use the hidden "automatic" getter prefix "_get...".
+    # If the ``shielding_tensors`` attribute has not been created, it will be
+    # automatically done when this function is automatically called.
+    # See exa.special for more information.
+    def _get_shielding_tensors(self):
+        """Build the complete shielding tensor dataframe."""
+        nuclei = self.sections[self.sections["parser"] == self._key_nuc_name]
+        df = []
+        for i in nuclei.index:
+            nucleus = self.get_section(i)
+            adfid = nucleus.section0.adfid
+            nmrid = nucleus.section0.nmrid
+            symbol = nucleus.section0.symbol
+            shieldings = []
+            for j in nucleus.sections.index[1:]:
+                subsec = nucleus.get_section(j)
+                if subsec is not None:
+                    shieldings.append(subsec.ds)
+            shieldings = pd.concat(shieldings)
+            shieldings["adfid"] = adfid
+            shieldings["nmrid"] = nmrid
+            shieldings["symbol"] = symbol
+            df.append(shieldings)
+        shielding_tensors = pd.DataFrame(df)
+        shielding_tensors['adfid'] = shielding_tensors['adfid'].astype(int)
+        shielding_tensors['nmrid'] = shielding_tensors['nmrid'].astype(int)
+        self.shielding_tensors = shielding_tensors
 
 
 class NMRMetadataParserMeta(SectionsMeta):
@@ -78,6 +142,9 @@ class NMRInfoParser(six.with_metaclass(NMRInfoParserMeta, Parser)):
 class NMRNucleusParser(Sections):
     """
     Parses the 'N U C L E U S :' subsection of an ADF NMR output.
+
+    Collates individual arrays corresponding to different shielding tensor
+    data (e.g. paramagnetic, diamagnetic, total, etc.) into a single table.
     """
     name = "NUCLEUS"
     description = "Parses NMR shielding tensors from the nucleus section."
@@ -86,20 +153,24 @@ class NMRNucleusParser(Sections):
     _key_first_sec_name = "info"
     _key_sec_name_p = 2
     _key_sec_name_id = 0
-    _key_sec_name_rep = ("-", "")
-    _key_sec_title_rep = ("=== UNSCALED: ", "")
+    _key_title_rep0 = ("=== ", "")
+    _key_title_rep1 = ("UNSCALED: ", "")
+    _key_parser_name_rep = ("-", "")
 
     def _parse(self):
         """Parser out what shielding tensor components are present."""
+        # First parse sub-sections
         starts = [self._key_start] + self.regex(self._key_sep, text=False)[self._key_sep]
         ends = starts[1:]
         parsers = [self._key_first_sec_name]
         titles = [self._key_first_sec_name]
         for start in ends:
             title = str(self[start + self._key_sec_name_p])
-            title = title.replace(*self._key_sec_title_rep)
+            title = title.replace(*self._key_title_rep0)
+            title = title.replace(*self._key_title_rep1)
             titles.append(title)
             parser = title.split()[self._key_sec_name_id]
+            parser = parser.replace(*self._key_parser_name_rep)
             parsers.append(parser)
         ends.append(len(self))
         dct = {'start': starts, 'end': ends, 'parser': parsers, 'title': titles}
@@ -171,11 +242,11 @@ class NMRNucleusTensorParserMixin(object):
         for prefix in self._key_idx_prefix:
             for alpha in self._key_idx_ijk:
                 for beta in self._key_idx_ijk:
-                    index.append(prefix + alpha + beta)
+                    index.append(self._key_typ + prefix + alpha + beta)
             if prefix != self._key_idx_prefix[-1]:
-                index.append(prefix + self._key_idx_iso)
+                index.append(self._key_typ + prefix + self._key_idx_iso)
         for value in self._key_idx_pas:
-            index.append(value)
+            index.append(self._key_typ + value)
         return index
 
     def _finalize_parse(self, data=None):
@@ -214,6 +285,7 @@ class NMRNucleusParaParser(six.with_metaclass(NMRNucleusTensorParserMeta, Parser
     _key_pas = slice(41, 44)
     _key_pas3 = 37
     _key_idx_prefix = ["b1", "u1", "s1", "gauge", "cart", "pas"]
+    _key_typ = "para"
 
     def _parse(self):
         """Parse the paramagnetic shielding tensor data."""
@@ -249,6 +321,7 @@ class NMRNucleusDiaParser(six.with_metaclass(NMRNucleusTensorParserMeta, Parser,
     _key_pas = slice(33, 36)
     _key_pas3 = 29
     _key_idx_prefix = ["core", "valence", "cart", "pas"]
+    _key_typ = "dia"
 
     def _parse(self):
         """Parse the diagmentic shielding tensor data."""
@@ -274,6 +347,7 @@ class NMRNucleusTotParser(six.with_metaclass(NMRNucleusTensorParserMeta, Parser,
     _key_pas = slice(25, 28)
     _key_pas3 = 21
     _key_idx_prefix = ["cart", "pas"]
+    _key_typ = "tot"
 
     def _parse(self):
         """Parse total NMR shielding tensors."""
