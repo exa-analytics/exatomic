@@ -10,13 +10,13 @@ editors and parsers.
 
 
 class OutputMixin(object):
-    """Contains some common properties and methods for ADF output objects."""
+    """Common properties and methods relevant to all output objects."""
     _key_convergence = "NOT CONVERGED"
 
     @property
     def converged(self):
         """
-        Check for convergence.
+        Any easy way to check for (SCF) convergence.
 
         Returns:
             convered (bool): True if converged.
@@ -24,5 +24,3 @@ class OutputMixin(object):
         if self._key_convergence in self:
             return False
         return True
-
-

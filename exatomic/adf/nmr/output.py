@@ -6,11 +6,10 @@ NMR Output Editors
 ######################
 This module provides parsing for an 'N M R' calculation block output from ADF's
 ``nmr`` executable. The :class:`~exatomic.adf.nmr.output.NMROutput` object
-represents the entirety of this output block. It is divided into subsections
-that contain specific data objects. Generally, the output block has the following
-structure.
+represents this output. The output block is divided into subsections that
+contain specific information. An overview is given below.
 
-.. code-block::
+.. code-block:: text
 
     metadata (version, citations, etc.)
     ####################################
@@ -23,20 +22,24 @@ structure.
     nucleus 2
     ####################################
     nucleus ...
-    log
+    logfile
 
+Three unique parsing objects are required, one for  ``metadata``, ``info``, and
+``nucleus`` subsections. Regardless of how many nuclei are calculated a single
+parsing object (of Sections subtype) handles that region of the output.
 """
 import six
 import numpy as np
 import pandas as pd
-from exa.core import SectionsMeta, Parser, Sections, DataSeries
+from exa import Sections, Parser
+from exa.core import Meta
 from exatomic.adf.mixin import OutputMixin
 
 
-class NMROutputMeta(SectionsMeta):
+class NMROutputMeta(Meta):
     """
     Defines data objects parsed in this part of an ADF output file. Note that
-    some objects are aggregated from individual sub-section parsers.
+    some objects are aggregated from individual subsection parsers.
     """
     shielding_tensors = pd.DataFrame
     _description = {'shielding_tensors': "Shielding tensor data per atom"}
@@ -51,7 +54,7 @@ class NMROutput(six.with_metaclass(NMROutputMeta, Sections, OutputMixin)):
         sheilding_tensors (DataFrame): Shielding tensor data (per atom)
     """
     name = "NMR"
-    description = "Parser (subsections) for an 'N M R' calculation"
+    description = "Parser for an 'N M R' calculation block"
     _key_delim0 = "^#+$"
     _key_delim1 = "\(LOGFILE\)"
     _key_sec_names = ["metadata", "None", "info"]    # Parser names
@@ -62,6 +65,7 @@ class NMROutput(six.with_metaclass(NMROutputMeta, Sections, OutputMixin)):
     _key_nuc_name = "NUCLEUS"
     _key_log_name = "LOGFILE"
     _key_log_title = "log"
+    _key_id_type = np.int64
 
     def _parse(self):
         """Determine all sections."""
@@ -85,7 +89,7 @@ class NMROutput(six.with_metaclass(NMROutputMeta, Sections, OutputMixin)):
     # Note that we use the hidden "automatic" getter prefix "_get...".
     # If the ``shielding_tensors`` attribute has not been created, it will be
     # automatically done when this function is automatically called.
-    # See exa.special for more information.
+    # See documentation of exa for more information.
     def _get_shielding_tensors(self):
         """Build the complete shielding tensor dataframe."""
         nuclei = self.sections[self.sections["parser"] == self._key_nuc_name]
@@ -106,12 +110,12 @@ class NMROutput(six.with_metaclass(NMROutputMeta, Sections, OutputMixin)):
             shieldings["symbol"] = symbol
             df.append(shieldings)
         shielding_tensors = pd.DataFrame(df)
-        shielding_tensors['adfid'] = shielding_tensors['adfid'].astype(int)
-        shielding_tensors['nmrid'] = shielding_tensors['nmrid'].astype(int)
+        shielding_tensors['adfid'] = shielding_tensors['adfid'].astype(self._key_id_type)
+        shielding_tensors['nmrid'] = shielding_tensors['nmrid'].astype(self._key_id_type)
         self.shielding_tensors = shielding_tensors
 
 
-class NMRMetadataParserMeta(SectionsMeta):
+class NMRMetadataParserMeta(Meta):
     """Defines the objects parsed by NMRMetadataParser."""
     _descriptions = {}
 
@@ -125,7 +129,7 @@ class NMRMetadataParser(six.with_metaclass(NMRMetadataParserMeta, Parser)):
         pass
 
 
-class NMRInfoParserMeta(SectionsMeta):
+class NMRInfoParserMeta(Meta):
     """Defines the objects parsed by NMRInfoParser."""
     _descriptions = {}
 
@@ -177,7 +181,7 @@ class NMRNucleusParser(Sections):
         self._sections_helper(dct)
 
 
-class NMRNucleusInfoParserMeta(SectionsMeta):
+class NMRNucleusInfoParserMeta(Meta):
     """Defines objects parsed by NMRNucleusInfoParser."""
     symbol = str
     adfid = int
@@ -206,7 +210,7 @@ class NMRNucleusInfoParser(six.with_metaclass(NMRNucleusInfoParserMeta, Parser))
         self.symbol = symbol.strip()
 
 
-class NMRNucleusTensorParserMeta(SectionsMeta):
+class NMRNucleusTensorParserMeta(Meta):
     """Defines objects parsed by NMRNucleusParaParser"""
     ds = DataSeries
     _descriptions = {'ds': "Shielding tensor data"}

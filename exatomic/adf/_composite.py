@@ -6,9 +6,9 @@ Composite ADF Output File Editor
 ###################################
 """
 import pandas as pd
-from exa.core import Sections
+from exa import Sections
 from .mixin import OutputMixin
-from .nmr.output import NMROutput
+#from .nmr.output import NMROutput
 
 
 class CompositeOutput(Sections, OutputMixin):
@@ -47,4 +47,4 @@ class CompositeOutput(Sections, OutputMixin):
         self._sections_helper(pd.DataFrame.from_dict(dct))
 
 
-CompositeOutput.add_section_parsers(NMROutput)
+#CompositeOutput.add_section_parsers(NMROutput)
