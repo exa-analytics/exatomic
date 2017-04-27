@@ -4,6 +4,8 @@
 """
 Radial Grid Spacing
 #####################
+This function is used by NWChem to define the radial grid on which the radial
+Hamiltonian is solved.
 """
 import numba as nb
 import numpy as np

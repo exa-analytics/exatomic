@@ -1,7 +1,12 @@
-from exa.core.editor import SectionsMeta, Parser, Sections
-from exa.core.dataseries import DataSeries
-from exa.core.dataframe import DataFrame
+# -*- coding: utf-8 -*-
+# Copyright (c) 2015-2017, Exa Analytics Development Team
+# Distributed under the terms of the Apache License 2.0
 import re
+import six
+import numpy as np
+import pandas as pd
+from exa import isotopes
+from exa.core import Sections, Parser, Meta
 
 
 class JobFile(Sections):
@@ -13,18 +18,19 @@ class JobFile(Sections):
 
     def _parse(self):
         """Parse input data from pslibrary"""
-        delims = self.find(self._key_sep, which="lineno")[self._key_sep]
+        delims = self.find(self._key_sep, text=False)[self._key_sep]
         starts = delims[::2]
         ends = delims[1::2]
         names = [self._key_sec_name]*len(ends)
-        self.sections = list(zip(names, starts, ends))
+        dct = {'parser': names, 'start': starts, 'end': ends}
+        self._sections_helper(dct)
 
 
-class JobFileAtomMeta(SectionsMeta):
+class JobFileAtomMeta(Meta):
     """
     """
-    ae = DataFrame
-    ps = DataFrame
+    ae = pd.DataFrame
+    ps = pd.DataFrame
     z = int
     symbol = str
     _descriptions = {'ae': "All electron parameters",
@@ -49,8 +55,6 @@ class JobFileAtom(six.with_metaclass(JobFileAtomMeta, Parser)):
                       np.float64, np.float64, np.float64, np.float64]
 
     def _parse(self):
-        """
-        """
         if str(self[0]).startswith("#"):
             return
         found = self.find(self._key_config, self._key_symbol,
@@ -70,9 +74,9 @@ class JobFileAtom(six.with_metaclass(JobFileAtomMeta, Parser)):
                 occs.append(occ)
             except AttributeError:
                 pass
-        self.ae = DataFrame.from_dict({'n': nvals, 'l': angmoms, 'occupation': occs})
+        self.ae = pd.DataFrame.from_dict({'n': nvals, 'l': angmoms, 'occupation': occs})
         self.symbol = found[self._key_symbol][-1][1].split("=")[1].replace("'", "").replace(",", "").title()
-        element = getattr(exa.isotopes, self.symbol)
+        element = getattr(isotopes, self.symbol)
         self.z = element.Z
         ps = []
         for line in self[found[self._key_ps][-1][0]:]:
@@ -83,7 +87,7 @@ class JobFileAtom(six.with_metaclass(JobFileAtomMeta, Parser)):
                 dat = list(self._key_resplit.match(ls[0].lower()).groups())[:-1]
                 dat += ls[1:]
                 ps.append(dat)
-        self.ps = DataFrame(ps, columns=self._key_ps_cols)
+        self.ps = pd.DataFrame(ps, columns=self._key_ps_cols)
         for i, col in enumerate(self.ps.columns):
             self.ps[col] = self.ps[col].astype(self._key_ps_dtypes[i])
 
