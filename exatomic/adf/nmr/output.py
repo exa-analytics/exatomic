@@ -212,7 +212,7 @@ class NMRNucleusInfoParser(six.with_metaclass(NMRNucleusInfoParserMeta, Parser))
 
 class NMRNucleusTensorParserMeta(Meta):
     """Defines objects parsed by NMRNucleusParaParser"""
-    ds = DataSeries
+    ds = pd.Series
     _descriptions = {'ds': "Shielding tensor data"}
 
 

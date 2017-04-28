@@ -4,6 +4,7 @@
 """
 """
 from ._composite import CompositeOutput
+from . import nmr
 
 
 
