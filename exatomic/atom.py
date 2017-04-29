@@ -1,11 +1,10 @@
 # -*- coding: utf-8 -*-
-# Copyright (c) 2015-2016, Exa Analytics Development Team
+# Copyright (c) 2015-2017, Exa Analytics Development Team
 # Distributed under the terms of the Apache License 2.0
 """
-Atomic Position Data
+Nuclear Coordinates
 ############################
-This module provides a collection of dataframes supporting nuclear positions,
-forces, velocities, symbols, etc. (all data associated with atoms as points).
+This module provides data objects targeted at storing
 """
 #from numbers import Integral
 #import numpy as np
