@@ -6,6 +6,23 @@ Nuclear Coordinates
 ############################
 This module provides data objects targeted at storing
 """
+from exa.core import DataFrame
+
+
+class Atom(DataFrame):
+    """
+    A table of the nuclear coordinates.
+
+    At a minimum this table requires the atom symbol, coordinates in 3D space,
+    and frame (i.e. point in time/SCF iteration/etc.).
+    """
+    _required_columns = ("symbol", "x", "y", "z", "frame")
+    _col_descriptions = {'symbol': "Element symbol", 'x': "Absolute x coordinate",
+                         'y': "Absolute y coordinate", 'z': "Absolute y coordinate",
+                         'frame': "Frame index"}
+
+
+
 #from numbers import Integral
 #import numpy as np
 #import pandas as pd
