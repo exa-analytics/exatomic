@@ -8,16 +8,16 @@ These parsing editors are targeted at parsing pseudized wave function and potent
 data.
 """
 import six
-import numpy as np
 import pandas as pd
 from exa.special import LazyFunction
-from exa.core import Meta, Parser
+from exa.tex import text_value_cleaner
+from exa.core import Meta, Parser, DataFrame
 from exatomic.nwchem.nwpw.pseudopotentials.grid import scaled_logspace
 
 
 class PAWOutputMeta(Meta):
     """Defines data objects for PAWOutput."""
-    data = pd.DataFrame
+    data = DataFrame
     info = dict
     grid = LazyFunction
     _descriptions = {'data': "Pseudized channel data",

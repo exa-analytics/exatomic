@@ -8,10 +8,9 @@ These auxiliary output parsers can be used when ``print debug`` is set in a plan
 wave NWChem calculation.
 """
 import six
-import pandas as pd
 from exa.tex import text_value_cleaner
 from exa.special import LazyFunction
-from exa.core import Meta, Parser
+from exa.core import Meta, Parser, DataFrame
 from exatomic.nwchem.nwpw.pseudopotentials.ps import PAWOutput
 
 
@@ -21,7 +20,7 @@ class AEOutputMeta(Meta):
     calculation performed as part of pseudopotential generation.
     """
     info = dict
-    data = pd.DataFrame
+    data = DataFrame
     grid = LazyFunction
     _descriptions = {'data': "All electron data",
                      'info': "Energy data",
