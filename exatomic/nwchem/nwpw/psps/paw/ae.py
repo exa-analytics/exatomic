@@ -2,7 +2,7 @@
 # Copyright (c) 2015-2017, Exa Analytics Development Team
 # Distributed under the terms of the Apache License 2.0
 """
-All-Electron Output Editors
+PAW Specific AE Output Editors
 ##############################
 These auxiliary output parsers can be used when ``print debug`` is set in a plane
 wave NWChem calculation.
@@ -25,6 +25,7 @@ class AEOutputMeta(Meta):
     _descriptions = {'data': "All electron data",
                      'info': "Energy data",
                      'grid': "Grid information"}
+
 
 class AEOutput(six.with_metaclass(AEOutputMeta, Parser)):
     """

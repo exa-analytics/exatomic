@@ -2,9 +2,12 @@
 # Copyright (c) 2015-2017, Exa Analytics Development Team
 # Distributed under the terms of the Apache License 2.0
 """
-Wrappers for Pseudopotential Parsing
+NWChem PSP Data
 #####################################
-This module provides the
+This module provides a container object that stores output data coming from
+NWChem's pseudopotential generation scheme. Note that parsable data is created
+only if debug printing is used. This module also provides functions that parse
+multiple files simultaneously.
 """
 import six
 from exa.core import Container
@@ -28,10 +31,8 @@ class PSPData(six.with_metaclass(PSPMeta, Container)):
         This container stores pseudopotential data for all atoms in the
         calculation of interest.
     """
-    def __init__(self, arg, symbol):
-        names = ("data", "log", "pstest", "psed", "aeed")
-        kwargs = dict(zip(names, parse_paw_psp(arg, symbol)))
-        super(PSPData, self).__init__(**kwargs)
+    def __init__(self, path):
+        pass
 
 
 
