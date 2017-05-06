@@ -15,14 +15,15 @@ before_install:
   - export PATH="$HOME/miniconda/bin:$PATH"
   - conda config --set always_yes yes --set changeps1 no
   - conda update -q conda
-  - git clone https://github.com/avmarchenko/exa
+  - git clone https://github.com/avmarchenko/exa.git ../
 
 install:
   - conda install -q python=$TRAVIS_PYTHON_VERSION
-  - cd exa; pip install -e .; cd ../;
+  - conda install -q -c conda-forge `cat exa/requirements.txt`
   - conda install -q -c conda-forge pytables
   - pip install sphinxcontrib-autoanysrc coverage codecov python-coveralls
-  - python setup.py install
+  - cd ../exa; pip install .; ../exatomic;
+  - pip install . 
 
 script:
   - nosetests --with-coverage
