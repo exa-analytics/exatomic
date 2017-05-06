@@ -78,8 +78,8 @@ class NPM(Command):
     node_modules = os.path.join(node_root, "node_modules")
 
     targets = [
-        os.path.join(here, "build", "widgets", "extension.js"),
-        os.path.join(here, "build", "widgets", "index.js")
+        os.path.join(here, "exatomic", "_nbextension", "extension.js"),
+        os.path.join(here, "exatomic", "_nbextension", "index.js")
     ]
 
     def initialize_options(self):
@@ -140,7 +140,7 @@ setup_args = {
     "version": version_ns["__version__"],
     "description": "A unified platform for computational chemists.",
     "long_description": long_description,
-#    "package_data": {"data": ["*.json"], "html": ["*.html"], "static": ["*.css"]},
+#    "package_data": {"data": ["*.json"], "html": ["*.html"], "_static": ["*.css"]},
     "include_package_data": True,
 #    "data_files": [
 #        ("share/jupyter/nbextensions/jupyter-exatomic", [
