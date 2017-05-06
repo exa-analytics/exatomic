@@ -15,7 +15,7 @@ before_install:
   - export PATH="$HOME/miniconda/bin:$PATH"
   - conda config --set always_yes yes --set changeps1 no
   - conda update -q conda
-  - git clone https://github.com/avmarchenko/exa.git ../
+  - git clone https://github.com/avmarchenko/exa.git ../exa
 
 install:
   - conda install -q python=$TRAVIS_PYTHON_VERSION
