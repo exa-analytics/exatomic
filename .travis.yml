@@ -19,7 +19,7 @@ before_install:
 
 install:
   - conda install -q python=$TRAVIS_PYTHON_VERSION
-  - conda install -q -c conda-forge `cat exa/requirements.txt`
+  - conda install -q -c conda-forge `cat ../exa/requirements.txt`
   - conda install -q -c conda-forge pytables
   - pip install sphinxcontrib-autoanysrc coverage codecov python-coveralls
   - cd ../exa; pip install .; ../exatomic;
