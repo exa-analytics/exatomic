@@ -2,6 +2,7 @@
 exa
 =======
 exa
+exawidgets
 psutil
 numexpr
 >>>>>>> org/master

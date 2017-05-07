@@ -6,5 +6,15 @@
 
 // Export widget models and views, and the npm package version number.
 var _ = require("underscore");
+<<<<<<< HEAD
 module.exports = _.extend(require("./exatomic.js"))
+=======
+module.exports = _.extend(
+    {},
+    require("./app.js"),
+    require("./functions.js"),
+    require("./universe.js"),
+    require("./test.js")
+);
+>>>>>>> tjd/master
 module.exports["version"] = require("../package.json").version;

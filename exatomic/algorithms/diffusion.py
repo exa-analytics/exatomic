@@ -4,7 +4,7 @@ Diffusion Coefficients
 ##########################
 Various algorithms for computing diffusion coefficients are coded here.
 '''
-import numpy as np
+#import numpy as np
 from exatomic import Length, Time
 from exatomic.algorithms.displacement import absolute_squared_displacement
 

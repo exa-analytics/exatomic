@@ -35,6 +35,7 @@ requirements:
         - nose
         - numba
         - exa
+        - exawidgets
 
     run:
         - python
@@ -54,6 +55,7 @@ requirements:
         - nose
         - numba
         - exa
+        - exawidgets
 
 about:
     home: https://exa-analytics.github.io
