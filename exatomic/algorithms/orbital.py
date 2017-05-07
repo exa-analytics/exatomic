@@ -12,12 +12,9 @@ from exatomic._config import config
 from datetime import datetime
 
 ## For voluminating GTFs
-import re
 import pandas as pd
-from exa import Series
-import sympy as sy
 from sympy import Add, Mul
-from exatomic.algorithms.basis import solid_harmonics, _vec_normalize
+from exatomic.algorithms.basis import solid_harmonics
 from exatomic.field import AtomicField
 from collections import OrderedDict
 
@@ -26,6 +23,7 @@ from collections import OrderedDict
 #####################################################################
 
 def density_from_momatrix(cmat, occvec):
+    print("orbital.density_from_matrix")
     nbas = len(occvec)
     arlen = nbas * (nbas + 1) // 2
     dens = np.empty(arlen, dtype=np.float64)
@@ -43,6 +41,7 @@ def density_from_momatrix(cmat, occvec):
     return chi1, chi2, dens, frame
 
 def density_as_square(denvec):
+    print("orbital.density_as_square")
     nbas = int((-1 + np.sqrt(1 - 4 * -2 * len(denvec))) / 2)
     square = np.empty((nbas, nbas), dtype=np.float64)
     cnt = 0
@@ -54,6 +53,7 @@ def density_as_square(denvec):
     return square
 
 def momatrix_as_square(movec):
+    print("orbital.momatrix_as_square")
     nbas = np.int64(len(movec) ** (1/2))
     square = np.empty((nbas, nbas), dtype=np.float64)
     cnt = 0
@@ -64,6 +64,7 @@ def momatrix_as_square(movec):
     return square
 
 def meshgrid3d(x, y, z):
+    print("orbital.meshgrid3d")
     tot = len(x) * len(y) * len(z)
     xs = np.empty(tot, dtype=np.float64)
     ys = np.empty(tot, dtype=np.float64)
@@ -88,6 +89,7 @@ class Nucpos(object):
         return 'Nucpos({},{},{},{})'.format(self.x, self.y, self.z, self.pre)
 
     def __init__(self, x, y, z, pre=None, prefac=None):
+        print("orbital.Nucpos")
         self.x  = '(x-{:.10f})'.format(x) if not np.isclose(x, 0) else 'x'
         self.y  = '(y-{:.10f})'.format(y) if not np.isclose(y, 0) else 'y'
         self.z  = '(z-{:.10f})'.format(z) if not np.isclose(z, 0) else 'z'
@@ -140,6 +142,7 @@ def make_fps(rmin=None, rmax=None, nr=None, nrfps=1,
     Returns
         fps (pd.Series): field parameters
     """
+    print("orbital.make_fps")
     if any((par is None for par in [rmin, rmax, nr])):
         if all((par is None for par in (ox, dxi, dxj, dxk))):
             raise Exception("Must supply at least rmin, rmax, nr or field"
@@ -188,6 +191,7 @@ def clean_sh(sh):
     Returns
         clean (OrderedDict): cleaned for use in generating string basis functions
     """
+    print("orbital.clean_sh")
     clean = OrderedDict()
     mlp = {1: 'nuc.x', -1: 'nuc.y', 0: 'nuc.z'}
     for L, ml in sh:
@@ -243,6 +247,7 @@ def _sphr_prefac(clean, L, ml, nuc):
     Returns
         prefacs (list): pre-exponential factors
     """
+    print("orbital._sphr_prefac")
     cln = clean[(L, ml)]
     if any(('nuc' in pre for pre in cln)):
         cln = [pre.format(nuc=nuc) for pre in cln]
@@ -264,6 +269,7 @@ def _cart_prefac(L, l, m, n, nucpos):
     Returns
         prefacs (list): pre-exponential factors
     """
+    print("orbital._cart_prefac")
     prefac = '{}{}'.format(nucpos.pre, nucpos.prefac)
     if L == 0: return [prefac]
     lin, nlin = '{}*', '{}**{}*'
@@ -289,6 +295,7 @@ def gen_basfn(prefacs, group, expnt):
     Returns
         basis function (str)
     """
+    print("orbital.gen_basfn")
     bastr = '{prefac}({prims})'
     bastrs = []
     primitive = '{{N:.8f}}*{{d:.8f}}*np.exp(-{{alpha:.8f}}*{expnt})'.format(expnt=expnt)
@@ -312,6 +319,7 @@ def _compile_basfns(basfns):
     Returns
         bfns (OrderedDict): namespace where functions were compiled
     """
+    print("orbital._compile_basfns")
     if not config['dynamic']['numba'] == 'true': raise NotImplementedError()
     bfns = OrderedDict()
     header = """import numpy as np
@@ -345,6 +353,7 @@ def gen_basfns(universe, frame=None):
     Returns
         bastrs (list): list of strings of basis functions
     """
+    print("orbital.gen_basfns")
     # Get the symbolic spherical functions
     lmax = universe.basis_set.lmax
     sh = clean_sh(solid_harmonics(lmax))
@@ -369,11 +378,11 @@ def gen_basfns(universe, frame=None):
         else:
             # Iterate over cartesian atom-centered basis functions
             args = ['L', 'l', 'm', 'n', 'shell']
-            kwargs = {'pre': None, 'prefac': None}
-            if 'pre' in basord.columns: 
+            #kwargs = {'pre': None, 'prefac': None}
+            if 'pre' in basord.columns:
                 args.append('pre')
                 if 'prefac' in basord.columns: args.append('prefac')
-            for row in zip(*[basord[i] for i in args]): 
+            for row in zip(*[basord[i] for i in args]):
                 L, l, m, n, shfunc = row[:5]
                 pre, prefac = row[5:6], row[6:7]
                 nucpos = Nucpos(x, y, z, pre=pre, prefac=prefac)
@@ -383,6 +392,7 @@ def gen_basfns(universe, frame=None):
     return basfns
 
 def numerical_grid_from_field_params(field_params):
+    print("orbital.numerical_grid_from_field_params")
     mx = field_params.ox[0] + (field_params.nx[0] - 1) * field_params.dxi[0]
     my = field_params.oy[0] + (field_params.ny[0] - 1) * field_params.dyj[0]
     mz = field_params.oz[0] + (field_params.nz[0] - 1) * field_params.dzk[0]
@@ -392,6 +402,7 @@ def numerical_grid_from_field_params(field_params):
     return meshgrid3d(x, y, z)
 
 def _determine_field_params(universe, field_params, nvec):
+    print("orbital._determine_field_params")
     if field_params is None:
         dr = 41
         rmin = min(universe.atom['x'].min(),
@@ -405,6 +416,7 @@ def _determine_field_params(universe, field_params, nvec):
         return make_fps(nrfps=nvec, **field_params)
 
 def _determine_vectors(universe, vector):
+    print("orbital._determine_vectors")
     if isinstance(vector, int): return [vector]
     if isinstance(vector, (list, tuple, range)): return vector
     if vector is None:
@@ -423,12 +435,14 @@ def _determine_vectors(universe, vector):
         raise TypeError('Try specifying vector as a list or int')
 
 def _determine_mocoefs(universe, mocoefs, vector):
+    print("orbital._determine_mocoefs")
     if mocoefs is None: return 'coef'
     if mocoefs not in universe.momatrix.columns:
         raise Exception('mocoefs must be a column in universe.momatrix')
     return mocoefs
 
 def _evaluate_fields(universe, vector, mocoefs, npoints, nbas, x, y, z):
+    print("orbital._evaluate_fields")
     bvals = np.zeros((npoints, nbas), dtype=np.float64)
     fvals = np.zeros((npoints, len(vector)), dtype=np.float64)
     vectors = universe.momatrix.groupby('orbital')
@@ -458,6 +472,7 @@ def add_molecular_orbitals(universe, field_params=None, mocoefs=None,
     Warning:
         Removes any fields previously attached to the universe
     """
+    print("orbital.add_molecular_orbitals")
     if hasattr(universe, '_field'):
         del universe.__dict__['_field']
     # Preliminary setup for minimal input parameters
@@ -503,7 +518,7 @@ def add_molecular_orbitals(universe, field_params=None, mocoefs=None,
 
 
 if config['dynamic']['numba'] == 'true':
-    from numba import jit, vectorize
+    from numba import jit
     density_from_momatrix = jit(nopython=True)(density_from_momatrix)
     density_as_square = jit(nopython=True)(density_as_square)
     momatrix_as_square = jit(nopython=True)(momatrix_as_square)

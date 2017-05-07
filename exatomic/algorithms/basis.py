@@ -30,7 +30,7 @@ enum_cartesian = {0: [[0, 0, 0]],
                   2: [[2, 0, 0], [1, 1, 0], [1, 0, 1],
                       [0, 2, 0], [0, 1, 1], [0, 0, 2]],
                   3: [[3, 0, 0], [2, 1, 0], [2, 0, 1],
-                      [1, 2, 0], [1, 1, 1], [1, 0, 2], 
+                      [1, 2, 0], [1, 1, 1], [1, 0, 2],
                       [0, 3, 0], [0, 2, 1], [0, 1, 2], [0, 0, 3]],
                   4: [[4, 0, 0], [3, 1, 0], [3, 0, 1], [2, 2, 0], [2, 1, 1],
                       [2, 0, 2], [1, 3, 0], [1, 2, 1], [1, 1, 2], [1, 0, 3],
@@ -43,6 +43,7 @@ enum_cartesian = {0: [[0, 0, 0]],
 
 
 def solid_harmonics(l_max):
+    print("algorithms.basis.solid_harmonics")
 
     def _top_sh(lcur, sp, sm):
         lpre = lcur - 1
@@ -85,6 +86,7 @@ def car2sph_transform_matrices(sh, l_tot):
     Args
         sh (OrderedDict): the result of solid_harmonics(l_tot)
     '''
+    print("algorithms.basis.car2sph_transform_matrices")
     s = [1]
     p = [y, z, x]
     d = [x*x, x*y, x*z, y*y, y*z, z*z]
@@ -119,6 +121,7 @@ def car2sph_transform_matrices(sh, l_tot):
     return ndict
 
 def fac(n):
+    print("algorithms.basis.fac")
     if n < 0: return 0
     if n == 0: return 1
     ns = np.empty((n), dtype=np.int64)
@@ -129,6 +132,7 @@ def fac(n):
 
 
 def fac2(n):
+    print("algorithms.basis.fac2")
     if n < -1: return 0
     if n < 2: return 1
     ns = np.empty((n//2,), dtype=np.int64)
@@ -138,12 +142,14 @@ def fac2(n):
     return np.prod(ns)
 
 def normalize(alpha, L):
+    print("algorithms.basis.normalize")
     prefac = (2 / np.pi) ** (0.75)
     numer = 2 ** (L) * alpha ** ((L + 1.5) / 2)
     denom = (fac2(2 * L - 1)) ** (0.5)
     return prefac * numer / denom
 
 def sto_normalize(alpha, n):
+    print("algorithms.basis.normalize")
     return (2 * alpha) ** n * ((2 * alpha) / fac(2 * n)) ** 0.5
 
 def _vec_fac(n):
@@ -162,11 +168,11 @@ def _ovl_indices(nbas, nel):
     chis = np.empty((nel, 2), dtype=np.int64)
     cnt = 0
     for i in range(nbas):
-        for j in range(i + 1): 
+        for j in range(i + 1):
             chis[cnt, 0] = i
             chis[cnt, 1] = j
     return chis
-    
+
 
 def _overlap(x1, x2, y1, y2, z1, z2, l1, l2, m1, m2, n1, n2, N1, N2, alpha1, alpha2):
     '''
