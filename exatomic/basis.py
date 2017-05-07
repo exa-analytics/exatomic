@@ -153,6 +153,7 @@ class BasisSetOrder(DataFrame):
     | prefac            | float    | prefactor (optional - for STOs)           |
     +-------------------+----------+-------------------------------------------+
     """
+    #_cardinal = ('frame', np.int64)
     _columns = ['center', 'L', 'shell']
     _index = 'chi'
     _categories = {'L': np.int64}

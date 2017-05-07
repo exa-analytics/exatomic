@@ -8,18 +8,18 @@ Building discrete molecular orbitals (for visualization) requires a complex
 set of operations that are provided by this module and wrapped into a clean API.
 """
 # Established
-import sympy as sy
+#import sympy as sy
 import numpy as np
 import pandas as pd
 import numexpr as ne
 from datetime import datetime
-from numba import jit, vectorize
+from numba import jit#, vectorize
 from psutil import virtual_memory
 from collections import OrderedDict
 
 # Local
-from exa import Series
-from exatomic._config import config
+#from exa import Series
+#from exatomic._config import config
 from exatomic.field import AtomicField
 from exa.relational.isotope import symbol_to_z
 from exatomic.algorithms.basis import solid_harmonics, clean_sh
@@ -311,6 +311,7 @@ def gen_basfns(uni, frame=None):
             # The pre-exponential factors (besides the additional ADF ones)
             prefacs = prefunc(nuc, larg[lkey], *args[rgslice])
             # Put together the basis function
+            print(prefacs, shell, nuc[exkey])
             basfns.append(gen_basfn(prefacs, shell, nuc[exkey]))
     return basfns
 
