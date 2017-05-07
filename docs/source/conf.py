@@ -1,7 +1,10 @@
-#!/usr/bin/env python3
+#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 # Copyright (c) 2015-2017, Exa Analytics Development Team
 # Distributed under the terms of the Apache License 2.0
+#
+# exatomic documentation build configuration file, created by
+# sphinx-quickstart on Tue Jun 23 21:37:50 2015.
 #
 # This file is execfile()d with the current directory set to its
 # containing dir.

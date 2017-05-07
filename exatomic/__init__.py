@@ -27,8 +27,6 @@ def _jupyter_nbextension_paths():
 
 
 
-
-
 try:
     from exa.cms import (Length, Mass, Time, Current, Amount, Luminosity, Isotope,
                          Dose, Acceleration, Charge, Dipole, Energy, Force,

@@ -12,3 +12,10 @@ from . import nmr
 
 #from .output import Output
 
+<<<<<<< HEAD
+=======
+from .output import Output
+import warnings
+
+#warnings.warn("Alpha release, bugs may be present")
+>>>>>>> org/master

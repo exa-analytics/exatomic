@@ -340,4 +340,3 @@ class DensityMatrix(DataFrame):
     def __init__(self, *args, **kwargs):
         print("orbital.DensityMatrix")
         super(DensityMatrix, self).__init__(*args, **kwargs)
-

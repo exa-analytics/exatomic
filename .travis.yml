@@ -4,6 +4,7 @@ os:
   - linux
 
 python:
+<<<<<<< HEAD
   - "2.7"
   - "3.4"
   - "3.5"
@@ -25,13 +26,40 @@ install:
   - cd ../exa; pip install .; cd ../exatomic;
   - pip install . 
 
+=======
+  - "3.4"
+  - "3.5"
+before_install:
+  - wget https://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh -O miniconda.sh
+  - chmod +x miniconda.sh
+  - ./miniconda.sh -b
+  - export PATH=/home/travis/miniconda3/bin:$PATH
+  - conda update --yes conda
+install:
+  - conda install --yes python=$TRAVIS_PYTHON_VERSION
+  - conda install --yes -c exaanalytics exa
+  - conda install --yes -c conda-forge pytables
+  - conda install --yes numba psutil numexpr
+  - conda install --yes -c cpcloud npm
+  - pip install travis-sphinx codacy-coverage python-coveralls codecov
+  - pip install sphinxcontrib-autoanysrc sphinx_rtd_theme
+  - python setup.py install
+  - exa -uu
+>>>>>>> org/master
 script:
   - nosetests --with-coverage
   - coverage xml
   - travis-sphinx -n build
+<<<<<<< HEAD
 
+=======
+>>>>>>> org/master
 after_success:
   - codecov
   - coveralls
   - python-codacy-coverage -r coverage.xml
+<<<<<<< HEAD
   - travis-sphinx deploy
+=======
+  - travis-sphinx -n deploy
+>>>>>>> org/master

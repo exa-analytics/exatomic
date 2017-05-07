@@ -1,1 +1,7 @@
+<<<<<<< HEAD
 exa
+=======
+exa
+psutil
+numexpr
+>>>>>>> org/master
