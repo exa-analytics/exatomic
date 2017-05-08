@@ -10,61 +10,38 @@ only if debug printing is used. This module also provides functions that parse
 multiple files simultaneously.
 """
 import six
+import pandas as pd
+import os
+from glob import glob
 from exa.core import Container
 from exa.special import Typed
+from exa.mpl import qualitative, sns
+from .paw_ae import AEOutput
+from .paw_ps import PAWOutput
 
 
-class PSPMeta(Typed):
+def parse_psp_data(scratch):
     """
-    Defines the data objects associated with the container
-    :class:`~exatomic.nwchem.nwpw.psps.base.NWChemPSPs`.
+    Given an NWChem scratch directory parse all pseudopotential
+    information.
     """
-    pass
+    plts = glob(os.path.join(scratch, "*.dat"))
+    symbols = {}
+    for plt in plts:
+        base = os.path.basename(plt)
+        first = base.split(".")[0]
+        paw = False
+        if "_" in first:
+            paw = True
+            first = first.split("_")[0]
+        symbols[first] = paw
+    for symbol, paw in symbols.items():
+        if paw:
+            return parse_paw_psp(scratch, symbol)
+        else:
+            return parse_nc_psp(scratch, symbol)
 
 
-class PSPData(six.with_metaclass(PSPMeta, Container)):
-    """
-    A container for storing discrete pseudopotentials and pseudo-waves
-    defined on a radial grid and used in plane wave calculations.
-
-    Note:
-        This container stores pseudopotential data for all atoms in the
-        calculation of interest.
-    """
-    def __init__(self, path):
-        pass
-
-
-
-
-
-#def parse_psp_data(scratch):
-#    """
-#    Given an NWChem scratch directory parse all pseudopotential
-#    information.
-#    """
-#    plts = glob(os.path.join(scratch, "*.dat"))
-#    symbols = {}
-#    for plt in plts:
-#        base = os.path.basename(plt)
-#        first = base.split(".")[0]
-#        paw = False
-#        if "_" in first:
-#            paw = True
-#            first = first.split("_")[0]
-#        symbols[first] = paw
-#    for symbol, paw in symbols.items():
-#        if paw:
-#            return parse_paw_psp(scratch, symbol)
-#        else:
-#            return parse_nc_psp(scratch, symbol)
-#import six
-#from exa.tex import text_value_cleaner
-#from exa.special import LazyFunction
-#from exa.core import Meta, Parser, DataFrame
-#from exatomic.nwchem.nwpw.pseudopotentials.ps import PAWOutput
-#
-#
 def parse_paw_psp(scratch, symbol):
     """
     """
@@ -115,6 +92,61 @@ def parse_paw_psp(scratch, symbol):
     data.index = psed.grid()
     pstest.index = psed.grid()
     return data, log, pstest, psed, aeed
+
+
+class PSPMeta(Typed):
+    """
+    Defines the data objects associated with the container
+    :class:`~exatomic.nwchem.nwpw.psps.base.NWChemPSPs`.
+    """
+    pass
+
+
+class PSPData(six.with_metaclass(PSPMeta, Container)):
+    """
+    A container for storing discrete pseudopotentials and pseudo-waves
+    defined on a radial grid and used in plane wave calculations.
+
+    Note:
+        This container stores pseudopotential data for all atoms in the
+        calculation of interest.
+    """
+    def plot_log(self, **kwargs):
+        """Plot the logarithmic derivatives."""
+        n = len(self.log.columns)//2
+        # Get default values
+        style = kwargs.pop("style", ["-", "--"])
+        ylim = kwargs.pop("ylim", (-5, 5))
+        colors = kwargs.pop("colors", None)
+        if colors is None:
+            colors = qualitative(n)
+        elif not isinstance(colors, (list, tuple)):
+            colors = [colors]*n
+        # Plot the figure
+        ax = sns.plt.subplot()
+        for i, col in enumerate(self.log.columns[::2]):
+            cols = [col, col.replace("AE", "PS")]
+            ax = self.log[cols].plot(ax=ax, style=style, c=colors[i], **kwargs)
+        ax.set_ylim(*ylim)
+        return ax
+
+    def plot_psae(self):
+        """Plot AE and PS waves for comparison."""
+        nls = self.psed.data['nl'].tolist()
+
+    def plot_ps(self, nl, **kwargs):
+        """Plot a given pseudo wave, projector, and AE reference."""
+        cols = [col for col in self.data.columns if nl.upper() in col]
+        vcol = [col for col in cols if "V" in col][0]
+        xlim = kwargs.pop("xlim", (0, 3.5))
+        ax = self.data[cols].plot(secondary_y=vcol, xlim=xlim, **kwargs)
+        return ax
+
+    def __init__(self, path):
+        data, log, pstest, psed, aeed = parse_psp_data(path)
+        super(PSPData, self).__init__(data=data, log=log, pstest=pstest, psed=psed, aeed=aeed)
+
+
 #
 #
 #def parse_nc_psp(paths):

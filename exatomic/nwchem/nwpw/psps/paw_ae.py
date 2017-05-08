@@ -11,7 +11,7 @@ import six
 from exa.tex import text_value_cleaner
 from exa.special import LazyFunction
 from exa.core import Meta, Parser, DataFrame
-from exatomic.nwchem.nwpw.pseudopotentials.ps import PAWOutput
+from exatomic.nwchem.nwpw.psps.paw_ps import PAWOutput
 
 
 class AEOutputMeta(Meta):
