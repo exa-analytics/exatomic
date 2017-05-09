@@ -11,11 +11,12 @@ import subprocess
 from glob import glob
 from base64 import b64decode
 from traitlets import Unicode
-from exawidgets import ContainerWidget
+from exawidgets.widget import BaseDOM
+#from exawidgets import ContainerWidget
 #from exa.utility import mkp
 
 
-class UniverseWidget(ContainerWidget):
+class UniverseWidget(BaseDOM):
     """
     Custom widget for the :class:`~exatomic.universe.Universe` data container.
     """
