@@ -54,8 +54,6 @@ class NMROutput(six.with_metaclass(NMROutputMeta, Sections, OutputMixin)):
     Attributes:
         shielding_tensors (DataFrame): Shielding tensor data (per atom)
     """
-    name = "NMR"
-    description = "Parser for an 'N M R' calculation block"
     _key_delim0 = "^#+$"
     _key_delim1 = "\(LOGFILE\)"
     _key_sec_names = ["metadata", "None", "info"]    # Parser names
