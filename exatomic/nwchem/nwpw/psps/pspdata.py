@@ -142,6 +142,21 @@ class PSPData(six.with_metaclass(PSPMeta, Container)):
         ax = self.data[cols].plot(secondary_y=vcol, xlim=xlim, **kwargs)
         return ax
 
+    def log_diff(self):
+        """Error in logarithmic differences."""
+        self._logs = []
+        for l in ("S", "P", "D", "F"):
+            cols = [col for col in self.log.columns if "{" + l + "}" in col]
+            if len(cols) == 2:
+                self.log[l] = self.log[cols[0]] - self.log[cols[1]]
+                self._logs.append(l)
+
+    def log_diff_estimate(self):
+        """Log diff errore."""
+        if "S" not in self.log.columns:
+            self.log_diff()
+        return self.log.loc[selfself._logs].abs().sum()
+
     def __init__(self, path):
         data, log, pstest, psed, aeed = parse_psp_data(path)
         super(PSPData, self).__init__(data=data, log=log, pstest=pstest, psed=psed, aeed=aeed)
