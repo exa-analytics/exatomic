@@ -4,6 +4,7 @@
 """
 XYZ File Editor
 ##################
+TODO: Add comment/append comment, replace comment
 """
 import csv
 import numpy as np
