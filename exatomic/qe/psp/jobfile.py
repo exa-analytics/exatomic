@@ -2,8 +2,15 @@
 # Copyright (c) 2015-2017, Exa Analytics Development Team
 # Distributed under the terms of the Apache License 2.0
 """
-PSLibrary 'JobFile'
+PSLibrary Job File
 #####################
+Job files (extension '.job') are used inside the `pslibrary`_ package to house
+input data for pseudopotential generation using the atomic sub-package ('ld1.x')
+within the `Quantum ESPRESSO`_ quantum chemistry suite of tools. See for example,
+`this`_ job file.
+
+.. _pslibrary: https://github.com/dalcorso/pslibrary
+.. _this: https://github.com/dalcorso/pslibrary/blob/master/paw_ps_collection.job
 """
 import re
 import six
@@ -31,8 +38,7 @@ class JobFile(Sections):
 
 
 class JobFileAtomMeta(Meta):
-    """
-    """
+    """Describe the attributes parsed by the parser."""
     ae = pd.DataFrame
     ps = pd.DataFrame
     z = int
