@@ -1,8 +1,11 @@
 # -*- coding: utf-8 -*-
 # Copyright (c) 2015-2017, Exa Analytics Development Team
 # Distributed under the terms of the Apache License 2.0
-from . import psp
+"""
+Parsing and input generation features for `Quantum ESPRESSO`_ and some related
+projects including the `pslibrary`_ and `eqe`_.
 
-#from exatomic.qe.editor import Editor
-#from exatomic.qe.container import Universe
-#from exatomic.qe.cp import parse_dynamics_dir
+.. _Quantum ESPRESSO: https://github.com/QEF/q-e
+.. _pslibrary: https://github.com/dalcorso/pslibrary
+.. _eqe: http://eqe.rutgers.edu
+"""

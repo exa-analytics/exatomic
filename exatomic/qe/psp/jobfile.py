@@ -10,6 +10,7 @@ within the `Quantum ESPRESSO`_ quantum chemistry suite of tools. See for example
 `this`_ job file.
 
 .. _pslibrary: https://github.com/dalcorso/pslibrary
+.. _Quantum ESPRESSO: https://github.com/QEF/q-e
 .. _this: https://github.com/dalcorso/pslibrary/blob/master/paw_ps_collection.job
 """
 import re
@@ -20,7 +21,7 @@ from exa import isotopes
 from exa.core import Sections, Parser, Meta
 
 
-class JobFile(Sections):
+class PSLJobFile(Sections):
     """Input 'job' file in the pslibrary"""
     name = "pslibrary job file"
     description = "Parser for pslibrary input files"
@@ -37,7 +38,7 @@ class JobFile(Sections):
         self._sections_helper(dct)
 
 
-class JobFileAtomMeta(Meta):
+class ElementMeta(Meta):
     """Describe the attributes parsed by the parser."""
     ae = pd.DataFrame
     ps = pd.DataFrame
@@ -49,7 +50,8 @@ class JobFileAtomMeta(Meta):
                      'symbol': "Atom symbol"}
 
 
-class JobFileAtom(six.with_metaclass(JobFileAtomMeta, Parser)):
+class Element(six.with_metaclass(ElementMeta, Parser)):
+    """A single element's input file in the composite job file."""
     name = "element"
     description = "Parser for element psp input"
     _key_config = "config"
@@ -102,4 +104,4 @@ class JobFileAtom(six.with_metaclass(JobFileAtomMeta, Parser)):
             self.ps[col] = self.ps[col].astype(self._key_ps_dtypes[i])
 
 
-JobFile.add_section_parsers(JobFileAtom)
+PSLJobFile.add_section_parsers(Element)

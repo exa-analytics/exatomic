@@ -22,21 +22,4 @@ def _jupyter_nbextension_paths():
 
 
 from exatomic._version import __version__
-
-#try:
-#    from exa.cms import (Length, Mass, Time, Current, Amount, Luminosity, Isotope,
-#                         Dose, Acceleration, Charge, Dipole, Energy, Force,
-#                         Frequency, MolarMass)
-#except:
-#    from exa.relational import Isotope, Length, Energy, Time, Amount, Constant, Mass
-#from exatomic import _config
-#from exatomic import error
-#from exatomic.editor import Editor
-
-
-#from exatomic import molcas
-#from exatomic import nwchem
-#from exatomic import gaussian
-#from exatomic import adf
-#from exatomic import nbo
-#from exatomic import mpl
+from exatomic.xyz import XYZ
