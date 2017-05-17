@@ -39,7 +39,8 @@ def parse_psp_data(scratch):
         if paw:
             return parse_paw_psp(scratch, symbol)
         else:
-            return parse_nc_psp(scratch, symbol)
+            raise
+            #return parse_nc_psp(scratch, symbol)
 
 
 def parse_paw_psp(scratch, symbol):
@@ -132,7 +133,8 @@ class PSPData(six.with_metaclass(PSPMeta, Container)):
 
     def plot_psae(self):
         """Plot AE and PS waves for comparison."""
-        nls = self.psed.data['nl'].tolist()
+        raise
+        #nls = self.psed.data['nl'].tolist()
 
     def plot_ps(self, nl, **kwargs):
         """Plot a given pseudo wave, projector, and AE reference."""
@@ -155,7 +157,7 @@ class PSPData(six.with_metaclass(PSPMeta, Container)):
         """Log diff errore."""
         if "S" not in self.log.columns:
             self.log_diff()
-        return self.log.loc[selfself._logs].abs().sum()
+        return self.log.loc[self._logs].abs().sum()
 
     def __init__(self, path):
         data, log, pstest, psed, aeed = parse_psp_data(path)
