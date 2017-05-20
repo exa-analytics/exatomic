@@ -19,11 +19,7 @@ module.exports = [
         entry: "./src/extension.js",
         output: {
             filename: "extension.js",
-<<<<<<< HEAD
-            path: "../build/widgets",
-=======
-            path: "../exatomic/static",
->>>>>>> tjd/master
+            path: "../exatomic/_nbextension",
             libraryTarget: "amd"
         }
     },
@@ -36,11 +32,7 @@ module.exports = [
         entry: "./src/index.js",
         output: {
             filename: "index.js",
-<<<<<<< HEAD
-            path: "../build/widgets",
-=======
-            path: "../exatomic/static",
->>>>>>> tjd/master
+            path: "../exatomic/_nbextension",
             libraryTarget: "amd"
         },
         devtool: "source-map",

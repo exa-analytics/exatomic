@@ -1,32 +1,20 @@
 {
   "name": "jupyter-exatomic",
-<<<<<<< HEAD
-  "version": "0.0.1",
-  "description": "A unified platform for computational chemists.ics, and visualization.",
-  "author": "Thomas J. Duignan and Alex Marchenko",
-=======
-  "version": "0.3.8",
-  "description": "The exatomic package for chemical visualization.",
+  "version": "0.4.0",
+  "description": "A unified platform for theoretical and computational chemists and physicists.",
   "author": "Thomas J. Duignan and Alex Marchenko",
   "license": "Apache-2.0",
->>>>>>> tjd/master
   "main": "src/index.js",
   "repository": {
     "type": "git",
-    "url": "https://github.com/exa-analytics/exatomic.git"
+    "url": "https://github.com/avmarchenko/exatomic.git"
   },
   "keywords": [
-<<<<<<< HEAD
-    "quantum",
     "quantum mechanics",
-    "chemistry",
     "computational chemistry",
-    "visualization",
-    "big data",
-    "analytics"
-=======
+    "materials science",
+    "solid state physics",
     "visualization"
->>>>>>> tjd/master
   ],
   "scripts": {
     "prepublish": "webpack",
@@ -34,28 +22,16 @@
   },
   "devDependencies": {
     "json-loader": "^0.5.4",
-<<<<<<< HEAD
-    "webpack": "^1.12.14"
-  },
-  "dependencies": {
-    "jupyter-js-widgets": "^1.1.1",
-    "jupyter-threejs": "^0.1.3",
-    "underscore": "^1.8.3",
-    "jquery": "^2.1.4",
-    "three": "^0.82.0"
-=======
     "webpack": "^1.12.14",
     "jsdoc": "^3.4.3"
   },
   "dependencies": {
     "jupyter-js-widgets": "^1.1.1",
-    "jupyter-exawidgets": "^0.1.3",
-    "jupyter-threejs": "^0.1.3",
     "underscore": "^1.8.3",
     "three": "^0.82.0",
-    "dat-gui": "^0.5.0",
     "three-trackballcontrols": "^0.0.5",
-    "qunitjs": "^2.1.1"
->>>>>>> tjd/master
+    "qunitjs": "^2.1.1",
+    "d3": "^4.8.0",
+    "jupyter-exawidgets": "^0.4.0"
   }
 }
