@@ -118,7 +118,7 @@ class PSPData(six.with_metaclass(PSPMeta, Container)):
         # Get default values
         style = kwargs.pop("style", ["-", "--"])
         ylim = kwargs.pop("ylim", (-5, 5))
-        colors = kwargs.pop("colors", None)
+        colors = kwargs.pop("c", None)
         if colors is None:
             colors = qualitative(n)
         elif not isinstance(colors, (list, tuple)):
@@ -136,10 +136,53 @@ class PSPData(six.with_metaclass(PSPMeta, Container)):
         ax.set_ylim(*ylim)
         return ax
 
-    def plot_psae(self):
-        """Plot AE and PS waves for comparison."""
+    def plot_wfc(self, xlim=(0, 10), **kwargs):
+        """Plot (AE) wave functions."""
+        nls = self.psed.data.loc[self.psed.data['fill'] > 0, "nl"]
+        cols = [col for col in self.data.columns if "psi" in col[0] and any(nl in col[1] for nl in nls)]
+        return self.data[cols].plot(xlim=xlim, **kwargs)
+
+    def plot_v(self, xlim=(0, 5), ylim=(-10, 10), legend=True, **kwargs):
+        """Plot the radial potential functions."""
+        cols = [col for col in self.data.columns if isinstance(col, str) and "v" in col.lower()]
+        n = len(cols) - 3
+        colors = kwargs.pop("c", None)
+        styles = kwargs.pop("style", None)
+        if colors is None:
+            colors = ["black", "gray", "lightgray"] + qualitative(n)
+        if styles is None:
+            styles = ["-", "-", "-"] + ["--"]*n
+        ax = sns.plt.subplot()
+        for i, col in enumerate(cols):
+            ax = self.data[col].plot(ax=ax, style=styles[i], c=colors[i], label=col, legend=legend, **kwargs)
+        ax.set_xlim(*xlim)
+        ax.set_ylim(*ylim)
+        return ax
+
+    def get_ae_rho(self, nl):
+        """Get the radial shell density."""
+        col = [col for col in self.data.columns if nl.upper() in col[1]][0]
+        shell = self.data[col].copy().to_frame()
+        rho = (r"$\rho_i(r)$", col[1])
+        shell[rho] = shell[col]**2
+        shell[(r"$r^2\rho_i(r)^2$", col[1])] = shell.index**2*shell[rho]
+        return shell
+
+    def get_nodal(self):
+        """Get node positions and max radial density."""
         raise
-        #nls = self.psed.data['nl'].tolist()
+#        nls = self.psed.data.loc[self.psed.data['fill'] > 0, "nl"]
+#        for nl in nls:
+#            shell = self.get_ae_rho(nl)
+#            psi = shell[shell.columns[0]].values
+#            nodes = psi[1:]*psi[:-1]
+#            nodes = nodes[nodes < 0].tolist()
+
+
+    def plot_ae_rho(self, nl, xlim=(0, 8), **kwargs):
+        """Plot the radial density of a given shell."""
+        shell = self.get_ae_rho(nl)
+        return shell.plot(xlim=xlim, **kwargs)
 
     def plot_ps(self, nl, **kwargs):
         """Plot a given pseudo wave, projector, and AE reference."""
