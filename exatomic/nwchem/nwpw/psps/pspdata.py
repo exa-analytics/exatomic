@@ -127,7 +127,12 @@ class PSPData(six.with_metaclass(PSPMeta, Container)):
         ax = sns.plt.subplot()
         for i, col in enumerate(self.log.columns[::2]):
             cols = [col, col.replace("AE", "PS")]
+#            plotme = self.log.loc[(self.log[cols[0]] < ylim[1]) &
+#                                  (self.log[cols[0]] > ylim[0]) &
+#                                  (self.log[cols[1]] < ylim[1]) &
+#                                  (self.log[cols[1]] > ylim[0]), cols]
             ax = self.log[cols].plot(ax=ax, style=style, c=colors[i], **kwargs)
+#            ax = plotme.plot(ax=ax, style=style, c=colors[i], **kwargs)
         ax.set_ylim(*ylim)
         return ax
 
