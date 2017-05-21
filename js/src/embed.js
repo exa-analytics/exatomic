@@ -8,10 +8,11 @@
 var _ = require("underscore");
 module.exports = _.extend(
     {},
-    require("./exatomic.js"),
-    require("./app.js"),
-    require("./functions.js"),
-    require("./universe.js"),
     require("./test.js")
+//    require("./exatomic.js"),
+//    require("./app.js"),
+//    require("./functions.js"),
+//    require("./universe.js"),
+//    require("./test.js")
 );
 module.exports["version"] = require("../package.json").version;

@@ -9,13 +9,15 @@ var _ = require("underscore");
 var __webpack_public_path__ = document.querySelector("body").getAttribute("data-base-url") + "nbextensions/jupyter-exa/";
 // Export widget models and views, and the npm package version number.
 module.exports = _.extend(
-    require("./example.js"), 
-    require("./example2.js"),
-    require("./foo/base.js"), 
-    require("./exa-three.js"),
-    require("./app.js"),
-    require("./functions.js"),
-    require("./universe.js"),
+    {},
     require("./test.js")
+//    require("./example.js"), 
+//    require("./example2.js"),
+//    require("./foo/base.js"), 
+//    require("./exa-three.js"),
+//    require("./app.js"),
+//    require("./functions.js"),
+//    require("./universe.js"),
+//    require("./test.js")
 );
 module.exports["version"] = require("../package.json").version;
