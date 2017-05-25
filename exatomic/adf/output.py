@@ -149,7 +149,7 @@ class Output(Editor):
         dfs['angmom'].update(dfs['angmom'].map({'S': 'S:'}))
         dfs[['L', 'ml']] = dfs['angmom'].str.extract('(.*):(.*)', expand=True)
         dfs['%'] = dfs['%'].str.replace('%', '')
-        dfs['%'].update(dfs['%'].map({"    ******": np.inf})
+        dfs['%'].update(dfs['%'].map({"    ******": np.inf}))
         dfs['%'] = dfs['%'].astype(np.float64)
         dfs['occupation'] = dfs['occupation'].astype(np.float64)
         dfs['vector'] = dfs['vector'].astype(np.int64) - 1
