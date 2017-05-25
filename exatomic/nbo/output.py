@@ -76,8 +76,9 @@ class MOMatrix(Editor):
     def to_universe(self):
         raise NotImplementedError('This editor has no parse_atom method.')
 
-    def parse_momatrix(self, nbas, column=None):
-        start = 3
+    def parse_momatrix(self, nbas, column=None, os=False):
+        column = 'coef' if column is None else column
+        start = 3 if not os else 4
         ncol = len(self[start].split())
         if nbas <= ncol:
             nrows = ncol
@@ -86,15 +87,31 @@ class MOMatrix(Editor):
             add = 1 if nbas % ncol else 0
             nrows = nbas * (nbas // ncol + add)
             occrows = nbas // ncol + add
+        # This code is repetitive with the beta spin parsing below
+        # generalize for i in rnage(2): etc. etc.
         stop = start + nrows
         occstart = stop
         occstop = occstart + occrows
-        momat = self.pandas_dataframe(start, stop, range(ncol)).stack().reset_index(drop=True)
-        occvec = self.pandas_dataframe(occstart, occstop, range(ncol)).stack().reset_index(drop=True)
-        momat.index.name = column if column is not None else 'coef1'
-        occvec.index.name = column if column is not None else 'coef1'
-        self.momatrix = momat
-        self.occupation_vector = occvec
+        coef = self.pandas_dataframe(start, stop, range(ncol)
+                                     ).stack().reset_index(drop=True)
+        occvec = self.pandas_dataframe(occstart, occstop, range(ncol)
+                                       ).stack().reset_index(drop=True)
+        orbital = np.repeat(range(dim), dim)
+        chi = np.tile(range(dim), dim)
+        self.momatrix = pd.DataFrame.from_dict({'orbital': orbital, 'chi': chi,
+                                                column: coef, 'frame': 0})
+        self.occupation_vector = {0: occvec}
+        if os:
+            start = self.find_next('BETA  SPIN', start=stop, keys_only=True) + 1
+            stop = start + nrows
+            occstart = stop
+            occstop = occstart + occrows
+            beta = self.pandas_dataframe(start, stop, range(ncol)
+                                        ).stack().reset_index(drop=True)
+            betaocc = self.pandas_dataframe(occstart, occstop, range(ncol),
+                                            ).stack().reset_index(drop=True)
+            self.momatrix['coef1'] = beta
+            self.occupation_vector['beta'] = betaocc
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)

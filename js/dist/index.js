@@ -1639,7 +1639,7 @@ define(["jupyter-js-widgets"], function(__WEBPACK_EXTERNAL_MODULE_5__) { return 
 	    Notebook widget application for visualization of the universe container.
 	    */
 	    constructor(view) {
-	        console.log("init2");
+	        console.log("Creating universe");
 	        this.view = view;
 	        this.view.create_canvas();
 	        this.update_vars();
@@ -1762,7 +1762,6 @@ define(["jupyter-js-widgets"], function(__WEBPACK_EXTERNAL_MODULE_5__) { return 
 	            self.top.index = index;
 	            self.top.frame = self.view.framelist[self.top.index];
 	            self.update_fields();
-	            //self.update_orbitals();
 	            self.render_current_frame();
 	        });
 	        this.top.index_slider.onFinishChange(function(index) {
@@ -1827,23 +1826,17 @@ define(["jupyter-js-widgets"], function(__WEBPACK_EXTERNAL_MODULE_5__) { return 
 	        this.fields = {
 	            "isovalue": 0.03,
 	            "field": null,
-	            "label": 0,
-	            "cur_fields": [null]
+	            "current": [null],
 	        };
 	        this.fields["folder"] = this.gui.addFolder("fields");
 	        this.fields["isovalue_slider"] = this.fields.folder.add(this.fields, "isovalue", 0.0001, 0.5);
-	        this.fields["field_dropdown"] = this.fields.folder.add(this.fields, "field", this.fields["cur_fields"]);
-	        this.fields["label_dropdown"] = this.fields.folder.add(this.fields, "label", this.fields["label"]);
-	        this.fields.field_dropdown.onFinishChange(function(field_index) {
-	            self.fields["field"] = field_index;
-	            self.render_field();
-	        });
-	        this.fields.label_dropdown.onFinishChange(function(label_index) {
-	            self.fields["label"] = label_index;
-	            self.render_field();
-	        });
+	        this.fields["field_dropdown"] = this.fields.folder.add(this.fields, "field", this.fields["current"]);
 	        this.fields.isovalue_slider.onFinishChange(function(value) {
 	            self.fields.isovalue = value;
+	            self.render_field();
+	        });
+	        this.fields.field_dropdown.onFinishChange(function(field_index) {
+	            self.fields["field"] = field_index;
 	            self.render_field();
 	        });
 	    };
@@ -1855,20 +1848,17 @@ define(["jupyter-js-widgets"], function(__WEBPACK_EXTERNAL_MODULE_5__) { return 
 	        Updates available fields for the given frame and selection
 	        */
 	        var self = this;
+	        console.log(this.view);
 	        var field_indices = this.gv(this.view.field_indices, this.top.index);
 	        if (field_indices === undefined) {
 	            field_indices = [];
 	        };
 	        field_indices.push(null);
-	        var label_indices = this.gv(this.view.label_indices, this.top.index);
-	        if (label_indices !== undefined) {
-	            field_indices = label_indices;
-	        };
-	        this.fields["cur_fields"] = field_indices;
+	        this.fields["current"] = field_indices;
 	        this.fields["field"] = field_indices[0];
 	        this.fields.folder.__controllers[1].remove();
 	        this.fields.folder.__controllers.splice(1, 1);
-	        this.fields["field_dropdown"] = this.fields.folder.add(this.fields, "field", this.fields["cur_fields"]);
+	        this.fields["field_dropdown"] = this.fields.folder.add(this.fields, "field", this.fields["current"]);
 	        this.fields.field_dropdown.onFinishChange(function(field_index) {
 	            self.fields["field"] = field_index;
 	            self.render_field();
@@ -1904,7 +1894,6 @@ define(["jupyter-js-widgets"], function(__WEBPACK_EXTERNAL_MODULE_5__) { return 
 	            "dyi": dyi, "dyj": dyj, "dyk": dyk,
 	            "dzi": dzi, "dzj": dzj, "dzk": dzk}, values);
 	        this.app3d.remove_meshes(this.cube_field_mesh);
-	        this.cube_like = "field";
 	        this.cube_field_mesh = this.app3d.add_scalar_field(this.cube_field, this.fields.isovalue, 2);
 	    };
 	
@@ -1930,13 +1919,11 @@ define(["jupyter-js-widgets"], function(__WEBPACK_EXTERNAL_MODULE_5__) { return 
 	        var v0 = this.gv(this.view.two_bond0, this.top.index);
 	        var v1 = this.gv(this.view.two_bond1, this.top.index);
 	        if (this.cube_field !== undefined) {
-	            if (this.cube_like === "field") {
-	                this.app3d.remove_meshes(this.cube_field_mesh);
-	                this.cube_field_mesh = this.app3d.add_scalar_field(this.cube_field, this.fields.isovalue, 2);
-	            } //else if (this.cube_like === "orbital") {
-	              //  this.render_orbital();
-	                //this.app3d.remove_meshes(this.cube_field_mesh);
-	                //this.cube_field_mesh = this.app3d.add_scalar_field(this.cube_field, this.orbitals.isovalue, 2);
+	            this.app3d.remove_meshes(this.cube_field_mesh);
+	            console.log(this.cube_field);
+	            this.cube_field_mesh = this.app3d.add_scalar_field(
+	                                   this.cube_field, this.fields.isovalue, 2);
+	            console.log(this.cube_field_mesh);
 	        };
 	        this.app3d.remove_meshes(this.bond_meshes);
 	        if (v0 !== undefined && v1 !== undefined) {
@@ -92804,6 +92791,106 @@ define(["jupyter-js-widgets"], function(__WEBPACK_EXTERNAL_MODULE_5__) { return 
 	        return norm * z2 * Math.exp(-alpha * r2);
 	    },
 	
+	    "f300": function(x, y, z) {
+	        var x2 = x*x;
+	        var y2 = y*y;
+	        var z2 = z*z;
+	        var r2 = x2 + y2 + z2;
+	        var alpha = 0.01;
+	        var norm = exawidgets.normalize_gaussian(alpha, 3);
+	        return norm * x*x*x * Math.exp(-alpha * r2);
+	    },
+	
+	    "f210": function(x, y, z) {
+	        var x2 = x*x;
+	        var y2 = y*y;
+	        var z2 = z*z;
+	        var r2 = x2 + y2 + z2;
+	        var alpha = 0.01;
+	        var norm = exawidgets.normalize_gaussian(alpha, 3);
+	        return norm * x*x*y * Math.exp(-alpha * r2);
+	    },
+	
+	    "f201": function(x, y, z) {
+	        var x2 = x*x;
+	        var y2 = y*y;
+	        var z2 = z*z;
+	        var r2 = x2 + y2 + z2;
+	        var alpha = 0.01;
+	        var norm = exawidgets.normalize_gaussian(alpha, 3);
+	        return norm * x*x*z * Math.exp(-alpha * r2);
+	    },
+	
+	    "f120": function(x, y, z) {
+	        var x2 = x*x;
+	        var y2 = y*y;
+	        var z2 = z*z;
+	        var r2 = x2 + y2 + z2;
+	        var alpha = 0.01;
+	        var norm = exawidgets.normalize_gaussian(alpha, 3);
+	        return norm * x*y*y * Math.exp(-alpha * r2);
+	    },
+	
+	    "f102": function(x, y, z) {
+	        var x2 = x*x;
+	        var y2 = y*y;
+	        var z2 = z*z;
+	        var r2 = x2 + y2 + z2;
+	        var alpha = 0.01;
+	        var norm = exawidgets.normalize_gaussian(alpha, 3);
+	        return norm * x*z*z * Math.exp(-alpha * r2);
+	    },
+	
+	    "f111": function(x, y, z) {
+	        var x2 = x*x;
+	        var y2 = y*y;
+	        var z2 = z*z;
+	        var r2 = x2 + y2 + z2;
+	        var alpha = 0.01;
+	        var norm = exawidgets.normalize_gaussian(alpha, 3);
+	        return norm * x*y*z * Math.exp(-alpha * r2);
+	    },
+	
+	    "f030": function(x, y, z) {
+	        var x2 = x*x;
+	        var y2 = y*y;
+	        var z2 = z*z;
+	        var r2 = x2 + y2 + z2;
+	        var alpha = 0.01;
+	        var norm = exawidgets.normalize_gaussian(alpha, 3);
+	        return norm * y*y*y * Math.exp(-alpha * r2);
+	    },
+	
+	    "f021": function(x, y, z) {
+	        var x2 = x*x;
+	        var y2 = y*y;
+	        var z2 = z*z;
+	        var r2 = x2 + y2 + z2;
+	        var alpha = 0.01;
+	        var norm = exawidgets.normalize_gaussian(alpha, 3);
+	        return norm * y*y*z * Math.exp(-alpha * r2);
+	    },
+	
+	    "f012": function(x, y, z) {
+	        var x2 = x*x;
+	        var y2 = y*y;
+	        var z2 = z*z;
+	        var r2 = x2 + y2 + z2;
+	        var alpha = 0.01;
+	        var norm = exawidgets.normalize_gaussian(alpha, 3);
+	        return norm * y*z*z * Math.exp(-alpha * r2);
+	    },
+	
+	    "f003": function(x, y, z) {
+	        var x2 = x*x;
+	        var y2 = y*y;
+	        var z2 = z*z;
+	        var r2 = x2 + y2 + z2;
+	        var alpha = 0.01;
+	        var norm = exawidgets.normalize_gaussian(alpha, 3);
+	        return norm * z*z*z * Math.exp(-alpha * r2);
+	    },
+	
 	};
 	
 	/*
@@ -93678,7 +93765,11 @@ define(["jupyter-js-widgets"], function(__WEBPACK_EXTERNAL_MODULE_5__) { return 
 	            "function": "s",
 	            "functions": ["s", "px", "py", "pz",
 	                          "d200", "d110", "d101",
-	                          "d020", "d011", "d002"],
+	                          "d020", "d011", "d002",
+	                          "f300", "f210", "f201",
+	                          "f120", "f102", "f111",
+	                          "f030", "f021", "f012",
+	                          "f003"],
 	            "isovalue": 0.005
 	        };
 	        this.gtf["folder"] = this.gui.addFolder("Gaussian Type Functions");
@@ -93727,9 +93818,9 @@ define(["jupyter-js-widgets"], function(__WEBPACK_EXTERNAL_MODULE_5__) { return 
 	        this.sh.folder.__controllers[2].remove();
 	        this.sh.folder.__controllers.splice(2, 1);
 	        this.sh.m = 0;
+	        this.sh.ms = [];
 	        var init = -this.sh.l;
 	        var max = 2 * this.sh.l + 1;
-	        this.sh.ms = [];
 	        while (this.sh.ms.length < max) {
 	            this.sh.ms.push(init++);
 	        };

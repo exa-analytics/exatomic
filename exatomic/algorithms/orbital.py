@@ -401,7 +401,7 @@ def add_molecular_orbitals(uni, field_params=None, mocoefs=None,
     # Preliminary assignment and array dimensions
     vector = _determine_vector(uni, vector)
     if mocoefs is None: mocoefs = 'coef'
-    elif mocoefs not in uni.momatrix.columns:
+    if mocoefs not in uni.momatrix.columns:
         print('mocoefs {} is not in uni.momatrix'.format(mocoefs))
         return
     fld_ps = _determine_field_params(uni, field_params, len(vector))
@@ -411,37 +411,41 @@ def add_molecular_orbitals(uni, field_params=None, mocoefs=None,
     nvec = len(vector)
     npts = len(x)
 
+    print('Warning: not extensively validated. Consider adding tests.')
     # Build the strings corresponding to basis functions
-    print('Warning: not extensively tested. Please be careful.')
-    basfns = gen_basfns(uni, frame=frame)
+    # basfns is frame dependent but takes a few seconds to generate,
+    # so cache a frame's basis functions with a dict of key {frame: basfns} value
+    if hasattr(uni, 'basfns'):
+        if frame in uni.basfns: pass
+        else: uni.basfns[frame] = gen_basfns(uni, frame=frame)
+    else: uni.basfns = {frame: gen_basfns(uni, frame=frame)}
     orbs = uni.momatrix.groupby('orbital')
 
+    t1 = datetime.now()
     # Evaluate basis functions one time and store all in a single
     # large numpy array which is much more efficient but can require
     # a lot of memory if the resolution of the field is very fine
     if (norb * npts * 8) < halfmem:
-        t1 = datetime.now()
-        print('Evaluating basis functions once.')
+        print('Evaluating basis functions once:'
+              ' {} basis functions'.format(nbas))
         fields = np.empty((npts, nvec), dtype=np.float64)
         vals = np.empty((npts, nbas), dtype=np.float64)
-        for i, bas in enumerate(basfns): vals[:,i] = ne.evaluate(bas)
+        for i, bas in enumerate(uni.basfns[frame]): vals[:,i] = ne.evaluate(bas)
         for i, vec in enumerate(vector):
-            fields[:,i] = (vals * orbs.get_group(vec).coef.values).sum(axis=1)
-        t2 = datetime.now()
-        print('Timing: compute MOs - {:.2f}s'.format((t2-t1).total_seconds()))
+            fields[:,i] = (vals * orbs.get_group(vec)[mocoefs].values).sum(axis=1)
     # If the resolution of fields will be memory intensive, evaluate
     # each basis function on the fly per MO which saves a large
     # np.array in memory but is redundant and less efficient
     else:
-        t1 = datetime.now()
-        print('Evaluating basis functions per MO.')
+        print('Evaluating basis functions per MO (slow):'
+              ' {} basis functions {} times'.format(nbas, nvec))
         fields = np.zeros((npts, nvec), dtype=np.float64)
         for i, vec in enumerate(vector):
-            c = orbs.get_group(vec).coef.values
-            for j, bas in enumerate(basfns):
+            c = orbs.get_group(vec)[mocoefs].values
+            for j, bas in enumerate(uni.basfns[frame]):
                 fields[:,i] += c[j] * ne.evaluate(bas)
-        t2 = datetime.now()
-        print('Timing: compute MOs - {:.2f}s'.format((t2-t1).total_seconds()))
+    t2 = datetime.now()
+    print('Timing: compute MOs - {:.2f}s'.format((t2-t1).total_seconds()))
 
     field = AtomicField(fld_ps, field_values=[fields[:,i] for i in range(nvec)])
     if not inplace: return field

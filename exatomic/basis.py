@@ -191,14 +191,13 @@ class Overlap(DataFrame):
         an array of the values directly."""
         try:
             # Assuming source is a file of triangular elements of the overlap matrix
-            vals = pd.read_csv(fp, header=None).values.flatten()
+            vals = pd.read_csv(source, header=None).values.flatten()
         except:
             vals = source
         # Reverse engineer the number of basis functions given len(ovl) = n * (n + 1) / 2
-        nbas = np.round(np.roots((1, 1, -2 * ovl.shape[0]))[1]).astype(np.int64)
-        # Index chi1 and chi2, they are interchangeable as overlap is symmetric
-        chis = _ovl_indices(nbas, ovl.shape[0])
-        ovl['frame'] = 0
+        nbas = np.round(np.roots((1, 1, -2 * vals.shape[0]))[1]).astype(np.int64)
+        # Index chi0 and chi1, they are interchangeable as overlap is symmetric
+        chis = _ovl_indices(nbas, vals.shape[0])
         return cls(pd.DataFrame.from_dict({'chi0': chis[:, 0],
                                            'chi1': chis[:, 1],
                                            'coef': vals,

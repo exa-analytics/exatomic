@@ -292,26 +292,30 @@ class Output(Editor):
         if not chk: return
         # Find the data
         found = self.find(_reexcst)
-        # Allocate the array
-        dtype = [('eV', 'f8'), ('osc', 'f8'), ('occ', 'i8'),
-                 ('virt', 'i8'), ('kind', 'O'), ('symmetry', 'O')]
-        data = np.empty((len(found),), dtype=dtype)
-        # Iterate over what we found
+        keeps, maps, summ = [], [] ,[]
         for i, (lno, ln) in enumerate(found):
-            # Split this line up into what we want and x
-            ll = ln.split()
-            kind, en, osc = ll[3], ll[4], ll[8]
-            # Same for the line right after it
-            occ, x, virt, x = self[lno + 1].split()
-            # Assign the values
-            data[i] = (en, osc.replace('f=', ''), occ, virt) + tuple(kind.split('-'))
-        excitation = pd.DataFrame(data)
-        # Internal units dictate we should have Hartrees as 'energy'
-        excitation['energy'] = excitation['eV'] * Energy['eV', 'Ha']
-        # Frame not really implemented here
-        excitation['frame'] = 0
-        excitation['group'] = 0
-        self.excitation = excitation
+            summ.append(ln)
+            lno += 1
+            while '->' in self[lno]:
+                keeps.append(lno)
+                maps.append(i)
+                lno += 1
+        cols = [0, 1, 2, 'kind', 'eV', 3, 'nm', 4, 'osc', 's2']
+        summ = pd.read_csv(StringIO('\n'.join([ln for lno, ln in found])),
+                           delim_whitespace=True, header=None, names=cols,
+                           usecols=[c for c in cols if type(c) == str])
+        summ['s2'] = summ['s2'].str[7:].astype(np.float64)
+        summ['osc'] = summ['osc'].str[2:].astype(np.float64)
+        cols = ['occ', 0, 'virt', 'cont']
+        conts = pd.read_csv(StringIO('\n'.join([self[i] for i in keeps])),
+                            delim_whitespace=True, header=None, names=cols,
+                            usecols=[c for c in cols if type(c) == str])
+        conts['map'] = maps
+        for col in summ.columns:
+            conts[col] = conts['map'].map(summ[col])
+        conts['energy'] = conts['eV'] * Energy['eV', 'Ha']
+        conts['frame'] = conts['group'] = 0
+        self.excitation = conts
 
 
     def parse_frequency(self):
@@ -381,8 +385,9 @@ class Output(Editor):
 def _basis_set_order(chunk):
     # Gaussian only prints the atom center
     # and label once for all basis functions
+    first = len(chunk[0]) - len(chunk[0].lstrip(' ')) + 1
     df = pd.read_fwf(StringIO('\n'.join(chunk)),
-                     widths=[4, 4, 3, 2, 4], header=None)
+                     widths=[first, 4, 3, 2, 4], header=None)
     df[1].fillna(method='ffill', inplace=True)
     df[1] = df[1].astype(np.int64) - 1
     df[2].fillna(method='ffill', inplace=True)
@@ -484,13 +489,13 @@ _reixn = 'IX=    {}'
 
 class Fchk(Editor):
 
-    def _intme(self, fitem):
+    def _intme(self, fitem, idx=0):
         """Helper gets an integer of interest."""
-        return int(self[fitem[0]].split()[-1])
+        return int(self[fitem[idx]].split()[-1])
 
-    def _dfme(self, fitem, dim):
+    def _dfme(self, fitem, dim, idx=0):
         """Helper gets an array of interest."""
-        start = fitem[0] + 1
+        start = fitem[idx] + 1
         col = min(len(self[start].split()), dim)
         stop = np.ceil(start + dim / col).astype(np.int64)
         return self.pandas_dataframe(start, stop, col).stack().values
@@ -615,9 +620,9 @@ class Fchk(Editor):
 
 
     def parse_orbital(self):
-        found = self.find(_reorben, _reorboc, keys_only=True)
-        ae = self._intme(found[_reorboc], idx=1)
-        be = self._intme(found[_reorboc], idx=2)
+        found = self.regex(_reorben, _reorboc, keys_only=True)
+        ae = self._intme(found[_reorboc], idx=0)
+        be = self._intme(found[_reorboc], idx=1)
         nbas = self._intme(found[_reorben])
         ens = np.concatenate([self._dfme(start, nbas, idx=i)
                               for i, start in enumerate(found[_reorben])])
