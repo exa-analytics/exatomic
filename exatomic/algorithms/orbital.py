@@ -426,8 +426,7 @@ def add_molecular_orbitals(uni, field_params=None, mocoefs=None,
     # large numpy array which is much more efficient but can require
     # a lot of memory if the resolution of the field is very fine
     if (norb * npts * 8) < halfmem:
-        print('Evaluating basis functions once:'
-              ' {} basis functions'.format(nbas))
+        print('Evaluating {} basis functions once.'.format(nbas))
         fields = np.empty((npts, nvec), dtype=np.float64)
         vals = np.empty((npts, nbas), dtype=np.float64)
         for i, bas in enumerate(uni.basfns[frame]): vals[:,i] = ne.evaluate(bas)
@@ -437,8 +436,7 @@ def add_molecular_orbitals(uni, field_params=None, mocoefs=None,
     # each basis function on the fly per MO which saves a large
     # np.array in memory but is redundant and less efficient
     else:
-        print('Evaluating basis functions per MO (slow):'
-              ' {} basis functions {} times'.format(nbas, nvec))
+        print('Evaluating {} basis functions {} times (slow).'.format(nbas, nvec))
         fields = np.zeros((npts, nvec), dtype=np.float64)
         for i, vec in enumerate(vector):
             c = orbs.get_group(vec)[mocoefs].values
