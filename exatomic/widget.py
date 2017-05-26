@@ -31,23 +31,24 @@ class UniverseWidget(BaseDOM):
         savedir = os.getcwd()
         if self.params['save_dir'] != "":
             savedir = self.params['save_dir']
+<<<<<<< HEAD
         if self.params['file_name'] != "":
             imgname = "none" #filename
+=======
+>>>>>>> tjd_master
         else:
             nxt = 0
-            try:
-                lgfls = [fl.split(os.sep)[-1] for fl in glob(os.sep.join([savedir, "*png"]))]
-                numbers = ["".join([c for c in fl if c.isdigit()]) for fl in lgfls]
-                last = sorted(map(int, numbers))[-1]
-                nxt = last + 1
+            if self.params['filename'] != "":
+                imgname = filename
+                if not imgname.endswith(".png"):
+                    imgname += ".png"
+            else:
                 imgname = "{:06d}.png".format(nxt)
-            except:
-                imgname = "{:06d}.png".format(nxt)
-        if os.path.isfile(os.sep.join([savedir, imgname])):
-            print("Automatic file name generation failed. Use uni._widget.params['filename']")
-            return
-        with open(os.sep.join([savedir, imgname]), "wb") as f:
-            f.write(b64decode(data.replace("data:image/png;base64,", "")))
+                while os.path.isfile(os.sep.join([savedir, imgname])):
+                    nxt += 1
+                    imgname = "{:06d}.png".format(nxt)
+            with open(os.sep.join([savedir, imgname]), "wb") as f:
+                f.write(b64decode(data.replace("data:image/png;base64,", "")))
         # TODO : this likely won"t work on windows but SHOULD automatically
         #        crop the image to minimize whitespace of the final image.
         try:

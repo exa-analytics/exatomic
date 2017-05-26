@@ -22,6 +22,11 @@ def _interpolate(df, x, y, z, method, kind, yfirst, dim, minimum):
     # Check that columns are in df
     if len(set([x, y, z]) & set(df.columns)) != 3:
         raise Exception('{!r}, {!r} and {!r} must be in df.columns'.format(x, y, z))
+    oned = None
+    if len(df[x].unique()) == 1:
+        oned, dud = y, x
+    elif len(df[y].unique()) == 1:
+        oned, dud = x, y
     # Map the method to the function or class in scipy
     convenience = {'cloughtocher': CloughTocher2DInterpolator,
                     'barycentric': barycentric_interpolate,
@@ -33,6 +38,21 @@ def _interpolate(df, x, y, z, method, kind, yfirst, dim, minimum):
                        'interp1d': interp1d,
                        'interp2d': interp2d,
                        'griddata': griddata}
+    # Handle 1-dimensional data first
+    if oned is not None:
+        if method not in ['interp1d', 'akima']:
+            raise Exception('One-dimensional interpolation must use '
+                            '"interp1d" or "aklima" method')
+        kwargs = {'kind': kind} if method == 'interp1d' else {}
+        xdat = df[oned].values
+        if not df[z].isnull().values.any(): zdat = df[z].values
+        else:
+            print('Missing data is interpolated with a 3rd order polynomial.')
+            zdat = df[z].interpolate(method='piecewise_polynomial', order=3)
+        newx = np.linspace(xdat.min(), xdat.max(), dim)
+        interpz = convenience[method](xdat, zdat, **kwargs)
+        newz = interpz(newx)
+        return {'x': newx, 'z': newz, 'y': df[dud].unique()}
     # Check that the interpolation method is supported
     if method not in convenience.keys():
         raise Exception('method must be in {}'.format(convenience.keys()))
