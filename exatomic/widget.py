@@ -10,8 +10,8 @@ import subprocess
 import pandas as pd
 from glob import glob
 from base64 import b64decode
-from traitlets import Unicode
-from ipywidgets import Layout
+from traitlets import Unicode, Bool, Int, Float, Instance
+from ipywidgets import Layout, widget_serialization
 from exawidgets import ThreeScene, BaseBox
 from exa.utility import mkp
 
@@ -20,21 +20,34 @@ width = "600"
 height = "450"
 gui_lo = Layout(width="200px")
 
-class TestUniverseScene(ThreeScene):
+
+class UniverseScene(ThreeScene):
     """basic :class:`~exatomic.container.universe` scene."""
-    _model_module = unicode("jupyter-exatomic").tag(sync=True)
-    _view_module = unicode("jupyter-exatomic").tag(sync=True)
-    _model_name = unicode("TestUniverseSceneModel").tag(sync=True)
-    _view_name = unicode("TestUniverseSceneView").tag(sync=True)
+    _model_name = Unicode("UniverseSceneModel").tag(sync=True)
+    _view_name = Unicode("UniverseSceneView").tag(sync=True)
+
+
+class Universe(BaseBox):
+    """Test :class:`~exatomic.container.Universe` widget."""
+    _model_name = Unicode("UniverseModel").tag(sync=True)
+    _view_name = Unicode("UniverseView").tag(sync=True)
+
+
+class TestUniverseScene(UniverseScene):
+    """basic :class:`~exatomic.container.universe` scene."""
+    _model_module = Unicode("jupyter-exatomic").tag(sync=True)
+    _view_module = Unicode("jupyter-exatomic").tag(sync=True)
+    _model_name = Unicode("TestUniverseSceneModel").tag(sync=True)
+    _view_name = Unicode("TestUniverseSceneView").tag(sync=True)
     scn_clear = Bool(False).tag(sync=True)
     scn_saves = Bool(False).tag(sync=True)
     # Blah something about CaselessStrEnums
-    kind = unicodde("null").tag(sync=True)
-    field = unicode("null").tag(sync=True)
-    field_nx = int(30).tag(sync=True)
-    field_ny = int(30).tag(sync=True)
-    field_nz = int(30).tag(sync=True)
-    field_iso = float(0.005).tag(sync=True)
+    kind = Unicode("null").tag(sync=True)
+    field = Unicode("null").tag(sync=True)
+    field_nx = Int(30).tag(sync=True)
+    field_ny = Int(30).tag(sync=True)
+    field_nz = Int(30).tag(sync=True)
+    field_iso = Float(0.005).tag(sync=True)
 
 funcs = ['hwfs', 'gtos']
 hwfs = ['1s',
@@ -46,7 +59,7 @@ gtos = ['s', 'px', 'py', 'pz', 'd200', 'd110',
 funcs = {'hwfs': hwfs, 'gtos': gtos}
 #shos = []
 
-class TestUniverse(BaseBox):
+class TestUniverse(Universe):
     """Test :class:`~exatomic.container.Universe` test widget."""
     _model_module = Unicode("jupyter-exatomic").tag(sync=True)
     _view_module = Unicode("jupyter-exatomic").tag(sync=True)
@@ -94,19 +107,7 @@ class TestUniverse(BaseBox):
                                             **kwargs)
 
 
-class UniverseScene(TestUniverse):
-    """basic :class:`~exatomic.container.universe` scene."""
-    _model_name = unicode("UniverseSceneModel").tag(sync=True)
-    _view_name = unicode("UniverseSceneView").tag(sync=True)
-
-
-class Universe(TestUniverse):
-    """Test :class:`~exatomic.container.Universe` widget."""
-    _model_name = Unicode("UniverseModel").tag(sync=True)
-    _view_name = Unicode("UniverseView").tag(sync=True)
-
-
-# class UniverseWidget(ContainerWidget):
+# class UniverseWidget(BaseBox):
 #     """
 #     Custom widget for the :class:`~exatomic.universe.Universe` data container.
 #     """

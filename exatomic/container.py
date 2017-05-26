@@ -29,7 +29,7 @@ from exatomic.two import (AtomTwo, MoleculeTwo, compute_atom_two,
                           compute_bond_count, compute_molecule_two)
 from exatomic.molecule import (Molecule, compute_molecule, compute_molecule_com,
                                compute_molecule_count)
-from exatomic.widget import UniverseWidget
+from exatomic.widget import Universe as UniverseWidget
 from exatomic.field import AtomicField
 from exatomic.orbital import Orbital, Excitation, MOMatrix, DensityMatrix
 from exatomic.basis import Overlap, BasisSet, BasisSetOrder
