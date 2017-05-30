@@ -9,7 +9,7 @@ data.
 """
 import six
 import pandas as pd
-from exa.special import LazyFunction
+from exa.functions import LazyFunction
 from exa.tex import text_value_cleaner
 from exa.core import Meta, Parser, DataFrame
 from exatomic.nwchem.nwpw.psps.grid import scaled_logspace

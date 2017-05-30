@@ -2,20 +2,10 @@
 # Copyright (c) 2015-2017, Exa Analytics Development Team
 # Distributed under the terms of the Apache License 2.0
 """
+Support for the `ADF Modeling Suite`_ software.
+
+_ADF Modeling Suite: https://www.scm.com
 """
-from ._composite import CompositeOutput
+from .output import CompositeOutput
 from . import nmr
-
-
-
-#from exatomic.adf import tests
-
-#from .output import Output
-
-<<<<<<< HEAD
-=======
-from .output import Output
-import warnings
-
-#warnings.warn("Alpha release, bugs may be present")
->>>>>>> org/master
+from . import dirac
