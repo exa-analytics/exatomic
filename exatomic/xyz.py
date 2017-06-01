@@ -10,11 +10,11 @@ An editor for the `XYZ`_ file format.
 """
 import six
 from exa import units
-from exa.core import Meta, Parser
+from exa.core.parser import Parser, ParserMeta
 from .atom import Atom
 
 
-class XYZMeta(Meta):
+class XYZMeta(ParserMeta):
     """Define data objects for :class:`~exatomic.xyz.XYZ`."""
     comment_lines = tuple
     atom = Atom
@@ -24,11 +24,12 @@ class XYZMeta(Meta):
 
 class XYZ(six.with_metaclass(XYZMeta, Parser)):
     """
-    Parser for common styles of `XYZ`_ files.
+    A parser/composer for the `XYZ`_ file format.
 
-    This parser supports simple XYZ and trajectory XYZ files. Occasionally
-    additionally columns will be present or the (length) units will be non-standard;
-    keyword arguments are provided to handle these cases.
+    This class can parser in simple XYZ and trajectory XYZ files. Occasionally
+    additional columns will be present in xyz-like files and can be handled by
+    keyword arguments. XYZ files can be constructed ('composed') using the
+    classmethods, ``from_universe``, ``from_atom``, etc.
 
     .. code-block:: python
 
