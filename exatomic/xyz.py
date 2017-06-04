@@ -8,21 +8,15 @@ An editor for the `XYZ`_ file format.
 
 .. _XYZ: https://en.wikipedia.org/wiki/XYZ_file_format
 """
-import six
+import numpy as np
+import pandas as pd
 from exa import units
-from exa.core.parser import Parser, ParserMeta
+from exa.core.parser import Parser
+from exa.typed import cta
 from .atom import Atom
 
 
-class XYZMeta(ParserMeta):
-    """Define data objects for :class:`~exatomic.xyz.XYZ`."""
-    comment_lines = tuple
-    atom = Atom
-    _descriptions = {'comments': "List of lines with comments",
-                     'atom': "Atom dataframe containing absolute positions"}
-
-
-class XYZ(six.with_metaclass(XYZMeta, Parser)):
+class XYZ(Parser):
     """
     A parser/composer for the `XYZ`_ file format.
 
@@ -45,6 +39,8 @@ class XYZ(six.with_metaclass(XYZMeta, Parser)):
     """
     _parse_unit = units.Angstrom
     _parse_columns = ("symbol", "x", "y", "z")
+    comment_lines = cta("comment_lines", list, "List of lines with comments")
+    atom = cta("atom", Atom, "Atom dataframe of absolute nuclear coordinates")
 
     @property
     def comments(self):

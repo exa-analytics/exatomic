@@ -1,15 +1,15 @@
 # -*- coding: utf-8 -*-
-# Copyright (c) 2015-2016, Exa Analytics Development Team
+# Copyright (c) 2015-2017, Exa Analytics Development Team
 # Distributed under the terms of the Apache License 2.0
 """
-Base Composer
+Base Input Composer
 #############################
 A few executables in the Quantum ESPRESSO suite share aspects of their template.
 Common features of provided by a base composer class. Generating input files
 should be done using the appropriate classes, for example
 :class:`~exatomic.qe.pw.composer.PWInput`.
 """
-from exa.core.composer import Composer, ComposerMeta
+from exa.core.composer import Composer
 
 
 _pwtemplate = """{n: = :control}
