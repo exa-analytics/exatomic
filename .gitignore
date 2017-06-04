@@ -26,37 +26,15 @@ osx-64/
 doc/build/
 target/
 .settings/
-js/dist/
 js/node_modules/
-win-32/
-win-64/
-linux-32/
-linux-64/
-osx-64/
+exatomic/_nbextension/
+node_modules/
+
 
 # Compiled
 *.py[cod]
 *.nb[ci]
 *.so
-.Python
-env/*
-build/*
-develop-eggs/*
-dist/*
-downloads/*
-eggs/*
-.eggs/*
-lib/*
-lib64/*
-parts/*
-sdist/*
-var/*
-js/dist/*
-js/node_modules/*
-*.egg-info/*
-.installed.cfg
-*.egg
-*.pypirc
 
 # IDE and misc
 *.manifest
@@ -68,7 +46,7 @@ nosetests.xml
 coverage.xml
 *.mo
 *.pot
-*.log
+*.log*
 *.project
 *.pydevproject
 *.swp
@@ -87,4 +65,5 @@ coverage.xml
 *.toc
 
 # Project specific
-exatomic/_nbextension/
+record.txt
+node_modules

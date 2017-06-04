@@ -14,6 +14,7 @@ import sys
 import platform
 
 
+# Basic information
 name = "exatomic"
 description = "A unified platform for theoretical and computational chemists and physicists."
 jsbuilddir = os.path.join('exatomic', '_nbextension')
@@ -24,10 +25,12 @@ prckws = {'shell': True} if platform.system().lower() == 'windows' else {}
 log.set_verbosity(log.DEBUG)
 log.info("setup.py entered")
 log.info("$PATH=%s" % os.environ['PATH'])
-npm_path = os.pathsep.join([os.path.join(node_root, "node_modules", ".bin"),
+node_modules_path = os.path.join(node_root, "node_modules")
+npm_path = os.pathsep.join([os.path.join(node_modules_path, ".bin"),
                             os.environ.get('PATH', os.defpath)])
 
 
+# Pull long documentation and version from source
 try:
     import pypandoc
     long_description = pypandoc.convert("README.md", "rst")
@@ -46,13 +49,13 @@ def js_prerelease(command, strict=False):
     """Decorator for building minified js/css prior to another command."""
     class DecoratedCommand(command):
         def run(self):
-            jsdeps = self.distribution.get_command_obj('jsdeps')
+            jsdeps = self.distribution.get_command_obj("jsdeps")
             if not is_repo and all(os.path.exists(t) for t in jsdeps.targets):
                 # sdist, nothing to do
                 command.run(self)
                 return
             try:
-                self.distribution.run_command('jsdeps')
+                self.distribution.run_command("jsdeps")
             except Exception as e:
                 missing = [t for t in jsdeps.targets if not os.path.exists(t)]
                 if strict or missing:
@@ -79,7 +82,7 @@ def update_package_data(distribution):
 class NPM(Command):
     description = "Install package.json dependencies using npm."
     user_options = []
-    node_modules = os.path.join(node_root, "node_modules")
+    node_modules = node_modules_path
     targets = [os.path.join(here, jsbuilddir, "extension.js"),
                os.path.join(here, jsbuilddir, "index.js")]
 
