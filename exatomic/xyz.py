@@ -12,7 +12,7 @@ import numpy as np
 import pandas as pd
 from exa import units
 from exa.core.parser import Parser
-from exa.typed import cta
+from exa.typed import TypedProperty
 from .atom import Atom
 
 
@@ -39,8 +39,8 @@ class XYZ(Parser):
     """
     _parse_unit = units.Angstrom
     _parse_columns = ("symbol", "x", "y", "z")
-    comment_lines = cta("comment_lines", list, "List of lines with comments")
-    atom = cta("atom", Atom, "Atom dataframe of absolute nuclear coordinates")
+    comment_lines = TypedProperty(list, "List of lines with comments")
+    atom = TypedProperty(Atom, "Atom dataframe of absolute nuclear coordinates")
 
     @property
     def comments(self):
