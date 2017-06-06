@@ -26,27 +26,17 @@ Three unique parsing objects are required, one for  ``metadata``, ``info``, and
 ``nucleus`` subsections. Regardless of how many nuclei are calculated a single
 parsing object (of Sections subtype) handles that region of the output.
 """
-import six
 import numpy as np
 import pandas as pd
-from exa.core import Meta, DataFrame, Sections
+from exa.typed import TypedProperty
+from exa.core.parser import Sections
+from exa.core.dataframe import DataFrame
 from exatomic.atom import Atom
 from exatomic.adf.mixin import OutputMixin
 from .out import NMRMetadataParser, InfoParser, NMRNucleusParser
 
 
-class NMROutputMeta(Meta):
-    """
-    Defines data objects parsed in this part of an ADF output file. Note that
-    some objects are aggregated from individual subsection parsers.
-    """
-    atom = Atom
-    shielding_tensors = DataFrame
-    _description = {'shielding_tensors': "Shielding tensor data per atom",
-                    'atom': "Table of nuclear coordinates"}
-
-
-class NMROutput(six.with_metaclass(NMROutputMeta, Sections, OutputMixin)):
+class NMR(Sections, OutputMixin):
     """
     The 'N M R' calculation section of a composite (or standalone) ADF output
     file.
@@ -56,15 +46,17 @@ class NMROutput(six.with_metaclass(NMROutputMeta, Sections, OutputMixin)):
     """
     _key_delim0 = "^#+$"
     _key_delim1 = "\(LOGFILE\)"
-    _key_sec_names = ["metadata", "None", "info"]    # Parser names
-    _key_sec_titles = ["version", "None", "basis"]   # Section titles
+    _key_sec_names = [NMRMetadataParser, "None", InfoParser]    # Static section parsers
+    _key_sec_titles = ["version", "None", "basis"]              # Static section titles
     _key_start = 0
     _key_nuc_title = 1
     _key_nuc_title_rep = ("*", "")
-    _key_nuc_name = "NUCLEUS"
+    _key_nuc_name = NMRNucleusParser
     _key_log_name = "LOGFILE"
     _key_log_title = "log"
     _key_id_type = np.int64
+    atom = TypedProperty(Atom)
+    shielding_tensors = TypedProperty(DataFrame, docs="Full shielding tensor data")
 
     def _parse(self):
         """Determine all sections."""
@@ -117,6 +109,3 @@ class NMROutput(six.with_metaclass(NMROutputMeta, Sections, OutputMixin)):
     def _get_atom(self):
         """Find the reference to the atom table."""
         pass
-
-
-NMROutput.add_section_parsers(NMRMetadataParser, InfoParser, NMRNucleusParser)

@@ -15,7 +15,11 @@ point for ADF output files. Most output files can be read by this class.
 """
 from exa import Sections
 from .mixin import OutputMixin
-#from .nmr.output import NMROutput
+from .dirac import DIRAC
+from .nmr import NMR
+
+
+parser_aliases = {'DIRAC': DIRAC, 'NMR': NMR}
 
 
 class CompositeOutput(Sections, OutputMixin):
@@ -25,8 +29,6 @@ class CompositeOutput(Sections, OutputMixin):
     This object accepts the most general type of ADF output file that contains
     output structures from many different calculations.
     """
-    name = "CompositeOutput"
-    description = "Generic ADF output file parser"
     _key_exe_delim = " *   Amsterdam Density Functional  (ADF)"
     _key_exe_plus = 7
     _key_exe_minus = -4
@@ -46,11 +48,8 @@ class CompositeOutput(Sections, OutputMixin):
                 title = title.replace(*args)
             titles.append(title.strip())
             parser = title.replace(*self._key_parser_rep)
-            parser_names.append(parser)
+            parser_names.append(parser_aliases.get(parser, parser))
         starts = [i + self._key_exe_minus for i in delims]
         ends = starts[1:]
         ends.append(len(self))
         self._sections_helper(parser=parser_names, start=starts, end=ends, title=titles)
-
-
-#CompositeOutput.add_section_parsers(NMROutput)

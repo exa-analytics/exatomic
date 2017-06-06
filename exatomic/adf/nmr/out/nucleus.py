@@ -6,10 +6,10 @@ NMR Nucleus Subsection
 ######################
 This subsection contains calculation shielding tensors.
 """
-import six
 import numpy as np
 import pandas as pd
-from exa.core import Meta, Sections, Parser
+from exa import Sections, Parser
+from exa.typed import TypedProperty
 
 
 class NMRNucleusParser(Sections):
@@ -19,8 +19,6 @@ class NMRNucleusParser(Sections):
     Collates individual arrays corresponding to different shielding tensor
     data (e.g. paramagnetic, diamagnetic, total, etc.) into a single table.
     """
-    name = "NUCLEUS"
-    description = "Parses NMR shielding tensors from the nucleus section."
     _key_sep = "^=+$"
     _key_start = 0
     _key_first_sec_name = "info"
@@ -46,26 +44,17 @@ class NMRNucleusParser(Sections):
             parser = parser.replace(*self._key_parser_name_rep)
             parsers.append(parser)
         ends.append(len(self))
-        dct = {'start': starts, 'end': ends, 'parser': parsers, 'title': titles}
-        self._sections_helper(dct)
+        self._sections_helper(start=starts, end=ends, parser=parsers, title=titles)
 
 
-class NMRNucleusInfoParserMeta(Meta):
-    """Defines objects parsed by NMRNucleusInfoParser."""
-    symbol = str
-    adfid = int
-    nmrid = int
-    _descriptions = {'symbol': "Atom type", 'adfid': "Atom input number in ADF calculation",
-                     'nmrid': "Internal NMR atom numbering"}
-
-
-class NMRNucleusInfoParser(six.with_metaclass(NMRNucleusInfoParserMeta, Parser)):
+class NMRNucleusInfoParser(Parser):
     """Parses the informational part of the 'N U C L E U S :' subsection of an ADF NMR output."""
-    name = "info"
-    description = "Parses the atom numbering part of the 'N U C L E U S :' subsection of an ADF NMR output."
     _key_marker = ":"
     _key_symmrk = "("
     _key_repmrk = (")", "")
+    symbol = TypedProperty(str, docs="Isotope symbol")
+    adfid = TypedProperty(int, docs="Atom ID in adf executable")
+    nmrid = TypedProperty(int, docs="Atom ID in nmr executable")
 
     def _parse(self):
         """Get atom numbering"""
@@ -77,12 +66,6 @@ class NMRNucleusInfoParser(six.with_metaclass(NMRNucleusInfoParserMeta, Parser))
             else:
                 self.nmrid = number
         self.symbol = symbol.strip()
-
-
-class NMRNucleusTensorParserMeta(Meta):
-    """Defines objects parsed by NMRNucleusParaParser"""
-    ds = pd.Series
-    _descriptions = {'ds': "Shielding tensor data"}
 
 
 class NMRNucleusTensorParserMixin(object):
@@ -107,6 +90,7 @@ class NMRNucleusTensorParserMixin(object):
     _key_idx_iso = "iso"
     _key_idx_ijk = ["x", "y", "z"]
     _key_dtype = np.float64
+    ds = TypedProperty(pd.Series, "Shielding tensor array for the current atom")
 
     @property
     def _key_index(self):
@@ -143,12 +127,10 @@ class NMRNucleusTensorParserMixin(object):
         self.ds = pd.to_numeric(pd.Series(data, index=self._key_index), errors='coerce')
 
 
-class NMRNucleusParaParser(six.with_metaclass(NMRNucleusTensorParserMeta, Parser,
-                                              NMRNucleusTensorParserMixin)):
+class NMRNucleusParaParser(Parser, NMRNucleusTensorParserMixin):
     """
+    Parses the paramagnetic NMR shielding tensors.
     """
-    name = "PARAMAGNETIC"
-    description = "Parses the paramagnetic NMR shielding tensors."
     _key_b1u1 = slice(6, 9)
     _key_b1u1iso = 10
     _key_s1gauge = slice(14, 17)
@@ -181,12 +163,10 @@ class NMRNucleusParaParser(six.with_metaclass(NMRNucleusTensorParserMeta, Parser
         self._finalize_parse(data)
 
 
-class NMRNucleusDiaParser(six.with_metaclass(NMRNucleusTensorParserMeta, Parser,
-                                             NMRNucleusTensorParserMixin)):
+class NMRNucleusDiaParser(Parser, NMRNucleusTensorParserMixin):
     """
-    """
-    name = "DIAMAGNETIC"
     description = "Parses the diamagnetic NMR shielding tensors."
+    """
     _key_cv = slice(6, 9)
     _key_cviso = 10
     _key_cart = slice(17, 20)
@@ -209,12 +189,10 @@ class NMRNucleusDiaParser(six.with_metaclass(NMRNucleusTensorParserMeta, Parser,
         self._finalize_parse(data)
 
 
-class NMRNucleusTotParser(six.with_metaclass(NMRNucleusTensorParserMeta, Parser,
-                                             NMRNucleusTensorParserMixin)):
+class NMRNucleusTotParser(Parser, NMRNucleusTensorParserMixin):
     """
+    Parses the total NMR shielding tensors.
     """
-    name = "TOTAL"
-    description = "Parses the total NMR shielding tensors."
     _key_cart = slice(9, 12)
     _key_cartiso = 13
     _key_pas = slice(25, 28)
@@ -225,7 +203,3 @@ class NMRNucleusTotParser(six.with_metaclass(NMRNucleusTensorParserMeta, Parser,
     def _parse(self):
         """Parse total NMR shielding tensors."""
         self._finalize_parse()
-
-
-NMRNucleusParser.add_section_parsers(NMRNucleusInfoParser, NMRNucleusParaParser,
-                                     NMRNucleusDiaParser, NMRNucleusTotParser)

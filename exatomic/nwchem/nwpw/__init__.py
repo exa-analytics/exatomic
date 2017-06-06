@@ -8,4 +8,4 @@ This subpackage handles the plane wave portion of the NWChem software.
 
 .. _nwpw: http://www.nwchem-sw.org/index.php/Release66:Plane-Wave_Density_Functional_Theory
 """
-from . import psps
+from . import psp

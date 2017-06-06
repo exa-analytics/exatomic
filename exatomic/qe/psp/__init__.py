@@ -7,3 +7,5 @@ as well as for the `pslibrary`_, a common source of pseudopotentials for QE.
 
 .. _pslibrary: https://github.com/dalcorso/pslibrary
 """
+from .jobfile import PSLJobFile
+from .upf import UPF

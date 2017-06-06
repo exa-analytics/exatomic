@@ -9,12 +9,10 @@ NWChem's pseudopotential generation scheme. Note that parsable data is created
 only if debug printing is used. This module also provides functions that parse
 multiple files simultaneously.
 """
-import six
 import pandas as pd
 import os
 from glob import glob
-from exa.core import Container
-from exa.special import Typed
+from exa import Container
 from exa.mpl import qualitative, sns
 from .paw_ae import AEOutput
 from .paw_ps import PAWOutput
@@ -48,7 +46,9 @@ def parse_paw_psp(scratch, symbol):
     """
     # Parse AE and PS output data to get nl values
     aeed = AEOutput(os.path.join(scratch, symbol + "_out"))
+    aeed.parse(recursive=True)
     psed = PAWOutput(os.path.join(scratch, symbol + "_paw"))
+    psed.parse(recursive=True)
     aenl = (aeed.data['n'].astype(str) + aeed.data['l'].astype(str)).tolist()
     psnl = psed.data['nl'].tolist()
     r = [r"$r$"]
@@ -95,15 +95,7 @@ def parse_paw_psp(scratch, symbol):
     return data, log, pstest, psed, aeed
 
 
-class PSPMeta(Typed):
-    """
-    Defines the data objects associated with the container
-    :class:`~exatomic.nwchem.nwpw.psps.base.NWChemPSPs`.
-    """
-    pass
-
-
-class PSPData(six.with_metaclass(PSPMeta, Container)):
+class PSPData(Container):
     """
     A container for storing discrete pseudopotentials and pseudo-waves
     defined on a radial grid and used in plane wave calculations.

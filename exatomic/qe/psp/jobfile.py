@@ -14,46 +14,13 @@ within the `Quantum ESPRESSO`_ quantum chemistry suite of tools. See for example
 .. _this: https://github.com/dalcorso/pslibrary/blob/master/paw_ps_collection.job
 """
 import re
-import six
 import numpy as np
 import pandas as pd
-from exa import isotopes
-from exa.core import Sections, Parser, Meta
+from exa import isotopes, Sections, Parser, TypedProperty, DataFrame
 
 
-class PSLJobFile(Sections):
-    """Input 'job' file in the pslibrary"""
-    name = "pslibrary job file"
-    description = "Parser for pslibrary input files"
-    _key_sep = "EOF"
-    _key_sec_name = "element"
-
-    def _parse(self):
-        """Parse input data from pslibrary"""
-        delims = self.find(self._key_sep, text=False)[self._key_sep]
-        starts = delims[::2]
-        ends = delims[1::2]
-        names = [self._key_sec_name]*len(ends)
-        dct = {'parser': names, 'start': starts, 'end': ends}
-        self._sections_helper(dct)
-
-
-class ElementMeta(Meta):
-    """Describe the attributes parsed by the parser."""
-    ae = pd.DataFrame
-    ps = pd.DataFrame
-    z = int
-    symbol = str
-    _descriptions = {'ae': "All electron parameters",
-                     'ps': "Pseudization parameters",
-                     'z': "Proton number",
-                     'symbol': "Atom symbol"}
-
-
-class Element(six.with_metaclass(ElementMeta, Parser)):
+class Element(Parser):
     """A single element's input file in the composite job file."""
-    name = "element"
-    description = "Parser for element psp input"
     _key_config = "config"
     _key_ae_dct = {}
     _key_mrk = "["
@@ -65,6 +32,10 @@ class Element(six.with_metaclass(ElementMeta, Parser)):
                     "energy", "rcut_nc", "rcut", "misc")
     _key_ps_dtypes = [np.int64, "O", np.int64, np.int64, np.float64,
                       np.float64, np.float64, np.float64, np.float64]
+    ae = TypedProperty(DataFrame)
+    ps = TypedProperty(DataFrame)
+    z = TypedProperty(int)
+    symbol = TypedProperty(str)
 
     def _parse(self):
         if str(self[0]).startswith("#"):
@@ -104,4 +75,17 @@ class Element(six.with_metaclass(ElementMeta, Parser)):
             self.ps[col] = self.ps[col].astype(self._key_ps_dtypes[i])
 
 
-PSLJobFile.add_section_parsers(Element)
+class PSLJobFile(Sections):
+    """Input 'job' file in the pslibrary"""
+    name = "pslibrary job file"
+    description = "Parser for pslibrary input files"
+    _key_sep = "EOF"
+    _key_parser = Element
+
+    def _parse(self):
+        """Parse input data from pslibrary"""
+        delims = self.find(self._key_sep, text=False)[self._key_sep]
+        starts = delims[::2]
+        ends = delims[1::2]
+        names = [self._key_parser]*len(ends)
+        self._sections_helper(parser=names, start=starts, end=ends)

@@ -6,26 +6,16 @@ PW Input Composer
 ##########################
 
 """
-from exa.typed import cta
+from exa import TypedProperty
+from exatomic.qe.base_composer import PWCPComposer
 
 
-class PWInputMeta(ComposerMeta):
-    """
-    """
-    control = dict
-    system = dict
-    electrons = dict
-    ions = dict
-    cell = dict
-
-
-class PWInput(six.with_metaclass(PWInputMeta, PWCPComposer)):
+class PWInput(PWCPComposer):
     """
     Input file composer for Quantum ESPRESSO's pw.x module.
     """
-    control = cta("control", dict)
-    system = cta("system", dict)
-    electrons = cta("electrons", dict)
-    ions = cta("ions", dict)
-    cell = cta("cell", dict)
-    _template = _pwtemplate
+    control = TypedProperty(dict)
+    system = TypedProperty(dict)
+    electrons = TypedProperty(dict)
+    ions = TypedProperty(dict)
+    cell = TypedProperty(dict)

@@ -7,51 +7,20 @@ NMR InfoParser Subsection
 The info subsection contains nuclear coordinates, basis information, and other
 calculation information.
 """
-import six
-from exa.core import Meta, Sections, Parser
+from exa.typed import TypedProperty
+from exa.core.parser import Sections, Parser
 from exatomic.atom import Atom
 
 
-class InfoParserMeta(Meta):
-    """Defines the objects parsed by NMRInfoParserParser."""
-    atom = Atom
-    _descriptions = {}
-
-
-class InfoParser(six.with_metaclass(InfoParserMeta, Sections)):
-    """
-    Subsection of an 'N M R' region containing nuclear coordinates, basis,
-    scaling and calculation information, etc.
-    """
-    name = "info"
-    description = "Subsection containing nuclear coordinates, basis, etc. of an NMR output."
-    _key_sep = "[<>]+$"
-    _key_sections = ["geninfo", "atom", "basis", "tensor", "blank", "switches", "potential"]
-
-    def _parse(self):
-        delims = self.regex(self._key_sep, text=False)[self._key_sep]
-        ends = delims[1:]
-        ends.append(len(self))
-        dct = {'start': delims, 'parser': self._key_sections, 'end': ends}
-        self._sections_helper(dct)
-
-
-class AtomParserMeta(Meta):
-    """Parser for the atom subsection of the info subsection of an NMR output."""
-    atom = Atom
-    _descriptions = {'atom': "Table of nuclear coordinates"}
-
-
-class AtomParser(six.with_metaclass(AtomParserMeta, Parser)):
+class AtomParser(Parser):
     """Parser for the atom table in an NMR output."""
-    name = "atom"
-    description = "Nuclear coordinate table from NMR output"
     _key_widths = (18, 8, 13, 13, 13)
     _key_names = ("symbol", "label", "x", "y", "z")
     _key_str0 = ("(", "")
     _key_str1 = (")", "")
     _key_str2 = (":", "")
     _key_frame = ("frame", 0)
+    atom = TypedProperty(Atom)
 
     def _parse(self):
         """Parse the atom table."""
@@ -67,4 +36,18 @@ class AtomParser(six.with_metaclass(AtomParserMeta, Parser)):
         self.atom = atom
 
 
-InfoParser.add_section_parsers(AtomParser)
+class InfoParser(Sections):
+    """
+    Subsection of an 'N M R' region containing nuclear coordinates, basis,
+    scaling and calculation information, etc.
+    """
+    _key_sep = "[<>]+$"
+    _key_sections = ["geninfo", AtomParser, "basis", "tensor", "blank", "switches", "potential"]
+    atom = TypedProperty(Atom)
+
+    def _parse(self):
+        delims = self.regex(self._key_sep, text=False)[self._key_sep]
+        ends = delims[1:]
+        ends.append(len(self))
+        dct = {'start': delims, 'parser': self._key_sections, 'end': ends}
+        self._sections_helper(dct)

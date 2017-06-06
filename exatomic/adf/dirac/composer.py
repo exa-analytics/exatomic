@@ -8,7 +8,7 @@ The 'dirac' executable performs all electron calculations, prerequisite for
 'adf' calculations.
 """
 import six
-from exa.core.composer import Composer, ComposerMeta
+from exa import Composer, TypedProperty
 
 
 _template = """{title}
@@ -21,18 +21,7 @@ _template = """{title}
 """
 
 
-class DiracInputMeta(ComposerMeta):
-    """
-    """
-    line2 = (list, tuple, str)
-    line3 = (list, tuple, str)
-    line4 = (list, tuple, str)
-    line5 = (list, tuple, str)
-    orbitals = (list, tuple, str)
-    line_1 = (list, tuple, str)
-
-
-class DiracInput(six.with_metaclass(DiracInputMeta, Composer)):
+class DiracInput(Composer):
     """
     Composer for the 'dirac' executable of the ADF modeling suite.
 
@@ -40,9 +29,14 @@ class DiracInput(six.with_metaclass(DiracInputMeta, Composer)):
     the radial quantum problem. The input file format can be found in the
     source code of the 'dirac.f90' file.
     """
-    template = _template
     joiner = " "
     delimter = None
+    line2 = TypedProperty((list, tuple, str))
+    line3 = TypedProperty((list, tuple, str))
+    line4 = TypedProperty((list, tuple, str))
+    line5 = TypedProperty((list, tuple, str))
+    orbitals = TypedProperty((list, tuple, str))
+    line_1 = TypedProperty((list, tuple, str), docs="Final line of DIRAC input")
 
     def __init__(self, title, line2, line3, line4, line5, orbitals, line_1):
         self.title = title
