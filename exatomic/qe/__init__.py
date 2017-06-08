@@ -3,10 +3,10 @@
 # Distributed under the terms of the Apache License 2.0
 """
 Parsing and input generation features for `Quantum ESPRESSO`_ and some related
-projects including the `pslibrary`_ and `eqe`_.
+projects including the `pslibrary`_ and `eQE`_.
 
 .. _Quantum ESPRESSO: https://github.com/QEF/q-e
 .. _pslibrary: https://github.com/dalcorso/pslibrary
-.. _eqe: http://eqe.rutgers.edu
+.. _eQE: http://eqe.rutgers.edu
 """
 from .psp import UPF, PSLJobFile
