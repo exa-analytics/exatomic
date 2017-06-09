@@ -86,8 +86,12 @@ class XYZ(Parser):
         else:
             self._parse_variable()    # Similarly, if it is not obvious how many
             return                    # frames/atoms there are use the slow approach.
-        atom = self.to_data(delim_whitespace=True, names=self._parse_columns)
-        atom = atom.dropna(how='any')
+        rows = [i +
+        for i in range(nframe):
+            j = 1 + i*nat2
+            rows.append(j)
+            rows.append(j+1)
+        atom = self[.to_data(delim_whitespace=True, names=self._parse_columns)
         atom['frame'] = [i for i in range(nframe) for _ in range(nat)]
         self.atom = atom
         if self._parse_unit != units.Angstrom:

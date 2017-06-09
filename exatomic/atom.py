@@ -7,8 +7,23 @@ Nuclear Coordinates
 This module provides data objects targeted at storing atomic coordinates (i.e.
 coordinates of nuclei in an atomic scale simulation).
 """
+import numba as nb
 from exa import DataFrame
 
+
+@nb.jit(nopython=True, nogil=True, cache=True)
+def frame_index(nframes, natoms, a=2, b=2):
+    """
+    Build a frame index for atoms.
+    """
+    natomsa = natoms + a
+    index = np.empty((nframes*natoms, ), dtype=np.int64)
+    k = 0
+    for i in range(nframes):
+        for j in range(natoms):
+            index[k] = i*natomsa + j
+            k += 1
+    return index + b
 
 class Atom(DataFrame):
     """
