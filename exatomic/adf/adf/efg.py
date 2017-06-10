@@ -10,6 +10,7 @@ file via the :class:`~exatomic.adf.adf.output.ADF` or
 :class:`~exatomci.adf.output.CompositeOutput` parsers.
 """
 import re
+import pandas as pd
 from exa import Sections, Parser, TypedProperty, DataFrame
 
 
@@ -128,10 +129,15 @@ class EFG(Sections):
         dss = []
         for section in self.itersections():
             dss.append(section.ds)
-        df = pd.concat(dss, axis=1).T
-        for col in df.columns:
-            try:
-                df[col] = pd.to_numeric(df[col])
-            except ValueError:
-                pass
-        self.df = df
+        self.df = pd.concat(dss, axis=1).T
+#        for col in self.df.columns:
+#            try:
+#                self.df[col] = pd.to_numeric(self.df[col])
+#            except ValueError:
+#                try:
+#                    self.df[col] = pd.to_numeric(self.df[col].str.replace(" e 10", "E"))
+#                except ValueError:
+#                    pass
+
+
+

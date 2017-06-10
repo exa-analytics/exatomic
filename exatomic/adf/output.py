@@ -17,9 +17,10 @@ from exa import Sections
 from .mixin import OutputMixin
 from .dirac import DIRAC
 from .nmr import NMR
+from .adf import ADF
 
 
-parser_aliases = {'DIRAC': DIRAC, 'NMR': NMR}
+parser_aliases = {'DIRAC': DIRAC, 'NMR': NMR, 'ADF': ADF}
 
 
 class CompositeOutput(Sections, OutputMixin):
