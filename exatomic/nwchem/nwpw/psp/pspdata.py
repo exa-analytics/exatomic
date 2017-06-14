@@ -112,7 +112,7 @@ class PSPData(Container):
         ylim = kwargs.pop("ylim", (-5, 5))
         colors = kwargs.pop("c", None)
         if colors is None:
-            colors = qualitative(n)
+            colors = qualitative(n=n)
         elif not isinstance(colors, (list, tuple)):
             colors = [colors]*n
         # Plot the figure
@@ -141,7 +141,7 @@ class PSPData(Container):
         colors = kwargs.pop("c", None)
         styles = kwargs.pop("style", None)
         if colors is None:
-            colors = ["black", "gray", "lightgray"] + qualitative(n)
+            colors = ["black", "gray", "lightgray"] + qualitative(n=n)
         if styles is None:
             styles = ["-", "-", "-"] + ["--"]*n
         ax = sns.plt.subplot()
