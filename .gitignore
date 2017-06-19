@@ -26,10 +26,9 @@ osx-64/
 doc/build/
 target/
 .settings/
+js/dist/
 js/node_modules/
 exatomic/_nbextension/
-node_modules/
-
 
 # Compiled
 *.py[cod]

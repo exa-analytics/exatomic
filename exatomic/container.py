@@ -29,7 +29,8 @@ from exatomic.two import (AtomTwo, MoleculeTwo, compute_atom_two,
                           compute_bond_count) #, compute_molecule_two)
 from exatomic.molecule import (Molecule, compute_molecule, compute_molecule_com,
                                compute_molecule_count)
-from exatomic.widget import UniverseWidget
+from exatomic.widget import Universe as UniverseWidget
+from exatomic.widget import TestUniverse as TestUniverseWidget
 from exatomic.field import AtomicField
 from exatomic.orbital import Orbital, Excitation, MOMatrix, DensityMatrix
 from exatomic.basis import Overlap, BasisSet, BasisSetOrder
@@ -72,7 +73,6 @@ class Universe(Container, metaclass=Meta):
     Attributes:
         atom (:class:`~exatomic.atom.Atom`): Atomic coordinates, symbols, forces, etc.
     """
-    _widget_class = UniverseWidget
     _cardinal = 'frame'
 
     @classmethod
@@ -214,6 +214,18 @@ class Universe(Container, metaclass=Meta):
 
     def __len__(self):
         return len(self.frame)
+
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self._traits_need_update = True
+        if hasattr(self, '_atom'):
+            self._widget = UniverseWidget(container=self)
+        else:
+            self._widget = TestUniverseWidget()
+
+    def _repr_html_(self):
+        return self._widget._ipython_display_()
+
 
 
 def concat(name=None, description=None, meta=None, *universes):
