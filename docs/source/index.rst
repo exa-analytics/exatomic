@@ -4,14 +4,14 @@
 #############################
 Exatomic
 #############################
-*A unified platform for computational and theoretical chemists and physicists*
+*A unified platform for theoretical and computational chemists*
 
 This package provides a platform for computational and theoretical chemists
-and physicists to parse, process, analyze, and visualize typical data coming
-from quantum mechanics calculations. Included in this package are 
-sub-packages dedicated to parsing data from software programs used in the field.
-A quick method to get started with visualization is through the `Jupyter notebook`_.
-This package is built using the `Exa Analytics Framework`_. 
+and physicists to parse, process, analyze, and visualize data coming from 
+quantum mechanics calculations. Included in this package are sub-packages 
+dedicated to parsing data from software programs used in the field. A quick 
+method to get started with visualization is through the `Jupyter notebook`_.
+This package is built on the `Exa Analytics Framework`_. 
 
 .. flashy example (todo)
 
@@ -31,7 +31,7 @@ This package is built using the `Exa Analytics Framework`_.
 
 .. toctree::
     :maxdepth: 2
-    :caption: Software
+    :caption: Software API
 
     adf.rst
     nwchem.rst

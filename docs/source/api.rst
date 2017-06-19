@@ -24,9 +24,21 @@ can be found at :ref:`examples-label` or via help::
 .. automodule:: exatomic._version
     :members:
 
-.. .. toctree::
-..    :maxdepth: 2
-..    :caption: Editors
+.. toctree::
+    :maxdepth: 2
+    :caption: Universe
 
-..     api/editor.rst
-..     api/parsing.rst
+    api/container.rst
+
+
+.. toctree::
+    :maxdepth: 2
+    :caption: Data Models
+
+    api/data/atom.rst
+
+########################
+Unittest Docs
+########################
+Source code of tests can sometimes provide useful information for developers
+and users.
