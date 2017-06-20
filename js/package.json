@@ -7,13 +7,14 @@
   "main": "src/index.js",
   "repository": {
     "type": "git",
-    "url": "https://github.com/exa-analytics/exatomic.git"
+    "url": "https://github.com/avmarchenko/exatomic.git"
   },
   "keywords": [
     "quantum mechanics",
-    "computational chemistry",
-    "materials science",
-    "solid state physics",
+    "chemistry",
+    "hpc",
+    "jupyter",
+    "notebook",
     "visualization"
   ],
   "scripts": {
@@ -27,9 +28,7 @@
   },
   "dependencies": {
     "jupyter-js-widgets": "^1.1.1",
-    "jupyter-exawidgets": "^0.4.1",
     "underscore": "^1.8.3",
-    "ndarray": "^1.0.18",
     "three": "^0.82.0",
     "three-trackballcontrols": "^0.0.5",
     "qunitjs": "^2.1.1",
