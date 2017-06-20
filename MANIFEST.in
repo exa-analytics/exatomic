@@ -1,2 +1,2 @@
-recursive-include data *.json
-recursive-include build/widgets *.*
+recursive-include exa/_data *.*
+recursive-include exa/_nbextension *.*
