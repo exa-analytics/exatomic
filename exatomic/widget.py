@@ -10,7 +10,7 @@ that is built on the `ipywidgets`_ and `Jupyter notebook`_ infrastructure.
 .. _ipywidgets: https://ipywidgets.readthedocs.io/en/latest/
 .. _Jupyter notebook: https://jupyter.org/
 """
-from exa import Widget
+from exa import DOMWidget
 
 
 class UniverseWidget(Widget):

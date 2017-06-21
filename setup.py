@@ -2,52 +2,56 @@
 # -*- coding: utf-8 -*-
 # Copyright (c) 2015-2017, Exa Analytics Development Team
 # Distributed under the terms of the Apache License 2.0
-from __future__ import print_function
+import os
+import sys
+import platform
+from distutils import log
+from subprocess import check_call
 from setuptools import setup, find_packages, Command
 from setuptools.command.sdist import sdist
 from setuptools.command.build_py import build_py
 from setuptools.command.egg_info import egg_info
-from subprocess import check_call
-from distutils import log
-import os
-import sys
-import platform
 
 
-# Basic information
 name = "exatomic"
-description = "A unified platform for theoretical and computational chemists and physicists."
-jsbuilddir = os.path.join('exatomic', '_nbextension')
-here = os.path.dirname(os.path.abspath(__file__))
-node_root = os.path.join(here, "js")
-is_repo = os.path.exists(os.path.join(here, ".git"))
-prckws = {'shell': True} if platform.system().lower() == 'windows' else {}
+description = "A unified platform for theoretical and computational chemists."
+datadir = "_data"
+nbdir = "_nbextension"
+readme = "README.md"
+requirements = "requirements.txt"
+verfile = "_version.py"
+root = os.path.dirname(os.path.abspath(__file__))
+is_repo = os.path.exists(os.path.join(root, ".git"))
+prckws = {'shell': True} if platform.system().lower() == "windows" else {}
+jsroot = os.path.join(root, "js")
+node_modules = os.path.join(jsroot, "node_modules")
+npm_path = os.pathsep.join([os.path.join(node_modules, ".bin"),
+                            os.environ.get("PATH", os.defpath)])
 log.set_verbosity(log.DEBUG)
-log.info("setup.py entered")
-log.info("$PATH=%s" % os.environ['PATH'])
-node_modules_path = os.path.join(node_root, "node_modules")
-npm_path = os.pathsep.join([os.path.join(node_modules_path, ".bin"),
-                            os.environ.get('PATH', os.defpath)])
-
-
-# Pull long documentation and version from source
 try:
     import pypandoc
-    long_description = pypandoc.convert("README.md", "rst")
+    long_description = pypandoc.convert(readme, "rst")
 except ImportError:
-    with open("README.md") as f:
+    with open(readme) as f:
         long_description = f.read()
-with open("requirements.txt") as f:
+with open(requirements) as f:
     dependencies = f.read().splitlines()
-with open(os.path.join(here, name, "_version.py")) as f:
+with open(os.path.join(root, name, verfile)) as f:
     v = f.readlines()[-2]
     v = v.split('=')[1].strip()[1:-1]
-    version = ".".join(v.replace(" ", "").split(","))
+    version = '.'.join(v.replace(" ", "").split(","))
+
+
+def update_package_data(distribution):
+    """Modify the ``package_data`` to catch changes during setup."""
+    build_py = distribution.get_command_obj("build_py")
+    build_py.finalize_options()    # Updates package_data
 
 
 def js_prerelease(command, strict=False):
-    """Decorator for building minified js/css prior to another command."""
+    """Build minified JS/CSS prior to performing the command."""
     class DecoratedCommand(command):
+        """Used by ``js_prerelease`` to modify JS/CSS prior to running the command."""
         def run(self):
             jsdeps = self.distribution.get_command_obj("jsdeps")
             if not is_repo and all(os.path.exists(t) for t in jsdeps.targets):
@@ -59,32 +63,23 @@ def js_prerelease(command, strict=False):
             except Exception as e:
                 missing = [t for t in jsdeps.targets if not os.path.exists(t)]
                 if strict or missing:
-                    log.warn("rebuilding js and css failed")
+                    log.warn("Rebuilding JS/CSS failed")
                     if missing:
-                        log.error("missing files: %s" % missing)
+                        log.error("Missing files: {}".format(missing))
                     raise e
                 else:
-                    log.warn("rebuilding js and css failed (not a problem)")
+                    log.warn("Rebuilding JS/CSS failed but continuing...")
                     log.warn(str(e))
             command.run(self)
             update_package_data(self.distribution)
     return DecoratedCommand
 
 
-def update_package_data(distribution):
-    """Update package_data to catch changes during setup."""
-    build_py = distribution.get_command_obj('build_py')
-    # distribution.package_data = find_package_data()
-    # re-init build_py options which load package_data
-    build_py.finalize_options()
-
-
 class NPM(Command):
     description = "Install package.json dependencies using npm."
     user_options = []
-    node_modules = node_modules_path
-    targets = [os.path.join(here, jsbuilddir, "extension.js"),
-               os.path.join(here, jsbuilddir, "index.js")]
+    targets = [os.path.join(root, name, nbdir, "extension.js"),
+               os.path.join(root, name, nbdir, "index.js")]
 
     def initialize_options(self):
         pass
@@ -100,8 +95,8 @@ class NPM(Command):
             return False
 
     def should_run_npm_install(self):
-        #package_json = os.path.join(node_root, "package.json")
-        #node_modules_exists = os.path.exists(self.node_modules)
+        #package_json = os.path.join(jsroot, "package.json")
+        #node_modules_exists = os.path.exists(node_modules)
         return self.has_npm()
 
     def run(self):
@@ -114,14 +109,14 @@ class NPM(Command):
 
         if self.should_run_npm_install():
             log.info("Installing build dependencies with npm. This may take a while...")
-            check_call(["npm", "install"], cwd=node_root, stdout=sys.stdout, stderr=sys.stderr, **prckws)
-            os.utime(self.node_modules, None)
+            check_call(["npm", "install"], cwd=jsroot, stdout=sys.stdout, stderr=sys.stderr, **prckws)
+            os.utime(node_modules, None)
 
         for t in self.targets:
             if not os.path.exists(t):
                 msg = "Missing file: %s" % t
                 if not has_npm_:
-                    msg += "\nnpm is required to build a development version of widgetsnbextension"
+                    msg += "\nnpm is required to build a development version of jupyter-" + name
                 raise ValueError(msg)
 
         # update package data in case this created new files
@@ -136,11 +131,13 @@ setup_args = {
     'include_package_data': True,
     'data_files': [
         ("share/jupyter/nbextensions/jupyter-" + name, [
-            os.path.join(jsbuilddir, "extension.js"),
-            os.path.join(jsbuilddir, "index.js"),
-            os.path.join(jsbuilddir, "index.js.map")
+            os.path.join(name, nbdir, "extension.js"),
+            os.path.join(name, nbdir, "index.js"),
+            os.path.join(name, nbdir, "index.js.map")
         ]),
     ],
+    'package_data': {name: [datadir + "/*"]},
+    'include_package_data': True,
     'install_requires': dependencies,
     'packages': find_packages(),
     'zip_safe': False,
@@ -155,23 +152,17 @@ setup_args = {
     'author_email': "exa.data.analytics@gmail.com",
     'maintainer_email': "exa.data.analytics@gmail.com",
     'url': "https://exa-analytics.github.io/" + name,
-    'download_url': "https://github.com/exa-analytics/" + name + "/tarball/v{}.tar.gz".format(version),
-    'keywords': ['visualization'],
+    'download_url': "https://github.com/avmarchenko/" + name + "/tarball/{}.tar.gz".format(version),
+    'keywords': ["quantum", "chemistry", "hpc", "jupyter", "notebook", "visualization"],
     'classifiers': [
         "Development Status :: 3 - Alpha",
         "Environment :: Web Environment",
         "Intended Audience :: Developers",
         "Intended Audience :: Science/Research",
-        "Intended Audience :: Financial and Insurance Industry",
-        "Intended Audience :: Healthcare Industry",
-        "Intended Audience :: Information Technology",
-        "Intended Audience :: Legal Industry",
         "License :: OSI Approved :: Apache Software License",
-        "Natural Language :: English"
         "Programming Language :: Python :: 2",
         "Programming Language :: Python :: 3",
-        "Topic :: Scientific/Engineering",
-        "Topic :: Multimedia :: Graphics"
+        "Natural Language :: English"
     ]
 }
 
