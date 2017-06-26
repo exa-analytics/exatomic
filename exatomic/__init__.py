@@ -22,5 +22,5 @@ def _jupyter_nbextension_paths():
 
 
 from exatomic._version import __version__
-from exatomic.container import Universe
+#from exatomic.container import Universe
 from exatomic.xyz import XYZ
