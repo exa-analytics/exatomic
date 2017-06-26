@@ -57,6 +57,10 @@ class XYZ(Parser):
         """Create an XYZ editor from an :class:`~exatomic.atom.Atom` table."""
         raise NotImplementedError()
 
+    def to_atom(self):
+        """Create an :class:`~exatomic.atom.Atom` table."""
+        raise NotImplementedError()
+
     def write(self, path, trajectory=True, float_format="%    .10f"):
         """
         Write the file (or files) to disk.
