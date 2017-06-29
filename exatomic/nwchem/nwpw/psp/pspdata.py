@@ -123,7 +123,7 @@ class PSPData(Container):
 #                                  (self.log[cols[0]] > ylim[0]) &
 #                                  (self.log[cols[1]] < ylim[1]) &
 #                                  (self.log[cols[1]] > ylim[0]), cols]
-            ax = self.log[cols].plot(ax=ax, style=style, c=colors[i], **kwargs)
+            ax = self.log[cols].plot(ax=ax, style=style, c=colors[i], alpha=[1.0, 0.5], **kwargs)
 #            ax = plotme.plot(ax=ax, style=style, c=colors[i], **kwargs)
         ax.set_ylim(*ylim)
         return ax

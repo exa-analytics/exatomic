@@ -49,5 +49,4 @@ class InfoParser(Sections):
         delims = self.regex(self._key_sep, text=False)[self._key_sep]
         ends = delims[1:]
         ends.append(len(self))
-        dct = {'start': delims, 'parser': self._key_sections, 'end': ends}
-        self._sections_helper(dct)
+        self._sections_helper(start=delims, parser=self._key_sections, end=ends)

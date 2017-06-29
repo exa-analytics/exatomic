@@ -12,41 +12,6 @@ from exa import Sections, Parser
 from exa.typed import TypedProperty
 
 
-class NMRNucleusParser(Sections):
-    """
-    Parses the 'N U C L E U S :' subsection of an ADF NMR output.
-
-    Collates individual arrays corresponding to different shielding tensor
-    data (e.g. paramagnetic, diamagnetic, total, etc.) into a single table.
-    """
-    _key_sep = "^=+$"
-    _key_start = 0
-    _key_first_sec_name = "info"
-    _key_sec_name_p = 2
-    _key_sec_name_id = 0
-    _key_title_rep0 = ("=== ", "")
-    _key_title_rep1 = ("UNSCALED: ", "")
-    _key_parser_name_rep = ("-", "")
-
-    def _parse(self):
-        """Parser out what shielding tensor components are present."""
-        # First parse sub-sections
-        starts = [self._key_start] + self.regex(self._key_sep, text=False)[self._key_sep]
-        ends = starts[1:]
-        parsers = [self._key_first_sec_name]
-        titles = [self._key_first_sec_name]
-        for start in ends:
-            title = str(self[start + self._key_sec_name_p])
-            title = title.replace(*self._key_title_rep0)
-            title = title.replace(*self._key_title_rep1)
-            titles.append(title)
-            parser = title.split()[self._key_sec_name_id]
-            parser = parser.replace(*self._key_parser_name_rep)
-            parsers.append(parser)
-        ends.append(len(self))
-        self._sections_helper(start=starts, end=ends, parser=parsers, title=titles)
-
-
 class NMRNucleusInfoParser(Parser):
     """Parses the informational part of the 'N U C L E U S :' subsection of an ADF NMR output."""
     _key_marker = ":"
@@ -203,3 +168,44 @@ class NMRNucleusTotParser(Parser, NMRNucleusTensorParserMixin):
     def _parse(self):
         """Parse total NMR shielding tensors."""
         self._finalize_parse()
+
+
+class NMRNucleusParser(Sections):
+    """
+    Parses the 'N U C L E U S :' subsection of an ADF NMR output.
+
+    Collates individual arrays corresponding to different shielding tensor
+    data (e.g. paramagnetic, diamagnetic, total, etc.) into a single table.
+    """
+    _key_sep = "^=+$"
+    _key_start = 0
+    _key_sec_name_p = 2
+    _key_sec_name_id = 0
+    _key_title_rep0 = ("=== ", "")
+    _key_title_rep1 = ("UNSCALED: ", "")
+    _key_parser_name_rep = ("-", "")
+    _key_info_parser = NMRNucleusInfoParser
+    _key_info_name = "INFO"
+    _key_parsers = {'PARAMAGNETIC': NMRNucleusParaParser,
+                    'DIAMAGNETIC': NMRNucleusDiaParser,
+                    'TOTAL': NMRNucleusTotParser}
+
+    def _parse(self):
+        """Parser out what shielding tensor components are present."""
+        # First parse sub-sections
+        starts = [self._key_start] + self.regex(self._key_sep, text=False)[self._key_sep]
+        ends = starts[1:]
+        parsers = [self._key_info_parser]
+        titles = [self._key_info_name]
+        for start in ends:
+            title = str(self[start + self._key_sec_name_p])
+            title = title.replace(*self._key_title_rep0)
+            title = title.replace(*self._key_title_rep1)
+            titles.append(title)
+            parser = title.split()[self._key_sec_name_id]
+            parser = parser.replace(*self._key_parser_name_rep)
+            parsers.append(self._key_parsers[parser])
+        ends.append(len(self))
+        self._sections_helper(start=starts, end=ends, parser=parsers, title=titles)
+
+

@@ -74,8 +74,7 @@ class NMR(Sections, OutputMixin):
         titles = list(self._key_sec_titles)
         titles += [str(self[i+self._key_nuc_title]).replace(*self._key_nuc_title_rep) for i in starts[m:n]]
         titles.append(self._key_log_title)
-        dct = {'parser': parsers, 'start': starts, 'end': ends, 'title': titles}
-        self._sections_helper(dct)
+        self._sections_helper(parser=parsers, start=starts, end=ends, title=titles)
 
     # Note that we use the hidden "automatic" getter prefix "_get...".
     # If the ``shielding_tensors`` attribute has not been created, it will be
