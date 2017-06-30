@@ -13,7 +13,7 @@ from .efg import EFG
 parser_aliases = {'EFG': EFG}
 
 
-class RESULTS(Sections):
+class Results(Sections):
     """
     Sections parser for the 'R E S U L T S' sub-section of an 'A D F' calculation.
     """

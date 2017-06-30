@@ -8,10 +8,11 @@ Parser for "A D F" output sections of a ADF calculation. The main object that
 should be used is :class:`~exatomic.adf.adf.output.ADF`
 """
 from exa import Sections
-from .results import RESULTS
+from .results import Results
+from .computation import Computation
 
 
-parser_aliases2 = {'RESULTS': RESULTS}
+parser_aliases = {'RESULTS': Results, 'COMPUTATION': Computation}
 
 
 class ADF(Sections):
@@ -36,7 +37,7 @@ class ADF(Sections):
             name = str(self[start]).replace("(", "").replace(")", "")
             name = name.replace("*", "").strip().replace(" ", "")
             starts.append(start)
-            names.append(parser_aliases2[name] if name in parser_aliases2 else name)
+            names.append(parser_aliases[name] if name in parser_aliases else name)
             ends.append(start)
         ends.append(len(self))
         self._sections_helper(start=starts, end=ends, parser=names)
