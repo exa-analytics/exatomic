@@ -58,10 +58,8 @@ class Editor(BaseEditor, metaclass=Meta):
             result = None
             try:
                 result = getattr(self, attr)
-            except (IndexError, NameError) as e:
+            except (IndexError, NameError, AttributeError) as e:
                 print('{} failed with : {}'.format(attr, e))
-            except AttributeError:
-                pass
             if result is not None:
                 kwargs[attr] = result
         return Universe(**kwargs)

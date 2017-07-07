@@ -101,7 +101,7 @@ def _clean_coeffs(arr, width=16, decimals=6):
     # Format C(shell) for coeffs
     ls = ['     {} = '.format('C' + l.upper()) for l in lorder]
     # Clean to string by shell
-    dat = [''.join([l, _clean_to_string(ar, decimals=decimals), '\n'])
+    dat = [''.join([l, _clean_to_string(ar, decimals=decimals, width=width), '\n'])
            for l, ar in zip(ls, arr)]
     # Return the whole minus the last line break
     return ''.join(dat)[:-1]
@@ -207,6 +207,8 @@ class Input(Editor):
         Returns
             editor (:class:`~exatomic.nbo.Input`)
         """
+        if column is not None and occvec is None:
+            raise Exception('If supplying non-default column, must supply occvec')
         # Grab all array data from new orbital code
         kwargs = _obtain_arrays(uni)
         # Manicure it slightly for NBO inputs
@@ -234,13 +236,13 @@ class Input(Editor):
         kwargs['ncomps'] = _clean_to_string(kwargs['ncomps'], ncol=10, width=5)
         kwargs['nprims'] = _clean_to_string(kwargs['nprims'], ncol=10, width=5)
         kwargs['npntrs'] = _clean_to_string(kwargs['npntrs'], ncol=10, width=5)
-        kwargs['expnts'] = _clean_to_string(kwargs['expnts'], decimals=6)
+        kwargs['expnts'] = _clean_to_string(kwargs['expnts'], decimals=10, width=18)
         kwargs['coeffs'] = _clean_coeffs(kwargs['coeffs'])
         # Separated matrices for debugging the top half when these
         # arrays are harder to come by. NBO has strict precision
         # requirements so overlap/density must be very precise (12 decimals).
         matargs = {'overlap': '', 'density': ''}
-        margs = {'decimals': 6, 'just': False}
+        margs = {'decimals': 15, 'width': 23, 'just': False}
         if hasattr(uni, '_overlap'):
             o = uni.overlap['coef'].values
             matargs['overlap'] = _clean_to_string(o, **margs)

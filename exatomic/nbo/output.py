@@ -100,7 +100,7 @@ class MOMatrix(Editor):
         chi = np.tile(range(dim), dim)
         self.momatrix = pd.DataFrame.from_dict({'orbital': orbital, 'chi': chi,
                                                 column: coef, 'frame': 0})
-        self.occupation_vector = {0: occvec}
+        self.occupation_vector = {column: occvec}
         if os:
             start = self.find_next('BETA  SPIN', start=stop, keys_only=True) + 1
             stop = start + nrows
@@ -111,7 +111,7 @@ class MOMatrix(Editor):
             betaocc = self.pandas_dataframe(occstart, occstop, range(ncol),
                                             ).stack().reset_index(drop=True)
             self.momatrix['coef1'] = beta
-            self.occupation_vector['beta'] = betaocc
+            self.occupation_vector[column + '1'] = betaocc
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)

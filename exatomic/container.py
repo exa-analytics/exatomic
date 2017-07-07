@@ -267,7 +267,7 @@ def basis_function_contributions(universe, mo, mocoefs='coef',
     Returns
         together (pd.DataFrame): a join of momatrix and basis_set_order
     """
-    small = universe.momatrix.contributions(mo, tol=tol, frame=frame)
+    small = universe.momatrix.contributions(mo, tol=tol, mocoefs=mocoefs, frame=frame)
     chis = small['chi'].values
     coefs = small[mocoefs]
     coefs.index = chis

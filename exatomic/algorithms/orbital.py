@@ -138,7 +138,11 @@ def make_fps(rmin=None, rmax=None, nr=None, nrfps=1,
         fps (pd.Series): field parameters
     """
     if any((par is None for par in [rmin, rmax, nr])):
-        if all((par is None for par in (ox, dxi, dxj, dxk))):
+        if all((par is not None for par in (xmin, xmax, nx,
+                                            ymin, ymax, ny,
+                                            zmin, zmax, nz))):
+            pass
+        eliif all((par is None for par in (ox, dxi, dxj, dxk))):
             raise Exception("Must supply at least rmin, rmax, nr or field"
                             " parameters as specified by a cube file.")
     d = {}

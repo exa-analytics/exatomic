@@ -169,7 +169,8 @@ class Output(Editor):
         '''
         Parses the primitive exponents, coefficients and shell if BSSHOW specified in SEWARD.
         '''
-        basis_map = self._basis_set_map()
+        try: basis_map = self._basis_set_map()
+        except: retuen
         linenos = [i[0] + 1 for i in self.regex(_re_prims)]
         lisdx = 0
         lfsdx = 0

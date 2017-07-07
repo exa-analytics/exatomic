@@ -25,7 +25,7 @@ class XYZ(Editor):
     _header = '{nat}\n{comment}\n'
     _cols = ['symbol', 'x', 'y', 'z']
 
-    def parse_atom(self, unit='A'):
+    def parse_atom(self, unit='A', names=('symbol', 'x', 'y', 'z')):
         """
         Parse the atom table from the current xyz file.
 
@@ -33,7 +33,7 @@ class XYZ(Editor):
             unit (str): Default xyz unit of length is the Angstrom
         """
         df = pd.read_csv(StringIO(str(self)), delim_whitespace=True,
-                                  names=('symbol', 'x', 'y', 'z'), header=None,
+                                  names=names, header=None,
                                   skip_blank_lines=False)
         # The following algorithm works for both trajectory files and single xyz files
         nats = pd.Series(df[df[['y', 'z']].isnull().all(axis=1)].index)
