@@ -28,36 +28,99 @@ rlmap = {value: key for key, value in lmap.items()}
 
 class Base(Editor):
 
+    def _one_el(self, starts, step, ncol):
+        func = pd.read_csv
+        kwargs = {'header': None}
+        if ncol == 1:
+            func = pd.read_fwf
+            kwargs['widths'] = [18] * 4
+        else:
+            kwargs['delim_whitespace'] = True
+        return [func(StringIO('\n'.join(self[start:start + step])),
+                     **kwargs).stack().values for start in starts]
+
     def _parse_momatrix(self):
         dim = int(self[5])
-        found = self.find(_orb_orb, _orb_occ, keys_only=True)
         ndim = dim * dim
-        orbstarts = np.array(found[_orb_orb]) + 1
-        occstart = found[_orb_occ][0] + 1
-        nrcol = len(self[orbstarts[0]].split())
-        nrcolocc = len(self[occstart].split())
-        coefs = np.empty(ndim, dtype=np.float64)
-        occvec = np.empty(dim, dtype=np.float64)
-        if nrcol == 1:
-            orbstops = np.ceil(orbstarts + dim / 4).astype(int)
-            occstop = np.ceil(occstart + dim / 4).astype(int)
-            for i, (start, stop) in enumerate(zip(orbstarts, orbstops)):
-                tmp = [[ln[chnk] for chnk in _orb_slice if ln[chnk]] for ln in self[start:stop]]
-                coefs[i*dim:i*dim + dim] = pd.DataFrame(tmp).stack().values
-            tmp = [[ln[chnk] for chnk in _orb_slice if ln[chnk]] for ln in self[occstart:occstop]]
-            occvec[:] = pd.DataFrame(tmp).stack().values
+        found = self.find(_orb_orb, _orb_occ,
+                          _orb_ens, keys_only=True)
+        skips = found[_orb_orb]
+        start = skips[0]
+        occs = [i + 1 for i in found[_orb_occ]]
+        ens = [i + 1 for i in found[_orb_ens]]
+        if not found[_orb_ens]: ens = False
+        ncol = len(self[start + 1].split())
+        chnk = np.ceil(dim / cols).astype(np.int64)
+        orbdx = np.repeat(range(dim), chnk)
+        if len(occs) == 2:
+            skips.insert(dim, skips[dim] - 1)
+            orbdx = np.concatenate([orbdx, orbdx])
+        skips = [i - skips[0] for i in skips]
+        if ncol == 1:
+            coefs = pd.read_fwf(StringIO('\n'.join(self[start:occs[0]-2])),
+                                skiprows=skips, header=None, widths=[18]*4)
+            if ens: ens = self._one_el(ens, chnk, ncol)
         else:
-            orbstops = np.ceil(orbstarts + dim / nrcol).astype(int)
-            occstop = np.ceil(occstart + dim / nrcolocc).astype(int)
-            for i, (start, stop) in enumerate(zip(orbstarts, orbstops)):
-                coefs[i*dim:i*dim + dim] = self.pandas_dataframe(start, stop, nrcol).stack().values
-            occvec[:] = self.pandas_dataframe(occstart, occstop, nrcolocc).stack().values
-        momatrix = pd.DataFrame.from_dict({'coef': coefs,
-                                           'orbital': np.repeat(range(dim), dim),
-                                           'chi': np.tile(range(dim), dim),
-                                           'frame': 0})
-        self.momatrix = momatrix
-        self.occupation_vector = occvec
+            coefs = self.pandas_dataframe(start, occs[0]-2, ncol,
+                                          **{'skiprows': skips})
+            if ens:
+                echnk = np.ceil(dim / len(self[ens[0] + 1].split())).astype(np.int64)
+                ens = self._one_el(ens, echnk, ncol)
+        occs = self._one_el(occs, chnk, ncol)
+        coefs['idx'] = orbdx
+        coefs = coefs.groupby('idx').apply(pd.DataFrame.stack).drop(
+                                           'idx', level=2).values
+        mo = {'orbital': np.repeat(range(dim), dim), 'frame': 0,
+              'chi': np.tile(range(dim), dim)}
+        if ens:
+            orb = {'frame': 0, 'group': 0}
+        if len(occs) == 2:
+            mo['coef'] = coefs[:len(coefs)//2]
+            mo['coef1'] = coefs[len(coefs)//2:]
+            self.occupation_vector = {'coef': occs[0], 'coef1': occs[1]}
+            if ens:
+                orb['occupation'] = np.concatenate(occs)
+                orb['energy'] = np.concatenate(ens)
+                orb['vector'] = np.concatenate([range(dim), range(dim)])
+                orb['spin'] = np.concatenate(np.zeros(dim), np.ones(dim)])
+        else:
+            mo['coef'] = coefs
+            self.occupation_vector = occs[0]
+            if ens:
+                orb['occupation'] = occs[0]
+                orb['energy'] = ens[0]
+                orb['vector'] = range(dim)
+                orb['spin'] = np.zeros(dim)
+        self.momatrix = pd.DataFrame.from_dict(mo)
+        if ens:
+            self.orbital = pd.DataFrame.from_dict(orb)
+        # ndim = dim * dim
+        # orbstarts = np.array(found[_orb_orb]) + 1
+        # occstart = found[_orb_occ][0] + 1
+        # nrcol = len(self[orbstarts[0]].split())
+        # nrcolocc = len(self[occstart].split())
+        # coefs = np.empty(ndim, dtype=np.float64)
+        # occvec = np.empty(dim, dtype=np.float64)
+        # if nrcol == 1:
+        #     orbstops = np.ceil(orbstarts + dim / 4).astype(int)
+        #     occstop = np.ceil(occstart + dim / 4).astype(int)
+        #     for i, (start, stop) in enumerate(zip(orbstarts, orbstops)):
+        #         tmp = [[ln[chnk] for chnk in _orb_slice if ln[chnk]] for ln in self[start:stop]]
+        #         coefs[i*dim:i*dim + dim] = pd.DataFrame(tmp).stack().values
+        #     tmp = [[ln[chnk] for chnk in _orb_slice if ln[chnk]] for ln in self[occstart:occstop]]
+        #     occvec[:] = pd.DataFrame(tmp).stack().values
+        # else:
+        #     orbstops = np.ceil(orbstarts + dim / nrcol).astype(int)
+        #     occstop = np.ceil(occstart + dim / nrcolocc).astype(int)
+        #     for i, (start, stop) in enumerate(zip(orbstarts, orbstops)):
+        #         coefs[i*dim:i*dim + dim] = self.pandas_dataframe(start, stop, nrcol).stack().values
+        #     occvec[:] = self.pandas_dataframe(occstart, occstop, nrcolocc).stack().values
+        # momatrix = pd.DataFrame.from_dict({'coef': coefs,
+        #                                    'orbital': np.repeat(range(dim), dim),
+        #                                    'chi': np.tile(range(dim), dim),
+        #                                    'frame': 0})
+        # self.momatrix = momatrix
+        # self.occupation_vector = occvec
 
 class Grid(Base):
 
@@ -88,6 +151,7 @@ _re_grid_idx = r'#INDEX'
 # Works for both
 _orb_orb = 'ORBITAL'
 _orb_occ = 'OCCUPATION NUMBERS'
+_orb_ens = 'ONE ELECTRON ENERGIES'
 
 class Orb(Base):
 
