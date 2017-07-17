@@ -90,7 +90,7 @@ class XYZ(Parser):
         else:
             self._parse_variable()    # Similarly, if it is not obvious how many
             return                    # frames/atoms there are use the slow approach.
-        rows = frame_index(nframe, nat)
+        rows = frame_index(nframe, nat).tolist()
         atom = self[rows].to_data(delim_whitespace=True, names=self._parse_columns)
         atom['frame'] = [i for i in range(nframe) for _ in range(nat)]
         self.atom = atom

@@ -7,6 +7,7 @@ Nuclear Coordinates
 This module provides data objects targeted at storing atomic coordinates (i.e.
 coordinates of nuclei in an atomic scale simulation).
 """
+import numpy as np
 import numba as nb
 from exa import DataFrame
 
