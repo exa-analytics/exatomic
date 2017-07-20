@@ -18,7 +18,7 @@ from .paw_ae import AEOutput
 from .paw_ps import PAWOutput
 
 
-def parse_psp_data(scratch):
+def parse_psp_data(scratch, symbol=None):
     """
     Given an NWChem scratch directory parse all pseudopotential
     information.
@@ -33,9 +33,10 @@ def parse_psp_data(scratch):
             paw = True
             first = first.split("_")[0]
         symbols[first] = paw
-    for symbol, paw in symbols.items():
+    for sym, paw in symbols.items():
         if paw:
-            return parse_paw_psp(scratch, symbol)
+            if sym == symbol or symbol is None:
+                return parse_paw_psp(scratch, symbol)
         else:
             raise
             #return parse_nc_psp(scratch, symbol)
@@ -78,7 +79,7 @@ def parse_paw_psp(scratch, symbol):
     pstest.columns = [[r"phi-ps0", r"psi-ps"]*len(psnl), ps2nl]
     # Parse logrithmic derivatives tests
     log = []
-    for path in glob(os.path.join(scratch, "*_scat_test.dat")):
+    for path in glob(os.path.join(scratch, symbol + "*_scat_test.dat")):
         angmom = path.split(os.sep)[-1].split("_")[1].upper()
         ae_ = r"$D^{AE}_{" + angmom + "}(E)$"
         ps_ = r"$D^{PS}_{" + angmom + "}(E)$"
@@ -199,8 +200,8 @@ class PSPData(Container):
             self.log_diff()
         return self.log.loc[self._logs].abs().sum()
 
-    def __init__(self, path):
-        data, log, pstest, psed, aeed = parse_psp_data(path)
+    def __init__(self, path, symbol=None):
+        data, log, pstest, psed, aeed = parse_psp_data(path, symbol)
         super(PSPData, self).__init__(data=data, log=log, pstest=pstest, psed=psed, aeed=aeed)
 
 
