@@ -19,27 +19,68 @@ import numpy as np
 from exa import DataFrame
 
 from exatomic.algorithms.basis import (lmap, spher_ml_count, enum_cartesian,
+                                       gaussian_cartesian,
                                        cart_lml_count, spher_lml_count,
                                        _vec_normalize, _wrap_overlap, lorder,
                                        _vec_sto_normalize, _ovl_indices,
-                                       solid_harmonics, car2sph_transform_matrices)
+                                       solid_harmonics, car2sph)
 
+# Abbreviations
+# NCartPrim -- Total number of cartesian primitive functions
+# NSphrPrim -- Total number of spherical primitive functions
+# NPrim     -- Total number of primitive basis functions (one of the above)
+# Nbas      -- Total number of contracted basis functions
+# NbasTri   -- Nbas * (Nbas + 1) // 2
+
+
+# Truncated NPrim dimensions indexed to save space
 class BasisSet(DataFrame):
+    """
+    Stores information about a basis set. Common basis set types in use for
+    electronic structure calculations usually consist of Gaussians or Slater
+    Type Orbitals (STOs). Both types usually employ atom-centered basis functions,
+    where each basis function resides on a given atom with coordinates
+    :math:`\\left(A_{x}, A_{y}, A_{z}\\right)`. For Gaussian basis sets, the
+    functional form of :math:`f\\left(x, y, z\\right)` is:
+
+    .. math::
+
+        r^{2} = \\left(x - A_{x}\\right)^{2} + \\left(x - A_{y}\\right)^{2} + \\left(z - A_{z}\\right)^{2} \\\\
+        f\\left(x, y, z\\right) = \\left(x - A_{x}\\right)^{l}\\left(x - A_{y}\\right)^{m}\\left(z - A_{z}\\right)^{n}e^{-\\alpha r^{2}}
+
+    where :math:`l`, :math:`m`, and :math:`n` are not quantum numbers but positive
+    integers (including zero) whose sum defines the orbital angular momentum of
+    each function and :math:`alpha` governs the exponential decay of the given
+    function. Gaussian basis functions are usually constructed from multiple
+    primitive Gaussians, with fixed contraction coefficients. Therefore, a basis
+    function consists of the sum of one or more primitive functions:
+
+    .. math::
+
+        g_{i}\\left(x, y, z\\right) = \\sum_{j=1}^{N_{i}}c_{ij}f_{ij}\\left(x, y, z\\right)
+
+    Alternatively, STOs are usually not constructed from linear combinations
+    of multiple primitives, and differ from Gaussian type functions in that they
+    do not contain an exponent in the :math:`r` term of the exponential decay.
+    These functions have 2 main benefits; an adequate description of the cusp
+    in the density at the nucleus, and the appropriate long-range decay behavior.
+    """
     _columns = ['alpha', 'd', 'shell', 'L', 'set']
     _cardinal = ('frame', np.int64)
-    _index = 'primitive'
+    _index = 'function'
     _categories = {'L': np.int64, 'set': np.int64, 'frame': np.int64}
 
     @property
     def lmax(self):
         return self['L'].cat.as_ordered().max()
 
+    @property
     def shells(self):
         return [lorder[l] for l in self.L.unique()]
 
     @property
     def nshells(self):
-        return len(self.shells())
+        return len(self.shells)
 
     def _sets(self):
         """Group by basis set."""
@@ -59,12 +100,15 @@ class BasisSet(DataFrame):
             lambda y: y.apply(
             lambda z: len(z['alpha'].unique()))).T.unstack()
 
-    def primitives(self):
+    def primitives(self, lml_count):
         """Total number of primitive functions per set."""
-        return self.primitives_by_shell().sum(axis=1)
+        return self._sets().apply(
+            lambda x: x.groupby('alpha').apply(
+                lambda y: y.groupby('L').apply(
+                    lambda z: z.iloc[0])['L'].map(lml_count).sum()).sum())
 
     def __init__(self, *args, spherical=True, gaussian=True, **kwargs):
-        super().__init__(*args, **kwargs)
+        super(BasisSet, self).__init__(*args, **kwargs)
         self.spherical = spherical
         self.gaussian = gaussian
         norm = _vec_normalize if gaussian else _vec_sto_normalize
@@ -73,52 +117,8 @@ class BasisSet(DataFrame):
         self['Nd'] = self['d'] * self['N']
 
 
-class GaussianBasisSet(BasisSet):
-    """
-    Stores information about a Gaussian type basis set.
 
-    A Gaussian type basis set is described by primitive Gaussian functions :math:`f\\left(x, y, z\\right)`
-    of the form:
-
-    .. math::
-
-        r^{2} = \\left(x - A_{x}\\right)^{2} + \\left(x - A_{y}\\right)^{2} + \\left(z - A_{z}\\right)^{2} \\\\
-        f\\left(x, y, z\\right) = \\left(x - A_{x}\\right)^{l}\\left(x - A_{y}\\right)^{m}\\left(z - A_{z}\\right)^{n}e^{-\\alpha r^{2}}
-
-    Note that :math:`l`, :math:`m`, and :math:`n` are not quantum numbers but positive integers
-    (including zero) whose sum defines the orbital angular momentum of the primitive function.
-    Each primitive function is centered on a given atom with coordinates :math:`\\left(A_{x}, A_{y}, A_{z}\\right)`.
-    A basis function in this basis set is a sum of one or more primitive functions:
-
-    .. math::
-
-        g_{i}\\left(x, y, z\\right) = \\sum_{j=1}^{N_{i}}c_{ij}f_{ij}\\left(x, y, z\\right)
-
-    Each primitive function :math:`f_{ij}` is parametrically dependent on its associated atom's
-    nuclear coordinates and specific values of :math:`\\alpha`, :math:`l`, :math:`m`, and :math:`n`.
-    For convenience in data storage, each primitive function record contains its value of
-    :math:`\\alpha` and coefficient (typically called the contraction coefficient) :math:`c`.
-    shell_function does not include degeneracy due to :math:`m_{l}` but separates exponents
-    and coefficients that have the same angular momentum values.
-
-    +-------------------+----------+-------------------------------------------+
-    | Column            | Type     | Description                               |
-    +===================+==========+===========================================+
-    | alpha             | float    | value of :math:`\\alpha`                  |
-    +-------------------+----------+-------------------------------------------+
-    | d                 | float    | value of the contraction coefficient      |
-    +-------------------+----------+-------------------------------------------+
-    | shell             | int/cat  | shell function identifier                 |
-    +-------------------+----------+-------------------------------------------+
-    | L                 | int/cat  | orbital angular momentum quantum number   |
-    +-------------------+----------+-------------------------------------------+
-    | set               | int/cat  | index of unique basis set per unique atom |
-    +-------------------+----------+-------------------------------------------+
-    | frame             | int/cat  | non-unique integer                        |
-    +-------------------+----------+-------------------------------------------+
-    """
-
-
+# Nbas dimensions
 class BasisSetOrder(DataFrame):
     """
     BasisSetOrder uniquely determines the basis function ordering scheme for
@@ -155,6 +155,8 @@ class BasisSetOrder(DataFrame):
     _categories = {'L': np.int64}
 
 
+# More general than the Overlap matrix but
+# has NBasTri dimensions
 class Overlap(DataFrame):
     """
     Overlap enumerates the overlap matrix elements between basis functions in
@@ -189,11 +191,9 @@ class Overlap(DataFrame):
     def from_column(cls, source):
         """Create an Overlap from a file with just the array of coefficients or
         an array of the values directly."""
-        try:
-            # Assuming source is a file of triangular elements of the overlap matrix
-            vals = pd.read_csv(source, header=None).values.flatten()
-        except:
-            vals = source
+        # Assuming source is a file of triangular elements of the overlap matrix
+        try: vals = pd.read_csv(source, header=None).values.flatten()
+        except: vals = source
         # Reverse engineer the number of basis functions given len(ovl) = n * (n + 1) / 2
         nbas = np.round(np.roots((1, 1, -2 * vals.shape[0]))[1]).astype(np.int64)
         # Index chi0 and chi1, they are interchangeable as overlap is symmetric
@@ -208,8 +208,8 @@ class Overlap(DataFrame):
         ndim = df.shape[0]
         arr = df.values
         arlen = ndim * (ndim + 1) // 2
-        ret = np.empty((arlen,), dtype=[('chi1', 'i8'),
-                                        ('chi2', 'i8'),
+        ret = np.empty((arlen,), dtype=[('chi0', 'i8'),
+                                        ('chi1', 'i8'),
                                         ('coef', 'f8'),
                                         ('frame', 'i8')])
         cnt = 0
@@ -219,322 +219,115 @@ class Overlap(DataFrame):
                 cnt += 1
         return cls(ret)
 
-#class SlaterBasisSet(BasisSet):
-#    """
-#    Stores information about a Slater type basis set.
-#
-#    .. math::
-#
-#        r = \\left(\\left(x - A_{x}\\right)^{2} + \\left(x - A_{y}\\right)^{2} + \\left(z - A_{z}\\right)^{2}\\right)^{\\frac{1}{2}} \\\\
-#        f\\left(x, y, z\\right) = \\left(x - A_{x}\\right)^{i}\\left(x - A_{y}\\right)^{j}\left(z - A_{z}\\right)^{k}r^{m}e^{-\\alpha r}
-#    """
-#    pass
-#
 
-#class Primitive(DataFrame):
-#    """
-#    Notice: Primitive is just a join of basis set and atom, re-work needed.
-#    Contains the required information to perform molecular integrals. Some
-#    repetition of data with GaussianBasisSet but for convenience also stored
-#    here.
-#
-#    Currently has the capability to compute the primitive overlap matrix
-#    and reduce the dimensionality to the contracted cartesian overlap
-#    matrix. Does not have the functionality to convert to the contracted
-#    spherical overlap matrix (the fully contracted basis set of routine
-#    gaussian type calculations).
-#    +-------------------+----------+-------------------------------------------+
-#    | Column            | Type     | Description                               |
-#    +===================+==========+===========================================+
-#    | xa                | float    | center in x direction of primitive        |
-#    +-------------------+----------+-------------------------------------------+
-#    | ya                | float    | center in y direction of primitive        |
-#    +-------------------+----------+-------------------------------------------+
-#    | za                | float    | center in z direction of primitive        |
-#    +-------------------+----------+-------------------------------------------+
-#    | alpha             | float    | value of :math:`\\alpha`, the exponent    |
-#    +-------------------+----------+-------------------------------------------+
-#    | d                 | float    | value of the contraction coefficient      |
-#    +-------------------+----------+-------------------------------------------+
-#    | l                 | int      | pre-exponential power of x                |
-#    +-------------------+----------+-------------------------------------------+
-#    | m                 | int      | pre-exponential power of y                |
-#    +-------------------+----------+-------------------------------------------+
-#    | n                 | int      | pre-exponential power of z                |
-#    +-------------------+----------+-------------------------------------------+
-#    | L                 | int/cat  | sum of l + m + n                          |
-#    +-------------------+----------+-------------------------------------------+
-#    """
-#    _columns = ['xa', 'ya', 'za', 'alpha', 'd', 'l', 'm', 'n', 'L']
-#    _indices = ['primitive']
-#    _categories = {'l': np.int64, 'm': np.int64, 'n': np.int64, 'L': np.int64}
-#
-#    def _normalize(self):
-#        '''
-#        Often primitives come unnormalized. This fixes that.
-#        '''
-#        self['N'] = _vec_normalize(self['alpha'].values, self['L'].values)
-#
-#
-#    def _cartesian_contraction_matrix(self, l=False):
-#        '''
-#        Generates the (nprim,ncont) matrix needed to reduce the
-#        dimensionality of the primitive basis to the contracted
-#        cartesian basis.
-#        '''
-#        bfns = self.groupby('func')
-#        contmat = np.zeros((len(self), len(bfns)), dtype=np.float64)
-#        cnt = 0
-#        if l:
-#            l = np.zeros(len(bfns), dtype=np.int64)
-#            for bfn, cont in bfns:
-#                ln = len(cont)
-#                contmat[cnt:cnt + ln, bfn] = cont['d'].values
-#                l[bfn] = cont['L'].values[0]
-#                cnt += ln
-#            return contmat, l
-#        for bfn, cont in bfns:
-#            ln = len(cont)
-#            contmat[cnt:cnt + ln, bfn] = cont['d'].values
-#            cnt += ln
-#        return contmat
-#
-#    def _spherical_contraction_matrix(self):
-#        '''
-#        Generates the (nprim,ncont) matrix needed to reduce the
-#        dimensionality of the primitive basis to the contracted
-#        spherical basis.
-#        '''
-#        pass
-#
-#
-#    def _spherical_from_cartesian(self):
-#        '''
-#        Reduces the dimensionality of the contracted cartesian
-#        basis to the contracted spherical basis.
-#        '''
-#        print('warning: this is not correct')
-#        lmax = self['L'].cat.as_ordered().max()
-#        prim_ovl = self.primitive_overlap().square()
-#        cartprim, ls = self._cartesian_contraction_matrix(l=True)
-#        contracted = pd.DataFrame(np.dot(np.dot(cartprim.T, prim_ovl), cartprim))
-#        sh = solid_harmonics(lmax)
-#        sphtrans = car2sph_transform_matrices(sh, lmax)
-#        bfns = self.groupby('func')
-#        lcounts = bfns.apply(lambda y: y['L'].values[0]).value_counts()
-#        for l, lc in lcounts.items():
-#            lcounts[l] = lc * spher_lml_count[l] // cart_lml_count[l]
-#        lc = lcounts.sum()
-#        spherical = np.zeros((contracted.shape[0], lc), dtype=np.float64)
-#        ip = 0
-#        ic = 0
-#        while ip < lc:
-#            l = ls[ic]
-#            if l < 2:
-#                spherical[:,ic] = contracted[ic]
-#                ip += 1
-#                ic += 1
-#            else:
-#                cspan = ic + cart_lml_count[l]
-#                sspan = ip + spher_lml_count[l]
-#                carts = contracted[list(range(ic, cspan))]
-#                trans = np.dot(carts, sphtrans[l].T)
-#                spherical[:,ip:sspan] = trans
-#                ip += spher_lml_count[l]
-#                ic += cart_lml_count[l]
-#        return pd.DataFrame(np.dot(np.dot(spherical.T, contracted), spherical))
-#
-#
-#    def primitive_overlap(self):
-#        """Computes the complete primitive cartesian overlap matrix."""
-#        if 'N' not in self.columns:
-#            self._normalize()
-#        chi1, chi2, overlap =  _wrap_overlap(self['xa'].values,
-#                                             self['ya'].values,
-#                                             self['za'].values,
-#                                             self['l'].astype(np.int64).values,
-#                                             self['m'].astype(np.int64).values,
-#                                             self['n'].astype(np.int64).values,
-#                                             self['N'].values, self['alpha'].values)
-#        return Overlap.from_dict({'chi1': chi1, 'chi2': chi2,
-#                                  'coef': overlap,
-#                                  'frame': [0] * len(chi1)})
-#
-#
-#    def contracted_cartesian_overlap(self):
-#        """Returns the contracted cartesian overlap matrix."""
-#        prim_ovl = self.primitive_overlap().square()
-#        contprim = self._cartesian_contraction_matrix()
-#        square = pd.DataFrame(np.dot(np.dot(contprim.T, prim_ovl), contprim))
-#        return Overlap.from_square(square)
-#
-#    def contracted_spherical_overlap(self):
-#        return self._spherical_from_cartesian()
-#
-#
-#    @classmethod
-#    def from_universe(cls, universe, inplace=False):
-#        '''
-#        The minimum information specified by a basis set does not include
-#        expansion due to degeneracy from m_l. This will expand the basis in a
-#        systematic cartesian ordering convention to generate the full cartesian
-#        basis. The universe argument must already have a universe with atom,
-#        basis_set_summary, and gaussian_basis_set attributes.
-#        '''
-#        bases = universe.gaussian_basis_set[abs(universe.gaussian_basis_set['d']) > 0].groupby('set')
-#        primdf = []
-#        shfunc, func = -1, -1
-#        for seht, x, y, z in zip(universe.atom['set'], universe.atom['x'],
-#                                 universe.atom['y'], universe.atom['z']):
-#            summ = universe.basis_set_summary.ix[seht]
-#            b = bases.get_group(seht).groupby('shell_function')
-#            for sh, prims in b:
-#                if len(prims) == 0: continue
-#                l = prims['L'].cat.as_ordered().max()
-#                shfunc += 1
-#                for l, m, n in enum_cartesian[l]:
-#                    func += 1
-#                    for alpha, d in zip(prims['alpha'], prims['d']):
-#                        primdf.append([x, y, z, alpha, d, l, m, n, l + m + n, sh, shfunc, func, seht])
-#        primdf = pd.DataFrame(primdf)
-#        primdf.columns = ['xa', 'ya', 'za', 'alpha', 'd', 'l', 'm', 'n', 'L', 'shell_function', 'shell', 'func', 'set']
-#        if inplace:
-#            universe.primitive = primdf
-#        else:
-#            return cls(primdf)
+# NPrim dimensions
+# Additionally, from_universe returns additional matrices with
+# (NCartPrim, NSphrPrim) dimensions and (NPrim, NBas) dimensions
+class Primitive(DataFrame):
+    """
+    Notice: Primitive is just a join of basis set and atom, re-work needed.
+    Contains the required information to perform molecular integrals. Some
+    repetition of data with GaussianBasisSet but for convenience also produced
+    here. This is an intermediary DataFrame which won't exist in a production
+    implementation
 
+    +-------------------+----------+-------------------------------------------+
+    | Column            | Type     | Description                               |
+    +===================+==========+===========================================+
+    | xa                | float    | center in x direction of primitive        |
+    +-------------------+----------+-------------------------------------------+
+    | ya                | float    | center in y direction of primitive        |
+    +-------------------+----------+-------------------------------------------+
+    | za                | float    | center in z direction of primitive        |
+    +-------------------+----------+-------------------------------------------+
+    | alpha             | float    | value of :math:`\\alpha`, the exponent    |
+    +-------------------+----------+-------------------------------------------+
+    | N                 | float    | value of the normalization constant       |
+    +-------------------+----------+-------------------------------------------+
+    | l                 | int      | pre-exponential power of x                |
+    +-------------------+----------+-------------------------------------------+
+    | m                 | int      | pre-exponential power of y                |
+    +-------------------+----------+-------------------------------------------+
+    | n                 | int      | pre-exponential power of z                |
+    +-------------------+----------+-------------------------------------------+
+    | L                 | int/cat  | sum of l + m + n                          |
+    +-------------------+----------+-------------------------------------------+
+    """
+    _columns = ['xa', 'ya', 'za', 'alpha', 'N', 'l', 'm', 'n', 'L', 'set']
+    _index = 'primitive'
+    _categories = {'l': np.int64, 'm': np.int64, 'n': np.int64, 'L': np.int64}
 
-#class BasisSetOrder(BasisSet):
-#    """
-#    BasisSetOrder uniquely determines the basis function ordering scheme for
-#    a given :class:`~exatomic.universe.Universe`. This table should be used
-#    if the ordering scheme is not programmatically available.
-#
-#    +-------------------+----------+-------------------------------------------+
-#    | Column            | Type     | Description                               |
-#    +===================+==========+===========================================+
-#    | tag               | str      | symbolic atomic center                    |
-#    +-------------------+----------+-------------------------------------------+
-#    | center            | int      | numeric atomic center (1-based)           |
-#    +-------------------+----------+-------------------------------------------+
-#    | type              | str      | identifier equivalent to (l, ml)          |
-#    +-------------------+----------+-------------------------------------------+
-#    """
-#    _columns = ['tag', 'center', 'type']
-#    _index = 'chi'
-#    _categories = {'center': np.int64, 'symbol': str}
-#
-#
-#
-#class PlanewaveBasisSet(BasisSet):
-#    """
-#    """
-#    pass
-#
-#
-#
-#class CartesianGTFOrder(DataFrame):
-#    """
-#    Stores cartesian basis function order with respect to basis function label.
-#
-#    +-------------------+----------+-------------------------------------------+
-#    | Column            | Type     | Description                               |
-#    +===================+==========+===========================================+
-#    | frame             | int/cat  | non-unique integer                        |
-#    +-------------------+----------+-------------------------------------------+
-#    | x                 | int      | power of x                                |
-#    +-------------------+----------+-------------------------------------------+
-#    | y                 | int      | power of y                                |
-#    +-------------------+----------+-------------------------------------------+
-#    | z                 | int      | power of z                                |
-#    +-------------------+----------+-------------------------------------------+
-#    | l                 | int      | x + y + z                                 |
-#    +-------------------+----------+-------------------------------------------+
-#    """
-#    _columns = ['l', 'x', 'y', 'z', 'frame']
-#    _index = 'cart_order'
-#    _traits = ['l']
-#    _categories = {'l': np.int64, 'x': np.int64, 'y': np.int64, 'z': np.int64}
-#
-#
-#    @classmethod
-#    def from_lmax_order(cls, lmax, ordering_function):
-#        """
-#        Generate the dataframe of cartesian basis function ordering with
-#        respect to spin angular momentum.
-#
-#        Args:
-#            lmax (int): Maximum value of orbital angular momentum
-#            ordering_function: Cartesian ordering function (code specific)
-#        """
-#        df = pd.DataFrame(np.concatenate([ordering_function(l) for l in range(lmax + 1)]),
-#                          columns=['l', 'x', 'y', 'z'])
-#        df['frame'] = 0
-#        return cls(df)
-#
-#    def symbolic_keys(self):
-#        """
-#        Generate the enumerated symbolic keys (e.g. 'x', 'xx', 'xxyy', etc.)
-#        associated with each row for ordering purposes.
-#        """
-#        x = self['x'].apply(lambda i: 'x' * i).astype(str)
-#        y = self['y'].apply(lambda i: 'y' * i).astype(str)
-#        z = self['z'].apply(lambda i: 'z' * i).astype(str)
-#        return x + y + z
-#
-#
-#################################################################################
-#import sympy as sy
-#from exa.symbolic import SymbolicFunction
-#
-#
-#class SlaterTypeBasisFunction(SymbolicFunction):
-#    """
-#    Args:
-#        xa (float): Basis center in x
-#        ya (float): Basis center in y
-#        za (float): Basis center in z
-#        kx (int): Spherical harmonic coefficient in x
-#        ky (int): Spherical harmonic coefficient in y
-#        kz (int): Spherical harmonic coefficient in z
-#        kr (int): Spherical harmonic coefficient in r
-#        zeta (float): Positive exponential coefficient
-#
-#    .. math:
-#
-#        \Chi_{A}\left(x, y, z\right) = r_{A}^{k_r}x_{A}^{k_x}y_{A}^{k_y}z_{A}^{k_z}e^{-\zeta r_{A}}
-#    """
-#    kr, kx, ky, kz = sy.symbols("k_r k_x k_y k_z", imaginary=False, positive=True, integer=True)
-#    x, y, z, xa, ya, za = sy.symbols("x y z x_A y_A z_A", imaginary=False)
-#    zeta = sy.Symbol("zeta", imaginary=False, positive=True)
-#    xx = x - xa
-#    yy = y - ya
-#    zz = z - za
-#    r = sy.sqrt(xx**2 + yy**2 + zz**2)
-#    expr = r**kr * x**kx * y**ky * z**kz * sy.exp(-zeta*r)
-#
-#    @classmethod
-#    def eval(cls, xa=None, ya=None, za=None, kx=None, ky=None, kz=None,
-#             kr=None, zeta=None):
-#        """
-#        """
-#        subs = {}
-#        if xa is not None:
-#            subs[cls.xa] = xa
-#        if ya is not None:
-#            subs[cls.ya] = ya
-#        if za is not None:
-#            subs[cls.za] = za
-#        if kr is not None:
-#            subs[cls.kr] = kr
-#        if kx is not None:
-#            subs[cls.kx] = kx
-#        if ky is not None:
-#            subs[cls.ky] = ky
-#        if kz is not None:
-#            subs[cls.kz] = kz
-#        if zeta is not None:
-#            subs[cls.zeta] = zeta
-#        print(subs)
-#        expr = cls.expr.subs(subs)
-#        return super().new_expression(expr, "vectorize")
+    @classmethod
+    def from_universe(cls, uni, grpby='L', frame=None, debug=True):
+        """
+        Generate the DF and associated contraction matrices. Currently
+        spits out the Primitive dataframe along with cartesian to spherical
+        and contraction matrices, as this class will disappear in an appropriate
+        implementation.
+
+        Args
+            uni (exatomic.container.Universe): a universe with basis set
+            grpby (str): one of 'L' or 'shell' for different basis sets
+            frame (int): always blue?
+        """
+        frame = uni.atom.nframes - 1 if frame is None else frame
+        uni.basis_set._set_categories()
+        sh = solid_harmonics(uni.basis_set.lmax)
+        uni.basis_set._revert_categories()
+        sets = uni.basis_set.cardinal_groupby().get_group(frame)._sets()
+        funcs = uni.basis_set_order.cardinal_groupby().get_group(frame).groupby('center')
+        atom = uni.atom.cardinal_groupby().get_group(frame)
+        conv = car2sph(sh)
+        cart = gaussian_cartesian if uni.meta['program'] == 'gaussian' else enum_cartesian
+
+        cprim = uni.atom.set.map(uni.basis_set.primitives(cart_lml_count)).sum()
+        sprim = uni.atom.set.map(uni.basis_set.primitives(spher_lml_count)).sum()
+        ncont = len(uni.basis_set_order.index)
+        if uni.basis_set.spherical:
+            contdim = sprim
+            lml_count = spher_lml_count
+        else:
+            contdim = cprim
+            lml_count = cart_lml_count
+
+        cols = ['xa', 'ya', 'za', 'alpha', 'N', 'l', 'm', 'n', 'L', 'set']
+        typs = ['f8', 'f8', 'f8', 'f8', 'f8', 'i8', 'i8', 'i8', 'i8', 'i8']
+        primdf = np.empty((cprim,), dtype=[(i, j) for i, j in zip(cols, typs)])
+        sphrdf = np.zeros((cprim, sprim), dtype=np.float64)
+        contdf = np.zeros((contdim, ncont), dtype=np.float64)
+
+        if debug:
+            print('Overlap grouping by', grpby)
+            print('{} cprims, {} sprims, {} ncont'.format(cprim, sprim, ncont))
+
+        pcnt, ridx, cidx, pidx, sidx = 0, 0, 0, 0, 0
+        for i, (seht, x, y, z) in enumerate(zip(atom['set'], atom['x'],
+                                                atom['y'], atom['z'])):
+            setdf = sets.get_group(seht).groupby(grpby)
+            aobas = funcs.get_group(i).groupby(grpby)
+            for idx, contsh in aobas:
+                if not len(contsh.index): continue
+                try: sh = setdf.get_group(idx)
+                except: continue
+                L = idx if grpby == 'L' else sh['L'].values[0]
+                chnk = sh.pivot('alpha', 'shell', 'd').loc[sh.alpha.unique()].fillna(0.0)
+                sh = sh.drop_duplicates('alpha')
+                pdim, cdim = chnk.shape
+                # Minimum primitive information
+                for l, m, n in cart[L]:
+                    for alpha, N in zip(sh.alpha, sh.N):
+                        primdf[pcnt] = (x, y, z, alpha, N, l, m, n, L, seht)
+                        pcnt += 1
+                # Cartesian to spherical prim
+                c2s = conv[L]
+                cpllus, splus = c2s.shape
+                for j in range(pdim):
+                    sphrdf[pidx:pidx + cplus,sidx:sidx + splus] = c2s
+                    pidx += cplus
+                    sidx += splus
+                # Spherical primitive to contracted
+                for k in range(lml_count[L]):
+                    contdf[ridx:ridx + pdim,cidx:cidx + cdim] = chnk.values
+                    cidx += cdim
+                    ridx += pdim
+        return cls(self, columns=cols), pd.DataFrame(sphrdf), pd.DataFrame(contdf)

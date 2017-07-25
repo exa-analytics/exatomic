@@ -15,7 +15,7 @@ from io import StringIO
 from .editor import Editor
 
 from exatomic.atom import Atom
-from exatomic.basis import GaussianBasisSet, BasisSetOrder, Overlap
+from exatomic.basis import Overlap
 from exatomic.orbital import MOMatrix, DensityMatrix
 from exatomic.algorithms.basis import (cart_ml_count, spher_ml_count, lmap, lorder,
                                        spher_lml_count)
@@ -50,6 +50,7 @@ class Base(Editor):
         ens = [i + 1 for i in found[_orb_ens]]
         if not found[_orb_ens]: ens = False
         ncol = len(self[start + 1].split())
+        cols = 4 if ncol == 1 else ncol
         chnk = np.ceil(dim / cols).astype(np.int64)
         orbdx = np.repeat(range(dim), chnk)
         if len(occs) == 2:
@@ -82,7 +83,7 @@ class Base(Editor):
                 orb['occupation'] = np.concatenate(occs)
                 orb['energy'] = np.concatenate(ens)
                 orb['vector'] = np.concatenate([range(dim), range(dim)])
-                orb['spin'] = np.concatenate(np.zeros(dim), np.ones(dim)])
+                orb['spin'] = np.concatenate([np.zeros(dim), np.ones(dim)])
         else:
             mo['coef'] = coefs
             self.occupation_vector = occs[0]
@@ -234,7 +235,7 @@ class Output(Editor):
         Parses the primitive exponents, coefficients and shell if BSSHOW specified in SEWARD.
         '''
         try: basis_map = self._basis_set_map()
-        except: retuen
+        except: return
         linenos = [i[0] + 1 for i in self.regex(_re_prims)]
         lisdx = 0
         lfsdx = 0

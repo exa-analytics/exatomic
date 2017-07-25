@@ -49,7 +49,7 @@ from exatomic.container import Universe, basis_function_contributions
 from exatomic.editor import Editor
 from exatomic.filetypes import XYZ, Cube
 
-from exatomic import test
+from exatomic import tests
 from exatomic.algorithms import delocalization
 from exatomic.algorithms import neighbors
 from exatomic.algorithms import diffusion

@@ -196,6 +196,13 @@ class Orbital(_Convolve):
                               'energy': energies, 'spin': spin,
                               'occupation': occs, 'vector': vector})
 
+    @classmethod
+    def from_occupation_vector(cls, occvec):
+        dim = occvec.shape[0]
+        return cls.from_dict({'frame': 0, 'group': 0,
+                              'energy': 0, 'spin': 0,
+                              'occupation': occvec, 'vector': range(occvec)})
+
 class Excitation(_Convolve):
     """
     +-------------------+----------+-------------------------------------------+

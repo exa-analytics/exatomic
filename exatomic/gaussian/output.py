@@ -126,8 +126,10 @@ class Output(Editor):
         todrop = setdx[:-1] + [i+1 for i in setdx[:-2]] + lindx.index.tolist()
         df.drop(todrop, inplace=True)
         # Keep cleaning
-        df[0] = df[0].str.replace('D', 'E').astype(np.float64)
-        df[1] = df[1].str.replace('D', 'E').astype(np.float64)
+        if df[0].dtype == 'object':
+            df[0] = df[0].str.replace('D', 'E').astype(np.float64)
+        if df[1].dtype == 'object':
+            df[1] = df[1].str.replace('D', 'E').astype(np.float64)
         try: sp = np.isnan(df[2]).sum() == df.shape[0]
         except TypeError:
             df[2] = df[2].str.replace('D', 'E').astype(np.float64)
@@ -157,20 +159,7 @@ class Output(Editor):
         ens = pd.read_fwf(StringIO(ens), header=None,
                           widths=np.repeat(10, 5)).stack().values
         # Other arrays
-        if os:
-            norbs = len(ens) // 2
-            vecs = np.concatenate((range(norbs), range(norbs)))
-            occs = np.concatenate((np.repeat(occ, ae), np.repeat(0, norbs - ae),
-                                   np.repeat(occ, be), np.repeat(0, norbs - be)))
-            spin = np.concatenate((np.repeat(0, norbs), np.repeat(1, norbs)))
-        else:
-            norbs = len(ens)
-            vecs = range(norbs)
-            occs = np.concatenate((np.repeat(occ, ae), np.repeat(0, norbs - ae)))
-            spin = np.repeat(0, norbs)
-        orbital = pd.DataFrame.from_dict({'energy': ens, 'occupation': occs,
-                                          'vector': vecs, 'spin': spin, 'frame': 0,
-                                          'group': 0})
+        orbital = Orbital.from_energies(ens, nbas, ae, be)
         # Symmetry labels
         if found[_reorb02]:
             # Gaussian seems to print out a lot of these blocks
@@ -408,47 +397,13 @@ def _basis_set_order(chunk):
     shl, pcen, pl, pn, shfns = -1, -1, -1, -1, []
     for cen, n, l in zip(df['center'], df['N'], df['L']):
         if not pcen == cen: shl = -1
-        if (not pl == l) or (not pn == n): shl += 1
+        if (not pl == l) or (not pn == n) or (not pcen == cen): shl += 1
         shfns.append(shl)
         pcen, pl, pn = cen, l, n
     df['shell'] = shfns
     df.drop([0, 2, 'N', 'ang'], axis=1, inplace=True)
     df['frame'] = 0
     return df
-    # nas = (np.nan, np.nan)
-    # lsp = len(chunk[0]) - len(chunk[0].lstrip(' ')) + 2
-    # centers = [(ln[lsp:lsp + 3].strip(), ln[lsp + 3:lsp + 6].strip())
-    #            if ln[lsp:lsp + 3].strip() else nas for ln in chunk]
-    # # pandas takes care of that
-    # basord = pd.DataFrame(centers, columns=('center', 'tag')).fillna(method='pad')
-    # basord['center'] = basord['center'].astype(np.int64)
-    # # Zero based indexing
-    # basord['center'] -= 1
-    # # nlml defines the type of basis function
-    # types = '\n'.join([ln[10:20].strip() for ln in chunk])
-    # # Gaussian prints 'D 0' so replace with 'D0'
-    # types = _rebaspat.sub(lambda m: _basrep[m.group(0)], types)
-    # types = pd.Series(types.splitlines())
-    # # Now pull it apart into n, l, ml columns
-    # split = r"([0-9]{1,})([A-z])(.*)"
-    # print(basord)
-    # basord[['n', 'L', 'ml']] = types.str.extract(split, expand=True)
-    # # And clean it up -- don't really need n but can use it for shells
-    # basord['n'] = basord['n'].astype(np.int64) - 1
-    # basord['L'] = basord['L'].str.lower().map(lmap).astype(np.int64)
-    # # Finally get shells -- why so difficult
-    # shfns = []
-    # shl, pcen, pl, pn = -1, -1, -1, -1
-    # for cen, n, l in zip(basord['center'], basord['n'], basord['L']):
-    #     if not pcen == cen: shl = -1
-    #     if (not pl == l) or (not pn == n): shl += 1
-    #     shfns.append(shl)
-    #     pcen, pl, pn = cen, l, n
-    # basord['shell'] = shfns
-    # # Get rid of n because it isn't even n anymore
-    # del basord['n']
-    # basord['frame'] = 0
-    # return basord
 
 
 _csv_args = {'delim_whitespace': True, 'header': None}

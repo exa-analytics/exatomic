@@ -14,7 +14,7 @@ from io import StringIO
 from exatomic import Length
 from exatomic.atom import Atom
 from exatomic.frame import compute_frame_from_atom
-from exatomic.basis import GaussianBasisSet, lmap
+from exatomic.basis import BasisSet, lmap
 from exatomic.orbital import Orbital, MOMatrix
 from .editor import Editor
 from .basis import cartesian_ordering_function, spherical_ordering_function
@@ -160,7 +160,7 @@ class Output(Editor):
 
     def parse_gaussian_basis_set(self):
         """
-        Parse the :class:`~exatomic.basis.GaussianBasisSet` dataframe.
+        Parse the :class:`~exatomic.basis.BasisSet` dataframe.
         """
         found = self.find(_rebas01, _rebas02)
         spherical = True if 'spherical' in found[_rebas01][0][1] else False

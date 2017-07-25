@@ -142,7 +142,7 @@ def make_fps(rmin=None, rmax=None, nr=None, nrfps=1,
                                             ymin, ymax, ny,
                                             zmin, zmax, nz))):
             pass
-        eliif all((par is None for par in (ox, dxi, dxj, dxk))):
+        elif all((par is None for par in (ox, dxi, dxj, dxk))):
             raise Exception("Must supply at least rmin, rmax, nr or field"
                             " parameters as specified by a cube file.")
     d = {}
@@ -403,6 +403,7 @@ def add_molecular_orbitals(uni, field_params=None, mocoefs=None,
        If inplace is True, removes any fields previously attached to the universe
     """
     # Preliminary assignment and array dimensions
+    frame = uni.atom.nframes - 1
     vector = _determine_vector(uni, vector)
     if mocoefs is None: mocoefs = 'coef'
     if mocoefs not in uni.momatrix.columns:
@@ -419,6 +420,7 @@ def add_molecular_orbitals(uni, field_params=None, mocoefs=None,
     # Build the strings corresponding to basis functions
     # basfns is frame dependent but takes a few seconds to generate,
     # so cache a frame's basis functions with a dict of key {frame: basfns} value
+    print('frame', frame)
     if hasattr(uni, 'basfns'):
         if frame in uni.basfns: pass
         else: uni.basfns[frame] = gen_basfns(uni, frame=frame)

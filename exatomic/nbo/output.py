@@ -14,7 +14,7 @@ from exa.relational.isotope import symbol_to_z, z_to_symbol
 
 from .editor import Editor
 from exatomic import Length
-from exatomic.basis import GaussianBasisSet
+from exatomic.orbital import Orbital
 
 csv_args = {'delim_whitespace': True}
 
@@ -77,6 +77,9 @@ class MOMatrix(Editor):
         raise NotImplementedError('This editor has no parse_atom method.')
 
     def parse_momatrix(self, nbas, column=None, os=False):
+        """
+        Requires the number of basis functions in this matrix.
+        """
         column = 'coef' if column is None else column
         start = 3 if not os else 4
         ncol = len(self[start].split())
@@ -96,10 +99,11 @@ class MOMatrix(Editor):
                                      ).stack().reset_index(drop=True)
         occvec = self.pandas_dataframe(occstart, occstop, range(ncol)
                                        ).stack().reset_index(drop=True)
-        orbital = np.repeat(range(dim), dim)
-        chi = np.tile(range(dim), dim)
+        orbital = np.repeat(range(nbas), nbas)
+        chi = np.tile(range(nbas), nbas)
         self.momatrix = pd.DataFrame.from_dict({'orbital': orbital, 'chi': chi,
                                                 column: coef, 'frame': 0})
+        self.orbital = Orbital.from_occupation_vector(occvec)
         self.occupation_vector = {column: occvec}
         if os:
             start = self.find_next('BETA  SPIN', start=stop, keys_only=True) + 1
@@ -111,6 +115,8 @@ class MOMatrix(Editor):
             betaocc = self.pandas_dataframe(occstart, occstop, range(ncol),
                                             ).stack().reset_index(drop=True)
             self.momatrix['coef1'] = beta
+            betaorb = Orbital.from_occupation_vector(betaocc)
+            self.orbital = pd.concat([self.orbital, betaorb]).reset_index(drop=True)
             self.occupation_vector[column + '1'] = betaocc
 
     def __init__(self, *args, **kwargs):
