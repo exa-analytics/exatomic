@@ -24,9 +24,9 @@ class TestCube(UnitTester):
         cd = os.path.abspath(__file__).split(os.sep)[:-1]
         self.h2o = Output(os.sep.join(cd + ['h2o.out'])).to_universe()
         self.h2o.add_molecular_orbitals(vector=[2])
+        self.cubed = Cube.from_universe(self.h2o, 0)
 
     def test_from_universe(self):
-        self.cubed = Cube.from_universe(self.h2o, 0)
         self.assertIs(self.cubed, Cube)
 
     def test_parse_atom(self):
