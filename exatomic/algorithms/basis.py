@@ -275,7 +275,8 @@ def _wrap_overlap(x, y, z, l, m, n, N, alpha):
         for j in range(i + 1):
             chi0[cnt] = i
             chi1[cnt] = j
-            ovl[cnt] = _overlap(f1x, f2x, f1y, f2y, f1z, f2z, f1l, f2l,
-                                f1m, f2m, f1n, f2n, f1N, f2N, f1a, f2a)
+            ovl[cnt] = _overlap(x[i], x[j], y[i], y[j], z[i], z[j],
+                                N[i], N[j], alpha[i], alpha[j],
+                                l[i], l[j], m[i], m[j], n[i], n[j])
             cnt += 1
     return chi0, chi1, ovl

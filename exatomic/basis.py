@@ -64,6 +64,20 @@ class BasisSet(DataFrame):
     do not contain an exponent in the :math:`r` term of the exponential decay.
     These functions have 2 main benefits; an adequate description of the cusp
     in the density at the nucleus, and the appropriate long-range decay behavior.
+
+    +-------------------+----------+-------------------------------------------+
+    | Column            | Type     | Description                               |
+    +===================+==========+===========================================+
+    | alpha             | float    | exponent                                  |
+    +-------------------+----------+-------------------------------------------+
+    | shell             | int      | group of primitives                       |
+    +-------------------+----------+-------------------------------------------+
+    | set               | int/cat  | unique basis set identifier               |
+    +-------------------+----------+-------------------------------------------+
+    | d                 | float    | contraction coefficient                   |
+    +-------------------+----------+-------------------------------------------+
+    | L                 | int      | orbital angular momentum                  |
+    +-------------------+----------+-------------------------------------------+
     """
     _columns = ['alpha', 'd', 'shell', 'L', 'set']
     _cardinal = ('frame', np.int64)
@@ -206,7 +220,8 @@ class Overlap(DataFrame):
     @classmethod
     def from_square(cls, df):
         ndim = df.shape[0]
-        arr = df.values
+        try: arr = df.values
+        except: arr = df
         arlen = ndim * (ndim + 1) // 2
         ret = np.empty((arlen,), dtype=[('chi0', 'i8'),
                                         ('chi1', 'i8'),
@@ -240,7 +255,7 @@ class Primitive(DataFrame):
     +-------------------+----------+-------------------------------------------+
     | za                | float    | center in z direction of primitive        |
     +-------------------+----------+-------------------------------------------+
-    | alpha             | float    | value of :math:`\\alpha`, the exponent    |
+    | alpha             | float    | value of :math:`\\alpha`, the exponent     |
     +-------------------+----------+-------------------------------------------+
     | N                 | float    | value of the normalization constant       |
     +-------------------+----------+-------------------------------------------+
@@ -252,10 +267,21 @@ class Primitive(DataFrame):
     +-------------------+----------+-------------------------------------------+
     | L                 | int/cat  | sum of l + m + n                          |
     +-------------------+----------+-------------------------------------------+
+    | set               | int/cat  | unique basis set identifier               |
+    +-------------------+----------+-------------------------------------------+
     """
     _columns = ['xa', 'ya', 'za', 'alpha', 'N', 'l', 'm', 'n', 'L', 'set']
     _index = 'primitive'
     _categories = {'l': np.int64, 'm': np.int64, 'n': np.int64, 'L': np.int64}
+
+    def primitive_overlap(self):
+        """Compute the complete primitive cartesian overlap matrix."""
+        cols = ['xa', 'ya', 'za', 'l', 'm', 'n', 'N', 'alpha']
+        self._revert_categories()
+        chi0, chi1, ovl = _wrap_overlap(*(self[col].values for col in cols))
+        self._set_categories()
+        return Overlap.from_dict({'chi0': chi0, 'chi1': chi1,
+                                  'coef': ovl, 'frame': 0})
 
     @classmethod
     def from_universe(cls, uni, grpby='L', frame=None, debug=True):
@@ -274,11 +300,11 @@ class Primitive(DataFrame):
         uni.basis_set._set_categories()
         sh = solid_harmonics(uni.basis_set.lmax)
         uni.basis_set._revert_categories()
-        sets = uni.basis_set.cardinal_groupby().get_group(frame)._sets()
+        sets = uni.basis_set.cardinal_groupby().get_group(frame).groupby('set')
         funcs = uni.basis_set_order.cardinal_groupby().get_group(frame).groupby('center')
         atom = uni.atom.cardinal_groupby().get_group(frame)
-        conv = car2sph(sh)
         cart = gaussian_cartesian if uni.meta['program'] == 'gaussian' else enum_cartesian
+        conv = car2sph(sh, cart)
 
         cprim = uni.atom.set.map(uni.basis_set.primitives(cart_lml_count)).sum()
         sprim = uni.atom.set.map(uni.basis_set.primitives(spher_lml_count)).sum()
@@ -320,7 +346,7 @@ class Primitive(DataFrame):
                         pcnt += 1
                 # Cartesian to spherical prim
                 c2s = conv[L]
-                cpllus, splus = c2s.shape
+                cplus, splus = c2s.shape
                 for j in range(pdim):
                     sphrdf[pidx:pidx + cplus,sidx:sidx + splus] = c2s
                     pidx += cplus
@@ -330,4 +356,4 @@ class Primitive(DataFrame):
                     contdf[ridx:ridx + pdim,cidx:cidx + cdim] = chnk.values
                     cidx += cdim
                     ridx += pdim
-        return cls(self, columns=cols), pd.DataFrame(sphrdf), pd.DataFrame(contdf)
+        return cls(primdf, columns=cols), pd.DataFrame(sphrdf), pd.DataFrame(contdf)

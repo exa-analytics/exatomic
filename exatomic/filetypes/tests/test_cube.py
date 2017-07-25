@@ -10,6 +10,7 @@ try:
 except:
     from exa.tester import UnitTester
 
+import os
 from exatomic import Universe
 from exatomic.atom import Atom
 from exatomic.field import AtomicField
