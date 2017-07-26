@@ -150,7 +150,7 @@ class _Square(_Matrix):
 
 class Triangle(_Symmetric):
     """
-    Triangular matrices having dimensions N * (N + 1) / 2
+    Triangular matrices having dimensions N * (N + 1) // 2
     sharing natural indices all belong in the same table.
     As applied to exatomic that includes but is not limited to:
 

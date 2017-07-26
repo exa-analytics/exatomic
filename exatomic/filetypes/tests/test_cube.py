@@ -27,16 +27,16 @@ class TestCube(UnitTester):
         self.cubed = Cube.from_universe(self.h2o, 0)
 
     def test_from_universe(self):
-        self.assertIs(self.cubed, Cube)
+        self.assertIs(type(self.cubed), Cube)
 
     def test_parse_atom(self):
         self.cubed.parse_atom()
-        self.assertIs(self.cubed.atom, Atom)
+        self.assertIs(type(self.cubed.atom), Atom)
 
     def test_parse_field(self):
         self.cubed.parse_atom()
-        self.assertIs(self.cubed.field, AtomicField)
+        self.assertIs(type(self.cubed.field), AtomicField)
 
     def test_to_universe(self):
         uni = self.cubed.to_universe()
-        self.assertIs(uni, Universe)
+        self.assertIs(type(uni), Universe)

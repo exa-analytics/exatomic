@@ -19,7 +19,7 @@ import numpy as np
 from exa import DataFrame
 
 from exatomic.algorithms.basis import (lmap, spher_ml_count, enum_cartesian,
-                                       gaussian_cartesian,
+                                       gaussian_cartesian, rlmap,
                                        cart_lml_count, spher_lml_count,
                                        _vec_normalize, _wrap_overlap, lorder,
                                        _vec_sto_normalize, _ovl_indices,
