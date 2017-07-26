@@ -87,4 +87,4 @@ class TestOrb(UnitTester):
         self.assertTrue(np.all(pd.notnull(self.mamcart.momatrix)))
         self.mamsphr.parse_momatrix()
         self.assertEqual(self.mamsphr.momatrix.shape, (2809, 4))
-        self.assertTrue(np.all(pd.notnull(self.mamspher.momatrix)))
+        self.assertTrue(np.all(pd.notnull(self.mamsphr.momatrix)))

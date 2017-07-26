@@ -207,8 +207,10 @@ class Output(Editor):
         colnames = ['coef'] + ['coef' + str(i) for i in range(1, ndim)]
         # Iterate over where the data was found
         # c counts the column in the resulting momatrix table
+        finds = ['Eigenvalues', 'EIGENVALUES']
         for c, (lno, ln) in enumerate(found[_remomat02]):
-            start = self._find_break(lno, finds=['Eigenvalues', 'EIGENVALUES']) + 1
+            while not any((find in self[lno] for find in finds)): lno += 1
+            start = lno + 1
             stop = start + nbas
             # The basis set order is printed with every chunk of eigenvectors
             if c == 0: self.basis_set_order = _basis_set_order(self[start:stop])
