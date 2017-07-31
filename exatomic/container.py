@@ -8,15 +8,14 @@ The :class:`~exatomic.container.Universe` is a
 :class:`~exa.core.container.Container` object that stores all information about
 the atomic system under investigation.
 """
-#from exa import Container
-#from .widget import UniverseWidget
-#
-#
-#class Universe(Container, UniverseWidget):
-#    """
-#    A system of atoms and/or molecules being studied.
-#    """
-#    pass
+from exa import Container
+
+
+class Universe(Container):
+    """
+    A system of atoms and/or molecules being studied.
+    """
+    pass
 
 
 
