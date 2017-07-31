@@ -9,7 +9,8 @@ coordinates of nuclei in an atomic scale simulation).
 """
 import numpy as np
 import numba as nb
-from exa import DataFrame
+from exa import Feature
+from exatomic.base import DataFrame
 
 
 @nb.jit(nopython=True, nogil=True, cache=True)
@@ -35,11 +36,11 @@ class Atom(DataFrame):
     and an index (called 'frame') corresponding to a time snapshot, geometry
     optimization snapshot, etc.
     """
-    _required_columns = {'symbol': ("Element symbol", str),
-                         'frame': ("Time snapshot or other arbitrary identifier representative of a known nuclear configuration",),
-                         'x': ("Absolute position in x", float),
-                         'y': ("Absolute position in y", float),
-                         'z': ("Absolute position in z", float)}
+    symbol = Feature(str, True) # Element abbreviation
+    frame = Feature(int, True)
+    x = Feature(float, True)
+    y = Feature(float, True)
+    z = Feature(float, True)
 
 
 #from numbers import Integral

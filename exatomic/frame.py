@@ -1,14 +1,41 @@
 # -*- coding: utf-8 -*-
 # Copyright (c) 2015-2017, Exa Analytics Development Team
 # Distributed under the terms of the Apache License 2.0
-#"""
-#Frame Data
-#######################
-#The primary "coordinate" for the atomic container (:class:`~exatomic.container.Universe`)
-#is the "frame". The frame concept can be anything; time, step along a geometry
-#optimization, different functional, etc. Each frame is distinguished from other
-#frames by unique atomic coordinates, a different level of theory, etc.
-#"""
+"""
+Frame
+######################
+"""
+from exa import Feature
+from exatomic.base import DataFrame
+
+
+class Frame(DataFrame):
+    """
+    """
+    time = Feature(float)
+    tempature = Feature(float)
+    energy = Feature(float)
+    enthalpy = Feature(float)
+    volume = Feature(float)
+    pressure = Feature(float)
+    xi = Feature(float)
+    xj = Feature(float)
+    xk = Feature(float)
+    yi = Feature(float)
+    yj = Feature(float)
+    yk = Feature(float)
+    zi = Feature(float)
+    zj = Feature(float)
+    zk = Feature(float)
+    ox = Feature(float)
+    oy = Feature(float)
+    oz = Feature(float)
+    rx = Feature(float)
+    ry = Feature(float)
+    rz = Feature(float)
+    periodic = Feature(bool)
+
+
 #import numpy as np
 ##from traitlets import Float
 #try:
