@@ -11,4 +11,4 @@ projects including the `pslibrary`_ and `eQE`_.
 """
 from .psp import UPF, PSLJobFile
 from .pw import PWOutput
-from .cp import parse_dynamics_dir
+#from .cp import parse_dynamics_dir
