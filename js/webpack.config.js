@@ -1,5 +1,5 @@
 var version = require("./package.json").version;
-var nbdir = "../exatomic/_nbextension";
+var nbdir = "../exatomic/static";
 
 // Custom webpack loaders are generally the same for all webpack bundles, hence
 // stored in a separate local variable.

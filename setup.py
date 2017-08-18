@@ -15,8 +15,8 @@ from setuptools.command.egg_info import egg_info
 
 name = "exatomic"
 description = "A unified platform for theoretical and computational chemists."
-datadir = "_data"
-nbdir = "_nbextension"
+datadir = "static"
+nbdir = "static"
 readme = "README.md"
 requirements = "requirements.txt"
 verfile = "_version.py"
