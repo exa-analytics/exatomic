@@ -200,7 +200,9 @@ class Orbital(_Convolve):
     def from_occupation_vector(cls, occvec, os=False):
         if not os: return cls.from_dict({'frame': 0, 'group': 0,
                                          'energy': 0, 'spin': 0,
-                                         'occupation': occvec, 'vector': range(occvec)})
+                                         'occupation': occvec, 'vector': range(len(occvec))})
+        else:
+            raise NotImplementedError('Implement open shell lazy')
 
 
 class Excitation(_Convolve):
