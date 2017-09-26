@@ -1,4 +1,7 @@
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> 454ebaa9677a776a535abb28f528efefabda52c5
 # -*- coding: utf-8 -*-
 # Copyright (c) 2015-2016, Exa Analytics Development Team
 # Distributed under the terms of the Apache License 2.0
@@ -31,12 +34,20 @@ guide for the types of data found in two body tables provided by this module
 import numpy as np
 import pandas as pd
 from traitlets import Unicode
+<<<<<<< HEAD
 from exa.numerical import DataFrame
 try:
 #    from exa.core.numerical import DataFrame, SparseDataFrame
     from exa.cms.isotope import symbol_to_radius
 except ImportError:
 #    from exa.numerical import DataFrame, SparseDataFrame
+=======
+try:
+    from exa.core.numerical import DataFrame, SparseDataFrame
+    from exa.cms.isotope import symbol_to_radius
+except ImportError:
+    from exa.numerical import DataFrame, SparseDataFrame
+>>>>>>> 454ebaa9677a776a535abb28f528efefabda52c5
     from exa.relational.isotope import symbol_to_radius
 from exa.math.vector.cartesian import pdist_euc_dxyz_idx
 from exatomic.algorithms.distance import periodic_pdist_euc_dxyz_idx
@@ -72,7 +83,10 @@ class AtomTwo(DataFrame):
             If the mapper is none, or is missing data, the computation will use
             default covalent radii available in :class:`~exa.relational.isotope`.
         """
+<<<<<<< HEAD
         print("two.AtomTwo.compute_bonds")
+=======
+>>>>>>> 454ebaa9677a776a535abb28f528efefabda52c5
         if mapper is None:
             mapper = symbol_to_radius()
         elif not all(symbol in mapper for symbol in symbols.unique()):
@@ -92,7 +106,10 @@ class AtomTwo(DataFrame):
         Traits representing bonded atoms are reported as two lists of equal
         length with atom labels.
         """
+<<<<<<< HEAD
         print("two.AtomTwo._bond_traits")
+=======
+>>>>>>> 454ebaa9677a776a535abb28f528efefabda52c5
         bonded = self.ix[self['bond'] == True, ['atom0', 'atom1', 'frame']]
         lbl0 = bonded['atom0'].map(label_mapper)
         lbl1 = bonded['atom1'].map(label_mapper)
@@ -111,6 +128,11 @@ class AtomTwo(DataFrame):
                 b1[i] = []
         b0 = Unicode(pd.Series(b0).to_json(orient='values')).tag(sync=True)
         b1 = Unicode(pd.Series(b1).to_json(orient='values')).tag(sync=True)
+<<<<<<< HEAD
+=======
+        print(b0.default_value)
+        print(b1.default_value)
+>>>>>>> 454ebaa9677a776a535abb28f528efefabda52c5
         return {'two_bond0': b0, 'two_bond1': b1}
 
 
@@ -129,7 +151,10 @@ def compute_atom_two(universe, mapper=None, bond_extra=0.45):
         mapper (dict): Dictionary of symbol, radii pairs (see note below)
         bond_extra (float): Extra additive factor to include when computing bonds
     """
+<<<<<<< HEAD
     print("two.compute_atom_two")
+=======
+>>>>>>> 454ebaa9677a776a535abb28f528efefabda52c5
     if universe.frame.is_periodic():
         return compute_periodic_two_si(universe, mapper, bond_extra)
     return compute_free_two_si(universe, mapper, bond_extra)
@@ -140,7 +165,10 @@ def compute_free_two_si(universe, mapper=None, bond_extra=0.45):
     Serial, in memory computation of two body properties for free boundary
     condition systems.
     """
+<<<<<<< HEAD
     print("two.compute_free_two_si")
+=======
+>>>>>>> 454ebaa9677a776a535abb28f528efefabda52c5
     n = universe.frame['atom_count'].astype(np.int64)
     n = (n*(n - 1)//2).sum()
     dx = np.empty((n, ), dtype=np.float64)
@@ -171,7 +199,11 @@ def compute_free_two_si(universe, mapper=None, bond_extra=0.45):
     atom1 = pd.Series(atom1, dtype='category')
     fdx = pd.Series(fdx, dtype='category')
     two = pd.DataFrame.from_dict({'dx': dx, 'dy': dy, 'dz': dz, 'distance': distance,
+<<<<<<< HEAD
                                   'atom0': atom0, 'atom1': atom1, 'frame': frame})
+=======
+                                  'atom0': atom0, 'atom1': atom1, 'frame': fdx})
+>>>>>>> 454ebaa9677a776a535abb28f528efefabda52c5
     two = AtomTwo(two)
     two.compute_bonds(universe.atom['symbol'], mapper=mapper)
     return two
@@ -181,7 +213,10 @@ def compute_periodic_two_si(universe, mapper=None, bond_extra=0.45):
     """
     Compute periodic two body properties.
     """
+<<<<<<< HEAD
     print("two.compute_periodic_two_si")
+=======
+>>>>>>> 454ebaa9677a776a535abb28f528efefabda52c5
     grps = universe.atom[['x', 'y', 'z', 'frame']].copy()
     grps['frame'] = grps['frame'].astype(np.int64)
     grps.update(universe.unit_atom)
@@ -197,7 +232,11 @@ def compute_periodic_two_si(universe, mapper=None, bond_extra=0.45):
     px = np.empty((n, ), dtype=np.ndarray)
     py = np.empty((n, ), dtype=np.ndarray)
     pz = np.empty((n, ), dtype=np.ndarray)
+<<<<<<< HEAD
     #start = 0
+=======
+    start = 0
+>>>>>>> 454ebaa9677a776a535abb28f528efefabda52c5
     stop = 0
     for i, (frame, grp) in enumerate(grps):
         ux = grp['x'].values.astype(np.float64)
@@ -218,7 +257,11 @@ def compute_periodic_two_si(universe, mapper=None, bond_extra=0.45):
         py[i] = pyy
         pz[i] = pzz
         fdx[i] = [frame for j in range(nnn)]
+<<<<<<< HEAD
 #        start = stop
+=======
+        start = stop
+>>>>>>> 454ebaa9677a776a535abb28f528efefabda52c5
     dx = np.concatenate(dx)
     dy = np.concatenate(dy)
     dz = np.concatenate(dz)
@@ -252,7 +295,10 @@ def compute_bond_count(universe):
         atom indexed. Counts for projected atoms have no meaning/are not
         computed during two body property calculation.
     """
+<<<<<<< HEAD
     print("two.compute_bond_count")
+=======
+>>>>>>> 454ebaa9677a776a535abb28f528efefabda52c5
     stack = universe.atom_two.ix[universe.atom_two['bond'] == True, ['atom0', 'atom1']].stack()
     return stack.value_counts().sort_index()
 
@@ -361,6 +407,7 @@ def compute_molecule_two(universe):
 #        df['count'] = pvd.shape[0]
 #    return df
 #
+<<<<<<< HEAD
 =======
 # -*- coding: utf-8 -*-
 # Copyright (c) 2015-2016, Exa Analytics Development Team
@@ -717,3 +764,5 @@ def n_nearest_distances_by_symbols(universe, a, b, n, length='A', stdev=False,
        df['count'] = pvd.shape[0]
    return df
 >>>>>>> 811f6aaae1e1aef968c27a34842d5ad9e7267217
+=======
+>>>>>>> 454ebaa9677a776a535abb28f528efefabda52c5

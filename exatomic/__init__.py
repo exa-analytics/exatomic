@@ -55,4 +55,9 @@ from exatomic import gaussian
 from exatomic import adf
 from exatomic import nbo
 from exatomic import mpl
+<<<<<<< HEAD
 >>>>>>> 811f6aaae1e1aef968c27a34842d5ad9e7267217
+=======
+
+from exatomic.widget import TestContainer, TestUniverse, UniverseWidget
+>>>>>>> 454ebaa9677a776a535abb28f528efefabda52c5
