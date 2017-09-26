@@ -9,11 +9,11 @@ var __webpack_public_path__ = document.querySelector("body").getAttribute("data-
 
 // Export widget models and views, and the npm package version number.
 var _ = require("underscore");
-module.exports = _.extend(
-    {},
-    require("./app.js"),
-    require("./functions.js"),
-    require("./universe.js"),
-    require("./test.js")
+module.exports = _.extend({},
+    require("./jupyter-exatomic-base.js"),
+    require("./jupyter-exatomic-utils.js"),
+    require("./jupyter-exatomic-three.js"),
+    require("./jupyter-exatomic-widgets.js"),
+    require("./jupyter-exatomic-examples.js")
 );
 module.exports["version"] = require("../package.json").version;
