@@ -108,6 +108,8 @@ class Output(Editor):
         '''Parses the atom list generated in SEWARD.'''
         start = stop = self.find(_re_atom, keys_only=True)[0] + 8
         while self[stop].split(): stop += 1
+        # Sometimes prints an '--' after the atoms..
+        if self[stop - 1].strip() == '--': stop -= 1
         columns = ['label', 'tag', 'x', 'y', 'z', 5, 6, 7]
         atom = self.pandas_dataframe(start, stop, columns).drop([5, 6, 7], axis=1)
         atom['symbol'] = atom['tag'].str.extract('([A-z]{1,})([0-9]*)',

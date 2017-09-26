@@ -105,6 +105,10 @@ class BasisSet(DataFrame):
         mi = self._sets().apply(
             lambda x: x.groupby('shell').apply(
             lambda y: y['L'].values[0]).value_counts())
+        if type(mi) == pd.DataFrame:
+            return pd.Series(mi.values[0], index=pd.MultiIndex.from_product(
+                             [mi.index.values, mi.columns.values],
+                             names=['set', 'L']))
         mi.index.names = ['set', 'L']
         return mi.sort_index()
 

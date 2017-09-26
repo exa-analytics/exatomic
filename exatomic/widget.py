@@ -11,7 +11,8 @@ import pandas as pd
 from glob import glob
 from base64 import b64decode
 from traitlets import Unicode
-from exawidgets import ContainerWidget
+#from exawidgets import ContainerWidget
+from exawidgets import BaseBox as ContainerWidget
 from exa.utility import mkp
 
 
