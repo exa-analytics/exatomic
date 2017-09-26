@@ -33,7 +33,7 @@ osx-64
 js/node_modules/
 node_modules/
 exatomic/static/
-js/dist/
+js/dist/*
 
 # PyInstaller
 #  Usually these files are written by a python script from a template
