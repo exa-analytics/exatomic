@@ -1,1 +1,8 @@
+<<<<<<< HEAD
 exa
+=======
+exa
+ipywidgets
+psutil
+numexpr
+>>>>>>> 454ebaa9677a776a535abb28f528efefabda52c5
