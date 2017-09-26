@@ -212,6 +212,7 @@ class ExatomicBox(Box):
     def __init__(self, *args, scene=None, **kwargs):
         self.scene = ExatomicScene() if scene is None else scene
         if not hasattr(self, 'gui'): self.init_gui()
+        if not hasattr(self, 'gui'): self.gui = VBox([])
         self.children = [HBox([self.gui, self.scene])]
         super(ExatomicBox, self).__init__(*args,
                                             children=self.children,
