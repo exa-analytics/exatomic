@@ -29,8 +29,7 @@ from exatomic.two import (AtomTwo, MoleculeTwo, compute_atom_two,
                           compute_bond_count, compute_molecule_two)
 from exatomic.molecule import (Molecule, compute_molecule, compute_molecule_com,
                                compute_molecule_count)
-from exatomic.widget import Universe as UniverseWidget
-from exatomic.widget import TestUniverse as TestUniverseWidget
+#from exatomic.widget import TestUniverse, UniverseWidget
 from exatomic.field import AtomicField
 from exatomic.orbital import Orbital, Excitation, MOMatrix, DensityMatrix
 from exatomic.basis import Overlap, BasisSet, BasisSetOrder
@@ -106,6 +105,7 @@ class Universe(Container, metaclass=Meta):
             mapper (dict): Custom radii to use when determining bonds
             bond_extra (float): Extra additive factor to use when determining bonds
         """
+        if len(self.atom.last_frame.index) > 200: return
         if self.frame.is_periodic():
             atom_two, projected_atom = compute_atom_two(self, mapper, bond_extra)
             self.atom_two = atom_two
@@ -203,16 +203,19 @@ class Universe(Container, metaclass=Meta):
         self._traits_need_update = True
 
 
-    def _custom_traits(self):
-        """
-        Build traits depending on multiple dataframes.
-        """
-        traits = {}
-        # Hack for now...
-        if hasattr(self, '_atom_two') or len(self)*100 > self.frame['atom_count'].sum():
-            mapper = self.atom.get_atom_labels().astype(np.int64)
-            traits.update(self.atom_two._bond_traits(mapper))
-        return traits
+    def get_atom_labels(self):
+        return self.atom.get_atom_labels().astype(np.int64)
+
+#    def _custom_traits(self):
+#        """
+#        Build traits depending on multiple dataframes.
+#        """
+#        traits = {}
+#        # Hack for now...
+#        if hasattr(self, '_atom_two') or len(self)*100 > self.frame['atom_count'].sum():
+#            mapper = self.atom.get_atom_labels().astype(np.int64)
+#            traits.update(self.atom_two._bond_traits(mapper))
+#        return traits
 
     def __len__(self):
         return len(self.frame)
@@ -220,10 +223,10 @@ class Universe(Container, metaclass=Meta):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         self._traits_need_update = True
-        if hasattr(self, '_atom'):
-            self._widget = UniverseWidget(container=self)
-        else:
-            self._widget = TestUniverseWidget()
+        #if hasattr(self, '_atom'):
+        #    self._widget = UniverseWidget(self)
+        #else:
+        #    self._widget = TestUniverse()
 
     def _repr_html_(self):
         return self._widget._ipython_display_()

@@ -107,6 +107,8 @@ class AtomTwo(DataFrame):
                 b1[i] = []
         b0 = Unicode(pd.Series(b0).to_json(orient='values')).tag(sync=True)
         b1 = Unicode(pd.Series(b1).to_json(orient='values')).tag(sync=True)
+        print(b0.default_value)
+        print(b1.default_value)
         return {'two_bond0': b0, 'two_bond1': b1}
 
 
@@ -165,7 +167,7 @@ def compute_free_two_si(universe, mapper=None, bond_extra=0.45):
     atom1 = pd.Series(atom1, dtype='category')
     fdx = pd.Series(fdx, dtype='category')
     two = pd.DataFrame.from_dict({'dx': dx, 'dy': dy, 'dz': dz, 'distance': distance,
-                                  'atom0': atom0, 'atom1': atom1, 'frame': frame})
+                                  'atom0': atom0, 'atom1': atom1, 'frame': fdx})
     two = AtomTwo(two)
     two.compute_bonds(universe.atom['symbol'], mapper=mapper)
     return two

@@ -1,4 +1,4 @@
 exa
-exawidgets
+ipywidgets
 psutil
 numexpr
