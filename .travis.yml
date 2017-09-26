@@ -10,10 +10,9 @@ before_install:
   - conda update --yes conda
 install:
   - conda install --yes python=$TRAVIS_PYTHON_VERSION
-  - conda install --yes -c exaanalytics exa exawidgets
-  - conda install --yes -c conda-forge pytables
+  - conda install --yes -c exaanalytics exa
+  - conda install --yes -c conda-forge pytables nodejs
   - conda install --yes numba psutil numexpr
-  - conda install --yes -c cpcloud npm
   - pip install travis-sphinx codacy-coverage python-coveralls codecov
   - pip install sphinxcontrib-autoanysrc sphinx_rtd_theme
   - python setup.py install
