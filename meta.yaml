@@ -1,6 +1,5 @@
 package:
     name: exatomic
-<<<<<<< HEAD
     version: "0.4.0.dev0"
 
 app:
@@ -8,12 +7,7 @@ app:
 
 source:
     git_rev: v0.4.0.dev0
-=======
     version: "0.3.8"
-
-source:
-    git_rev: v0.3.8
->>>>>>> org/master
     git_url: https://github.com/exa-analytics/exatomic.git
 
 requirements:
@@ -35,7 +29,6 @@ requirements:
         - nose
         - numba
         - exa
-        - exawidgets
 
     run:
         - python
@@ -55,7 +48,6 @@ requirements:
         - nose
         - numba
         - exa
-        - exawidgets
 
 about:
     home: https://exa-analytics.github.io

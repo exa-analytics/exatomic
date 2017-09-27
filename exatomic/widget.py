@@ -193,7 +193,6 @@ from ipywidgets import (Widget, DOMWidget, Box, widget_serialization, Layout,
                         Button, Dropdown, VBox, HBox, FloatSlider, IntSlider,
                         register, Play, jslink, Checkbox)
 ## Imports expected to break
-from exatomic.container import Universe
 from exa.relational.isotope import symbol_to_radius, symbol_to_color
 
 ###################
@@ -389,6 +388,7 @@ class ExatomicBox(Box):
     def __init__(self, *args, scene=None, **kwargs):
         self.scene = ExatomicScene() if scene is None else scene
         if not hasattr(self, 'gui'): self.init_gui()
+        if not hasattr(self, 'gui'): self.gui = VBox([])
         self.children = [HBox([self.gui, self.scene])]
         super(ExatomicBox, self).__init__(*args,
                                             children=self.children,
@@ -657,12 +657,12 @@ class UniverseWidget(ExatomicBox):
 
         
     def __init__(self, uni, *args, **kwargs):
-        if not isinstance(uni, Universe):
-            raise TypeError("Object passed to UniverseWidget must be a universe.")
+        #if not isinstance(uni, Universe):
+        #    raise TypeError("Object passed to UniverseWidget must be a universe.")
         unargs = {}
         try: unargs.update(atom_traits(uni.atom))
         except AttributeError: pass
-        try: unargs.update(two_traits(uni.atom_two, uni.get_atom_labels()))
+        try: unargs.update(two_traits(uni.atom_two, uni.atom.get_atom_labels()))
         except AttributeError: pass
         try: unargs.update(field_traits(uni.field))
         except AttributeError: pass
