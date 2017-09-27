@@ -4,4 +4,4 @@
 """
 ADF NMR
 """
-from .output import NMR
+#from .output import NMR

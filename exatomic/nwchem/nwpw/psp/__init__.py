@@ -9,4 +9,4 @@ wave forms and potentials relevant for the pseudopotential/plane wave method.
 and projector augmented wave method. This sub-package provides parsing functionality
 for this (typically debug) data.
 """
-from .pspdata import PSPData
+#from .pspdata import PSPData

@@ -5,6 +5,6 @@
 Tests for :mod:`~exatomic.qe.base_composer`
 ##########################################
 """
-from unittest import TestCase
-from exatomic.qe.base_composer import PWCPComposer
+#from unittest import TestCase
+#from exatomic.qe.base_composer import PWCPComposer
 

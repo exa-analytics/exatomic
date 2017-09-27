@@ -9,6 +9,6 @@ projects including the `pslibrary`_ and `eQE`_.
 .. _pslibrary: https://github.com/dalcorso/pslibrary
 .. _eQE: http://eqe.rutgers.edu
 """
-from .psp import UPF, PSLJobFile
-from .pw import PWOutput
+#from .psp import UPF, PSLJobFile
+#from .pw import PWOutput
 #from .cp import parse_dynamics_dir
