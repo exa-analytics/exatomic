@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-import os, sys, platfrom
+import os, sys, platform
 from distutils import log
 from subprocess import check_call
 from setuptools import setup, find_packages, Command
