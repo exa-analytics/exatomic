@@ -2,7 +2,6 @@
 .Python/
 .ipynb_checkpoints/
 __pycache__/
-<<<<<<< HEAD
 build/
 dist/
 *eggs/
@@ -27,51 +26,6 @@ osx-64/
 doc/build/
 target/
 .settings/
-=======
-*.py[cod]
-*.nbc
-*.nbi
-
-# C extensions
-*.so
-
-# Distribution / packaging
-.Python
-env/*
-build/*
-develop-eggs/*
-dist/*
-downloads/*
-eggs/*
-.eggs/*
-lib/*
-lib64/*
-parts/*
-sdist/*
-var/*
-*.egg-info/*
-.installed.cfg
-*.egg
-*.pypirc
-win-32
-win-64
-linux-32
-linux-64
-osx-64
-js/dist/
->>>>>>> 811f6aaae1e1aef968c27a34842d5ad9e7267217
-js/node_modules/
-exatomic/static/*.js
-exatomic/static/*.map
-node_modules/
-<<<<<<< HEAD
-=======
-exatomic/static/
-<<<<<<< HEAD
->>>>>>> 811f6aaae1e1aef968c27a34842d5ad9e7267217
-=======
-js/dist/*
->>>>>>> 454ebaa9677a776a535abb28f528efefabda52c5
 
 
 # Compiled

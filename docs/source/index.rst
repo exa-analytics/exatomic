@@ -2,7 +2,7 @@
 .. Distributed under the terms of the Apache License 2.0
 
 #############################
-Exatomic
+`Exatomic`_
 #############################
 *A unified platform for theoretical and computational chemists*
 
@@ -11,7 +11,6 @@ and physicists to parse, process, analyze, and visualize data coming from
 quantum mechanics calculations. Included in this package are sub-packages 
 dedicated to parsing data from software programs used in the field. A quick 
 method to get started with visualization is through the `Jupyter notebook`_.
-This package is built on the `Exa Analytics Framework`_. 
 
 .. flashy example (todo)
 
@@ -25,13 +24,13 @@ This package is built on the `Exa Analytics Framework`_.
 
 .. toctree::
     :maxdepth: 2
-    :caption: General API
+    :caption: General
 
     api.rst
 
 .. toctree::
     :maxdepth: 2
-    :caption: Software API
+    :caption: Software 
 
     adf.rst
     nwchem.rst
@@ -41,7 +40,6 @@ This package is built on the `Exa Analytics Framework`_.
     :caption: Contributors
 
     contrib.rst
-    concepts.rst
 
 
 ##################
@@ -53,5 +51,5 @@ Info
 * :ref:`modindex`
 * :ref:`search`
 
-.. _Exa Analytics Framework: https://exa-analytics.github.io/
+.. _Exatomic: https://exa-analytics.github.io/
 .. _Jupyter notebook: https://jupyter.org

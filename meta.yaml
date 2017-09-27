@@ -1,56 +1,51 @@
-package:
-    name: exatomic
-    version: "0.4.0.dev0"
+{% set name = "exatomic" %}
+{% set version = "0.4.0" %}
+{% set build = 0 %}
 
-app:
-    entry: exatomic
+package:
+  name: {{ name }}
+  version: {{ version }}
 
 source:
-    git_rev: v0.4.0.dev0
-    version: "0.3.8"
-    git_url: https://github.com/exa-analytics/exatomic.git
+  fn: {{ name }}-{{ version }}.tar.gz
+  url: https://pypi.io/packages/source/{{ name[0] }}/{{ name }}/{{ name }}-{{ version }}.tar.gz
+
+build:
+  number: {{ build }}
+  script: python setup.py install --single-version-externally-managed --record record.txt
 
 requirements:
-    build:
-        - python x.x
-        - numpy
-        - scipy
-        - matplotlib
-        - sqlalchemy
-        - pandas
-        - networkx
-        - sympy
-        - seaborn
-        - jupyter
-        - notebook
-        - ipywidgets
-        - ipyparallel
-        - sphinx
-        - nose
-        - numba
-        - exa
+  build:
+    - python
+    - setuptools
 
-    run:
-        - python
-        - numpy
-        - scipy
-        - matplotlib
-        - sqlalchemy
-        - pandas
-        - networkx
-        - sympy
-        - seaborn
-        - jupyter
-        - notebook
-        - ipywidgets
-        - ipyparallel
-        - sphinx
-        - nose
-        - numba
-        - exa
+  run:
+    - python
+    - numpy
+    - scipy
+    - matplotlib
+    - seaborn
+    - networkx
+    - paramiko
+    - pandas
+    - sympy
+    - notebook
+    - nose
+    - numba
+    - six
+    - pytables
+    - sphinx
+    - sphinx_rtd_theme
+    - pandoc
+    - nbsphinx
+    - exa
+
+test:
+  imports:
+    - exatomic
 
 about:
-    home: https://exa-analytics.github.io
-    license: Apache 2.0
+    home: https://exa-analytics.github.io/{{ name }}
+    license: Apache-2.0
     license_file: LICENSE
-    summary: A unified platform for computational chemists.
+    summary: A unified platform for theoretical and computational chemists.

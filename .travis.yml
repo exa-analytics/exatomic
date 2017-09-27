@@ -5,7 +5,6 @@ os:
 
 python:
   - "2.7"
-  - "3.4"
   - "3.5"
   - "3.6"
 
@@ -20,11 +19,11 @@ before_install:
 install:
   - conda install -q python=$TRAVIS_PYTHON_VERSION
   - conda install -q -c conda-forge `cat ../exa/requirements.txt`
+  - conda install -q -c conda-forge `cat requirements.txt`
   - conda install -q -c conda-forge pytables
   - pip install travis-sphinx codacy-coverage python-coveralls
-  - cd ../exa; pip install .; cd js; ./npminstall.sh; ./makedocs.sh; cd ../../exatomic;
-  - pip install . 
-  - cd js; ./npminstall.sh; ./makedocs.sh; cd ../;
+  - cd ../exa; pip install .; cd ../exatomic;
+  - pip install .
 
 script:
   - nosetests --with-coverage

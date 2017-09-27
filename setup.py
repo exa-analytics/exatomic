@@ -1,10 +1,6 @@
-#! /usr/bin/env python
+#!/usr/bin/env python
 # -*- coding: utf-8 -*-
-# Copyright (c) 2015-2017, Exa Analytics Development Team
-# Distributed under the terms of the Apache License 2.0
-import os
-import sys
-import platform
+import os, sys, platfrom
 from distutils import log
 from subprocess import check_call
 from setuptools import setup, find_packages, Command
@@ -15,19 +11,17 @@ from setuptools.command.egg_info import egg_info
 
 name = "exatomic"
 description = "A unified platform for theoretical and computational chemists."
-datadir = "static"
-nbdir = "static"
+staticdir = "static"
+jsdir = "js"
 readme = "README.md"
 requirements = "requirements.txt"
 verfile = "_version.py"
+log.set_verbosity(log.DEBUG)
 root = os.path.dirname(os.path.abspath(__file__))
-is_repo = os.path.exists(os.path.join(root, ".git"))
+node_modules = os.path.join(root, jsdir, "node_modules")
 prckws = {'shell': True} if platform.system().lower() == "windows" else {}
-jsroot = os.path.join(root, "js")
-node_modules = os.path.join(jsroot, "node_modules")
 npm_path = os.pathsep.join([os.path.join(node_modules, ".bin"),
                             os.environ.get("PATH", os.defpath)])
-log.set_verbosity(log.DEBUG)
 try:
     import pypandoc
     long_description = pypandoc.convert(readme, "rst")
@@ -51,11 +45,12 @@ def update_package_data(distribution):
 def js_prerelease(command, strict=False):
     """Build minified JS/CSS prior to performing the command."""
     class DecoratedCommand(command):
-        """Used by ``js_prerelease`` to modify JS/CSS prior to running the command."""
+        """
+        Used by ``js_prerelease`` to modify JS/CSS prior to running the command.
+        """
         def run(self):
             jsdeps = self.distribution.get_command_obj("jsdeps")
-            if not is_repo and all(os.path.exists(t) for t in jsdeps.targets):
-                # sdist, nothing to do
+            if not os.path.exists(".git") and all(os.path.exists(t) for t in jsdeps.targets):
                 command.run(self)
                 return
             try:
@@ -76,10 +71,10 @@ def js_prerelease(command, strict=False):
 
 
 class NPM(Command):
-    description = "Install package.json dependencies using npm."
+    description = "install package.json dependencies using npm."
     user_options = []
-    targets = [os.path.join(root, name, nbdir, "extension.js"),
-               os.path.join(root, name, nbdir, "index.js")]
+    targets = [os.path.join(root, name, staticdir, "extension.js"),
+               os.path.join(root, name, staticdir, "index.js")]
 
     def initialize_options(self):
         pass
@@ -100,14 +95,11 @@ class NPM(Command):
         return self.has_npm()
 
     def run(self):
-        has_npm_ = self.has_npm()
-        if not has_npm_:
+        if not self.has_npm():
             log.error("`npm` unavailable.  If you're running this command using sudo, make sure `npm` is available to sudo")
-
-        env = os.environ.copy()
-        env['PATH'] = npm_path
-
-        if self.should_run_npm_install():
+        else:
+            env = os.environ.copy()
+            env['PATH'] = npm_path
             log.info("Installing build dependencies with npm. This may take a while...")
             check_call(["npm", "install"], cwd=jsroot, stdout=sys.stdout, stderr=sys.stderr, **prckws)
             os.utime(node_modules, None)
@@ -128,31 +120,30 @@ setup_args = {
     'version': version,
     'description': description,
     'long_description': long_description,
-    'include_package_data': True,
-    'data_files': [
-        ("share/jupyter/nbextensions/jupyter-" + name, [
-            os.path.join(name, nbdir, "extension.js"),
-            os.path.join(name, nbdir, "index.js"),
-            os.path.join(name, nbdir, "index.js.map")
-        ]),
-    ],
-    'package_data': {name: [datadir + "/*"]},
+    'package_data': {name: [staticdir + "/*"]},
     'include_package_data': True,
     'install_requires': dependencies,
     'packages': find_packages(),
-    'zip_safe': False,
+    'data_files': [
+        ("share/jupyter/nbextensions/jupyter-" + name, [
+            os.path.join(name, staticdir, "extension.js"),
+            os.path.join(name, staticdir, "index.js"),
+            os.path.join(name, staticdir, "index.js.map")
+        ]),
+    ],
     'cmdclass': {
         'build_py': js_prerelease(build_py),
         'egg_info': js_prerelease(egg_info),
         'sdist': js_prerelease(sdist, strict=True),
         'jsdeps': NPM,
     },
+    'zip_safe': False,
     'license': "Apache License Version 2.0",
     'author': "Thomas J. Duignan and Alex Marchenko",
     'author_email': "exa.data.analytics@gmail.com",
     'maintainer_email': "exa.data.analytics@gmail.com",
     'url': "https://exa-analytics.github.io/" + name,
-    'download_url': "https://github.com/avmarchenko/" + name + "/tarball/{}.tar.gz".format(version),
+    'download_url': "https://github.com/exa-analytics/{}/archive/{}.tar.gz".format(name, version),
     'keywords': ["quantum", "chemistry", "hpc", "jupyter", "notebook", "visualization"],
     'classifiers': [
         "Development Status :: 3 - Alpha",
