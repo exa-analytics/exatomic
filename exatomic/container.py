@@ -29,12 +29,12 @@ from exatomic.two import (AtomTwo, MoleculeTwo, compute_atom_two,
                           compute_bond_count, compute_molecule_two)
 from exatomic.molecule import (Molecule, compute_molecule, compute_molecule_com,
                                compute_molecule_count)
-from exatomic.widget import UniverseWidget
 from exatomic.field import AtomicField
 from exatomic.orbital import Orbital, Excitation, MOMatrix, DensityMatrix
 from exatomic.basis import Overlap, BasisSet, BasisSetOrder
 from exatomic.algorithms.orbital import add_molecular_orbitals
 from exatomic.interfaces.cclib import universe_from_cclib
+from exatomic.widget import UniverseWidget
 
 
 class Meta(DataObject):
@@ -276,3 +276,4 @@ def basis_function_contributions(universe, mo, mocoefs='coef',
         return together
     else:
         raise NotImplementedError("not clever enough for that.")
+
