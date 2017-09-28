@@ -18,7 +18,7 @@
 import os
 import sys
 sys.path.insert(0, os.path.abspath(os.sep.join(("..", ".."))))
-from exatomic import __version__
+from exatomic._version import __version__
 
 # If extensions (or modules to document with autodoc) are in another directory,
 # add these directories to sys.path here. If the directory is relative to the
