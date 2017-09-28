@@ -3,4 +3,4 @@
 # Distributed under the terms of the Apache License 2.0
 
 from .inputs import Input
-from .output import Output
+from .output import Output, MOMatrix

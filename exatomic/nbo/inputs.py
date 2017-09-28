@@ -25,7 +25,7 @@ _header = """\
 $GENNBO NATOMS={nat}    NBAS={nbas}  UPPER  BODM BOHR $END
 $NBO BNDIDX NLMO AONBO=W AONLMO=W $END
 $COORD
-{exaver} -- {name} -- tr[D*S] = {check}
+{exaver} -- {name} -- tr[P*S] = {check}
 {atom}
 $END
 $BASIS
@@ -89,7 +89,7 @@ def _get_labels(Ls, mls=None, ls=None, ms=None, ns=None):
         return [spher[(spher['L'] == l) &
                       (spher['ml'] == ml)]['label'].iloc[0]
                       for l, ml in zip(Ls, mls)]
-    if xs is not None:
+    if ls is not None:
         return [cart[(cart['L'] == L) &
                      (cart['l'] == l) &
                      (cart['m'] == m) &
@@ -226,7 +226,7 @@ class Input(Editor):
         if 'ml' in kwargs:
             labargs = {'mls': kwargs['ml']}
         else:
-            labards = {'ls': kwargs['l'],
+            labargs = {'ls': kwargs['l'],
                        'ms': kwargs['m'],
                        'ns': kwargs['n']}
         kwargs['label'] = _get_labels(kwargs['L'], **labargs)
@@ -247,6 +247,7 @@ class Input(Editor):
             o = uni.overlap['coef'].values
             matargs['overlap'] = _clean_to_string(o, **margs)
         # Still no clean solution for an occupation vector yet
+        d = None
         if hasattr(uni, '_density'):
             d = uni.density
         elif hasattr(uni, 'occupation_vector'):
@@ -255,7 +256,8 @@ class Input(Editor):
             if column is None:
                 raise Exception("Must provide column name if providing occvec.")
             d = DensityMatrix.from_momatrix(uni.momatrix, occvec, column=column)
-        matargs['density'] = _clean_to_string(d['coef'].values, **margs)
+        if d is not None:
+            matargs['density'] = _clean_to_string(d['coef'].values, **margs)
         # Compute tr[P*S] must be equal to number of electrons
         if matargs['density']:
             kwargs['check'] = np.trace(np.dot(d.square(), uni.overlap.square()))
