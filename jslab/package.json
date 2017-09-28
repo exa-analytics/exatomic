@@ -1,7 +1,7 @@
 {
   "name": "jupyterlab-exatomic",
   "version": "0.4.0",
-  "description": "The exatomic package for chemical visualization.",
+  "description": "A unified platform for theoretical and computational chemists.",
   "author": "Thomas J. Duignan and Alex Marchenko",
   "license": "Apache-2.0",
   "main": "lib/index.js",
