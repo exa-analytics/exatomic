@@ -87,7 +87,7 @@ class Editor(BaseEditor, metaclass=Meta):
         self.frame = compute_frame_from_atom(self.atom)
 
 
-    def to_universe(self, name=None, description=None, meta=None):
+    def to_universe(self, name=None, description=None, meta=None, verbose=True):
         """
         Convert the editor to a :class:`~exatomic.container.Universe` object.
         """
@@ -96,14 +96,20 @@ class Editor(BaseEditor, metaclass=Meta):
                 meta.update(self.meta)
             else:
                 meta = self.meta
-        kwargs = {'name': name, 'description': description, 'meta': meta}
-        attrs = [attr.replace('parse_', '') for attr in vars(self.__class__).keys() if attr.startswith('parse_')]
+        kwargs = {'name': name,
+                  'description': description, 
+                  'meta': meta}
+        attrs = [attr.replace('parse_', '') 
+                 for attr in vars(self.__class__).keys() 
+                 if attr.startswith('parse_')]
         for attr in attrs:
             result = None
             try:
                 result = getattr(self, attr)
-            except (IndexError, NameError, AttributeError) as e:
-                print('{} failed with : {}'.format(attr, e))
+            except Exception as e:
+                if verbose:
+                    if not str(e).startswith('Please compute'):
+                        print('parse_{} failed with: {}'.format(attr, e))
             if result is not None:
                 kwargs[attr] = result
         return Universe(**kwargs)
