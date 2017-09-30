@@ -219,7 +219,7 @@ class Universe(Container, metaclass=Meta):
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
-        self._widget = self._widget_class(self)
+        #self._widget = self._widget_class(self)
 
 
 

@@ -20,7 +20,7 @@ var TestSceneModel = base.ExatomicSceneModel.extend({
         return _.extend({}, base.ExatomicSceneModel.prototype.defaults, {
             _model_name: "TestSceneModel",
             _view_name: "TestSceneView",
-            geo_shape: true,
+            geom: true,
             field: "null",
             field_ml: 0
         })
@@ -39,7 +39,7 @@ var TestSceneView = base.ExatomicSceneView.extend({
 
     add_geometry: function(color) {
         this.clear_meshes("generic");
-        if (this.model.get("geo_shape")) {
+        if (this.model.get("geom")) {
             this.meshes["generic"] = this.app3d.test_mesh();
         };
         this.add_meshes("generic");
@@ -58,7 +58,7 @@ var TestSceneView = base.ExatomicSceneView.extend({
 
     init_listeners: function() {
         TestSceneView.__super__.init_listeners.apply(this);
-        this.listenTo(this.model, "change:geo_shape", this.add_geometry);
+        this.listenTo(this.model, "change:geom", this.add_geometry);
         this.listenTo(this.model, "change:field", this.add_field);
     },
 
