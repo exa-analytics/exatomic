@@ -30,7 +30,44 @@ gui_lo = Layout(width="195px")
 # Common GUI patterns #
 #######################
 
-class Controller(object):
+
+class Folder(VBox):
+    """A VBox with a main widget that will show or hide widgets."""
+    mlo = Layout(width="200px")
+    lo = gui_lo 
+
+
+    def _close(self):
+        """Close all widgets in the folder."""
+        for widget in self.active_controls.values():
+            widget.close()
+        for widget in self.inactive_controls.values():
+            widget.close()
+        self.close()
+
+
+    def _set_layout(self, widget=None):
+        """Ensure all widgets are the same size."""
+        if widget is not None:
+            widget.layout = self.lo
+        else:
+            for widget in self.active_controls.values():
+                widget.layout = self.lo
+            for widget in self.inactive_controls.values():
+                widget.layout = self.lo
+
+        
+    def _init_folder(self, control, content):
+        """Set up controller for folder."""
+        self.active_controls = OrderedDict([
+            ('folder', control)])
+        self.inactive_controls = content
+        self._set_layout()
+        def _controller(b):
+            self.open_folder = self.open_folder == False
+            self.set_gui()
+        self.active_controls['folder'].on_click(_controller)
+
 
     def activate(self, *keys, update=False):
         """Activate a widget in the folder."""
@@ -53,8 +90,9 @@ class Controller(object):
 
     def insert(self, idx, key, obj, active=True, update=False):
         """Insert a widget into the folder specified by index."""
-        od = self.active_controls if active else self.inactive_controls
+        self._set_layout(obj)
         nd = OrderedDict()
+        od = self.active_controls if active else self.inactive_controls
         keys = list(od.keys())
         keys.insert(idx, key)
         for k in keys:
@@ -64,42 +102,6 @@ class Controller(object):
         else: self.inactive_controls = nd
         if update:
             self.set_gui()
-
-
-
-class Folder(VBox, Controller):
-    """A VBox with a main widget that will show or hide widgets."""
-    mlo = Layout(width="200px")
-    lo = gui_lo 
-
-
-    def _close(self):
-        """Close all widgets in the folder."""
-        for widget in self.active_controls.values():
-            widget.close()
-        for widget in self.inactive_controls.values():
-            widget.close()
-        self.close()
-
-
-    def _set_layout(self):
-        """Ensure all widgets are the same size."""
-        for widget in self.active_controls.values():
-            widget.layout = self.lo
-        for widget in self.inactive_controls.values():
-            widget.layout = self.lo
-
-        
-    def _init_folder(self, control, content):
-        """Set up controller for folder."""
-        self.active_controls = OrderedDict([
-            ('folder', control)])
-        self.inactive_controls = content
-        self._set_layout()
-        def _controller(b):
-            self.open_folder = self.open_folder == False
-            self.set_gui()
-        self.active_controls['folder'].on_click(_controller)
 
 
     def set_gui(self):
@@ -191,7 +193,7 @@ class ExatomicScene(DOMWidget):
 
 
 @register
-class ExatomicBox(Box, Controller):
+class ExatomicBox(Box):
     """Base class for containers of a GUI and scene."""
 
     _model_module = Unicode("jupyter-exatomic").tag(sync=True)
@@ -300,8 +302,10 @@ class TestContainer(ExatomicBox):
         def _field(c): self.scene.field = c.new 
         fopts.observe(_field, names='value')
 
-        self.inactive_controls['field'].insert(1, 'options', fopts)
-        self.activate('field')
+        folder = self.inactive_controls.pop('field')
+        folder.insert(1, 'options', fopts)
+        folder.activate('iso', 'nx', 'ny', 'nz')
+        self.active_controls['field'] = folder
 
 
     def __init__(self, *args, **kwargs):
@@ -396,6 +400,7 @@ class TestUniverse(ExatomicBox):
 
         folder.insert(1, 'fopts', fopts)
         folder.insert(2, 'fkind', fkind)
+        folder.activate('iso', 'nx', 'ny', 'nz')
         self.active_controls['field'] = folder
 
 
