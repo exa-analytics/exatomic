@@ -2,14 +2,34 @@
 # Copyright (c) 2015-2017, Exa Analytics Development Team
 # Distributed under the terms of the Apache License 2.0
 """
-A unified data platform for computational and theoretical chemists and
-physicists.
+A unified data anlaysis and visualization platform for computational and
+theoretical chemists, physicists, etc. Support for molecular geometry and
+orbital visualization is provided via the `Jupyter`_ notebook, a web-browser
+based interactive (multi-programming language) environment.
 
-Supported software
-####################
+.. extended description (todo)
+
+
+Supported Software
+---------------------
+The list below contains third-party software that is supported by this package.
+For specific features supported (per software), see the appropriate description
+below.
+
 - :mod:`~exatomic.adf.__init__`: `Amsterdam Density Functional`_
+- :mod:`~exatomic.gaussian.__init__`: `Gaussian`_
+- :mod:`~exatomic.molcas.__init__`: `OpenMolcas`_
+- :mod:`~exatomic.nbo.__init__`: `NBO`_
+- :mod:`~exatomic.nwchem.__init__`: `NWChem`_
+- :mod:`~exatomic.qe.__init__`: `Quantum ESPRESSO`_
 
+.. _Jupyter: https://jupyter.org
 .. _Amsterdam Density Functional: https://www.scm.com
+.. _Gaussian: http://gaussian.com/
+.. _OpenMolcas: https://gitlab.com/Molcas/OpenMolcas
+.. _NBO: http://nbo6.chem.wisc.edu/
+.. _NWChem: http://www.nwchem-sw.org/index.php/Main_Page
+.. _Quantum ESPRESSO: http://www.quantum-espresso.org/
 """
 def _jupyter_nbextension_paths():
     """Jupyter notebook extension directory paths."""
@@ -19,8 +39,23 @@ def _jupyter_nbextension_paths():
         'dest': "jupyter-exatomic",
         'require': "jupyter-exatomic/extension"
     }]
-#
-#
+
+from ._version import __version__
+from .xyz import XYZ
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 #<<<<<<< HEAD
 #from exatomic._version import __version__
 #from exatomic.container import Universe

@@ -2,45 +2,64 @@
 # Copyright (c) 2015-2017, Exa Analytics Development Team
 # Distributed under the terms of the Apache License 2.0
 """
-Nuclear Coordinates
+Atomic Coordinates
 ############################
-This module provides data objects targeted at storing atomic coordinates (i.e.
-coordinates of nuclei in an atomic scale simulation).
+This module provides the minimal requires for a data object that stores
+atomic coordinates (i.e. coordinates of nuclei in the classical sense).
 """
 import numpy as np
 import numba as nb
-from exa import Feature
-from exatomic.base import DataFrame
+from pandas.api.types import CategoricalDtype
+from exa import DataFrame
+from exa.core.data import Column, Index
+from exa.util import isotopes
 
-
-@nb.jit(nopython=True, nogil=True, cache=True)
-def frame_index(nframes, natoms, a=2, b=2):
-    """
-    Build a frame index for atoms.
-    """
-    natomsa = natoms + a
-    index = np.empty((nframes*natoms, ), dtype=np.int64)
-    k = 0
-    for i in range(nframes):
-        for j in range(natoms):
-            index[k] = i*natomsa + j
-            k += 1
-    return index + b
 
 class Atom(DataFrame):
     """
-    Dataframe that contains the nuclear coordinate positions in abosolute 3D
-    space.
-
-    At a minimum this table requires element symbols, coordinates in 3D space,
-    and an index (called 'frame') corresponding to a time snapshot, geometry
-    optimization snapshot, etc.
+    Absolute atomic coordinates, types, and other data.
     """
-    symbol = Feature(str, True) # Element abbreviation
-    frame = Feature(int, True)
-    x = Feature(float, True)
-    y = Feature(float, True)
-    z = Feature(float, True)
+    atom = Index(int)
+    frame = Column(CategoricalDtype)
+    Z = Column(int)
+    x = Column(float)
+    y = Column(float)
+    z = Column(float)
+
+    def as_symbol(self):
+        """Transform Z (proton number) to element symbol."""
+        pass
+
+
+
+#@nb.jit(nopython=True, nogil=True, cache=True)
+#def frame_index(nframes, natoms, a=2, b=2):
+#    """
+#    Build a frame index for atoms.
+#    """
+#    natomsa = natoms + a
+#    index = np.empty((nframes*natoms, ), dtype=np.int64)
+#    k = 0
+#    for i in range(nframes):
+#        for j in range(natoms):
+#            index[k] = i*natomsa + j
+#            k += 1
+#    return index + b
+#
+#class Atom(DataFrame):
+#    """
+#    Dataframe that contains the nuclear coordinate positions in abosolute 3D
+#    space.
+#
+#    At a minimum this table requires element symbols, coordinates in 3D space,
+#    and an index (called 'frame') corresponding to a time snapshot, geometry
+#    optimization snapshot, etc.
+#    """
+#    symbol = Feature(str, True) # Element abbreviation
+#    frame = Feature(int, True)
+#    x = Feature(float, True)
+#    y = Feature(float, True)
+#    z = Feature(float, True)
 
 
 #from numbers import Integral
