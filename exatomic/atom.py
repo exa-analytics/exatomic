@@ -9,7 +9,7 @@ atomic coordinates (i.e. coordinates of nuclei in the classical sense).
 """
 import numpy as np
 import numba as nb
-from pandas.api.types import CategoricalDtype
+from pandas.core.dtypes.dtypes import CategoricalDtypeType
 from exa import DataFrame
 from exa.core.data import Column, Index
 from exa.util import isotopes
@@ -20,8 +20,8 @@ class Atom(DataFrame):
     Absolute atomic coordinates, types, and other data.
     """
     atom = Index(int)
-    frame = Column(CategoricalDtype)
-    Z = Column(int)
+    frame = Column(CategoricalDtypeType)
+    Z = Column(CategoricalDtypeType)
     x = Column(float)
     y = Column(float)
     z = Column(float)

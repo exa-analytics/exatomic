@@ -9,16 +9,21 @@ A parser for the `XYZ`_ file format (for storing atomic coordinates.
 .. _XYZ: https://en.wikipedia.org/wiki/XYZ_file_format
 """
 import re
+from io import StringIO
 from exa import Parser
 from exa.core.editor import Matches, Match
+from exatomic.atom import Atom
 
 
 class XYZ(Parser):
-    """
-    Parser for the XYZ file format.
-    """
+    """Parser for the XYZ file format."""
     _start = re.compile("^\s*(\d+)")
     _stop = -1
+
+    def to_atom(self):
+        """
+        """
+        pass
 
     def _parse_stops_1(self, starts):
         """Stop when the number of atoms plus two is found."""
@@ -28,6 +33,9 @@ class XYZ(Parser):
             text = self.lines[n]
             matches.append(Match(n, text))
         return Matches(starts.pattern, *matches)
+
+    def _parse(self):
+        pass
 
 
 
