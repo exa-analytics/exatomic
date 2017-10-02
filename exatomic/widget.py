@@ -214,7 +214,7 @@ uni_field_lists = OrderedDict([
                     '3d-2', '3d-1', '3d0', '3d+1', '3d+2']),
     ("Gaussian", ['s', 'px', 'py', 'pz', 'd200', 'd110',
                   'd101', 'd020', 'd011', 'd002', 'f300',
-                  'f210', 'f201', 'f120', 'f111', 'f102', 
+                  'f210', 'f201', 'f120', 'f111', 'f102',
                   'f030', 'f021', 'f012', 'f003']),
     ("SolidHarmonic", [str(i) for i in range(8)])])
 
@@ -223,10 +223,10 @@ def gui_base_widgets():
     return OrderedDict(scn_close=Button(icon="trash",
                                  description=" Close",
                                  layout=gui_lo),
-                       scn_clear=Button(icon="bomb", 
+                       scn_clear=Button(icon="bomb",
                                  description=" Clear",
                                  layout=gui_lo),
-                       scn_saves=Button(icon="camera", 
+                       scn_saves=Button(icon="camera",
                                  description=" Save",
                                  layout=gui_lo))
 
@@ -253,7 +253,7 @@ def gui_field_widgets(uni=False, test=False):
 # Base classes #
 ################
 
-@register 
+@register
 class ExatomicScene(DOMWidget):
     """Resizable three.js scene."""
     _view_module = Unicode("jupyter-exatomic").tag(sync=True)
@@ -299,7 +299,7 @@ class ExatomicScene(DOMWidget):
         super(DOMWidget, self).__init__(*args,
                                         layout=Layout(width=width, height=height),
                                         **kwargs)
-  
+
 @register
 class ExatomicBox(Box):
     """Base class for containers of a GUI and scene."""
@@ -311,7 +311,7 @@ class ExatomicBox(Box):
                     ).tag(sync=True, **widget_serialization)
 
     def _close(self, b):
-        """Shut down all active widgets within the container.""" 
+        """Shut down all active widgets within the container."""
         self.scene.close()
         for wid in self.controls:
             self.controls[wid].close()
@@ -330,21 +330,21 @@ class ExatomicBox(Box):
         if key is not None:
             self.controls[key] = self.field_gui[key]
         else:
-            for key, wid in self.field_gui.items(): 
-                self.controls[key] = wid 
+            for key, wid in self.field_gui.items():
+                self.controls[key] = wid
 
     def remove_field_gui(self):
         """Remove field controllers from the GUI widgets."""
-        for key in self.field_gui.keys(): 
+        for key in self.field_gui.keys():
             try: self.controls.pop(key)
             except KeyError: continue
 
     def init_gui(self, uni=False, test=False):
         """Initialize generic GUI controls and register callbacks."""
         self.controls = gui_base_widgets()
-        def _scn_clear(b): 
+        def _scn_clear(b):
             self.scene.scn_clear = self.scene.scn_clear == False
-        def _scn_saves(b): 
+        def _scn_saves(b):
             self.scene.scn_saves = self.scene.scn_saves == False
         self.controls['scn_close'].on_click(self._close)
         self.controls['scn_clear'].on_click(_scn_clear)
@@ -363,11 +363,11 @@ class ExatomicBox(Box):
         if test and uni:
             self.uni_gui = {key: Dropdown(options=val, layout=gui_lo)
                             for key, val in uni_field_lists.items()}
-            def _field_kind(c): 
+            def _field_kind(c):
                 self.scene.field_kind = c.new
                 if 'field_ml' in self.controls:
                     self.scene.field_ml = self.uni_gui['ml'][c.new].options[0]
-                    self.controls.update([('field_ml', 
+                    self.controls.update([('field_ml',
                                            self.uni_gui['ml'][c.new])])
                 self.gui = VBox([val for key, val in self.controls.items()],
                                  layout=Layout(width="200px"))
@@ -417,11 +417,11 @@ class TestContainer(ExatomicBox):
         """Initialize specific GUI controls and register callbacks."""
         super(TestContainer, self).init_gui()
         fopts = ['null', 'sphere', 'torus', 'ellipsoid']
-        self.controls.update([('geo_shape', Button(icon="cubes", 
+        self.controls.update([('geo_shape', Button(icon="cubes",
                                description="  Mesh", layout=gui_lo)),
                               ('field_options', Dropdown(options=fopts,
                                layout=gui_lo))])
-        def _geo_shape(b): 
+        def _geo_shape(b):
             self.scene.geo_shape = self.scene.geo_shape == False
         self.controls['geo_shape'].on_click(_geo_shape)
         def _field(c):
@@ -471,15 +471,15 @@ class TestUniverse(ExatomicBox):
     def init_gui(self):
         super(TestUniverse, self).init_gui(uni=True, test=True)
         opts = uni_field_lists.keys()
-        self.controls.update([('field_options', Dropdown(options=opts, 
+        self.controls.update([('field_options', Dropdown(options=opts,
                                layout=gui_lo)),
                               ('field_kind', self.uni_gui[self.scene.field])])
         self.controls.update(self.field_gui)
         def _field(c):
             self.scene.field = c.new
             fk = uni_field_lists[c.new][0]
-            self.scene.field_kind = fk 
-            if self.scene.field == 'SolidHarmonic':  
+            self.scene.field_kind = fk
+            if self.scene.field == 'SolidHarmonic':
                 self.remove_field_gui()
                 self.controls.update([('field_ml', self.uni_gui['ml'][fk])])
                 self.add_field_gui()
@@ -513,7 +513,7 @@ def atom_traits(df):
             ).to_json(orient="values").replace('"', '')
     grps = df.groupby('frame')
     syms = grps.apply(lambda g: g['symbol'].cat.codes.values)
-    symmap = {i: v for i, v in enumerate(df['symbol'].cat.categories) 
+    symmap = {i: v for i, v in enumerate(df['symbol'].cat.categories)
               if v in df.unique_atoms}
     unq = df['symbol'].unique()
     radii = symbol_to_radius()[unq]
@@ -553,7 +553,7 @@ def two_traits(df, lbls):
     b0 = np.empty((len(frames), ), dtype='O')
     b1 = b0.copy()
     for i, frame in enumerate(frames):
-        try: 
+        try:
             b0[i] = bond_grps.get_group(frame)['atom0'].astype(np.int64).values
             b1[i] = bond_grps.get_group(frame)['atom1'].astype(np.int64).values
         except Exception:
@@ -617,22 +617,22 @@ class UniverseWidget(ExatomicBox):
     def init_gui(self, nframes=1, fields=None):
         super(UniverseWidget, self).init_gui(uni=True, test=False)
         playable = bool(nframes <= 1)
-        frame_lims = {'min': 0, 'max': nframes-1, 'step': 1, 
+        frame_lims = {'min': 0, 'max': nframes-1, 'step': 1,
                       'value': 0, 'layout': gui_lo}
         self.controls.update([('scn_frame', IntSlider(
                                description='Frame', **frame_lims)),
-                              ('playing', Play(description="Press play", 
+                              ('playing', Play(description="Press play",
                                disabled=playable, **frame_lims)),
-                              ('atom_3d', Button(description=" Atoms", 
+                              ('atom_3d', Button(description=" Atoms",
                                icon="adjust", layout=gui_lo))])
         if fields is not None:
             print('fields is not None:', fields)
-            self.controls.update([('field_show', Button(description=" Fields", 
+            self.controls.update([('field_show', Button(description=" Fields",
                                   layout=gui_lo, icon="cube"))])
-            def _field_show(b): 
+            def _field_show(b):
                 self.field_show = self.field_show == False
                 fdx = self.scene.field_idx
-                if self.field_show: 
+                if self.field_show:
                     self.controls.update([('field_options', Dropdown(options=fields,
                                           layout=gui_lo))])
                     self.add_field_gui('field_iso')
@@ -655,7 +655,7 @@ class UniverseWidget(ExatomicBox):
         self.gui = VBox([val for key, val in self.controls.items()],
                             layout=Layout(width="200px"))
 
-        
+
     def __init__(self, uni, *args, **kwargs):
         #if not isinstance(uni, Universe):
         #    raise TypeError("Object passed to UniverseWidget must be a universe.")

@@ -41,7 +41,7 @@ def _jupyter_nbextension_paths():
     }]
 
 from ._version import __version__
-from .xyz import XYZ
+from .interfaces import XYZ
 
 
 

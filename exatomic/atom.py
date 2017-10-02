@@ -20,8 +20,8 @@ class Atom(DataFrame):
     Absolute atomic coordinates, types, and other data.
     """
     atom = Index(int)
-    frame = Column(CategoricalDtypeType)
-    Z = Column(CategoricalDtypeType)
+    frame = Column(CategoricalDtypeType)    # Save space
+    Z = Column(CategoricalDtypeType)        # ditto
     x = Column(float)
     y = Column(float)
     z = Column(float)
@@ -29,6 +29,8 @@ class Atom(DataFrame):
     def as_symbol(self):
         """Transform Z (proton number) to element symbol."""
         pass
+
+
 
 
 

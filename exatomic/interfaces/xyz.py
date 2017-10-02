@@ -9,21 +9,68 @@ A parser for the `XYZ`_ file format (for storing atomic coordinates.
 .. _XYZ: https://en.wikipedia.org/wiki/XYZ_file_format
 """
 import re
+import numpy as np
+import numba as nb
+import pandas as pd
 from io import StringIO
+from operator import itemgetter
 from exa import Parser
+from exa.typed import Typed
+from exa.util import isotopes
 from exa.core.editor import Matches, Match
 from exatomic.atom import Atom
 
 
+# Helper functions for creating the atom table
+_iso = isotopes.as_df()
+_iso = _iso.drop_duplicates("symbol").set_index("symbol")['Z']
+
+
+@nb.vectorize(nopython=True)
+def _tot_idx(start, stop):
+    """Compute the total size of the atom table."""
+    return stop - start - 2
+
+
+@nb.jit(nopython=True, nogil=True, cache=True)
+def _build_indexes(start, stop):
+    """Given the sections of an XYZ file, build the indexes."""
+    n = np.sum(_tot_idx(start, stop))
+    idx = np.empty((n, ), dtype=np.int64)
+    fdx = idx.copy()
+    cdx = np.empty((len(start), ), dtype=np.int64)
+    k = 0    # Frame counter
+    j = 0    # Atom counter
+    for i, sta in enumerate(start):
+        for v in range(sta+2, stop[i]):
+            idx[j] = v
+            fdx[j] = k
+            j += 1
+        k += 1
+        cdx[i] = sta + 1
+    return idx, fdx, cdx
+
+
 class XYZ(Parser):
-    """Parser for the XYZ file format."""
+    """
+    Parser for the XYZ file format.
+
+    The symbol column gets mapped onto the proton number, 'Z'. For extended
+    XYZ-like files with custom columns pass the column names as needed.
+
+    .. code-block:: python
+
+        xyz = XYZ(file)
+        xyz.atom              # Default XYZ format
+        # Support for additional formats
+        xyz = XYZ(file)
+        xyz.parse(("symbol", "charge", "x", "y", "z"))
+        xyz.atom              # The atom table has an additional column 'charge'
+    """
     _start = re.compile("^\s*(\d+)")
     _stop = -1
-
-    def to_atom(self):
-        """
-        """
-        pass
+    atom = Typed(Atom, doc="Table of nuclear coordinates")
+    comments = Typed(dict, doc="Dictionary of comments")
 
     def _parse_stops_1(self, starts):
         """Stop when the number of atoms plus two is found."""
@@ -34,8 +81,24 @@ class XYZ(Parser):
             matches.append(Match(n, text))
         return Matches(starts.pattern, *matches)
 
-    def _parse(self):
-        pass
+    def _parse(self, columns=("Z", "x", "y", "z")):
+        """Perform complete parsing."""
+        columns = [col if col != "symbol" else "Z" for col in columns]
+        idx, fdx, cdx = _build_indexes(self.sections['start'].values,
+                                       self.sections['stop'].values)
+        atom = Atom(pd.read_csv(StringIO("\n".join(itemgetter(*idx)(self.lines))),
+                                         delim_whitespace=True, names=columns,
+                                         converters={'Z': lambda x: _iso[x]}))
+        atom['frame'] = fdx
+        self.comments = {i: self.lines[j] for i, j in enumerate(cdx)}
+        self.atom = atom
+
+    def _parse_atom(self, columns=("Z", "x", "y", "z")):
+        self._parse(columns)
+
+    def _parse_comments(self):
+        self._parse()
+
 
 
 
