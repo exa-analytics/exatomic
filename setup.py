@@ -108,7 +108,7 @@ class NPM(Command):
         for t in self.targets:
             if not os.path.exists(t):
                 msg = "Missing file: %s" % t
-                if not has_npm_:
+                if not self.has_npm():
                     msg += "\nnpm is required to build a development version of jupyter-" + name
                 raise ValueError(msg)
 
