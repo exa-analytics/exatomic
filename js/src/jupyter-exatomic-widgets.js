@@ -21,19 +21,19 @@ var UniverseSceneModel = base.ExatomicSceneModel.extend({
         return _.extend({}, base.ExatomicSceneModel.prototype.defaults, {
             _model_name: "UniverseSceneModel",
             _view_name: "UniverseSceneView",
-            frame_idx: 0, 
+            frame_idx: 0,
             field_idx: "null",
             field_iso: 0.03,
-            field_i: "", 
+            field_i: "",
             field_v: "",
             field_p: {},
-            atom_x: "", 
+            atom_x: "",
             atom_y: "",
-            atom_z: "", 
+            atom_z: "",
             atom_s: "",
-            atom_r: {}, 
+            atom_r: {},
             arom_c: {},
-            two_b0: "", 
+            two_b0: "",
             two_b1: "",
         })
     }
@@ -56,7 +56,7 @@ var UniverseSceneView = base.ExatomicSceneView.extend({
         this.atom_r = this.model.get("atom_r");
         this.atom_c = this.model.get("atom_c");
         // Two
-        if (this.model.get("two_b0") !== null) { 
+        if (this.model.get("two_b0") !== null) {
             this.two_b0 = JSON.parse(this.model.get("two_b0"));
             this.two_b1 = JSON.parse(this.model.get("two_b1"));
         };

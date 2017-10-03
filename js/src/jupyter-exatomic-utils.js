@@ -14,7 +14,7 @@ var create_float_array_xyz = function(x, y, z) {
     var ny = y.length || 1;
     var nz = z.length || 1;
     var n = Math.max(nx, ny, nz);
-    x = (nx == 1) ? repeat_float(x, n) : x; 
+    x = (nx == 1) ? repeat_float(x, n) : x;
     y = (ny == 1) ? repeat_float(y, n) : y;
     z = (nz == 1) ? repeat_float(z, n) : z;
     var xyz = new Float32Array(n * 3)
@@ -478,7 +478,7 @@ var scalar_field = function(dims, func_or_values) {
     } else {
         var values = new Float32Array(func_or_values);
     };
-    return { "x": x,   "y": y,   "z": z, 
+    return { "x": x,   "y": y,   "z": z,
             "nx": nx, "ny": ny, "nz": nz,
             "values": values}
 };
@@ -1146,5 +1146,5 @@ module.exports = {
     contour: contour,
     Gaussian: Gaussian,
     Hydrogenic: Hydrogenic,
-    SolidHarmonic: SolidHarmonic 
+    SolidHarmonic: SolidHarmonic
 };

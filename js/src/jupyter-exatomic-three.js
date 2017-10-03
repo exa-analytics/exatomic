@@ -45,7 +45,7 @@ class App3D {
         view.controls.keys = [65, 83, 68];
         view.controls.addEventListener("change", view.render.bind(view));
         view.controls.target = new THREE.Vector3(0.0, 0.0, 0.0);
-       
+
         // Start of old stuff
         this.view = view;
         this.scene = view.scene;
@@ -70,7 +70,7 @@ class App3D {
         Example of a render
         */
         var geom = new THREE.IcosahedronGeometry(2, 1);
-        var mat = new THREE.MeshBasicMaterial({color: 0x000000, 
+        var mat = new THREE.MeshBasicMaterial({color: 0x000000,
                                                wireframe: true});
         var mesh = new THREE.Mesh(geom, mat);
         return [mesh];
@@ -80,7 +80,7 @@ class App3D {
         /*"""
         add_points
         ---------------
-        Create a point cloud from x, y, z coordinates 
+        Create a point cloud from x, y, z coordinates
 
         Args:
             x (array-like): Array like object of x values
