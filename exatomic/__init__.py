@@ -22,6 +22,7 @@ below.
 - :mod:`~exatomic.nbo.__init__`: `NBO`_
 - :mod:`~exatomic.nwchem.__init__`: `NWChem`_
 - :mod:`~exatomic.qe.__init__`: `Quantum ESPRESSO`_
+- :mod:`~exatomic.interfaces.__init__`: Additional 3rd party support
 
 .. _Jupyter: https://jupyter.org
 .. _Amsterdam Density Functional: https://www.scm.com
@@ -41,6 +42,8 @@ def _jupyter_nbextension_paths():
     }]
 
 from ._version import __version__
+from .core import Atom
+from .core import Universe
 from .interfaces import XYZ
 
 

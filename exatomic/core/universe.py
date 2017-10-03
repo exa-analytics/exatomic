@@ -1,23 +1,30 @@
-#<<<<<<< HEAD
-#<<<<<<< HEAD
-#=======
-#>>>>>>> 27d553b3b4e163d985a0bdc43198c525ebdd64c5
-## -*- coding: utf-8 -*-
-## Copyright (c) 2015-2017, Exa Analytics Development Team
-## Distributed under the terms of the Apache License 2.0
-#"""
-#The Universe
-###############################
-#The :class:`~exatomic.container.Universe` is a
-#:class:`~exa.core.container.Container` object that stores all information about
-#the atomic system under investigation.
-#"""
-#<<<<<<< HEAD
-#from exa import Container
-#
-#
-#class Universe(Container):
-#=======
+# -*- coding: utf-8 -*-
+# Copyright (c) 2015-2017, Exa Analytics Development Team
+# Distributed under the terms of the Apache License 2.0
+"""
+The Universe
+##############################
+This module provides the 'container' object for exatomic. A 'container' is a
+the main storage object for data that belongs under the same concept. The
+:class:`~exatomic.universe.Universe` provides the main API entry point for all
+of the feature provided by exatomic.
+"""
+from exa import Container
+from exa.typed import Typed
+from .atom import Atom
+
+
+class Universe(Container):
+    """
+    A complete description of an atomic or molecular scale simulation.
+    """
+    atom = Typed(Atom)
+
+
+
+
+
+
 #import six
 #import numpy as np
 #import pandas as pd

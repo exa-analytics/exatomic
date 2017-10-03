@@ -18,7 +18,7 @@ from exa import Parser
 from exa.typed import Typed
 from exa.util import isotopes
 from exa.core.editor import Matches, Match
-from exatomic.atom import Atom
+from exatomic import Atom
 
 
 # Helper functions for creating the atom table
