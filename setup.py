@@ -13,6 +13,7 @@ name = "exatomic"
 description = "A unified platform for theoretical and computational chemists."
 staticdir = "static"
 jsdir = "js"
+jsroot = os.path.abspath(jsdir)
 readme = "README.md"
 requirements = "requirements.txt"
 verfile = "_version.py"
