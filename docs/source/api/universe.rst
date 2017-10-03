@@ -4,5 +4,5 @@
 #############################
 Universe
 #############################
-.. automodule:: exatomic.container
+.. automodule:: exatomic.core.universe
     :members:

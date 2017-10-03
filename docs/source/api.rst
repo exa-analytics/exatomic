@@ -26,16 +26,10 @@ can be found at :ref:`examples-label` or via help::
 
 .. toctree::
     :maxdepth: 2
-    :caption: Universe
+    :caption: Core API
 
     api/container.rst
 
-
-.. toctree::
-    :maxdepth: 2
-    :caption: Data Models
-
-    api/data/atom.rst
 
 ########################
 Unittest Docs
