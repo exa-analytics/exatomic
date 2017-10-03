@@ -7,7 +7,7 @@
   "main": "src/index.js",
   "repository": {
     "type": "git",
-    "url": "https://github.com/avmarchenko/exatomic.git"
+    "url": "https://github.com/exa-analytics/exatomic.git"
   },
   "keywords": [
     "quantum mechanics",
