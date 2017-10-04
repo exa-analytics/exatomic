@@ -6,7 +6,7 @@ Parser for ADF's SCF Section
 ###############################
 Parses the 'S C F' section of an ADF block output.
 """
-from exa import Parser, Matches
+from exa import Parser, Matches, Match
 
 
 class SCF(Parser):
@@ -19,4 +19,11 @@ class SCF(Parser):
         """
         """
         key = "  Integrated fractional orbital density"
-        return Matches(key, *[self.find_next(key, cursor=s[0]) for s in starts])
+        matches = []
+        for start in starts:
+            m = self.find_next(key, cursor=start[0])
+            if m is None:
+                matches.append(Match(len(self), None))
+            else:
+                matches.append(m)
+        return Matches(key, *matches)
