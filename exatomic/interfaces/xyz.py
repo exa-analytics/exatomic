@@ -16,14 +16,12 @@ from io import StringIO
 from operator import itemgetter
 from exa import Parser
 from exa.typed import Typed
-from exa.util import isotopes
 from exa.core.editor import Matches, Match
 from exatomic import Atom
+from exatomic.base import sym2z, z2sym
 
 
 # Helper functions for creating the atom table
-_iso = isotopes.as_df()
-_iso = _iso.drop_duplicates("symbol").set_index("symbol")['Z']
 
 
 @nb.vectorize(nopython=True)
@@ -68,27 +66,30 @@ class XYZ(Parser):
         xyz.atom              # The atom table has an additional column 'charge'
     """
     _start = re.compile("^\s*(\d+)")
-    _stop = -1
     atom = Typed(Atom, doc="Table of nuclear coordinates")
     comments = Typed(dict, doc="Dictionary of comments")
 
-    def _parse_stops_1(self, starts):
-        """Stop when the number of atoms plus two is found."""
-        matches = []
-        for k, v in starts:
-            n = k + int(v.split()[0]) + 1
-            text = self.lines[n]
-            matches.append(Match(n, text))
-        return Matches(starts.pattern, *matches)
+    @classmethod
+    def from_atom(cls, atom):
+        """
+        Create an XYZ editor from the :class:`~exatomic.core.atom.Atom` table.
+
+        Args:
+            atom (:class:`~exatomic.core.atom.Atom`): Atom table
+
+        Returns:
+            xyz (:class:`~exatomic.interfaces.xyz.XYZ`): XYZ editor
+        """
+        pass
 
     def _parse(self, columns=("Z", "x", "y", "z")):
         """Perform complete parsing."""
         columns = [col if col != "symbol" else "Z" for col in columns]
-        idx, fdx, cdx = _build_indexes(self.sections['start'].values,
-                                       self.sections['stop'].values)
+        idx, fdx, cdx = _build_indexes(self.sections['startline'].values,
+                                       self.sections['endline'].values)
         atom = Atom(pd.read_csv(StringIO("\n".join(itemgetter(*idx)(self.lines))),
                                          delim_whitespace=True, names=columns,
-                                         converters={'Z': lambda x: _iso[x]}))
+                                         converters={'Z': lambda x: sym2z[x]}))
         atom['frame'] = fdx
         self.comments = {i: self.lines[j] for i, j in enumerate(cdx)}
         self.atom = atom
@@ -98,6 +99,18 @@ class XYZ(Parser):
 
     def _parse_comments(self):
         self._parse()
+
+    def _parse_end(self, starts):
+        """Parse ends by simple line counting."""
+        matches = []
+        for start in starts:
+            n = start.num + int(start.text.split()[0]) + 1
+            text = self.lines[n]
+            matches.append(Match(n, text))
+        return Matches(starts.pattern, *matches)
+
+
+
 
 
 
