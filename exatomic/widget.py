@@ -11,14 +11,16 @@ import pandas as pd
 from glob import glob
 from base64 import b64decode
 from collections import OrderedDict
-from traitlets import (Bool, Int, Float, Unicode, 
+from traitlets import (Bool, Int, Float, Unicode,
                        List, Any, Dict, Instance)
 from ipywidgets import (
     Box, VBox, HBox, FloatSlider, IntSlider, Play,
+    IntRangeSlider,
     Widget, DOMWidget, Layout, Button, Dropdown,
     register, jslink, widget_serialization
 )
 from exa.relational.isotope import symbol_to_radius, symbol_to_color
+from exatomic import __js_version__
 
 ###################
 # Default layouts #
@@ -33,8 +35,8 @@ gui_lo = Layout(width="195px")
 
 class Folder(VBox):
     """A VBox with a main widget that will show or hide widgets."""
-    mlo = Layout(width="200px")
-    lo = gui_lo 
+    mlo = Layout(width="205px")
+    lo = gui_lo
 
 
     def _close(self):
@@ -49,14 +51,17 @@ class Folder(VBox):
     def _set_layout(self, widget=None):
         """Ensure all widgets are the same size."""
         if widget is not None:
+            if isinstance(widget, Folder): return
             widget.layout = self.lo
         else:
             for widget in self.active_controls.values():
+                if isinstance(widget, Folder): continue
                 widget.layout = self.lo
             for widget in self.inactive_controls.values():
+                if isinstance(widget, Folder): continue
                 widget.layout = self.lo
 
-        
+
     def _init_folder(self, control, content):
         """Set up controller for folder."""
         self.active_controls = OrderedDict([
@@ -89,7 +94,7 @@ class Folder(VBox):
 
 
     def insert(self, idx, key, obj, active=True, update=False):
-        """Insert a widget into the folder specified by index."""
+        """Insert a widget into the folder positionally by index."""
         self._set_layout(obj)
         nd = OrderedDict()
         od = self.active_controls if active else self.inactive_controls
@@ -110,19 +115,20 @@ class Folder(VBox):
         if not self.open_folder:
             self.children = self.children[:1]
         self.on_displayed(VBox._fire_children_displayed)
-                               
 
-    def __init__(self, control, content, show=False, **kwargs):
+
+    def __init__(self, control, content, show=False, layout=None, **kwargs):
         self.open_folder = show
         self._init_folder(control, content)
+        layout = self.mlo if layout is None else layout
         super(Folder, self).__init__(list(self.active_controls.values()),
-                                     layout=self.mlo, **kwargs)
+                                     layout=layout, **kwargs)
 
-        
+
 
 def gui_field_widgets(uni=False, test=False):
     """New widgets for field GUI functionality."""
-    field_lims = {"min": 30, "max": 60, "value": 30,
+    flims = {"min": 30, "max": 60, "value": 30,
                   "step": 1, "layout": gui_lo,
                   "continuous_update": False}
     iso_lims = {"continuous_update": False,
@@ -134,9 +140,9 @@ def gui_field_widgets(uni=False, test=False):
     else: iso_lims.update({"min": 3.0, "max": 10.0, "value": 2.0})
     if uni and not test: iso_lims["value"] = 0.03
     return OrderedDict(iso=FloatSlider(**iso_lims),
-                       nx=IntSlider(description="Nx", **field_lims),
-                       ny=IntSlider(description="Ny", **field_lims),
-                       nz=IntSlider(description="Nz", **field_lims))
+                       nx=IntSlider(description="Nx", **flims),
+                       ny=IntSlider(description="Ny", **flims),
+                       nz=IntSlider(description="Nz", **flims))
 
 
 
@@ -144,15 +150,20 @@ def gui_field_widgets(uni=False, test=False):
 # Base classes #
 ################
 
-@register 
+
+@register
 class ExatomicScene(DOMWidget):
     """Resizable three.js scene."""
+    _model_module_version = Unicode(__js_version__).tag(sync=True)
+    _model_module_version = Unicode(__js_version__).tag(sync=True)
     _view_module = Unicode("jupyter-exatomic").tag(sync=True)
     _model_module = Unicode("jupyter-exatomic").tag(sync=True)
     _model_name = Unicode("ExatomicSceneModel").tag(sync=True)
     _view_name = Unicode("ExatomicSceneView").tag(sync=True)
     scn_clear = Bool(False).tag(sync=True)
     scn_saves = Bool(False).tag(sync=True)
+    field_pos = Unicode("003399").tag(sync=True)
+    field_neg = Unicode("FF9900").tag(sync=True)
     field_iso = Float(2.0).tag(sync=True)
     field_ox = Float(-3.0).tag(sync=True)
     field_oy = Float(-3.0).tag(sync=True)
@@ -189,13 +200,15 @@ class ExatomicScene(DOMWidget):
     def __init__(self, *args, **kwargs):
         lo = Layout(width="400", height="400")
         super(DOMWidget, self).__init__(*args, layout=lo, **kwargs)
-  
+
 
 
 @register
 class ExatomicBox(Box):
     """Base class for containers of a GUI and scene."""
 
+    _model_module_version = Unicode(__js_version__).tag(sync=True)
+    _model_module_version = Unicode(__js_version__).tag(sync=True)
     _model_module = Unicode("jupyter-exatomic").tag(sync=True)
     _view_module = Unicode("jupyter-exatomic").tag(sync=True)
     _model_name = Unicode("ExatomicBoxModel").tag(sync=True)
@@ -205,7 +218,7 @@ class ExatomicBox(Box):
 
 
     def _close(self, b):
-        """Shut down all active widgets within the container.""" 
+        """Shut down all active widgets within the container."""
 
         for widget in self.active_controls.values():
             try: widget._close()
@@ -229,9 +242,9 @@ class ExatomicBox(Box):
             clear=Button(icon="bomb", description=" Clear", layout=gui_lo),
             saves=Button(icon="camera", description=" Save", layout=gui_lo))
 
-        def _clear(b): 
+        def _clear(b):
             self.scene.scn_clear = self.scene.scn_clear == False
-        def _saves(b): 
+        def _saves(b):
             self.scene.scn_saves = self.scene.scn_saves == False
 
         self.active_controls['close'].on_click(self._close)
@@ -262,7 +275,7 @@ class ExatomicBox(Box):
         super(ExatomicBox, self).__init__(
                 *args, children=[HBox([self.gui, self.scene])], **kwargs)
 
-  
+
 
 ########################
 # Basic example widget #
@@ -299,7 +312,7 @@ class TestContainer(ExatomicBox):
 
         fopts = ['null', 'sphere', 'torus', 'ellipsoid']
         fopts = Dropdown(options=fopts, layout=gui_lo)
-        def _field(c): self.scene.field = c.new 
+        def _field(c): self.scene.field = c.new
         fopts.observe(_field, names='value')
 
         folder = self.inactive_controls.pop('field')
@@ -351,7 +364,7 @@ class TestUniverse(ExatomicBox):
                             '3d-2', '3d-1', '3d0', '3d+1', '3d+2']),
             ('Gaussian', ['s', 'px', 'py', 'pz', 'd200', 'd110',
                           'd101', 'd020', 'd011', 'd002', 'f300',
-                          'f210', 'f201', 'f120', 'f111', 'f102', 
+                          'f210', 'f201', 'f120', 'f111', 'f102',
                           'f030', 'f021', 'f012', 'f003']),
             ('SolidHarmonic', [str(i) for i in range(8)])
         ])
@@ -370,9 +383,9 @@ class TestUniverse(ExatomicBox):
         def _field(c):
             self.scene.field = c.new
             fk = uni_field_lists[c.new][0]
-            self.scene.field_kind = fk 
+            self.scene.field_kind = fk
 
-            if self.scene.field == 'SolidHarmonic':  
+            if self.scene.field == 'SolidHarmonic':
                 folder.insert(3, 'fml', self.inactive_controls[fk])
                 folder.active_controls.pop('fkind')
             elif 'fml' in folder.active_controls:
@@ -393,7 +406,7 @@ class TestUniverse(ExatomicBox):
         for key, widget in field_widgets:
             widget.observe(_field_kind, names='value')
 
-        def _field_ml(c): 
+        def _field_ml(c):
             self.scene.field_ml = c.new
         for key, widget in ml_widgets:
             widget.observe(_field_ml, names='value')
@@ -416,15 +429,20 @@ class TestUniverse(ExatomicBox):
 def atom_traits(df):
     """Get atom table traitlets."""
     traits = {}
+    if 'label' in df.columns:
+        df.rename(columns={'label': 'l'}, inplace=True)
+    elif 'tag' in df.columns:
+        df.rename(columns={'tag': 'l'}, inplace=True)
+    else:
+        df['l'] = df['symbol'] + df.index.astype(str)
     grps = df.groupby('frame')
-    for col in ['x', 'y', 'z']:
+    for col in ['x', 'y', 'z', 'l']:
         traits['atom_' + col] = grps.apply(
             lambda y: y[col].to_json(
             orient='values', double_precision=3)
             ).to_json(orient="values").replace('"', '')
-    grps = df.groupby('frame')
     syms = grps.apply(lambda g: g['symbol'].cat.codes.values)
-    symmap = {i: v for i, v in enumerate(df['symbol'].cat.categories) 
+    symmap = {i: v for i, v in enumerate(df['symbol'].cat.categories)
               if v in df.unique_atoms}
     unq = df['symbol'].unique()
     radii = symbol_to_radius()[unq]
@@ -449,7 +467,9 @@ def field_traits(df):
                                   'fx', 'fy', 'fz']].T.to_dict()).to_dict()
     try: idxs = list(map(list, grps.groups.values()))
     except: idxs = [list(grp.index) for i, grp in grps]
-    vals = [f.tolist() for f in df.field_values]
+    #vals = [f.tolist() for f in df.field_values]
+    vals = '[' + ','.join([f.to_json(orient='values',
+                           double_precision=5) for f in df.field_values]) + ']'
     return {'field_v': vals, 'field_i': idxs, 'field_p': fps}
 
 def two_traits(df, lbls):
@@ -464,7 +484,7 @@ def two_traits(df, lbls):
     b0 = np.empty((len(frames), ), dtype='O')
     b1 = b0.copy()
     for i, frame in enumerate(frames):
-        try: 
+        try:
             b0[i] = bond_grps.get_group(frame)['atom0'].astype(np.int64).values
             b1[i] = bond_grps.get_group(frame)['atom1'].astype(np.int64).values
         except Exception:
@@ -511,10 +531,16 @@ class UniverseScene(ExatomicScene):
     two_b1 = Unicode().tag(sync=True)
     # Field traits
     field_i = List().tag(sync=True)
-    field_v = List().tag(sync=True)
+    field_v = Unicode().tag(sync=True)
     field_p = Dict().tag(sync=True)
     field_idx = Any().tag(sync=True)
     field_iso = Float(0.03).tag(sync=True)
+    field_show = Bool(False).tag(sync=True)
+    cont_show = Bool(False).tag(sync=True)
+    cont_axis = Unicode("z").tag(sync=True)
+    cont_num = Int(10).tag(sync=True)
+    cont_lim = List([-8, -1]).tag(sync=True)
+    cont_val = Float(0.0).tag(sync=True)
     # Frame traits
 
 
@@ -523,7 +549,6 @@ class UniverseWidget(ExatomicBox):
     """Test :class:`~exatomic.container.Universe` viewing widget."""
     _model_name = Unicode("UniverseWidgetModel").tag(sync=True)
     _view_name = Unicode("UniverseWidgetView").tag(sync=True)
-    field_show = Bool(False).tag(sync=True)
 
     def init_gui(self, nframes=1, fields=None):
 
@@ -543,32 +568,71 @@ class UniverseWidget(ExatomicBox):
         ])
         def _scn_frame(c): self.scene.frame_idx = c.new
         content['scn_frame'].observe(_scn_frame, names='value')
-        jslink((content['playing'], 'value'), 
+        jslink((content['playing'], 'value'),
                (content['scn_frame'], 'value'))
         self.active_controls['frame'] = Folder(control, content)
         self.active_controls['frame'].activate()
 
 
         if fields is not None:
+            # Main field folder
             folder = self.inactive_controls.pop('field')
             fopts = Dropdown(options=fields, layout=gui_lo)
-            def _fopts(c): self.scene.field_idx = c.new 
+            def _fopts(c): self.scene.field_idx = c.new
             fopts.observe(_fopts, names='value')
             folder.insert(1, 'fopts', fopts, update=True)
-            folder.activate('iso')
+            # Make an isosurface folder
+            isos = Button(description=' Isosurfaces', icon='cube')
+            def _fshow(b):
+                self.scene.field_show = self.scene.field_show == False
+            isos.on_click(_fshow)
+            # Move the isosurface button to the subfolder
+            iso = folder.inactive_controls.pop('iso')
+            isofolder = Folder(isos, OrderedDict([('iso', iso)]),
+                               layout=Layout(width="200px"))
+            isofolder.activate('iso')
+            folder.insert(2, 'iso', isofolder, update=True)
+            # Make a contour folder
+            control = Button(description=' Contours', icon='dot-circle-o')
+            def _cshow(b):
+                self.scene.cont_show = self.scene.cont_show == False
+            control.on_click(_cshow)
+            content = OrderedDict([
+                ('axis', Dropdown(options=['x', 'y', 'z'], value='z')),
+                ('num', IntSlider(description='N', min=5, max=20,
+                                  value=10, step=1, layout=gui_lo,)),
+                                  #continuous_update=False)),
+                ('lim', IntRangeSlider(description="10**Limits", min=-10,
+                                       max=0, step=1, value=[-8, -1],)),
+                                       #continuous_update=False)),
+                ('val', FloatSlider(description="Value",
+                                    min=-5, max=5, value=0,)),
+                                    #continuous_update=False)),
+            ])
+            def _cont_axis(c): self.scene.cont_axis = c.new
+            def _cont_num(c): self.scene.cont_num = c.new
+            def _cont_lim(c): self.scene.cont_lim = c.new
+            def _cont_val(c): self.scene.cont_val = c.new
+            content['axis'].observe(_cont_axis, names='value')
+            content['num'].observe(_cont_num, names='value')
+            content['lim'].observe(_cont_lim, names='value')
+            content['val'].observe(_cont_val, names='value')
+            contour = Folder(control, content, layout=Layout(width="200px"))
+            contour.activate()
+            folder.insert(3, 'contour', contour, update=True)
             self.active_controls['field'] = folder
 
-        
+
     def __init__(self, uni, *args, **kwargs):
         unargs = {}
         try: unargs.update(atom_traits(uni.atom))
         except AttributeError: pass
-        try: unargs.update(two_traits(uni.atom_two, 
+        try: unargs.update(two_traits(uni.atom_two,
                            uni.atom.get_atom_labels()))
         except AttributeError: pass
         try: unargs.update(frame_traits(uni.frame))
         except AttributeError: pass
-        try: 
+        try:
             unargs.update(field_traits(uni.field))
             fields = ['null'] + unargs['field_i'][0]
         except AttributeError:
@@ -578,4 +642,3 @@ class UniverseWidget(ExatomicBox):
         super(UniverseWidget, self).__init__(*args,
                                              scene=scene,
                                              **kwargs)
-
