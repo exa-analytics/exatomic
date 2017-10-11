@@ -7,4 +7,6 @@ Version
 """
 
 version_info = (0, 3, 8)
+js_version_info = (0, 4, 0)
 __exatomic_version__ = '.'.join(map(str, version_info))
+__js_exatomic_version__ = '~' + '.'.join(map(str, js_version_info))

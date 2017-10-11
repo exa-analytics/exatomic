@@ -32,8 +32,9 @@ def _jupyter_nbextension_paths():
     }]
 
 
-from ._version import __exatomic_version__
+from ._version import __exatomic_version__, __js_exatomic_version__
 __version__ = __exatomic_version__
+__js_version__ = __js_exatomic_version__
 
 try:
     from exa.cms import (Length, Mass, Time, Current, Amount, Luminosity, Isotope,
