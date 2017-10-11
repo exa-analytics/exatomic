@@ -13,44 +13,32 @@ from exatomic import Energy
 
 
 def _get_minimum(mindf):
-#    absmin = mindf[mindf[2] == mindf[2].min()]
-#    idxs = mindf[(mindf[0] > 0) & (mindf[1] > 0)].index.values
-#    id0, id1 = idxs[:2]
-#    cnt = 1
-#    try:
-#        while np.isclose(id0 + 1, id1):
-#            id0, id1 = idxs[cnt:cnt + 2]
-#            cnt += 1
-#        slc = slice(idxs[0], id0 + 1)
-#        amin = mindf.ix[idxs[0]:id0 + 1]
-#    except:
-#        if absmin.index[0] in idxs:
-#            slc = list(idxs) + [idxs[-1] + 1]
-#            amin = mindf.ix[idxs]
-#        else:
-#            slc = list(idxs) + list(absmin.index.values)
-#    return mindf.ix[slc]
-    return mindf[(mindf[0] < mindf[0].max() - 0.01) &
-                 (mindf[0] > mindf[0].min() + 0.01) &
-                 (mindf[1] < mindf[1].max() - 0.01) &
-                 (mindf[1] > mindf[1].min() + 0.01)]
+    return mindf[(mindf[0] < mindf[0].max()) &
+                 (mindf[0] > mindf[0].min()) &
+                 (mindf[1] < mindf[1].max()) &
+                 (mindf[1] > mindf[1].min())]
 
 
 def plot_j2_surface(data, key='j2', method='wireframe', nxlabel=6,
                     nylabel=6, nzlabel=6, minimum=False, figsize=(8,6),
-                    alpha=0.5, cmap=None, title=None):
+                    alpha=0.5, cmap=None, title=None, ylabel='$\gamma$',
+                    xlabel='$\\alpha$', zlabel='$J^{2}$', xlabelpad=None,
+                    ylabelpad=None, zlabelpad=None):
     cmap = sns.mpl.pyplot.cm.get_cmap('coolwarm') if cmap is None else cmap
     figargs = {'figsize': figsize}
     axargs = {'alpha': alpha, 'cmap': cmap}
-    fig = _plot_surface(data['alpha'], data['gamma'], data['j2'],
+    fig = _plot_surface(data['alpha'], data['gamma'], data[key],
                         nxlabel, nylabel, nzlabel, method, figargs, axargs)
     ax = fig.gca()
     if 'min' in data and minimum:
         mindf = _get_minimum(data['min'])
-        ax.plot(mindf[0], mindf[1], mindf[2], color='k', zorder=2)
-    ax.set_ylabel(r'$\gamma$')
-    ax.set_xlabel(r'$\\\alpha$')
-    ax.set_zlabel(r'J$^{2}$')
+        ax.plot(mindf[0].values,
+                mindf[1].values,
+                mindf[2].values,
+                color='k', zorder=2, alpha=0.5)
+    ax.set_ylabel(ylabel, labelpad=xlabelpad)
+    ax.set_xlabel(xlabel, labelpad=ylabelpad)
+    ax.set_zlabel(zlabel, labelpad=zlabelpad)
     if title is not None:
         ax.set_title(title)
     return fig
