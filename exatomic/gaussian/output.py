@@ -155,11 +155,11 @@ class Output(Editor):
         ae, x, x, be, x, x = found[_realphaelec][0][1].split()
         ae, be = int(ae), int(be)
         # Get orbital energies
-        ens = '\n'.join([ln.split('--')[1][1:] for i, ln in found[_reorb01]])
+        ens = '\n'.join([ln.split('-- ')[1] for i, ln in found[_reorb01]])
         ens = pd.read_fwf(StringIO(ens), header=None,
                           widths=np.repeat(10, 5)).stack().values
         # Other arrays
-        orbital = Orbital.from_energies(ens, nbas, ae, be)
+        orbital = Orbital.from_energies(ens, ae, be, os=os)
         # Symmetry labels
         if found[_reorb02]:
             # Gaussian seems to print out a lot of these blocks
@@ -207,13 +207,17 @@ class Output(Editor):
         colnames = ['coef'] + ['coef' + str(i) for i in range(1, ndim)]
         # Iterate over where the data was found
         # c counts the column in the resulting momatrix table
-        finds = ['Eigenvalues', 'EIGENVALUES']
         for c, (lno, ln) in enumerate(found[_remomat02]):
-            while not any((find in self[lno] for find in finds)): lno += 1
-            start = lno + 1
+            gap = 0
+            while not 'eigenvalues' in self[lno + gap].lower(): gap += 1
+            start = lno + gap + 1
             stop = start + nbas
             # The basis set order is printed with every chunk of eigenvectors
-            if c == 0: self.basis_set_order = _basis_set_order(self[start:stop])
+            if not c: 
+                mapr = self.basis_set.groupby(['set', 'L']).apply(
+                        lambda x: x['shell'].unique()).to_dict()
+                self.basis_set_order = _basis_set_order(self[start:stop], mapr,
+                                                        self.atom['set'])
             # Some fudge factors due to extra lines being printed
             space = start - lno - 1
             fnbas = nbas + space
@@ -225,15 +229,17 @@ class Output(Editor):
             # b counts the blocks of eigenvectors per column in momatrix
             for b, (start, stop) in enumerate(zip(starts, stops)):
                 # Number of eigenvectors in this block
-                ncol = len(self[start][20:].split())
+                ncol = len(self[start][21:].split())
+                step = nbas * ncol
                 _csv_args['names'] = range(ncol)
                 # Massage the text so that we can read csv
-                block = '\n'.join([ln[20:] for ln in self[start:stop]])
+                block = '\n'.join([ln[21:] for ln in self[start:stop]])
                 block = _rebaspat.sub(lambda m: _basrep[m.group(0)], block)
                 # Enplacen the resultant unstacked values
-                coefs[stride:stride + nbas * ncol, c] = pd.read_csv(
-                    StringIO(block), **_csv_args).unstack().values
-                stride += nbas * ncol
+                coefs[stride:stride + nbas * ncol, c] = pd.read_fwf(
+                        StringIO(block), header=None,
+                        widths=np.repeat(10, 5)).unstack().dropna().values
+                stride += step
         # Index chi, phi
         chis = np.tile(range(nbas), nbas)
         orbs = np.repeat(range(nbas), nbas)
@@ -373,7 +379,7 @@ class Output(Editor):
 
 
 
-def _basis_set_order(chunk):
+def _basis_set_order(chunk, mapr, sets):
     # Gaussian only prints the atom center
     # and label once for all basis functions
     first = len(chunk[0]) - len(chunk[0].lstrip(' ')) + 1
@@ -384,8 +390,7 @@ def _basis_set_order(chunk):
     df[2].fillna(method='ffill', inplace=True)
     df.rename(columns={1: 'center', 3: 'N', 4: 'ang'}, inplace=True)
     df['N'] = df['N'].astype(np.int64) - 1
-    cart = 'XX' in df['ang'].values
-    if cart:
+    if 'XX' in df['ang'].values:
         df[['L', 'l', 'm', 'n']] = df['ang'].map({'S': [0, 0, 0, 0],
                 'XX': [2, 2, 0, 0], 'XY': [2, 1, 1, 0], 'XZ': [2, 1, 0, 1],
                 'YY': [2, 0, 2, 0], 'YZ': [2, 0, 1, 1], 'ZZ': [2, 0, 0, 2],
@@ -396,11 +401,13 @@ def _basis_set_order(chunk):
         df['ml'] = df['ang'].str[1:]
         df['ml'].update(df['ml'].map({'': 0, 'X': 1, 'Y': -1, 'Z': 0}))
         df['ml'] = df['ml'].astype(np.int64)
-    shl, pcen, pl, pn, shfns = -1, -1, -1, -1, []
-    for cen, n, l in zip(df['center'], df['N'], df['L']):
-        if not pcen == cen: shl = -1
-        if (not pl == l) or (not pn == n) or (not pcen == cen): shl += 1
-        shfns.append(shl)
+    cnts = {key: -1 for key in range(10)}
+    pcen, pl, pn, shfns = 0, 0, 1, []
+    for cen, n, l, seht in zip(df['center'], df['N'], df['L'], 
+                               df['center'].map(sets)):
+        if not pcen == cen: cnts = {key: -1 for key in range(10)}
+        if (pl != l) or (pn != n) or (pcen != cen): cnts[l] += 1
+        shfns.append(mapr[(seht, l)][cnts[l]])
         pcen, pl, pn = cen, l, n
     df['shell'] = shfns
     df.drop([0, 2, 'N', 'ang'], axis=1, inplace=True)
@@ -428,8 +435,8 @@ _remomat02 = 'Orbital Coefficients'
 _rebas01 = r'basis functions,'
 _rebas02 = 'AO basis set in the form of general basis input'
 _rebas03 = ' (Standard|General) basis'
-_basrep = {'D 0': 'D0', 'F 0': 'F0',
-           'G 0': 'G0', 'H 0': 'H0', 'I 0': 'I0'}
+_basrep = {'D 0': 'D0 ', 'F 0': 'F0 ',
+           'G 0': 'G0 ', 'H 0': 'H0 ', 'I 0': 'I0 '}
 _rebaspat = re.compile('|'.join(_basrep.keys()))
 # Frame flags
 _retoten = 'SCF Done:'
