@@ -2,25 +2,25 @@
 // Distributed under the terms of the Apache License 2.0
 /*"""
 =================
-jupyter-exatomic.js
+jupyter-exatomic-base.js
 =================
-JavaScript "frontend" complement of exatomic's Container for use within
-the Jupyter notebook interface. This "module" standardizes bidirectional
-communication logic for all container widget views.
+JavaScript "frontend" complement of exatomic's Universe
+for use within the Jupyter notebook interface.
 */
 
 "use strict";
-var _ = require("underscore");
 var widgets = require("@jupyter-widgets/base");
 var control = require("@jupyter-widgets/controls");
-var utils = require("./jupyter-exatomic-utils.js");
 var App3D = require("./jupyter-exatomic-three.js").App3D;
+var version = "~" + require("../package.json").version;
 
 
 var ExatomicBoxModel = control.BoxModel.extend({
 
     defaults: function() {
         return _.extend({}, control.BoxModel.prototype.defaults, {
+            _model_module_version: version,
+            _view_module_version: version,
             _model_module: "jupyter-exatomic",
             _view_module: "jupyter-exatomic",
             _model_name: "ExatomicBoxModel",
@@ -29,6 +29,7 @@ var ExatomicBoxModel = control.BoxModel.extend({
     }
 
 });
+
 
 var ExatomicBoxView = control.BoxView.extend({
 
@@ -39,12 +40,16 @@ var ExatomicSceneModel = widgets.DOMWidgetModel.extend({
 
     defaults: function() {
         return _.extend({}, widgets.DOMWidgetModel.prototype.defaults, {
+            _model_module_version: version,
+            _view_module_version: version,
             _model_module: "jupyter-exatomic",
             _view_module: "jupyter-exatomic",
             _model_name: "ExatomicSceneModel",
             _view_name: "ExatomicSceneView",
             scn_clear: false,
             scn_saves: false,
+            field_neg: "FF9900",
+            field_pos: "003399",
             field_iso: 2.0,
             field_ox: -3.0,
             field_oy: -3.0,
@@ -66,13 +71,14 @@ var ExatomicSceneModel = widgets.DOMWidgetModel.extend({
 var ExatomicSceneView = widgets.DOMWidgetView.extend({
 
     initialize: function() {
-        ExatomicSceneView.__super__.initialize.apply(this, arguments);
+        widgets.DOMWidgetView.prototype.initialize.apply(this, arguments);
         var that = this;
         $(this.el).width(
             this.model.get("layout").get("width")).height(
             this.model.get("layout").get("height")).resizable({
             aspectRatio: false,
             resize: function(event, ui) {
+                // event.preventDefault();
                 var w = ui.size.width;
                 var h = ui.size.height;
                 that.model.get("layout").set("width", w);
@@ -89,15 +95,19 @@ var ExatomicSceneView = widgets.DOMWidgetView.extend({
 
     init: function() {
         this.meshes = {"generic": [],
+                       "contour": [],
                        "frame": [],
                        "field": [],
                        "atom": [],
                        "two": []};
         this.app3d = new App3D(this);
+        // this.app3d.init_picker();
+        this.animation();
     },
 
     render: function() {
-        this.renderer.render(this.scene, this.camera);
+        return Promise.resolve(
+            this.renderer.render(this.scene, this.camera));
     },
 
     resize: function(w, h) {
@@ -106,15 +116,21 @@ var ExatomicSceneView = widgets.DOMWidgetView.extend({
         this.renderer.setSize(w, h);
         this.camera.aspect = w / h;
         this.camera.updateProjectionMatrix();
+        this.ocamera.left = -w/2;
+        this.ocamera.right = w/2;
+        this.ocamera.top = h/2;
+        this.ocamera.bottom = -h/2;
+        this.ocamera.updateProjectionMatrix();
         this.controls.handleResize();
         this.render();
     },
 
     animation: function() {
         window.requestAnimationFrame(this.animation.bind(this));
+        // this.app3d.update();
         this.controls.update();
         this.resize(this.model.get("layout").get("width"),
-                    this.model.get("layout").get("height"));
+                   this.model.get("layout").get("height"));
     },
 
     clear_meshes: function(kind) {
@@ -147,24 +163,33 @@ var ExatomicSceneView = widgets.DOMWidgetView.extend({
         this.render();
         var image = this.renderer.domElement.toDataURL("image/png");
         this.send({"type": "image", "content": image});
-        this.renderer.setSize(this.model.get("layout").get("width"),
-                              this.model.get("layout").get("height"));
-        var ar = this.model.get("layout").get("width") / this.model.get("layout").get("height");
-        this.camera.aspect = ar;
+        var w = this.model.get("layout").get("width");
+        var h = this.model.get("layout").get("height");
+        this.renderer.setSize(w, h);
+        this.camera.aspect = w / h;
         this.camera.updateProjectionMatrix();
         this.render();
     },
 
     get_fps: function() {
-        return {ox: this.model.get("field_ox"),
-                oy: this.model.get("field_oy"),
-                oz: this.model.get("field_oz"),
-                nx: this.model.get("field_nx"),
-                ny: this.model.get("field_ny"),
-                nz: this.model.get("field_nz"),
-                fx: this.model.get("field_fx"),
-                fy: this.model.get("field_fy"),
-                fz: this.model.get("field_fz")}
+        var fps = {ox: this.model.get("field_ox"),
+                   oy: this.model.get("field_oy"),
+                   oz: this.model.get("field_oz"),
+                   nx: this.model.get("field_nx"),
+                   ny: this.model.get("field_ny"),
+                   nz: this.model.get("field_nz"),
+                   fx: this.model.get("field_fx"),
+                   fy: this.model.get("field_fy"),
+                   fz: this.model.get("field_fz")};
+        fps["dx"] = (fps["fx"] - fps["ox"]) / (fps["nx"] - 1);
+        fps["dy"] = (fps["fy"] - fps["oy"]) / (fps["ny"] - 1);
+        fps["dz"] = (fps["fz"] - fps["oz"]) / (fps["nz"] - 1);
+        return fps;
+    },
+
+    get_field_colors: function() {
+        return {"pos": parseInt(this.model.get("field_pos"), 16),
+                "neg": parseInt(this.model.get("field_neg"), 16)}
     },
 
     add_field: function() {},
@@ -190,4 +215,3 @@ module.exports = {
     ExatomicBoxModel: ExatomicBoxModel,
     ExatomicBoxView: ExatomicBoxView
 }
-

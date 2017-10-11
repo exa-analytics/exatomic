@@ -9,7 +9,6 @@ Jupyter notebook environment.
 */
 
 "use strict";
-var THREE = require("three");
 var base = require("./jupyter-exatomic-base.js");
 var utils = require("./jupyter-exatomic-utils.js");
 
@@ -31,7 +30,7 @@ var TestSceneModel = base.ExatomicSceneModel.extend({
 var TestSceneView = base.ExatomicSceneView.extend({
 
     init: function() {
-        TestSceneView.__super__.init.apply(this);
+        base.ExatomicSceneView.prototype.init.apply(this);
         this.init_listeners();
         this.add_geometry();
         this.animation();
@@ -108,7 +107,8 @@ var TestUniverseSceneView = base.ExatomicSceneView.extend({
         } else {
             var tf = utils[field](ars, kind);
         };
-        this.meshes["field"] = this.app3d.add_scalar_field(tf, iso, 2);
+        var colors = this.get_field_colors();
+        this.meshes["field"] = this.app3d.add_scalar_field(tf, iso, 2, colors);
         this.add_meshes("field");
     },
 

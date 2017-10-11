@@ -24,8 +24,13 @@ class App3D {
         var h = view.model.get("layout").get("height");
         view.camera = new THREE.PerspectiveCamera(35, w / h, 1, 1000);
         view.camera.position.z = 10;
+        // w = window.innerWidth;
+        // h = window.innerHeight;
+        view.ocamera = new THREE.OrthographicCamera(-w/2, w/2, h/2, -h/2, 1, 10);
+        view.ocamera.position.z = 10;
 
         view.scene = new THREE.Scene();
+        view.oscene = new THREE.Scene();
         view.renderer = new THREE.WebGLRenderer({
             antialias: true,
             alpha: true
@@ -45,11 +50,14 @@ class App3D {
         view.controls.keys = [65, 83, 68];
         view.controls.addEventListener("change", view.render.bind(view));
         view.controls.target = new THREE.Vector3(0.0, 0.0, 0.0);
-       
+        // view._render = true;
+
         // Start of old stuff
         this.view = view;
         this.scene = view.scene;
         this.camera = view.camera;
+        this.oscene = view.oscene;
+        this.ocamera = view.ocamera;
         this.controls = view.controls;
         this.renderer = view.renderer;
 
@@ -61,7 +69,177 @@ class App3D {
         this.scene.add(this.ambient_light);
         this.scene.add(this.dlight0);
         this.scene.add(this.dlight1);
+
     };
+
+    init_picker() {
+        // Add a canvas overlay for mouse-over picker
+        var w2 = this.view.model.get("layout").get("width") / 2;
+        var h2 = this.view.model.get("layout").get("height") / 2;
+        this.INTERSECTED = null;
+        this.mouse = new THREE.Vector3();
+        this.ray = new THREE.Raycaster();
+        this.canvas = document.createElement("canvas");
+        this.context = this.canvas.getContext("2d");
+        this.context.font = "Bold 20px Arial";
+        this.context.fillStyle = "rgba(0,0,0,0.95)";
+        this.context.fillText("Hello, world!", 0, 20);
+        this.texture = new THREE.Texture(this.canvas);
+        this.texture.minFilter = THREE.LinearFilter;
+        this.texture.needsUpdate = true;
+        this.sprite = new THREE.Sprite(
+            new THREE.SpriteMaterial({map: this.texture})
+            // deprecated Material attributes --
+            // useScreenCoordinates: true,
+            // alignment: THREE.SpriteAlignment.topLeft
+        );
+        this.sprite.scale.set(20,20,1);
+        this.sprite.position.set(-w2+10,-h2+10,1);
+        this.oscene.add(this.sprite);
+        console.log(this.sprite);
+        var that = this;
+        var onDocumentMouseMove = function(event) {
+            // event.preventDefault();
+            that.mouse.set(  (event.clientX / window.innerWidth)  * 2 - 1,
+                           - (event.clientY / window.innerHeight) * 2 + 1, 0);
+            that.sprite.position.set(event.clientX, event.clientY, 0);
+            console.log(event.clientX, event.clientY);
+            console.log(that.mouse);
+            // var vec = new THREE.Vector3(that.mouse.x, that.mouse.y, 0.0);
+            // var ray = new THREE.Raycaster();
+            that.ray.setFromCamera(that.mouse, that.camera);
+            var intersects = that.ray.intersectObjects(that.scene.children);
+            console.log(intersects);
+            if (intersects.length > 0) {
+                if (that.INTERSECTED != intersects[0].object) {
+                    if (that.INTERSECTED) {
+                        that.INTERSECTED.material.color.setHex(that.INTERSECTED.currentHex);
+                    };
+                    that.INTERSECTED = intersects[0].object;
+                    console.log(that.INTERSECTED);
+                    that.INTERSECTED.currentHex = that.INTERSECTED.material.color.getHex();
+                    that.INTERSECTED.material.color.setHex(0xff0000);
+                    var message = "Things";
+                    var metrics = that.context.measureText(message);
+                    var width = metrics.width;
+                    that.context.fillStyle = "rgba(0,0,0,0.95)";
+                    that.context.fillRect(0,0,width+8,20+8);
+                    that.context.fillStyle = "rgba(255,255,255,0.95)";
+                    that.context.fillRect(2,2,width+4,20+4);
+                    that.context.fillStyle = "rgba(0,0,0,1)";
+                    that.context.fillText(message,4,20);
+                    that.texture.needsUpdate = true;
+                } else {
+                    that.context.clearRect(0,0,300,300);
+                    that.texture.needsUpdate = true;
+                };
+            } else {
+                if (that.INTERSECTED) {
+                    that.INTERSECTED.material.color.setHex(that.INTERSECTED.currentHex);
+                };
+                that.INTERSECTED = null;
+                that.context.clearRect(0,0,300,300);
+                that.texture.needsUpdate = true;
+            }
+            that.controls.update();
+        };
+        document.addEventListener('mousemove', onDocumentMouseMove, false);
+        // this.sprite.position.set(mouse.x, mouse.y, 0);
+        // var onDocumentMouseDown = function(event) {
+        //     that.mouse.x =   (event.clientX / window.innerWidth)  * 2 - 1;
+        //     that.mouse.y = - (event.clientY / window.innerHeight) * 2 + 1;
+        //     var vec = new THREE.Vector3(that.mouse.x, that.mouse.y, 0.0);
+        //     var ray = new THREE.Raycaster();
+        //     ray.setFromCamera(vec, that.camera);
+        //     var intersects = ray.intersectObjects(that.scene.children);
+        //     if (intersects.length > 0) {
+        //         if (that.INTERSECTED != intersects[0].object) {
+        //             if (that.INTERSECTED) that.INTERSECTED.material.color.setHex(that.INTERSECTED.currentHex);
+        //
+        //             that.INTERSECTED = intersects[0].object;
+        //             console.log(that.INTERSECTED);
+        //             that.INTERSECTED.currentHex = that.INTERSECTED.material.color.getHex();
+        //             that.INTERSECTED.material.color.setHex(0xff0000);
+        //
+        //         }
+        //     } else {
+        //         if (that.INTERSECTED) that.INTERSECTED.material.color.setHex(that.INTERSECTED.currentHex);
+        //
+        //         that.INTERSECTED = null;
+        //     }
+        //     that.controls.update();
+        // };
+        //this.projector = new THREE.Projector();
+        //this.raycaster = new THREE.Raycaster();
+        // document.addEventListener('mousedown', onDocumentMouseDown, false);
+    };
+
+    // update() {
+    //     // this.raycaster.setFromCamera(this.mouse, this.camera);
+    //     // var vec = new THREE.Vector3(this.mouse.x, this.mouse.y, 0);
+    //     vec.unproject(this.camera);
+    //     var ray = new THREE.Raycaster(this.camera.position,
+    //         vec.sub(this.camera.position).normalize());
+    //     var intersects = ray.intersectObjects(this.scene.children);
+    //     if (intersects.length > 0) {
+    //         if (this.INTERSECTED != intersects[0].object) {
+    //             if (this.INTERSECTED) this.INTERSECTED.material.color.setHex(this.INTERSECTED.currentHex);
+    //
+    //             this.INTERSECTED = intersects[0].object;
+    //             console.log(this.INTERSECTED);
+    //             this.INTERSECTED.currentHex = this.INTERSECTED.material.color.getHex();
+    //             this.INTERSECTED.material.color.setHex(0xff0000);
+    //
+    //         }
+    //     } else {
+    //         if (this.INTERSECTED) this.INTERSECTED.material.color.setHex(this.INTERSECTED.currentHex);
+    //
+    //         this.INTERSECTED = null;
+    //     }
+    //     // var w = window.innerWidth / 2;
+    //     // var h = window.innerHeight / 2;
+    //     // this.sprite.position.set(-w + 20, -h + 20);
+    //     // var vec = new THREE.Vector3(this.mouse.x, this.mouse.y, 1);
+    //     // vec.unproject(this.camera);
+    //     // var ray = new THREE.Raycaster(this.camera.position,
+    //     //                               vec.sub(this.camera.position).normalize());
+    //     // var intersects = ray.intersectObjects(this.scene.children);
+    //     // if (intersects.length > 0) {
+    //     //     if (intersects[0].object != this.INTERSECTED) {
+    //     //         if (this.INTERSECTED !== null) {
+    //     //             this.INTERSECTED.material.color.setHex(this.INTERSECTED.currentHex);
+    //     //         };
+    //     //         this.INTERSECTED = intersects[0].object;
+    //     //         this.INTERSECTED.currentHex = this.INTERSECTED.material.color.getHex();
+    //     //         this.INTERSECTED.material.color.setHex(0xffff00);
+    //     //         if (intersects[0].object.name) {
+    //     //             this.context.clearRect(0,0,640,480);
+    //     //             var message = intersects[0].object.name;
+    //     //             var metrics = this.context.measureText(message);
+    //     //             var width = metrics.width;
+    //     //             this.context.fillStyle = "rgba(0,0,0,0.95)";
+    //     //             this.context.fillRect(0,0,width+8,20+8);
+    //     //             this.context.fillStyle = "rgba(255,255,255,0.95)";
+    //     //             this.context.fillRect(2,2,width+4,20+4);
+    //     //             this.context.fillStyle = "rgba(0,0,0,1)";
+    //     //             this.context.fillText(message,4,20);
+    //     //             this.texture.needsUpdate = true;
+    //     //         } else {
+    //     //             this.context.clearRect(0,0,300,300);
+    //     //             this.texture.needsUpdate = true;
+    //     //         };
+    //     //     };
+    //     // } else {
+    //     //     if (this.INTERSECTED !== null) {
+    //     //         this.INTERSECTED.material.color.setHex(this.INTERSECTED.currentHex);
+    //     //     };
+    //     //     this.INTERSECTED = null;
+    //     //     this.context.clearRect(0,0,300,300);
+    //     //     this.texture.needsUpdate = true;
+    //     // };
+    //     // this.controls.update();
+    //     // //stats.update();
+    // };
 
     test_mesh() {
         /*"""
@@ -70,7 +248,7 @@ class App3D {
         Example of a render
         */
         var geom = new THREE.IcosahedronGeometry(2, 1);
-        var mat = new THREE.MeshBasicMaterial({color: 0x000000, 
+        var mat = new THREE.MeshBasicMaterial({color: 0x000000,
                                                wireframe: true});
         var mesh = new THREE.Mesh(geom, mat);
         return [mesh];
@@ -80,7 +258,7 @@ class App3D {
         /*"""
         add_points
         ---------------
-        Create a point cloud from x, y, z coordinates 
+        Create a point cloud from x, y, z coordinates
 
         Args:
             x (array-like): Array like object of x values
@@ -207,7 +385,7 @@ class App3D {
 
     add_cylinders(v0, v1, x, y, z, colors) {
         /*"""
-        add_lines
+        add_cylinders
         ------------
         Add lines between pairs of points.
 
@@ -263,9 +441,7 @@ class App3D {
         -----------------
         Create a wireframe object
         */
-        if (color === undefined) {
-            color = 0x808080;
-        };
+        color = (color === undefined) ? 0x808080 : color;
         var geometry = new THREE.Geometry();
         for (var vertex of vertices) {
             geometry.vertices.push(new THREE.Vector3(vertex[0], vertex[1], vertex[2]));
@@ -292,9 +468,7 @@ class App3D {
         Args:
             kwargs: {"x": x, "y": y, ..., "ox": ox, ...}
         */
-        if (kwargs === undefined) {
-            kwargs = {};
-        };
+        kwargs = (kwargs === undefined) ? {} : kwargs;
         for (var key of ["x", "y", "z"]) {
             if (!kwargs.hasOwnProperty(key)) {
                 kwargs[key] = 60.0;
@@ -338,15 +512,9 @@ class App3D {
     set_camera_from_mesh(mesh, rx, ry, rz) {
         /*"""
         */
-        if (rx === undefined) {
-            rx = 2.0;
-        }
-        if (ry === undefined) {
-            ry = 2.0;
-        }
-        if (rz === undefined) {
-            rz = 2.0;
-        }
+        rx = (rx === undefined) ? 2.0 : rx;
+        ry = (ry === undefined) ? 2.0 : ry;
+        rz = (rz === undefined) ? 2.0 : rz;
         var position;
         if (mesh.geometry.type === "BufferGeometry") {
             position = mesh.geometry.attributes.position.array;
@@ -403,7 +571,43 @@ class App3D {
         this.set_camera(kwargs);
     };
 
-    add_scalar_field(field, isovalue, sides, algorithm) {
+    add_contour(field, ncontour, clims, axis, val, colors) {
+        /*"""
+        add_contour
+        ------------------------
+        Create contour lines of a scalar field
+        */
+        var contours = this.march_squares(field, ncontour, clims, axis, val);
+        var pgeom = new THREE.Geometry();
+        var ngeom = new THREE.Geometry();
+        for (var i=0; i<ncontour; i++) {
+            for (var vec of contours[i]) {
+                ngeom.vertices.push(new THREE.Vector3(
+                    vec[0], vec[1], vec[2]
+                ));
+            };
+        };
+        for (var i=ncontour; i<(2 * ncontour); i++) {
+            for (var vec of contours[i]) {
+                pgeom.vertices.push(new THREE.Vector3(
+                    vec[0], vec[1], vec[2]
+                ));
+            };
+        };
+        var pmesh = new THREE.LineSegments(pgeom,
+            new THREE.LineBasicMaterial({
+                color: colors["pos"],
+                linewidth: 10
+            }));
+        var nmesh = new THREE.LineSegments(ngeom,
+            new THREE.LineBasicMaterial({
+                color: colors["neg"],
+                linewidth: 10
+            }));
+        return [pmesh, nmesh];
+    };
+
+    add_scalar_field(field, iso, sides, colors) {
         /*"""
         add_scalar_field
         -------------------------
@@ -413,26 +617,14 @@ class App3D {
         of vertices that intersect the provided field magnitude (isovalue).
         There are a couple of algorithms that do this.
         */
-        if (isovalue === undefined) {
-            isovalue = 0;
+        sides = (sides === undefined) ? 1 : sides;
+        iso = (iso === undefined) ? 0 : iso;
+        if (sides == 1) {
+            var meshes = this.march_cubes1(field, iso);
+        } else if (sides == 2) {
+            var meshes = this.march_cubes2(field, iso, colors);
         };
-        if (algorithm === undefined) {
-            algorithm = "mc";
-        };
-        if (sides === undefined) {
-            sides = 1;
-        };
-
-        if (algorithm == "mc" && sides == 1) {
-            var field_mesh = this.march_cubes1(field, isovalue);
-            //this.scene.add(field_mesh);
-            return field_mesh;
-        } else if (algorithm == "mc" && sides == 2) {
-            var field_meshes = this.march_cubes2(field, isovalue);
-            return field_meshes;
-        } else {
-            console.log("NotImplementedError");
-        };
+        return meshes;
     };
 
     add_unit_axis() {
@@ -585,7 +777,7 @@ class App3D {
         return [filled, frame];
     };
 
-    march_cubes2(field, isovalue) {
+    march_cubes2(field, isovalue, colors) {
         /*"""
         march_cubes2
         ------------------------
@@ -709,23 +901,355 @@ class App3D {
         n_geometry.computeFaceNormals();
         n_geometry.computeVertexNormals();
         var p_material = new THREE.MeshPhongMaterial({
-            color: 0x003399,
-            specular: 0x003399,
+            color: colors['pos'],
+            specular: colors['pos'],
             side: THREE.DoubleSide,
             shininess: 15
         });
         var n_material = new THREE.MeshPhongMaterial({
-            color: 0xFF9900,
-            specular: 0xFF9900,
+            color: colors['neg'],
+            specular: colors['neg'],
             side: THREE.DoubleSide,
             shininess: 15
         });
         var mesh1 = new THREE.Mesh(p_geometry, p_material);
         var mesh2 = new THREE.Mesh(n_geometry, n_material);
-        this.scene.add(mesh1);
-        this.scene.add(mesh2);
         return [mesh1, mesh2];
     };
+
+    march_squares(field, ncontour, clims, axis, val) {
+        console.log("ms");
+
+        // Get the contour values given the limits and number of lines
+        var z = App3D.prototype.compute_contours(ncontour, clims);
+        var nc = z.length;
+
+        // Get square of interest and "x, y" data
+        var dat = App3D.prototype.get_square(field, val, axis);
+        var sq = dat.dat;
+        var x = dat.x;
+        var y = dat.y;
+
+        // Relative indices of adjacent square vertices
+        var im = [0, 1, 1, 0];
+        var jm = [0, 0, 1, 1];
+        // Indexes case values for case value switch
+        var castab = [[[0, 0, 8], [0, 2, 5], [7, 6, 9]],
+                      [[0, 3, 4], [1, 3, 1], [4, 3, 0]],
+                      [[9, 6, 7], [5, 2, 0], [8, 0, 0]]];
+
+        // Probably don't need as many empty arrays as number of contours
+        // but need at least two for positive and negative contours.
+        // exa.threejs.app.add_contours currently expects this behavior, however.
+        var cverts = [];
+        for(var i = 0; i < nc; i++) {
+          cverts.push([]);
+        };
+
+        // Vars to hold the relative heights and x, y values of
+        // the square of interest.
+        var h = new Array(5);
+        var xh = new Array(5);
+        var yh = new Array(5);
+        var sh = new Array(5);
+
+        // m indexes the triangles in the square of interest
+        var m1;
+        var m2;
+        var m3;
+        // case value tells us whether or not to interpolate
+        // or which x and y values to use to build the contour
+        var cv;
+        // Place holders for the x and y values of the square of interest
+        var x1 = 0;
+        var x2 = 0;
+        var y1 = 0;
+        var y2 = 0;
+        // Find out whether or not the x, y range is relevant for
+        // the given contour level
+        var tmp1 = 0;
+        var tmp2 = 0;
+        var dmin;
+        var dmax;
+
+        var jdim = x.length - 2;
+        var idim = y.length - 2;
+        // Starting at the end of the y array
+        for(var j = jdim; j >= 0; j--) {
+            // But at the beginning of the x array
+            for(var i = 0; i <= idim; i++) {
+                // The smallest and largest values in square of interest
+                tmp1 = Math.min(sq[i][j], sq[i][j + 1]);
+                tmp2 = Math.min(sq[i + 1][j], sq[i + 1][j + 1]);
+                dmin = Math.min(tmp1, tmp2);
+                tmp1 = Math.max(sq[i][j], sq[i][j + 1]);
+                tmp2 = Math.max(sq[i + 1][j], sq[i + 1][j + 1]);
+                dmax = Math.max(tmp1, tmp2);
+                // If outside all contour bounds, move along
+                if (dmax < z[0] || dmin > z[nc - 1]) {
+                    continue;
+                };
+                // For each contour
+                for(var c = 0; c < nc; c++) {
+                    // If outside individual contour bound, move along
+                    if (z[c] < dmin || z[c] > dmax) {
+                        continue;
+                    };
+                    // The box is considered as follows:
+                    //
+                    //  v4  +------------------+ v3
+                    //      |        m=3       |
+                    //      |                  |
+                    //      |  m=2    X   m=2  |  center is v0
+                    //      |                  |
+                    //      |        m=1       |
+                    //  v1  +------------------+ v2
+                    //
+                    // m indexes the triangle
+                    // For each vertex in the square (5 of them)
+                    for(var m = 4; m >= 0; m--) {
+                        if (m > 0) {
+                            h[m] = sq[i + im[m-1]][j + jm[m-1]] - z[c];
+                            xh[m] = x[i + im[m-1]];
+                            yh[m] = y[j + jm[m-1]];
+                        } else {
+                            h[0] = 0.25 * (h[1] + h[2] + h[3] + h[4]);
+                            xh[0] = 0.5 * (x[i] + x[i + 1]);
+                            yh[0] = 0.5 * (y[j] + y[j + 1]);
+                        };
+                        if (h[m] > 0.0) {
+                            sh[m] = 1;
+                        } else if (h[m] < 0.0) {
+                            sh[m] = -1;
+                        } else {
+                            sh[m] = 0;
+                        };
+                    };
+                    // Now loop over the triangles in the square to find the case
+                    for(var m = 1; m <= 4; m++) {
+                        m1 = m;
+                        m2 = 0;
+                        if (m != 4) {
+                          m3 = m + 1;
+                        } else {
+                          m3 = 1;
+                        };
+                        if ((cv = castab[sh[m1] + 1][sh[m2] + 1][sh[m3] + 1]) == 0) {
+                            continue;
+                        };
+                        // Assign x and y appropriately given the case
+                        switch (cv) {
+                            case 1: // Vertices 1 and 2
+                                x1 = xh[m1];
+                                y1 = yh[m1];
+                                x2 = xh[m2];
+                                y2 = yh[m2];
+                                break;
+                            case 2: // Vertices 2 and 3
+                                x1 = xh[m2];
+                                y1 = yh[m2];
+                                x2 = xh[m3];
+                                y2 = yh[m3];
+                                break;
+                            case 3: // Vertices 3 and 1
+                                x1 = xh[m3];
+                                y1 = yh[m3];
+                                x2 = xh[m1];
+                                y2 = yh[m1];
+                                break;
+                            case 4: // Vertex 1 and side 2-3
+                                x1 = xh[m1];
+                                y1 = yh[m1];
+                                x2 = App3D.prototype.sect(m2, m3, h, xh);
+                                y2 = App3D.prototype.sect(m2, m3, h, yh);
+                                break;
+                            case 5: // Vertex 2 and side 3-1
+                                x1 = xh[m2];
+                                y1 = yh[m2];
+                                x2 = App3D.prototype.sect(m3, m1, h, xh);
+                                y2 = App3D.prototype.sect(m3, m1, h, yh);
+                                break;
+                            case 6: // Vertex 3 and side 1-2
+                                x1 = xh[m3];
+                                y1 = yh[m3];
+                                x2 = App3D.prototype.sect(m1, m2, h, xh);
+                                y2 = App3D.prototype.sect(m1, m2, h, yh);
+                                break;
+                            case 7: // Sides 1-2 and 2-3
+                                x1 = App3D.prototype.sect(m1, m2, h, xh);
+                                y1 = App3D.prototype.sect(m1, m2, h, yh);
+                                x2 = App3D.prototype.sect(m2, m3, h, xh);
+                                y2 = App3D.prototype.sect(m2, m3, h, yh);
+                                break;
+                            case 8: // Sides 2-3 and 3-1
+                                x1 = App3D.prototype.sect(m2, m3, h, xh);
+                                y1 = App3D.prototype.sect(m2, m3, h, yh);
+                                x2 = App3D.prototype.sect(m3, m1, h, xh);
+                                y2 = App3D.prototype.sect(m3, m1, h, yh);
+                                break;
+                            case 9: // Sides 3-1 and 1-2
+                                x1 = App3D.prototype.sect(m3, m1, h, xh);
+                                y1 = App3D.prototype.sect(m3, m1, h, yh);
+                                x2 = App3D.prototype.sect(m1, m2, h, xh);
+                                y2 = App3D.prototype.sect(m1, m2, h, yh);
+                                break;
+                            default:
+                                break;
+                        };
+                        // Push the x and y positions
+                        cverts[c].push([x1, y1, val]);
+                        cverts[c].push([x2, y2, val]);
+                    };
+                };
+            };
+        };
+        // Default behavior of algorithm
+        if (axis == "z") {
+            return cverts;
+        // cverts is populated assuming x, y correspond to x, y
+        // dimensions in the cube file, but to avoid a double nested
+        // if else inside the tight O(N^2) loop, just move around the
+        // elements accordingly afterwards according to the axis of
+        // interest
+        } else if (axis == "x") {
+            var rear = [];
+            for(var c = 0; c < nc; c++) {
+                rear.push([]);
+                var maxi = cverts[c].length;
+                for(var v = 0; v < maxi; v++) {
+                    rear[c].push([cverts[c][v][0], val, cverts[c][v][1]]);
+                };
+            };
+        } else if (axis == "y") {
+            var rear = [];
+            for(var c = 0; c < nc; c++) {
+                rear.push([]);
+                var maxi = cverts[c].length;
+                for(var v = 0; v < maxi; v++) {
+                    rear[c].push([val, cverts[c][v][0], cverts[c][v][1]]);
+                };
+            };
+        };
+        return rear;
+    };
+
+};
+
+App3D.prototype.sect = function(p1, p2, rh, w) {
+    // Interpolate a value along the side of a square
+    // by the relative heights at the square of interest
+    return (rh[p2] * w[p1] - rh[p1] * w[p2]) / (rh[p2] - rh[p1]);
+};
+
+App3D.prototype.get_square = function(field, val, axis) {
+    // Given a 1D array data that is ordered by x (outer increment)
+    // then y (middle increment) and z (inner increment), determine
+    // the appropriate z index given the z value to plot the contour
+    // over. Then select that z-axis of the cube data and convert
+    // it to a 2D array for processing in marching squares.
+    var dat = [];
+    var x, y, z, nx, ny, nz, xidx, yidx, plidx;
+    if (axis === "z") {
+        xidx = 0;
+        yidx = 1;
+        plidx = 2;
+        x = field["x"];
+        y = field["y"];
+        z = field["z"];
+        nx = field["nx"];
+        ny = field["ny"];
+        nz = field["nz"];
+    } else if (axis === "x") {
+        xidx = 0;
+        yidx = 2;
+        plidx = 1;
+        x = field["x"];
+        y = field["z"];
+        z = field["y"];
+        nx = field["nx"];
+        ny = field["nz"];
+        nz = field["ny"];
+    } else if (axis === "y") {
+        xidx = 1;
+        yidx = 2;
+        plidx = 0;
+        x = field["y"];
+        y = field["z"];
+        z = field["x"];
+        nx = field["ny"];
+        ny = field["nz"];
+        nz = field["nx"];
+    };
+    //
+    // for(var i = 0; i < dims[xidx]; i++) {
+    //     x.push(orig[xidx] + i * scale[xidx]);
+    // };
+    // for(var j = 0; j < dims[yidx]; j++) {
+    //     y.push(orig[yidx] + j * scale[yidx]);
+    // };
+
+    var idx = 0;
+    var cur = 0;
+    // var first = orig[plidx];
+    // var amax = orig[plidx] + dims[plidx] * scale[plidx];
+    var first = z[0];
+    var amax = z[z.length - 1];
+
+    if (val < first) {
+        idx = 0;
+    } else if (val > amax) {
+        idx = nz - 1;
+    } else {
+        for(var k = 0; k < nz; k++) {
+            cur = z[k];
+            if (Math.abs(val - z[k]) < Math.abs(val - first)) {
+                first = z[k];
+                idx = k;
+            };
+        };
+    };
+
+    if (axis === "z") {
+        for (var xi=0; xi < nx; xi++) {
+            var tmp = [];
+            for(var yi = 0; yi < ny; yi++) {
+                tmp.push(field["values"][(nx * xi + yi) * ny + idx]);
+            };
+            dat.push(tmp);
+        };
+    } else if (axis === "x") {
+        for (var xi=0; xi<nx; xi++) {
+            var tmp = [];
+            for(var zi=0; zi<nz; zi++) {
+                tmp.push(field["values"][(nx * xi + idx) * nz + zi]);
+            };
+            dat.push(tmp);
+        };
+    } else if (axis === "y") {
+        for (var yi=0; yi<ny; yi++) {
+            var tmp = [];
+            for(var zi=0; zi<nz; zi++) {
+                tmp.push(field["values"][(nx * idx + yi) * ny + zi]);
+            };
+            dat.push(tmp);
+        };
+    };
+    return {dat: dat, x: x, y: y};
+};
+
+
+App3D.prototype.compute_contours = function(ncontour, clims) {
+    // Determine the spacing for contour lines given the limits
+    // (exponents of base ten) and the number of contour lines
+    var tmp1 = [];
+    var tmp2 = [];
+    var d = (clims[1] - clims[0]) / ncontour;
+    for(var i = 0; i < ncontour; i++) {
+        tmp1.push(-Math.pow(10, -i * d));
+        tmp2.push(Math.pow(10, -i * d));
+    };
+    tmp2.reverse()
+    return tmp1.concat(tmp2);
 };
 
 App3D.prototype.flatten_color = function(colors) {
