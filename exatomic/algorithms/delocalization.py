@@ -26,7 +26,7 @@ sns.mpl.pyplot.rcParams.update({'text.usetex': True,
 
 
 def plot_energy(curv, color=None, title='', figsize=(21,5),
-                nylabel=3, fontsize=24):
+                nylabel=3, nxlabel=5, fontsize=24):
     """
     Accepts the output of compute_curvature or combine_curvature and
     returns a figure with appropriate styling.
