@@ -10,6 +10,15 @@ environment:
   matrix:
     # Note: Because we have to separate the py2 and py3 components due to compiler version, we have a race condition for non-python packages.
     # Not sure how to resolve this, but maybe we should be tracking the VS version in the build string anyway?
+    - TARGET_ARCH: "x86"
+      CONDA_PY: "27"
+      PY_CONDITION: "python >=2.7,<3"
+    - TARGET_ARCH: "x86"
+      CONDA_PY: "35"
+      PY_CONDITION: "python >=3.5,<3.6"
+    - TARGET_ARCH: "x86"
+      CONDA_PY: "36"
+      PY_CONDITION: "python >=3.6"
     - TARGET_ARCH: "x64"
       CONDA_PY: "27"
       PY_CONDITION: "python >=2.7,<3"
@@ -35,12 +44,17 @@ install:
         throw "There are newer queued builds for this pull request, failing early." }
 
   # Use the pre-installed Miniconda for the desired arch
-  - ps: $env:path="C:\Miniconda-x64;$root\Scripts;$root\Library\bin;$($env:path)"
+  - ps: if($env:TARGET_ARCH -eq 'x86')
+          {$root = "C:\Miniconda"}
+        else
+          {$root = "C:\Miniconda-x64"}
+        $env:path="$root;$root\Scripts;$root\Library\bin;$($env:path)"
 
   - cmd: conda config --set show_channel_urls true
   - cmd: conda config --set always_yes yes --set changeps1 no
   - cmd: conda update -q -y --all
   - cmd: conda install -q -y -c conda-forge numpy scipy matplotlib seaborn networkx pandas nose numba pytables six numexpr ipywidgets psutil
+  # TEMPORARY
   - cmd: git clone git@github.com:avmarchenko/exa.git
   - cmd: cd exa
   - cmd: pip install -e .
