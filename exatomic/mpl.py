@@ -108,6 +108,257 @@ def photoelectron_spectrum(*unis, filters=None, broaden=0.06, color=None,
         fig (matplotlib.figure.Figure): the plot
     """
     pass
+
+def new_pes(*unis, filters=None, broaden=0.06, color=None, stepe=0.5, units='eV',
+            fontsize=20, peaklabels=True, xlim=None, extra=None,
+            figsize=(10,10), title=None):
+    """
+    Things
+    """
+    def plot_details(ax, dos, xmin, xmax, peaklabels):
+        switch = len(o) // 2
+        nonzero = dos[dos['signal'] > 0.1]['shifted']
+        small = nonzero.min()
+        esmall = small - stepe * switch
+        elarge = nonzero.max()
+        xmin.append(esmall - 0.5)
+        xmax.append(elarge + 0.5)
+        dh = 1 / (switch + 3)
+        hlo = dh
+        hhi = (switch + switch % 2) * dh
+        for c, (sym, en) in enumerate(zip(o['symmetry'], o['shifted'])):
+            ax.plot([en] * 2, [0, 0.05], color='k', linewidth=1)
+            if peaklabels:
+                if '$' in sym: astr = sym
+                else: astr = r'$\textrm{' + sym[0].lower() + '}_{\\large \\textrm{' + sym[1:].lower() + '}}$'
+                e = esmall if c < switch else elarge
+                h = hlo if c < switch else hhi
+                ax.text(e, h, astr, fontsize=fontsize - 4)
+                if c < switch:
+                    esmall += stepe
+                    hlo += dh
+                else:
+                    elarge += stepe * 1.5
+                    hhi -= dh
+                xmax[-1] = elarge
+        return ax, xmin, xmax
+
+    def plot_extra(ax, extra):
+        for i, stargs in enumerate(zip(extra['x'], extra['y'])):
+            kwargs = {'color': extra['color']}
+            if isinstance(extra['label'], list):
+                kwargs['color'] = extra['color'][i]
+                kwargs['label'] = extra['label'][i]
+            else:
+                if not i: kwargs['label'] = extra['label']
+            ax.plot(*stargs, **kwargs)
+            ax.legend(frameon=False)
+        return ax
+
+    nuni = len(unis)
+    if filters is None:
+        print("filters allows for customization of the plot")
+        filters = [{'eV': [-10, 0]}] * nuni
+    elif isinstance(filters, dict):
+        filters = [filters] * nuni
+    elif len(filters) == 1 and isinstance(filters, list):
+        filters = filters * nuni
+    elif len(filters) != nuni:
+        raise Exception("Provide a list of filter dicts same as number of unis.")
+    nax = nuni + 1 if extra is not None else nuni
+    figargs = {'figsize': figsize}
+    fig = _gen_figure(nxplot=nax, nyplot=1, joinx=True, figargs=figargs)
+    axs = fig.get_axes()
+    color = sns.color_palette('cubehelix', nuni) if color is None else color
+    xmin, xmax = [], []
+    hdls, lbls = [], []
+    for i, (uni, ax, fil) in enumerate(zip(unis, axs, filters)):
+        if 'energy' in fil: lo, hi = fil['energy']
+        elif units in fil: lo, hi = fil[units]
+        else: raise Exception('filters must include an energetic keyword')
+        shift = fil['shift'] if 'shift' in fil else 0
+        lframe = uni.orbital['group'].astype(int).max()
+        dos = uni.orbital.convolve(ewin=[lo,hi], broaden=broaden,
+                                   units=units, frame=lframe)
+        dos['shifted'] = dos[units] + shift
+        lab = uni.name if uni.name is not None \
+              else fil['label'] if 'label' in fil else ''
+        dos[dos['signal'] > 0.01].plot(ax=ax, x='shifted', y='signal',
+                                    label=lab, color=color[i % len(color)])
+        li = uni.orbital['group'].astype(int).max()
+        o = uni.orbital[uni.orbital['group'] == li]
+        o = o[(o[units] > lo) & (o[units] < hi) & (o['occupation'] > 0)]
+        o = o.drop_duplicates(units).copy().drop_duplicates(
+                units).sort_values(by=units).reset_index()
+        o['shifted'] = o[units] + shift
+        ax, xmin, xmax = plot_details(ax, dos, xmin, xmax, peaklabels)
+    if extra:
+        axs[-1] = plot_extra(axs[-1], extra)
+    xlim = (min(xmin), max(xmax)) if xlim is None else xlim
+    if title is not None:
+        axs[0].set_title(title)
+    for i in range(nax):
+        if not (i == nax - 1):
+            sns.despine(bottom=True, trim=True)
+            axs[i].set_xticks([])
+            axs[i].set_xlabel('')
+        axs[i].legend(frameon=False)
+        axs[i].set_xlim(xlim)
+        axs[i].set_yticks([])
+        axs[i].set_yticklabels([])
+    shifted = any(('shift' in fil for fil in filters))
+    xax = 'E* (' + units + ')' if shifted else 'E (' + units + ')'
+    axs[-1].set_xlabel(xax)
+    nx = 2 if abs(xlim[1] - xlim[0]) > 8 else 1
+    axs[-1].set_xticks(np.arange(xlim[0], xlim[1] + 1, nx, dtype=int))
+    return fig
+
+# Example filter for the following mo_diagram function
+# applied to orbital table
+#
+#mofilters[key] = [{'eV': [-7, 5],
+#                   'occupation': 2,
+#                   'symmetry': 'EU'}.copy() for i in range(5)]
+#mofilters[key][0]['shift'] = 24.7
+#mofilters[key][0]['eV'] = [-30, -10]
+#mofilters[key][0]['symmetry'] = '$\pi_{u}$'
+#mofilters[key][-1]['eV'] = [0, 10]
+#mofilters[key][-1]['shift'] = -11.5
+
+def new_mo_diagram(*unis, filters=None, units='eV', width=0.0625,
+                   pad_degen=0.125, pad_occ=0.03125, scale_occ=1,
+                   fontsize=22, figsize=(10,8), labelpos='right',
+                   ylim=None):
+    """
+    Args
+        unis(exatomic.container.Universe): uni or list of unis
+        filters(dict): dict or list of dicts for each uni
+            accepted kwargs: 'shift', uni.orbital column names
+            special kwargs: 'shift' shifts energies,
+                ['energy', 'eV', units] must be of the form [min, max]
+            Note: values can be strings defining relationships like
+                  {'occupation': '> 0'}
+        units (str): the units in which to display the MO diagram
+        width (float): the width of the line of each energy level
+        pad_degen (float): the spacing between degenerate energy levels
+        pad_occ (float): the spacing between arrows of occupied levels
+        scale_occ (float): scales the size of the occupied arrows
+        fontsize (int): font size for text on the MO diagram
+        figsize (tuple): matplotlib's figure figsize kwarg
+        labelpos (str): ['right', 'bottom'] placement of symmetry labels
+
+    Returns
+        fig (matplotlib.figure.Figure): the plot
+    """
+    def filter_orbs(o, fil):
+        shift = fil['shift'] if 'shift' in fil else 0
+        for key, val in fil.items():
+            if key == 'shift': continue
+            if isinstance(val, str) and \
+            any((i in ['<', '>'] for i in val)):
+                o = eval('o[o["' + key + '"] ' + val + ']')
+                continue
+            val = [val] if not isinstance(val,
+                        (list,tuple)) else val
+            if key in [units, 'energy']:
+                if len(val) != 2:
+                    raise Exception('energy (units) '
+                    'filter arguments must be [min, max]')
+                o = o[(o[key] > val[0]) & (o[key] < val[1])].copy()
+            elif key == 'index':
+                o = o.ix[val].copy()
+            else:
+                o = o[o[key].isin(val)].copy()
+        return o, shift
+
+    def cull_data(o, shift):
+        data = OrderedDict()
+        # Deduplicate manually to count degeneracy
+        for en, sym, occ in zip(o[units], o['symmetry'], o['occupation']):
+            en += shift
+            if '$' in sym: pass
+            else: sym = '${}_{{{}}}$'.format(sym[0].lower(),
+                                             sym[1:].lower())
+            data.setdefault(en, {'degen': 0, 'sym': sym, 'occ': occ})
+            data[en]['degen'] += 1
+        return data
+
+    def offset(degen, pad_degen=pad_degen):
+        start = 0.5 - pad_degen * (degen - 1)
+        return [start + i * 2 * pad_degen for i in range(degen)]
+
+    def occoffset(occ, pad_occ=pad_occ):
+        if not occ: return []
+        if occ <= 1: return [0]
+        if occ <= 2: return [-pad_occ, pad_occ]
+
+    def plot_axis(ax, data):
+        for nrg, vals in data.items():
+            # Format the occupation//symmetry
+            occ = np.round(vals['occ']).astype(int)
+            # Iterate over degeneracy
+            offs = offset(vals['degen'])
+            for x in offs:
+                ax.plot([x - lw, x + lw], [nrg, nrg],
+                        color='k', lw=1.2)
+                # Iterate over occupation
+                for s, ocof in enumerate(occoffset(occ)):
+                    # Down arrow if beta spin else up arrow
+                    pt = -2 * lw * scale_occ if s == 1 else 2 * lw * scale_occ
+                    st = nrg + lw * scale_occ if s == 1 else nrg - lw * scale_occ
+                    ax.arrow(ocof + x, st, 0, pt, **arrows)
+        # Assign symmetry label
+            sym = vals['sym']
+            if labelpos == 'right':
+                ax.text(x + 2 * lw, nrg - lw, sym, fontsize=fontsize - 2)
+            elif labelpos == 'bottom':
+                ax.text(0.5 - 2 * lw, nrg - 4 * lw, sym, fontsize=fontsize - 2)
+        return ax
+
+    if filters is None:
+        print('filters allows for customization of the plot.')
+        filters = {'eV': [-5,5]}
+    nunis = len(unis)
+    filters = [filters] * nunis if isinstance(filters, dict) else filters
+    # Make our figure and axes
+    figargs = {'figsize': figsize}
+    fig = _gen_figure(nxplot=nunis, nyplot=1, joinx=True, sharex=True, figargs=figargs)
+    axs = fig.get_axes()
+    # Some initialization
+    ymin = np.empty(nunis, dtype=np.float64)
+    ymax = np.empty(nunis, dtype=np.float64)
+    ysc = exatomic.Energy['eV', units]
+    lw = width
+    arrows = {'fc': "k", 'ec': "k",
+              'head_width': 0.01,
+              'head_length': 0.05 * ysc}
+    for i, (ax, uni, fil) in enumerate(zip(axs, unis, filters)):
+        if uni.name: ax.set_title(uni.name)
+        o = uni.orbital
+        o[units] = o['energy'] * exatomic.Energy['Ha', units]
+        o, shift = filter_orbs(o, fil)
+        print('Filtered {} eigenvalues from '
+              '{}'.format(o.shape[0], uni.name))
+        ymin[i] = o[units].min() + shift
+        ymax[i] = o[units].max() + shift
+        data = cull_data(o, shift)
+        ax = plot_axis(ax, data)
+    # Go back through axes to set limits
+    for i, ax in enumerate(axs):
+        ax.set_xlim((0,1))
+        ax.xaxis.set_ticklabels([])
+        ylims = (min(ymin[~np.isnan(ymin)]) - 1, max(ymax[~np.isnan(ymax)]) + 1) \
+                if ylim is None else ylim
+        ax.set_ylim(ylims)
+        if not i:
+            ax.set_ylabel('E ({})'.format(units), fontsize=fontsize)
+            diff = ylims[1] - ylims[0]
+            headlen = 0.05 * diff
+            ax.arrow(0.05, ylims[0], 0, diff - headlen, fc="k", ec="k",
+                     head_width=0.05, head_length= headlen)
+    sns.despine(left=True, bottom=True, right=True)
+    return fig
+
 #    unis = [unis] if not isinstance(unis, list) else unis
 #    if window is None:
 #        window = []

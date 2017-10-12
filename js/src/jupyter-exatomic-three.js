@@ -597,12 +597,12 @@ class App3D {
         var pmesh = new THREE.LineSegments(pgeom,
             new THREE.LineBasicMaterial({
                 color: colors["pos"],
-                linewidth: 10
+                linewidth: 4
             }));
         var nmesh = new THREE.LineSegments(ngeom,
             new THREE.LineBasicMaterial({
                 color: colors["neg"],
-                linewidth: 10
+                linewidth: 4
             }));
         return [pmesh, nmesh];
     };

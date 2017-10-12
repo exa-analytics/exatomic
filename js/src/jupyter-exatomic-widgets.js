@@ -101,10 +101,11 @@ var UniverseSceneView = base.ExatomicSceneView.extend({
                 .then(function(p) {that.field_v = p})
                 .catch(function(e) {console.log(e.message)})
         ];
-        this.promises = Promise.all(promises);
+        this.promises = Promise.all(promises); //.then(that.add_atom);
     },
 
     add_atom: function() {
+        console.log(this);
         this.clear_meshes("atom");
         this.clear_meshes("two");
         var fdx = this.model.get("frame_idx");

@@ -74,11 +74,9 @@ def combine_curvature(curvs, order=None):
     else:
         reordered = curvs
     for i, curv in enumerate(reordered):
-        if i > 0:
-            try:
-                reordered[i].drop('n', axis=1, inplace=True)
-            except ValueError:
-                pass
+        if not i: continue
+        try: reordered[i].drop('n', axis=1, inplace=True)
+        except ValueError: pass
     return pd.concat(reordered, axis=1)
 
 
