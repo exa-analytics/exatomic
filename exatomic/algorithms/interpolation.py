@@ -1,6 +1,6 @@
-## -*- coding: utf-8 -*-
-## Copyright (c) 2015-2016, Exa Analytics Development Team
-## Distributed under the terms of the Apache License 2.0
+# -*- coding: utf-8 -*-
+# Copyright (c) 2015-2017, Exa Analytics Development Team
+# Distributed under the terms of the Apache License 2.0
 #"""
 #Interpolation
 #################################
@@ -52,7 +52,8 @@
 #        newx = np.linspace(xdat.min(), xdat.max(), dim)
 #        interpz = convenience[method](xdat, zdat, **kwargs)
 #        newz = interpz(newx)
-#        return {'x': newx, 'z': newz, 'y': df[dud].unique()}
+#        return {'x': newx, 'z': newz, 'y': df[dud].unique(),
+#                'min': (newx[newz.argmin()], newz.min())}
 #    # Check that the interpolation method is supported
 #    if method not in convenience.keys():
 #        raise Exception('method must be in {}'.format(convenience.keys()))

@@ -887,24 +887,27 @@ class Orbital(_Convolve):
             return self.iloc[index]
 
     @classmethod
-    def from_energies(cls, energies, nbas, alphae, betae):
+    def from_energies(cls, energies, alphae, betae, os=False):
+        print("WARNING FROM ORBITAL.FROM_ENERGIES")
+        print("BREAKING API CHANGE -- NO MORE NBAS, ADDED OS KWARG")
         try: ae, be = int(alphae), int(betae)
         except: raise NotImplementedError('Only integer occupation')
-        lens = energies.shape[0]
-        if lens == nbas:
-            spin = np.zeros(nbas, dtype=np.int64)
-            vector = range(nbas)
+        nmos = energies.shape[0] if not os else energies.shape[0] // 2
+        nmos = energies.shape[0] // 2
+        if os:
+            nmos = energies.shape[0] // 2
+            spin = np.concatenate((np.zeros(nmos), np.ones(nmos)))
+            vector = np.concatenate((range(nmos), range(nmos)))
+            occs = np.concatenate((np.ones(ae), np.zeros(nmos - ae),
+                                   np.ones(be), np.zeros(nmos - be)))
+            frame = group = np.zeros(nmos * 2, dtype=np.int64)
+        else:
+            nmos = energies.shape[0]
+            spin = np.zeros(nmos, dtype=np.int64)
+            vector = range(nmos)
             occs = np.concatenate((np.repeat(2, ae),
-                                   np.zeros(nbas - ae)))
-            frame = group = np.zeros(nbas, dtype=np.int64)
-        elif lens == nbas * 2:
-            hens = lens // 2
-            spin = np.concatenate((np.zeros(hens), np.ones(hens)))
-            vector = np.concatenate((range(nbas), range(nbas)))
-            occs = np.concatenate((np.ones(ae), np.zeros(nbas - ae),
-                                   np.ones(be), np.zeros(nbas - be)))
-            frame = group = np.zeros(nbas * 2, dtype=np.int64)
-        else: raise Exception('Passed energies.shape is not 1 or 2 * nbas')
+                                   np.zeros(nmos - ae)))
+            frame = group = np.zeros(nmos, dtype=np.int64)
         return cls.from_dict({'frame': frame, 'group': group,
                               'energy': energies, 'spin': spin,
                               'occupation': occs, 'vector': vector})
