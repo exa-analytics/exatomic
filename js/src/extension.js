@@ -7,8 +7,8 @@ if (window.require) {
     window.require.config({
         map: {
             "*" : {
-                "jupyter-exa": "nbextensions/jupyter-exa/index",
-                "jupyter-js-widgets": "nbextensions/jupyter-js-widgets/extension"
+                "jupyter-exatomic": "nbextensions/jupyter-exatomic/index"//,
+                //"jupyter-js-widgets": "nbextensions/jupyter-js-widgets/extension"
             }
         }
     });

@@ -9,7 +9,6 @@ Jupyter notebook environment.
 */
 
 "use strict";
-var THREE = require("three");
 var base = require("./jupyter-exatomic-base.js");
 var utils = require("./jupyter-exatomic-utils.js");
 
@@ -20,7 +19,7 @@ var TestSceneModel = base.ExatomicSceneModel.extend({
         return _.extend({}, base.ExatomicSceneModel.prototype.defaults, {
             _model_name: "TestSceneModel",
             _view_name: "TestSceneView",
-            geo_shape: true,
+            geom: true,
             field: "null",
             field_ml: 0
         })
@@ -31,7 +30,7 @@ var TestSceneModel = base.ExatomicSceneModel.extend({
 var TestSceneView = base.ExatomicSceneView.extend({
 
     init: function() {
-        TestSceneView.__super__.init.apply(this);
+        base.ExatomicSceneView.prototype.init.apply(this);
         this.init_listeners();
         this.add_geometry();
         this.animation();
@@ -39,7 +38,7 @@ var TestSceneView = base.ExatomicSceneView.extend({
 
     add_geometry: function(color) {
         this.clear_meshes("generic");
-        if (this.model.get("geo_shape")) {
+        if (this.model.get("geom")) {
             this.meshes["generic"] = this.app3d.test_mesh();
         };
         this.add_meshes("generic");
@@ -58,7 +57,7 @@ var TestSceneView = base.ExatomicSceneView.extend({
 
     init_listeners: function() {
         TestSceneView.__super__.init_listeners.apply(this);
-        this.listenTo(this.model, "change:geo_shape", this.add_geometry);
+        this.listenTo(this.model, "change:geom", this.add_geometry);
         this.listenTo(this.model, "change:field", this.add_field);
     },
 
@@ -108,7 +107,8 @@ var TestUniverseSceneView = base.ExatomicSceneView.extend({
         } else {
             var tf = utils[field](ars, kind);
         };
-        this.meshes["field"] = this.app3d.add_scalar_field(tf, iso, 2);
+        var colors = this.get_field_colors();
+        this.meshes["field"] = this.app3d.add_scalar_field(tf, iso, 2, colors);
         this.add_meshes("field");
     },
 

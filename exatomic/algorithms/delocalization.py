@@ -1,6 +1,6 @@
-## -*- coding: utf-8 -*-
-## Copyright (c) 2015-2016, Exa Analytics Development Team
-## Distributed under the terms of the Apache License 2.0
+# -*- coding: utf-8 -*-
+# Copyright (c) 2015-2017, Exa Analytics Development Team
+# Distributed under the terms of the Apache License 2.0
 #"""
 #Delocalization
 #################################
@@ -26,7 +26,7 @@
 #
 #
 #def plot_energy(curv, color=None, title='', figsize=(21,5),
-#                nylabel=3, fontsize=24):
+#                nylabel=3, nxlabel=5, fontsize=24):
 #    """
 #    Accepts the output of compute_curvature or combine_curvature and
 #    returns a figure with appropriate styling.
@@ -74,11 +74,9 @@
 #    else:
 #        reordered = curvs
 #    for i, curv in enumerate(reordered):
-#        if i > 0:
-#            try:
-#                reordered[i].drop('n', axis=1, inplace=True)
-#            except ValueError:
-#                pass
+#        if not i: continue
+#        try: reordered[i].drop('n', axis=1, inplace=True)
+#        except ValueError: pass
 #    return pd.concat(reordered, axis=1)
 #
 #
