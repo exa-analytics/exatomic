@@ -14,6 +14,7 @@ before_install:
   - export PATH="$HOME/miniconda/bin:$PATH"
   - conda config --set always_yes yes --set changeps1 no
   - conda update -q conda
+# TEMPORARY
   - git clone https://github.com/avmarchenko/exa.git ../exa
 
 install:
@@ -26,11 +27,11 @@ install:
   - pip install .
 
 script:
- #- nosetests --with-coverage
- #- coverage xml
+  - nosetests --with-coverage
+  - coverage xml
   - travis-sphinx -n build
 
 after_success:
- #- coveralls
- #- python-codacy-coverage -r coverage.xml
+  - coveralls
+  - python-codacy-coverage -r coverage.xml
   - travis-sphinx -n deploy
