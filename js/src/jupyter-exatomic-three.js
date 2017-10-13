@@ -143,7 +143,7 @@ class App3D {
             }
             that.controls.update();
         };
-        document.addEventListener('mousemove', onDocumentMouseMove, false);
+        this.el.addEventListener('mousemove', onDocumentMouseMove, false);
         // this.sprite.position.set(mouse.x, mouse.y, 0);
         // var onDocumentMouseDown = function(event) {
         //     that.mouse.x =   (event.clientX / window.innerWidth)  * 2 - 1;

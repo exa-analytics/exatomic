@@ -5,7 +5,7 @@
 Universe Notebook Widget
 #########################
 """
-import os
+import os, re
 import numpy as np
 import pandas as pd
 from glob import glob
@@ -427,20 +427,28 @@ class TestUniverse(ExatomicBox):
 ################################
 
 def atom_traits(df):
-    """Get atom table traitlets."""
+    """
+    Get atom table traitlets. Atomic size (using the covalent radius) and atom
+    colors (using the common `Jmol`_ color scheme) are packed as dicts and
+    obtained from the static data in exa.
+
+    .. _Jmol: http://jmol.sourceforge.net/jscolors/
+    """
     traits = {}
-    if 'label' in df.columns:
-        df.rename(columns={'label': 'l'}, inplace=True)
-    elif 'tag' in df.columns:
-        df.rename(columns={'tag': 'l'}, inplace=True)
-    else:
-        df['l'] = df['symbol'] + df.index.astype(str)
+    if 'label' in df.columns: df['l'] = df['label']
+    elif 'tag' in df.columns: df['l'] = df['tag']
+    else: df['l'] = df['symbol'] + df.index.astype(str)
     grps = df.groupby('frame')
     for col in ['x', 'y', 'z', 'l']:
-        traits['atom_' + col] = grps.apply(
+        traits['atom_'+col] = grps.apply(
             lambda y: y[col].to_json(
             orient='values', double_precision=3)
             ).to_json(orient="values").replace('"', '')
+    del df['l']
+    repl = {r'\\': '', '"\[': '[', '\]"': ']'}
+    replpat = re.compile('|'.join(repl.keys()))
+    repl = {'\\': '', '"[': '[', ']"': ']'}
+    traits['atom_l'] = replpat.sub(lambda m: repl[m.group(0)], traits['atom_l'])
     syms = grps.apply(lambda g: g['symbol'].cat.codes.values)
     symmap = {i: v for i, v in enumerate(df['symbol'].cat.categories)
               if v in df.unique_atoms}
@@ -580,7 +588,6 @@ class UniverseWidget(ExatomicBox):
             fopts = Dropdown(options=fields, layout=gui_lo)
             def _fopts(c): self.scene.field_idx = c.new
             fopts.observe(_fopts, names='value')
-            folder.insert(1, 'fopts', fopts, update=True)
             # Make an isosurface folder
             isos = Button(description=' Isosurfaces', icon='cube')
             def _fshow(b):
@@ -588,26 +595,26 @@ class UniverseWidget(ExatomicBox):
             isos.on_click(_fshow)
             # Move the isosurface button to the subfolder
             iso = folder.inactive_controls.pop('iso')
-            isofolder = Folder(isos, OrderedDict([('iso', iso)]),
-                               layout=Layout(width="200px"))
-            isofolder.activate('iso')
-            folder.insert(2, 'iso', isofolder, update=True)
+            isofolder = Folder(isos, OrderedDict([
+                ('fopts', fopts),
+                ('iso', iso)
+            ]), layout=Layout(width="200px"))
+            isofolder.activate()
+            folder.insert(1, 'iso', isofolder, update=True)
             # Make a contour folder
             control = Button(description=' Contours', icon='dot-circle-o')
             def _cshow(b):
                 self.scene.cont_show = self.scene.cont_show == False
             control.on_click(_cshow)
             content = OrderedDict([
+                ('fopts', fopts),
                 ('axis', Dropdown(options=['x', 'y', 'z'], value='z')),
                 ('num', IntSlider(description='N', min=5, max=20,
                                   value=10, step=1, layout=gui_lo,)),
-                                  #continuous_update=False)),
                 ('lim', IntRangeSlider(description="10**Limits", min=-10,
                                        max=0, step=1, value=[-8, -1],)),
-                                       #continuous_update=False)),
                 ('val', FloatSlider(description="Value",
                                     min=-5, max=5, value=0,)),
-                                    #continuous_update=False)),
             ])
             def _cont_axis(c): self.scene.cont_axis = c.new
             def _cont_num(c): self.scene.cont_num = c.new
@@ -619,7 +626,7 @@ class UniverseWidget(ExatomicBox):
             content['val'].observe(_cont_val, names='value')
             contour = Folder(control, content, layout=Layout(width="200px"))
             contour.activate()
-            folder.insert(3, 'contour', contour, update=True)
+            folder.insert(2, 'contour', contour, update=True)
             self.active_controls['field'] = folder
 
 

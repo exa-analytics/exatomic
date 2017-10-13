@@ -84,31 +84,6 @@ class AtomTwo(DataFrame):
         mbl = radius0 + radius1 + bond_extra
         self['bond'] = self['distance'] <= mbl
 
-    def _bond_traits(self, label_mapper):
-        """
-        Traits representing bonded atoms are reported as two lists of equal
-        length with atom labels.
-        """
-        bonded = self.ix[self['bond'] == True, ['atom0', 'atom1', 'frame']]
-        lbl0 = bonded['atom0'].map(label_mapper)
-        lbl1 = bonded['atom1'].map(label_mapper)
-        lbl = pd.concat((lbl0, lbl1), axis=1)
-        lbl['frame'] = bonded['frame']
-        bond_grps = lbl.groupby('frame')
-        frames = self['frame'].unique().astype(np.int64)
-        b0 = np.empty((len(frames), ), dtype='O')
-        b1 = b0.copy()
-        for i, frame in enumerate(frames):
-            try:
-                b0[i] = bond_grps.get_group(frame)['atom0'].astype(np.int64).values
-                b1[i] = bond_grps.get_group(frame)['atom1'].astype(np.int64).values
-            except Exception:
-                b0[i] = []
-                b1[i] = []
-        b0 = Unicode(pd.Series(b0).to_json(orient='values')).tag(sync=True)
-        b1 = Unicode(pd.Series(b1).to_json(orient='values')).tag(sync=True)
-        return {'two_bond0': b0, 'two_bond1': b1}
-
 
 class MoleculeTwo(DataFrame):
     """

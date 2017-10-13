@@ -66,6 +66,7 @@ class Cube(Editor):
         nz, dzi, dzj, dzk = [typ(i) for typ, i in zip(typs, self[5].split())]
         nat, nx, ny, nz = abs(nat), abs(nx), abs(ny), abs(nz)
         volstart = nat + 6
+        if len(self[volstart].split()) < 5: volstart += 1
         ncol = len(self[volstart].split())
         data = self.pandas_dataframe(volstart, len(self), ncol).values.ravel()
         df = pd.Series({'ox': ox, 'oy': oy, 'oz': oz,

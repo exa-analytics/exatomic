@@ -213,7 +213,7 @@ class Output(Editor):
             start = lno + gap + 1
             stop = start + nbas
             # The basis set order is printed with every chunk of eigenvectors
-            if not c: 
+            if not c:
                 mapr = self.basis_set.groupby(['set', 'L']).apply(
                         lambda x: x['shell'].unique()).to_dict()
                 self.basis_set_order = _basis_set_order(self[start:stop], mapr,
@@ -403,7 +403,7 @@ def _basis_set_order(chunk, mapr, sets):
         df['ml'] = df['ml'].astype(np.int64)
     cnts = {key: -1 for key in range(10)}
     pcen, pl, pn, shfns = 0, 0, 1, []
-    for cen, n, l, seht in zip(df['center'], df['N'], df['L'], 
+    for cen, n, l, seht in zip(df['center'], df['N'], df['L'],
                                df['center'].map(sets)):
         if not pcen == cen: cnts = {key: -1 for key in range(10)}
         if (pl != l) or (pn != n) or (pcen != cen): cnts[l] += 1
@@ -590,7 +590,8 @@ class Fchk(Editor):
         nbas = self._intme(found[_reorben])
         ens = np.concatenate([self._dfme(start, nbas, idx=i)
                               for i, start in enumerate(found[_reorben])])
-        self.orbital = Orbital.from_energies(ens, nbas, ae, be)
+        os = nbas != len(ens)
+        self.orbital = Orbital.from_energies(ens, ae, be, os=os)
 
 
     def __init__(self, *args, **kwargs):

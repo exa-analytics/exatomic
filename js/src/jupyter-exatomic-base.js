@@ -101,7 +101,7 @@ var ExatomicSceneView = widgets.DOMWidgetView.extend({
                        "atom": [],
                        "two": []};
         this.app3d = new App3D(this);
-        // this.app3d.init_picker();
+        this.app3d.init_picker();
         this.animation();
     },
 

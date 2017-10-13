@@ -175,8 +175,6 @@ class Orbital(_Convolve):
 
     @classmethod
     def from_energies(cls, energies, alphae, betae, os=False):
-        print("WARNING FROM ORBITAL.FROM_ENERGIES")
-        print("BREAKING API CHANGE -- NO MORE NBAS, ADDED OS KWARG")
         try: ae, be = int(alphae), int(betae)
         except: raise NotImplementedError('Only integer occupation')
         nmos = energies.shape[0] if not os else energies.shape[0] // 2
