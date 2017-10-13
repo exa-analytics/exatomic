@@ -81,6 +81,8 @@ class Atom(DataFrame):
         return self.last_frame.symbol.unique()
 
     def center(self, idx, frame=None):
+        """Return a copy of a single frame of the atom table
+        centered around a specific atom index."""
         if frame is None: frame = self.last_frame.copy()
         else: frame = self[self.frame == frame].copy()
         center = frame.ix[idx]
@@ -150,28 +152,6 @@ class Atom(DataFrame):
         labels = Series([i for nat in nats for i in range(nat)], dtype='category')
         labels.index = self.index
         return labels
-
-    def _custom_traits(self):
-        """
-        Create creates for the atomic size (using the covalent radius) and atom
-        colors (using the common `Jmol`_ color scheme). Note that that data is
-        present in the static data (see :mod:`~exa.relational.isotope`).
-
-        .. _Jmol: http://jmol.sourceforge.net/jscolors/
-        """
-        self._set_categories()
-        kwargs = {}
-        grps = self.cardinal_groupby()
-        symbols = grps.apply(lambda g: g['symbol'].cat.codes.values)    # Pass integers rather than string symbols
-        kwargs['atom_symbols'] = Unicode(symbols.to_json(orient='values')).tag(sync=True)
-        symmap = {i: v for i, v in enumerate(self['symbol'].cat.categories) if v in self.unique_atoms}
-        sym2rad = symbol_to_radius()
-        radii = sym2rad[self['symbol'].unique()]
-        kwargs['atom_radii'] = Dict({i: radii[v] for i, v in symmap.items()}).tag(sync=True)  # (Int) symbol radii
-        sym2col = symbol_to_color()
-        colors = sym2col[self['symbol'].unique()]    # Same thing for colors
-        kwargs['atom_colors'] = Dict({i: colors[v] for i, v in symmap.items()}).tag(sync=True)
-        return kwargs
 
     @classmethod
     def from_small_molecule_data(cls, center=None, ligand=None, distance=None, geometry=None,
