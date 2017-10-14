@@ -149,8 +149,6 @@ def gui_field_widgets(uni=False, test=False):
 ################
 # Base classes #
 ################
-
-
 @register
 class ExatomicScene(DOMWidget):
     """Resizable three.js scene."""
@@ -160,8 +158,8 @@ class ExatomicScene(DOMWidget):
     _model_module = Unicode("jupyter-exatomic").tag(sync=True)
     _model_name = Unicode("ExatomicSceneModel").tag(sync=True)
     _view_name = Unicode("ExatomicSceneView").tag(sync=True)
-    scn_clear = Bool(False).tag(sync=True)
-    scn_saves = Bool(False).tag(sync=True)
+    clear = Bool(False).tag(sync=True)
+    save = Bool(False).tag(sync=True)
     field_pos = Unicode("003399").tag(sync=True)
     field_neg = Unicode("FF9900").tag(sync=True)
     field_iso = Float(2.0).tag(sync=True)
@@ -204,6 +202,32 @@ class ExatomicScene(DOMWidget):
 
 
 @register
+class PickerScene(ExatomicScene):
+    _model_name = Unicode("PickerSceneModel").tag(sync=True)
+    _view_name = Unicode("PickerSceneView").tag(sync=True)
+
+
+@register
+class PromiseScene(ExatomicScene):
+    """Resizable three.js scene."""
+    _model_name = Unicode("PromiseSceneModel").tag(sync=True)
+    _view_name = Unicode("PromiseSceneView").tag(sync=True)
+
+
+@register
+class ThreeAppScene(DOMWidget):
+    """Resizable three.js scene."""
+    _model_module_version = Unicode(__js_version__).tag(sync=True)
+    _model_module_version = Unicode(__js_version__).tag(sync=True)
+    _view_module = Unicode("jupyter-exatomic").tag(sync=True)
+    _model_module = Unicode("jupyter-exatomic").tag(sync=True)
+    _model_name = Unicode("ThreeAppSceneModel").tag(sync=True)
+    _view_name = Unicode("ThreeAppSceneView").tag(sync=True)
+    def __init__(self, *args, **kwargs):
+        lo = Layout(width="400", height="400")
+        super(DOMWidget, self).__init__(*args, layout=lo, **kwargs)
+
+@register
 class ExatomicBox(Box):
     """Base class for containers of a GUI and scene."""
 
@@ -243,9 +267,9 @@ class ExatomicBox(Box):
             saves=Button(icon="camera", description=" Save", layout=gui_lo))
 
         def _clear(b):
-            self.scene.scn_clear = self.scene.scn_clear == False
+            self.scene.clear = self.scene.clear == False
         def _saves(b):
-            self.scene.scn_saves = self.scene.scn_saves == False
+            self.scene.save = self.scene.save == False
 
         self.active_controls['close'].on_click(self._close)
         self.active_controls['clear'].on_click(_clear)
