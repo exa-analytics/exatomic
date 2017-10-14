@@ -48,60 +48,42 @@ var UniverseSceneModel = base.ExatomicSceneModel.extend({
 var UniverseSceneView = base.ExatomicSceneView.extend({
 
     init: function() {
-        // TODO :: Fix Promises so that initialization
-        //         accounts for THREE.js initialization
-        //         and allows for dynamically populating
-        //         the initial scene (atom frame 0).
         base.ExatomicSceneView.prototype.init.apply(this);
         this.app3d.set_camera({"x": 40.0, "y": 40.0, "z": 40.0});
         // Atom
         var that = this;
         var jsonparse = function(string) {
             return new Promise(function(resolve, reject) {
-                try {
-                    var obj = JSON.parse(string);
-                    resolve(obj);
-                } catch(err) {
-                    reject(err);
-                }
+                try {resolve(JSON.parse(string))}
+                catch(e) {reject(e)}
             });
         };
+        var logerror = function(e) {console.log(e.message)};
         var promises = [
             jsonparse(this.model.get("atom_x"))
-                .then(function(p) {that.atom_x = p})
-                .catch(function(e) {console.log(e.message)}),
+                .then(function(p) {that.atom_x = p}).catch(logerror),
             jsonparse(this.model.get("atom_y"))
-                .then(function(p) {that.atom_y = p})
-                .catch(function(e) {console.log(e.message)}),
+                .then(function(p) {that.atom_y = p}).catch(logerror),
             jsonparse(this.model.get("atom_z"))
-                .then(function(p) {that.atom_z = p})
-                .catch(function(e) {console.log(e.message)}),
+                .then(function(p) {that.atom_z = p}).catch(logerror),
             jsonparse(this.model.get("atom_s"))
-                .then(function(p) {that.atom_s = p})
-                .catch(function(e) {console.log(e.message)}),
+                .then(function(p) {that.atom_s = p}).catch(logerror),
             Promise.resolve(this.model.get("atom_r"))
-                .then(function(p) {that.atom_r = p})
-                .catch(function(e) {console.log(e.message)}),
+                .then(function(p) {that.atom_r = p}).catch(logerror),
             Promise.resolve(this.model.get("atom_c"))
-                .then(function(p) {that.atom_c = p})
-                .catch(function(e) {console.log(e.message)}),
+                .then(function(p) {that.atom_c = p}).catch(logerror),
             jsonparse(this.model.get("two_b0"))
-                .then(function(p) {that.two_b0 = p})
-                .catch(function(e) {console.log(e.message)}),
+                .then(function(p) {that.two_b0 = p}).catch(logerror),
             jsonparse(this.model.get("two_b1"))
-                .then(function(p) {that.two_b1 = p})
-                .catch(function(e) {console.log(e.message)}),
+                .then(function(p) {that.two_b1 = p}).catch(logerror),
             Promise.resolve(this.model.get("field_i"))
-                .then(function(p) {that.field_i = p})
-                .catch(function(e) {console.log(e.message)}),
+                .then(function(p) {that.field_i = p}).catch(logerror),
             Promise.resolve(this.model.get("field_p"))
-                .then(function(p) {that.field_p = p})
-                .catch(function(e) {console.log(e.message)}),
+                .then(function(p) {that.field_p = p}).catch(logerror),
             jsonparse(this.model.get("field_v"))
-                .then(function(p) {that.field_v = p})
-                .catch(function(e) {console.log(e.message)})
+                .then(function(p) {that.field_v = p}).catch(logerror)
         ];
-        this.promises = Promise.all(promises); //.then(that.add_atom);
+        this.promises = Promise.all(promises).then(this.add_atom.bind(this));
     },
 
     add_atom: function() {
