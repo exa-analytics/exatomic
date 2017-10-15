@@ -30,16 +30,7 @@ from exatomic.algorithms.orbital import add_molecular_orbitals
 from exatomic.widget import UniverseWidget
 
 
-class Universe(six.with_metaclass(TypedMeta, Container)):
-    """
-    The atomic container is called a universe because it represents everything
-    known about the atomistic simulation (whether quantum or classical). This
-    includes data such as atomic coordinates, molecular orbital energies, as
-    well as (classical phenomena) such as two body distances, etc.
-
-    Attributes:
-        atom (:class:`~exatomic.atom.Atom`): Atomic coordinates, symbols, forces, etc.
-    """
+class Meta(TypedMeta):
     atom = Atom
     frame = Frame
     atom_two = AtomTwo
@@ -59,6 +50,18 @@ class Universe(six.with_metaclass(TypedMeta, Container)):
     contribution = DataFrame
     basis_set_order = BasisSetOrder
     basis_set = BasisSet
+
+
+class Universe(six.with_metaclass(Meta, Container)):
+    """
+    The atomic container is called a universe because it represents everything
+    known about the atomistic simulation (whether quantum or classical). This
+    includes data such as atomic coordinates, molecular orbital energies, as
+    well as (classical phenomena) such as two body distances, etc.
+
+    Attributes:
+        atom (:class:`~exatomic.atom.Atom`): Atomic coordinates, symbols, forces, etc.
+    """
     _cardinal = "frame"
     _getter_prefix = "parse"
 
