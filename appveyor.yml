@@ -53,19 +53,10 @@ install:
   - cmd: conda config --set show_channel_urls true
   - cmd: conda config --set always_yes yes --set changeps1 no
   - cmd: conda update -q -y --all
-<<<<<<< HEAD
-  - cmd: conda install -q -y -c conda-forge numpy scipy matplotlib seaborn networkx pandas nose numba pytables six numexpr ipywidgets psutil
-  # TEMPORARY
-  - cmd: git clone git@github.com:avmarchenko/exa.git
-  - cmd: cd exa
-  - cmd: pip install -e .
-  - cmd: cd ../
-  - cmd: pip install -e .
-=======
   - cmd: git clone https://github.com/exa-analytics/exa.git
   - cmd: cd exa
-  - cmd: git fetch origin pull/139/head:org-master-3.9
-  - cmd: git checkout org-master-3.9
+  - cmd: git fetch origin
+  - cmd: git checkout 0.3.9
   - cmd: conda install -q -y -c conda-forge numpy scipy matplotlib seaborn networkx pandas nose numba pytables six
   - cmd: conda install -q -c conda-forge pytables python-coveralls ply pandoc pypandoc nbsphinx sympy
   - cmd: conda install -q -c conda-forge 'icu=56.*'
@@ -74,13 +65,8 @@ install:
   - cmd: cd ../
   - conda install -q -c conda-forge psutil numexpr nodejs ipywidgets
   - cmd: pip install .
->>>>>>> 1c37655b6be3dca60b2adbeee8ca3767e5477943
 
 build: false
 
 test_script:
-<<<<<<< HEAD
-  - cmd: nosetests
-=======
-    #- cmd: nosetests
->>>>>>> 1c37655b6be3dca60b2adbeee8ca3767e5477943
+ #- cmd: nosetests
