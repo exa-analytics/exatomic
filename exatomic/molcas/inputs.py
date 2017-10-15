@@ -1,12 +1,12 @@
 # -*- coding: utf-8 -*-
-# Copyright (c) 2015-2016, Exa Analytics Development Team
+# Copyright (c) 2015-2017, Exa Analytics Development Team
 # Distributed under the terms of the Apache License 2.0
-'''
+"""
 Input Generator and Parser
 ###############################
-'''
-
+"""
 from .editor import Editor
+
 
 _template = """\
 {seward}
@@ -15,6 +15,7 @@ _template = """\
 
 {postcalc}
 """
+
 
 _seward = """\
 &SEWARD &END
@@ -25,6 +26,7 @@ Title
 End of input
 """
 
+
 _scf = """\
 &SCF &END
 Title
@@ -34,6 +36,7 @@ Charge
 {mult}
 End of input
 """
+
 
 _rasscf = """\
 {rasrestart}
@@ -66,20 +69,23 @@ levshift
 End of input
 """
 
+
 _caspt2 = """\
 &CASPT2 &END
 End of input
 """
+
 
 _rassi = """\
 &RASSI &END
 End of input
 """
 
-class InputGenerator(Editor):
 
+class InputGenerator(Editor):
     def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+        super(InputGenerator, self).__init__(*args, **kwargs)
+
 
 def _handle_basis(basis, atom_types):
     if isinstance(basis, (str, dict)):

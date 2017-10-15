@@ -13,7 +13,7 @@ from exa.math.misc.indexing import starts_counts
 from exa.util.units import Length
 from exa.util.utility import mkp
 from exatomic.core.editor import Editor
-from exatomic.core.Frame import compute_frame_from_atom
+from exatomic.core.frame import compute_frame_from_atom
 
 
 class XYZ(Editor):

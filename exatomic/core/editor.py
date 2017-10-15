@@ -10,8 +10,8 @@ found file formats directly into :class:`~exatomic.container.Universe` objects.
 import six
 from exa import Editor as _Editor
 from exa import TypedMeta
-from exatomic.core.universe import Universe
-from exatomic.core.frame import compute_frame_from_atom
+from .universe import Universe
+from .frame import compute_frame_from_atom
 
 
 class Editor(six.with_metaclass(TypedMeta, _Editor)):

@@ -1,13 +1,9 @@
 # -*- coding: utf-8 -*-
-# Copyright (c) 2015-2016, Exa Analytics Development Team
+# Copyright (c) 2015-2017, Exa Analytics Development Team
 # Distributed under the terms of the Apache License 2.0
-
-try:
-    from exa.test.tester import UnitTester
-except:
-    from exa.tester import UnitTester
+from unittest import TestCase
 from exatomic.molcas.inputs import InputGenerator
 
-class TestInput(UnitTester):
+class TestInput(TestCase):
     """Tests the Molcas input editor class."""
     pass

@@ -12,6 +12,7 @@ import pandas as pd
 from exa import DataFrame
 from numba import jit
 
+
 @jit(nopython=True, cache=True)
 def _symmetric_from_square(square):
     ndim = len(square)

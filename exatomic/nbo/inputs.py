@@ -1,25 +1,22 @@
 # -*- coding: utf-8 -*-
-# Copyright (c) 2015-2016, Exa Analytics Development Team
+# Copyright (c) 2015-2017, Exa Analytics Development Team
 # Distributed under the terms of the Apache License 2.0
 """
 exnbo Input Generator and Parser
-===================================
+###################################
 """
-
 import numpy as np
 import pandas as pd
-
-from exa.relational.isotope import symbol_to_z
-symbol_to_Z = symbol_to_z()
-
 from exatomic import __version__
 from .editor import Editor
-from exatomic.orbital import DensityMatrix
-from exatomic.basis import (solid_harmonics, lorder,
-                            cart_lml_count, spher_lml_count)
+from exatomic.core.orbital import DensityMatrix
+from exatomic.core.basis import (solid_harmonics, lorder,
+                                 cart_lml_count, spher_lml_count)
 from itertools import combinations_with_replacement as cwr
 
+
 _exaver = 'exatomic.v' + __version__
+
 
 _header = """\
 $GENNBO NATOMS={nat}    NBAS={nbas}  UPPER  BODM BOHR $END
@@ -42,6 +39,7 @@ $CONTRACT
 {coeffs}
 $END"""
 
+
 _matrices = """
 $OVERLAP
 {overlap}
@@ -49,6 +47,7 @@ $END
 $DENSITY
 {density}
 $END"""
+
 
 def _nbo_labels():
     """Generate data frames of L, (ml | l, m, n), NBO label."""

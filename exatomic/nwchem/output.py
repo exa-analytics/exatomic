@@ -11,11 +11,11 @@ from os import sep, path
 import numpy as np
 import pandas as pd
 from io import StringIO
-from exatomic import Length
-from exatomic.atom import Atom
-from exatomic.frame import compute_frame_from_atom
-from exatomic.basis import BasisSet, lmap
-from exatomic.orbital import Orbital, MOMatrix
+from exa.util.units import Length
+from exatomic import Atom
+from exatomic.core.frame import compute_frame_from_atom
+from exatomic.core.basis import BasisSet, lmap
+from exatomic.core.orbital import Orbital, MOMatrix
 from .editor import Editor
 from .basis import cartesian_ordering_function, spherical_ordering_function
 

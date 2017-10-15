@@ -1,23 +1,20 @@
 # -*- coding: utf-8 -*-
-## Copyright (c) 2015-2016, Exa Analytics Development Team
+## Copyright (c) 2015-2017, Exa Analytics Development Team
 ## Distributed under the terms of the Apache License 2.0
 """
 Tests for :mod:`~exatomic.filetypes.cube`
 #################################
 """
-try:
-    from exa.test.tester import UnitTester
-except:
-    from exa.tester import UnitTester
-
+from unittest import TestCase
 import os
 from exatomic import Universe
-from exatomic.atom import Atom
-from exatomic.field import AtomicField
-from exatomic.filetypes.cube import Cube
+from exatomic.core.atom import Atom
+from exatomic.core.field import AtomicField
+from exatomic.interfaces.cube import Cube
 from exatomic.gaussian import Output
 
-class TestCube(UnitTester):
+
+class TestCube(TestCase):
     """Tests cube reading and writing."""
 
     def setUp(self):

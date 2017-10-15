@@ -29,7 +29,7 @@ Building the docs requires [sphinx](http://www.sphinx-doc.org/en/stable).
 [![Coveralls](https://coveralls.io/repos/github/exa-analytics/exatomic/badge.svg)](https://coveralls.io/github/exa-analytics/exatomic)
 [![Codacy Badge](https://api.codacy.com/project/badge/Grade/ac0112a9a8b9496e8b74f0ab618386ce)](https://www.codacy.com/app/alexvmarch/exatomic?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=avmarchenko/exatomic&amp;utm_campaign=Badge_Grade)
 
-For a development ready installation:
+For a development ready installation (requires node package manager):
 
     $ git clone https://github.com/exa-analytics/exatomic.git
     $ cd exatomic/js

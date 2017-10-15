@@ -5,4 +5,6 @@ from . import error
 from .atom import Atom, UnitAtom, ProjectedAtom, VisualAtom, Frequency
 from .basis import BasisSet, BasisSetOrder, Overlap, Primitive
 from .field import AtomicField
+from .frame import Frame
 from .universe import Universe
+from .editor import Editor

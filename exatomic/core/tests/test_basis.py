@@ -1,17 +1,12 @@
 # -*- coding: utf-8 -*-
 # Copyright (c) 2015-2017, Exa Analytics Development Team
 # Distributed under the terms of the Apache License 2.0
-
-try:
-    from exa.test.tester import UnitTester
-except:
-    from exa.tester import UnitTester
-
+from unittest import TestCase
 import pandas as pd
-from exatomic.basis import (BasisSet, BasisSetOrder, Overlap, Primitive,
+from exatomic.core.basis import (BasisSet, BasisSetOrder, Overlap, Primitive,
                             spher_lml_count, cart_lml_count)
 
-class TestBasisSet(UnitTester):
+class TestBasisSet(TestCase):
 
     def setUp(self):
         adict = {col: [0] for col in BasisSet._columns}
@@ -85,14 +80,3 @@ class TestBasisSet(UnitTester):
         self.assertTrue(
             (self.lbs.primitives(spher_lml_count) == pd.Series({
             0: 14, 1: 5})).all())
-
-
-
-class TestBasisSetOrder(UnitTester):
-    pass
-
-class TestOverlap(UnitTester):
-    pass
-
-class TestPrimitive(UnitTester):
-    pass

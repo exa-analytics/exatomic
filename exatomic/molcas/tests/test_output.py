@@ -1,19 +1,15 @@
 # -*- coding: utf-8 -*-
-# Copyright (c) 2015-2016, Exa Analytics Development Team
+# Copyright (c) 2015-2017, Exa Analytics Development Team
 # Distributed under the terms of the Apache License 2.0
-
 import os
 import numpy as np
 import pandas as pd
-try:
-    from exa.test.tester import UnitTester
-except:
-    from exa.tester import UnitTester
+from unittest import TestCase
 from exatomic import Universe
 from exatomic.molcas.output import Output, Orb
 
 
-class TestOutput(UnitTester):
+class TestOutput(TestCase):
     """Test the Molcas output file editor."""
 
     def setUp(self):
@@ -68,7 +64,7 @@ class TestOutput(UnitTester):
         self.assertIs(type(uni), Universe)
 
 
-class TestOrb(UnitTester):
+class TestOrb(TestCase):
     """Test the Molcas Orb file parser."""
 
     def setUp(self):

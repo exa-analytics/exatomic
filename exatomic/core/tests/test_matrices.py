@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# Copyright (c) 2015-2016, Exa Analytics Development Team
+# Copyright (c) 2015-2017, Exa Analytics Development Team
 # Distributed under the terms of the Apache License 2.0
 """
 Matrix Tests
@@ -7,14 +7,14 @@ Matrix Tests
 Testing for Matrix base classes and numba funcs.
 """
 import numpy as np
-from exa.test import UnitTester
-from exatomic.matrices import (_symmetric_from_square,
-                               _symmetric_to_square,
-                               _square_from_square,
-                               _square_to_square)
+from unittest import TestCase
+from exatomic.core.matrices import (_symmetric_from_square,
+                                    _symmetric_to_square,
+                                    _square_from_square,
+                                    _square_to_square)
 
 
-class TestNumbaFuncs(UnitTester):
+class TestNumbaFuncs(TestCase):
     """Test the numba functions for the correct indexing and reshaping."""
     def setUp(self):
         self.tidx0 = np.array([0, 1, 1, 2, 2, 2])

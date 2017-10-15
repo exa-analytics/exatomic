@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# Copyright (c) 2015-2016, Exa Analytics Development Team
+# Copyright (c) 2015-2017, Exa Analytics Development Team
 # Distributed under the terms of the Apache License 2.0
 """
 Gaussian Output Editor
@@ -10,20 +10,17 @@ import re
 import numpy as np
 import pandas as pd
 from io import StringIO
-
-from exatomic import Length
+from exa.util.units import Length, Energy
 from .editor import Editor
-from exa.relational.isotope import z_to_symbol
-from exatomic import Energy
-from exatomic.frame import compute_frame_from_atom
-from exatomic.basis import BasisSet
-from exatomic.orbital import Orbital
+from exatomic.base import z2sym
+from exatomic.core.frame import compute_frame_from_atom
+from exatomic.core.basis import BasisSet
+from exatomic.core.orbital import Orbital
 from exatomic.algorithms.basis import lmap, lorder
-
-z_to_symbol = z_to_symbol()
-
 from numba import jit, int64
-@jit(nopython=True, cache=True)
+
+
+@jit(nopython=True, nogil=True, cache=True)
 def _triangular_indices(ncol, nbas):
     dim = nbas * (nbas + 1) // 2
     idx = np.empty((dim, 3), dtype=np.int64)
@@ -36,6 +33,7 @@ def _triangular_indices(ncol, nbas):
                 idx[cnt,2] = 0
                 cnt += 1
     return idx
+
 
 class Output(Editor):
 
@@ -93,7 +91,7 @@ class Output(Editor):
         atom['y'] *= Length['A', 'au']
         atom['z'] *= Length['A', 'au']
         # Map atomic symbols onto Z numbers
-        atom['symbol'] = atom['Z'].map(z_to_symbol)
+        atom['symbol'] = atom['Z'].map(z2sym)
         self.atom = atom
 
     def parse_basis_set(self):
@@ -346,7 +344,7 @@ class Output(Editor):
             stacked = pd.DataFrame.from_dict({'Z': zs, 'label': labels,
                                     'dx': dx, 'dy': dy, 'dz': dz,
                                     'frequency': freqs, 'freqdx': freqdxs})
-            stacked['symbol'] = stacked['Z'].map(z_to_symbol)
+            stacked['symbol'] = stacked['Z'].map(z2sym)
             dfs.append(stacked)
         # Now put all our frequencies together
         frequency = pd.concat(dfs).reset_index(drop=True)
@@ -375,7 +373,7 @@ class Output(Editor):
 
 
     def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+        super(Output, self).__init__(*args, **kwargs)
 
 
 
@@ -473,7 +471,7 @@ class Fchk(Editor):
         # Atom identifiers
         znums = self._dfme(found[_reznum], nat)
         # Atomic symbols
-        symbols = list(map(lambda x: z_to_symbol[x], znums))
+        symbols = list(map(lambda x: z2sym[x], znums))
         # Z effective if ECPs are used
         zeffs = self._dfme(found[_rezeff], nat).astype(np.int64)
         # Atomic positions

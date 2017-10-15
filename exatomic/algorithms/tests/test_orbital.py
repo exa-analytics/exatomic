@@ -6,13 +6,12 @@ Tests for building molecular orbitals
 """
 import numpy as np
 import pandas as pd
-
-from exa.test import UnitTester
+from unittest import TestCase
 from exatomic.algorithms.basis import clean_sh, solid_harmonics
 from exatomic.algorithms.orbital import (make_fps, _atompos, _sphr_prefac,
                                          _cart_prefac, gen_basfn)
 
-class Testatompos(UnitTester):
+class Testatompos(TestCase):
     def setUp(self):
         self.zeros = _atompos(0,  0, 0)
         self.nonzs = _atompos(1, -2, 3)
@@ -37,7 +36,7 @@ class Testatompos(UnitTester):
         self.assertEqual(self.precs['r2'], '((x-1.)**2+(y+2.1111)**2+(z-3.)**2)')
 
 
-class TestMakeFps(UnitTester):
+class TestMakeFps(TestCase):
     def setUp(self):
         self.min = make_fps(-8, 8, 50)
         self.all = make_fps(-8, 8, 50, nrfps=5,
@@ -81,7 +80,7 @@ class TestMakeFps(UnitTester):
         self.assertEqual(self.all.dzj[0], 0)
 
 
-class TestCleanSH(UnitTester):
+class TestCleanSH(TestCase):
     def setUp(self):
         self.sh = clean_sh(solid_harmonics(3))
 
@@ -96,7 +95,7 @@ class TestCleanSH(UnitTester):
         self.assertEqual(self.sh[(3, -2)], ['3.87298334620742*{x}*{y}*{z}*'])
 
 
-class TestSphrPrefac(UnitTester):
+class TestSphrPrefac(TestCase):
     def setUp(self):
         self.csh = clean_sh(solid_harmonics(3))
         self.nuc = _atompos(0, 0.5, 0)
@@ -112,7 +111,7 @@ class TestSphrPrefac(UnitTester):
         self.assertEqual(_sphr_prefac(self.nuc, self.csh, 3, -2), ['3.87298334620742*x*(y-0.5)*z*'])
 
 
-class TestCartPrefac(UnitTester):
+class TestCartPrefac(TestCase):
     def setUp(self):
         self.org = _atompos(0, 0, 0)
         self.nor = _atompos(0.5,0.5,0.5)
@@ -136,7 +135,7 @@ class TestCartPrefac(UnitTester):
         self.assertEqual(_cart_prefac(self.nor, '1.0', 2, 1, 1, 0,), ['1.0*(x-0.5)*(y-0.5)*'])
 
 
-class TestGenBsfn(UnitTester):
+class TestGenBsfn(TestCase):
     def setUp(self):
         self.uncontdf = pd.DataFrame.from_dict({'N': [1], 'd': [1], 'alpha': [1]})
         self.contdf = pd.DataFrame.from_dict({'N': [1, 2], 'd': [1, 2], 'alpha': [1, 2]})

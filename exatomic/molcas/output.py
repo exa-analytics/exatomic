@@ -1,11 +1,11 @@
 # -*- coding: utf-8 -*-
 # Copyright (c) 2015-2017, Exa Analytics Development Team
 # Distributed under the terms of the Apache License 2.0
-'''
+"""
 Molcas Output Parser
 #####################
 Multiple frames are not currently supported
-'''
+"""
 import os
 import pandas as pd
 import numpy as np
@@ -13,14 +13,12 @@ from io import StringIO
 
 from .editor import Editor
 
-from exatomic.basis import Overlap, lmap, rlmap, spher_lml_count
-from exatomic.orbital import DensityMatrix
-from exa.relational.isotope import symbol_to_z
+from exatomic.core.basis import Overlap, lmap, rlmap, spher_lml_count
+from exatomic.core.orbital import DensityMatrix
+from exatomic.base import sym2z
 
-symbol_to_z = symbol_to_z()
 
 class Orb(Editor):
-
     def to_universe(self):
         raise NotImplementedError("No atom information given. " \
                                   "Attach these attributes to a universe.")
@@ -105,7 +103,7 @@ _re_ens = 'ONE ELECTRON ENERGIES'
 class Output(Editor):
 
     def parse_atom(self):
-        '''Parses the atom list generated in SEWARD.'''
+        """Parses the atom list generated in SEWARD."""
         start = stop = self.find(_re_atom, keys_only=True)[0] + 8
         while self[stop].split(): stop += 1
         # Sometimes prints an '--' after the atoms..
@@ -114,15 +112,15 @@ class Output(Editor):
         atom = self.pandas_dataframe(start, stop, columns).drop([5, 6, 7], axis=1)
         atom['symbol'] = atom['tag'].str.extract('([A-z]{1,})([0-9]*)',
                                                  expand=False)[0].str.lower().str.title()
-        atom['Z'] = atom['symbol'].map(symbol_to_z).astype(np.int64)
+        atom['Z'] = atom['symbol'].map(sym2z).astype(np.int64)
         atom['label'] -= 1
         atom['frame'] = 0
         self.atom = atom
 
     def parse_basis_set_order(self):
-        '''
+        """
         Parses the shell ordering scheme if BSSHOW specified in SEWARD.
-        '''
+        """
         start = stop = self.find(_re_bas_order, keys_only=True)[0] + 1
         while self[stop].strip(): stop += 1
         df = self.pandas_dataframe(start, stop, ['idx', 'tag', 'type', 'center'])
@@ -156,9 +154,9 @@ class Output(Editor):
 
 
     def parse_basis_set(self):
-        '''
+        """
         Parses the primitive exponents, coefficients and shell if BSSHOW specified in SEWARD.
-        '''
+        """
         found = self.find(_re_bas_0, _re_bas_1, _re_bas_2, keys_only=True)
         bmaps = [i + 1 for i in found[_re_bas_0]]
         atoms = [i + 2 for i in found[_re_bas_1]]

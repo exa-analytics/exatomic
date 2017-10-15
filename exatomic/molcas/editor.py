@@ -1,14 +1,14 @@
 # -*- coding: utf-8 -*-
 # Copyright (c) 2015-2017, Exa Analytics Development Team
 # Distributed under the terms of the Apache License 2.0
-'''
+"""
 Base Molcas Editor
 ##################
-'''
+"""
 from exatomic import Editor as AtomicEditor
 
-class Editor(AtomicEditor):
 
+class Editor(AtomicEditor):
     _to_universe = AtomicEditor.to_universe
 
     def to_universe(self, *args, **kwargs):
