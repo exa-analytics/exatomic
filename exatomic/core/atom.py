@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# Copyright (c) 2015-2016, Exa Analytics Development Team
+# Copyright (c) 2015-2017, Exa Analytics Development Team
 # Distributed under the terms of the Apache License 2.0
 """
 Atomic Position Data
@@ -10,20 +10,8 @@ forces, velocities, symbols, etc. (all data associated with atoms as points).
 from numbers import Integral
 import numpy as np
 import pandas as pd
-from traitlets import Dict, Unicode
-try:
-    from exa.core.numerical import DataFrame, SparseDataFrame, Series
-    from exa.cms.isotope import (symbol_to_color, symbol_to_radius, symbol_to_znum,
-                                    symbol_to_mass)
-except ImportError:
-    from exa.numerical import DataFrame, SparseDataFrame, Series
-    from exa.relational.isotope import (symbol_to_color, symbol_to_radius,
-                                        symbol_to_z, symbol_to_element_mass)
-    symbol_to_znum = symbol_to_z
-    symbol_to_mass = symbol_to_element_mass
-from exatomic import Length
-from exatomic.error import PeriodicUniverseError
-#from exatomic.algorithms.distance import minimal_image_counts
+from exa import DataFrame, SparseDataFrame, Series
+from exa.base import sym2z, sym2mass
 from exatomic.algorithms.geometry import make_small_molecule
 
 
@@ -117,7 +105,7 @@ class Atom(DataFrame):
         df = self[self['frame'].isin(frame)].copy()
         if tag not in df.columns:
             if tag == 'Z':
-                stoz = symbol_to_z()
+                stoz = sym2z()
                 df[tag] = df['symbol'].map(stoz)
         df['x'] *= Length['au', units]
         df['y'] *= Length['au', units]
@@ -138,8 +126,7 @@ class Atom(DataFrame):
 
     def get_element_masses(self):
         """Compute and return element masses from symbols."""
-        elem_mass = symbol_to_element_mass()
-        return self['symbol'].astype('O').map(elem_mass)
+        return self['symbol'].astype('O').map(sym2mass)
 
     def get_atom_labels(self):
         """

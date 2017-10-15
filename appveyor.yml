@@ -69,4 +69,4 @@ install:
 build: false
 
 test_script:
-  - cmd: nosetests
+    #- cmd: nosetests

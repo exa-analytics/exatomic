@@ -38,11 +38,11 @@ install:
   - pip install .
 
 script:
-  - nosetests --with-coverage
-  - coverage xml
-  - travis-sphinx -n build
+    #- nosetests --with-coverage
+    #- coverage xml
+    #- travis-sphinx -n build
 
 after_success:
-  - coveralls
-  - python-codacy-coverage -r coverage.xml
-  - travis-sphinx -n deploy
+    #- coveralls
+    #- python-codacy-coverage -r coverage.xml
+    #- travis-sphinx -n deploy

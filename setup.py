@@ -39,7 +39,7 @@ with open("requirements.txt") as f:
 with open(os.path.join(here, "exatomic", "_version.py")) as f:
     v = f.readlines()[-2]
     v = v.split('=')[1].strip()[1:-1]
-    version = '.'.join(v.replace(" ", "").split(","))
+    version = ".".join(v.replace(" ", "").split(","))
 
 
 def js_prerelease(command, strict=False):
