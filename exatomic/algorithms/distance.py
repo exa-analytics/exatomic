@@ -13,9 +13,8 @@ Warning:
 .. _numba: http://numba.pydata.org/
 """
 import numpy as np
-from exa._config import config
-#from exa.math.misc.repeat import repeat_counts_f8_2d
-#from exa.math.vector.cartesian import magnitude_xyz
+from exa.math.misc.repeat import repeat_counts_f8_2d
+from exa.math.vector.cartesian import magnitude_xyz
 
 
 def minimal_image(xyz, rxyz, oxyz):
@@ -139,14 +138,3 @@ def _compute(cx, cy, cz, rx, ry, rz, ox, oy, oz):
         dz[h] = pz[hh]
         h += 1
     return dx, dy, dz
-
-
-if config['dynamic']['numba'] == 'true':
-    from numba import jit, vectorize
-    #from exa.math.vector.cartesian import magnitude_xyz
-    types3 = ['int32(int32, int32, int32)', 'int64(int64, int64, int64)',
-             'float32(float32, float32, float32)', 'float64(float64, float64, float64)']
-    #minimal_image_counts = jit(nopython=True, cache=True, nogil=True)(minimal_image_counts)
-    minimal_image = vectorize(types3, nopython=True)(minimal_image)
-    periodic_pdist_euc_dxyz_idx = jit(nopython=True, cache=True, nogil=True)(periodic_pdist_euc_dxyz_idx)
-    _compute = jit(nopython=True, cache=True, nogil=True)(_compute)

@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# Copyright (c) 2015-2016, Exa Analytics Development Team
+# Copyright (c) 2015-2017, Exa Analytics Development Team
 # Distributed under the terms of the Apache License 2.0
 """
 Delocalization
@@ -15,7 +15,8 @@ import numpy as np
 import pandas as pd
 import seaborn as sns
 from exa.mpl import _gen_figure
-from exatomic import Energy, gaussian, nwchem
+from exa.util.units import Energy
+from exatomic import gaussian, nwchem
 from exatomic.mpl import plot_j2_surface, plot_j2_contour
 
 sns.mpl.pyplot.rcParams.update({'text.usetex': True,
@@ -26,7 +27,7 @@ sns.mpl.pyplot.rcParams.update({'text.usetex': True,
 
 
 def plot_energy(curv, color=None, title='', figsize=(21,5),
-                nylabel=3, fontsize=24):
+                nylabel=3, nxlabel=5, fontsize=24):
     """
     Accepts the output of compute_curvature or combine_curvature and
     returns a figure with appropriate styling.
@@ -74,11 +75,9 @@ def combine_curvature(curvs, order=None):
     else:
         reordered = curvs
     for i, curv in enumerate(reordered):
-        if i > 0:
-            try:
-                reordered[i].drop('n', axis=1, inplace=True)
-            except ValueError:
-                pass
+        if not i: continue
+        try: reordered[i].drop('n', axis=1, inplace=True)
+        except ValueError: pass
     return pd.concat(reordered, axis=1)
 
 
@@ -206,7 +205,6 @@ def functional_results(adir, code='gaussian', ip=False,
         except:
             print(comp, func, 'not computed')
     return curvs
-
 
 
 def tuning_results(adir, code='gaussian', ip=False, ea=False,

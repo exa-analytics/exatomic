@@ -1,21 +1,15 @@
-# -*- coding: utf-8 -*-
-#'''
+## -*- coding: utf-8 -*-
+#"""
 #Cell Packing Utilities
-#========================
-#'''
-#from exa.relational import Mass, Length
-#
-#
-#def cubic_cell_dimension(mass, density):
-#    '''
+########################
+#"""
+#def cubic_cell_volume(mass, density):
+#    """
 #    Args:
 #        mass (float): Total mass of all atoms (in atomic units)
 #        density (float): Desired density (in g/cm^3)
 #
 #    Returns:
 #        a (float): Cubic unit cell dimension (in atomic units)
-#    '''
-#    mass *= Mass['u', 'g']
-#    density /= Length['cm', 'au']**3    # Volume is in the denominator
-#    return (mass / density)**(1/3)
-#
+#    """
+#    return mass*1.66054/density

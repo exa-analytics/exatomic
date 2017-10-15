@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# Copyright (c) 2015-2016, Exa Analytics Development Team
+# Copyright (c) 2015-2017, Exa Analytics Development Team
 # Distributed under the terms of the Apache License 2.0
 """
 Numerical Orbital Functions
@@ -19,12 +19,10 @@ from collections import OrderedDict
 
 # Local
 from exa import Series
-from exatomic._config import config
-from exatomic.field import AtomicField
-from exa.relational.isotope import symbol_to_z
+from exatomic.core.field import AtomicField
+from exatomic.base import sym2z
 from exatomic.algorithms.basis import solid_harmonics, clean_sh
 
-symbol_to_z = symbol_to_z()
 halfmem = virtual_memory().total / 2
 solhar = clean_sh(solid_harmonics(6))
 
@@ -138,7 +136,11 @@ def make_fps(rmin=None, rmax=None, nr=None, nrfps=1,
         fps (pd.Series): field parameters
     """
     if any((par is None for par in [rmin, rmax, nr])):
-        if all((par is None for par in (ox, dxi, dxj, dxk))):
+        if all((par is not None for par in (xmin, xmax, nx,
+                                            ymin, ymax, ny,
+                                            zmin, zmax, nz))):
+            pass
+        elif all((par is None for par in (ox, dxi, dxj, dxk))):
             raise Exception("Must supply at least rmin, rmax, nr or field"
                             " parameters as specified by a cube file.")
     d = {}
@@ -257,9 +259,9 @@ def gen_basfns(uni, frame=None):
     """
     frame = uni.atom.nframes - 1 if frame is None else frame
     # Group the dataframes appropriately
-    sets = uni.basis_set.cardinal_groupby().get_group(frame).groupby('set')
-    funcs = uni.basis_set_order.cardinal_groupby().get_group(frame).groupby('center')
-    atom = uni.atom.cardinal_groupby().get_group(frame)
+    sets = uni.basis_set.groupby('frame').get_group(frame).groupby('set')
+    funcs = uni.basis_set_order.groupby('frame').get_group(frame).groupby('center')
+    atom = uni.atom.groupby('frame').get_group(frame)
     # Set some variables based on basis set info
     larg = {'sh': None, 'pre': None}
     if uni.basis_set.spherical:
@@ -288,6 +290,7 @@ def gen_basfns(uni, frame=None):
     else: exkey = 'r2'
     # Iterate over atomic positions
     basfns = []
+    print(ordrcols)
     for i, (seht, x, y, z) in enumerate(zip(atom['set'], atom['x'],
                                             atom['y'], atom['z'])):
         # Dict of strings of atomic position
@@ -372,7 +375,7 @@ def _determine_vector(uni, vector):
         elif hasattr(uni.atom, 'Z'):
             homo = uni.atom['Z'].sum() // 2
         else:
-            uni.atom['Z'] = uni.atom['symbol'].map(symbol_to_z)
+            uni.atom['Z'] = uni.atom['symbol'].map(sym2z)
             homo = uni.atom['Z'].sum() // 2
         if homo < 15: return range(0, homo + 15)
         else: return range(homo - 15, homo + 5)
@@ -399,9 +402,10 @@ def add_molecular_orbitals(uni, field_params=None, mocoefs=None,
        If inplace is True, removes any fields previously attached to the universe
     """
     # Preliminary assignment and array dimensions
+    frame = uni.atom.nframes - 1
     vector = _determine_vector(uni, vector)
     if mocoefs is None: mocoefs = 'coef'
-    elif mocoefs not in uni.momatrix.columns:
+    if mocoefs not in uni.momatrix.columns:
         print('mocoefs {} is not in uni.momatrix'.format(mocoefs))
         return
     fld_ps = _determine_field_params(uni, field_params, len(vector))
@@ -411,37 +415,40 @@ def add_molecular_orbitals(uni, field_params=None, mocoefs=None,
     nvec = len(vector)
     npts = len(x)
 
+    print('Warning: not extensively validated. Consider adding tests.')
     # Build the strings corresponding to basis functions
-    print('Warning: not extensively tested. Please be careful.')
-    basfns = gen_basfns(uni, frame=frame)
+    # basfns is frame dependent but takes a few seconds to generate,
+    # so cache a frame's basis functions with a dict of key {frame: basfns} value
+    print('frame', frame)
+    if hasattr(uni, 'basfns'):
+        if frame in uni.basfns: pass
+        else: uni.basfns[frame] = gen_basfns(uni, frame=frame)
+    else: uni.basfns = {frame: gen_basfns(uni, frame=frame)}
     orbs = uni.momatrix.groupby('orbital')
 
+    t1 = datetime.now()
     # Evaluate basis functions one time and store all in a single
     # large numpy array which is much more efficient but can require
     # a lot of memory if the resolution of the field is very fine
     if (norb * npts * 8) < halfmem:
-        t1 = datetime.now()
-        print('Evaluating basis functions once.')
+        print('Evaluating {} basis functions once.'.format(nbas))
         fields = np.empty((npts, nvec), dtype=np.float64)
         vals = np.empty((npts, nbas), dtype=np.float64)
-        for i, bas in enumerate(basfns): vals[:,i] = ne.evaluate(bas)
+        for i, bas in enumerate(uni.basfns[frame]): vals[:,i] = ne.evaluate(bas)
         for i, vec in enumerate(vector):
-            fields[:,i] = (vals * orbs.get_group(vec).coef.values).sum(axis=1)
-        t2 = datetime.now()
-        print('Timing: compute MOs - {:.2f}s'.format((t2-t1).total_seconds()))
+            fields[:,i] = (vals * orbs.get_group(vec)[mocoefs].values).sum(axis=1)
     # If the resolution of fields will be memory intensive, evaluate
     # each basis function on the fly per MO which saves a large
     # np.array in memory but is redundant and less efficient
     else:
-        t1 = datetime.now()
-        print('Evaluating basis functions per MO.')
+        print('Evaluating {} basis functions {} times (slow).'.format(nbas, nvec))
         fields = np.zeros((npts, nvec), dtype=np.float64)
         for i, vec in enumerate(vector):
-            c = orbs.get_group(vec).coef.values
-            for j, bas in enumerate(basfns):
+            c = orbs.get_group(vec)[mocoefs].values
+            for j, bas in enumerate(uni.basfns[frame]):
                 fields[:,i] += c[j] * ne.evaluate(bas)
-        t2 = datetime.now()
-        print('Timing: compute MOs - {:.2f}s'.format((t2-t1).total_seconds()))
+    t2 = datetime.now()
+    print('Timing: compute MOs - {:.2f}s'.format((t2-t1).total_seconds()))
 
     field = AtomicField(fld_ps, field_values=[fields[:,i] for i in range(nvec)])
     if not inplace: return field

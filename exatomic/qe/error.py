@@ -5,8 +5,8 @@
 Errors, Exceptions, and Warnings for QE
 ##########################################
 """
-from exatomic.error import AtomicException
-
-
-class QEException(AtomicException):
-    pass
+#from exatomic.error import AtomicException
+#
+#
+#class QEException(AtomicException):
+#    pass
