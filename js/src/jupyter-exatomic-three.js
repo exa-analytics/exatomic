@@ -98,9 +98,18 @@ class ThreeApp {
                 that.controls.addEventListener("change",
                     that.render.bind(that));
             }).then(this.init_mesh.bind(this))
-            .then(function(o) {that.scene.add(o)})
-            .then(this.animate.bind(this))
+            .then(function(o) {
+                console.log("Mesh initialized");
+                console.log(o.name);
+                o.name = "THINGS";
+                console.log(o.name);
+                that.scene.add(o);
+            })
         return Promise.resolve(promises);
+    };
+
+    finalize(promise) {
+        return promise.then(this.animate.bind(this));
     };
 
     set_dims() {
@@ -127,11 +136,7 @@ class PickerApp extends ThreeApp {
         return Promise.resolve(mouse);
     };
 
-    cast_rays() {
-    };
-
     init_promise() {
-        console.log(this);
         var that = this;
         this.INTERSECTED = null;
         var promises = super.init_promise();
@@ -171,8 +176,7 @@ class PickerApp extends ThreeApp {
                         that.INTERSECTED = null;
                     };
               }, false)
-            });
-            // .then(this.cast_rays.bind(this))
+            })
         return Promise.resolve(promises);
     };
 
@@ -180,213 +184,170 @@ class PickerApp extends ThreeApp {
         super(view);
     };
 
-    //     this.view = view;
-    //
-    //     this.radius = 500;
-    //     this.theta = 0;
-    //     this.frustumSize = 1000;
-    //     // var w = this.view.model.get("layout").get("width");
-    //     // var h = this.view.model.get("layout").get("height");
-    //     var w = window.innerWidth;
-    //     var h = window.innerHeight;
-    //     var aspect = w / h;
-    //     this.view.camera = new THREE.OrthographicCamera(-this.frustumSize * aspect / 2,
-    //                                                      this.frustumSize * aspect / 2,
-    //                                                      this.frustumSize / 2,
-    //                                                     -this.frustumSize / 2, 1,
-    //                                                      this.frustumSize);
-    //
-    //     this.view.scene = new THREE.Scene();
-    //     this.view.scene.background = new THREE.Color(0xf0f0f0);
-    //     var light = new THREE.DirectionalLight(0xffffff, 1);
-    //     light.position.set(1, 1, 1).normalize();
-    //     this.view.scene.add(light);
-    //
-    //     var geometry = new THREE.BoxBufferGeometry(20, 20, 20);
-    //
-    //     for (var i=0; i < 2000; i++) {
-    //         var obj = new THREE.Mesh(geometry, new THREE.MeshLambertMaterial({color: Math.random() * 0xffffff}));
-    //
-    //         obj.position.x = Math.random() * 800 - 400;
-    //         obj.position.y = Math.random() * 800 - 400;
-    //         obj.position.z = Math.random() * 800 - 400;
-    //
-    //         obj.rotation.x = Math.random() * 2 * Math.PI;
-    //         obj.rotation.y = Math.random() * 2 * Math.PI;
-    //         obj.rotation.z = Math.random() * 2 * Math.PI;
-    //
-    //         obj.scale.x = Math.random() + 0.5;
-    //         obj.scale.y = Math.random() + 0.5;
-    //         obj.scale.z = Math.random() + 0.5;
-    //
-    //         this.view.scene.add(obj);
-    //
-    //     };
-    //     // var geom = new THREE.IcosahedronGeometry(2, 1);
-    //     // var mat = new THREE.MeshBasicMaterial({color: 0x000000,
-    //     //                                        wireframe: true});
-    //     // var mesh = new THREE.Mesh(geom, mat);
-    //     // this.view.scene.add(mesh);
-    //
-    //     this.view.renderer = new THREE.WebGLRenderer({
-    //         antialias: true,
-    //         alpha: true
-    //     });
-    //     this.view.renderer.setPixelRatio(window.devicePixelRatio);
-    //     this.view.renderer.setSize(w, h);
-    //     this.view.el.appendChild(this.view.renderer.domElement);
-    //
-    //     this.ray = new THREE.Raycaster();
-    //     this.mouse = new THREE.Vector2();
-    //     this.INTERSECTED = null;
-    //
-    //     document.addEventListener('mousemove', onDocumentMouseMove, false);
-    //     window.addEventListener('resize', onWindowResize, false);
-    //     var that = this;
-    //     var onWindowResize = function() {
-    //         var aspect = window.innerWidth / window.innerHeight;
-    //         that.view.camera.left   = -this.frustumSize * aspect / 2;
-    //         that.view.camera.right  =  this.frustumSize * aspect / 2;
-    //         that.view.camera.top    =  this.frustumSize * aspect / 2;
-    //         that.view.camera.bottom = -this.frustumSize * aspect / 2;
-    //         that.view.camera.updateProjectionMatrix();
-    //         that.view.renderer.setSize(window.innerWidth, window.innerHeight);
-    //     };
-    //     var onDocumentMouseMove = function(event) {
-    //         event.preventDefault();
-    //         that.mouse.x =  (event.clientX / window.innerWidth) * 2 - 1;
-    //         that.mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
-    //     };
-    //
-    // };
-    //
-    // animate() {
-    //     requestAnimationFrame(this.animate);
-    //     this.render();
-    // };
-    //
-    // render() {
-    //
-    //     this.theta += 0.1;
-    //     this.view.camera.position.x = this.radius * Math.sin(THREE.Math.degToRad(this.theta));
-    //     this.view.camera.position.y = this.radius * Math.sin(THREE.Math.degToRad(this.theta));
-    //     this.view.camera.position.z = this.radius * Math.sin(THREE.Math.degToRad(this.theta));
-    //     this.view.camera.lookAt(this.scene.position);
-    //
-    //     this.view.camera.updateMatrixWorld();
-    //
-    //     this.ray.setFromCamera(this.mouse, this.camera);
-    //     var intersects = this.ray.intersectObjects(this.scene.children);
-    //     if (intersects.length > 0) {
-    //         if (this.INTERSECTED != intersects[0].object) {
-    //             if (this.INTERSECTED != null) {
-    //                 this.INTERSECTED.material.color.setHex(this.INTERSECTED.currentHex);
-    //             };
-    //             this.INTERSECTED = intersects[0].object;
-    //             this.INTERSECTED.currentHex = this.INTERSECTED.material.color.getHex();
-    //             this.INTERSECTED.material.color.setHex(0xff0000);
-    //         };
-    //     } else {
-    //         if (this.INTERSECTED != null) {
-    //             this.INTERSECTED.material.color.setHex(this.INTERSECTED.currentHex);
-    //         };
-    //         this.INTERSECTED = null;
-    //     };
-    //     this.renderer.render(this.scene, this.camera);
-    // };
 };
 
-class App3D {
-    /*"""
-    App3D
-    =========
-    A 3D visualization application built on top of threejs
-    that accepts an empty jupyter widget view and defines
-    a simple threejs scene with a simplified threejs API.
-    */
-    constructor(view) {
-        // Was in other place
-        var w = view.model.get("layout").get("width");
-        var h = view.model.get("layout").get("height");
-        view.camera = new THREE.PerspectiveCamera(35, w / h, 1, 1000);
-        view.camera.position.z = 10;
-        // w = window.innerWidth;
-        // h = window.innerHeight;
 
-        view.scene = new THREE.Scene();
-        view.renderer = new THREE.WebGLRenderer({
-            antialias: true,
-            alpha: true
-        });
-        view.renderer.setSize(view.model.get("layout").get("width"),
-                              view.model.get("layout").get("height"));
-        view.el.appendChild(view.renderer.domElement);
-
-        view.controls = new TBC(view.camera, view.renderer.domElement);
-        view.controls.rotateSpeed = 10.0;
-        view.controls.zoomSpeed = 5.0;
-        view.controls.panSpeed = 0.5;
-        view.controls.noZoom = false;
-        view.controls.noPan = false;
-        view.controls.staticMoving = true;
-        view.controls.dynamicDampingFactor = 0.3;
-        view.controls.keys = [65, 83, 68];
-        view.controls.target = new THREE.Vector3(0.0, 0.0, 0.0);
-        view.controls.addEventListener("change", view.render.bind(view));
-        // view.controls.target = new THREE.Vector3(0.0, 0.0, 0.0);
-        // view._render = true;
-
-        // Start of old stuff
-        this.view = view;
-        this.scene = view.scene;
-        this.camera = view.camera;
-        this.controls = view.controls;
-        this.renderer = view.renderer;
-
-        this.ambient_light = new THREE.AmbientLight(0xFFFFFF, 0.5);
-        this.dlight0 = new THREE.DirectionalLight(0xFFFFFF, 0.3);
-        this.dlight1 = new THREE.DirectionalLight(0xFFFFFF, 0.3);
-        this.dlight0.position.set(-100, -100, -100);
-        this.dlight1.position.set(100, 100, 100);
-        this.scene.add(this.ambient_light);
-        this.scene.add(this.dlight0);
-        this.scene.add(this.dlight1);
-
-    };
+class HUDApp extends ThreeApp {
 
     init_raycaster() {
-        this.INTERSECTED = null;
-        this.mouse = new THREE.Vector2();
-        this.ray = new THREE.Raycaster();
-        var that = this;
-        var onDocumentMouseMove = function(event) {
-            event.preventDefault();
-            that.mouse.x =  (event.clientX / window.innerWidth) * 2 - 1;
-            that.mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
-            that.ray.setFromCamera(that.mouse, that.camera);
-            var intersects = that.ray.intersectObjects(that.scene.children);
-            if (intersects.length > 0) {
-                if (that.INTERSECTED != intersects[0].object) {
-                    if (that.INTERSECTED != null) {
-                        that.INTERSECTED.material.color.setHex(that.INTERSECTED.currentHex);
-                    };
-                    that.INTERSECTED = intersects[0].object;
-                    that.INTERSECTED.currentHex = that.INTERSECTED.material.color.getHex();
-                    that.INTERSECTED.material.color.setHex(0xff0000);
-                };
-            } else {
-                if (that.INTERSECTED != null) {
-                    that.INTERSECTED.material.color.setHex(that.INTERSECTED.currentHex);
-                };
-                that.INTERSECTED = null;
-            };
-            that.controls.update();
-        };
-        document.addEventListener('mousemove', onDocumentMouseMove, false);
-
+        console.log("init_raycaster");
+        return Promise.resolve(new THREE.Raycaster());
     };
 
-    init_HUD() {
+    init_hud_scene() {
+        console.log("init_hud_scene");
+        return Promise.resolve(new THREE.Scene());
+    };
+
+    init_hud_camera() {
+        console.log("init_hud_camera");
+        return Promise.resolve(new THREE.OrthographicCamera(
+            -this.w / 2,  this.w / 2,
+             this.h / 2, -this.h / 2, 0, 30));
+    };
+
+    init_hud_canvas() {
+        console.log("init_hud_canvas");
+        // https://www.evermade.fi/pure-three-js-hud/
+        var canvas = document.createElement("canvas");
+        canvas.width = this.w;
+        canvas.height = this.h;
+        return Promise.resolve(canvas);
+    };
+
+    init_mouse() {
+        console.log("init_mouse");
+        return Promise.resolve(new THREE.Vector2());
+    };
+
+    render() {
+        this.renderer.clear();
+        this.renderer.render(this.scene, this.camera);
+        this.renderer.clearDepth();
+        this.renderer.render(this.hudscene, this.hudcamera);
+    };
+
+    resize() {
+        this.set_dims();
+        this.set_hud();
+        this.renderer.setSize(this.w, this.h);
+        this.camera.aspect = this.w / this.h;
+        this.hudcamera.left   = -this.w / 2;
+        this.hudcamera.right  =  this.w / 2;
+        this.hudcamera.top    =  this.h / 2;
+        this.hudcamera.bottom = -this.h / 2;
+        this.camera.updateProjectionMatrix();
+        this.hudcamera.updateProjectionMatrix();
+        this.controls.handleResize();
+    };
+
+    set_hud() {
+        if (this.INTERSECTED === null) {return};
+        this.context.clearRect(0,0,this.w,this.h);
+        var message = this.INTERSECTED.name;
+        var metrics = this.context.measureText(message);
+        var width = metrics.width;
+        this.context.fillStyle = "rgba(0,0,0,0.95)";
+        // fillRect(x, y, width, height)
+        // fillText(x, y, [, maxwidth]);
+        this.context.font = "Bold 20px Arial";
+        this.context.fillRect(0, this.h - 28, width + 8, 28);
+        this.context.fillStyle = "rgba(255,255,255,0.95)";
+        this.context.fillRect(2, this.h - 26, width + 6, 26);
+        this.context.fillStyle = "rgba(0,0,0,1)";
+        this.context.fillText(message, 4, this.h - 8);
+        //             this.context.fillStyle = "rgba(0,0,0,0.95)";
+        //             that.context.fillRect(0,0,width+8,20+8);
+        //             that.context.fillStyle = "rgba(255,255,255,0.95)";
+        //             that.context.fillRect(2,2,width+4,20+4);
+        //             that.context.fillStyle = "rgba(0,0,0,1)";
+        //             that.context.fillText(message,4,20);
+        this.hudplane.material.map.needsUpdate = true;
+        this.hudplane.material.needsUpdate = true;
+    };
+
+    unset_hud() {
+        this.context.clearRect(0,0,this.w,this.h);
+        this.hudplane.material.map.needsUpdate = true;
+        this.hudplane.material.needsUpdate = true;
+    };
+
+    init_promise() {
+        var that = this;
+        this.INTERSECTED = null;
+        var promises = super.init_promise();
+        promises.then(this.init_raycaster.bind(this))
+            .then(function(o) {that.ray = o})
+            .then(this.init_hud_scene.bind(this))
+            .then(function(o) {that.hudscene = o})
+            .then(this.init_hud_camera.bind(this))
+            .then(function(o) {that.hudcamera = o})
+            .then(this.init_hud_canvas.bind(this))
+            .then(function(o) {
+                that.hudcanvas = o;
+                that.context = that.hudcanvas.getContext("2d");
+                that.texture = new THREE.Texture(that.hudcanvas);
+                that.texture.needsUpdate = true;
+                var material = new THREE.MeshBasicMaterial({map: that.texture});
+                material.transparent = true;
+                var planeGeometry = new THREE.PlaneGeometry(that.w, that.h);
+                that.hudplane = new THREE.Mesh(planeGeometry, material);
+                that.hudscene.add(that.hudplane);
+                that.renderer.autoClear = false;
+            }).then(this.init_mouse.bind(this))
+            .then(function(o) {
+                that.mouse = o;
+                that.view.el.addEventListener('mousemove',
+                function(event) {
+                    event.preventDefault();
+                    var pos = that.renderer.domElement.getBoundingClientRect();
+                    that.mouse.x =  ((event.clientX - pos.x) / that.w) * 2 - 1;
+                    that.mouse.y = -((event.clientY - pos.y) / that.h) * 2 + 1;
+                    that.ray.setFromCamera(that.mouse, that.camera);
+                    var intersects = that.ray.intersectObjects(that.scene.children);
+                    if (intersects.length > 0) {
+                        if (that.INTERSECTED != intersects[0].object) {
+                            if (that.INTERSECTED != null) {
+                                that.INTERSECTED.material.color.setHex(that.INTERSECTED.currentHex);
+                            };
+                            that.INTERSECTED = intersects[0].object;
+                            that.INTERSECTED.currentHex = that.INTERSECTED.material.color.getHex();
+                            var R = (that.INTERSECTED.currentHex >> 16) + 76;
+                            var G = (that.INTERSECTED.currentHex >> 8 & 0x00FF) + 76;
+                            var B = (that.INTERSECTED.currentHex & 0x0000FF) + 76;
+                            R = R < 255 ? R < 1 ? 0 : R : 255;
+                            G = G < 255 ? G < 1 ? 0 : G : 255;
+                            B = B < 255 ? B < 1 ? 0 : B : 255;
+                            var newhex = (0x1000000 + R * 0x10000 + G * 0x100 + B);
+                            that.INTERSECTED.material.color.setHex(newhex);
+                            if (that.INTERSECTED.name) {
+                                that.set_hud();
+                            } else {
+                                that.unset_hud();
+                            };
+                        };
+                    } else {
+                        if (that.INTERSECTED != null) {
+                            that.INTERSECTED.material.color.setHex(that.INTERSECTED.currentHex);
+                        };
+                        that.INTERSECTED = null;
+                        that.unset_hud();
+                        // console.log(that.context);
+                        // that.context.clearRect(0,0,300,300);
+                        // that.hudplane.material.map.needsUpdate = true;
+                        // that.hudplane.material.needsUpdate = true;
+                    };
+              }, false);
+            }).then(this.animate.bind(this));
+        return Promise.resolve(promises);
+    };
+
+    constructor(view) {
+        super(view);
+    };
+
+};
+
         // var w = this.view.model.get("layout").get("width");
         // var h = this.view.model.get("layout").get("height");
         // // var w2 = this.view.model.get("layout").get("width") / 2;
@@ -473,7 +434,6 @@ class App3D {
         //this.projector = new THREE.Projector();
         //this.raycaster = new THREE.Raycaster();
         // document.addEventListener('mousedown', onDocumentMouseDown, false);
-    };
 
     // update() {
     //     // this.raycaster.setFromCamera(this.mouse, this.camera);
@@ -541,6 +501,65 @@ class App3D {
     //     // this.controls.update();
     //     // //stats.update();
     // };
+
+class App3D {
+    /*"""
+    App3D
+    =========
+    A 3D visualization application built on top of threejs
+    that accepts an empty jupyter widget view and defines
+    a simple threejs scene with a simplified threejs API.
+    */
+    constructor(view) {
+        // Was in other place
+        var w = view.model.get("layout").get("width");
+        var h = view.model.get("layout").get("height");
+        view.camera = new THREE.PerspectiveCamera(35, w / h, 1, 1000);
+        view.camera.position.z = 10;
+        // w = window.innerWidth;
+        // h = window.innerHeight;
+
+        view.scene = new THREE.Scene();
+        view.renderer = new THREE.WebGLRenderer({
+            antialias: true,
+            alpha: true
+        });
+        view.renderer.setSize(view.model.get("layout").get("width"),
+                              view.model.get("layout").get("height"));
+        view.el.appendChild(view.renderer.domElement);
+
+        view.controls = new TBC(view.camera, view.renderer.domElement);
+        view.controls.rotateSpeed = 10.0;
+        view.controls.zoomSpeed = 5.0;
+        view.controls.panSpeed = 0.5;
+        view.controls.noZoom = false;
+        view.controls.noPan = false;
+        view.controls.staticMoving = true;
+        view.controls.dynamicDampingFactor = 0.3;
+        view.controls.keys = [65, 83, 68];
+        view.controls.target = new THREE.Vector3(0.0, 0.0, 0.0);
+        view.controls.addEventListener("change", view.render.bind(view));
+        // view.controls.target = new THREE.Vector3(0.0, 0.0, 0.0);
+        // view._render = true;
+
+        // Start of old stuff
+        this.view = view;
+        this.scene = view.scene;
+        this.camera = view.camera;
+        this.controls = view.controls;
+        this.renderer = view.renderer;
+
+        this.ambient_light = new THREE.AmbientLight(0xFFFFFF, 0.5);
+        this.dlight0 = new THREE.DirectionalLight(0xFFFFFF, 0.3);
+        this.dlight1 = new THREE.DirectionalLight(0xFFFFFF, 0.3);
+        this.dlight0.position.set(-100, -100, -100);
+        this.dlight1.position.set(100, 100, 100);
+        this.scene.add(this.ambient_light);
+        this.scene.add(this.dlight0);
+        this.scene.add(this.dlight1);
+
+    };
+
 
     test_mesh() {
         /*"""
@@ -1923,5 +1942,6 @@ App3D.prototype.bits = [1, 2, 4, 8, 16, 32, 64, 128];
 module.exports = {
     ThreeApp: ThreeApp,
     App3D: App3D,
+    HUDApp: HUDApp,
     PickerApp: PickerApp
 };

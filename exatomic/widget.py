@@ -208,10 +208,9 @@ class PickerScene(ExatomicScene):
 
 
 @register
-class PromiseScene(ExatomicScene):
-    """Resizable three.js scene."""
-    _model_name = Unicode("PromiseSceneModel").tag(sync=True)
-    _view_name = Unicode("PromiseSceneView").tag(sync=True)
+class HUDScene(ExatomicScene):
+    _model_name = Unicode("HUDSceneModel").tag(sync=True)
+    _view_name = Unicode("HUDSceneView").tag(sync=True)
 
 
 @register

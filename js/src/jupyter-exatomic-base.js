@@ -12,9 +12,9 @@ for use within the Jupyter notebook interface.
 var widgets = require("@jupyter-widgets/base");
 var control = require("@jupyter-widgets/controls");
 var App3D = require("./jupyter-exatomic-three.js").App3D;
-var PickerApp = require("./jupyter-exatomic-three.js").PickerApp;
-// var AppPromise = require("./jupyter-exatomic-three.js").AppPromise;
 var ThreeApp = require("./jupyter-exatomic-three.js").ThreeApp;
+var PickerApp = require("./jupyter-exatomic-three.js").PickerApp;
+var HUDApp = require("./jupyter-exatomic-three.js").HUDApp;
 var version = "~" + require("../package.json").version;
 
 
@@ -210,30 +210,6 @@ var ExatomicSceneView = widgets.DOMWidgetView.extend({
 
 });
 
-// var PromiseSceneModel = ExatomicSceneModel.extend({
-//
-//     defaults: function() {
-//         return _.extend({}, ExatomicSceneModel.prototype.defaults, {
-//             _model_name: "PromiseSceneModel",
-//             _view_name: "PromiseSceneView"
-//         })
-//     }
-//
-// });
-//
-// var PromiseSceneView = ExatomicSceneView.extend({
-//
-//     init: function() {
-//         this.app3d = new AppPromise(this);
-//         this.three_promise = this.app3d.init_promise();
-//     },
-//
-//     render: function() {
-//         return this.three_promise;
-//     }
-//
-// });
-
 
 var ThreeAppSceneModel = widgets.DOMWidgetModel.extend({
 
@@ -287,7 +263,7 @@ var ThreeAppSceneView = widgets.DOMWidgetView.extend({
     },
 
     render: function() {
-        return this.three_promise;
+        return this.app3d.finalize(this.three_promise);
     },
 
 });
@@ -312,6 +288,31 @@ var PickerSceneView = ThreeAppSceneView.extend({
     },
 
     render: function() {
+        return this.app3d.finalize(this.three_promise);
+    },
+
+});
+
+var HUDSceneModel = ThreeAppSceneModel.extend({
+
+    defaults: function() {
+        return _.extend({}, ThreeAppSceneModel.prototype.defaults, {
+            _model_name: "HUDSceneModel",
+            _view_name: "HUDSceneView"
+        })
+    }
+
+});
+
+var HUDSceneView = ThreeAppSceneView.extend({
+
+    init: function() {
+        this.app3d = new HUDApp(this);
+        this.three_promise = this.app3d.init_promise();
+    },
+
+    render: function() {
+        // return this.app3d.finalize(this.three_promise);
         return this.three_promise;
     },
 
@@ -325,7 +326,7 @@ module.exports = {
     ThreeAppSceneModel: ThreeAppSceneModel,
     ThreeAppSceneView: ThreeAppSceneView,
     PickerSceneModel: PickerSceneModel,
-    PickerSceneView: PickerSceneView
-    // PromiseSceneModel: PromiseSceneModel,
-    // PromiseSceneView: PromiseSceneView,
+    PickerSceneView: PickerSceneView,
+    HUDSceneModel: HUDSceneModel,
+    HUDSceneView: HUDSceneView
 }
