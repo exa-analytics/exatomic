@@ -15,12 +15,13 @@ from exa.math.misc.indexing import starts_counts
 from exa.util.units import Length
 from exa.util.utility import mkp
 from exatomic.core.editor import Editor
-from exatomic.core.frame import compute_frame_from_atom
+from exatomic.core.frame import compute_frame_from_atom, Frame
 from exatomic.core.atom import Atom
 
 
 class Meta(TypedMeta):
     atom = Atom
+    frame = Frame
 
 
 class XYZ(six.with_metaclass(Meta, Editor)):
@@ -31,6 +32,9 @@ class XYZ(six.with_metaclass(Meta, Editor)):
     """
     _header = '{nat}\n{comment}\n'
     _cols = ['symbol', 'x', 'y', 'z']
+
+    def parse_frame(self):
+        self.frame = compute_frame_from_atom(self.atom)
 
     def parse_atom(self, unit='Angstrom', names=('symbol', 'x', 'y', 'z')):
         """
