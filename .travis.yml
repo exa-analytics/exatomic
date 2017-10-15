@@ -29,7 +29,7 @@ install:
   - git fetch origin pull/139/head:org-master-3.9
   - git checkout org-master-3.9
   - conda install -q -c conda-forge `cat requirements.txt`
-  - conda install -q -c conda-forge pytables python-coveralls ply pandoc pypandoc nbsphinx
+  - conda install -q -c conda-forge pytables python-coveralls ply pandoc pypandoc nbsphinx sympy
   - pip install travis-sphinx codacy-coverage coverage
   - pip install .
   - cd ../

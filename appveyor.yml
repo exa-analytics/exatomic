@@ -58,7 +58,7 @@ install:
   - cmd: git fetch origin pull/139/head:org-master-3.9
   - cmd: git checkout org-master-3.9
   - cmd: conda install -q -y -c conda-forge numpy scipy matplotlib seaborn networkx pandas nose numba pytables six
-  - cmd: conda install -q -c conda-forge pytables python-coveralls ply pandoc pypandoc nbsphinx
+  - cmd: conda install -q -c conda-forge pytables python-coveralls ply pandoc pypandoc nbsphinx sympy
   - cmd: conda install -q -c conda-forge 'icu=56.*'
   - cmd: pip install travis-sphinx codacy-coverage coverage
   - cmd: pip install .

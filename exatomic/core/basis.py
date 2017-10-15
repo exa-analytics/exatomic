@@ -129,7 +129,9 @@ class BasisSet(DataFrame):
                     prims[seht] += lml_count[sml.iloc[0]['L']]
         return pd.Series(prims)
 
-    def __init__(self, *args, spherical=True, gaussian=True, **kwargs):
+    def __init__(self, *args, **kwargs):
+        spherical = kwargs.pop("spherical", True)
+        gaussian = kwargs.pop("gaussian", True)
         super(BasisSet, self).__init__(*args, **kwargs)
         self.spherical = spherical
         self.gaussian = gaussian
