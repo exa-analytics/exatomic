@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# Copyright (c) 2015-2016, Exa Analytics Development Team
+# Copyright (c) 2015-2017, Exa Analytics Development Team
 # Distributed under the terms of the Apache License 2.0
 """
 Universe Notebook Widget
@@ -8,7 +8,7 @@ Universe Notebook Widget
 
 ###
 ### OLDER CODE KEPT HERE FOR TESTING PURPOSES
-###   AND TO COMPARE TIMINGS WITH VARIOUS 
+###   AND TO COMPARE TIMINGS WITH VARIOUS
 ###   MESSAGE PASSING CONVENTIONS BETWEEN
 ###         PYTHON AND JAVASCRIPT
 ###      ** NOT IN PRODUCTION USE **
@@ -24,8 +24,8 @@ from ipywidgets import (Widget, DOMWidget, Box, widget_serialization, Layout,
                         Button, Dropdown, VBox, HBox, FloatSlider, IntSlider,
                         register, Play, jslink, Checkbox)
 ## Imports expected to break
-from exatomic.container import Universe
-from exa.relational.isotope import symbol_to_radius, symbol_to_color
+from exatomic import Universe
+from exatomic.base import sym2radius, sym2color
 
 
 ###################
@@ -47,7 +47,7 @@ uni_field_lists = OrderedDict([
                     '3d-2', '3d-1', '3d0', '3d+1', '3d+2']),
     ("Gaussian", ['s', 'px', 'py', 'pz', 'd200', 'd110',
                   'd101', 'd020', 'd011', 'd002', 'f300',
-                  'f210', 'f201', 'f120', 'f111', 'f102', 
+                  'f210', 'f201', 'f120', 'f111', 'f102',
                   'f030', 'f021', 'f012', 'f003']),
     ("SolidHarmonic", [str(i) for i in range(8)])])
 
@@ -56,10 +56,10 @@ def gui_base_widgets():
     return OrderedDict(scn_close=Button(icon="trash",
                                  description=" Close",
                                  layout=gui_lo),
-                       scn_clear=Button(icon="bomb", 
+                       scn_clear=Button(icon="bomb",
                                  description=" Clear",
                                  layout=gui_lo),
-                       scn_saves=Button(icon="camera", 
+                       scn_saves=Button(icon="camera",
                                  description=" Save",
                                  layout=gui_lo))
 
@@ -86,7 +86,7 @@ def gui_field_widgets(uni=False, test=False):
 # Base classes #
 ################
 
-@register 
+@register
 class ExatomicScene(DOMWidget):
     """Resizable three.js scene."""
     _view_module = Unicode("jupyter-exatomic").tag(sync=True)
@@ -132,7 +132,7 @@ class ExatomicScene(DOMWidget):
         super(DOMWidget, self).__init__(*args,
                                         layout=Layout(width=width, height=height),
                                         **kwargs)
-  
+
 @register
 class ExatomicBox(Box):
     """Base class for containers of a GUI and scene."""
@@ -144,7 +144,7 @@ class ExatomicBox(Box):
                     ).tag(sync=True, **widget_serialization)
 
     def _close(self, b):
-        """Shut down all active widgets within the container.""" 
+        """Shut down all active widgets within the container."""
         self.scene.close()
         for wid in self.controls:
             self.controls[wid].close()
@@ -163,21 +163,21 @@ class ExatomicBox(Box):
         if key is not None:
             self.controls[key] = self.field_gui[key]
         else:
-            for key, wid in self.field_gui.items(): 
-                self.controls[key] = wid 
+            for key, wid in self.field_gui.items():
+                self.controls[key] = wid
 
     def remove_field_gui(self):
         """Remove field controllers from the GUI widgets."""
-        for key in self.field_gui.keys(): 
+        for key in self.field_gui.keys():
             try: self.controls.pop(key)
             except KeyError: continue
 
     def init_gui(self, uni=False, test=False):
         """Initialize generic GUI controls and register callbacks."""
         self.controls = gui_base_widgets()
-        def _scn_clear(b): 
+        def _scn_clear(b):
             self.scene.scn_clear = self.scene.scn_clear == False
-        def _scn_saves(b): 
+        def _scn_saves(b):
             self.scene.scn_saves = self.scene.scn_saves == False
         self.controls['scn_close'].on_click(self._close)
         self.controls['scn_clear'].on_click(_scn_clear)
@@ -196,10 +196,10 @@ class ExatomicBox(Box):
         if test and uni:
             self.uni_gui = {key: Dropdown(options=val, layout=gui_lo)
                             for key, val in uni_field_lists.items()}
-            def _field_kind(c): 
+            def _field_kind(c):
                 self.scene.field_kind = c.new
                 if 'field_ml' in self.controls:
-                    self.controls.update([('field_ml', 
+                    self.controls.update([('field_ml',
                                            self.uni_gui['ml'][c.new])])
                 self.gui = VBox([val for key, val in self.controls.items()],
                                  layout=Layout(width="200px"))
@@ -274,7 +274,7 @@ class FieldWidget(ExatomicWidget):
                 'indices': grp.index.values.tolist(),
                 'params': grp.loc[grp.index.values[0]].to_dict()}
 
-    
+
 
 
 @register
@@ -290,7 +290,7 @@ class TwoWidget(ExatomicWidget):
         bonded = grp.loc[self.df['bond'] == True]
         self.b0 = bonded['atom0'].tolist()
         self.b1 = bonded['atom1'].tolist()
-    
+
     def from_dataframe(self, lbls):
         grp = self.df.groupby('frame').get_group(0)
         bonded = grp.loc[self.df['bond'] == True]
@@ -329,16 +329,16 @@ class AtomWidget(ExatomicWidget):
         traits['x'] = grp['x'].tolist()
         traits['y'] = grp['y'].tolist()
         traits['z'] = grp['z'].tolist()
-        symmap = {i: v for i, v in enumerate(grp['symbol'].cat.categories) 
+        symmap = {i: v for i, v in enumerate(grp['symbol'].cat.categories)
                   if v in self.df.unique_atoms}
         unq = self.df['symbol'].unique()
-        radii = symbol_to_radius()[unq]
-        colors = symbol_to_color()[unq]
+        radii = sym2radius[unq]
+        colors = sym2color[unq]
         traits['s'] =  grp['symbol'].cat.codes.values.tolist()
         traits['r'] = {i: 0.5 * radii[v] for i, v in symmap.items()}
         traits['c'] = {i: colors[v] for i, v in symmap.items()}
         return traits
-        
+
 
 
 @register
@@ -359,30 +359,30 @@ class SmallverseWidget(ExatomicBox):
     _model_name = Unicode("SmallverseWidgetModel").tag(sync=True)
     _view_name = Unicode("SmallverseWidgetView").tag(sync=True)
     field_show = Bool(False).tag(sync=True)
-    
+
     def init_gui(self, nframes=1, fields=None):
         super(SmallverseWidget, self).init_gui(uni=True, test=False)
         playable = bool(nframes <= 1)
-        frame_lims = {'min': 0, 'max': nframes-1, 'step': 1, 
+        frame_lims = {'min': 0, 'max': nframes-1, 'step': 1,
                       'value': 0, 'layout': gui_lo}
         self.controls.update([('scn_frame', IntSlider(
                                description='Frame', **frame_lims)),
-                              ('playing', Play(description="Press play", 
+                              ('playing', Play(description="Press play",
                                disabled=playable, **frame_lims)),
-                              ('atom_spheres', Button(description=" Atoms", 
+                              ('atom_spheres', Button(description=" Atoms",
                                icon="adjust", layout=gui_lo))])
         if fields is not None:
             print('fields is not None:', fields)
-            self.controls.update([('field_show', Button(description=" Fields", 
+            self.controls.update([('field_show', Button(description=" Fields",
                                   layout=gui_lo, icon="cube"))])
-            def _field_show(b): 
+            def _field_show(b):
                 self.field_show = self.field_show == False
                 fdx = self.scene.field_idx
-                if self.field_show: 
+                if self.field_show:
                     self.controls.update([('field_options', Dropdown(options=fields,
                                           layout=gui_lo))])
                     self.add_field_gui('field_iso')
-                    def _field_options(c): 
+                    def _field_options(c):
                         self.scene.field_idx = c.new
                         self.scene.field.update_traits(self.scene.frame_idx, c.new)
                     self.controls['field_options'].observe(_field_options, names="value")
@@ -394,11 +394,11 @@ class SmallverseWidget(ExatomicBox):
                                  layout=Layout(width="200px"))
                 self.set_gui()
             self.controls['field_show'].on_click(_field_show)
-        def _scn_frame(c): 
+        def _scn_frame(c):
             self.scene.frame_idx = c.new
             self.scene.atom.update_traits(c.new)
             self.scene.two.update_traits(c.new)
-        def _atom_spheres(b): 
+        def _atom_spheres(b):
             self.scene.atom_spheres = self.scene.atom_spheres == False
         self.controls['scn_frame'].observe(_scn_frame, names='value')
         self.controls['atom_spheres'].on_click(_atom_spheres)
@@ -416,7 +416,7 @@ class SmallverseWidget(ExatomicBox):
         except AttributeError: scene.atom = None
         try: scene.frame = FrameWidget(uni.frame)
         except AttributeError: scene.frame = None
-        try: 
+        try:
             scene.field = FieldWidget(uni.field)
             fields = ['null'] + scene.field.indices
         except AttributeError: scene.field, fields = None, None
@@ -460,7 +460,7 @@ class SmallverseWidget(ExatomicBox):
 #    _view_name = Unicode("AllTwoWidgetView").tag(sync=True)
 #    b0 = Unicode().tag(sync=True)
 #    b1 = Unicode().tag(sync=True)
-#    
+#
 #    def from_dataframe(self, lbls):
 #        bonded = self.df.ix[self.df['bond'] == True, ['atom0', 'atom1', 'frame']]
 #        lbl0 = bonded['atom0'].map(lbls)
@@ -472,7 +472,7 @@ class SmallverseWidget(ExatomicBox):
 #        b0 = np.empty((len(frames), ), dtype='O')
 #        b1 = b0.copy()
 #        for i, frame in enumerate(frames):
-#            try: 
+#            try:
 #                b0[i] = bond_grps.get_group(frame)['atom0'].astype(np.int64).values
 #                b1[i] = bond_grps.get_group(frame)['atom1'].astype(np.int64).values
 #            except Exception:
@@ -510,7 +510,7 @@ class SmallverseWidget(ExatomicBox):
 #                ).to_json(orient="values").replace('"', '')
 #        grps = self.df.groupby('frame')
 #        syms = grps.apply(lambda g: g['symbol'].cat.codes.values)
-#        symmap = {i: v for i, v in enumerate(self.df['symbol'].cat.categories) 
+#        symmap = {i: v for i, v in enumerate(self.df['symbol'].cat.categories)
 #                  if v in self.df.unique_atoms}
 #        unq = self.df['symbol'].unique()
 #        radii = symbol_to_radius()[unq]
@@ -519,9 +519,9 @@ class SmallverseWidget(ExatomicBox):
 #        traits['radii'] = {i: 0.5 * radii[v] for i, v in symmap.items()}
 #        traits['colrs'] = {i: colors[v] for i, v in symmap.items()}
 #        return traits
-        
 
-            
+
+
 
 #@register
 #class FrameWidget(ExatomicWidget):
