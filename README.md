@@ -1,103 +1,48 @@
-| |logo|
-##################
-Installation
-##################
-| |conda|
-| |pypi|
-Exatomic is available through `anaconda`_,
+[![exatomic logo](docs/source/static/logo.png)](https://exa-analytics.github.io)
+*A unified platform for computational chemists*
 
-.. code-block:: bash
 
-    conda install -c exaanalytics exatomic
+# Installation
+[![conda Badge](https://anaconda.org/exaanalytics/exatomic/badges/installer/conda.svg)](https://conda.anaconda.org/exaanalytics)
+[![pypi badge](https://badge.fury.io/py/exatomic.svg)](https://badge.fury.io/py/exatomic)
+Exa is available through [anaconda](https://www.continuum.io/downloads)
 
-or `pypi`_.
+    $ conda install -c exaanalytics exatomic
 
-.. code-block:: bash
+or [pypi](https://pypi.python.org/pypi).
 
-    pip install exatomic
+    $ pip install exatomic
 
-After installation, run the following to set up visualization.
 
-.. code-block:: bash
+# Getting Started
+[![docs](https://readthedocs.org/projects/exatomic/badge/?version=latest)](https://exa-analytics.github.io/exatomic/)
+[![gitter](https://badges.gitter.im/exa-analytics/exatomic.svg)](https://gitter.im/exa-analytics/exatomic)
+Building the docs requires [sphinx](http://www.sphinx-doc.org/en/stable).
 
-    exa -u
+    $ cd docs
+    $ make html           # .\make.bat html
 
-If using conda, make sure to be on up-to-date versions of `ipywidgets` and
-`notebook`:
 
-.. code-block:: bash
+# Development
+[![Travis-CI](https://travis-ci.org/exa-analytics/exatomic.svg?branch=master)](https://travis-ci.org/exa-analytics/exatomic)
+[![Appveyor](https://ci.appveyor.com/api/projects/status/5palls4vcdipkv00/branch/master?svg=true)](https://ci.appveyor.com/project/avmarchenko/exatomic/branch/master)
+[![Coveralls](https://coveralls.io/repos/github/exa-analytics/exatomic/badge.svg)](https://coveralls.io/github/exa-analytics/exatomic)
+[![Codacy Badge](https://api.codacy.com/project/badge/Grade/ac0112a9a8b9496e8b74f0ab618386ce)](https://www.codacy.com/app/alexvmarch/exatomic?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=avmarchenko/exatomic&amp;utm_campaign=Badge_Grade)
 
-    conda install -c conda-forge notebook ipywidgets
+For a development ready installation:
 
-Visualization currently support Chrome and Firefox.
+    $ git clone https://github.com/exa-analytics/exatomic.git
+    $ cd exatomic/js
+    $ ./js.sh    # .\js.bat
+    $ cd ../
+    $ pip install -e .
 
-###################
-Getting Started
-###################
-| |docs|
-| |gitter|
-| |doi|
-Documentation can be built using `sphinx`_:
 
-.. code-block:: bash
+# Reference
+[![DOI](https://zenodo.org/badge/49284471.svg)](https://zenodo.org/badge/latestdoi/49284471)
 
-    cd doc
-    make html    # or .\make.bat html
 
-##################
-Status
-##################
-| |build|
-| |issues|
-| |cov|
-
-###############
-Legal
-###############
-| |lic|
-| Copyright (c) 2015-2016, Exa Analytics Development Team
-| Distributed under the terms of the Apache License 2.0
-
-.. _anaconda: https://www.continuum.io/downloads
-.. _pypi: https://pypi.python.org/pypi
-.. _sphinx: http://www.sphinx-doc.org/en/stable/
-
-.. |logo| image:: doc/source/_static/logo.png
-    :target: doc/source/_static/logo.png
-    :alt: Exatomic Analytics
-
-.. |build| image:: https://travis-ci.org/exa-analytics/exatomic.svg?branch=master
-    :target: https://travis-ci.org/exa-analytics/exatomic
-    :alt: Build Status
-
-.. |docs| image:: https://readthedocs.org/projects/exatomic/badge/?version=latest
-    :target: http://exatomic.readthedocs.io/en/latest/?badge=latest
-    :alt: Documentation Status
-
-.. |conda| image:: https://anaconda.org/exaanalytics/exatomic/badges/installer/conda.svg
-    :target: https://conda.anaconda.org/exaanalytics
-    :alt: Anaconda Version
-
-.. |pypi| image:: https://badge.fury.io/py/exatomic.svg
-    :target: https://badge.fury.io/py/exatomic
-    :alt: PyPI Version
-
-.. |gitter| image:: https://badges.gitter.im/exa-analytics/exatomic.svg
-   :target: https://gitter.im/exa-analytics/exatomic?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge
-   :alt: Join the chat at https://gitter.im/exa-analytics/exatomic
-
-.. |issues| image:: https://www.quantifiedcode.com/api/v1/project/99e4f26905194100ad4c27aba432ec4c/badge.svg
-  :target: https://www.quantifiedcode.com/app/project/99e4f26905194100ad4c27aba432ec4c
-  :alt: Code issues
-
-.. |cov| image:: https://coveralls.io/repos/github/exa-analytics/exatomic/badge.svg
-    :target: https://coveralls.io/github/exa-analytics/exatomic
-    :alt: Code Coverage
-
-.. |lic| image:: http://img.shields.io/:license-apache-blue.svg?style=flat-square
-    :target: http://www.apache.org/licenses/LICENSE-2.0
-    :alt: License
-
-.. |doi| image:: https://zenodo.org/badge/23807/exa-analytics/exatomic.svg
-    :target: https://zenodo.org/badge/latestdoi/23807/exa-analytics/exatomic
-    :alt: DOI
+# Legal
+[![Apache License 2.0](http://img.shields.io/:license-apache-blue.svg?style=flat-square)](http://www.apache.org/licenses/LICENSE-2.0)
+Copyright (c) 2015-2017, Exa Analytics Development Team
+Distributed under the terms of the Apache License 2.0
