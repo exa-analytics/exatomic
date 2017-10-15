@@ -251,17 +251,14 @@ class HUDApp extends ThreeApp {
         var message = this.INTERSECTED.name;
         var metrics = this.context.measureText(message);
         var width = metrics.width;
-
         // fillRect(x, y, width, height)
         // fillText(x, y, [, maxwidth]);
-
-
         this.context.fillStyle = "rgba(0,0,0,0.95)";
-        this.context.fillRect(0,0,width+8,30+8);
+        this.context.fillRect(0,0,width+8,20+8);
         this.context.fillStyle = "rgba(255,255,255,0.95)";
-        this.context.fillRect(2,2,width+4,30+4);
+        this.context.fillRect(2,2,width+4,20+4);
         this.context.fillStyle = "rgba(0,0,0,1)";
-        this.context.fillText(message,4,30);
+        this.context.fillText(message,4,20);
         this.texture.needsUpdate = true;
 
         // this.context.fillStyle = "rgba(0,0,0,0.95)";
@@ -275,12 +272,7 @@ class HUDApp extends ThreeApp {
     };
 
     unset_hud() {
-        // this.context.clearRect(-this.w,-this.h,this.w*2,this.h*2);
-        // this.context.needsUpdate = true;
         this.sprite.position.set(1000, 1000, 1000);
-        // this.context.clearRect(0,0,this.w,this.h);
-        // this.hudplane.material.map.needsUpdate = true;
-        // this.hudplane.material.needsUpdate = true;
     };
 
     init_promise() {
