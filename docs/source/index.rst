@@ -1,4 +1,4 @@
-.. Copyright (c) 2015-2016, Exa Analytics Development Team
+.. Copyright (c) 2015-2017, Exa Analytics Development Team
 .. Distributed under the terms of the Apache License 2.0
 
 ##############################################
@@ -12,7 +12,6 @@
 
     overview.rst
     install.rst
-    api/api.rst
 
 .. toctree::
     :maxdepth: 2
@@ -22,8 +21,6 @@
 .. toctree::
     :maxdepth: 2
     :caption: Contributor Guide
-
-    dev/overview.rst
 
 
 ##################
