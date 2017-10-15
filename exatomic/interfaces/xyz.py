@@ -25,7 +25,7 @@ class XYZ(Editor):
     _header = '{nat}\n{comment}\n'
     _cols = ['symbol', 'x', 'y', 'z']
 
-    def parse_atom(self, unit='A', names=('symbol', 'x', 'y', 'z')):
+    def parse_atom(self, unit='Angstrom', names=('symbol', 'x', 'y', 'z')):
         """
         Parse the atom table from the current xyz file.
 
@@ -83,9 +83,9 @@ class XYZ(Editor):
                     f.write(self._header.format(nat=str(len(atom)),
                                                 comment='frame: ' + str(frame)))
                     a = atom[self._cols].copy()
-                    a['x'] *= Length['au', 'A']
-                    a['y'] *= Length['au', 'A']
-                    a['z'] *= Length['au', 'A']
+                    a['x'] *= Length['au', 'Angstrom']
+                    a['y'] *= Length['au', 'Angstrom']
+                    a['z'] *= Length['au', 'Angstrom']
                     a.to_csv(f, header=False, index=False, sep=' ', float_format=float_format,
                              quoting=csv.QUOTE_NONE, escapechar=' ')
 
@@ -109,9 +109,9 @@ class XYZ(Editor):
                 atom_copy.update(universe.unit_atom)
             elif atom_table == 'visual':
                 atom_copy.update(universe.visual_atom)
-            atom_copy['x'] *= Length['au', 'A']
-            atom_copy['y'] *= Length['au', 'A']
-            atom_copy['z'] *= Length['au', 'A']
+            atom_copy['x'] *= Length['au', 'Angstrom']
+            atom_copy['y'] *= Length['au', 'Angstrom']
+            atom_copy['z'] *= Length['au', 'Angstrom']
             string += atom_copy.to_csv(sep=' ', header=False, quoting=csv.QUOTE_NONE,
                                        index=False, float_format=float_format,
                                        escapechar=' ')
