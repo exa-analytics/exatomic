@@ -200,18 +200,16 @@ class HUDApp extends ThreeApp {
     };
 
     init_hud_camera() {
-        console.log("init_hud_camera");
         return Promise.resolve(new THREE.OrthographicCamera(
             -this.w / 2,  this.w / 2,
              this.h / 2, -this.h / 2, 0, 30));
     };
 
     init_hud_canvas() {
-        console.log("init_hud_canvas");
         // https://www.evermade.fi/pure-three-js-hud/
         var canvas = document.createElement("canvas");
-        canvas.width = this.w;
-        canvas.height = this.h;
+        // canvas.width = this.w;
+        // canvas.height = this.h;
         return Promise.resolve(canvas);
     };
 
@@ -241,35 +239,48 @@ class HUDApp extends ThreeApp {
         this.controls.handleResize();
     };
 
+		// nearestPowerOfTwo: function ( value ) {
+    //
+		// 	return Math.pow( 2, Math.round( Math.log( value ) / Math.LN2 ) );
+    //
+		// },
+
     set_hud() {
         if (this.INTERSECTED === null) {return};
         this.context.clearRect(0,0,this.w,this.h);
         var message = this.INTERSECTED.name;
         var metrics = this.context.measureText(message);
         var width = metrics.width;
-        this.context.fillStyle = "rgba(0,0,0,0.95)";
+
         // fillRect(x, y, width, height)
         // fillText(x, y, [, maxwidth]);
-        this.context.font = "Bold 20px Arial";
-        this.context.fillRect(0, this.h - 28, width + 8, 28);
+
+
+        this.context.fillStyle = "rgba(0,0,0,0.95)";
+        this.context.fillRect(0,0,width+8,30+8);
         this.context.fillStyle = "rgba(255,255,255,0.95)";
-        this.context.fillRect(2, this.h - 26, width + 6, 26);
+        this.context.fillRect(2,2,width+4,30+4);
         this.context.fillStyle = "rgba(0,0,0,1)";
-        this.context.fillText(message, 4, this.h - 8);
-        //             this.context.fillStyle = "rgba(0,0,0,0.95)";
-        //             that.context.fillRect(0,0,width+8,20+8);
-        //             that.context.fillStyle = "rgba(255,255,255,0.95)";
-        //             that.context.fillRect(2,2,width+4,20+4);
-        //             that.context.fillStyle = "rgba(0,0,0,1)";
-        //             that.context.fillText(message,4,20);
-        this.hudplane.material.map.needsUpdate = true;
-        this.hudplane.material.needsUpdate = true;
+        this.context.fillText(message,4,30);
+        this.texture.needsUpdate = true;
+
+        // this.context.fillStyle = "rgba(0,0,0,0.95)";
+        // this.context.fillRect(0, this.h - 28, width + 8, 28);
+        // this.context.fillStyle = "rgba(255,255,255,0.95)";
+        // this.context.fillRect(2, this.h - 26, width + 6, 26);
+        // this.context.fillStyle = "rgba(0,0,0,1)";
+        // this.context.fillText(message, 4, this.h - 8);
+        // this.hudplane.material.map.needsUpdate = true;
+        // this.hudplane.material.needsUpdate = true;
     };
 
     unset_hud() {
-        this.context.clearRect(0,0,this.w,this.h);
-        this.hudplane.material.map.needsUpdate = true;
-        this.hudplane.material.needsUpdate = true;
+        // this.context.clearRect(-this.w,-this.h,this.w*2,this.h*2);
+        // this.context.needsUpdate = true;
+        this.sprite.position.set(1000, 1000, 1000);
+        // this.context.clearRect(0,0,this.w,this.h);
+        // this.hudplane.material.map.needsUpdate = true;
+        // this.hudplane.material.needsUpdate = true;
     };
 
     init_promise() {
@@ -286,13 +297,19 @@ class HUDApp extends ThreeApp {
             .then(function(o) {
                 that.hudcanvas = o;
                 that.context = that.hudcanvas.getContext("2d");
+                that.context.font = "Bold 20px Arial";
                 that.texture = new THREE.Texture(that.hudcanvas);
                 that.texture.needsUpdate = true;
-                var material = new THREE.MeshBasicMaterial({map: that.texture});
-                material.transparent = true;
-                var planeGeometry = new THREE.PlaneGeometry(that.w, that.h);
-                that.hudplane = new THREE.Mesh(planeGeometry, material);
-                that.hudscene.add(that.hudplane);
+                var material = new THREE.SpriteMaterial({map: that.texture});
+                that.sprite = new THREE.Sprite(material);
+                that.sprite.scale.set(200,100,1.0);
+                that.sprite.position.set(1000,1000,0);
+                that.hudscene.add(that.sprite);
+                // var material = new THREE.MeshBasicMaterial({map: that.texture});
+                // material.transparent = true;
+                // var planeGeometry = new THREE.PlaneGeometry(that.w, that.h);
+                // that.hudplane = new THREE.Mesh(planeGeometry, material);
+                // that.hudscene.add(that.hudplane);
                 that.renderer.autoClear = false;
             }).then(this.init_mouse.bind(this))
             .then(function(o) {
@@ -301,8 +318,12 @@ class HUDApp extends ThreeApp {
                 function(event) {
                     event.preventDefault();
                     var pos = that.renderer.domElement.getBoundingClientRect();
+                    // that.sprite.position.set(event.clientX, event.clientY - 20, 0);
                     that.mouse.x =  ((event.clientX - pos.x) / that.w) * 2 - 1;
                     that.mouse.y = -((event.clientY - pos.y) / that.h) * 2 + 1;
+                    // that.sprite.position.set(1, -1, 0);
+                    that.sprite.position.set((((event.clientX - pos.x) / that.w) * 2 - 1),
+                                             (((event.clientY - pos.y) / that.h) * 2 - 1), 0);
                     that.ray.setFromCamera(that.mouse, that.camera);
                     var intersects = that.ray.intersectObjects(that.scene.children);
                     if (intersects.length > 0) {
