@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 ## -*- coding: utf-8 -*-
 #
 ## Copyright (c) 2015-2016, Exa Analytics Development Team
@@ -96,6 +97,27 @@
 #    Gaussian software package. Target syntax is for Gaussian
 #    09.
 #    """
+=======
+# -*- coding: utf-8 -*-
+# Copyright (c) 2015-2017, Exa Analytics Development Team
+# Distributed under the terms of the Apache License 2.0
+import os
+import numpy as np
+import pandas as pd
+from unittest import TestCase
+from exatomic import Universe
+from exatomic.gaussian import Output
+
+
+class TestOutput(TestCase):
+    """
+    This test ensures that the parsing functionality works on
+    a smattering of output files that were generated with the
+    Gaussian software package. Target syntax is for Gaussian
+    09.
+    """
+    pass
+>>>>>>> 1c37655b6be3dca60b2adbeee8ca3767e5477943
 #    def setUp(self):
 #        """Grab the output file as an editor."""
 #        # TODO : add some cartesian basis set files
@@ -152,4 +174,7 @@
 #        """Test the to_universe method."""
 #        uni = self.uo2sp.to_universe()
 #        self.assertTrue(isinstance(uni, Universe))
+<<<<<<< HEAD
 #>>>>>>> org/master
+=======
+>>>>>>> 1c37655b6be3dca60b2adbeee8ca3767e5477943

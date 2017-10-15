@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 ## -*- coding: utf-8 -*-
 ## Copyright (c) 2015-2016, Exa Analytics Development Team
 ## Distributed under the terms of the Apache License 2.0
@@ -73,6 +74,23 @@
 #class TestOutput(UnitTester):
 #    """Test the Molcas output file editor."""
 #
+=======
+# -*- coding: utf-8 -*-
+# Copyright (c) 2015-2017, Exa Analytics Development Team
+# Distributed under the terms of the Apache License 2.0
+import os
+import numpy as np
+import pandas as pd
+from unittest import TestCase
+from exatomic import Universe
+from exatomic.molcas.output import Output, Orb
+
+
+class TestOutput(TestCase):
+    """Test the Molcas output file editor."""
+    pass
+
+>>>>>>> 1c37655b6be3dca60b2adbeee8ca3767e5477943
 #    def setUp(self):
 #        cd = os.path.abspath(__file__).split(os.sep)[:-1]
 #        self.uo2sp = Output(os.sep.join(cd + ['mol-uo2-anomb.out']))
@@ -125,6 +143,7 @@
 #        self.assertIs(type(uni), Universe)
 #
 #
+<<<<<<< HEAD
 #class TestOrb(UnitTester):
 #    """Test the Molcas Orb file parser."""
 #
@@ -149,3 +168,25 @@
 #        self.assertEqual(self.mamsphr.momatrix.shape, (2809, 4))
 #        self.assertTrue(np.all(pd.notnull(self.mamsphr.momatrix)))
 #>>>>>>> 811f6aaae1e1aef968c27a34842d5ad9e7267217
+=======
+class TestOrb(TestCase):
+    """Test the Molcas Orb file parser."""
+
+    def setUp(self):
+        cd = os.path.abspath(__file__).split(os.sep)[:-1]
+        self.uo2sporb = Orb(os.sep.join(cd + ['mol-uo2-anomb.scforb']))
+        self.mamcart = Orb(os.sep.join(cd + ['mol-ch3nh2-631g.scforb']))
+        self.mamsphr = Orb(os.sep.join(cd + ['mol-ch3nh2-anovdzp.scforb']))
+
+    def test_parse_momatrix(self):
+        """Test the momatrix table parser."""
+        self.uo2sporb.parse_momatrix()
+        self.assertEqual(self.uo2sporb.momatrix.shape, (4761, 4))
+        self.assertTrue(np.all(pd.notnull(self.uo2sporb.momatrix)))
+        self.mamcart.parse_momatrix()
+        self.assertEqual(self.mamcart.momatrix.shape, (784, 4))
+        self.assertTrue(np.all(pd.notnull(self.mamcart.momatrix)))
+        self.mamsphr.parse_momatrix()
+        self.assertEqual(self.mamsphr.momatrix.shape, (2809, 4))
+        self.assertTrue(np.all(pd.notnull(self.mamsphr.momatrix)))
+>>>>>>> 1c37655b6be3dca60b2adbeee8ca3767e5477943

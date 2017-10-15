@@ -34,7 +34,7 @@ with open(requirements) as f:
 with open(os.path.join(root, name, verfile)) as f:
     v = f.readlines()[-2]
     v = v.split('=')[1].strip()[1:-1]
-    version = '.'.join(v.replace(" ", "").split(","))
+    version = ".".join(v.replace(" ", "").split(","))
 
 
 def update_package_data(distribution):

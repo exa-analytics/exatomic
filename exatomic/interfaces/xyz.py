@@ -1,250 +1,360 @@
-# -*- coding: utf-8 -*-
-# Copyright (c) 2015-2017, Exa Analytics Development Team
-# Distributed under the terms of the Apache License 2.0
-"""
-XYZ Parser
-##################
-A parser for the `XYZ`_ file format (for storing atomic coordinates.
-
-.. _XYZ: https://en.wikipedia.org/wiki/XYZ_file_format
-"""
-import re
-import numpy as np
-import numba as nb
-import pandas as pd
-from io import StringIO
-from operator import itemgetter
-from exa import Parser
-from exa.typed import Typed
-from exa.core.editor import Matches, Match
-from exatomic import Atom
-from exatomic.base import sym2z, z2sym
-
-
-# Helper functions for creating the atom table
-
-
-@nb.vectorize(nopython=True)
-def _tot_idx(start, stop):
-    """Compute the total size of the atom table."""
-    return stop - start - 2
-
-
-@nb.jit(nopython=True, nogil=True, cache=True)
-def _build_indexes(start, stop):
-    """Given the sections of an XYZ file, build the indexes."""
-    n = np.sum(_tot_idx(start, stop))
-    idx = np.empty((n, ), dtype=np.int64)
-    fdx = idx.copy()
-    cdx = np.empty((len(start), ), dtype=np.int64)
-    k = 0    # Frame counter
-    j = 0    # Atom counter
-    for i, sta in enumerate(start):
-        for v in range(sta+2, stop[i]):
-            idx[j] = v
-            fdx[j] = k
-            j += 1
-        k += 1
-        cdx[i] = sta + 1
-    return idx, fdx, cdx
-
-
-class XYZ(Parser):
-    """
-    Parser for the XYZ file format.
-
-    The symbol column gets mapped onto the proton number, 'Z'. For extended
-    XYZ-like files with custom columns pass the column names as needed.
-
-    .. code-block:: python
-
-        xyz = XYZ(file)
-        xyz.atom              # Default XYZ format
-        # Support for additional formats
-        xyz = XYZ(file)
-        xyz.parse(("symbol", "charge", "x", "y", "z"))
-        xyz.atom              # The atom table has an additional column 'charge'
-    """
-    _start = re.compile("^\s*(\d+)")
-    atom = Typed(Atom, doc="Table of nuclear coordinates")
-    comments = Typed(dict, doc="Dictionary of comments")
-
-    @classmethod
-    def from_atom(cls, atom):
-        """
-        Create an XYZ editor from the :class:`~exatomic.core.atom.Atom` table.
-
-        Args:
-            atom (:class:`~exatomic.core.atom.Atom`): Atom table
-
-        Returns:
-            xyz (:class:`~exatomic.interfaces.xyz.XYZ`): XYZ editor
-        """
-        pass
-
-    def _parse(self, columns=("Z", "x", "y", "z")):
-        """Perform complete parsing."""
-        columns = [col if col != "symbol" else "Z" for col in columns]
-        idx, fdx, cdx = _build_indexes(self.sections['startline'].values,
-                                       self.sections['endline'].values)
-        atom = Atom(pd.read_csv(StringIO("\n".join(itemgetter(*idx)(self.lines))),
-                                         delim_whitespace=True, names=columns,
-                                         converters={'Z': lambda x: sym2z[x]}))
-        atom['frame'] = fdx
-        self.comments = {i: self.lines[j] for i, j in enumerate(cdx)}
-        self.atom = atom
-
-    def _parse_atom(self, columns=("Z", "x", "y", "z")):
-        self._parse(columns)
-
-    def _parse_comments(self):
-        self._parse()
-
-    def _parse_end(self, starts):
-        """Parse ends by simple line counting."""
-        matches = []
-        for start in starts:
-            n = start.num + int(start.text.split()[0]) + 1
-            text = self.lines[n]
-            matches.append(Match(n, text))
-        return Matches(starts.pattern, *matches)
-
-
-
-
-
-
-
-
+<<<<<<< HEAD:exatomic/filetypes/xyz.py
+## -*- coding: utf-8 -*-
+## Copyright (c) 2015-2016, Exa Analytics Development Team
+## Distributed under the terms of the Apache License 2.0
+#"""
+#<<<<<<< HEAD
+##XYZ File Editor
+####################
+##TODO: Add comment/append comment, replace comment
+##"""
+##import csv
+##import numpy as np
+##import pandas as pd
+##from io import StringIO
+##from exa.math.misc.indexing import starts_counts
+##from exatomic import Length
+##from exa.utility import mkp
+##from exatomic.editor import Editor
+###from exatomic.frame import compute_frame_from_atom
+##
+##
+##class XYZ(Editor):
+##    """
+##    An editor for programmatically editing `xyz`_ files.
+##
+##    .. _xyz: https://en.wikipedia.org/wiki/XYZ_file_format
+##    """
+##    _header = '{nat}\n{comment}\n'
+##    _cols = ['symbol', 'x', 'y', 'z']
+##
+##    def parse_atom(self, unit='A'):
+##        """
+##        Parse the atom table from the current xyz file.
+##
+##        Args:
+##            unit (str): Default xyz unit of length is the Angstrom
+##        """
+##        df = pd.read_csv(StringIO(str(self)), delim_whitespace=True,
+##                                  names=('symbol', 'x', 'y', 'z'), header=None,
+##                                  skip_blank_lines=False)
+##        # The following algorithm works for both trajectory files and single xyz files
+##        nats = pd.Series(df[df[['y', 'z']].isnull().all(axis=1)].index)
+##        nats = nats[nats.diff() != 1].values
+##        comments = nats + 1
+##        nats = df.ix[nats, 'symbol']
+##        comments = df.ix[comments, :].dropna(how='all').index
+##        initials = nats.index.values.astype(np.int64) + 2
+##        counts = nats.values.astype(np.int64)
+##        frame, label, indices = starts_counts(initials, counts)
+##        df = df[df.index.isin(indices)]
+##        df[['x', 'y', 'z']] = df[['x', 'y', 'z']].astype(np.float64)
+##        df['symbol'] = df['symbol'].astype('category')
+##        df['frame'] = frame
+##        df['frame'] = df['frame'].astype('category')
+##        df.reset_index(drop=True, inplace=True)
+##        df.index.names = ['atom']
+##        df['x'] *= Length[unit, 'au']
+##        df['y'] *= Length[unit, 'au']
+##        df['z'] *= Length[unit, 'au']
+##        if self.meta is not None:
+##            self.meta['comments'] = {line: self._lines[line] for line in comments}
+##        else:
+##            self.meta = {'comments': {line: self._lines[line] for line in comments}}
+##        self.atom = df
+##
+##    def write(self, path, trajectory=True, float_format='%    .8f'):
+##        """
+##        Write an xyz file (or files) to disk.
+##
+##        Args:
+##            path (str): Directory or file path
+##            trajectory (bool): Write xyz trajectory file (default) or individual
+##
+##        Returns:
+##            path (str): On success, return the directory or file path written
+##        """
+##        if trajectory:
+##            with open(path, 'w') as f:
+##                f.write(str(self))
+##        else:
+##            grps = self.atom.cardinal_groupby()
+##            n = len(str(self.frame.index.max()))
+##            for frame, atom in grps:
+##                filename = str(frame).zfill(n) + '.xyz'
+##                with open(mkp(path, filename), 'w') as f:
+##                    f.write(self._header.format(nat=str(len(atom)),
+##                                                comment='frame: ' + str(frame)))
+##                    a = atom[self._cols].copy()
+##                    a['x'] *= Length['au', 'A']
+##                    a['y'] *= Length['au', 'A']
+##                    a['z'] *= Length['au', 'A']
+##                    a.to_csv(f, header=False, index=False, sep=' ', float_format=float_format,
+##                             quoting=csv.QUOTE_NONE, escapechar=' ')
+##
+##    @classmethod
+##    def from_universe(cls, universe, atom_table='atom', float_format='%    .8f'):
+##        """
+##        Create an xyz file editor from a given universe. If the universe has
+##        more than one frame, creates an xyz trajectory format editor.
+##
+##        Args:
+##            universe: The universe
+##            atom_table (str): One of 'atom', 'unit', or 'visual' corresponding to coordinates
+##            float_format (str): Floating point format (for writing)
+##        """
+##        string = ''
+##        grps = universe.atom.cardinal_groupby()
+##        for frame, atom in grps:
+##            string += cls._header.format(nat=len(atom), comment='frame: ' + str(frame))
+##            atom_copy = atom[cls._cols].copy()
+##            if atom_table == 'unit':
+##                atom_copy.update(universe.unit_atom)
+##            elif atom_table == 'visual':
+##                atom_copy.update(universe.visual_atom)
+##            atom_copy['x'] *= Length['au', 'A']
+##            atom_copy['y'] *= Length['au', 'A']
+##            atom_copy['z'] *= Length['au', 'A']
+##            string += atom_copy.to_csv(sep=' ', header=False, quoting=csv.QUOTE_NONE,
+##                                       index=False, float_format=float_format,
+##                                       escapechar=' ')
+##        return cls(string, name=universe.name, description=universe.description,
+##                   meta=universe.meta)
+#=======
+#XYZ File Editor
+###################
+#"""
+#import csv
 #import numpy as np
 #import pandas as pd
-#from exa import Parser
-#from exa.typed import Typed
-#from .atom import Atom, frame_index
+#from io import StringIO
+#from exa.math.misc.indexing import starts_counts
+#from exatomic import Length
+#from exa.utility import mkp
+#from exatomic.editor import Editor
+#from exatomic.frame import compute_frame_from_atom
 #
 #
-#class XYZ(Parser):
+#class XYZ(Editor):
 #    """
-#    A parser/composer for the `XYZ`_ file format.
+#    An editor for programmatically editing `xyz`_ files.
 #
-#    This class can parser in simple XYZ and trajectory XYZ files. Occasionally
-#    additional columns will be present in xyz-like files and can be handled by
-#    keyword arguments. XYZ files can be constructed ('composed') using the
-#    classmethods, ``from_universe``, ``from_atom``, etc.
-#
-#    .. code-block:: python
-#
-#        from exa import units
-#
-#        # File in atomic length units (Bohr)
-#        xyz = XYZ(xyzfile, unit=units.au_length)
-#
-#        # File with extra columns
-#        xyz = XYZ(xyzfile, columns=("symbol", "Z", "x", "y", "z"))
-#
-#    .. _XYZ: https://en.wikipedia.org/wiki/XYZ_file_format
+#    .. _xyz: https://en.wikipedia.org/wiki/XYZ_file_format
 #    """
-#    _parse_unit = units.Angstrom
-#    _parse_columns = ("symbol", "x", "y", "z")
-#    comment_lines = TypedProperty(list, "List of lines with comments")
-#    atom = TypedProperty(Atom, "Atom dataframe of absolute nuclear coordinates")
+#    _header = '{nat}\n{comment}\n'
+#    _cols = ['symbol', 'x', 'y', 'z']
 #
-#    @property
-#    def comments(self):
-#        """Get a dictionary of frame numbers and comments."""
-#        return {i: str(self[k]) for i, k in enumerate(self.comment_lines)}
-#
-#    @classmethod
-#    def from_universe(cls, universe):
-#        """Create an XYZ editor from a universe."""
-#        raise NotImplementedError()
-#
-#    @classmethod
-#    def from_atom(cls, atom):
-#        """Create an XYZ editor from an :class:`~exatomic.atom.Atom` table."""
-#        raise NotImplementedError()
-#
-#    def to_atom(self):
-#        """Create an :class:`~exatomic.atom.Atom` table."""
-#        raise NotImplementedError()
-#
-#    def write(self, path, trajectory=True, float_format="%    .10f"):
+#    def parse_atom(self, unit='A', names=('symbol', 'x', 'y', 'z')):
 #        """
-#        Write the file (or files) to disk.
+#        Parse the atom table from the current xyz file.
 #
 #        Args:
-#            path (str): File or directory path
-#            trajectory (bool): If true, write trajectory-like XYZ file
-#            float_format (str): Formatting for numbers
+#            unit (str): Default xyz unit of length is the Angstrom
 #        """
-#        raise NotImplementedError()
-#
-#    def _parse(self):
-#        """
-#        The parser assumes that the number of atoms does not vary if multiple frames,
-#        but if they do a slow parsing algorithm is used that goes xyz-block by xyz-block.
-#        """
-#        nat = int(str(self[0]).split()[0])
-#        nat2 = nat + 2
-#        # Check if we have an integer number of frames
-#        if np.mod(len(self), nat2) == 0:
-#            # To confirm that all frames have the same number of atoms,
-#            # we compare the lines.
-#            if not all(int(line.split()[0]) == nat for line in self[::nat2]):
-#                self._parse_variable()           # Logic for the current function
-#                return                           # ends here, so we return.
-#            nframe = len(self)//nat2
+#        df = pd.read_csv(StringIO(str(self)), delim_whitespace=True,
+#                                  names=names, header=None,
+#                                  skip_blank_lines=False)
+#        # The following algorithm works for both trajectory files and single xyz files
+#        nats = pd.Series(df[df[['y', 'z']].isnull().all(axis=1)].index)
+#        nats = nats[nats.diff() != 1].values
+#        comments = nats + 1
+#        nats = df.ix[nats, 'symbol']
+#        comments = df.ix[comments, :].dropna(how='all').index
+#        initials = nats.index.values.astype(np.int64) + 2
+#        counts = nats.values.astype(np.int64)
+#        frame, label, indices = starts_counts(initials, counts)
+#        df = df[df.index.isin(indices)]
+#        df[['x', 'y', 'z']] = df[['x', 'y', 'z']].astype(np.float64)
+#        df['symbol'] = df['symbol'].astype('category')
+#        df['frame'] = frame
+#        df['frame'] = df['frame'].astype('category')
+#        df.reset_index(drop=True, inplace=True)
+#        df.index.names = ['atom']
+#        df['x'] *= Length[unit, 'au']
+#        df['y'] *= Length[unit, 'au']
+#        df['z'] *= Length[unit, 'au']
+#        if self.meta is not None:
+#            self.meta['comments'] = {line: self._lines[line] for line in comments}
 #        else:
-#            self._parse_variable()    # Similarly, if it is not obvious how many
-#            return                    # frames/atoms there are use the slow approach.
-#        rows = frame_index(nframe, nat).tolist()
-#        atom = self[rows].to_data(delim_whitespace=True, names=self._parse_columns)
-#        atom['frame'] = [i for i in range(nframe) for _ in range(nat)]
-#        self.atom = atom
-#        if self._parse_unit != units.Angstrom:
-#            factor = units.Angstrom._value/self._parse_unit._value
-#            for r in ("x", "y", "z"):
-#                self.atom[r] *= factor
-#        self.comment_lines = [i*nat2 + 1 for i in range(nframe)]
+#            self.meta = {'comments': {line: self._lines[line] for line in comments}}
+#        self.atom = df
 #
-#    def _parse_variable(self):
+#    def write(self, path, trajectory=True, float_format='%    .8f'):
 #        """
-#        Parses a trajectory like XYZ file that has variable atom counts in each frame.
-#        No assumptions are made about the length of the file, or number of atoms per
-#        frame.
-#        """
-#        cursor = 0    # Cursor line number
-#        frame = 0     # Frame index
-#        n = len(self)
-#        nat = 0
-#        atoms = []
-#        comments = []
-#        # Inspect line by line
-#        while cursor + nat < n:
-#            ls = str(self[cursor]).strip().split()
-#            # If we find what we think is a nat, then parse
-#            if len(ls) >= 1 and ls[0].isdigit():
-#                nat = int(ls[0])
-#                comments.append(cursor + 1)
-#                atom = self[cursor+2:cursor+nat+2].to_data(delim_whitespace=True,
-#                                                           names=self._parse_columns)
-#                atom['frame'] = frame
-#                atoms.append(atom)
-#                cursor += nat + 2
-#                nat = 0
-#                frame += 1
-#            else:
-#                cursor += 1
-#        self.atom = pd.concat(atoms, ignore_index=True)
-#        if self._parse_unit != units.Angstrom:
-#            factor = units.Angstrom._value/self._parse_unit._value
-#            for r in ("x", "y", "z"):
-#                self.atom[r] *= factor
-#        self.comment_lines = comments
+#        Write an xyz file (or files) to disk.
 #
-#    def __init__(self, *args, **kwargs):
-#        unit = kwargs.pop("unit", XYZ._parse_unit)
-#        columns = kwargs.pop("columns", XYZ._parse_columns)
-#        super(XYZ, self).__init__(*args, **kwargs)
-#        self._parse_unit = unit
-#        self._parse_columns = columns
+#        Args:
+#            path (str): Directory or file path
+#            trajectory (bool): Write xyz trajectory file (default) or individual
+#
+#        Returns:
+#            path (str): On success, return the directory or file path written
+#        """
+#        if trajectory:
+#            with open(path, 'w') as f:
+#                f.write(str(self))
+#        else:
+#            grps = self.atom.cardinal_groupby()
+#            n = len(str(self.frame.index.max()))
+#            for frame, atom in grps:
+#                filename = str(frame).zfill(n) + '.xyz'
+#                with open(mkp(path, filename), 'w') as f:
+#                    f.write(self._header.format(nat=str(len(atom)),
+#                                                comment='frame: ' + str(frame)))
+#                    a = atom[self._cols].copy()
+#                    a['x'] *= Length['au', 'A']
+#                    a['y'] *= Length['au', 'A']
+#                    a['z'] *= Length['au', 'A']
+#                    a.to_csv(f, header=False, index=False, sep=' ', float_format=float_format,
+#                             quoting=csv.QUOTE_NONE, escapechar=' ')
+#
+#    @classmethod
+#    def from_universe(cls, universe, atom_table='atom', float_format='%    .8f'):
+#        """
+#        Create an xyz file editor from a given universe. If the universe has
+#        more than one frame, creates an xyz trajectory format editor.
+#
+#        Args:
+#            universe: The universe
+#            atom_table (str): One of 'atom', 'unit', or 'visual' corresponding to coordinates
+#            float_format (str): Floating point format (for writing)
+#        """
+#        string = ''
+#        grps = universe.atom.cardinal_groupby()
+#        for frame, atom in grps:
+#            string += cls._header.format(nat=len(atom), comment='frame: ' + str(frame))
+#            atom_copy = atom[cls._cols].copy()
+#            if atom_table == 'unit':
+#                atom_copy.update(universe.unit_atom)
+#            elif atom_table == 'visual':
+#                atom_copy.update(universe.visual_atom)
+#            atom_copy['x'] *= Length['au', 'A']
+#            atom_copy['y'] *= Length['au', 'A']
+#            atom_copy['z'] *= Length['au', 'A']
+#            string += atom_copy.to_csv(sep=' ', header=False, quoting=csv.QUOTE_NONE,
+#                                       index=False, float_format=float_format,
+#                                       escapechar=' ')
+#        return cls(string, name=universe.name, description=universe.description,
+#                   meta=universe.meta)
+#>>>>>>> 811f6aaae1e1aef968c27a34842d5ad9e7267217
+=======
+# -*- coding: utf-8 -*-
+# Copyright (c) 2015-2016, Exa Analytics Development Team
+# Distributed under the terms of the Apache License 2.0
+"""
+XYZ File Editor
+##################
+"""
+import csv
+import numpy as np
+import pandas as pd
+from io import StringIO
+from exa.math.misc.indexing import starts_counts
+from exa.util.units import Length
+from exa.util.utility import mkp
+from exatomic.core.editor import Editor
+from exatomic.core.frame import compute_frame_from_atom
+
+
+class XYZ(Editor):
+    """
+    An editor for programmatically editing `xyz`_ files.
+
+    .. _xyz: https://en.wikipedia.org/wiki/XYZ_file_format
+    """
+    _header = '{nat}\n{comment}\n'
+    _cols = ['symbol', 'x', 'y', 'z']
+
+    def parse_atom(self, unit='A', names=('symbol', 'x', 'y', 'z')):
+        """
+        Parse the atom table from the current xyz file.
+
+        Args:
+            unit (str): Default xyz unit of length is the Angstrom
+        """
+        df = pd.read_csv(StringIO(str(self)), delim_whitespace=True,
+                                  names=names, header=None,
+                                  skip_blank_lines=False)
+        # The following algorithm works for both trajectory files and single xyz files
+        nats = pd.Series(df[df[['y', 'z']].isnull().all(axis=1)].index)
+        nats = nats[nats.diff() != 1].values
+        comments = nats + 1
+        nats = df.ix[nats, 'symbol']
+        comments = df.ix[comments, :].dropna(how='all').index
+        initials = nats.index.values.astype(np.int64) + 2
+        counts = nats.values.astype(np.int64)
+        frame, label, indices = starts_counts(initials, counts)
+        df = df[df.index.isin(indices)]
+        df[['x', 'y', 'z']] = df[['x', 'y', 'z']].astype(np.float64)
+        df['symbol'] = df['symbol'].astype('category')
+        df['frame'] = frame
+        df['frame'] = df['frame'].astype('category')
+        df.reset_index(drop=True, inplace=True)
+        df.index.names = ['atom']
+        df['x'] *= Length[unit, 'au']
+        df['y'] *= Length[unit, 'au']
+        df['z'] *= Length[unit, 'au']
+        if self.meta is not None:
+            self.meta['comments'] = {line: self._lines[line] for line in comments}
+        else:
+            self.meta = {'comments': {line: self._lines[line] for line in comments}}
+        self.atom = df
+
+    def write(self, path, trajectory=True, float_format='%    .8f'):
+        """
+        Write an xyz file (or files) to disk.
+
+        Args:
+            path (str): Directory or file path
+            trajectory (bool): Write xyz trajectory file (default) or individual
+
+        Returns:
+            path (str): On success, return the directory or file path written
+        """
+        if trajectory:
+            with open(path, 'w') as f:
+                f.write(str(self))
+        else:
+            grps = self.atom.cardinal_groupby()
+            n = len(str(self.frame.index.max()))
+            for frame, atom in grps:
+                filename = str(frame).zfill(n) + '.xyz'
+                with open(mkp(path, filename), 'w') as f:
+                    f.write(self._header.format(nat=str(len(atom)),
+                                                comment='frame: ' + str(frame)))
+                    a = atom[self._cols].copy()
+                    a['x'] *= Length['au', 'A']
+                    a['y'] *= Length['au', 'A']
+                    a['z'] *= Length['au', 'A']
+                    a.to_csv(f, header=False, index=False, sep=' ', float_format=float_format,
+                             quoting=csv.QUOTE_NONE, escapechar=' ')
+
+    @classmethod
+    def from_universe(cls, universe, atom_table='atom', float_format='%    .8f'):
+        """
+        Create an xyz file editor from a given universe. If the universe has
+        more than one frame, creates an xyz trajectory format editor.
+
+        Args:
+            universe: The universe
+            atom_table (str): One of 'atom', 'unit', or 'visual' corresponding to coordinates
+            float_format (str): Floating point format (for writing)
+        """
+        string = ''
+        grps = universe.atom.cardinal_groupby()
+        for frame, atom in grps:
+            string += cls._header.format(nat=len(atom), comment='frame: ' + str(frame))
+            atom_copy = atom[cls._cols].copy()
+            if atom_table == 'unit':
+                atom_copy.update(universe.unit_atom)
+            elif atom_table == 'visual':
+                atom_copy.update(universe.visual_atom)
+            atom_copy['x'] *= Length['au', 'A']
+            atom_copy['y'] *= Length['au', 'A']
+            atom_copy['z'] *= Length['au', 'A']
+            string += atom_copy.to_csv(sep=' ', header=False, quoting=csv.QUOTE_NONE,
+                                       index=False, float_format=float_format,
+                                       escapechar=' ')
+        return cls(string, name=universe.name, description=universe.description,
+                   meta=universe.meta)
+>>>>>>> 1c37655b6be3dca60b2adbeee8ca3767e5477943:exatomic/interfaces/xyz.py

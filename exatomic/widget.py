@@ -5,7 +5,7 @@
 Universe Notebook Widget
 #########################
 """
-import os
+import os, re
 import numpy as np
 import pandas as pd
 from glob import glob
@@ -19,7 +19,7 @@ from ipywidgets import (
     Widget, DOMWidget, Layout, Button, Dropdown,
     register, jslink, widget_serialization
 )
-from exa.relational.isotope import symbol_to_radius, symbol_to_color
+from exatomic.base import sym2radius, sym2color
 from exatomic import __js_version__
 
 ###################
@@ -149,7 +149,10 @@ def gui_field_widgets(uni=False, test=False):
 ################
 # Base classes #
 ################
+<<<<<<< HEAD
 
+=======
+>>>>>>> 1c37655b6be3dca60b2adbeee8ca3767e5477943
 @register
 class ExatomicScene(DOMWidget):
     """Resizable three.js scene."""
@@ -159,8 +162,8 @@ class ExatomicScene(DOMWidget):
     _model_module = Unicode("jupyter-exatomic").tag(sync=True)
     _model_name = Unicode("ExatomicSceneModel").tag(sync=True)
     _view_name = Unicode("ExatomicSceneView").tag(sync=True)
-    scn_clear = Bool(False).tag(sync=True)
-    scn_saves = Bool(False).tag(sync=True)
+    clear = Bool(False).tag(sync=True)
+    save = Bool(False).tag(sync=True)
     field_pos = Unicode("003399").tag(sync=True)
     field_neg = Unicode("FF9900").tag(sync=True)
     field_iso = Float(2.0).tag(sync=True)
@@ -203,6 +206,31 @@ class ExatomicScene(DOMWidget):
 
 
 @register
+class PickerScene(ExatomicScene):
+    _model_name = Unicode("PickerSceneModel").tag(sync=True)
+    _view_name = Unicode("PickerSceneView").tag(sync=True)
+
+
+@register
+class HUDScene(ExatomicScene):
+    _model_name = Unicode("HUDSceneModel").tag(sync=True)
+    _view_name = Unicode("HUDSceneView").tag(sync=True)
+
+
+@register
+class ThreeAppScene(DOMWidget):
+    """Resizable three.js scene."""
+    _model_module_version = Unicode(__js_version__).tag(sync=True)
+    _model_module_version = Unicode(__js_version__).tag(sync=True)
+    _view_module = Unicode("jupyter-exatomic").tag(sync=True)
+    _model_module = Unicode("jupyter-exatomic").tag(sync=True)
+    _model_name = Unicode("ThreeAppSceneModel").tag(sync=True)
+    _view_name = Unicode("ThreeAppSceneView").tag(sync=True)
+    def __init__(self, *args, **kwargs):
+        lo = Layout(width="400", height="400")
+        super(DOMWidget, self).__init__(*args, layout=lo, **kwargs)
+
+@register
 class ExatomicBox(Box):
     """Base class for containers of a GUI and scene."""
 
@@ -241,9 +269,9 @@ class ExatomicBox(Box):
             saves=Button(icon="camera", description=" Save", layout=gui_lo))
 
         def _clear(b):
-            self.scene.scn_clear = self.scene.scn_clear == False
+            self.scene.clear = self.scene.clear == False
         def _saves(b):
-            self.scene.scn_saves = self.scene.scn_saves == False
+            self.scene.save = self.scene.save == False
 
         self.active_controls['close'].on_click(self._close)
         self.active_controls['clear'].on_click(_clear)
@@ -421,26 +449,34 @@ class TestUniverse(ExatomicBox):
 ################################
 
 def atom_traits(df):
-    """Get atom table traitlets."""
+    """
+    Get atom table traitlets. Atomic size (using the covalent radius) and atom
+    colors (using the common `Jmol`_ color scheme) are packed as dicts and
+    obtained from the static data in exa.
+
+    .. _Jmol: http://jmol.sourceforge.net/jscolors/
+    """
     traits = {}
-    if 'label' in df.columns:
-        df.rename(columns={'label': 'l'}, inplace=True)
-    elif 'tag' in df.columns:
-        df.rename(columns={'tag': 'l'}, inplace=True)
-    else:
-        df['l'] = df['symbol'] + df.index.astype(str)
+    if 'label' in df.columns: df['l'] = df['label']
+    elif 'tag' in df.columns: df['l'] = df['tag']
+    else: df['l'] = df['symbol'] + df.index.astype(str)
     grps = df.groupby('frame')
     for col in ['x', 'y', 'z', 'l']:
-        traits['atom_' + col] = grps.apply(
+        traits['atom_'+col] = grps.apply(
             lambda y: y[col].to_json(
             orient='values', double_precision=3)
             ).to_json(orient="values").replace('"', '')
+    del df['l']
+    repl = {r'\\': '', '"\[': '[', '\]"': ']'}
+    replpat = re.compile('|'.join(repl.keys()))
+    repl = {'\\': '', '"[': '[', ']"': ']'}
+    traits['atom_l'] = replpat.sub(lambda m: repl[m.group(0)], traits['atom_l'])
     syms = grps.apply(lambda g: g['symbol'].cat.codes.values)
     symmap = {i: v for i, v in enumerate(df['symbol'].cat.categories)
               if v in df.unique_atoms}
     unq = df['symbol'].unique()
-    radii = symbol_to_radius()[unq]
-    colors = symbol_to_color()[unq]
+    radii = sym2radius[unq]
+    colors = sym2color[unq]
     traits['atom_s'] = syms.to_json(orient='values')
     traits['atom_r'] = {i: 0.5 * radii[v] for i, v in symmap.items()}
     traits['atom_c'] = {i: colors[v] for i, v in symmap.items()}
@@ -574,7 +610,6 @@ class UniverseWidget(ExatomicBox):
             fopts = Dropdown(options=fields, layout=gui_lo)
             def _fopts(c): self.scene.field_idx = c.new
             fopts.observe(_fopts, names='value')
-            folder.insert(1, 'fopts', fopts, update=True)
             # Make an isosurface folder
             isos = Button(description=' Isosurfaces', icon='cube')
             def _fshow(b):
@@ -582,26 +617,26 @@ class UniverseWidget(ExatomicBox):
             isos.on_click(_fshow)
             # Move the isosurface button to the subfolder
             iso = folder.inactive_controls.pop('iso')
-            isofolder = Folder(isos, OrderedDict([('iso', iso)]),
-                               layout=Layout(width="200px"))
-            isofolder.activate('iso')
-            folder.insert(2, 'iso', isofolder, update=True)
+            isofolder = Folder(isos, OrderedDict([
+                ('fopts', fopts),
+                ('iso', iso)
+            ]), layout=Layout(width="200px"))
+            isofolder.activate()
+            folder.insert(1, 'iso', isofolder, update=True)
             # Make a contour folder
             control = Button(description=' Contours', icon='dot-circle-o')
             def _cshow(b):
                 self.scene.cont_show = self.scene.cont_show == False
             control.on_click(_cshow)
             content = OrderedDict([
+                ('fopts', fopts),
                 ('axis', Dropdown(options=['x', 'y', 'z'], value='z')),
                 ('num', IntSlider(description='N', min=5, max=20,
                                   value=10, step=1, layout=gui_lo,)),
-                                  #continuous_update=False)),
                 ('lim', IntRangeSlider(description="10**Limits", min=-10,
                                        max=0, step=1, value=[-8, -1],)),
-                                       #continuous_update=False)),
                 ('val', FloatSlider(description="Value",
                                     min=-5, max=5, value=0,)),
-                                    #continuous_update=False)),
             ])
             def _cont_axis(c): self.scene.cont_axis = c.new
             def _cont_num(c): self.scene.cont_num = c.new
@@ -613,7 +648,7 @@ class UniverseWidget(ExatomicBox):
             content['val'].observe(_cont_val, names='value')
             contour = Folder(control, content, layout=Layout(width="200px"))
             contour.activate()
-            folder.insert(3, 'contour', contour, update=True)
+            folder.insert(2, 'contour', contour, update=True)
             self.active_controls['field'] = folder
 
     def __init__(self, uni, *args, **kwargs):

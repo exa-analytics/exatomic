@@ -7,8 +7,13 @@ theoretical chemists, physicists, etc. Support for molecular geometry and
 orbital visualization is provided via the `Jupyter`_ notebook, a web-browser
 based interactive (multi-programming language) environment.
 
+<<<<<<< HEAD
 .. extended description (todo)
 
+=======
+Warning:
+    This package uses the `atomic`_ unit system (Hartree) by default.
+>>>>>>> 1c37655b6be3dca60b2adbeee8ca3767e5477943
 
 Supported Software
 ---------------------
@@ -41,6 +46,7 @@ def _jupyter_nbextension_paths():
         'require': "jupyter-exatomic/extension"
     }]
 
+<<<<<<< HEAD
 from ._version import __version__
 from .core import Atom
 from .core import Universe
@@ -81,3 +87,11 @@ from .interfaces import XYZ
 #from exatomic import mpl
 #
 #from exatomic.widget import TestContainer, TestUniverse, UniverseWidget
+=======
+__js_version__ = "0.3.9"
+from ._version import __version__
+from . import core
+from .core import Universe, Editor, Atom, AtomicField, Frame
+from .interfaces import XYZ, Cube
+from .widget import TestContainer, TestUniverse, UniverseWidget
+>>>>>>> 1c37655b6be3dca60b2adbeee8ca3767e5477943

@@ -5,6 +5,7 @@ os:
 
 python:
   - "2.7"
+<<<<<<< HEAD
   - "3.5"
   - "3.6"
 
@@ -24,6 +25,38 @@ install:
   - conda install -q -c conda-forge pytables
   - pip install travis-sphinx codacy-coverage python-coveralls
   - cd ../exa; pip install .; cd ../exatomic;
+=======
+ #- "3.5"
+  - "3.6"
+
+before_install:
+  - deactivate
+  - wget http://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh -O miniconda.sh
+  - bash miniconda.sh -b -p $HOME/miniconda
+  - export NUMBA_DISABLE_JIT=1
+  - export DISPLAY=:99.0
+  - sh -e /etc/init.d/xvfb start
+  - sleep 3
+  - export PATH="$HOME/miniconda/bin:$PATH"
+  - conda config --set always_yes yes --set changeps1 no
+  - conda update -q conda
+  - conda install -q -c conda-forge 'icu=56.*'
+
+install:
+  - conda install --yes python=$TRAVIS_PYTHON_VERSION
+# 3.9 DEV
+  - git clone https://github.com/exa-analytics/exa.git
+  - cd exa
+  - git fetch origin pull/139/head:org-master-3.9
+  - git checkout org-master-3.9
+  - conda install -q -c conda-forge `cat requirements.txt`
+  - conda install -q -c conda-forge pytables python-coveralls ply pandoc pypandoc nbsphinx sympy
+  - pip install travis-sphinx codacy-coverage coverage
+  - pip install .
+  - cd ../
+# - conda install -q -c exaanalytics exa
+  - conda install -q -c conda-forge psutil numexpr nodejs ipywidgets
+>>>>>>> 1c37655b6be3dca60b2adbeee8ca3767e5477943
   - pip install .
 
 script:
