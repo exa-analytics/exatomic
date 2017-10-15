@@ -50,20 +50,20 @@ install:
           {$root = "C:\Miniconda-x64"}
         $env:path="$root;$root\Scripts;$root\Library\bin;$($env:path)"
 
-  - cmd: mkdir ../exa
-  - cmd: cd ../exa
-  - cmd: git checkout -b avmarchenko-org-master-3.9 master
-  - cmd: git pull https://github.com/avmarchenko/exa.git org-master-3.9
-  - cmd: conda install -q -c conda-forge `cat requirements.txt`
-  - cmd: conda install -q -c conda-forge pytables python-coveralls ply pandoc pypandoc nbsphinx
-  - cmd: conda install -q 'icu=56.*'
-  - cmd: pip install travis-sphinx codacy-coverage coverage
-  - cmd: pip install .
-  - cmd: cd -
   - cmd: conda config --set show_channel_urls true
   - cmd: conda config --set always_yes yes --set changeps1 no
   - cmd: conda update -q -y --all
-  - cmd: conda install -q -y -c conda-forge numpy scipy matplotlib seaborn networkx pandas nose numba pytables six
+  - cmd: git clone https://github.com/exa-analytics/exa.git
+  - cmd: cd exa
+  - cmd: git fetch origin pull/139/head:org-master-3.9
+  - cmd: git checkout org-master-3.9
+  - cmd: conda install -q -c conda-forge `cat requirements.txt`
+  - cmd: conda install -q -c conda-forge pytables python-coveralls ply pandoc pypandoc nbsphinx
+  - cmd: conda install -q -c conda-forge 'icu=56.*'
+  - cmd: pip install travis-sphinx codacy-coverage coverage
+  - cmd: pip install .
+  - cmd: cd ../
+  - conda install -q -c conda-forge psutil numexpr nodejs ipywidgets
   - cmd: pip install .
 
 build: false

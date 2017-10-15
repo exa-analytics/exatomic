@@ -24,15 +24,15 @@ before_install:
 install:
   - conda install --yes python=$TRAVIS_PYTHON_VERSION
 # 3.9 DEV
-  - mkdir ../exa
-  - cd ../exa
-  - git checkout -b avmarchenko-org-master-3.9 master
-  - git pull https://github.com/avmarchenko/exa.git org-master-3.9
+  - git clone https://github.com/exa-analytics/exa.git
+  - cd exa
+  - git fetch origin pull/139/head:org-master-3.9
+  - git checkout org-master-3.9
   - conda install -q -c conda-forge `cat requirements.txt`
   - conda install -q -c conda-forge pytables python-coveralls ply pandoc pypandoc nbsphinx
   - pip install travis-sphinx codacy-coverage coverage
   - pip install .
-  - cd -
+  - cd ../
 # - conda install -q -c exaanalytics exa
   - conda install -q -c conda-forge psutil numexpr nodejs ipywidgets
   - pip install .
