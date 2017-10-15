@@ -14,7 +14,6 @@ simulations), step number (e.g. geometry optimization), or an arbitrary index
 import six
 import numpy as np
 import pandas as pd
-from exa.core.numerical import Numerical
 from exa import Field, DataFrame, Container, TypedMeta
 from .error import BasisSetNotFoundError
 from .frame import Frame, compute_frame_from_atom
@@ -30,14 +29,6 @@ from exatomic.algorithms.orbital import add_molecular_orbitals
 #from exatomic.interfaces.cclib import universe_from_cclib
 from exatomic.widget import UniverseWidget
 
-
-class Meta(Numerical):
-    """
-    Defines strongly typed attributes of the :class:`~exatomic.universe.Universe`
-    and :class:`~exatomic.editor.AtomicEditor` objects. All "aliases" below are
-    in fact type definitions that get dynamically generated on package load
-    for :class:`~exatomic.container.Universe` and :class:`~exatomic.editor.Editor`.
-    """
 
 class Universe(six.with_metaclass(TypedMeta, Container)):
     """
@@ -68,7 +59,8 @@ class Universe(six.with_metaclass(TypedMeta, Container)):
     contribution = DataFrame
     basis_set_order = BasisSetOrder
     basis_set = BasisSet
-    _cardinal = 'frame'
+    _cardinal = "frame"
+    _getter_prefix = "parse"
 
     @classmethod
     def from_cclib(cls, ccobj):
@@ -87,7 +79,6 @@ class Universe(six.with_metaclass(TypedMeta, Container)):
         self.unit_atom = UnitAtom.from_universe(self)
 
     def compute_visual_atom(self):
-        """"""
         self.visual_atom = VisualAtom.from_universe(self)
         self.compute_molecule_com()
 

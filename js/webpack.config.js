@@ -39,7 +39,8 @@ module.exports = [
         module: {
             loaders: loaders
         },
-        externals: ["jupyter-js-widgets"]
+        //externals: ["jupyter-js-widgets"]
+        externals: ["@jupyter-widgets/base", "@jupyter-widgets/controls"]
     },
     {// Embeddable jupyter-exatomic bundle
      //
@@ -66,6 +67,7 @@ module.exports = [
         module: {
             loaders: loaders
         },
-        externals: ["jupyter-js-widgets"]
+        //externals: ["jupyter-js-widgets"]
+        externals: ["@jupyter-widgets/base", "@jupyter-widgets/controls"]
     }
 ];

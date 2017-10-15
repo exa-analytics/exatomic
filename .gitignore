@@ -28,6 +28,7 @@ target/
 .settings/
 exatomic/static/*.js
 exatomic/static/*.map
+package-lock.json
 
 
 # Compiled
