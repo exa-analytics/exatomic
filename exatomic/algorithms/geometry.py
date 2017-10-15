@@ -200,4 +200,3 @@ def _6_domain(center, ligand, distance, geometry, offset, plane, axis):
         geom.append([xi, yi, zi, ligand, 0, cnt])
         cnt += 1
     return pd.DataFrame(geom, columns=columns)
->>>>>>> 1c37655b6be3dca60b2adbeee8ca3767e5477943

@@ -149,10 +149,6 @@ def gui_field_widgets(uni=False, test=False):
 ################
 # Base classes #
 ################
-<<<<<<< HEAD
-
-=======
->>>>>>> 1c37655b6be3dca60b2adbeee8ca3767e5477943
 @register
 class ExatomicScene(DOMWidget):
     """Resizable three.js scene."""
