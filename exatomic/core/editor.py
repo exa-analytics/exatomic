@@ -26,6 +26,8 @@ class Editor(six.with_metaclass(TypedMeta, _Editor)):
     See Also:
         For a list of typed attributes, see :class:`~exatomic.container.Universe`.
     """
+    _getter_prefix = "parse"
+
     def parse_frame(self):
         """
         Create a minimal :class:`~exatomic.frame.Frame` from the (parsed)

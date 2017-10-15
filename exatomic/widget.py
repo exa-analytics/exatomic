@@ -470,9 +470,9 @@ def atom_traits(df):
     syms = grps.apply(lambda g: g['symbol'].cat.codes.values)
     symmap = {i: v for i, v in enumerate(df['symbol'].cat.categories)
               if v in df.unique_atoms}
-    unq = df['symbol'].unique()
-    radii = sym2radius[unq]
-    colors = sym2color[unq]
+    unq = df['symbol'].astype(str).unique()
+    radii = {k: sym2radius[k] for k in unq}
+    colors = {k: sym2color[k] for k in unq}
     traits['atom_s'] = syms.to_json(orient='values')
     traits['atom_r'] = {i: 0.5 * radii[v] for i, v in symmap.items()}
     traits['atom_c'] = {i: colors[v] for i, v in symmap.items()}

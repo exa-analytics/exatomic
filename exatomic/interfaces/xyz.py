@@ -5,18 +5,25 @@
 XYZ File Editor
 ##################
 """
+import six
 import csv
 import numpy as np
 import pandas as pd
 from io import StringIO
+from exa import TypedMeta
 from exa.math.misc.indexing import starts_counts
 from exa.util.units import Length
 from exa.util.utility import mkp
 from exatomic.core.editor import Editor
 from exatomic.core.frame import compute_frame_from_atom
+from exatomic.core.atom import Atom
 
 
-class XYZ(Editor):
+class Meta(TypedMeta):
+    atom = Atom
+
+
+class XYZ(six.with_metaclass(Meta, Editor)):
     """
     An editor for programmatically editing `xyz`_ files.
 
