@@ -76,7 +76,7 @@ var SmallverseSceneView = base.ExatomicSceneView.extend({
                                    this.model.get("atom").attributes.y,
                                    this.model.get("atom").attributes.z,
                                    c, r);
-        if (this.model.get("two") !== null) { 
+        if (this.model.get("two") !== null) {
             this.meshes["two"] = bond(this.model.get("two").attributes.b0,
                                       this.model.get("two").attributes.b1,
                                       this.model.get("atom").attributes.x,

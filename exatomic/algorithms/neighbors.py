@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# Copyright (c) 2015-2016, Exa Analytics Development Team
+# Copyright (c) 2015-2017, Exa Analytics Development Team
 # Distributed under the terms of the Apache License 2.0
 """
 Neighbor Selection Algorithms
@@ -78,7 +78,9 @@ def _slice_atoms_molecules(universe, sources, restrictions, n):
         universe.atom['label'] = labels
     labels = labels.unique()
     symbols = universe.atom['symbol'].unique()
-    classification = universe.molecule['classification'].unique()
+    classification = []
+    if 'classification' in universe.molecule.columns:
+        classification = universe.molecule['classification'].unique()
     if all(source in labels for source in sources):
         source_atoms = universe.atom[universe.atom['label'].isin(sources)]
         mdx = source_atoms['molecule'].astype(np.int64)

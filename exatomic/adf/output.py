@@ -2,6 +2,22 @@
 # Copyright (c) 2015-2017, Exa Analytics Development Team
 # Distributed under the terms of the Apache License 2.0
 """
+<<<<<<< HEAD
+ADF Composite Output
+#########################
+This module provides the primary (user facing) output parser.
+"""
+from exa import Parser
+from .dirac import DIRAC
+from .adf import ADF
+
+
+class Output(Parser):
+    """
+    The ADF output parser.
+    """
+    pass
+=======
 Output Parser
 #####################
 Multiple frames are not currently supported
@@ -16,9 +32,12 @@ from exatomic.core.basis import BasisSet
 from exa.util.units import Length
 from .editor import Editor
 
+>>>>>>> 1c37655b6be3dca60b2adbeee8ca3767e5477943
 
-class Output(Editor):
 
+<<<<<<< HEAD
+Output.add_parsers(DIRAC, ADF)
+=======
 
     def parse_atom(self):
         # TODO : only supports single frame, gets last atomic positions
@@ -262,3 +281,4 @@ _re_exc_01 = ' no.     E/a.u.        E/eV      f           Symmetry'
 _re_mo_00 = 'Eigenvectors .* in BAS representation'
 _re_mo_01 = 'row '
 _re_mo_02 = 'nosym'
+>>>>>>> 1c37655b6be3dca60b2adbeee8ca3767e5477943

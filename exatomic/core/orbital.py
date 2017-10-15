@@ -1,3 +1,716 @@
+<<<<<<< HEAD
+# -*- coding: utf-8 -*-
+# Copyright (c) 2015-2017, Exa Analytics Development Team
+# Distributed under the terms of the Apache License 2.0
+"""
+Orbital DataFrame
+##################
+The orbital dataframe is used to represent atomic wave functions or orbitals.
+"""
+
+
+
+
+#'''
+#Orbital DataFrame
+#####################
+#Orbital information. All of the dataframe structures and functions associated
+#with the results of a quantum chemical calculation. The Orbital table itself
+#summarizes information such as centers and energies. The Excitation table
+#collects information about orbital excitations from time-dependent calculations.
+#The convolve() bound method can be used to generate photoelectron spectroscopy
+#and absorbance spectra.
+#The MOMatrix table contains a C matrix as it is presented in quantum textbooks,
+#stored in a columnar format. The bound method square() returns the
+#matrix as one would write it out. This table should have dimensions
+#N_basis_functions * N_basis_functions. The DensityMatrix table stores
+#a triangular matrix in columnar format and contains a similar square()
+#method to return the matrix as we see it on a piece of paper.
+#'''
+#import numpy as np
+#import pandas as pd
+#try:
+#    from exa.core.dataframe import DataFrame
+#except ImportError:
+#    from exa.numerical import DataFrame
+#from exatomic import Energy
+#from exatomic.algorithms.orbital import (density_from_momatrix,
+#                                         density_as_square,
+#                                         momatrix_as_square)
+#from exatomic.field import AtomicField
+#
+#class _Convolve(DataFrame):
+#
+#    @staticmethod
+#    def _gauss(sigma, en, en0):
+#        return (1.0 / (sigma * np.sqrt(2 * np.pi))) * \
+#               np.exp(-(en - en0) ** 2 / (2 * sigma ** 2))
+#
+#    @staticmethod
+#    def _lorentz(gamma, en, en0):
+#        return gamma / (2 * np.pi * (en - en0) ** 2 + (gamma / 2) ** 2)
+#
+#    @property
+#    def last_frame(self):
+#        return self['frame'].cat.as_ordered().max()
+#
+#    @property
+#    def last_group(self):
+#        return self[self.frame == self.last_frame].group.cat.as_ordered().max()
+#
+#    def convolve(self, func='gauss', units='eV', ewin=None, broaden=0.13,
+#                 padding=5, npoints=1001, group=None, frame=None, name=None,
+#                 normalize=True):
+#        """
+#        Compute a spectrum based on excitation energies and oscillator strengths.
+#
+#        Args
+#            func (str): either 'gauss' or 'lorentz'
+#            units (str): units of resulting spectrum
+#            ewin (iter): (emin, emax) in same units as units (default in eV)
+#            broaden (float): how broad to make the peaks (FWHM, default in eV)
+#            npoints (int): "resolution" of the spectrum
+#            name (str): optional - name the column of returned data
+#            normalize (bool): set the largest value of signal equal to 1.0
+#
+#        Returns
+#            df (pd.DataFrame): contains x and y values of a spectrum
+#                               (signal and energy)
+#        """
+#        frame = self.last_frame if frame is None else frame
+#        group = self.last_group if group is None else group
+#        if func not in ['gauss', 'lorentz']:
+#            raise NotImplementedError('Convolution must be one of "gauss" or "lorentz".')
+#        choices = {'gauss': self._gauss, 'lorentz': self._lorentz}
+#        if units == 'Ha': units = 'energy'
+#        if units not in self.columns:
+#            self[units] = self['energy'] * Energy['Ha', units]
+#        sm = self[units].min() if ewin is None else ewin[0]
+#        lg = self[units].max() if ewin is None else ewin[1]
+#        mine = sm - padding * broaden
+#        maxe = lg + padding * broaden
+#        enrg = np.linspace(mine, maxe, npoints)
+#        spec = np.zeros(npoints)
+#        if self.__class__.__name__ == 'Excitation':
+#            smdf = self[(self[units] > sm) & (self[units] < lg) &
+#                        (self['frame'] == frame) & self['group'] == group]
+#            for osc, en0 in zip(smdf['osc'], smdf[units]):
+#                spec += osc * choices[func](broaden, enrg, en0)
+#        else:
+#            smdf = self[(self[units] > sm) & (self[units] < lg) &
+#                        (self['occupation'] > 0)]
+#            for en0 in smdf[units]:
+#                spec += choices[func](broaden, enrg, en0)
+#        if np.isclose(spec.max(), 0):
+#            print('Spectrum is all zeros, check energy window.')
+#        else:
+#            if normalize:
+#                spec /= spec.max()
+#        name = 'signal' if name is None else name
+#        return pd.DataFrame.from_dict({units: enrg, name: spec})
+#
+#
+#class Orbital(_Convolve):
+#    """
+#    +-------------------+----------+-------------------------------------------+
+#    | Column            | Type     | Description                               |
+#    +===================+==========+===========================================+
+#    | frame             | category | non-unique integer (req.)                 |
+#    +-------------------+----------+-------------------------------------------+
+#    | group             | category | like frame but for same geometry          |
+#    +-------------------+----------+-------------------------------------------+
+#    | orbital           | int      | vector of MO coefficient matrix           |
+#    +-------------------+----------+-------------------------------------------+
+#    | label             | int      | label of orbital                          |
+#    +-------------------+----------+-------------------------------------------+
+#    | occupation        | float    | population of orbital                     |
+#    +-------------------+----------+-------------------------------------------+
+#    | energy            | float    | eigenvalue of orbital eigenvector         |
+#    +-------------------+----------+-------------------------------------------+
+#    | symmetry          | str      | symmetry designation (if applicable)      |
+#    +-------------------+----------+-------------------------------------------+
+#    | x                 | float    | orbital center in x                       |
+#    +-------------------+----------+-------------------------------------------+
+#    | y                 | float    | orbital center in y                       |
+#    +-------------------+----------+-------------------------------------------+
+#    | z                 | float    | orbital center in z                       |
+#    +-------------------+----------+-------------------------------------------+
+#
+#    Note:
+#        Spin zero means alpha spin or unknown and spin one means beta spin.
+#    """
+#    _columns = ['frame', 'group', 'energy', 'occupation', 'vector', 'spin']
+#    _index = 'orbital'
+#    _cardinal = ('frame', np.int64)
+#    _categories = {'spin': np.int64, 'frame': np.int64, 'group': np.int64}
+#
+#
+#    def get_orbital(self, orb=-1, spin=0, index=None, group=None, frame=None):
+#        """
+#        Returns a specific orbital.
+#
+#        Args
+#            orb (int): See note below (default HOMO)
+#            spin (int): 0, no spin or alpha (default); 1, beta
+#            index (int): Orbital dataframe index (default None)
+#            frame (int): The frame of the universe (default max(frame))
+#            group (int): The group of orbitals within a given frame
+#
+#        Returns
+#            orbital (exatomic.orbital.Orbital): Orbital row
+#
+#        Note
+#            If the index is not known (usually), but a criterion
+#            such as (HOMO or LUMO) is desired, use the *orb* and
+#            *spin* criteria. Negative *orb* values are occupied,
+#            positive are unoccupied. So -1 returns the HOMO, -2
+#            returns the HOMO-1; 0 returns the LUMO, 1 returns the
+#            LUMO+1, etc.
+#        """
+#        frame = self.last_frame if frame is None else frame
+#        group = self.last_group if group is None else group
+#        if index is None:
+#            if orb > -1:
+#                return self[(self['frame'] == frame) &
+#                            (self['group'] == group) &
+#                            (self['occupation'] == 0) &
+#                            (self['spin'] == spin)].iloc[orb]
+#            else:
+#                return self[(self['frame'] == frame) &
+#                            (self['group'] == group) &
+#                            (self['occupation'] > 0) &
+#                            (self['spin'] == spin)].iloc[orb]
+#        else:
+#            return self.iloc[index]
+#
+#    @classmethod
+#    def from_energies(cls, energies, nbas, alphae, betae):
+#        try: ae, be = int(alphae), int(betae)
+#        except: raise NotImplementedError('Only integer occupation')
+#        lens = energies.shape[0]
+#        if lens == nbas:
+#            spin = np.zeros(nbas, dtype=np.int64)
+#            vector = range(nbas)
+#            occs = np.concatenate((np.repeat(2, ae),
+#                                   np.zeros(nbas - ae)))
+#            frame = group = np.zeros(nbas, dtype=np.int64)
+#        elif lens == nbas * 2:
+#            hens = lens // 2
+#            spin = np.concatenate((np.zeros(hens), np.ones(hens)))
+#            vector = np.concatenate((range(nbas), range(nbas)))
+#            occs = np.concatenate((np.ones(ae), np.zeros(nbas - ae),
+#                                   np.ones(be), np.zeros(nbas - be)))
+#            frame = group = np.zeros(nbas * 2, dtype=np.int64)
+#        else: raise Exception('Passed energies.shape is not 1 or 2 * nbas')
+#        return cls.from_dict({'frame': frame, 'group': group,
+#                              'energy': energies, 'spin': spin,
+#                              'occupation': occs, 'vector': vector})
+#
+#class Excitation(_Convolve):
+#    """
+#    +-------------------+----------+-------------------------------------------+
+#    | Column            | Type     | Description                               |
+#    +===================+==========+===========================================+
+#    | energy            | float    | excitation energy in Ha                   |
+#    +-------------------+----------+-------------------------------------------+
+#    | irrep             | str      | irreducible representation of excitation  |
+#    +-------------------+----------+-------------------------------------------+
+#    | osc               | float    | oscillator strength (length repr.)        |
+#    +-------------------+----------+-------------------------------------------+
+#    | occ               | int      | occupied orbital of excitation            |
+#    +-------------------+----------+-------------------------------------------+
+#    | virt              | int      | virtual orbital of excitation             |
+#    +-------------------+----------+-------------------------------------------+
+#    | occsym            | str      | occupied orbital symmetry                 |
+#    +-------------------+----------+-------------------------------------------+
+#    | virtsym           | str      | virtual orbital symmetry                  |
+#    +-------------------+----------+-------------------------------------------+
+#    | frame             | int      | non-unique integer (req.)                 |
+#    +-------------------+----------+-------------------------------------------+
+#    | group             | int      | like frame but for same geometry          |
+#    +-------------------+----------+-------------------------------------------+
+#    """
+#    _columns = ['energy', 'osc', 'frame', 'group']
+#    _index = 'excitation'
+#    _cardinal = ('frame', np.int64)
+#    _categories = {'frame': np.int64, 'group': np.int64}
+#
+#    @classmethod
+#    def from_universe(cls, uni, initial=None, final=None, spin=0):
+#        """
+#        Generate the zeroth order approximation to excitation energies
+#        via the transition dipole method (provided a universe contains
+#        an MOMatrix and dipole moment integrals already).
+#        """
+#        if not hasattr(uni, 'multipole'):
+#            print('Universe must have dipole integrals.')
+#            return
+#        dim = len(uni.basis_set_order.index)
+#        fix = (np.ones((dim, dim)) - np.eye(dim, dim) / 2)
+#        rx = ((uni.multipole.pivot('chi0', 'chi1', 'ix1').fillna(0.0)
+#             + uni.multipole.pivot('chi0', 'chi1', 'ix1').T.fillna(0.0)) * fix).values
+#        ry = ((uni.multipole.pivot('chi0', 'chi1', 'ix2').fillna(0.0)
+#             + uni.multipole.pivot('chi0', 'chi1', 'ix2').T.fillna(0.0)) * fix).values
+#        rz = ((uni.multipole.pivot('chi0', 'chi1', 'ix3').fillna(0.0)
+#             + uni.multipole.pivot('chi0', 'chi1', 'ix3').T.fillna(0.0)) * fix).values
+#        mo = uni.momatrix.square().values
+#        ens = pd.concat([uni.orbital[uni.orbital.spin == spin].energy] * dim, axis=1).values
+#        tdm = pd.DataFrame.from_dict({
+#            'energy': pd.DataFrame(ens.T - ens).stack(),
+#            'mux': pd.DataFrame(np.dot(mo.T, np.dot(rx, mo))).stack(),
+#            'muy': pd.DataFrame(np.dot(mo.T, np.dot(ry, mo))).stack(),
+#            'muz': pd.DataFrame(np.dot(mo.T, np.dot(rz, mo))).stack()})
+#        tdm['osc'] = tdm['energy'] ** 3 * (tdm['mux'] + tdm['muy'] + tdm['muz']) ** 2
+#        tdm['frame'] = tdm['group'] = 0
+#        tdm.index.rename(['occ', 'virt'], inplace=True)
+#        return cls(tdm.reset_index())
+#
+#
+#class MOMatrix(DataFrame):
+#    """
+#    The MOMatrix is the result of solving a quantum mechanical eigenvalue
+#    problem in a finite basis set. Individual columns are eigenfunctions
+#    of the Fock matrix with eigenvalues corresponding to orbital energies.
+#
+#    .. math::
+#
+#        C^{*}SC = 1
+#
+#    +-------------------+----------+-------------------------------------------+
+#    | Column            | Type     | Description                               |
+#    +===================+==========+===========================================+
+#    | chi               | int      | row of MO coefficient matrix              |
+#    +-------------------+----------+-------------------------------------------+
+#    | orbital           | int      | vector of MO coefficient matrix           |
+#    +-------------------+----------+-------------------------------------------+
+#    | coef              | float    | weight of basis_function in MO            |
+#    +-------------------+----------+-------------------------------------------+
+#    | frame             | category | non-unique integer (req.)                 |
+#    +-------------------+----------+-------------------------------------------+
+#    """
+#    # TODO :: add spin as a column and make it the first groupby?
+#    #_traits = ['orbital']
+#    _columns = ['chi', 'orbital']
+#    _cardinal = ('frame', np.int64)
+#    _index = 'index'
+#
+#    def contributions(self, orbital, mocoefs='coef', tol=0.01, frame=0):
+#        """
+#        Returns a slice containing all non-negligible basis function
+#        contributions to a specific orbital.
+#
+#        Args
+#            orbital (int): orbital index
+#        """
+#        tmp = self[self['frame'] == frame].groupby('orbital').get_group(orbital)
+#        return tmp[np.abs(tmp[mocoefs]) > tol]
+#
+#
+#    def square(self, frame=0, column='coef'):
+#        """
+#        Returns a square dataframe corresponding to the canonical C matrix
+#        representation.
+#        """
+#        movec = self[self['frame'] == frame][column].values
+#        square = pd.DataFrame(momatrix_as_square(movec))
+#        square.index.name = 'chi'
+#        square.columns.name = 'orbital'
+#        return square
+#
+#
+#class DensityMatrix(DataFrame):
+#    """
+#    The density matrix in a contracted basis set. As it is
+#    square symmetric, only n_basis_functions * (n_basis_functions + 1) / 2
+#    rows are stored.
+#
+#    +-------------------+----------+-------------------------------------------+
+#    | Column            | Type     | Description                               |
+#    +===================+==========+===========================================+
+#    | chi1              | int      | first basis function                      |
+#    +-------------------+----------+-------------------------------------------+
+#    | chi2              | int      | second basis function                     |
+#    +-------------------+----------+-------------------------------------------+
+#    | coef              | float    | overlap matrix element                    |
+#    +-------------------+----------+-------------------------------------------+
+#    | frame             | category | non-unique integer (req.)                 |
+#    +-------------------+----------+-------------------------------------------+
+#    """
+#    _columns = ['chi1', 'chi2', 'coef']
+#    _cardinal = ('frame', np.int64)
+#    _index = 'index'
+#
+#    def square(self, frame=0):
+#        """Returns a square dataframe of the density matrix."""
+#        denvec = self[self['frame'] == frame]['coef'].values
+#        square = pd.DataFrame(density_as_square(denvec))
+#        square.index.name = 'chi1'
+#        square.columns.name = 'chi2'
+#        return square
+#
+#    @classmethod
+#    def from_momatrix(cls, momatrix, occvec, column='coef'):
+#        """
+#        A density matrix can be constructed from an MOMatrix by:
+#        .. math::
+#
+#            D_{uv} = \sum_{i}^{N} C_{ui} C_{vi} n_{i}
+#
+#        Args:
+#            momatrix (:class:`~exatomic.orbital.MOMatrix`): a C matrix
+#            occvec (:class:`~np.array` or similar): vector of len(C.shape[0])
+#                containing the occupations of each molecular orbital.
+#
+#        Returns:
+#            ret (:class:`~exatomic.orbital.DensityMatrix`): The density matrix
+#        """
+#        cmat = momatrix.square(column=column).values
+#        chi1, chi2, dens, frame = density_from_momatrix(cmat, occvec)
+#        return cls.from_dict({'chi1': chi1, 'chi2': chi2,
+#                              'coef': dens, 'frame': frame})
+### -*- coding: utf-8 -*-
+### Copyright (c) 2015-2016, Exa Analytics Development Team
+### Distributed under the terms of the Apache License 2.0
+##'''
+##Orbital DataFrame
+######################
+##Orbital information. All of the dataframe structures and functions associated
+##with the results of a quantum chemical calculation. The Orbital table itself
+##summarizes information such as centers and energies. The Excitation table
+##collects information about orbital excitations from time-dependent calculations.
+##The convolve() bound method can be used to generate photoelectron spectroscopy
+##and absorbance spectra.
+##The MOMatrix table contains a C matrix as it is presented in quantum textbooks,
+##stored in a columnar format. The bound method square() returns the
+##matrix as one would write it out. This table should have dimensions
+##N_basis_functions * N_basis_functions. The DensityMatrix table stores
+##a triangular matrix in columnar format and contains a similar square()
+##method to return the matrix as we see it on a piece of paper.
+##'''
+##import numpy as np
+##import pandas as pd
+##try:
+##    from exa.core.dataframe import DataFrame
+##except ImportError:
+##    from exa.numerical import DataFrame
+##from exatomic import Energy
+##from exatomic.algorithms.orbital import (density_from_momatrix,
+##                                         density_as_square,
+##                                         momatrix_as_square)
+###from exatomic.field import AtomicField
+##
+##class _Convolve(DataFrame):
+##
+##    @staticmethod
+##    def _gauss(sigma, en, en0):
+##        print("orbital._Convolve._gauss")
+##        return (1.0 / (sigma * np.sqrt(2 * np.pi))) * \
+##               np.exp(-(en - en0) ** 2 / (2 * sigma ** 2))
+##
+##    @staticmethod
+##    def _lorentz(gamma, en, en0):
+##        print("orbital._Convolve._lorentz")
+##        return gamma / (2 * np.pi * (en - en0) ** 2 + (gamma / 2) ** 2)
+##
+##    @property
+##    def last_frame(self):
+##        print("orbital._Convolve.last_frame")
+##        return self['frame'].cat.as_ordered().max()
+##
+##    @property
+##    def last_group(self):
+##        print("orbital._Convolve.last_group")
+##        return self['group'].cat.as_ordered().max()
+##
+##    def convolve(self, func='gauss', units='eV', ewin=None, broaden=0.13,
+##                 padding=5, npoints=1001, group=None, frame=None, name=None):
+##        """
+##        Compute a spectrum based on excitation energies and oscillator strengths.
+##
+##        Args
+##            func (str): either 'gauss' or 'lorentz'
+##            units (str): units of resulting spectrum
+##            ewin (iter): (emin, emax) in same units as units (default in eV)
+##            broaden (float): how broad to make the peaks (FWHM, default in eV)
+##            npoints (int): "resolution" of the spectrum
+##            name (str): optional - name the column of returned data
+##
+##        Returns
+##            df (pd.DataFrame): contains x and y values of a spectrum
+##                               (signal and energy)
+##        """
+##        print("orbital._Convolve.convolve")
+##        frame = self.last_frame if frame is None else frame
+##        group = self.last_group if group is None else group
+##        if func not in ['gauss', 'lorentz']:
+##            raise NotImplementedError('Convolution must be one of "gauss" or "lorentz".')
+##        choices = {'gauss': self._gauss, 'lorentz': self._lorentz}
+##        if units == 'Ha': units = 'energy'
+##        if units not in self.columns:
+##            self[units] = self['energy'] * Energy['Ha', units]
+##        sm = self[units].min() if ewin is None else ewin[0]
+##        lg = self[units].max() if ewin is None else ewin[1]
+##        mine = sm - padding * broaden
+##        maxe = lg + padding * broaden
+##        enrg = np.linspace(mine, maxe, npoints)
+##        spec = np.zeros(npoints)
+##        if self.__class__.__name__ == 'Excitation':
+##            smdf = self[(self[units] > sm) & (self[units] < lg) &
+##                        (self['frame'] == frame) & self['group'] == group]
+##            for osc, en0 in zip(smdf['osc'], smdf[units]):
+##                spec += osc * choices[func](broaden, enrg, en0)
+##        else:
+##            smdf = self[(self[units] > sm) & (self[units] < lg) &
+##                        (self['occupation'] > 0)]
+##            for en0 in smdf[units]:
+##                spec += choices[func](broaden, enrg, en0)
+##        if np.isclose(spec.max(), 0):
+##            print('Spectrum is all zeros, check energy window.')
+##        else:
+##            spec /= spec.max()
+##        name = 'signal' if name is None else name
+##        return pd.DataFrame.from_dict({units: enrg, name: spec})
+##
+##    def __init__(self, *args, **kwargs):
+##        print("orbital._Convolve")
+##        super(DataFrame, self).__init__(*args, **kwargs)
+##
+##
+##
+##class Orbital(_Convolve):
+##    """
+##    +-------------------+----------+-------------------------------------------+
+##    | Column            | Type     | Description                               |
+##    +===================+==========+===========================================+
+##    | frame             | category | non-unique integer (req.)                 |
+##    +-------------------+----------+-------------------------------------------+
+##    | group             | category | like frame but for same geometry          |
+##    +-------------------+----------+-------------------------------------------+
+##    | orbital           | int      | vector of MO coefficient matrix           |
+##    +-------------------+----------+-------------------------------------------+
+##    | label             | int      | label of orbital                          |
+##    +-------------------+----------+-------------------------------------------+
+##    | occupation        | float    | population of orbital                     |
+##    +-------------------+----------+-------------------------------------------+
+##    | energy            | float    | eigenvalue of orbital eigenvector         |
+##    +-------------------+----------+-------------------------------------------+
+##    | symmetry          | str      | symmetry designation (if applicable)      |
+##    +-------------------+----------+-------------------------------------------+
+##    | x                 | float    | orbital center in x                       |
+##    +-------------------+----------+-------------------------------------------+
+##    | y                 | float    | orbital center in y                       |
+##    +-------------------+----------+-------------------------------------------+
+##    | z                 | float    | orbital center in z                       |
+##    +-------------------+----------+-------------------------------------------+
+##
+##    Note:
+##        Spin zero means alpha spin or unknown and spin one means beta spin.
+##    """
+##    _columns = ['frame', 'group', 'energy', 'occupation', 'vector', 'spin']
+##    _index = 'orbital'
+##    _cardinal = ('frame', np.int64)
+##    _categories = {'spin': np.int64, 'frame': np.int64, 'group': np.int64}
+##
+##    @property
+##    def last_frame(self):
+##        print("orbital.Orbital.last_frame")
+##        return self.frame.cat.as_ordered().max()
+##
+##    @property
+##    def last_group(self):
+##        print("orbital.Orbital.last_group")
+##        return self[self.frame == self.last_frame].group.cat.as_ordered().max()
+##
+##    def get_orbital(self, orb=-1, spin=0, index=None, group=None, frame=None):
+##        """
+##        Returns a specific orbital.
+##
+##        Args
+##            orb (int): See note below (default HOMO)
+##            spin (int): 0, no spin or alpha (default); 1, beta
+##            index (int): Orbital dataframe index (default None)
+##            frame (int): The frame of the universe (default max(frame))
+##            group (int): The group of orbitals within a given frame
+##
+##        Returns
+##            orbital (exatomic.orbital.Orbital): Orbital row
+##
+##        Note
+##            If the index is not known (usually), but a criterion
+##            such as (HOMO or LUMO) is desired, use the *orb* and
+##            *spin* criteria. Negative *orb* values are occupied,
+##            positive are unoccupied. So -1 returns the HOMO, -2
+##            returns the HOMO-1; 0 returns the LUMO, 1 returns the
+##            LUMO+1, etc.
+##        """
+##        print("orbital.Orbital.get_orbital")
+##        frame = self.last_frame if frame is None else frame
+##        group = self.last_group if group is None else group
+##        if index is None:
+##            if orb > -1:
+##                return self[(self['frame'] == frame) &
+##                            (self['group'] == group) &
+##                            (self['occupation'] == 0) &
+##                            (self['spin'] == spin)].iloc[orb]
+##            else:
+##                return self[(self['frame'] == frame) &
+##                            (self['group'] == group) &
+##                            (self['occupation'] > 0) &
+##                            (self['spin'] == spin)].iloc[orb]
+##        else:
+##            return self.iloc[index]
+##
+##class Excitation(_Convolve):
+##    """
+##    +-------------------+----------+-------------------------------------------+
+##    | Column            | Type     | Description                               |
+##    +===================+==========+===========================================+
+##    | energy            | float    | excitation energy in Ha                   |
+##    +-------------------+----------+-------------------------------------------+
+##    | irrep             | str      | irreducible representation of excitation  |
+##    +-------------------+----------+-------------------------------------------+
+##    | osc               | float    | oscillator strength (length repr.)        |
+##    +-------------------+----------+-------------------------------------------+
+##    | occ               | int      | occupied orbital of excitation            |
+##    +-------------------+----------+-------------------------------------------+
+##    | virt              | int      | virtual orbital of excitation             |
+##    +-------------------+----------+-------------------------------------------+
+##    | occsym            | str      | occupied orbital symmetry                 |
+##    +-------------------+----------+-------------------------------------------+
+##    | virtsym           | str      | virtual orbital symmetry                  |
+##    +-------------------+----------+-------------------------------------------+
+##    | frame             | int      | non-unique integer (req.)                 |
+##    +-------------------+----------+-------------------------------------------+
+##    | group             | int      | like frame but for same geometry          |
+##    +-------------------+----------+-------------------------------------------+
+##    """
+##    _columns = ['energy', 'osc', 'frame', 'group']
+##    _index = 'excitation'
+##    _cardinal = ('frame', np.int64)
+##    _categories = {'frame': np.int64, 'group': np.int64}
+##
+##    def __init__(self, *args, **kwargs):
+##        print("orbital.Excitation")
+##        super(_Convolve, self).__init__(*args, **kwargs)
+##
+##
+##
+##class MOMatrix(DataFrame):
+##    """
+##    The MOMatrix is the result of solving a quantum mechanical eigenvalue
+##    problem in a finite basis set. Individual columns are eigenfunctions
+##    of the Fock matrix with eigenvalues corresponding to orbital energies.
+##
+##    .. math::
+##
+##        C^{*}SC = 1
+##
+##    +-------------------+----------+-------------------------------------------+
+##    | Column            | Type     | Description                               |
+##    +===================+==========+===========================================+
+##    | chi               | int      | row of MO coefficient matrix              |
+##    +-------------------+----------+-------------------------------------------+
+##    | orbital           | int      | vector of MO coefficient matrix           |
+##    +-------------------+----------+-------------------------------------------+
+##    | coef              | float    | weight of basis_function in MO            |
+##    +-------------------+----------+-------------------------------------------+
+##    | frame             | category | non-unique integer (req.)                 |
+##    +-------------------+----------+-------------------------------------------+
+##    """
+##    # TODO :: add spin as a column and make it the first groupby?
+##    #_traits = ['orbital']
+##    _columns = ['chi', 'orbital']
+##    _cardinal = ('frame', np.int64)
+##    _index = 'index'
+##
+##    def contributions(self, orbital, tol=0.01, frame=0):
+##        """
+##        Returns a slice containing all non-negligible basis function
+##        contributions to a specific orbital.
+##
+##        Args
+##            orbital (int): orbital index
+##        """
+##        print("orbital.MOMatrix.contributions")
+##        tmp = self[self['frame'] == frame].groupby('orbital').get_group(orbital)
+##        return tmp[abs(tmp['coef']) > tol]
+##
+##
+##    def square(self, frame=0, column='coef'):
+##        """
+##        Returns a square dataframe corresponding to the canonical C matrix
+##        representation.
+##        """
+##        print("orbital.MOMatrix.sqaure")
+##        movec = self[self['frame'] == frame][column].values
+##        square = pd.DataFrame(momatrix_as_square(movec))
+##        square.index.name = 'chi'
+##        square.columns.name = 'orbital'
+##        return square
+##
+##    def __init__(self, *args, **kwargs):
+##        print("orbital.MOMatrix")
+##        super(MOMatrix, self).__init__(*args, **kwargs)
+##
+##
+##
+##class DensityMatrix(DataFrame):
+##    """
+##    The density matrix in a contracted basis set. As it is
+##    square symmetric, only n_basis_functions * (n_basis_functions + 1) / 2
+##    rows are stored.
+##
+##    +-------------------+----------+-------------------------------------------+
+##    | Column            | Type     | Description                               |
+##    +===================+==========+===========================================+
+##    | chi1              | int      | first basis function                      |
+##    +-------------------+----------+-------------------------------------------+
+##    | chi2              | int      | second basis function                     |
+##    +-------------------+----------+-------------------------------------------+
+##    | coef              | float    | overlap matrix element                    |
+##    +-------------------+----------+-------------------------------------------+
+##    | frame             | category | non-unique integer (req.)                 |
+##    +-------------------+----------+-------------------------------------------+
+##    """
+##    _columns = ['chi1', 'chi2', 'coef']
+##    _cardinal = ('frame', np.int64)
+##    _index = 'index'
+##
+##    def square(self, frame=0):
+##        """Returns a square dataframe of the density matrix."""
+##        print("orbital.DensityMatrix.square")
+##        denvec = self[self['frame'] == frame]['coef'].values
+##        square = pd.DataFrame(density_as_square(denvec))
+##        square.index.name = 'chi1'
+##        square.columns.name = 'chi2'
+##        return square
+##
+##    @classmethod
+##    def from_momatrix(cls, momatrix, occvec, column='coef'):
+##        """
+##        A density matrix can be constructed from an MOMatrix by:
+##        .. math::
+##
+##            D_{uv} = \sum_{i}^{N} C_{ui} C_{vi} n_{i}
+##
+##        Args:
+##            momatrix (:class:`~exatomic.orbital.MOMatrix`): a C matrix
+##            occvec (:class:`~np.array` or similar): vector of len(C.shape[0])
+##                containing the occupations of each molecular orbital.
+##
+##        Returns:
+##            ret (:class:`~exatomic.orbital.DensityMatrix`): The density matrix
+##        """
+##        print("orbital.DensityMatrix.from_momatrix")
+##        cmat = momatrix.square(column=column).values
+##        chi1, chi2, dens, frame = density_from_momatrix(cmat, occvec)
+##        return cls.from_dict({'chi1': chi1, 'chi2': chi2,
+##                              'coef': dens, 'frame': frame})
+##
+##    def __init__(self, *args, **kwargs):
+##        print("orbital.DensityMatrix")
+##        super(DensityMatrix, self).__init__(*args, **kwargs)
+=======
 # -*- coding: utf-8 -*-
 # Copyright (c) 2015-2016, Exa Analytics Development Team
 # Distributed under the terms of the Apache License 2.0
@@ -366,3 +1079,4 @@ class DensityMatrix(DataFrame):
         chi1, chi2, dens, frame = density_from_momatrix(cmat, occvec)
         return cls.from_dict({'chi1': chi1, 'chi2': chi2,
                               'coef': dens, 'frame': frame})
+>>>>>>> 811f6aaae1e1aef968c27a34842d5ad9e7267217

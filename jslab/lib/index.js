@@ -9,7 +9,7 @@ module.exports = {
         widgets.registerWidget({
             name: "jupyter-exatomic",
             version: jupyter_exatomic.version,
-            exports: jupyter_exatomicc
+            exports: jupyter_exatomic
         });
     },
     autoStart: true

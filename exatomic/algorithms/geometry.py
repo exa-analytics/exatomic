@@ -1,10 +1,12 @@
 # -*- coding: utf-8 -*-
-'''
+# Copyright (c) 2015-2016, Exa Analytics Development Team
+# Distributed under the terms of the Apache License 2.0
+"""
 Geometry
 ======================
 Functions for constructing molecular and solid state geometries with
 symmetry adapted or crystalline structures.
-'''
+"""
 import numpy as np
 import pandas as pd
 from exa.util.units import Length
@@ -198,3 +200,4 @@ def _6_domain(center, ligand, distance, geometry, offset, plane, axis):
         geom.append([xi, yi, zi, ligand, 0, cnt])
         cnt += 1
     return pd.DataFrame(geom, columns=columns)
+>>>>>>> 1c37655b6be3dca60b2adbeee8ca3767e5477943

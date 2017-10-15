@@ -178,16 +178,16 @@ class UnitAtom(SparseDataFrame):
 #        """
 #        """
 #        if universe.frame.is_periodic():
-#            xyz = universe.atom[['x', 'y', 'z']].values.astype(np.float64)
-#            if 'rx' not in universe.frame:
-#                universe.frame.compute_cell_magnitudes()
-#            counts = universe.frame['atom_count'].values.astype(np.int64)
-#            rxyz = universe.frame[['rx', 'ry', 'rz']].values.astype(np.float64)
-#            oxyz = universe.frame[['ox', 'oy', 'oz']].values.astype(np.float64)
-#            unit = pd.DataFrame(minimal_image_counts(xyz, rxyz, oxyz, counts), columns=['x', 'y', 'z'])
-#            unit = unit[unit != xyz].astype(np.float64).to_sparse()
-#            unit.index = universe.atom.index
-#            return cls(unit)
+#            atom = universe.atom[['x', 'y', 'z']].copy()
+#            atom.update(universe.unit_atom)
+#            bonded = universe.atom_two.ix[universe.atom_two['bond'] == True, 'atom1'].astype(np.int64)
+#            prjd = universe.projected_atom.ix[bonded.index].to_dense()
+#            prjd['atom'] = bonded
+#            prjd.drop_duplicates('atom', inplace=True)
+#            prjd.set_index('atom', inplace=True)
+#            atom.update(prjd)
+#            atom = atom[atom != universe.atom[['x', 'y', 'z']]].to_sparse()
+#            return cls(atom)
 #        raise PeriodicUniverseError()
 
 

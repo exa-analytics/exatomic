@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# Copyright (c) 2015-2016, Exa Analytics Development Team
+# Copyright (c) 2015-2017, Exa Analytics Development Team
 # Distributed under the terms of the Apache License 2.0
 """
 Pair Correlation Functions
@@ -7,7 +7,7 @@ Pair Correlation Functions
 """
 import numpy as np
 import pandas as pd
-from exatomic import Length
+from exa.util.units import Length
 
 
 def radial_pair_correlation(universe, a, b, dr=0.05, start=1.0, stop=13.0,

@@ -149,6 +149,10 @@ def gui_field_widgets(uni=False, test=False):
 ################
 # Base classes #
 ################
+<<<<<<< HEAD
+
+=======
+>>>>>>> 1c37655b6be3dca60b2adbeee8ca3767e5477943
 @register
 class ExatomicScene(DOMWidget):
     """Resizable three.js scene."""
@@ -242,7 +246,6 @@ class ExatomicBox(Box):
 
     def _close(self, b):
         """Shut down all active widgets within the container."""
-
         for widget in self.active_controls.values():
             try: widget._close()
             except: widget.close()
@@ -343,7 +346,6 @@ class TestContainer(ExatomicBox):
         folder.activate('iso', 'nx', 'ny', 'nz')
         self.active_controls['field'] = folder
 
-
     def __init__(self, *args, **kwargs):
         super(TestContainer, self).__init__(*args,
                                             scene=TestScene(),
@@ -378,7 +380,6 @@ class TestUniverse(ExatomicBox):
     _view_name = Unicode("TestUniverseView").tag(sync=True)
 
     def init_gui(self):
-
         super(TestUniverse, self).init_gui(uni=True, test=True)
 
         uni_field_lists = OrderedDict([
@@ -407,7 +408,6 @@ class TestUniverse(ExatomicBox):
             self.scene.field = c.new
             fk = uni_field_lists[c.new][0]
             self.scene.field_kind = fk
-
             if self.scene.field == 'SolidHarmonic':
                 folder.insert(3, 'fml', self.inactive_controls[fk])
                 folder.active_controls.pop('fkind')
@@ -438,7 +438,6 @@ class TestUniverse(ExatomicBox):
         folder.insert(2, 'fkind', fkind)
         folder.activate('iso', 'nx', 'ny', 'nz')
         self.active_controls['field'] = folder
-
 
     def __init__(self, *args, **kwargs):
         super(TestUniverse, self).__init__(
@@ -651,7 +650,6 @@ class UniverseWidget(ExatomicBox):
             contour.activate()
             folder.insert(2, 'contour', contour, update=True)
             self.active_controls['field'] = folder
-
 
     def __init__(self, uni, *args, **kwargs):
         unargs = {}

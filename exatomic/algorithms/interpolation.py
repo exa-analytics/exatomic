@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# Copyright (c) 2015-2016, Exa Analytics Development Team
+# Copyright (c) 2015-2017, Exa Analytics Development Team
 # Distributed under the terms of the Apache License 2.0
 """
 Interpolation
@@ -7,7 +7,6 @@ Interpolation
 Hidden wrapper function that makes it convenient to choose
 an interpolation scheme available in scipy.
 """
-
 import numpy as np
 import pandas as pd
 from scipy.interpolate import (interp1d, interp2d, griddata,
@@ -17,6 +16,7 @@ from scipy.interpolate import (interp1d, interp2d, griddata,
                                RegularGridInterpolator)
 from scipy.signal import savgol_filter
 from scipy.optimize import curve_fit
+
 
 def _interpolate(df, x, y, z, method, kind, yfirst, dim, minimum):
     # Check that columns are in df

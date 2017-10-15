@@ -1,5 +1,7 @@
 # -*- coding: utf-8 -*-
-'''
+# Copyright (c) 2015-2017, Exa Analytics Development Team
+# Distributed under the terms of the Apache License 2.0
+"""
 Basis Function Manipulation
 ################################
 Functions for managing and manipulating basis set data.
@@ -7,7 +9,7 @@ Many of the ordering schemes used in computational codes can be
 generated programmatically with the right numerical function.
 This is preferred to an explicit parsing and storage of a given
 basis set ordering scheme.
-'''
+"""
 import re
 import sympy
 import numpy as np
@@ -104,14 +106,14 @@ def clean_sh(sh):
 
 
 def car2sph(sh, cart):
-    '''
+    """
     Turns symbolic solid harmonic functions into a dictionary of
     arrays containing cartesian to spherical transformation matrices.
 
     Args
         sh (OrderedDict): the result of solid_harmonics(l_tot)
         cart (dict): dictionary of l, cartesian l, m, n ordering
-    '''
+    """
     keys, conv = {}, {}
     prevL, mscnt = 0, 0
     for L in cart:
@@ -238,7 +240,7 @@ def _nin(o1, o2, po1, po2, gamma, pg12):
 @jit(nopython=True, cache=True)
 def _overlap(x1, x2, y1, y2, z1, z2, N1, N2,
              a1, a2, l1, l2, m1, m2, n1, n2):
-    '''Compute the primitive overlap between two gaussians.'''
+    """Compute the primitive overlap between two gaussians."""
     ab2 = (x1 - x2) ** 2 + (y1 - y2) ** 2 + (z1 - z2) ** 2
     if ab2 < 1e-8:
         ll = l1 + l2

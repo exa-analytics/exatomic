@@ -1,4 +1,8 @@
+<<<<<<< HEAD
+recursive-include exatomic/static *
+=======
 recursive-include exatomic *
 
 # root text files
 include requirements.txt
+>>>>>>> 1c37655b6be3dca60b2adbeee8ca3767e5477943
