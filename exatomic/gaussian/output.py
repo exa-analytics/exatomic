@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# Copyright (c) 2015-2016, Exa Analytics Development Team
+# Copyright (c) 2015-2017, Exa Analytics Development Team
 # Distributed under the terms of the Apache License 2.0
 """
 Gaussian Output Editor
@@ -10,20 +10,17 @@ import re
 import numpy as np
 import pandas as pd
 from io import StringIO
-
-from exatomic import Length
+from exa.util.units import Length, Energy
 from .editor import Editor
-from exa.relational.isotope import z_to_symbol
-from exatomic import Energy
-from exatomic.frame import compute_frame_from_atom
-from exatomic.basis import BasisSet
-from exatomic.orbital import Orbital
+from exatomic.base import z2sym
+from exatomic.core.frame import compute_frame_from_atom
+from exatomic.core.basis import BasisSet
+from exatomic.core.orbital import Orbital
 from exatomic.algorithms.basis import lmap, lorder
-
-z_to_symbol = z_to_symbol()
-
 from numba import jit, int64
-@jit(nopython=True, cache=True)
+
+
+@jit(nopython=True, nogil=True, cache=True)
 def _triangular_indices(ncol, nbas):
     dim = nbas * (nbas + 1) // 2
     idx = np.empty((dim, 3), dtype=np.int64)
@@ -36,6 +33,7 @@ def _triangular_indices(ncol, nbas):
                 idx[cnt,2] = 0
                 cnt += 1
     return idx
+
 
 class Output(Editor):
 
@@ -93,7 +91,7 @@ class Output(Editor):
         atom['y'] *= Length['A', 'au']
         atom['z'] *= Length['A', 'au']
         # Map atomic symbols onto Z numbers
-        atom['symbol'] = atom['Z'].map(z_to_symbol)
+        atom['symbol'] = atom['Z'].map(z2sym)
         self.atom = atom
 
     def parse_basis_set(self):
@@ -126,8 +124,10 @@ class Output(Editor):
         todrop = setdx[:-1] + [i+1 for i in setdx[:-2]] + lindx.index.tolist()
         df.drop(todrop, inplace=True)
         # Keep cleaning
-        df[0] = df[0].str.replace('D', 'E').astype(np.float64)
-        df[1] = df[1].str.replace('D', 'E').astype(np.float64)
+        if df[0].dtype == 'object':
+            df[0] = df[0].str.replace('D', 'E').astype(np.float64)
+        if df[1].dtype == 'object':
+            df[1] = df[1].str.replace('D', 'E').astype(np.float64)
         try: sp = np.isnan(df[2]).sum() == df.shape[0]
         except TypeError:
             df[2] = df[2].str.replace('D', 'E').astype(np.float64)
@@ -153,24 +153,11 @@ class Output(Editor):
         ae, x, x, be, x, x = found[_realphaelec][0][1].split()
         ae, be = int(ae), int(be)
         # Get orbital energies
-        ens = '\n'.join([ln.split('--')[1][1:] for i, ln in found[_reorb01]])
+        ens = '\n'.join([ln.split('-- ')[1] for i, ln in found[_reorb01]])
         ens = pd.read_fwf(StringIO(ens), header=None,
                           widths=np.repeat(10, 5)).stack().values
         # Other arrays
-        if os:
-            norbs = len(ens) // 2
-            vecs = np.concatenate((range(norbs), range(norbs)))
-            occs = np.concatenate((np.repeat(occ, ae), np.repeat(0, norbs - ae),
-                                   np.repeat(occ, be), np.repeat(0, norbs - be)))
-            spin = np.concatenate((np.repeat(0, norbs), np.repeat(1, norbs)))
-        else:
-            norbs = len(ens)
-            vecs = range(norbs)
-            occs = np.concatenate((np.repeat(occ, ae), np.repeat(0, norbs - ae)))
-            spin = np.repeat(0, norbs)
-        orbital = pd.DataFrame.from_dict({'energy': ens, 'occupation': occs,
-                                          'vector': vecs, 'spin': spin, 'frame': 0,
-                                          'group': 0})
+        orbital = Orbital.from_energies(ens, ae, be, os=os)
         # Symmetry labels
         if found[_reorb02]:
             # Gaussian seems to print out a lot of these blocks
@@ -219,10 +206,16 @@ class Output(Editor):
         # Iterate over where the data was found
         # c counts the column in the resulting momatrix table
         for c, (lno, ln) in enumerate(found[_remomat02]):
-            start = self._find_break(lno, finds=['Eigenvalues', 'EIGENVALUES']) + 1
+            gap = 0
+            while not 'eigenvalues' in self[lno + gap].lower(): gap += 1
+            start = lno + gap + 1
             stop = start + nbas
             # The basis set order is printed with every chunk of eigenvectors
-            if c == 0: self.basis_set_order = _basis_set_order(self[start:stop])
+            if not c:
+                mapr = self.basis_set.groupby(['set', 'L']).apply(
+                        lambda x: x['shell'].unique()).to_dict()
+                self.basis_set_order = _basis_set_order(self[start:stop], mapr,
+                                                        self.atom['set'])
             # Some fudge factors due to extra lines being printed
             space = start - lno - 1
             fnbas = nbas + space
@@ -234,15 +227,17 @@ class Output(Editor):
             # b counts the blocks of eigenvectors per column in momatrix
             for b, (start, stop) in enumerate(zip(starts, stops)):
                 # Number of eigenvectors in this block
-                ncol = len(self[start][20:].split())
+                ncol = len(self[start][21:].split())
+                step = nbas * ncol
                 _csv_args['names'] = range(ncol)
                 # Massage the text so that we can read csv
-                block = '\n'.join([ln[20:] for ln in self[start:stop]])
+                block = '\n'.join([ln[21:] for ln in self[start:stop]])
                 block = _rebaspat.sub(lambda m: _basrep[m.group(0)], block)
                 # Enplacen the resultant unstacked values
-                coefs[stride:stride + nbas * ncol, c] = pd.read_csv(
-                    StringIO(block), **_csv_args).unstack().values
-                stride += nbas * ncol
+                coefs[stride:stride + nbas * ncol, c] = pd.read_fwf(
+                        StringIO(block), header=None,
+                        widths=np.repeat(10, 5)).unstack().dropna().values
+                stride += step
         # Index chi, phi
         chis = np.tile(range(nbas), nbas)
         orbs = np.repeat(range(nbas), nbas)
@@ -292,26 +287,30 @@ class Output(Editor):
         if not chk: return
         # Find the data
         found = self.find(_reexcst)
-        # Allocate the array
-        dtype = [('eV', 'f8'), ('osc', 'f8'), ('occ', 'i8'),
-                 ('virt', 'i8'), ('kind', 'O'), ('symmetry', 'O')]
-        data = np.empty((len(found),), dtype=dtype)
-        # Iterate over what we found
+        keeps, maps, summ = [], [] ,[]
         for i, (lno, ln) in enumerate(found):
-            # Split this line up into what we want and x
-            ll = ln.split()
-            kind, en, osc = ll[3], ll[4], ll[8]
-            # Same for the line right after it
-            occ, x, virt, x = self[lno + 1].split()
-            # Assign the values
-            data[i] = (en, osc.replace('f=', ''), occ, virt) + tuple(kind.split('-'))
-        excitation = pd.DataFrame(data)
-        # Internal units dictate we should have Hartrees as 'energy'
-        excitation['energy'] = excitation['eV'] * Energy['eV', 'Ha']
-        # Frame not really implemented here
-        excitation['frame'] = 0
-        excitation['group'] = 0
-        self.excitation = excitation
+            summ.append(ln)
+            lno += 1
+            while '->' in self[lno]:
+                keeps.append(lno)
+                maps.append(i)
+                lno += 1
+        cols = [0, 1, 2, 'kind', 'eV', 3, 'nm', 4, 'osc', 's2']
+        summ = pd.read_csv(StringIO('\n'.join([ln for lno, ln in found])),
+                           delim_whitespace=True, header=None, names=cols,
+                           usecols=[c for c in cols if type(c) == str])
+        summ['s2'] = summ['s2'].str[7:].astype(np.float64)
+        summ['osc'] = summ['osc'].str[2:].astype(np.float64)
+        cols = ['occ', 0, 'virt', 'cont']
+        conts = pd.read_csv(StringIO('\n'.join([self[i] for i in keeps])),
+                            delim_whitespace=True, header=None, names=cols,
+                            usecols=[c for c in cols if type(c) == str])
+        conts['map'] = maps
+        for col in summ.columns:
+            conts[col] = conts['map'].map(summ[col])
+        conts['energy'] = conts['eV'] * Energy['eV', 'Ha']
+        conts['frame'] = conts['group'] = 0
+        self.excitation = conts
 
 
     def parse_frequency(self):
@@ -345,7 +344,7 @@ class Output(Editor):
             stacked = pd.DataFrame.from_dict({'Z': zs, 'label': labels,
                                     'dx': dx, 'dy': dy, 'dz': dz,
                                     'frequency': freqs, 'freqdx': freqdxs})
-            stacked['symbol'] = stacked['Z'].map(z_to_symbol)
+            stacked['symbol'] = stacked['Z'].map(z2sym)
             dfs.append(stacked)
         # Now put all our frequencies together
         frequency = pd.concat(dfs).reset_index(drop=True)
@@ -374,22 +373,22 @@ class Output(Editor):
 
 
     def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+        super(Output, self).__init__(*args, **kwargs)
 
 
 
-def _basis_set_order(chunk):
+def _basis_set_order(chunk, mapr, sets):
     # Gaussian only prints the atom center
     # and label once for all basis functions
+    first = len(chunk[0]) - len(chunk[0].lstrip(' ')) + 1
     df = pd.read_fwf(StringIO('\n'.join(chunk)),
-                     widths=[4, 4, 3, 2, 4], header=None)
+                     widths=[first, 4, 3, 2, 4], header=None)
     df[1].fillna(method='ffill', inplace=True)
     df[1] = df[1].astype(np.int64) - 1
     df[2].fillna(method='ffill', inplace=True)
     df.rename(columns={1: 'center', 3: 'N', 4: 'ang'}, inplace=True)
     df['N'] = df['N'].astype(np.int64) - 1
-    cart = 'XX' in df['ang'].values
-    if cart:
+    if 'XX' in df['ang'].values:
         df[['L', 'l', 'm', 'n']] = df['ang'].map({'S': [0, 0, 0, 0],
                 'XX': [2, 2, 0, 0], 'XY': [2, 1, 1, 0], 'XZ': [2, 1, 0, 1],
                 'YY': [2, 0, 2, 0], 'YZ': [2, 0, 1, 1], 'ZZ': [2, 0, 0, 2],
@@ -400,50 +399,18 @@ def _basis_set_order(chunk):
         df['ml'] = df['ang'].str[1:]
         df['ml'].update(df['ml'].map({'': 0, 'X': 1, 'Y': -1, 'Z': 0}))
         df['ml'] = df['ml'].astype(np.int64)
-    shl, pcen, pl, pn, shfns = -1, -1, -1, -1, []
-    for cen, n, l in zip(df['center'], df['N'], df['L']):
-        if not pcen == cen: shl = -1
-        if (not pl == l) or (not pn == n): shl += 1
-        shfns.append(shl)
+    cnts = {key: -1 for key in range(10)}
+    pcen, pl, pn, shfns = 0, 0, 1, []
+    for cen, n, l, seht in zip(df['center'], df['N'], df['L'],
+                               df['center'].map(sets)):
+        if not pcen == cen: cnts = {key: -1 for key in range(10)}
+        if (pl != l) or (pn != n) or (pcen != cen): cnts[l] += 1
+        shfns.append(mapr[(seht, l)][cnts[l]])
         pcen, pl, pn = cen, l, n
     df['shell'] = shfns
     df.drop([0, 2, 'N', 'ang'], axis=1, inplace=True)
     df['frame'] = 0
     return df
-    # nas = (np.nan, np.nan)
-    # lsp = len(chunk[0]) - len(chunk[0].lstrip(' ')) + 2
-    # centers = [(ln[lsp:lsp + 3].strip(), ln[lsp + 3:lsp + 6].strip())
-    #            if ln[lsp:lsp + 3].strip() else nas for ln in chunk]
-    # # pandas takes care of that
-    # basord = pd.DataFrame(centers, columns=('center', 'tag')).fillna(method='pad')
-    # basord['center'] = basord['center'].astype(np.int64)
-    # # Zero based indexing
-    # basord['center'] -= 1
-    # # nlml defines the type of basis function
-    # types = '\n'.join([ln[10:20].strip() for ln in chunk])
-    # # Gaussian prints 'D 0' so replace with 'D0'
-    # types = _rebaspat.sub(lambda m: _basrep[m.group(0)], types)
-    # types = pd.Series(types.splitlines())
-    # # Now pull it apart into n, l, ml columns
-    # split = r"([0-9]{1,})([A-z])(.*)"
-    # print(basord)
-    # basord[['n', 'L', 'ml']] = types.str.extract(split, expand=True)
-    # # And clean it up -- don't really need n but can use it for shells
-    # basord['n'] = basord['n'].astype(np.int64) - 1
-    # basord['L'] = basord['L'].str.lower().map(lmap).astype(np.int64)
-    # # Finally get shells -- why so difficult
-    # shfns = []
-    # shl, pcen, pl, pn = -1, -1, -1, -1
-    # for cen, n, l in zip(basord['center'], basord['n'], basord['L']):
-    #     if not pcen == cen: shl = -1
-    #     if (not pl == l) or (not pn == n): shl += 1
-    #     shfns.append(shl)
-    #     pcen, pl, pn = cen, l, n
-    # basord['shell'] = shfns
-    # # Get rid of n because it isn't even n anymore
-    # del basord['n']
-    # basord['frame'] = 0
-    # return basord
 
 
 _csv_args = {'delim_whitespace': True, 'header': None}
@@ -466,8 +433,8 @@ _remomat02 = 'Orbital Coefficients'
 _rebas01 = r'basis functions,'
 _rebas02 = 'AO basis set in the form of general basis input'
 _rebas03 = ' (Standard|General) basis'
-_basrep = {'D 0': 'D0', 'F 0': 'F0',
-           'G 0': 'G0', 'H 0': 'H0', 'I 0': 'I0'}
+_basrep = {'D 0': 'D0 ', 'F 0': 'F0 ',
+           'G 0': 'G0 ', 'H 0': 'H0 ', 'I 0': 'I0 '}
 _rebaspat = re.compile('|'.join(_basrep.keys()))
 # Frame flags
 _retoten = 'SCF Done:'
@@ -484,13 +451,13 @@ _reixn = 'IX=    {}'
 
 class Fchk(Editor):
 
-    def _intme(self, fitem):
+    def _intme(self, fitem, idx=0):
         """Helper gets an integer of interest."""
-        return int(self[fitem[0]].split()[-1])
+        return int(self[fitem[idx]].split()[-1])
 
-    def _dfme(self, fitem, dim):
+    def _dfme(self, fitem, dim, idx=0):
         """Helper gets an array of interest."""
-        start = fitem[0] + 1
+        start = fitem[idx] + 1
         col = min(len(self[start].split()), dim)
         stop = np.ceil(start + dim / col).astype(np.int64)
         return self.pandas_dataframe(start, stop, col).stack().values
@@ -504,7 +471,7 @@ class Fchk(Editor):
         # Atom identifiers
         znums = self._dfme(found[_reznum], nat)
         # Atomic symbols
-        symbols = list(map(lambda x: z_to_symbol[x], znums))
+        symbols = list(map(lambda x: z2sym[x], znums))
         # Z effective if ECPs are used
         zeffs = self._dfme(found[_rezeff], nat).astype(np.int64)
         # Atomic positions
@@ -615,13 +582,14 @@ class Fchk(Editor):
 
 
     def parse_orbital(self):
-        found = self.find(_reorben, _reorboc, keys_only=True)
-        ae = self._intme(found[_reorboc], idx=1)
-        be = self._intme(found[_reorboc], idx=2)
+        found = self.regex(_reorben, _reorboc, keys_only=True)
+        ae = self._intme(found[_reorboc], idx=0)
+        be = self._intme(found[_reorboc], idx=1)
         nbas = self._intme(found[_reorben])
         ens = np.concatenate([self._dfme(start, nbas, idx=i)
                               for i, start in enumerate(found[_reorben])])
-        self.orbital = Orbital.from_energies(ens, nbas, ae, be)
+        os = nbas != len(ens)
+        self.orbital = Orbital.from_energies(ens, ae, be, os=os)
 
 
     def __init__(self, *args, **kwargs):

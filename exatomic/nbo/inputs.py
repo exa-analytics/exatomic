@@ -1,31 +1,28 @@
 # -*- coding: utf-8 -*-
-# Copyright (c) 2015-2016, Exa Analytics Development Team
+# Copyright (c) 2015-2017, Exa Analytics Development Team
 # Distributed under the terms of the Apache License 2.0
 """
 exnbo Input Generator and Parser
-===================================
+###################################
 """
-
 import numpy as np
 import pandas as pd
-
-from exa.relational.isotope import symbol_to_z
-symbol_to_Z = symbol_to_z()
-
 from exatomic import __version__
 from .editor import Editor
-from exatomic.orbital import DensityMatrix
-from exatomic.basis import (solid_harmonics, lorder,
-                            cart_lml_count, spher_lml_count)
+from exatomic.core.orbital import DensityMatrix
+from exatomic.core.basis import (solid_harmonics, lorder,
+                                 cart_lml_count, spher_lml_count)
 from itertools import combinations_with_replacement as cwr
 
+
 _exaver = 'exatomic.v' + __version__
+
 
 _header = """\
 $GENNBO NATOMS={nat}    NBAS={nbas}  UPPER  BODM BOHR $END
 $NBO BNDIDX NLMO AONBO=W AONLMO=W $END
 $COORD
-{exaver} -- {name} -- tr[D*S] = {check}
+{exaver} -- {name} -- tr[P*S] = {check}
 {atom}
 $END
 $BASIS
@@ -42,6 +39,7 @@ $CONTRACT
 {coeffs}
 $END"""
 
+
 _matrices = """
 $OVERLAP
 {overlap}
@@ -49,6 +47,7 @@ $END
 $DENSITY
 {density}
 $END"""
+
 
 def _nbo_labels():
     """Generate data frames of L, (ml | l, m, n), NBO label."""
@@ -89,7 +88,7 @@ def _get_labels(Ls, mls=None, ls=None, ms=None, ns=None):
         return [spher[(spher['L'] == l) &
                       (spher['ml'] == ml)]['label'].iloc[0]
                       for l, ml in zip(Ls, mls)]
-    if xs is not None:
+    if ls is not None:
         return [cart[(cart['L'] == L) &
                      (cart['l'] == l) &
                      (cart['m'] == m) &
@@ -101,7 +100,7 @@ def _clean_coeffs(arr, width=16, decimals=6):
     # Format C(shell) for coeffs
     ls = ['     {} = '.format('C' + l.upper()) for l in lorder]
     # Clean to string by shell
-    dat = [''.join([l, _clean_to_string(ar, decimals=decimals), '\n'])
+    dat = [''.join([l, _clean_to_string(ar, decimals=decimals, width=width), '\n'])
            for l, ar in zip(ls, arr)]
     # Return the whole minus the last line break
     return ''.join(dat)[:-1]
@@ -207,6 +206,8 @@ class Input(Editor):
         Returns
             editor (:class:`~exatomic.nbo.Input`)
         """
+        if column is not None and occvec is None:
+            raise Exception('If supplying non-default column, must supply occvec')
         # Grab all array data from new orbital code
         kwargs = _obtain_arrays(uni)
         # Manicure it slightly for NBO inputs
@@ -224,7 +225,7 @@ class Input(Editor):
         if 'ml' in kwargs:
             labargs = {'mls': kwargs['ml']}
         else:
-            labards = {'ls': kwargs['l'],
+            labargs = {'ls': kwargs['l'],
                        'ms': kwargs['m'],
                        'ns': kwargs['n']}
         kwargs['label'] = _get_labels(kwargs['L'], **labargs)
@@ -234,17 +235,18 @@ class Input(Editor):
         kwargs['ncomps'] = _clean_to_string(kwargs['ncomps'], ncol=10, width=5)
         kwargs['nprims'] = _clean_to_string(kwargs['nprims'], ncol=10, width=5)
         kwargs['npntrs'] = _clean_to_string(kwargs['npntrs'], ncol=10, width=5)
-        kwargs['expnts'] = _clean_to_string(kwargs['expnts'], decimals=6)
+        kwargs['expnts'] = _clean_to_string(kwargs['expnts'], decimals=10, width=18)
         kwargs['coeffs'] = _clean_coeffs(kwargs['coeffs'])
         # Separated matrices for debugging the top half when these
         # arrays are harder to come by. NBO has strict precision
         # requirements so overlap/density must be very precise (12 decimals).
         matargs = {'overlap': '', 'density': ''}
-        margs = {'decimals': 6, 'just': False}
+        margs = {'decimals': 15, 'width': 23, 'just': False}
         if hasattr(uni, '_overlap'):
             o = uni.overlap['coef'].values
             matargs['overlap'] = _clean_to_string(o, **margs)
         # Still no clean solution for an occupation vector yet
+        d = None
         if hasattr(uni, '_density'):
             d = uni.density
         elif hasattr(uni, 'occupation_vector'):
@@ -253,7 +255,8 @@ class Input(Editor):
             if column is None:
                 raise Exception("Must provide column name if providing occvec.")
             d = DensityMatrix.from_momatrix(uni.momatrix, occvec, column=column)
-        matargs['density'] = _clean_to_string(d['coef'].values, **margs)
+        if d is not None:
+            matargs['density'] = _clean_to_string(d['coef'].values, **margs)
         # Compute tr[P*S] must be equal to number of electrons
         if matargs['density']:
             kwargs['check'] = np.trace(np.dot(d.square(), uni.overlap.square()))

@@ -1,16 +1,16 @@
 # -*- coding: utf-8 -*-
-# Copyright (c) 2015-2016, Exa Analytics Development Team
+# Copyright (c) 2015-2017, Exa Analytics Development Team
 # Distributed under the terms of the Apache License 2.0
 """
 Gaussian Input Generator
 ###########################
 Editor class and helper function for writing input files.
 """
-
 import os
 import numpy as np
 from .editor import Editor
 from exatomic import __version__
+
 
 _template = """\
 {link0}
@@ -25,8 +25,8 @@ _template = """\
 
 """
 
-class Input(Editor):
 
+class Input(Editor):
     @classmethod
     def from_universe(cls, uni, link0='', route='#P HF/6-31G(d)', title='', name='',
                       charge=0, mult=1, basis='', ecp='', options='', writedir=None):
@@ -60,7 +60,7 @@ class Input(Editor):
         return fl
 
     def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+        super(Input, self).__init__(*args, **kwargs)
 
 
 def _handle_args(kwarg, args):
@@ -96,13 +96,13 @@ def tuning_inputs(uni, name, mult, charge, basis, gammas, alphas,
     """
     Provided a universe, generate input files for functional tuning.
     Includes input keywords for orbital visualization within exatomic.
-    Assumes you will copy restart checkpoint files to have the same 
+    Assumes you will copy restart checkpoint files to have the same
     names as the input files.
 
     Args
         uni (exatomic.container.Universe): molecular specification
         name (str): prefix for job names
-        mult (int): spin multiplicity 
+        mult (int): spin multiplicity
         charge (int): charge of the system
         basis (list): tuples of atomic symbol, string of basis name
         gammas (iter): values of range separation parameter (omega)
@@ -194,20 +194,20 @@ IOP(3/76={b}{a})"""
     return editors
 
 
-def functional_inputs(uni, name, mult, charge, basis, 
+def functional_inputs(uni, name, mult, charge, basis,
                       funcnames={'pbe': 'PBEPBE'}, nproc=4, mem=4,
                       field=None, writedir=None):
     """
     Provided a universe, generate input files to analyze the
     delocalization error inherent in functionals defined in funcnames.
     Includes input keywords for orbital visualization within exatomic.
-    Assumes you will copy restart checkpoint files to have the same 
+    Assumes you will copy restart checkpoint files to have the same
     names as the input files.
 
     Args
         uni (exatomic.container.Universe): molecular specification
         name (str): prefix for job names
-        mult (int): spin multiplicity 
+        mult (int): spin multiplicity
         charge (int): charge of the system
         basis (list): tuples of atomic symbol, string of basis name
         gammas (iter): values of range separation parameter (omega)
@@ -235,11 +235,9 @@ def functional_inputs(uni, name, mult, charge, basis,
             field = field if field is not None else ''
             this_route = ['Charge'] if field else []
             opts = {'title': jobname, 'mult': mul, 'charge': chg,
-                    'link0': link_opts + this_link, 
+                    'link0': link_opts + this_link,
                     'route': route_opts + this_route,
                     'writedir': writedir, 'postatom': field,
                     'basis': basis}
             editors.append(Input.from_universe(uni, **args))
     return editors
-
-

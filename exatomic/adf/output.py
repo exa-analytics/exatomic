@@ -1,23 +1,21 @@
 # -*- coding: utf-8 -*-
-# Copyright (c) 2015-2016, Exa Analytics Development Team
+# Copyright (c) 2015-2017, Exa Analytics Development Team
 # Distributed under the terms of the Apache License 2.0
-'''
+"""
 Output Parser
 #####################
 Multiple frames are not currently supported
-'''
+"""
 import re
 import numpy as np
 import pandas as pd
 from io import StringIO
-
-from exa.relational.isotope import symbol_to_z
+from exatomic.base import sym2z
 from exatomic.algorithms.basis import lmap, enum_cartesian
-from exatomic.basis import BasisSet
-from exatomic import Length
+from exatomic.core.basis import BasisSet
+from exa.util.units import Length
 from .editor import Editor
 
-symbol_to_z = symbol_to_z()
 
 class Output(Editor):
 
@@ -30,7 +28,7 @@ class Output(Editor):
         atom.drop([0, 2, 3], axis=1, inplace=True)
         atom.columns = ['symbol', 'x', 'y', 'z']
         for c in ['x', 'y', 'z']: atom[c] *= Length['A', 'au']
-        atom['Z'] = atom['symbol'].map(symbol_to_z)
+        atom['Z'] = atom['symbol'].map(sym2z)
         atom['frame'] = 0
         self.atom = atom
 
@@ -114,8 +112,12 @@ class Output(Editor):
         while self[stop].strip(): stop += 1
         df = self.pandas_dataframe(start, stop, cols[key])
         df['vector'] -= 1
-        df['spin'] = df.spin.map({'A': 0, 'B': 1})
-        df.sort_values(by=['spin', 'energy'], inplace=True)
+        if 'spin' in cols[key]:
+            df['spin'] = df.spin.map({'A': 0, 'B': 1})
+            df.sort_values(by=['spin', 'energy'], inplace=True)
+        else:
+            df.sort_values(by='energy', inplace=True)
+            df['spin'] = 0
         df.reset_index(drop=True, inplace=True)
         df['frame'] = df['group'] = 0
         self.orbital = df
@@ -148,7 +150,9 @@ class Output(Editor):
         dfs['angmom'] = dfs['angmom'].str.strip()
         dfs['angmom'].update(dfs['angmom'].map({'S': 'S:'}))
         dfs[['L', 'ml']] = dfs['angmom'].str.extract('(.*):(.*)', expand=True)
-        dfs['%'] = dfs['%'].str.replace('%', '').astype(np.float64)
+        dfs['%'] = dfs['%'].str.replace('%', '')
+        dfs['%'].update(dfs['%'].map({"    ******": np.inf}))
+        dfs['%'] = dfs['%'].astype(np.float64)
         dfs['occupation'] = dfs['occupation'].astype(np.float64)
         dfs['vector'] = dfs['vector'].astype(np.int64) - 1
         dfs['eV'] = dfs['eV'].astype(np.float64)
@@ -162,17 +166,31 @@ class Output(Editor):
         # First table of interest here
         start = found + 4
         stop = self.find_next(_re_exc_01, keys_only=True) - 3
-        adf = self.pandas_dataframe(start, stop, 9)
-        adf.drop(3, axis=1, inplace=True)
-        adf[0] = adf[0].str[:-1].astype(np.int64) - 1
-        adf[1] = adf[1].map({'Alph': 0, 'Beta': 1})
-        adf[[2, 'occsym']] = adf[2].str.extract('([0-9]*)(.*)', expand=True)
-        adf[[4, 'virtsym']] = adf[4].str.extract('([0-9]*)(.*)', expand=True)
-        adf[2] = adf[2].astype(np.int64)
-        adf[4] = adf[4].astype(np.int64)
-        adf.rename(columns={0: 'excitation', 1: 'spin', 2: 'occ', 4: 'virt',
-                            5: 'weight', 6: 'TDMx', 7: 'TDMy', 8: 'TDMz'},
-                            inplace=True)
+        # adf = self.pandas_dataframe(start, stop, 9)
+        # adf.drop(3, axis=1, inplace=True)
+        # adf[0] = adf[0].str[:-1].astype(np.int64) - 1
+        # adf[1] = adf[1].map({'Alph': 0, 'Beta': 1})
+        # adf[[2, 'occsym']] = adf[2].str.extract('([0-9]*)(.*)', expand=True)
+        # adf[[4, 'virtsym']] = adf[4].str.extract('([0-9]*)(.*)', expand=True)
+        # adf[2] = adf[2].astype(np.int64)
+        # adf[4] = adf[4].astype(np.int64)
+        # adf.rename(columns={0: 'excitation', 1: 'spin', 2: 'occ', 4: 'virt',
+        #                     5: 'weight', 6: 'TDMx', 7: 'TDMy', 8: 'TDMz'},
+        #                     inplace=True)
+        os = len(self[start].split()) == 9
+        cols = ['excitation', 'occ', 'drop', 'virt', 'weight', 'TDMx', 'TDMy', 'TDMz']
+        if os: cols.insert(1, 'spin')
+        adf = self.pandas_dataframe(start, stop, cols)
+        adf.drop('drop', axis=1, inplace=True)
+        s1 = set(adf['occ'][adf['occ'] == 'NTO'].index)
+        s2 = set(adf['excitation'][adf['excitation'].isin(['occ:', 'virt:'])].index)
+        adf.drop(s1 | s2, axis=0, inplace=True)
+        adf['excitation'] = adf['excitation'].str[:-1].astype(np.int64) - 1
+        if os: adf['spin'] = adf['spin'].map({'Alph': 0, 'Beta': 1})
+        adf[['occ', 'occsym']] = adf['occ'].str.extract('([0-9]*)(.*)', expand=True)
+        adf[['virt', 'virtsym']] = adf['virt'].str.extract('([0-9]*)(.*)', expand=True)
+        adf['occ'] = adf['occ'].astype(np.int64) - 1
+        adf['virt'] = adf['virt'].astype(np.int64) - 1
         # Second one here
         start = stop + 5
         stop = start
@@ -183,8 +201,6 @@ class Output(Editor):
         df.columns = ['energy', 'eV', 'osc', 'symmetry']
         # Expand the second table to fit the original
         for col in df.columns: adf[col] = adf.excitation.map(df[col])
-        adf['occ'] -= 1
-        adf['virt'] -= 1
         adf['frame'] = adf['group'] = 0
         self.excitation = adf
 

@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# Copyright (c) 2015-2016, Exa Analytics Development Team
+# Copyright (c) 2015-2017, Exa Analytics Development Team
 # Distributed under the terms of the Apache License 2.0
 """
 QE cp.x Molecular Dynamics
@@ -13,12 +13,12 @@ import numpy as np
 import pandas as pd
 from linecache import getline
 from operator import itemgetter
-from exa.utility import mkp
+from exa.util.utility import mkp
+from exa.util.units import Time
 from exa.math.misc.indexing import starts_count
-from exa.relational.unit import Time
-from exatomic.atom import Atom
-from exatomic.frame import Frame
-from exatomic.container import Universe
+from exatomic import Atom
+from exatomic import Frame
+from exatomic import Universe
 from exatomic.qe.cp.error import CPException
 
 

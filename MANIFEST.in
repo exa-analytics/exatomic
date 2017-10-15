@@ -1,4 +1,3 @@
-# The package including static
 recursive-include exatomic *
 
 # root text files

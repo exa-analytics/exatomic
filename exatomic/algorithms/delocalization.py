@@ -26,7 +26,7 @@ sns.mpl.pyplot.rcParams.update({'text.usetex': True,
 
 
 def plot_energy(curv, color=None, title='', figsize=(21,5),
-                nylabel=3, fontsize=24):
+                nylabel=3, nxlabel=5, fontsize=24):
     """
     Accepts the output of compute_curvature or combine_curvature and
     returns a figure with appropriate styling.
@@ -74,11 +74,9 @@ def combine_curvature(curvs, order=None):
     else:
         reordered = curvs
     for i, curv in enumerate(reordered):
-        if i > 0:
-            try:
-                reordered[i].drop('n', axis=1, inplace=True)
-            except ValueError:
-                pass
+        if not i: continue
+        try: reordered[i].drop('n', axis=1, inplace=True)
+        except ValueError: pass
     return pd.concat(reordered, axis=1)
 
 

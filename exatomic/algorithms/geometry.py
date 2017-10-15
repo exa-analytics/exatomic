@@ -7,9 +7,11 @@ symmetry adapted or crystalline structures.
 '''
 import numpy as np
 import pandas as pd
-from exatomic import Length
+from exa.util.units import Length
+
 
 columns = ['x', 'y', 'z', 'symbol', 'frame', 'label']
+
 
 def make_small_molecule(center=None, ligand=None, distance=None, geometry=None,
                         offset=None, plane=None, axis=None, domains=None, unit='A'):
