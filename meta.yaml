@@ -1,10 +1,5 @@
-<<<<<<< HEAD
-{% set name = "exatomic" %}
-{% set version = "0.4.0" %}
-=======
 {% set name = "exa" %}
 {% set version = "0.3.9" %}
->>>>>>> 1c37655b6be3dca60b2adbeee8ca3767e5477943
 {% set build = 0 %}
 
 package:
@@ -31,13 +26,7 @@ requirements:
     - matplotlib
     - seaborn
     - networkx
-<<<<<<< HEAD
-    - paramiko
     - pandas
-    - sympy
-=======
-    - pandas
->>>>>>> 1c37655b6be3dca60b2adbeee8ca3767e5477943
     - notebook
     - nose
     - numba
@@ -47,25 +36,14 @@ requirements:
     - sphinx_rtd_theme
     - pandoc
     - nbsphinx
-<<<<<<< HEAD
     - exa
 
 test:
   imports:
     - exatomic
-=======
-
-test:
-  imports:
-    - exa
->>>>>>> 1c37655b6be3dca60b2adbeee8ca3767e5477943
 
 about:
     home: https://exa-analytics.github.io/{{ name }}
     license: Apache-2.0
     license_file: LICENSE
-<<<<<<< HEAD
     summary: A unified platform for theoretical and computational chemists.
-=======
-    summary: A framework for data processing, computation, and visualization.
->>>>>>> 1c37655b6be3dca60b2adbeee8ca3767e5477943
