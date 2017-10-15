@@ -101,7 +101,7 @@ class ThreeApp {
             .then(function(o) {
                 console.log("Mesh initialized");
                 console.log(o.name);
-                o.name = "THINGS";
+                o.name = "THINGS and stuff";
                 console.log(o.name);
                 that.scene.add(o);
             })
@@ -258,7 +258,7 @@ class HUDApp extends ThreeApp {
         this.context.fillStyle = "rgba(255,255,255,0.95)";
         this.context.fillRect(2,2,width+4,20+4);
         this.context.fillStyle = "rgba(0,0,0,1)";
-        this.context.fillText(message,4,20);
+        this.context.fillText(message,4,21);
         this.texture.needsUpdate = true;
 
         // this.context.fillStyle = "rgba(0,0,0,0.95)";
