@@ -26,14 +26,9 @@ osx-64/
 doc/build/
 target/
 .settings/
-<<<<<<< HEAD
-exatomic/static/
-=======
 exatomic/static/*.js
 exatomic/static/*.map
 package-lock.json
->>>>>>> 1c37655b6be3dca60b2adbeee8ca3767e5477943
-
 
 # Compiled
 *.py[cod]
