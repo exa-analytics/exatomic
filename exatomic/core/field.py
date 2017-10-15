@@ -11,10 +11,7 @@ loop going over the y dimension, and the inner loop going over the z dimension.
 """
 import numpy as np
 import pandas as pd
-try:
-    from exa.core.numerical import Field, Series
-except ImportError:
-    from exa.numerical import Field, Series
+from exa import Field, Series
 
 
 class AtomicField(Field):
@@ -27,11 +24,8 @@ class AtomicField(Field):
 
     .. _cube file format: http://paulbourke.net/dataformats/cube/
     """
-    _values_precision = 6
     _cardinal = ('frame', np.int64)
     _categories = {'label': str, 'field_type': str}
-    _traits = ['nx', 'ny', 'nz', 'ox', 'oy', 'oz', 'dxi', 'dxj', 'dxk',
-               'dyi', 'dyj', 'dyk', 'dzi', 'dzj', 'dzk']
     _columns = ['nx', 'ny', 'nz', 'ox', 'oy', 'oz', 'dxi', 'dxj', 'dxk',
                 'dyi', 'dyj', 'dyk', 'dzi', 'dzj', 'dzk', 'frame']
 

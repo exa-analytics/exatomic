@@ -10,13 +10,8 @@ import pandas as pd
 import networkx as nx
 import warnings
 from networkx.algorithms.components import connected_components
-try:
-    from exa.core.numerical import DataFrame
-    from exa.cms.isotope import symbol_to_mass
-    symbol_to_element_mass = symbol_to_mass
-except ImportError:
-    from exa.numerical import DataFrame
-    from exa.relational.isotope import symbol_to_element_mass
+from exa import DataFrame
+from exatomic.base import sym2mass
 from exatomic.formula import string_to_dict, dict_to_string
 
 
@@ -131,7 +126,6 @@ def compute_molecule(universe):
             mapper[adx] = i
         i += 1
     universe.atom['molecule'] = universe.atom.index.map(lambda x: mapper[x])
-    sym2mass = symbol_to_element_mass()
     universe.atom['mass'] = universe.atom['symbol'].map(sym2mass)
     grps = universe.atom.groupby('molecule')
     molecule = grps['symbol'].value_counts().unstack().fillna(0).astype(np.int64)

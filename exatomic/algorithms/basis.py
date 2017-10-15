@@ -12,12 +12,11 @@ import re
 import sympy
 import numpy as np
 from sympy import Add, Mul
-from exatomic._config import config
 from collections import OrderedDict
 from numba import jit, vectorize
 
-x, y, z = sympy.symbols('x y z')
 
+x, y, z = sympy.symbols('x y z')
 lorder = ['s', 'p', 'd', 'f', 'g', 'h', 'i', 'k', 'l', 'm']
 lmap = {'s': 0, 'p': 1, 'd': 2, 'f': 3, 'g': 4, 'h': 5, 'i': 6, 'k': 7, 'l': 8,
         'm': 9, 'px': 1, 'py': 1, 'pz': 1}
@@ -27,7 +26,6 @@ spher_ml_count = {'s': 1, 'p': 3, 'd': 5, 'f': 7, 'g': 9, 'h': 11, 'i': 13, 'k':
 spher_lml_count = {lorder.index(key): value for key, value in spher_ml_count.items()}
 cart_ml_count = {'s': 1, 'p': 3, 'd': 6, 'f': 10, 'g': 15, 'h': 21, 'i': 28}
 cart_lml_count = {lorder.index(key): value for key, value in cart_ml_count.items()}
-
 enum_cartesian = {0: [[0, 0, 0]],
                   1: [[1, 0, 0], [0, 1, 0], [0, 0, 1]],
                   2: [[2, 0, 0], [1, 1, 0], [1, 0, 1],
@@ -43,7 +41,6 @@ enum_cartesian = {0: [[0, 0, 0]],
                       [1, 4, 0], [1, 3, 1], [1, 2, 2], [1, 1, 3], [1, 0, 4],
                       [0, 5, 0], [0, 4, 1], [0, 3, 2], [0, 2, 3], [0, 1, 4],
                       [0, 0, 5]]}
-
 gaussian_cartesian = enum_cartesian.copy()
 gaussian_cartesian[2] = [[2, 0, 0], [0, 2, 0], [0, 0, 2],
                          [1, 1, 0], [1, 0, 1], [0, 1, 1]]

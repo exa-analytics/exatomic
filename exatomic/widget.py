@@ -19,7 +19,7 @@ from ipywidgets import (
     Widget, DOMWidget, Layout, Button, Dropdown,
     register, jslink, widget_serialization
 )
-from exa.relational.isotope import symbol_to_radius, symbol_to_color
+from exatomic.base import sym2radius, sym2color
 from exatomic import __js_version__
 
 ###################
@@ -476,8 +476,8 @@ def atom_traits(df):
     symmap = {i: v for i, v in enumerate(df['symbol'].cat.categories)
               if v in df.unique_atoms}
     unq = df['symbol'].unique()
-    radii = symbol_to_radius()[unq]
-    colors = symbol_to_color()[unq]
+    radii = sym2radius[unq]
+    colors = sym2color[unq]
     traits['atom_s'] = syms.to_json(orient='values')
     traits['atom_r'] = {i: 0.5 * radii[v] for i, v in symmap.items()}
     traits['atom_c'] = {i: colors[v] for i, v in symmap.items()}

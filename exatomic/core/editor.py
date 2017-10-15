@@ -8,11 +8,13 @@ This module provides a text file editor that can be used to transform commonly
 found file formats directly into :class:`~exatomic.container.Universe` objects.
 """
 import six
-from exa.editor import Editor as BaseEditor
-from exatomic.container import Meta, Universe
-from exatomic.frame import compute_frame_from_atom
+from exa import Editor as _Editor
+from exa import TypedMeta
+from exatomic.core.universe import Universe
+from exatomic.core.frame import compute_frame_from_atom
 
-class Editor(BaseEditor, metaclass=Meta):
+
+class Editor(six.with_metaclass(TypedMeta, _Editor)):
     """
     Base atomic editor class for converting between file formats and to (or
     from) :class:`~exatomic.container.Universe` objects.

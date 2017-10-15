@@ -19,12 +19,10 @@ from collections import OrderedDict
 
 # Local
 from exa import Series
-from exatomic._config import config
-from exatomic.field import AtomicField
-from exa.relational.isotope import symbol_to_z
+from exatomic.core.field import AtomicField
+from exatomic.base import sym2z
 from exatomic.algorithms.basis import solid_harmonics, clean_sh
 
-symbol_to_z = symbol_to_z()
 halfmem = virtual_memory().total / 2
 solhar = clean_sh(solid_harmonics(6))
 
@@ -377,7 +375,7 @@ def _determine_vector(uni, vector):
         elif hasattr(uni.atom, 'Z'):
             homo = uni.atom['Z'].sum() // 2
         else:
-            uni.atom['Z'] = uni.atom['symbol'].map(symbol_to_z)
+            uni.atom['Z'] = uni.atom['symbol'].map(sym2z)
             homo = uni.atom['Z'].sum() // 2
         if homo < 15: return range(0, homo + 15)
         else: return range(homo - 15, homo + 5)

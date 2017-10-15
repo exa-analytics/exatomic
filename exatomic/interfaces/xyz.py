@@ -10,10 +10,10 @@ import numpy as np
 import pandas as pd
 from io import StringIO
 from exa.math.misc.indexing import starts_counts
-from exatomic import Length
-from exa.utility import mkp
-from exatomic.editor import Editor
-from exatomic.frame import compute_frame_from_atom
+from exa.util.units import Length
+from exa.util.utility import mkp
+from exatomic.core.editor import Editor
+from exatomic.core.Frame import compute_frame_from_atom
 
 
 class XYZ(Editor):

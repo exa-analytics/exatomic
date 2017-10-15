@@ -1,17 +1,12 @@
 # -*- coding: utf-8 -*-
-# Copyright (c) 2015-2016, Exa Analytics Development Team
+# Copyright (c) 2015-2017, Exa Analytics Development Team
 # Distributed under the terms of the Apache License 2.0
-
-try:
-    from exa.cms.isotope import znum_to_symbol as z_to_symbol
-    from exa.cms.unit import Length, Energy
-except:
-    from exa.relational.isotope import z_to_symbol
-    from exatomic import Length, Energy
-
+"""
+"""
+from exa.util.units import Length, Energy
 from exatomic.algorithms.basis import lmap
+from exatomic.base import z2sym
 
-z_to_symbol = z_to_symbol()
 
 def universe_from_cclib(ccobj):
     data = ccobj.__dict__
@@ -42,7 +37,7 @@ def parse_ccobj_atom(data):
     Z = np.tile(Z, nframe)
     atom = pd.DataFrame.from_dict({'x': x, 'y': y, 'z': z,
                                    'Z': Z, 'frame': frame})
-    atom['symbol'] = atom['Z'].map(z_to_symbol)
+    atom['symbol'] = atom['Z'].map(z2sym)
     return atom
 
 def parse_ccobj_orbital(data):

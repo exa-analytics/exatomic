@@ -29,13 +29,8 @@ guide for the types of data found in two body tables provided by this module
 """
 import numpy as np
 import pandas as pd
-from traitlets import Unicode
-try:
-    from exa.core.numerical import DataFrame, SparseDataFrame
-    from exa.cms.isotope import symbol_to_radius
-except ImportError:
-    from exa.numerical import DataFrame, SparseDataFrame
-    from exa.relational.isotope import symbol_to_radius
+from exa import DataFrame, SparseDataFrame
+from exatomic.base import sym2radius
 from exa.math.vector.cartesian import pdist_euc_dxyz_idx
 from exatomic.algorithms.distance import periodic_pdist_euc_dxyz_idx
 
@@ -71,9 +66,9 @@ class AtomTwo(DataFrame):
             default covalent radii available in :class:`~exa.relational.isotope`.
         """
         if mapper is None:
-            mapper = symbol_to_radius()
+            mapper = sym2radius
         elif not all(symbol in mapper for symbol in symbols.unique()):
-            sym2rad = symbol_to_radius()
+            sym2rad = sym2radius
             for symbol in symbols.unique():
                 if symbol not in mapper:
                     mapper[symbol] = sym2rad[symbol]

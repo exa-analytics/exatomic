@@ -11,7 +11,7 @@ from numbers import Integral
 import numpy as np
 import pandas as pd
 from exa import DataFrame, SparseDataFrame, Series
-from exa.base import sym2z, sym2mass
+from exatomic.base import sym2z, sym2mass
 from exatomic.algorithms.geometry import make_small_molecule
 
 
@@ -45,12 +45,10 @@ class Atom(DataFrame):
     | vz                | float    | velocity in z                             |
     +-------------------+----------+-------------------------------------------+
     """
-    _precision = {'x': 2, 'y': 2, 'z': 2}
     _index = 'atom'
     _cardinal = ('frame', np.int64)
     _categories = {'symbol': str, 'set': np.int64, 'molecule': np.int64,
                    'label': np.int64}
-    _traits = ['x', 'y', 'z', 'set']
     _columns = ['x', 'y', 'z', 'symbol']
 
     @property
@@ -280,5 +278,3 @@ def add_vibrational_mode(uni, freqdx):
     movie['frame'] = np.repeat(range(len(factor)), len(uni.atom))
     uni.frame = pd.concat(frames).reset_index()
     uni.atom = movie
-    uni._traits_need_update = True
-    uni._update_traits()

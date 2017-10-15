@@ -14,35 +14,40 @@ simulations), step number (e.g. geometry optimization), or an arbitrary index
 import six
 import numpy as np
 import pandas as pd
-try:
-    from exa.core.base import DataObject
-    from exa.core.numerical import Field, DataFrame
-    from exa.core.container import Container
-except ImportError:
-    from exa.container import TypedMeta as DataObject
-    from exa.numerical import Field, DataFrame
-    from exa.container import Container
-from exatomic.error import BasisSetNotFoundError
-from exatomic.frame import Frame, compute_frame_from_atom
-from exatomic.atom import Atom, UnitAtom, ProjectedAtom, VisualAtom, Frequency
-from exatomic.two import (AtomTwo, MoleculeTwo, compute_atom_two,
-                          compute_bond_count, compute_molecule_two)
-from exatomic.molecule import (Molecule, compute_molecule, compute_molecule_com,
-                               compute_molecule_count)
-from exatomic.field import AtomicField
-from exatomic.orbital import Orbital, Excitation, MOMatrix, DensityMatrix
-from exatomic.basis import Overlap, BasisSet, BasisSetOrder
+from exa.core.numerical import Numerical
+from exa import Field, DataFrame, Container, TypedMeta
+from .error import BasisSetNotFoundError
+from .frame import Frame, compute_frame_from_atom
+from .atom import Atom, UnitAtom, ProjectedAtom, VisualAtom, Frequency
+from .two import (AtomTwo, MoleculeTwo, compute_atom_two,
+                  compute_bond_count, compute_molecule_two)
+from .molecule import (Molecule, compute_molecule, compute_molecule_com,
+                       compute_molecule_count)
+from .field import AtomicField
+from .orbital import Orbital, Excitation, MOMatrix, DensityMatrix
+from .basis import Overlap, BasisSet, BasisSetOrder
 from exatomic.algorithms.orbital import add_molecular_orbitals
-from exatomic.interfaces.cclib import universe_from_cclib
+#from exatomic.interfaces.cclib import universe_from_cclib
 from exatomic.widget import UniverseWidget
 
 
-class Meta(DataObject):
+class Meta(Numerical):
     """
     Defines strongly typed attributes of the :class:`~exatomic.universe.Universe`
     and :class:`~exatomic.editor.AtomicEditor` objects. All "aliases" below are
     in fact type definitions that get dynamically generated on package load
     for :class:`~exatomic.container.Universe` and :class:`~exatomic.editor.Editor`.
+    """
+
+class Universe(six.with_metaclass(TypedMeta, Container)):
+    """
+    The atomic container is called a universe because it represents everything
+    known about the atomistic simulation (whether quantum or classical). This
+    includes data such as atomic coordinates, molecular orbital energies, as
+    well as (classical phenomena) such as two body distances, etc.
+
+    Attributes:
+        atom (:class:`~exatomic.atom.Atom`): Atomic coordinates, symbols, forces, etc.
     """
     atom = Atom
     frame = Frame
@@ -63,18 +68,6 @@ class Meta(DataObject):
     contribution = DataFrame
     basis_set_order = BasisSetOrder
     basis_set = BasisSet
-
-class Universe(Container, metaclass=Meta):
-    """
-    The atomic container is called a universe because it represents everything
-    known about the atomistic simulation (whether quantum or classical). This
-    includes data such as atomic coordinates, molecular orbital energies, as
-    well as (classical phenomena) such as two body distances, etc.
-
-    Attributes:
-        atom (:class:`~exatomic.atom.Atom`): Atomic coordinates, symbols, forces, etc.
-    """
-    _widget_class = UniverseWidget
     _cardinal = 'frame'
 
     @classmethod
