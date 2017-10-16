@@ -82,6 +82,11 @@ class Frame(DataFrame):
         self['ry'] = cartmag(self['xj'].values, self['yj'].values, self['zj'].values)
         self['rz'] = cartmag(self['xk'].values, self['yk'].values, self['zk'].values)
 
+    def orthorhombic(self):
+        if "xi" in self.columns and np.allclose(self["xj"], 0.0):
+            return True
+        return False
+
 
 def compute_frame(universe):
     """

@@ -12,6 +12,7 @@ import numpy as np
 import pandas as pd
 from exa import DataFrame, SparseDataFrame, Series
 from exatomic.base import sym2z, sym2mass
+from exatomic.algorithms.distance import modv
 from exatomic.algorithms.geometry import make_small_molecule
 
 
@@ -173,22 +174,20 @@ class UnitAtom(SparseDataFrame):
     _index = 'atom'
     _columns = ['x', 'y', 'z']
 
-#    @classmethod
-#    def from_universe(cls, universe):
-#        """
-#        """
-#        if universe.frame.is_periodic():
-#            atom = universe.atom[['x', 'y', 'z']].copy()
-#            atom.update(universe.unit_atom)
-#            bonded = universe.atom_two.ix[universe.atom_two['bond'] == True, 'atom1'].astype(np.int64)
-#            prjd = universe.projected_atom.ix[bonded.index].to_dense()
-#            prjd['atom'] = bonded
-#            prjd.drop_duplicates('atom', inplace=True)
-#            prjd.set_index('atom', inplace=True)
-#            atom.update(prjd)
-#            atom = atom[atom != universe.atom[['x', 'y', 'z']]].to_sparse()
-#            return cls(atom)
-#        raise PeriodicUniverseError()
+    @classmethod
+    def from_universe(cls, universe):
+        if universe.periodic:
+            if "rx" not in universe.frame.columns:
+                universe.frame.compute_cell_magnitudes()
+            a, b, c = universe.frame[["rx", "ry", "rz"]].max().values
+            x = modv(universe.atom['x'].values, a)
+            y = modv(universe.atom['y'].values, b)
+            z = modv(universe.atom['z'].values, c)
+            df = pd.DataFrame.from_dict({'x': x, 'y': y, 'z': z})
+            df.index = universe.atom.index
+            df = df[universe.atom[['x', 'y', 'z']] != df].to_sparse()
+            return cls(df)
+        raise PeriodicUniverseError()
 
 
 class ProjectedAtom(SparseDataFrame):

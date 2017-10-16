@@ -19,7 +19,7 @@ from .error import BasisSetNotFoundError
 from .frame import Frame, compute_frame_from_atom
 from .atom import Atom, UnitAtom, ProjectedAtom, VisualAtom, Frequency
 from .two import (AtomTwo, MoleculeTwo, compute_atom_two,
-                  compute_bond_count, compute_molecule_two)
+                  _compute_bond_count, compute_molecule_two, _compute_bonds)
 from .molecule import (Molecule, compute_molecule, compute_molecule_com,
                        compute_molecule_count)
 from .field import AtomicField
@@ -60,14 +60,23 @@ class Universe(six.with_metaclass(Meta, Container)):
     well as (classical phenomena) such as two body distances, etc.
 
     Attributes:
-        atom (:class:`~exatomic.atom.Atom`): Atomic coordinates, symbols, forces, etc.
+        frame (:class:`~exatomic.core.frame.Frame`): State variables:
+        atom (:class:`~exatomic.core.atom.Atom`): (Classical) atomic data (e.g. coordinates)
+        atom_two (:class:`~exatomic.core.two.AtomTwo`): Interatomic distances
+        molecule (:class:`~exatomic.core.molecule.Molecule`): Molecule information
+        orbital (:class:`~exatomic.core.orbital.Orbital`): Molecular orbital information
+        momatrix (:class:`~exatomic.core.orbital.MOMatrix`): Molecular orbital coefficient matrix
     """
     _cardinal = "frame"
-    _getter_prefix = "parse"
+    _getter_prefix = "compute"
 
     @property
     def periodic(self, *args, **kwargs):
         return self.frame.is_periodic(*args, **kwargs)
+
+    @property
+    def orthorhombic(self):
+        return self.frame.orthorhombic()
 
     @classmethod
     def from_cclib(cls, ccobj):
@@ -89,7 +98,7 @@ class Universe(six.with_metaclass(Meta, Container)):
         self.visual_atom = VisualAtom.from_universe(self)
         self.compute_molecule_com()
 
-    def compute_atom_two(self, mapper=None, bond_extra=0.45):
+    def compute_atom_two(self, *args, **kwargs):
         """
         Compute interatomic two body properties (e.g. bonds).
 
@@ -97,30 +106,22 @@ class Universe(six.with_metaclass(Meta, Container)):
             mapper (dict): Custom radii to use when determining bonds
             bond_extra (float): Extra additive factor to use when determining bonds
         """
-        if self.frame.is_periodic():
-            atom_two, projected_atom = compute_atom_two(self, mapper, bond_extra)
-            self.atom_two = atom_two
-            self.projected_atom = projected_atom
-        else:
-            self.atom_two = compute_atom_two(self, mapper, bond_extra)
-        self._traits_need_update = True
+        self.atom_two = compute_atom_two(self, *args, **kwargs)
 
-    def compute_bonds(self, mapper=None, bond_extra=0.45):
+    def compute_bonds(self, *args, **kwargs):
         """
         Updates bonds (and molecules).
 
         See Also:
             :func:`~exatomic.two.AtomTwo.compute_bonds`
         """
-        self.atom_two.compute_bonds(self.atom['symbol'], mapper=mapper, bond_extra=bond_extra)
-        self.compute_molecule()
-        self._traits_need_update = True
+        _compute_bonds(self.atom, self.atom_two, *args, **kwargs)
 
     def compute_bond_count(self):
         """
         Compute bond counts and attach them to the :class:`~exatomic.atom.Atom` table.
         """
-        self.atom['bond_count'] = compute_bond_count(self)
+        _compute_bond_count(self)
 
     def compute_molecule(self):
         """Compute the :class:`~exatomic.molecule.Molecule` table."""
@@ -174,7 +175,6 @@ class Universe(six.with_metaclass(Meta, Container)):
                 self.field = AtomicField(new_field, field_values=new_field_values)
         else:
             raise TypeError('field must be an instance of exatomic.field.AtomicField or a list of them')
-        self._traits_need_update = True
 
     def add_molecular_orbitals(self, field_params=None, mocoefs=None,
                                vector=None, frame=None):
@@ -191,27 +191,12 @@ class Universe(six.with_metaclass(Meta, Container)):
                 raise AttributeError("universe must have {} attribute.".format(attr))
         add_molecular_orbitals(self, field_params=field_params,
                                mocoefs=mocoefs, vector=vector, frame=frame)
-        self._traits_need_update = True
-
-
-    def _custom_traits(self):
-        """
-        Build traits depending on multiple dataframes.
-        """
-        traits = {}
-        # Hack for now...
-        if hasattr(self, '_atom_two') or len(self)*100 > self.frame['atom_count'].sum():
-            mapper = self.atom.get_atom_labels().astype(np.int64)
-            traits.update(self.atom_two._bond_traits(mapper))
-        return traits
 
     def __len__(self):
         return len(self.frame)
 
     def __init__(self, **kwargs):
-        super().__init__(**kwargs)
-        #self._widget = self._widget_class(self)
-
+        super(Universe, self).__init__(**kwargs)
 
 
 def concat(name=None, description=None, meta=None, *universes):
@@ -220,25 +205,6 @@ def concat(name=None, description=None, meta=None, *universes):
         This function is not fully featured or tested yet!
     """
     raise NotImplementedError()
-    kwargs = {'name': name, 'description': description, 'meta': meta}
-    names = []
-    for universe in universes:
-        for key, data in universe._data().items():
-            name = key[1:] if key.startswith('_') else key
-            names.append(name)
-            if name in kwargs:
-                kwargs[name].append(data)
-            else:
-                kwargs[name] = [data]
-    for name in set(names):
-        cls = kwargs[name][0].__class__
-        if isinstance(kwargs[name][0], Field):
-            data = pd.concat(kwargs[name])
-            values = [v for field in kwargs[name] for v in field.field_values]
-            kwargs[name] = cls(data, field_values=values)
-        else:
-            kwargs[name] = cls(pd.concat(kwargs[name]))
-    return Universe(**kwargs)
 
 
 def basis_function_contributions(universe, mo, mocoefs='coef',
@@ -267,4 +233,3 @@ def basis_function_contributions(universe, mo, mocoefs='coef',
         return together
     else:
         raise NotImplementedError("not clever enough for that.")
-

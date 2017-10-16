@@ -9,7 +9,7 @@ import numpy as np
 import numba as nb
 
 
-@nb.vectorize(nopython=True, cache=True)
+@nb.vectorize(["float64(float64, float64, float64)"], nopython=True, target="parallel")
 def cartmag(x, y, z):
     """
     Vectorized operation to compute the magnitude of a three component array.
@@ -17,8 +17,23 @@ def cartmag(x, y, z):
     return np.sqrt(x**2 + y**2 + z**2)
 
 
-@nb.jit(nopython=True, nogil=True, cache=True)
-def pdist_pbc_ortho(ux, uy, uz, a, b, c, index, dmax=8.0, rtol=10**-5, atol=10**-8):
+@nb.vectorize(["float64(float64, float64)"], nopython=True, target="parallel")
+def modv(x, y):
+    """
+    Vectorized modulo operation.
+
+    Args:
+        x (array): 1D array
+        y (array, float): Scalar or 1D array
+
+    Returns:
+        z (array): x modulo y
+    """
+    return np.mod(x, y)
+
+
+@nb.jit(nopython=True, nogil=True, parallel=True)
+def pdist_pbc_ortho(ux, uy, uz, a, b, c, index, dmax=8.0):
     """
     Pairwise two body calculation for bodies in an orthorhombic periodic cell.
 
@@ -34,27 +49,23 @@ def pdist_pbc_ortho(ux, uy, uz, a, b, c, index, dmax=8.0, rtol=10**-5, atol=10**
         uz (array): In unit cell z array
         a (float): Unit cell dimension a
         b (float): Unit cell dimension b
-        c (float): Unit cell dimension c
-        index (array): Atom indexes
+        c (float): Unit cell dimension c index (array): Atom indexes
         dmax (float): Maximum distance of interest
-        rtol (float): Relative tolerance (used to check float equivalence)
-        atol (float): Absolute tolerance (used to check float equivalence)
     """
     m = [-1, 0, 1]
     dmax2 = dmax**2
     n = len(ux)
     nn = n*(n - 1)//2
     dx = np.empty((nn, ), dtype=np.float64)
-    dx[:] = np.nan
     dy = dx.copy()
     dz = dx.copy()
     dr = dx.copy()
-    ii = dx.copy()
-    jj = dx.copy()
-    projection = dx.copy()
+    ii = np.empty((nn, ), dtype=np.int64)
+    jj = ii.copy()
+    projection = ii.copy()
     k = 0
     # For each atom i
-    for i in range(n):
+    for i in nb.prange(n):
         xi = ux[i]
         yi = uy[i]
         zi = uz[i]
@@ -67,6 +78,7 @@ def pdist_pbc_ortho(ux, uy, uz, a, b, c, index, dmax=8.0, rtol=10**-5, atol=10**
             dpy = np.nan
             dpz = np.nan
             dpr = dmax2
+            inck = False
             prj = 0
             # Check all projections of atom i
             # Note that i, j are in the unit cell so we make a 3x3x3 'supercell'
@@ -84,10 +96,11 @@ def pdist_pbc_ortho(ux, uy, uz, a, b, c, index, dmax=8.0, rtol=10**-5, atol=10**
                         dpz_ = pzi - zj
                         dpr_ = dpx_**2 + dpy_**2 + dpz_**2
                         # The second criteria here enforces that prefer the projection
-                        # with the largest value (i.e. 0 = [-1, -1, -1] < 13 = [0, 0, 0] < 26 = [1, 1, 1])
+                        # with the largest value (i.e. 0 = [-1, -1, -1] < 13 = [0, 0, 0]
+                        # < 26 = [1, 1, 1])
                         # The system sets a fixed preference for the projected positions rather
                         # than having a random choice.
-                        if dpr_ <= dpr or np.abs(dpr - dpr_) <= atol + rtol*dpr_:
+                        if dpr_ < dpr:
                             dx[k] = dpx_
                             dy[k] = dpy_
                             dz[k] = dpz_
@@ -95,53 +108,56 @@ def pdist_pbc_ortho(ux, uy, uz, a, b, c, index, dmax=8.0, rtol=10**-5, atol=10**
                             ii[k] = index[i]
                             jj[k] = index[j]
                             projection[k] = prj
+                            dpr = dpr_
+                            inck = True
                         prj += 1
-            k += 1
-    dx = dx[~np.isnan(dx)]
-    dy = dy[~np.isnan(dy)]
-    dz = dz[~np.isnan(dz)]
-    dr = dr[~np.isnan(dr)]
-    ii = ii[~np.isnan(ii)]
-    jj = jj[~np.isnan(jj)]
-    projection = projection[~np.isnan(projection)]
+            if inck:
+                k += 1
+    dx = dx[:k]
+    dy = dy[:k]
+    dz = dz[:k]
+    dr = dr[:k]
+    ii = ii[:k]
+    jj = jj[:k]
+    projection = projection[:k]
     return dx, dy, dz, dr, ii, jj, projection
 
 
-@nb.jit(nopython=True, nogil=True, cache=True)
+@nb.jit(nopython=True, nogil=True, parallel=True)
 def pdist(x, y, z, index, dmax=8.0):
     """
     3D free boundary condition
     """
+    dmax2 = dmax**2
     m = len(x)
     n = m*(m - 1)//2
     dx = np.empty((n, ), dtype=np.float64)
-    dx[:] = np.nan
     dy = dx.copy()
     dz = dx.copy()
     dr = dx.copy()
-    atom0 = dx.copy()
-    atom1 = dx.copy()
+    atom0 = np.empty((n, ), dtype=np.int64)
+    atom1 = atom0.copy()
     k = 0
-    for i in range(m):
+    for i in nb.prange(m):
         for j in range(i + 1, m):
-            dx_ = (x[i] - x[j])
-            dy_ = (y[i] - y[j])
-            dz_ = (z[i] - z[j])
-            r = np.sqrt(dx_**2 + dy_**2 + dz_**2)
-            if r <= dmax:
+            dx_ = x[i] - x[j]
+            dy_ = y[i] - y[j]
+            dz_ = z[i] - z[j]
+            dr2_ = dx_**2 + dy_**2 + dz_**2
+            if dr2_ < dmax2:
                 dx[k] = dx_
                 dy[k] = dy_
                 dz[k] = dz_
-                dr[k] = r
+                dr[k] = np.sqrt(dr2_)
                 atom0[k] = index[i]
                 atom1[k] = index[j]
                 k += 1
-    dx = dx[~np.isnan(dx)]
-    dy = dy[~np.isnan(dy)]
-    dz = dz[~np.isnan(dz)]
-    dr = dr[~np.isnan(dr)]
-    atom0 = atom0[~np.isnan(atom0)]
-    atom1 = atom1[~np.isnan(atom1)]
+    dx = dx[:k]
+    dy = dy[:k]
+    dz = dz[:k]
+    dr = dr[:k]
+    atom0 = atom0[:k]
+    atom1 = atom1[:k]
     return dx, dy, dz, dr, atom0, atom1
 
 
