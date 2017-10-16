@@ -12,7 +12,7 @@ frames by unique atomic coordinates, a different level of theory, etc.
 import numpy as np
 from traitlets import Float
 from exa import DataFrame
-from exa.math.vector.cartesian import magnitude_xyz
+from exatomic.algorithms.distance import cartmag
 
 
 class Frame(DataFrame):
@@ -39,11 +39,6 @@ class Frame(DataFrame):
     """
     _index = 'frame'
     _columns = ['atom_count']
-    _precision = {'xi': 2, 'xj': 2, 'xk': 2, 'yi': 2, 'yj': 2, 'yk': 2, 'zi': 2,
-                  'zj': 2, 'zk': 2, 'ox': 2, 'oy': 2, 'oz': 2}
-    # Note that adding "frame" below turns the index of this dataframe into a trait
-    _traits = ['xi', 'xj', 'xk', 'yi', 'yj', 'yk', 'zi', 'zj', 'zk',
-               'ox', 'oy', 'oz', 'frame']
 
     def is_periodic(self, how='all'):
         """
@@ -83,9 +78,9 @@ class Frame(DataFrame):
         """
         Compute the magnitudes of the unit cell vectors (rx, ry, rz).
         """
-        self['rx'] = magnitude_xyz(self['xi'].values, self['yi'].values, self['zi'].values).astype(np.float64)
-        self['ry'] = magnitude_xyz(self['xj'].values, self['yj'].values, self['zj'].values).astype(np.float64)
-        self['rz'] = magnitude_xyz(self['xk'].values, self['yk'].values, self['zk'].values).astype(np.float64)
+        self['rx'] = cartmag(self['xi'].values, self['yi'].values, self['zi'].values)
+        self['ry'] = cartmag(self['xj'].values, self['yj'].values, self['zj'].values)
+        self['rz'] = cartmag(self['xk'].values, self['yk'].values, self['zk'].values)
 
 
 def compute_frame(universe):

@@ -2,7 +2,7 @@
 # Copyright (c) 2015-2017, Exa Analytics Development Team
 # Distributed under the terms of the Apache License 2.0
 """
-Two Body Properties
+Atomic Two Body
 ##################################
 This module provides functions for computing two body properties. A body can be,
 for example, an atom (such that two body properties correspond to inter-atomic
@@ -31,17 +31,14 @@ import numpy as np
 import pandas as pd
 from exa import DataFrame, SparseDataFrame
 from exatomic.base import sym2radius
-from exa.math.vector.cartesian import pdist_euc_dxyz_idx
-from exatomic.algorithms.distance import periodic_pdist_euc_dxyz_idx
+from exatomic.algorithms.distance import pdist_pbc_ortho, pdist
 
 
 class AtomTwo(DataFrame):
-    """
-    Interatomic distances generated from the :class:`~exatomic.atom.Atom` table.
-    """
-    _index = 'two'
-    _cardinal = ('frame', np.int64)
-    _columns = ['dx', 'dy', 'dz', 'atom0', 'atom1', 'distance']
+    """Interatomic distances."""
+    _index = "two"
+    _cardinal = ("frame", np.int64)
+    _columns = ["dx", "dy", "dz", "atom0", "atom1", "distance"]
     _categories = {'symbols': str, 'atom0': np.int64, 'atom1': np.int64}
 
     def compute_bonds(self, symbols, mapper=None, bond_extra=0.45):
@@ -86,17 +83,20 @@ class MoleculeTwo(DataFrame):
     pass
 
 
-def compute_atom_two(universe, mapper=None, bond_extra=0.45):
+def compute_atom_two(universe, bond_extra=0.45, **radii):
     """
     Compute interatomic distances and determine bonds.
 
     Args:
         universe: An atomic universe
-        mapper (dict): Dictionary of symbol, radii pairs (see note below)
         bond_extra (float): Extra additive factor to include when computing bonds
+        radii (kwargs): Alternative atomic radii to use in determining bonds
     """
-    if universe.frame.is_periodic():
-        return compute_periodic_two_si(universe, mapper, bond_extra)
+    if universe.periodic:
+        if universe.frame.orthorhombic:
+            return compute_pdist_pbc_ortho(universe, bond_extra, **radii)
+        else:
+            raise NotImplementedError("Only supports orthorhombic cells")
     return compute_free_two_si(universe, mapper, bond_extra)
 
 
@@ -228,8 +228,7 @@ def compute_molecule_two(universe):
 
 
 
-def bond_summary_by_label_pairs(universe, *labels, length='A', stdev=False,
-                               stderr=False, variance=False, ncount=False):
+def bond_summary_by_label_pairs(universe, *labels, **kwarg):
    """
    Compute a summary of bond lengths by label pairs
 
@@ -245,12 +244,17 @@ def bond_summary_by_label_pairs(universe, *labels, length='A', stdev=False,
    Returns:
        summary (:class:`~pandas.DataFrame`): Bond length dataframe
    """
+   length = kwargs.pop("length", "Angstrom")
+   stdev = kwargs.pop("stdev", False)
+   stderr = kwargs.pop("stderr", False)
+   variance = kwargs.pop("variance", False)
+   ncount = kwargs.pop("ncount", False)
    l0, l1 = list(zip(*labels))
    l0 = np.array(l0, dtype=np.int64)
    l1 = np.array(l1, dtype=np.int64)
    ids = unordered_pairing(l0, l1)
    bonded = universe.two[universe.two['bond'] == True].copy()
-   if universe.is_periodic:
+   if universe.periodic:
        bonded['atom0'] = bonded['prjd_atom0'].map(universe.projected_atom['atom'])
        bonded['atom1'] = bonded['prjd_atom1'].map(universe.projected_atom['atom'])
    bonded['label0'] = bonded['atom0'].map(universe.atom['label'])
@@ -281,7 +285,7 @@ def bond_summary_by_label_pairs(universe, *labels, length='A', stdev=False,
    return df
 
 
-def n_nearest_distances_by_symbols(universe, a, b, n, length='A', stdev=False,
+def n_nearest_distances_by_symbols(universe, a, b, n, length='Angstrom', stdev=False,
                                   stderr=False, variance=False, ncount=False):
    """
    Compute a distance summary of the n nearest pairs of symbols, (a, b).

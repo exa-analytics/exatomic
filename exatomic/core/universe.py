@@ -65,6 +65,10 @@ class Universe(six.with_metaclass(Meta, Container)):
     _cardinal = "frame"
     _getter_prefix = "parse"
 
+    @property
+    def periodic(self, *args, **kwargs):
+        return self.frame.is_periodic(*args, **kwargs)
+
     @classmethod
     def from_cclib(cls, ccobj):
         return cls(**universe_from_cclib(ccobj))

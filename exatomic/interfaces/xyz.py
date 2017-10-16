@@ -11,12 +11,12 @@ import numpy as np
 import pandas as pd
 from io import StringIO
 from exa import TypedMeta
-from exa.math.misc.indexing import starts_counts
 from exa.util.units import Length
 from exa.util.utility import mkp
 from exatomic.core.editor import Editor
 from exatomic.core.frame import compute_frame_from_atom, Frame
 from exatomic.core.atom import Atom
+from exatomic.algorithms.indexing import starts_counts
 
 
 class Meta(TypedMeta):
