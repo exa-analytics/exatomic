@@ -12,9 +12,6 @@ for use within the Jupyter notebook interface.
 var widgets = require("@jupyter-widgets/base");
 var control = require("@jupyter-widgets/controls");
 var App3D = require("./jupyter-exatomic-three.js").App3D;
-var ThreeApp = require("./jupyter-exatomic-three.js").ThreeApp;
-var PickerApp = require("./jupyter-exatomic-three.js").PickerApp;
-var HUDApp = require("./jupyter-exatomic-three.js").HUDApp;
 var version = "~" + require("../package.json").version;
 
 
@@ -71,6 +68,23 @@ var ExatomicSceneModel = widgets.DOMWidgetModel.extend({
 });
 
 
+
+var ExatomicSceneModel = widgets.DOMWidgetModel.extend({
+
+    defaults: function() {
+        return _.extend({}, widgets.DOMWidgetModel.prototype.defaults, {
+            _model_module_version: version,
+            _view_module_version: version,
+            _model_module: "jupyter-exatomic",
+            _view_module: "jupyter-exatomic",
+            _model_name: "ExatomicSceneModel",
+            _view_name: "ExatomicSceneView",
+
+        })
+    }
+
+});
+
 var ExatomicSceneView = widgets.DOMWidgetView.extend({
 
     initialize: function() {
@@ -92,71 +106,25 @@ var ExatomicSceneView = widgets.DOMWidgetView.extend({
             }
         });
         this.init();
-        this.init_listeners();
-        this.field_listeners();
     },
 
     init: function() {
-        this.meshes = {"generic": [],
-                       "contour": [],
-                       "frame": [],
-                       "field": [],
-                       "atom": [],
-                       "two": []};
         this.app3d = new App3D(this);
-        this.app3d.init_raycaster();
-        this.animation();
-    },
-
-    render: function() {
-        return Promise.resolve(
-            this.renderer.render(this.scene, this.camera));
+        this.three_promises = this.app3d.init_promise();
+        this.init_listeners();
+        this.field_listeners();
     },
 
     resize: function(w, h) {
         this.model.get("layout").set("width", w);
         this.model.get("layout").set("height", h);
-        this.renderer.setSize(w, h);
-        this.camera.aspect = w / h;
-        this.camera.updateProjectionMatrix();
-        // this.ocamera.left = -w/2;
-        // this.ocamera.right = w/2;
-        // this.ocamera.top = h/2;
-        // this.ocamera.bottom = -h/2;
-        // this.ocamera.updateProjectionMatrix();
-        this.controls.handleResize();
-        this.render();
+        this.app3d.resize();
     },
 
-    animation: function() {
-        window.requestAnimationFrame(this.animation.bind(this));
-        this.controls.update();
-        this.resize(this.model.get("layout").get("width"),
-                    this.model.get("layout").get("height"));
+    render: function() {
+        return this.app3d.finalize(this.three_promises);
     },
 
-    clear_meshes: function(kind) {
-        kind = (typeof kind !== "string") ? "all" : kind;
-        for (var idx in this.meshes) {
-            if ((kind === "all") || (kind === idx)) {
-                for (var sub in this.meshes[idx]) {
-                    this.scene.remove(this.meshes[idx][sub]);
-                    delete this.meshes[idx][sub];
-                };
-            };
-        };
-    },
-
-    add_meshes: function(kind) {
-        kind = (typeof kind !== "string") ? "all" : kind;
-        for (var idx in this.meshes) {
-            if ((kind === "all") || (kind === idx)) {
-                for (var sub in this.meshes[idx]) {
-                    this.scene.add(this.meshes[idx][sub]);
-                };
-            };
-        };
-    },
 
     save: function() {
         this.renderer.setSize(1920, 1080);
@@ -211,122 +179,9 @@ var ExatomicSceneView = widgets.DOMWidgetView.extend({
 });
 
 
-var ThreeAppSceneModel = widgets.DOMWidgetModel.extend({
-
-    defaults: function() {
-        return _.extend({}, widgets.DOMWidgetModel.prototype.defaults, {
-            _model_module_version: version,
-            _view_module_version: version,
-            _model_module: "jupyter-exatomic",
-            _view_module: "jupyter-exatomic",
-            _model_name: "ThreeAppSceneModel",
-            _view_name: "ThreeAppSceneView",
-
-        })
-    }
-
-});
-
-var ThreeAppSceneView = widgets.DOMWidgetView.extend({
-
-    initialize: function() {
-        widgets.DOMWidgetView.prototype.initialize.apply(this, arguments);
-        var that = this;
-        $(this.el).width(
-            this.model.get("layout").get("width")).height(
-            this.model.get("layout").get("height")).resizable({
-            aspectRatio: false,
-            resize: function(event, ui) {
-                // event.preventDefault();
-                var w = ui.size.width;
-                var h = ui.size.height;
-                that.model.get("layout").set("width", w);
-                that.model.get("layout").set("height", h);
-                that.el.width = w;
-                that.el.height = h;
-                that.resize(w, h);
-            }
-        });
-        this.init();
-        // this.animate();
-    },
-
-    init: function() {
-        this.app3d = new ThreeApp(this);
-        this.three_promise = this.app3d.init_promise();
-    },
-
-    resize: function(w, h) {
-        this.model.get("layout").set("width", w);
-        this.model.get("layout").set("height", h);
-        this.app3d.resize();
-    },
-
-    render: function() {
-        return this.app3d.finalize(this.three_promise);
-    },
-
-});
-
-
-var PickerSceneModel = ThreeAppSceneModel.extend({
-
-    defaults: function() {
-        return _.extend({}, ThreeAppSceneModel.prototype.defaults, {
-            _model_name: "PickerSceneModel",
-            _view_name: "PickerSceneView"
-        })
-    }
-
-});
-
-var PickerSceneView = ThreeAppSceneView.extend({
-
-    init: function() {
-        this.app3d = new PickerApp(this);
-        this.three_promise = this.app3d.init_promise();
-    },
-
-    render: function() {
-        return this.app3d.finalize(this.three_promise);
-    },
-
-});
-
-var HUDSceneModel = ThreeAppSceneModel.extend({
-
-    defaults: function() {
-        return _.extend({}, ThreeAppSceneModel.prototype.defaults, {
-            _model_name: "HUDSceneModel",
-            _view_name: "HUDSceneView"
-        })
-    }
-
-});
-
-var HUDSceneView = ThreeAppSceneView.extend({
-
-    init: function() {
-        this.app3d = new HUDApp(this);
-        this.three_promise = this.app3d.init_promise();
-    },
-
-    render: function() {
-        // return this.app3d.finalize(this.three_promise);
-        return this.three_promise;
-    },
-
-});
-
 module.exports = {
     ExatomicSceneModel: ExatomicSceneModel,
     ExatomicSceneView: ExatomicSceneView,
     ExatomicBoxModel: ExatomicBoxModel,
-    ExatomicBoxView: ExatomicBoxView,
-    ThreeAppSceneModel: ThreeAppSceneModel,
-    ThreeAppSceneView: ThreeAppSceneView,
-    PickerSceneModel: PickerSceneModel,
-    PickerSceneView: PickerSceneView,
-    HUDSceneModel: HUDSceneModel,
-    HUDSceneView: HUDSceneView
+    ExatomicBoxView: ExatomicBoxView
 }

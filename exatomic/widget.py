@@ -15,9 +15,8 @@ from traitlets import (Bool, Int, Float, Unicode,
                        List, Any, Dict, Instance)
 from ipywidgets import (
     Box, VBox, HBox, FloatSlider, IntSlider, Play,
-    IntRangeSlider,
-    Widget, DOMWidget, Layout, Button, Dropdown,
-    register, jslink, widget_serialization
+    IntRangeSlider, Widget, DOMWidget, Layout, Button,
+    Dropdown, register, jslink, widget_serialization
 )
 from exa.relational.isotope import symbol_to_radius, symbol_to_color
 from exatomic import __js_version__
@@ -199,32 +198,6 @@ class ExatomicScene(DOMWidget):
         lo = Layout(width="400", height="400")
         super(DOMWidget, self).__init__(*args, layout=lo, **kwargs)
 
-
-
-@register
-class PickerScene(ExatomicScene):
-    _model_name = Unicode("PickerSceneModel").tag(sync=True)
-    _view_name = Unicode("PickerSceneView").tag(sync=True)
-
-
-@register
-class HUDScene(ExatomicScene):
-    _model_name = Unicode("HUDSceneModel").tag(sync=True)
-    _view_name = Unicode("HUDSceneView").tag(sync=True)
-
-
-@register
-class ThreeAppScene(DOMWidget):
-    """Resizable three.js scene."""
-    _model_module_version = Unicode(__js_version__).tag(sync=True)
-    _model_module_version = Unicode(__js_version__).tag(sync=True)
-    _view_module = Unicode("jupyter-exatomic").tag(sync=True)
-    _model_module = Unicode("jupyter-exatomic").tag(sync=True)
-    _model_name = Unicode("ThreeAppSceneModel").tag(sync=True)
-    _view_name = Unicode("ThreeAppSceneView").tag(sync=True)
-    def __init__(self, *args, **kwargs):
-        lo = Layout(width="400", height="400")
-        super(DOMWidget, self).__init__(*args, layout=lo, **kwargs)
 
 @register
 class ExatomicBox(Box):
@@ -449,7 +422,7 @@ class TestUniverse(ExatomicBox):
 # Universe and related widgets #
 ################################
 
-def atom_traits(df):
+def atom_traits(df, labels=False):
     """
     Get atom table traitlets. Atomic size (using the covalent radius) and atom
     colors (using the common `Jmol`_ color scheme) are packed as dicts and
@@ -458,20 +431,28 @@ def atom_traits(df):
     .. _Jmol: http://jmol.sourceforge.net/jscolors/
     """
     traits = {}
-    if 'label' in df.columns: df['l'] = df['label']
-    elif 'tag' in df.columns: df['l'] = df['tag']
-    else: df['l'] = df['symbol'] + df.index.astype(str)
+    cols = ['x', 'y', 'z']
+    if labels:
+        cols.append('l')
+        if 'tag' in df.columns: df['l'] = df['tag']
+        else: df['l'] = df['symbol'] + df.index.astype(str)
     grps = df.groupby('frame')
-    for col in ['x', 'y', 'z', 'l']:
-        traits['atom_'+col] = grps.apply(
-            lambda y: y[col].to_json(
-            orient='values', double_precision=3)
-            ).to_json(orient="values").replace('"', '')
-    del df['l']
-    repl = {r'\\': '', '"\[': '[', '\]"': ']'}
-    replpat = re.compile('|'.join(repl.keys()))
-    repl = {'\\': '', '"[': '[', ']"': ']'}
-    traits['atom_l'] = replpat.sub(lambda m: repl[m.group(0)], traits['atom_l'])
+    for col in cols:
+        ncol = 'atom_' + col
+        if col == 'l':
+            labels = grps.apply(lambda y: y[col].to_json(orient='values')
+                ).to_json(orient="values")
+            repl = {r'\\': '', '"\[': '[', '\]"': ']'}
+            replpat = re.compile('|'.join(repl.keys()))
+            repl = {'\\': '', '"[': '[', ']"': ']'}
+            traits['atom_l'] = replpat.sub(lambda m: repl[m.group(0)],
+                                           labels)
+            del df['l']
+        else:
+            traits[ncol] = grps.apply(
+                lambda y: y[col].to_json(
+                orient='values', double_precision=3)
+                ).to_json(orient="values").replace('"', '')
     syms = grps.apply(lambda g: g['symbol'].cat.codes.values)
     symmap = {i: v for i, v in enumerate(df['symbol'].cat.categories)
               if v in df.unique_atoms}
@@ -553,6 +534,7 @@ class UniverseScene(ExatomicScene):
     atom_x = Unicode().tag(sync=True)
     atom_y = Unicode().tag(sync=True)
     atom_z = Unicode().tag(sync=True)
+    atom_l = Unicode().tag(sync=True)
     atom_s = Unicode().tag(sync=True)
     atom_r = Dict().tag(sync=True)
     atom_c = Dict().tag(sync=True)
@@ -653,9 +635,9 @@ class UniverseWidget(ExatomicBox):
             self.active_controls['field'] = folder
 
 
-    def __init__(self, uni, *args, **kwargs):
+    def __init__(self, uni, *args, labels=False, **kwargs):
         unargs = {}
-        try: unargs.update(atom_traits(uni.atom))
+        try: unargs.update(atom_traits(uni.atom, labels=labels))
         except AttributeError: pass
         try: unargs.update(two_traits(uni.atom_two,
                            uni.atom.get_atom_labels()))

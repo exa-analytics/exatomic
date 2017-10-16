@@ -11,6 +11,7 @@ Jupyter notebook environment.
 "use strict";
 var base = require("./jupyter-exatomic-base.js");
 var utils = require("./jupyter-exatomic-utils.js");
+var App3D = require("./jupyter-exatomic-three.js").App3D;
 
 
 var TestSceneModel = base.ExatomicSceneModel.extend({
@@ -31,32 +32,31 @@ var TestSceneView = base.ExatomicSceneView.extend({
 
     init: function() {
         base.ExatomicSceneView.prototype.init.apply(this);
-        this.init_listeners();
-        this.add_geometry();
-        this.animation();
+        this.three_promises = this.app3d.finalize(this.three_promises)
+            .then(this.add_geometry.bind(this));
     },
 
     add_geometry: function(color) {
-        this.clear_meshes("generic");
+        this.app3d.clear_meshes("generic");
         if (this.model.get("geom")) {
-            this.meshes["generic"] = this.app3d.test_mesh();
+            this.app3d.meshes["generic"] = this.app3d.test_mesh();
         };
-        this.add_meshes("generic");
+        this.app3d.add_meshes("generic");
     },
 
     add_field: function() {
-        this.clear_meshes("field");
+        this.app3d.clear_meshes("field");
         var fps = this.get_fps();
         var ars = utils.gen_field_arrays(fps);
         var func = utils[this.model.get("field")];
         var iso = this.model.get("field_iso");
         var tf = utils.scalar_field(ars, func);
-        this.meshes["field"] = this.app3d.add_scalar_field(tf, iso);
-        this.add_meshes("field");
+        this.app3d.meshes["field"] = this.app3d.add_scalar_field(tf, iso);
+        this.app3d.add_meshes("field");
     },
 
     init_listeners: function() {
-        TestSceneView.__super__.init_listeners.apply(this);
+        base.ExatomicSceneView.prototype.init_listeners.call(this);
         this.listenTo(this.model, "change:geom", this.add_geometry);
         this.listenTo(this.model, "change:field", this.add_field);
     },
@@ -88,15 +88,13 @@ var TestUniverseSceneModel = base.ExatomicSceneModel.extend({
 var TestUniverseSceneView = base.ExatomicSceneView.extend({
 
     init: function() {
-        TestUniverseSceneView.__super__.init.apply(this);
-        this.app3d.set_camera({"x": 40.0, "y": 40.0, "z": 40.0});
-        this.init_listeners();
-        this.add_field();
-        this.animation();
+        base.ExatomicSceneView.prototype.init.call(this);
+        this.three_promises = this.app3d.finalize(this.three_promises)
+            .then(this.add_field.bind(this));
     },
 
     add_field: function() {
-        this.clear_meshes("field");
+        this.app3d.clear_meshes("field");
         var field = this.model.get("field");
         var kind = this.model.get("field_kind");
         var iso = this.model.get("field_iso");
@@ -108,12 +106,12 @@ var TestUniverseSceneView = base.ExatomicSceneView.extend({
             var tf = utils[field](ars, kind);
         };
         var colors = this.get_field_colors();
-        this.meshes["field"] = this.app3d.add_scalar_field(tf, iso, 2, colors);
-        this.add_meshes("field");
+        this.app3d.meshes["field"] = this.app3d.add_scalar_field(tf, iso, 2, colors);
+        this.app3d.add_meshes("field");
     },
 
     init_listeners: function() {
-        TestUniverseSceneView.__super__.init_listeners.apply(this);
+        base.ExatomicSceneView.prototype.init_listeners.call(this);
         this.listenTo(this.model, "change:field_kind", this.add_field);
         this.listenTo(this.model, "change:field_ml", this.add_field);
     },
