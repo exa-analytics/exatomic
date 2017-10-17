@@ -7,6 +7,9 @@
 Examples
 ########################
 
+
 .. toctree::
-    
-    notebooks/exatomic.ipynb
+    :maxdepth: 1
+    :caption: Software Specific Examples
+
+    notebooks/qe.ipynb

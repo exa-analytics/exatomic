@@ -72,8 +72,9 @@ class Folder(VBox):
         self.active_controls['folder'].on_click(_controller)
 
 
-    def activate(self, *keys, update=False):
+    def activate(self, *keys, **kwargs):
         """Activate a widget in the folder."""
+        update = kwargs.pop("update", False)
         keys = list(self.inactive_controls.keys()) if not keys else keys
         for key in keys:
              self.active_controls[key] = self.inactive_controls.pop(key)
@@ -81,8 +82,9 @@ class Folder(VBox):
             self.set_gui()
 
 
-    def deactivate(self, *keys, update=False):
+    def deactivate(self, *keys, **kwargs):
         """Deactivate a widget in the folder."""
+        update = kwargs.pop("update", False)
         keys = list(self.active_controls.keys()) if not keys else keys
         for key in keys:
             if key == 'folder': continue
@@ -288,7 +290,8 @@ class ExatomicBox(Box):
                 Button(description=' Fields', icon='cube'), fopts)
 
 
-    def __init__(self, *args, scene=None, **kwargs):
+    def __init__(self, *args, **kwargs):
+        scene = kwargs.pop("scene", None)
         self.scene = ExatomicScene() if scene is None else scene
         if not hasattr(self, 'active_controls'): self.init_gui()
         self.gui = VBox(list(self.active_controls.values()))

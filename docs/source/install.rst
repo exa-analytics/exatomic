@@ -3,6 +3,10 @@
 
 Installation
 ##############
+This package makes heavy use of the Jupyter notebook and the Python programming
+language. The easiest way to get started is via the Anaconda Python distribution.
+Download and install [conda](https://conda.io/miniconda.html), and then follow
+the instructions below.
 
 
 Anaconda
