@@ -9,7 +9,6 @@ a physical quantity.
 """
 import numpy as np
 import pandas as pd
-from io import StringIO
 from exa import Series
 from exatomic import __version__, Atom, Editor, AtomicField
 from exatomic.base import z2sym, sym2z
@@ -36,7 +35,6 @@ class Cube(Editor):
         Parse the :class:`~exatomic.atom.Atom` object from the cube file in place.
         """
         nat = int(self[2].split()[0])
-        ncol = len(self[6].split())
         names = ['Z', 'Zeff', 'x', 'y', 'z']
         df = self.pandas_dataframe(6, nat + 6, names)
         df['symbol'] = df['Z'].map(z2sym).astype('category')
@@ -121,7 +119,9 @@ class Cube(Editor):
                   + (chnk * nx * ny).format(*volum.apply(
                     ffmt.replace('f', 'E').format)))
 
-    def __init__(self, *args, label=None, field_type=None, **kwargs):
+    def __init__(self, *args, **kwargs):
+        label = kwargs.pop("label", None)
+        field_type = kwargs.pop("field_type", None)
         super(Cube, self).__init__(*args, **kwargs)
         self.label = label
         self.field_type = field_type
