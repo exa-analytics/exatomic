@@ -8,15 +8,13 @@ Universe Notebook Widget
 import os, re
 import numpy as np
 import pandas as pd
-from glob import glob
 from base64 import b64decode
 from collections import OrderedDict
 from traitlets import (Bool, Int, Float, Unicode,
                        List, Any, Dict, Instance)
 from ipywidgets import (
     Box, VBox, HBox, FloatSlider, IntSlider, Play,
-    IntRangeSlider,
-    Widget, DOMWidget, Layout, Button, Dropdown,
+    IntRangeSlider, DOMWidget, Layout, Button, Dropdown,
     register, jslink, widget_serialization
 )
 from exatomic.base import sym2radius, sym2color
@@ -498,9 +496,16 @@ def field_traits(df):
                            double_precision=5) for f in df.field_values]) + ']'
     return {'field_v': vals, 'field_i': idxs, 'field_p': fps}
 
-def two_traits(df, lbls):
+#def two_traits(df, lbls):
+def two_traits(uni):
     """Get two table traitlets."""
-    bonded = df.ix[df['bond'] == True, ['atom0', 'atom1', 'frame']]
+    if not hasattr(uni, "atom_two"):
+        raise AttributeError("for the catcher")
+    if "frame" not in uni.atom_two.columns:
+        uni.atom_two['frame'] = uni.atom_two['atom0'].map(uni.atom['frame'])
+    lbls = uni.atom.get_atom_labels()
+    df = uni.atom_two
+    bonded = df.loc[df['bond'] == True, ['atom0', 'atom1', 'frame']]
     lbl0 = bonded['atom0'].map(lbls)
     lbl1 = bonded['atom1'].map(lbls)
     lbl = pd.concat((lbl0, lbl1), axis=1)
@@ -518,7 +523,9 @@ def two_traits(df, lbls):
             b1[i] = []
     b0 = pd.Series(b0).to_json(orient='values')
     b1 = pd.Series(b1).to_json(orient='values')
+    del uni.atom_two['frame']
     return {'two_b0': b0, 'two_b1': b1}
+
 
 def frame_traits(df):
     """Get frame table traitlets."""
@@ -651,8 +658,8 @@ class UniverseWidget(ExatomicBox):
         unargs = {}
         try: unargs.update(atom_traits(uni.atom))
         except AttributeError: pass
-        try: unargs.update(two_traits(uni.atom_two,
-                           uni.atom.get_atom_labels()))
+        #try: unargs.update(two_traits(uni.atom_two,
+        try: unargs.update(two_traits(uni))
         except AttributeError: pass
         try: unargs.update(frame_traits(uni.frame))
         except AttributeError: pass

@@ -7,7 +7,7 @@ Two Body Properties Computations
 """
 import numpy as np
 from unittest import TestCase
-from exatomic.algorithms.distance import mag
+from exatomic.algorithms.distance import cartmag
 
 
 class Test3DOperations(TestCase):
@@ -20,5 +20,5 @@ class Test3DOperations(TestCase):
         y = np.random.rand(n)
         z = np.random.rand(n)
         check = (x**2 + y**2 + z**2)**0.5
-        result = mag(x, y, z)
+        result = cartmag(x, y, z)
         self.assertTrue(np.allclose(check, result))
