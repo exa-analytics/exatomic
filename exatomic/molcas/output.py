@@ -13,7 +13,7 @@ from io import StringIO
 
 from .editor import Editor
 
-from exatomic.core.basis import Overlap, lmap, rlmap, spher_lml_count
+from exatomic.core.basis import Overlap, lmap, spher_lml_count
 from exatomic.core.orbital import DensityMatrix
 from exatomic.base import sym2z
 
@@ -36,7 +36,7 @@ class Orb(Editor):
 
     def parse_momatrix(self):
         dim = int(self[5])
-        ndim = dim * dim
+        #ndim = dim * dim
         found = self.find(_re_orb, _re_occ,
                           _re_ens, keys_only=True)
         skips = found[_re_orb]

@@ -11,8 +11,10 @@ from numbers import Integral
 import numpy as np
 import pandas as pd
 from exa import DataFrame, SparseDataFrame, Series
+from exa.util.units import Length
 from exatomic.base import sym2z, sym2mass
 from exatomic.algorithms.distance import modv
+from exatomic.core.error import PeriodicUniverseError
 from exatomic.algorithms.geometry import make_small_molecule
 
 
@@ -132,7 +134,7 @@ class Atom(DataFrame):
         Compute and return enumerated atoms.
 
         Returns:
-            labels (:class:`~exa.numerical.Series`): Enumerated atom labels (of type int)
+            labels (:class:`~exa.core.numerical.Series`): Enumerated atom labels (of type int)
         """
         nats = self.cardinal_groupby().size().values
         labels = Series([i for nat in nats for i in range(nat)], dtype='category')
