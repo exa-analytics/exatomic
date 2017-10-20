@@ -8,17 +8,15 @@ Building discrete molecular orbitals (for visualization) requires a complex
 set of operations that are provided by this module and wrapped into a clean API.
 """
 # Established
-import sympy as sy
 import numpy as np
 import pandas as pd
 import numexpr as ne
 from datetime import datetime
-from numba import jit, vectorize
+from numba import jit
 from psutil import virtual_memory
 from collections import OrderedDict
 
 # Local
-from exa import Series
 from exatomic.core.field import AtomicField
 from exatomic.base import sym2z
 from exatomic.algorithms.basis import solid_harmonics, clean_sh
@@ -26,12 +24,28 @@ from exatomic.algorithms.basis import solid_harmonics, clean_sh
 halfmem = virtual_memory().total / 2
 solhar = clean_sh(solid_harmonics(6))
 
+
+@jit(nopython=True, nogil=True, parallel=True)
+def build_pair_index(n):
+    m = n**2
+    x = np.empty((m, ), dtype=np.int64)
+    y = x.copy()
+    k = 0
+    # Order matters so don't us nb.prange
+    for i in range(n):
+        for j in range(n):
+            x[k] = i
+            y[k] = j
+            k += 1
+    return x, y
+
+
 #####################################################################
 # Numba vectorized operations for Orbital, MOMatrix, Density tables #
 # These will eventually be fully moved to matrices.py not meshgrid3d#
 #####################################################################
 
-@jit(nopython=True)
+@jit(nopython=True, nogil=True, parallel=True)
 def density_from_momatrix(cmat, occvec):
     nbas = len(occvec)
     arlen = nbas * (nbas + 1) // 2
@@ -49,7 +63,7 @@ def density_from_momatrix(cmat, occvec):
             cnt += 1
     return chi1, chi2, dens, frame
 
-@jit(nopython=True)
+@jit(nopython=True, nogil=True, parallel=True)
 def density_as_square(denvec):
     nbas = int((-1 + np.sqrt(1 - 4 * -2 * len(denvec))) / 2)
     square = np.empty((nbas, nbas), dtype=np.float64)
@@ -61,7 +75,7 @@ def density_as_square(denvec):
             cnt += 1
     return square
 
-@jit(nopython=True)
+@jit(nopython=True, nogil=True, parallel=True)
 def momatrix_as_square(movec):
     nbas = np.int64(len(movec) ** (1/2))
     square = np.empty((nbas, nbas), dtype=np.float64)
@@ -455,4 +469,3 @@ def add_molecular_orbitals(uni, field_params=None, mocoefs=None,
     # Don't collect infinity fields if this is run a bunch of times
     if hasattr(uni, '_field'): del uni.__dict__['_field']
     uni.field = field
-    uni._traits_need_update = True

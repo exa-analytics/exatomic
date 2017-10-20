@@ -6,16 +6,17 @@ NWChem Output
 #######################
 Parse NWChem output files and convert them into an exatomic Universe container.
 """
-import re
 from os import sep, path
 import numpy as np
 import pandas as pd
 from io import StringIO
 from exa.util.units import Length
-from exatomic import Atom
 from exatomic.core.frame import compute_frame_from_atom
-from exatomic.core.basis import BasisSet, lmap
-from exatomic.core.orbital import Orbital, MOMatrix
+from exatomic.algorithms.orbital import build_pair_index
+from exatomic.algorithms.basis import lmap
+from exatomic.core.atom import Atom
+from exatomic.core.basis import BasisSet
+from exatomic.core.orbital import Orbital
 from .editor import Editor
 from .basis import cartesian_ordering_function, spherical_ordering_function
 
@@ -31,6 +32,7 @@ class Output(Editor):
         found = self.find(_reatom01, _reatom02,
                           _reatom03, _reatom04, keys_only=True)
         unit = self[found[_reatom04][0]].split()[3]
+        unit = "Angstrom" if unit == "angstroms" else "au"
         starts = np.array(found[_reatom01]) + 7
         stops = np.array(found[_reatom02]) - 1
         ecps = np.array(found[_reatom03]) + 2
@@ -42,10 +44,10 @@ class Output(Editor):
                                                  expand=False)[0].str.lower().str.title()
         atom['Z'] = atom['Z'].astype(np.int64)
         atom['Zeff'] = (atom['Z'] - atom['tag'].map(ecps).fillna(value=0)).astype(np.int64)
-        n = len(atom)
+        #n = len(atom)
         nf = atom.label.value_counts().max()
         nat = atom.label.max()
-        basis_sets = np.empty((n, ), dtype=np.int64)
+        #basis_sets = np.empty((n, ), dtype=np.int64)
         atom['frame'] = [i for i in range(nf) for j in range(nat)]
         atom['label'] -= 1
         atom['x'] *= Length[unit, 'au']
@@ -56,7 +58,7 @@ class Output(Editor):
             atom = atom[~(atom['frame'] == li)]
             atom.reset_index(drop=True, inplace=True)
         del atom['label']
-        self.atom = atom
+        self.atom = Atom(atom)
 
     def parse_orbital(self):
         '''
@@ -64,7 +66,7 @@ class Output(Editor):
         '''
         orbital = None
         check = self.find(_remo01)
-        if any(['Alpha' in value for value in check.values()]):
+        if any(['Alpha' in value for value in check]):
             alpha_starts = np.array([no for no, line in check if 'Alpha' in line], dtype=np.int64) + 2
             alpha_stops = np.array([no for no, line in check if 'Beta' in line], dtype=np.int64) - 1
             beta_starts = alpha_stops + 3
@@ -89,30 +91,48 @@ class Output(Editor):
         Note:
             Must supply 'print "final vectors" "final vectors analysis" for momatrix
         """
-        found = self.find(_reallmos, keys_only=True)
-        if found:
-            nrcol = 6
-            start = found[0] + 8
-            nfuncs = self.gaussian_basis_set.functions()
-            nbas = self.atom['set'].map(nfuncs).sum()
-            chunk = nbas + 3
-            nchunks = np.ceil(nbas / nrcol).astype(np.int64)
-            leftover = nbas % nrcol
-            idxs = [(start + chunk * i, start + nbas + chunk * i) for i in range(nchunks)]
-            print(idxs)
-            dfs = []
-            for i, (start, stop) in enumerate(idxs):
-                if i == len(idxs) - 1 and leftover:
-                    dfs.append(self.pandas_dataframe(start, stop, leftover))
-                else:
-                    dfs.append(self.pandas_dataframe(start, stop, nrcol))
-            coefs = pd.concat(dfs, axis=1).unstack().values
-            chis = np.tile(range(nbas), nbas)
-            orbitals = np.repeat(range(nbas), nbas)
-            self.momatrix = pd.DataFrame.from_dict({'coef': coefs,
-                                                    'orbital': orbitals,
-                                                    'chi': chis,
-                                                    'frame': [0] * nbas ** 2})
+#        found = self.find(_reallmos)
+#        if found:
+#            nrcol = 6
+#            start = found[0][0] + 8
+#            #nfuncs = self.gaussian_basis_set.functions()
+#            nfuncs = self.basis_set.functions().groupby(level="set").sum()
+#            nbas = self.atom['set'].map(nfuncs).sum()
+#            chunk = nbas + 3
+#            nchunks = np.ceil(nbas/nrcol).astype(np.int64)
+#            leftover = nbas%nrcol
+#            idxs = [(start + chunk * i, start + nbas + chunk*i) for i in range(nchunks)]
+#            dfs = []
+#            for i, (start, stop) in enumerate(idxs):
+#                if i == len(idxs) - 1 and leftover:
+#                    dfs.append(self.pandas_dataframe(start, stop, leftover))
+#                else:
+#                    dfs.append(self.pandas_dataframe(start, stop, nrcol))
+#            coefs = pd.concat(dfs, axis=1).unstack().values
+#            chis = np.tile(range(nbas), nbas)
+#            orbitals = np.repeat(range(nbas), nbas)
+#            self.momatrix = pd.DataFrame.from_dict({'coef': coefs,
+#                                                    'orbital': orbitals,
+#                                                    'chi': chis,
+#                                                    'frame': [0] * nbas ** 2})
+        key0 = "Final MO vectors"
+        key1 = "center of mass"
+        found = self.find(key0, key1)
+        if key0 in found:
+            start = found[key0][0][0] + 6
+            end = found[key1][0][0] - 1
+            c = pd.read_fwf(StringIO("\n".join(self[start:end])), widths=(6, 12, 12, 12, 12, 12, 12),
+                            names=list(range(7)))
+            idx = c[c[0].isnull()].index.values
+            c = c[~c.index.isin(idx)]
+            del c[0]
+            c = c.values.ravel().astype(float)
+            c = c[~np.isnan(c)]
+            orbital, chi = build_pair_index(len(self.basis_set_order))
+            momatrix = pd.DataFrame.from_dict({'coef': c, 'chi': chi, 'orbital': orbital})
+            momatrix['frame'] = 0
+            self.momatrix = momatrix
+
 
 
     def _parse_orbital(self, starts, stops):
@@ -124,8 +144,10 @@ class Output(Editor):
         '''
         joined = '\n'.join(['\n'.join(self[s:e]) for s, e in zip(starts, stops)])
         nvec = joined.count('Vector')
-        nbas = self.atom['symbol'].value_counts().values * self.basis_set_summary['func_per_atom'].astype(np.int64)
-        nbas = nbas.sum()
+        mapper = self.basis_set.functions().groupby(level="set").sum()
+        nbas = self.atom['set'].map(mapper).sum()
+        #nbas = self.atom['symbol'].value_counts().values * self.basis_set_summary['func_per_atom'].astype(np.int64)
+        #nbas = nbas.sum()
         nbas *= nvec
         # Orbital dataframe -- alternatively one could parse the strings
         # into the DataFrame and then use the pd.Series.str methods to
@@ -158,49 +180,83 @@ class Output(Editor):
         return pd.DataFrame.from_dict({'x': x, 'y': z, 'z': z, 'frame': frame,
                                        'vector': orb_no, 'occupation': occ, 'energy': nrg})
 
-    def parse_gaussian_basis_set(self):
+    def parse_basis_set(self):
         """
         Parse the :class:`~exatomic.basis.BasisSet` dataframe.
         """
+# SAVING THE CODE BELOW FOR REFERENCE (MAY BE REMOVED in 0.4.0)
+#        found = self.find(_rebas01, _rebas02)
+#        spherical = True if 'spherical' in found[_rebas01][0][1] else False
+#        start = found[_rebas01][0][0]
+#        stop = found[_rebas02][0][0] - 1 if start < found[_rebas02][0][0] else found[_rebas02][1][0] - 1
+#        df = self.pandas_dataframe(start, stop, 4, **{'index_col': False})
+#        dtype = [('shell', 'i8'), ('L', 'i8'), ('alpha', 'f8'),
+#                 ('d', 'f8'), ('set', 'i8')]
+#        keep = np.empty((df.shape[0],), dtype=dtype)
+#        seht, cnt = -1, 0
+#        tags = {}
+#        self.df = df
+#        print(df[3])
+#        for i, (shell, l, alpha, d) in enumerate(zip(df[0], df[1], df[2], df[3])):
+#            if len(shell) == 8:
+#                seht += 1
+#                tags[df[0].values[i - 2]] = seht
+#            print(type(d))
+#            if not np.isnan(d):
+#                keep[cnt] = (shell, lmap[l.lower()], alpha, d, seht)
+#                cnt += 1
+#        gaussian_basis_set = pd.DataFrame(keep[:cnt])
+#        gaussian_basis_set['shell'] -= 1
+#        gaussian_basis_set['frame'] = 0
+#        self.gaussian_basis_set = gaussian_basis_set
+#        self.gaussian_basis_set.spherical = spherical
+#        self.atom['set'] = self.atom['tag'].map(tags)
+        if not hasattr(self, "atom"):
+            self.parse_atom()
         found = self.find(_rebas01, _rebas02)
-        spherical = True if 'spherical' in found[_rebas01][0][1] else False
-        start = found[_rebas01][0][0]
-        stop = found[_rebas02][0][0] - 1 if start < found[_rebas02][0][0] else found[_rebas02][1][0] - 1
-        df = self.pandas_dataframe(start, stop, 4, **{'index_col': False})
-        dtype = [('shell', 'i8'), ('L', 'i8'), ('alpha', 'f8'),
-                 ('d', 'f8'), ('set', 'i8')]
-        keep = np.empty((df.shape[0],), dtype=dtype)
-        seht, cnt = -1, 0
-        tags = {}
-        print(df)
-        for i, (shell, l, alpha, d) in enumerate(zip(df[0], df[1], df[2], df[3])):
-            print(d)
-            if len(shell) == 8:
-                seht += 1
-                tags[df[0].values[i - 2]] = seht
-            if not np.isnan(d):
-                keep[cnt] = (shell, lmap[l.lower()], alpha, d, seht)
-                cnt += 1
-        gaussian_basis_set = pd.DataFrame(keep[:cnt])
-        gaussian_basis_set['shell'] -= 1
-        gaussian_basis_set['frame'] = 0
-        self.gaussian_basis_set = gaussian_basis_set
-        self.gaussian_basis_set.spherical = spherical
-        self.atom['set'] = self.atom['tag'].map(tags)
+        spherical = True if "spherical" in found[_rebas01][0][1] else False
+        start = found[_rebas01][0][0] + 2
+        stop = found[_rebas02][1][0] - 1
+        # Read in all of the extra lines that contain ---- and tag names
+        df = pd.read_fwf(StringIO("\n".join(self[start:stop])), widths=(3, 3, 16, 16),
+                         names=("shell", "L", "alpha", "d"))
+        df.loc[df['shell'] == "-", "shell"] = np.nan
+        tags = df.loc[(df['shell'].str.isdigit() == False), "shell"]
+        idxs = tags.index.tolist()
+        idxs.append(len(df))
+        df['set'] = ""
+        for i, tag in enumerate(tags):
+            df.loc[idxs[i]:idxs[i+1], "set"] = tag
+        df = df.dropna().reset_index(drop=True)
+        mapper = {v: k for k, v in dict(enumerate(df['set'].unique())).items()}
+        df['set'] = df['set'].map(mapper)
+        df['shell'] = df['shell'].astype(int) - 1
+        df['L'] = df['L'].str.strip().str.lower().map(lmap)
+        df['alpha'] = df['alpha'].astype(float)
+        df['d'] = df['d'].astype(float)
+        # NO SUPPORT FOR MULTIPLE FRAMES?
+        df['frame'] = 0
+        self.basis_set = BasisSet(df, spherical=spherical)
+        self.atom['set'] = self.atom['tag'].map(mapper)
 
     def parse_basis_set_order(self):
         dtype = [('center', 'i8'), ('shell', 'i8'), ('L', 'i8')]
-        if self.gaussian_basis_set.spherical:
+        #if self.gaussian_basis_set.spherical:
+        if self.basis_set.spherical:
             dtype += [('ml', 'i8')]
         else:
             dtype += [('l', 'i8'), ('m', 'i8'), ('n', 'i8')]
-        nbas = self.atom['set'].map(self.gaussian_basis_set.functions()).sum()
+        #nbas = self.atom['set'].map(self.gaussian_basis_set.functions()).sum()
+        mapper = self.basis_set.functions().groupby(level="set").sum()
+        nbas = self.atom['set'].map(mapper).sum()
         bso = np.empty((nbas,), dtype=dtype)
         cnt = 0
-        bases = self.gaussian_basis_set.groupby('set')
+        #bases = self.gaussian_basis_set.groupby('set')
+        bases = self.basis_set.groupby('set')
         for seht, center in zip(self.atom['set'], self.atom.index):
             bas = bases.get_group(seht).groupby('shell')
-            if self.gaussian_basis_set.spherical:
+            #if self.gaussian_basis_set.spherical:
+            if self.basis_set.spherical:
                 for shell, grp in bas:
                     l = grp['L'].values[0]
                     for ml in spherical_ordering_function(l):
@@ -213,6 +269,7 @@ class Output(Editor):
                         bso[cnt] = (center, shell, l, ll, m, n)
                         cnt += 1
         self.basis_set_order = pd.DataFrame(bso)
+        self.basis_set_order['frame'] = 0
 
     def parse_frame(self):
         """
@@ -225,13 +282,13 @@ class Output(Editor):
         dfts = found[_redften]
         if scfs and dfts:
             print('Warning: found total energies from scf and dft, using dft')
-            dfts = [float(val.split()[-1]) for key, val in dfts.items()]
+            dfts = [float(val.split()[-1]) for key, val in dfts]
             self.frame['total_energy'] = dfts
         elif scfs:
-            scfs = [float(val.split()[-1]) for key, val in scfs.items()]
+            scfs = [float(val.split()[-1]) for key, val in scfs]
             self.frame['total_energy'] = scfs
         elif dfts:
-            dfts = [float(val.split()[-1]) for key, val in dfts.items()]
+            dfts = [float(val.split()[-1]) for key, val in dfts]
             self.frame['total_energy'] = dfts
 
 
@@ -264,7 +321,6 @@ class Ecce(Editor):
         small = []
         for line in self[start+1:stop]:
             ll = line.split()
-            cnt = 0
             for l in ll:
                 try:
                     small.append(float(l))
@@ -331,7 +387,7 @@ class Ecce(Editor):
                 try:
                     self._rebmovecs = r'.*%begin%molecular orbital vectors'
                     self._regex = self.regex(self._rebmovecs)
-                    b = list(self._regex[self._rebmovecs].keys())[0]
+                    #b = list(self._regex[self._rebmovecs].keys())[0]
                     self._reemovecs = r'.*%end%molecular orbital vectors'
                     self._rebmooccs = r'.*%begin%molecular orbital occupations'
                     self._reemooccs = r'.*%end%molecular orbital occupations'

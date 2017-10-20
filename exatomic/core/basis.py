@@ -13,17 +13,15 @@ also analytical and discrete manipulations of the basis set.
 See Also:
     For symbolic and discrete manipulations see :mod:`~exatomic.algorithms.basis`.
 """
-import os
 import pandas as pd
 import numpy as np
 from exa import DataFrame
-
-from exatomic.algorithms.basis import (lmap, spher_ml_count, enum_cartesian,
-                                       gaussian_cartesian, rlmap,
+from exatomic.algorithms.basis import (enum_cartesian, gaussian_cartesian,
                                        cart_lml_count, spher_lml_count,
                                        _vec_normalize, _wrap_overlap, lorder,
                                        _vec_sto_normalize, _ovl_indices,
                                        solid_harmonics, car2sph)
+
 
 # Abbreviations
 # NCartPrim -- Total number of cartesian primitive functions
@@ -98,16 +96,26 @@ class BasisSet(DataFrame):
 
     def functions_by_shell(self):
         """Return a series of (l, n function) pairs per set."""
-        mi = self.groupby('set').apply(
-            lambda x: x.groupby('shell').apply(
-            lambda y: y['L'].values[0]).value_counts())
-        if type(mi) == pd.DataFrame:
-            return pd.Series(mi.values[0],
-                             index=pd.MultiIndex.from_product(
-                             [mi.index.values, mi.columns.values],
-                             names=['set', 'L']))
-        mi.index.names = ['set', 'L']
-        return mi.sort_index()
+#        mi = self.groupby('set').apply(
+#            lambda x: x.groupby('shell').apply(
+#            lambda y: y['L'].values[0]).value_counts())
+#        if type(mi) == pd.DataFrame:
+#            return pd.Series(mi.values[0],
+#                             index=pd.MultiIndex.from_product(
+#                             [mi.index.values, mi.columns.values],
+#                             names=['set', 'L']))
+#        mi.index.names = ['set', 'L']
+#        return mi.sort_index()
+#       The following always returns a series and is about 30x faster
+        return self.groupby(["set", "L"])['shell'].nunique()
+
+    def functions(self):
+        if self.spherical:
+            mapper = lambda x: spher_lml_count[x]
+        else:
+            mapper = lambda x: cart_lml_count[x]
+        n = self.functions_by_shell()
+        return n*n.index.get_level_values("L").map(mapper)
 
     def primitives_by_shell(self):
         """Return a series of (l, n primitive) pairs per set."""

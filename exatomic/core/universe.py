@@ -12,22 +12,18 @@ simulations), step number (e.g. geometry optimization), or an arbitrary index
 (e.g. density functional theory exchange correlation functional).
 """
 import six
-import numpy as np
 import pandas as pd
-from exa import Field, DataFrame, Container, TypedMeta
-from .error import BasisSetNotFoundError
+from exa import DataFrame, Container, TypedMeta
 from .frame import Frame, compute_frame_from_atom
 from .atom import Atom, UnitAtom, ProjectedAtom, VisualAtom, Frequency
 from .two import (AtomTwo, MoleculeTwo, compute_atom_two,
-                  _compute_bond_count, compute_molecule_two, _compute_bonds)
+                  _compute_bond_count, _compute_bonds)
 from .molecule import (Molecule, compute_molecule, compute_molecule_com,
                        compute_molecule_count)
 from .field import AtomicField
 from .orbital import Orbital, Excitation, MOMatrix, DensityMatrix
 from .basis import Overlap, BasisSet, BasisSetOrder
 from exatomic.algorithms.orbital import add_molecular_orbitals
-#from exatomic.interfaces.cclib import universe_from_cclib
-from exatomic.widget import UniverseWidget
 
 
 class Meta(TypedMeta):
@@ -80,6 +76,7 @@ class Universe(six.with_metaclass(Meta, Container)):
 
     @classmethod
     def from_cclib(cls, ccobj):
+        from exatomic.interfaces.cclib import universe_from_cclib
         return cls(**universe_from_cclib(ccobj))
 
     # Note that compute_* function may be called automatically by typed
