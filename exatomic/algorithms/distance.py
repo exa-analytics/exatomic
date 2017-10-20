@@ -67,7 +67,7 @@ def pdist_ortho(ux, uy, uz, a, b, c, index, dmax=8.0):
     projection = ii.copy()
     k = 0
     # For each atom i
-    for i in nb.prange(n):
+    for i in range(n):
         xi = ux[i]
         yi = uy[i]
         zi = uz[i]
@@ -154,7 +154,7 @@ def pdist_ortho_nv(ux, uy, uz, a, b, c, index, dmax=8.0):
     projection = ii.copy()
     k = 0
     # For each atom i
-    for i in nb.prange(n):
+    for i in range(n):
         xi = ux[i]
         yi = uy[i]
         zi = uz[i]
@@ -220,7 +220,7 @@ def pdist(x, y, z, index, dmax=8.0):
     atom0 = np.empty((n, ), dtype=np.int64)
     atom1 = atom0.copy()
     k = 0
-    for i in nb.prange(m):
+    for i in range(m):
         xi = x[i]
         yi = y[i]
         zi = z[i]
@@ -260,7 +260,7 @@ def pdist_nv(x, y, z, index, dmax=8.0):
     atom0 = np.empty((n, ), dtype=np.int64)
     atom1 = atom0.copy()
     k = 0
-    for i in nb.prange(m):
+    for i in range(m):
         xi = x[i]
         yi = y[i]
         zi = z[i]

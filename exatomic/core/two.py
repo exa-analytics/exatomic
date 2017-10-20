@@ -42,6 +42,10 @@ class AtomTwo(DataFrame):
     _columns = ["atom0", "atom1", "dr"]
     _categories = {'symbols': str, 'atom0': np.int64, 'atom1': np.int64}
 
+    @property
+    def bonded(self):
+        return self[self['bond'] == True]
+
 
 class MoleculeTwo(DataFrame):
     pass
