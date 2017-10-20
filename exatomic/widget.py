@@ -117,7 +117,9 @@ class Folder(VBox):
         self.on_displayed(VBox._fire_children_displayed)
 
 
-    def __init__(self, control, content, show=False, layout=None, **kwargs):
+    def __init__(self, control, content, **kwargs):
+        show = kwargs.pop("show", False)
+        layout = kwargs.pop("layout", None)
         self.open_folder = show
         self._init_folder(control, content)
         layout = self.mlo if layout is None else layout
@@ -646,7 +648,8 @@ class UniverseWidget(ExatomicBox):
             folder.insert(2, 'contour', contour, update=True)
             self.active_controls['field'] = folder
 
-    def __init__(self, uni, *args, scenekwargs=None, **kwargs):
+    def __init__(self, uni, *args, **kwargs):
+        scenekwargs = kwargs.pop("scenekwargs", None)
         unargs = {}
         fields = None
         atomcolors, atomradii = {}, {}

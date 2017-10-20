@@ -123,11 +123,19 @@ class Output(Editor):
             end = found[key1][0][0] - 1
             c = pd.read_fwf(StringIO("\n".join(self[start:end])), widths=(6, 12, 12, 12, 12, 12, 12),
                             names=list(range(7)))
+            self.c = c
             idx = c[c[0].isnull()].index.values
             c = c[~c.index.isin(idx)]
             del c[0]
-            c = c.values.ravel().astype(float)
-            c = c[~np.isnan(c)]
+            nbas = len(self.basis_set_order)
+            n = c.shape[0]//nbas
+            coefs = []
+            # The for loop below is like numpy.array_split(df, n); using numpy.array_split
+            # with dataframes seemed to have strange results where splits had wrong sizes?
+            for i in range(n):
+                coefs.append(c.iloc[i*nbas:(i+1)*nbas, :].astype(float).dropna(axis=1).values.ravel("F"))
+            c = np.concatenate(coefs)
+            del coefs
             orbital, chi = build_pair_index(len(self.basis_set_order))
             momatrix = pd.DataFrame.from_dict({'coef': c, 'chi': chi, 'orbital': orbital})
             momatrix['frame'] = 0

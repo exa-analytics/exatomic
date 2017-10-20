@@ -13,7 +13,8 @@ from io import StringIO
 
 from .editor import Editor
 
-from exatomic.core.basis import Overlap, lmap, spher_lml_count
+from exatomic.algorithms.basis import lmap, spher_lml_count
+from exatomic.core.basis import Overlap
 from exatomic.core.orbital import DensityMatrix
 from exatomic.base import sym2z
 
