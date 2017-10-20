@@ -110,9 +110,9 @@ def make_fps(rmin=None, rmax=None, nr=None, nrfps=1,
              xmin=None, xmax=None, nx=None, frame=0,
              ymin=None, ymax=None, ny=None, field_type=0,
              zmin=None, zmax=None, nz=None, label=0,
-             ox=None, dxi=None, dxj=None, dxk=None,
-             oy=None, dyi=None, dyj=None, dyk=None,
-             oz=None, dzi=None, dzj=None, dzk=None):
+             ox=None, fx=None, dxi=None, dxj=None, dxk=None,
+             oy=None, fy=None, dyi=None, dyj=None, dyk=None,
+             oz=None, fz=None, dzi=None, dzj=None, dzk=None):
     """
     Generate the necessary field parameters of a numerical grid field
     as an exatomic.field.AtomicField.

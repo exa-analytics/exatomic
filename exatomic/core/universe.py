@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# Copyright (c) 2015-2016, Exa Analytics Development Team
+# Copyright (c) 2015-2017, Exa Analytics Development Team
 # Distributed under the terms of the Apache License 2.0
 """
 The Atomic Universe
@@ -152,6 +152,7 @@ class Universe(six.with_metaclass(Meta, Container)):
             if not hasattr(self, 'field'):
                 self.field = field
             else:
+                self.field._revert_categories()
                 new_field_values = self.field.field_values + field.field_values
                 newdx = range(len(self.field), len(self.field) + len(field))
                 field.index = newdx

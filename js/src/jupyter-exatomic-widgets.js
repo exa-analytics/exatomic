@@ -12,11 +12,15 @@ communication logic for all container widget views.
 "use strict";
 var base = require("./jupyter-exatomic-base.js");
 var utils = require("./jupyter-exatomic-utils.js");
+var THREE = require("three");
+var App3D = require("./jupyter-exatomic-three.js").App3D;
 
 
+// var UniverseSceneModel = base.ExatomicSceneModel.extend({
 var UniverseSceneModel = base.ExatomicSceneModel.extend({
 
     defaults: function() {
+        // return _.extend({}, base.ExatomicSceneModel.prototype.defaults, {
         return _.extend({}, base.ExatomicSceneModel.prototype.defaults, {
             _model_name: "UniverseSceneModel",
             _view_name: "UniverseSceneView",
@@ -34,6 +38,7 @@ var UniverseSceneModel = base.ExatomicSceneModel.extend({
             atom_x: "",
             atom_y: "",
             atom_z: "",
+            atom_l: "",
             atom_s: "",
             atom_r: {},
             arom_c: {},
@@ -44,52 +49,49 @@ var UniverseSceneModel = base.ExatomicSceneModel.extend({
 
 });
 
+var jsonparse = function(string) {
+    return new Promise(function(resolve, reject) {
+        try {resolve(JSON.parse(string))}
+        catch(e) {reject(e)}
+    });
+};
 
+var logerror = function(e) {console.log(e.message)};
+
+var fparse = function(obj, key) {
+    jsonparse(obj.model.get(key))
+    .then(function(p) {obj[key] = p}).catch(logerror)
+};
+
+var resolv = function(obj, key) {
+    return Promise.resolve(obj.model.get(key))
+    .then(function(p) {obj[key] = p}).catch(logerror)
+};
+
+// var UniverseSceneView = base.ExatomicSceneView.extend({
 var UniverseSceneView = base.ExatomicSceneView.extend({
 
     init: function() {
-        base.ExatomicSceneView.prototype.init.apply(this);
-        this.app3d.set_camera({"x": 40.0, "y": 40.0, "z": 40.0});
-        // Atom
+        base.ExatomicSceneView.prototype.init.call(this);
         var that = this;
-        var jsonparse = function(string) {
-            return new Promise(function(resolve, reject) {
-                try {resolve(JSON.parse(string))}
-                catch(e) {reject(e)}
-            });
-        };
-        var logerror = function(e) {console.log(e.message)};
-        var promises = [
-            jsonparse(this.model.get("atom_x"))
-                .then(function(p) {that.atom_x = p}).catch(logerror),
-            jsonparse(this.model.get("atom_y"))
-                .then(function(p) {that.atom_y = p}).catch(logerror),
-            jsonparse(this.model.get("atom_z"))
-                .then(function(p) {that.atom_z = p}).catch(logerror),
-            jsonparse(this.model.get("atom_s"))
-                .then(function(p) {that.atom_s = p}).catch(logerror),
-            Promise.resolve(this.model.get("atom_r"))
-                .then(function(p) {that.atom_r = p}).catch(logerror),
-            Promise.resolve(this.model.get("atom_c"))
-                .then(function(p) {that.atom_c = p}).catch(logerror),
-            jsonparse(this.model.get("two_b0"))
-                .then(function(p) {that.two_b0 = p}).catch(logerror),
-            jsonparse(this.model.get("two_b1"))
-                .then(function(p) {that.two_b1 = p}).catch(logerror),
-            Promise.resolve(this.model.get("field_i"))
-                .then(function(p) {that.field_i = p}).catch(logerror),
-            Promise.resolve(this.model.get("field_p"))
-                .then(function(p) {that.field_p = p}).catch(logerror),
-            jsonparse(this.model.get("field_v"))
-                .then(function(p) {that.field_v = p}).catch(logerror)
-        ];
-        this.promises = Promise.all(promises).then(this.add_atom.bind(this));
+        this.promises = Promise.all([fparse(that, "atom_x"),
+            fparse(that, "atom_y"), fparse(that, "atom_z"),
+            fparse(that, "atom_s"), resolv(that, "atom_r"),
+            resolv(that, "atom_c"), fparse(that, "atom_l"),
+            fparse(that, "two_b0"), fparse(that, "two_b1"),
+            resolv(that, "field_i"), resolv(that, "field_p"),
+            fparse(that, "field_v")]);
+        this.three_promises = this.app3d.finalize(this.three_promises)
+            .then(this.add_atom.bind(this));
+    },
+
+    render: function() {
+        return Promise.all([this.three_promises, this.promises]);
     },
 
     add_atom: function() {
-        console.log(this);
-        this.clear_meshes("atom");
-        this.clear_meshes("two");
+        this.app3d.clear_meshes("atom");
+        this.app3d.clear_meshes("two");
         var fdx = this.model.get("frame_idx");
         var syms = this.atom_s[fdx];
         var colrs = utils.mapper(syms, this.atom_c);
@@ -101,25 +103,26 @@ var UniverseSceneView = base.ExatomicSceneView.extend({
             var atom = this.app3d.add_points;
             var bond = this.app3d.add_lines;
         };
-        this.meshes["atom"] = atom(this.atom_x[fdx], this.atom_y[fdx],
-                                   this.atom_z[fdx], colrs, radii);
+        this.app3d.meshes["atom"] = atom(this.atom_x[fdx], this.atom_y[fdx],
+                                         this.atom_z[fdx], colrs, radii,
+                                         this.atom_l[fdx]);
         if (this.two_b0.length !== 0) {
-            this.meshes["two"] = bond(this.two_b0[fdx], this.two_b1[fdx],
-                                      this.atom_x[fdx], this.atom_y[fdx],
-                                      this.atom_z[fdx], colrs);
+            this.app3d.meshes["two"] = bond(this.two_b0[fdx], this.two_b1[fdx],
+                                            this.atom_x[fdx], this.atom_y[fdx],
+                                            this.atom_z[fdx], colrs);
         };
-        this.add_meshes();
+        this.app3d.add_meshes();
     },
 
     add_field: function() {
-        this.clear_meshes("field");
+        this.app3d.clear_meshes("field");
         if (this.model.get("field_show") === false) { return };
         var fldx = this.model.get("field_idx");
         if (fldx === "null") { return };
         var fdx = this.model.get("frame_idx");
         var idx = this.field_i[fdx][fldx];
         var fps = this.field_p[fdx][fldx];
-        this.meshes["field"] = this.app3d.add_scalar_field(
+        this.app3d.meshes["field"] = this.app3d.add_scalar_field(
             utils.scalar_field(
                 utils.gen_field_arrays(fps),
                 this.field_v[idx]
@@ -127,18 +130,18 @@ var UniverseSceneView = base.ExatomicSceneView.extend({
             this.model.get("field_iso"),
             2, this.get_field_colors()
         );
-        this.add_meshes("field");
+        this.app3d.add_meshes("field");
     },
 
     add_contour: function() {
-        this.clear_meshes("contour");
+        this.app3d.clear_meshes("contour");
         if (this.model.get("cont_show") === false) { return };
         var fldx = this.model.get("field_idx");
         if (fldx === "null") { return };
         var fdx = this.model.get("frame_idx");
         var idx = this.field_i[fdx][fldx];
         var fps = this.field_p[fdx][fldx];
-        this.meshes["contour"] = this.app3d.add_contour(
+        this.app3d.meshes["contour"] = this.app3d.add_contour(
             utils.scalar_field(
                 utils.gen_field_arrays(fps),
                 this.field_v[idx]
@@ -149,11 +152,12 @@ var UniverseSceneView = base.ExatomicSceneView.extend({
             this.model.get("cont_val"),
             this.get_field_colors()
         );
-        this.add_meshes("contour");
+        this.app3d.add_meshes("contour");
     },
 
     init_listeners: function() {
-        base.ExatomicSceneView.prototype.init_listeners.apply(this);
+        // base.ExatomicSceneView.prototype.init_listeners.apply(this);
+        base.ExatomicSceneView.prototype.init_listeners.call(this);
         this.listenTo(this.model, "change:frame_idx", this.add_atom);
         this.listenTo(this.model, "change:atom_3d", this.add_atom);
         this.listenTo(this.model, "change:field_idx", this.add_field);
