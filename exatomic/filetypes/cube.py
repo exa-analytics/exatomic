@@ -39,7 +39,7 @@ class Cube(Editor):
         """
         Parse the :class:`~exatomic.atom.Atom` object from the cube file in place.
         """
-        nat = int(self[2].split()[0])
+        nat = abs(int(self[2].split()[0]))
         ncol = len(self[6].split())
         names = ['Z', 'Zeff', 'x', 'y', 'z']
         df = self.pandas_dataframe(6, nat + 6, names)

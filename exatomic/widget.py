@@ -159,8 +159,8 @@ class ExatomicScene(DOMWidget):
     _view_name = Unicode("ExatomicSceneView").tag(sync=True)
     clear = Bool(False).tag(sync=True)
     save = Bool(False).tag(sync=True)
-    field_pos = Unicode("003399").tag(sync=True)
-    field_neg = Unicode("FF9900").tag(sync=True)
+    field_pos = Unicode("#003399").tag(sync=True)
+    field_neg = Unicode("#FF9900").tag(sync=True)
     field_iso = Float(2.0).tag(sync=True)
     field_ox = Float(-3.0).tag(sync=True)
     field_oy = Float(-3.0).tag(sync=True)
@@ -176,9 +176,12 @@ class ExatomicScene(DOMWidget):
 
     def _handle_custom_msg(self, message, callback):
         """Custom message handler."""
-        typ = message['type']
-        content = message['content']
-        if typ == 'image': self._handle_image(content)
+        if message['type'] == 'image':
+            self._handle_image(message['content'])
+        else: print("Custom msg not handled.\n"
+                    "type of msg : {}\n"
+                    "msg (abbr.) : {}".format(message['type'],
+                                              message['content'][:100]))
 
     def _handle_image(self, content):
         """Save a PNG of the scene."""
@@ -193,6 +196,11 @@ class ExatomicScene(DOMWidget):
         repl = 'data:image/png;base64,'
         with open(os.sep.join([savedir, fname]), 'wb') as f:
             f.write(b64decode(content.replace(repl, '')))
+
+    def _close(self):
+        self.send({'type': 'close'})
+        self.close()
+
 
     def __init__(self, *args, **kwargs):
         lo = Layout(width="400", height="400")
@@ -224,11 +232,11 @@ class ExatomicBox(Box):
             try: widget._close()
             except: widget.close()
 
-        self.scene.close()
+        self.scene._close()
         self.close()
 
 
-    def init_gui(self, uni=False, test=False):
+    def _init_gui(self, uni=False, test=False):
         """Initialize generic GUI controls and register callbacks."""
 
         # Default GUI controls to control the scene
@@ -266,10 +274,10 @@ class ExatomicBox(Box):
 
     def __init__(self, *args, scene=None, **kwargs):
         self.scene = ExatomicScene() if scene is None else scene
-        if not hasattr(self, 'active_controls'): self.init_gui()
+        if not hasattr(self, 'active_controls'): self._init_gui()
         self.gui = VBox(list(self.active_controls.values()))
         super(ExatomicBox, self).__init__(
-                *args, children=[HBox([self.gui, self.scene])], **kwargs)
+            *args, children=[HBox([self.gui, self.scene])], **kwargs)
 
 
 
@@ -288,25 +296,24 @@ class TestScene(ExatomicScene):
 
 
 
-@register
+#@register
 class TestContainer(ExatomicBox):
 
     """A basic container to test some javascript."""
-    _model_name = Unicode("TestContainerModel").tag(sync=True)
-    _view_name = Unicode("TestContainerView").tag(sync=True)
+    # _model_name = Unicode("TestContainerModel").tag(sync=True)
+    # _view_name = Unicode("TestContainerView").tag(sync=True)
 
-
-    def init_gui(self):
+    def _init_gui(self):
         """Initialize specific GUI controls and register callbacks."""
 
-        super(TestContainer, self).init_gui()
+        super(TestContainer, self)._init_gui()
 
         geom = Button(icon="cubes", description=" Mesh", layout=gui_lo)
         def _geom(b): self.scene.geom = self.scene.geom == False
         geom.on_click(_geom)
         self.active_controls['geom'] = geom
 
-        fopts = ['null', 'sphere', 'torus', 'ellipsoid']
+        fopts = ['null', 'Sphere', 'Torus', 'Ellipsoid']
         fopts = Dropdown(options=fopts, layout=gui_lo)
         def _field(c): self.scene.field = c.new
         fopts.observe(_field, names='value')
@@ -344,15 +351,15 @@ class TestUniverseScene(ExatomicScene):
     field_ml = Int(0).tag(sync=True)
 
 
-@register
+#@register
 class TestUniverse(ExatomicBox):
     """Test :class:`~exatomic.container.Universe` test widget."""
-    _model_name = Unicode("TestUniverseModel").tag(sync=True)
-    _view_name = Unicode("TestUniverseView").tag(sync=True)
+    # _model_name = Unicode("TestUniverseModel").tag(sync=True)
+    # _view_name = Unicode("TestUniverseView").tag(sync=True)
 
-    def init_gui(self):
+    def _init_gui(self):
 
-        super(TestUniverse, self).init_gui(uni=True, test=True)
+        super(TestUniverse, self)._init_gui(uni=True, test=True)
 
         uni_field_lists = OrderedDict([
             ('Hydrogenic', ['1s',   '2s',   '2px', '2py', '2pz',
@@ -415,21 +422,26 @@ class TestUniverse(ExatomicBox):
 
     def __init__(self, *args, **kwargs):
         super(TestUniverse, self).__init__(
-                *args, scene=TestUniverseScene(), **kwargs)
+            *args, scene=TestUniverseScene(), **kwargs)
 
 
 ################################
 # Universe and related widgets #
 ################################
 
-def atom_traits(df, labels=False):
+def atom_traits(df, atomcolors=None, atomradii=None):
     """
-    Get atom table traitlets. Atomic size (using the covalent radius) and atom
+    Get atom table traits. Atomic size (using the covalent radius) and atom
     colors (using the common `Jmol`_ color scheme) are packed as dicts and
     obtained from the static data in exa.
 
     .. _Jmol: http://jmol.sourceforge.net/jscolors/
     """
+    # Implement logic to automatically choose
+    # whether or not to create labels
+    labels = True
+    atomcolors = pd.Series() if atomcolors is None else pd.Series(atomcolors)
+    atomradii = pd.Series() if atomradii is None else pd.Series(atomradii)
     traits = {}
     cols = ['x', 'y', 'z']
     if labels:
@@ -459,13 +471,15 @@ def atom_traits(df, labels=False):
     unq = df['symbol'].unique()
     radii = symbol_to_radius()[unq]
     colors = symbol_to_color()[unq]
+    colors.update(atomcolors)
+    radii.update(atomradii)
     traits['atom_s'] = syms.to_json(orient='values')
     traits['atom_r'] = {i: 0.5 * radii[v] for i, v in symmap.items()}
     traits['atom_c'] = {i: colors[v] for i, v in symmap.items()}
     return traits
 
 def field_traits(df):
-    """Get field table traitlets."""
+    """Get field table traits."""
     df['frame'] = df['frame'].astype(int)
     df['nx'] = df['nx'].astype(int)
     df['ny'] = df['ny'].astype(int)
@@ -485,7 +499,7 @@ def field_traits(df):
     return {'field_v': vals, 'field_i': idxs, 'field_p': fps}
 
 def two_traits(df, lbls):
-    """Get two table traitlets."""
+    """Get two table traits."""
     bonded = df.ix[df['bond'] == True, ['atom0', 'atom1', 'frame']]
     lbl0 = bonded['atom0'].map(lbls)
     lbl1 = bonded['atom1'].map(lbls)
@@ -506,8 +520,10 @@ def two_traits(df, lbls):
     b1 = pd.Series(b1).to_json(orient='values')
     return {'two_b0': b0, 'two_b1': b1}
 
-def frame_traits(df):
-    """Get frame table traitlets."""
+def frame_traits(uni):
+    """Get frame table traits."""
+    if not hasattr(uni, 'frame'): return {}
+
 #    xi = Float().tag(sync=True)
 #    xj = Float().tag(sync=True)
 #    xk = Float().tag(sync=True)
@@ -530,6 +546,7 @@ class UniverseScene(ExatomicScene):
     _view_name = Unicode("UniverseSceneView").tag(sync=True)
     # Top level index
     frame_idx = Int(0).tag(sync=True)
+    axis = Bool(False).tag(sync=True)
     # Atom traits
     atom_x = Unicode().tag(sync=True)
     atom_y = Unicode().tag(sync=True)
@@ -557,20 +574,24 @@ class UniverseScene(ExatomicScene):
     # Frame traits
 
 
-@register
+#@register
 class UniverseWidget(ExatomicBox):
     """Test :class:`~exatomic.container.Universe` viewing widget."""
-    _model_name = Unicode("UniverseWidgetModel").tag(sync=True)
-    _view_name = Unicode("UniverseWidgetView").tag(sync=True)
+    # _model_name = Unicode("UniverseWidgetModel").tag(sync=True)
+    # _view_name = Unicode("UniverseWidgetView").tag(sync=True)
 
-    def init_gui(self, nframes=1, fields=None):
+    def _init_gui(self, nframes=1, fields=None):
 
-        super(UniverseWidget, self).init_gui(uni=True, test=False)
+        super(UniverseWidget, self)._init_gui(uni=True, test=False)
 
-        atoms = Button(description=' Atoms', icon='adjust', layout=gui_lo)
+        atoms = Button(description=' Fill', icon='adjust', layout=gui_lo)
+        axis = Button(description=' Axis', icon='arrows-alt', layout=gui_lo)
         def _atom_3d(b): self.scene.atom_3d = self.scene.atom_3d == False
+        def _axis(b): self.scene.axis = self.scene.axis == False
         atoms.on_click(_atom_3d)
+        axis.on_click(_axis)
         self.active_controls['atom_3d'] = atoms
+        self.active_controls['axis'] = axis
 
         playable = bool(nframes <= 1)
         flims = dict(min=0, max=nframes-1, step=1, value=0, layout=gui_lo)
@@ -616,8 +637,8 @@ class UniverseWidget(ExatomicBox):
                 ('axis', Dropdown(options=['x', 'y', 'z'], value='z')),
                 ('num', IntSlider(description='N', min=5, max=20,
                                   value=10, step=1, layout=gui_lo,)),
-                ('lim', IntRangeSlider(description="10**Limits", min=-10,
-                                       max=0, step=1, value=[-8, -1],)),
+                ('lim', IntRangeSlider(description="10**Limits", min=-8,
+                                       max=0, step=1, value=[-7, -1],)),
                 ('val', FloatSlider(description="Value",
                                     min=-5, max=5, value=0,)),
             ])
@@ -635,22 +656,25 @@ class UniverseWidget(ExatomicBox):
             self.active_controls['field'] = folder
 
 
-    def __init__(self, uni, *args, labels=False, **kwargs):
+    def __init__(self, uni, *args, scenekwargs=None, **kwargs):
         unargs = {}
-        try: unargs.update(atom_traits(uni.atom, labels=labels))
-        except AttributeError: pass
-        try: unargs.update(two_traits(uni.atom_two,
-                           uni.atom.get_atom_labels()))
-        except AttributeError: pass
-        try: unargs.update(frame_traits(uni.frame))
-        except AttributeError: pass
-        try:
+        fields = None
+        atomcolors, atomradii = {}, {}
+        scenekwargs = {} if scenekwargs is None else scenekwargs
+        if 'atomcolors' in scenekwargs:
+            atomcolors = scenekwargs['atomcolors']
+        if 'atomradii' in scenekwargs:
+            atomradii = scenekwargs['atomradii']
+        if hasattr(uni, 'atom'):
+            unargs.update(atom_traits(uni.atom, atomcolors, atomradii))
+        if hasattr(uni, 'atom_two'):
+            unargs.update(two_traits(uni.atom_two,
+                          uni.atom.get_atom_labels()))
+        if hasattr(uni, 'field'):
             unargs.update(field_traits(uni.field))
             fields = ['null'] + unargs['field_i'][0]
-        except AttributeError:
-            fields = None
+        if scenekwargs is not None: unargs.update(scenekwargs)
         scene = UniverseScene(**unargs)
-        self.init_gui(nframes=uni.atom.nframes, fields=fields)
-        super(UniverseWidget, self).__init__(*args,
-                                             scene=scene,
-                                             **kwargs)
+        self._init_gui(nframes=uni.atom.nframes, fields=fields)
+        super(UniverseWidget, self).__init__(
+            *args, scene=scene, **kwargs)
