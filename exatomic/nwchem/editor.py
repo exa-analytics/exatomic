@@ -5,21 +5,14 @@
 NWChem Editor
 ##################
 """
-import numpy as np
 import pandas as pd
-from io import StringIO
-from exatomic import Universe
-from exatomic import Editor as AtomicEditor
-from exatomic.algorithms.basis import spher_lml_count, cart_lml_count, rlmap
+from exatomic import Editor
 
+class Editor(Editor):
 
-class Editor(AtomicEditor):
-    """
-    Base NWChem editor
-    """
     def __init__(self, *args, **kwargs):
         super(Editor, self).__init__(*args, **kwargs)
-        if self.meta is None:
-            self.meta = {'program': 'nwchem'}
-        else:
+        if self.meta is not None:
             self.meta.update({'program': 'nwchem'})
+        else:
+            self.meta = {'program': 'nwchem'}
