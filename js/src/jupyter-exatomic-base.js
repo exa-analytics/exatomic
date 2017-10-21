@@ -17,16 +17,14 @@ var version = "~" + require("../package.json").version;
 
 var ExatomicBoxModel = control.BoxModel.extend({
 
-    defaults: function() {
-        return _.extend({}, control.BoxModel.prototype.defaults, {
+    defaults: _.extend({}, control.BoxModel.prototype.defaults, {
             _model_module_version: version,
             _view_module_version: version,
             _model_module: "jupyter-exatomic",
             _view_module: "jupyter-exatomic",
             _model_name: "ExatomicBoxModel",
             _view_name: "ExatomicBoxView",
-        })
-    }
+    })
 
 });
 
@@ -38,32 +36,14 @@ var ExatomicBoxView = control.BoxView.extend({
 
 var ExatomicSceneModel = widgets.DOMWidgetModel.extend({
 
-    defaults: function() {
-        return _.extend({}, widgets.DOMWidgetModel.prototype.defaults, {
+    defaults: _.extend({}, widgets.DOMWidgetModel.prototype.defaults, {
             _model_module_version: version,
             _view_module_version: version,
             _model_module: "jupyter-exatomic",
             _view_module: "jupyter-exatomic",
             _model_name: "ExatomicSceneModel",
-            _view_name: "ExatomicSceneView",
-            clear: false,
-            save: false,
-            field_neg: "FF9900",
-            field_pos: "003399",
-            field_iso: 2.0,
-            field_ox: -3.0,
-            field_oy: -3.0,
-            field_oz: -3.0,
-            field_dx: 0.2,
-            field_dy: 0.2,
-            field_dz: 0.2,
-            field_nx: 31,
-            field_ny: 31,
-            field_nz: 31,
-            savedir: "",
-            imgname: "",
-        })
-    }
+            _view_name: "ExatomicSceneView"
+    })
 
 });
 
@@ -111,8 +91,8 @@ var ExatomicSceneView = widgets.DOMWidgetView.extend({
     init: function() {
         this.app3d = new App3D(this);
         this.three_promises = this.app3d.init_promise();
-        this.init_listeners();
         this.field_listeners();
+        this.init_listeners();
     },
 
     resize: function(w, h) {
@@ -123,22 +103,6 @@ var ExatomicSceneView = widgets.DOMWidgetView.extend({
 
     render: function() {
         return this.app3d.finalize(this.three_promises);
-    },
-
-
-    save: function() {
-        this.renderer.setSize(1920, 1080);
-        this.camera.aspect = 1920 / 1080;
-        this.camera.updateProjectionMatrix();
-        this.render();
-        var image = this.renderer.domElement.toDataURL("image/png");
-        this.send({"type": "image", "content": image});
-        var w = this.model.get("layout").get("width");
-        var h = this.model.get("layout").get("height");
-        this.renderer.setSize(w, h);
-        this.camera.aspect = w / h;
-        this.camera.updateProjectionMatrix();
-        this.render();
     },
 
     get_fps: function() {
@@ -157,12 +121,24 @@ var ExatomicSceneView = widgets.DOMWidgetView.extend({
         return fps;
     },
 
-    get_field_colors: function() {
-        return {"pos": parseInt(this.model.get("field_pos"), 16),
-                "neg": parseInt(this.model.get("field_neg"), 16)}
+    _handle_custom_msg: function(msg, clbk) {
+        if (msg["type"] === "close") { this.app3d.close() };
+        if (msg["type"] === "camera") {
+            this.app3d.set_camera_from_camera(msg["content"]);
+        };
     },
 
-    add_field: function() {},
+    clear_meshes: function() {
+        this.app3d.clear_meshes();
+    },
+
+    save: function() {
+        this.send({"type": "image", "content": this.app3d.save()});
+    },
+
+    save_camera: function() {
+        this.send({"type": "camera", "content": this.app3d.camera.toJSON()});
+    },
 
     field_listeners: function() {
         this.listenTo(this.model, "change:field_nx", this.add_field);
@@ -174,6 +150,8 @@ var ExatomicSceneView = widgets.DOMWidgetView.extend({
     init_listeners: function() {
         this.listenTo(this.model, "change:clear", this.clear_meshes);
         this.listenTo(this.model, "change:save", this.save);
+        this.listenTo(this.model, "change:save_cam", this.save_camera);
+        this.listenTo(this.model, "msg:custom", this._handle_custom_msg);
     },
 
 });

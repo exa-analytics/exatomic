@@ -90,8 +90,7 @@ class Input(Editor):
         keys += [key.split('}')[0].split(':')[0] for key in _calcdft.split('{')[1:]]
         kwargs = {key: '' for key in keys}
 
-        atom = uni.atom[['symbol', 'x', 'y', 'z']]
-        kwargs['atom'] = atom.to_string(index=None, header=None)
+        kwargs['atom'] = uni.atom.to_xyz()[:-1]
         if name is not None:
             kwargs['name'] = name
         else:
@@ -204,7 +203,7 @@ def tuning_inputs(uni, name, mult, charge, basis, gammas, alphas,
     Returns
         editors (list): input files as exa.Editors
     """
-    fnstr = 'xc xcampbe96 1.0 cpbe96 1.0 HFexch 1.0\n'\
+    fnstr = 'xcampbe96 1.0 cpbe96 1.0 HFexch 1.0\n'\
             ' cam {gam:.4f} cam_alpha {alp:.4f} cam_beta {bet:.4f}'.format
     jbnm = '{name}-{{gam:.2f}}-{{alp:.2f}}-{{chg}}'.format(name=name).format
     chgnms = ['cat', 'neut', 'an']
@@ -221,6 +220,7 @@ def tuning_inputs(uni, name, mult, charge, basis, gammas, alphas,
                         'title': jnm, 'name': jnm, 'xc': fnc,
                         'basis': basis, 'prop': ''} #, 'writedir': writedir}
                 fls.append(Input.from_universe(uni, **opts))
+                fls[-1].name = jnm + '.nw'
     return fls
 
 # def tuning_inputs(uni, name, mult, charge, basis, gammas, alphas,

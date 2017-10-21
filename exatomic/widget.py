@@ -11,8 +11,8 @@ import pandas as pd
 from glob import glob
 from base64 import b64decode
 from collections import OrderedDict
-from traitlets import (Bool, Int, Float, Unicode,
-                       List, Any, Dict, Instance)
+from traitlets import (Bool, Int, Float, Unicode, CInt,
+                       List, Any, Dict, Instance, link)
 from ipywidgets import (
     Box, VBox, HBox, FloatSlider, IntSlider, Play,
     IntRangeSlider, Widget, DOMWidget, Layout, Button,
@@ -159,6 +159,8 @@ class ExatomicScene(DOMWidget):
     _view_name = Unicode("ExatomicSceneView").tag(sync=True)
     clear = Bool(False).tag(sync=True)
     save = Bool(False).tag(sync=True)
+    save_cam = Bool(False).tag(sync=True)
+    cameras = List(trait=Dict()).tag(sync=True)
     field_pos = Unicode("#003399").tag(sync=True)
     field_neg = Unicode("#FF9900").tag(sync=True)
     field_iso = Float(2.0).tag(sync=True)
@@ -174,14 +176,18 @@ class ExatomicScene(DOMWidget):
     savedir = Unicode().tag(sync=True)
     imgname = Unicode().tag(sync=True)
 
-    def _handle_custom_msg(self, message, callback):
+    def _handle_custom_msg(self, msg, callback):
         """Custom message handler."""
-        if message['type'] == 'image':
-            self._handle_image(message['content'])
+        if msg['type'] == 'image':
+            self._handle_image(msg['content'])
+        elif msg['type'] == 'camera':
+            self._handle_camera(msg['content'])
         else: print("Custom msg not handled.\n"
                     "type of msg : {}\n"
-                    "msg (abbr.) : {}".format(message['type'],
-                                              message['content'][:100]))
+                    "msg         : {}".format(msg['type'], msg['content']))
+
+    def _handle_camera(self, content):
+        self.cameras.append(content)
 
     def _handle_image(self, content):
         """Save a PNG of the scene."""
@@ -197,12 +203,16 @@ class ExatomicScene(DOMWidget):
         with open(os.sep.join([savedir, fname]), 'wb') as f:
             f.write(b64decode(content.replace(repl, '')))
 
+    def _set_camera(self, c):
+        self.send({'type': 'camera',
+                   'content': self.cameras[c.new]})
+
     def _close(self):
         self.send({'type': 'close'})
         self.close()
 
-
     def __init__(self, *args, **kwargs):
+        self.cameras = []
         lo = Layout(width="400", height="400")
         super(DOMWidget, self).__init__(*args, layout=lo, **kwargs)
 
@@ -242,9 +252,26 @@ class ExatomicBox(Box):
         # Default GUI controls to control the scene
         self.inactive_controls = OrderedDict()
         self.active_controls = OrderedDict(
-            close=Button(icon="trash", description=" Close", layout=gui_lo),
-            clear=Button(icon="bomb", description=" Clear", layout=gui_lo),
-            saves=Button(icon="camera", description=" Save", layout=gui_lo))
+            close=Button(icon='trash', description=' Close', layout=gui_lo),
+            clear=Button(icon='bomb', description=' Clear', layout=gui_lo))
+
+        copts = OrderedDict([
+            ('get', Button(icon='arrow-circle-down', description=' Save')),
+            ('set', IntSlider(description='Load', min=0,
+                              max=max(len(self.scene.cameras)-1,0),
+                              value=0, step=1))])
+        def _save_camera(b):
+            self.scene.save_cam = self.scene.save_cam == False
+            (self.active_controls['camera']
+                 .active_controls['set'].max) = len(self.scene.cameras)
+        copts['get'].on_click(_save_camera)
+        copts['set'].observe(self.scene._set_camera, names='value')
+        cfolder = Folder(Button(icon='camera', description=' Camera'), copts)
+        cfolder.activate()
+
+        self.active_controls['camera'] = cfolder
+        self.active_controls['saves'] = Button(
+            icon='save', description=' Save', layout=gui_lo)
 
         def _clear(b):
             self.scene.clear = self.scene.clear == False
@@ -272,10 +299,17 @@ class ExatomicBox(Box):
                 Button(description=' Fields', icon='cube'), fopts)
 
 
-    def __init__(self, *args, scene=None, **kwargs):
-        self.scene = ExatomicScene() if scene is None else scene
+    def __init__(self, scenekwargs=None, *args, **kwargs):
+        scenekwargs = {} if scenekwargs is None else scenekwargs
+
+        if not hasattr(self, 'scene'):
+            self.scene = ExatomicScene(**scenekwargs)
+        elif 'scene' in kwargs:
+            self.scene = kwargs.pop('scene')
+
         if not hasattr(self, 'active_controls'): self._init_gui()
         self.gui = VBox(list(self.active_controls.values()))
+
         super(ExatomicBox, self).__init__(
             *args, children=[HBox([self.gui, self.scene])], **kwargs)
 
@@ -287,8 +321,8 @@ class ExatomicBox(Box):
 
 @register
 class TestScene(ExatomicScene):
-
     """A basic scene to test some javascript."""
+
     _model_name = Unicode("TestSceneModel").tag(sync=True)
     _view_name = Unicode("TestSceneView").tag(sync=True)
     field = Unicode("null").tag(sync=True)
@@ -296,12 +330,8 @@ class TestScene(ExatomicScene):
 
 
 
-#@register
 class TestContainer(ExatomicBox):
-
-    """A basic container to test some javascript."""
-    # _model_name = Unicode("TestContainerModel").tag(sync=True)
-    # _view_name = Unicode("TestContainerView").tag(sync=True)
+    """A basic container to test some javascript and GUI."""
 
     def _init_gui(self):
         """Initialize specific GUI controls and register callbacks."""
@@ -337,6 +367,7 @@ class TestContainer(ExatomicBox):
 @register
 class TestUniverseScene(ExatomicScene):
     """Test :class:`~exatomic.container.Universe` scene."""
+
     _model_name = Unicode("TestUniverseSceneModel").tag(sync=True)
     _view_name = Unicode("TestUniverseSceneView").tag(sync=True)
     field_iso = Float(0.0005).tag(sync=True)
@@ -351,14 +382,10 @@ class TestUniverseScene(ExatomicScene):
     field_ml = Int(0).tag(sync=True)
 
 
-#@register
 class TestUniverse(ExatomicBox):
     """Test :class:`~exatomic.container.Universe` test widget."""
-    # _model_name = Unicode("TestUniverseModel").tag(sync=True)
-    # _view_name = Unicode("TestUniverseView").tag(sync=True)
 
     def _init_gui(self):
-
         super(TestUniverse, self)._init_gui(uni=True, test=True)
 
         uni_field_lists = OrderedDict([
@@ -396,6 +423,7 @@ class TestUniverse(ExatomicBox):
 
             folder.insert(2, 'fkind', self.inactive_controls[c.new])
             folder.set_gui()
+
         fopts.observe(_field, names="value")
 
         def _field_kind(c):
@@ -406,6 +434,7 @@ class TestUniverse(ExatomicBox):
                               update=True)
             elif 'fml' in folder.active_controls:
                 folder.deactivate('fml', update=True)
+
         for key, widget in field_widgets:
             widget.observe(_field_kind, names='value')
 
@@ -420,9 +449,10 @@ class TestUniverse(ExatomicBox):
         self.active_controls['field'] = folder
 
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, scenekwargs=None, *args, **kwargs):
+        scenekwargs = {} if scenekwargs is None else scenekwargs
         super(TestUniverse, self).__init__(
-            *args, scene=TestUniverseScene(), **kwargs)
+            *args, scene=TestUniverseScene(**scenekwargs), **kwargs)
 
 
 ################################
@@ -523,7 +553,6 @@ def two_traits(df, lbls):
 def frame_traits(uni):
     """Get frame table traits."""
     if not hasattr(uni, 'frame'): return {}
-
 #    xi = Float().tag(sync=True)
 #    xj = Float().tag(sync=True)
 #    xk = Float().tag(sync=True)
@@ -576,9 +605,7 @@ class UniverseScene(ExatomicScene):
 
 #@register
 class UniverseWidget(ExatomicBox):
-    """Test :class:`~exatomic.container.Universe` viewing widget."""
-    # _model_name = Unicode("UniverseWidgetModel").tag(sync=True)
-    # _view_name = Unicode("UniverseWidgetView").tag(sync=True)
+    """:class:`~exatomic.container.Universe` viewing widget."""
 
     def _init_gui(self, nframes=1, fields=None):
 
@@ -674,7 +701,8 @@ class UniverseWidget(ExatomicBox):
             unargs.update(field_traits(uni.field))
             fields = ['null'] + unargs['field_i'][0]
         if scenekwargs is not None: unargs.update(scenekwargs)
-        scene = UniverseScene(**unargs)
+        self.scene = UniverseScene(**unargs)
         self._init_gui(nframes=uni.atom.nframes, fields=fields)
         super(UniverseWidget, self).__init__(
-            *args, scene=scene, **kwargs)
+            *args, **kwargs)
+            # *args, scene=scene, **kwargs)

@@ -38,9 +38,6 @@ class App3D {
 
     init_camera() {
         var camera = new THREE.PerspectiveCamera(35, this.w / this.h, 1, 1000);
-        camera.position.x = 40;
-        camera.position.y = 40;
-        camera.position.z = 40;
         return Promise.resolve(camera);
     };
 
@@ -61,12 +58,8 @@ class App3D {
         var renderer = new THREE.WebGLRenderer({antialias: true,
                                                 alpha: true});
         renderer.setSize(this.w, this.h);
-        // Using plane geometry reference says this is required
-        // but makes the scene black.
-        // renderer.setClearColor(0x000000);
         renderer.autoClear = false;
         return Promise.resolve(renderer);
-
     };
 
     init_controls() {
@@ -95,35 +88,29 @@ class App3D {
     init_hud_camera() {
         var camera = new THREE.OrthographicCamera(
             -this.w2,  this.w2,
-             this.h2, -this.h2, 1, 10);
-        camera.position.z = 10;
-        // camera.position.x = 40;
-        // camera.position.y = 40;
-        // camera.position.z = 40;
+             this.h2, -this.h2, 1, 1500);
+        camera.position.z = 1000;
         return Promise.resolve(camera);
 
-    };
-
-    init_hud_canvas() {
-        var canvas = document.createElement("canvas");
-        canvas.width = 256;
-        canvas.height = 128;
-        return Promise.resolve(canvas);
     };
 
     init_mouse() {
         return Promise.resolve(new THREE.Vector2());
     };
 
-    resize() {
+    resize(w, h) {
+        w = (w === undefined) ? this.w : w;
+        h = (h === undefined) ? this.h : h;
+        var w2 = w / 2;
+        var h2 = h / 2;
         this.set_dims();
         this.set_hud();
-        this.renderer.setSize(this.w, this.h);
-        this.camera.aspect = this.w / this.h;
-        this.hudcamera.left   = -this.w2;
-        this.hudcamera.right  =  this.w2;
-        this.hudcamera.top    =  this.h2;
-        this.hudcamera.bottom = -this.h2;
+        this.renderer.setSize(w, h);
+        this.camera.aspect = w / h;
+        this.hudcamera.left   = -w2;
+        this.hudcamera.right  =  w2;
+        this.hudcamera.top    =  h2;
+        this.hudcamera.bottom = -h2;
         this.camera.updateProjectionMatrix();
         this.hudcamera.updateProjectionMatrix();
         this.controls.handleResize();
@@ -147,26 +134,14 @@ class App3D {
         return promise.then(this.animate.bind(this));
     };
 
-    finalize_hud_canvas() {
-        this.context = this.hudcanvas.getContext("2d");
-        this.context.font = "Bold 20px Arial";
-        this.texture = new THREE.Texture(this.hudcanvas);
-        this.texture.needsUpdate = true;
-        var material = new THREE.SpriteMaterial({map: this.texture});
-        this.sprite = new THREE.Sprite(material);
-        this.sprite.scale.set(200, 100, 1);
-        // var material = new THREE.MeshBasicMaterial({map: this.texture});
-        // var planegeom = new THREE.PlaneGeometry(150, 30);
-        // this.sprite = new THREE.Mesh(planegeom, material);
-        this.sprite.position.set(1000, 1000, 1000);
-        this.hudscene.add(this.sprite);
-    };
-
     lighten_color(color) {
         // Need to check if color being passed is hex or int
-        var R = (color >> 16) + 76;
-        var G = (color >> 8 & 0x00FF) + 76;
-        var B = (color & 0x0000FF) + 76;
+        var R = (color >> 16);
+        var G = (color >> 8 & 0x00FF);
+        var B = (color & 0x0000FF);
+        R = (R == 0) ? 110 : R + 76;
+        G = (G == 0) ? 110 : G + 76;
+        B = (B == 0) ? 110 : B + 76;
         R = R < 255 ? R < 1 ? 0 : R : 255;
         G = G < 255 ? G < 1 ? 0 : G : 255;
         B = B < 255 ? B < 1 ? 0 : B : 255;
@@ -175,7 +150,6 @@ class App3D {
 
     highlight_active(intersects) {
         if (intersects.length > 0) {
-            console.log("in highlight_active", this.ACTIVE);
             if (this.ACTIVE != intersects[0].object) {
                 if (this.ACTIVE != null) {
                     if (this.ACTIVE.material.color) {
@@ -208,12 +182,8 @@ class App3D {
         function(event) {
             event.preventDefault();
             var pos = that.renderer.domElement.getBoundingClientRect();
-            var nx =  ((event.clientX - pos.x) / that.w) * 2 - 1;
-            var ny = -((event.clientY - pos.y) / that.h) * 2 + 1;
-            that.mouse.x = nx;
-            that.mouse.y = ny;
-            // that.sprite.position.set(nx, ny, 0);
-            // console.log(that.sprite.position);
+            that.mouse.x =  ((event.clientX - pos.x) / that.w) * 2 - 1;
+            that.mouse.y = -((event.clientY - pos.y) / that.h) * 2 + 1;
             that.ray.setFromCamera(that.mouse, that.camera);
             var intersects = that.ray.intersectObjects(that.scene.children);
             that.highlight_active(intersects);
@@ -222,7 +192,7 @@ class App3D {
 
     init_promise() {
         var that = this;
-        var promises = [
+        return Promise.all([
             this.init_scene().then(function(o) {that.scene = o}),
             Promise.all([
                 this.init_camera().then(function(o) {that.camera = o}),
@@ -235,42 +205,57 @@ class App3D {
                     that.controls = o;
                     that.controls.addEventListener(
                         "change", that.render.bind(that));
-            }),
+            }).then(this.init_hud_canvas.bind(this))
+                .then(function(o) {that.hudcanvas = o})
+                .then(this.finalize_hud_canvas.bind(this)),
             this.init_raycaster().then(function(o) {that.ray = o}),
             this.init_hud_scene().then(function(o) {that.hudscene = o}),
             this.init_hud_camera().then(function(o) {that.hudcamera = o}),
-            this.init_hud_canvas().then(function(o) {that.hudcanvas = o})
-                .then(this.finalize_hud_canvas.bind(this)),
             this.init_mouse().then(function(o) {that.mouse = o})
                 .then(this.finalize_mouse_over.bind(this))
-        ];
-        return Promise.all(promises);
+        ]);
+    };
+
+    init_hud_canvas() {
+        var canvas = document.createElement("canvas");
+        canvas.width = 1024;
+        canvas.height = 1024;
+        return Promise.resolve(canvas);
+    };
+
+    finalize_hud_canvas() {
+        this.context = this.hudcanvas.getContext("2d");
+        this.context.textAlign = "bottom";
+        this.context.textBaseline = "left";
+        this.context.font = "64px Arial";
+        this.texture = new THREE.Texture(this.hudcanvas);
+        this.texture.anisotropy = this.renderer.getMaxAnisotropy();
+        this.texture.minFilter = THREE.NearestMipMapLinearFilter;
+        this.texture.magFilter = THREE.NearestFilter;
+        this.texture.needsUpdate = true;
+        var material = new THREE.SpriteMaterial({map: this.texture});
+        this.sprite = new THREE.Sprite(material);
+        this.sprite.position.set(1000, 1000, 1000);
+        this.sprite.scale.set(256, 256, 1);
+        this.hudscene.add(this.sprite);
     };
 
     set_hud() {
         if ((this.ACTIVE === null) ||
             (this.ACTIVE.name === "") ||
             (this.ACTIVE instanceof THREE.Points)) { return };
-        this.context.clearRect(0, 0, this.w, this.h);
-        var message = this.ACTIVE.name;
-        var w = this.context.measureText(message).width;
-        var h = 20;
+        this.context.clearRect(0, 0, 1024, 1024);
+        this.context.fillStyle = "rgba(245,245,245,0.9)";
+        var w = this.context.measureText(this.ACTIVE.name).width;
+        this.context.fillRect(512 - 2, 512 - 60, w + 6, 72);
         this.context.fillStyle = "rgba(0,0,0,0.95)";
-        this.context.fillRect(0, 0, w + 8, h + 8);
-        this.context.fillStyle = "rgba(255,255,255,0.95)";
-        this.context.fillRect(2, 2, w + 4, h + 4);
-        this.context.fillStyle = "rgba(0,0,0,0.95)";
-        this.context.fillText(message, 4, h + 2);
-        // this.sprite.position.set(-this.w2 + (w,
-        //                          -this.h2 - h, 1);
-        this.sprite.position.set(0,
-                                 -this.h2 - h, 1);
+        this.context.fillText(this.ACTIVE.name, 512, 512);
+        this.sprite.position.set(-this.w2 + 2, -this.h2 + 4, 1);
         this.sprite.material.needsUpdate = true;
         this.texture.needsUpdate = true;
     };
 
     unset_hud() {
-        console.log("unsetting hud");
         this.sprite.position.set(1000, 1000, 1000);
     };
 
@@ -312,6 +297,50 @@ class App3D {
         return [mesh];
     };
 
+    add_parametric_surface() {
+        var func = function(ou, ov) {
+            var u = 2 * Math.PI * ou;
+            var v = 2 * Math.PI * ov;
+            var x = Math.sin(u);
+            var y = Math.cos(v);
+            var z = Math.cos(u + v);
+            return new THREE.Vector3(x, y, z)
+        };
+        var geom = new THREE.ParametricGeometry(func, 24, 24);
+        var pmat = new THREE.MeshLambertMaterial({color: 'green', side: THREE.FrontSide});
+        var nmat = new THREE.MeshLambertMaterial({color: 'yellow', side: THREE.FrontSide});
+        var psurf = new THREE.Mesh(geom, pmat);
+        var nsurf = new THREE.Mesh(geom, nmat);
+        psurf.name = "Positive";
+        nsurf.name = "Negative";
+        return [psurf, nsurf];
+    };
+
+    close() {
+        console.log("Disposing exatomic THREE objects.");
+        for (var idx in this.meshes) {
+            for (var sub in this.meshes[idx]) {
+                if (this.meshes[idx][sub].geometry) {
+                    this.meshes[idx][sub].geometry.dispose();
+                };
+                if (this.meshes[idx][sub].material) {
+                    this.meshes[idx][sub].geometry.dispose();
+                };
+            };
+        };
+        this.texture.dispose();
+        this.renderer.dispose();
+    };
+
+    save() {
+        this.resize(1920, 1080);
+        this.render();
+        var image = this.renderer.domElement.toDataURL("image/png");
+        this.resize();
+        this.render();
+        return image;
+    };
+
     add_points(x, y, z, c, r) {
         /*"""
         add_points
@@ -329,10 +358,10 @@ class App3D {
             points (THREE.Points): Reference to added points object
 
         */
-        c = (c === undefined) ? 0x808080 : c;
-        r = (r === undefined) ? 1 : r;
-        c = (!c.hasOwnProperty("length")) ? utils.repeat_obj(c, n) : c;
-        r = (!r.hasOwnProperty("length")) ? utils.repeat_obj(r, n) : r;
+        r = r || 1;
+        c = c || 0x808080;
+        c = (!c.length) ? utils.repeat_obj(c, n) : c;
+        r = (!r.length) ? utils.repeat_obj(r, n) : r;
         c = App3D.prototype.flatten_color(c);
         r = new Float32Array(r);
         var geometry = new THREE.BufferGeometry();
@@ -371,7 +400,7 @@ class App3D {
         */
         var material = new THREE.LineBasicMaterial({
             vertexColors: THREE.VertexColors,
-            linewidth: 10,
+            linewidth: 4,
         });
         var geometry = new THREE.Geometry();
         var n = v0.length;
@@ -408,22 +437,21 @@ class App3D {
             spheres (list): List of THREE.Mesh objects
         */
         var n = 1;
-        n = (x.hasOwnProperty("length")) ? x.length : n;
-        n = (y.hasOwnProperty("length")) ? y.length : n;
-        n = (z.hasOwnProperty("length")) ? z.length : n;
-        c = (c === undefined) ? 0x808080 : c;
-        r = (r === undefined) ? 1 : r;
+        r = r || 1;
+        c = c || x808080;
+        n = x.length || n;
+        n = y.length || n;
+        n = z.length || n;
         c = (!c.hasOwnProperty("length")) ? utils.repeat_obj(c, n) : c;
         r = (!r.hasOwnProperty("length")) ? utils.repeat_obj(r, n) : r;
         l = (l == "") ? utils.repeat_obj(l, n) : l;
-        console.log("labels", l);
         var geometries = {};
         // var materials = {};
         for (var i=0; i<n; i++) {
             var color = c[i];
             var radius = r[i];
-            if (geometries.hasOwnProperty(color) === false) {
-                geometries[color] = new THREE.SphereGeometry(radius, 24, 24);
+            if (!geometries.hasOwnProperty(color)) {
+                geometries[color] = new THREE.SphereGeometry(radius, 20, 20);
             };
             // if (materials.hasOwnProperty(color) === false) {
             //     materials[color] = new THREE.MeshPhongMaterial({
@@ -465,12 +493,11 @@ class App3D {
             linesegs (THREE.LineSegments): Line segment objects
         */
         var r = 0.05;
-        // var material = new THREE.MeshPhongMaterial({
-        //     vertexColors: THREE.VertexColors,
-        //     color: 0x606060,
-        //     specular: 0x606060,
-        //     shininess: 5,
-        // });
+        var mat = new THREE.MeshPhongMaterial({
+            vertexColors: THREE.VertexColors,
+            color: 0x606060,
+            specular: 0x606060,
+            shininess: 5});
         var meshes = [];
         var n = v0.length;
         for (var i=0; i<n; i++) {
@@ -492,13 +519,7 @@ class App3D {
             for (var l=0; l<nn; l++) {
                 geometry.faces[l].vertexColors[0] =
             };*/
-            var material = new THREE.MeshPhongMaterial({
-                vertexColors: THREE.VertexColors,
-                color: 0x606060,
-                specular: 0x606060,
-                shininess: 5,
-            });
-            var mesh = new THREE.Mesh(geometry, material);
+            var mesh = new THREE.Mesh(geometry, mat.clone());
             mesh.name = (length * 0.52918).toFixed(4) + "\u212B";
             mesh.position.set(center.x, center.y, center.z);
             mesh.lookAt(vector1);
@@ -513,7 +534,7 @@ class App3D {
         -----------------
         Create a wireframe object
         */
-        color = (color === undefined) ? 0x808080 : color;
+        color = color || 0x808080;
         var geometry = new THREE.Geometry();
         for (var v of vertices) {
             geometry.vertices.push(new THREE.Vector3(v[0], v[1], v[2]));
@@ -530,6 +551,10 @@ class App3D {
         return [cell];
     };
 
+    get_camera() {
+        return this.camera.toJSON();
+    };
+
     set_camera(kwargs) {
         /*"""
         set_camera
@@ -537,35 +562,35 @@ class App3D {
         Set the camera in the default position and have it look at the origin.
 
         Args:
-            kwargs: {"x": x, "y": y, ..., "ox": ox, ...}
+            kwargs: {"x": x, "y": y, ..., "ox": ox, ..., "rx": rx, ...}
         */
-        kwargs = (kwargs === undefined) ? {"x": 40.0, "y": 40.0, "z": 40.0} : kwargs;
+        kwargs = kwargs || {"x": 40.0, "y": 40.0, "z": 40.0};
         for (var key of ["x", "y", "z"]) {
             if (!kwargs.hasOwnProperty(key)) {
                 kwargs[key] = 60.0;
             } else {
-                if (kwargs[key] === undefined || isNaN(kwargs[key]) || !isFinite(kwargs[key])) {
-                    kwargs[key] = 60.0;
-                };
-            };
+                if ((!kwargs[key]) ||
+                    (isNaN(kwargs[key])) ||
+                    (!isFinite(kwargs[key]))) {
+                        kwargs[key] = 60.0}};
         };
         for (var key of ["rx", "ry", "rz"]) {
             if (!kwargs.hasOwnProperty(key)) {
                 kwargs[key] = 0.5;
             } else {
-                if (kwargs[key] === undefined || isNaN(kwargs[key]) || !isFinite(kwargs[key])) {
-                    kwargs[key] = 0.5;
-                };
-            };
+                if ((!kwargs[key]) ||
+                    (isNaN(kwargs[key])) ||
+                    (!isFinite(kwargs[key]))) {
+                        kwargs[key] = 0.5}};
         };
         for (var key of ["ox", "oy", "oz"]) {
             if (!kwargs.hasOwnProperty(key)) {
                 kwargs[key] = 0.0;
             } else {
-                if (kwargs[key] === undefined || isNaN(kwargs[key]) || !isFinite(kwargs[key])) {
-                    kwargs[key] = 0.0;
-                };
-            };
+                if ((!kwargs[key]) ||
+                    (isNaN(kwargs[key])) ||
+                    (!isFinite(kwargs[key]))) {
+                        kwargs[key] = 0.0}};
         };
 
         var x = kwargs["x"] + kwargs["rx"];
@@ -580,12 +605,26 @@ class App3D {
         this.controls.target = this.target;
     };
 
+    set_camera_from_camera(camera) {
+        var loader = new THREE.ObjectLoader();
+        var newcam = loader.parse(camera);
+        this.camera = newcam;
+        var that = this;
+        this.init_controls()
+            .then(function(o) {
+                that.controls = o;
+                that.controls.addEventListener(
+                    "change", that.render.bind(that))
+            });
+        this.render();
+    };
+
     set_camera_from_mesh(mesh, rx, ry, rz) {
         /*"""
         */
-        rx = (rx === undefined) ? 2.0 : rx;
-        ry = (ry === undefined) ? 2.0 : ry;
-        rz = (rz === undefined) ? 2.0 : rz;
+        rx = rx || 2.0;
+        ry = ry || 2.0;
+        rz = rz || 2.0;
         var position;
         if (mesh.geometry.type === "BufferGeometry") {
             position = mesh.geometry.attributes.position.array;
@@ -634,9 +673,12 @@ class App3D {
         var ox = (max.x + min.x) / 2;
         var oy = (max.y + min.y) / 2;
         var oz = (max.z + min.z) / 2;
-        max.x *= 1.2;
-        max.y *= 1.2;
-        max.z *= 1.2;
+        max.x *= 2.0;
+        max.y *= 2.0;
+        max.z *= 2.0;
+        max.x = Math.max(max.x, 30);
+        max.y = Math.max(max.y, 30);
+        max.z = Math.max(max.z, 30);
         var kwargs = {"x": max.x, "y": max.y, "z": max.z,
                       "ox": ox, "oy": oy, "oz": oz};
         this.set_camera(kwargs);
@@ -648,34 +690,32 @@ class App3D {
         ------------------------
         Create contour lines of a scalar field
         */
-        var contours = this.march_squares(field, ncontour, clims, axis, val);
-        var pgeom = new THREE.Geometry();
-        var ngeom = new THREE.Geometry();
-        for (var i=0; i<ncontour; i++) {
+        var rets = this.march_squares(field, ncontour, clims, axis, val);
+        var contours = rets["verts"];
+        var labels = rets["contours"];
+        var ngeom, pgem, ncont2;
+        var meshes = [];
+        var nmat = new THREE.LineBasicMaterial({color: colors["neg"],
+                                                linewidth: 4});
+        var pmat = new THREE.LineBasicMaterial({color: colors["pos"],
+                                                linewidth: 4});
+        for (var i=0, i2=i+ncontour; i<ncontour; i++, i2++) {
+            var ngeom = new THREE.Geometry();
+            var pgeom = new THREE.Geometry();
             for (var vec of contours[i]) {
-                ngeom.vertices.push(new THREE.Vector3(
-                    vec[0], vec[1], vec[2]
-                ));
+                ngeom.vertices.push(new THREE.Vector3(vec[0], vec[1], vec[2]));
             };
-        };
-        for (var i=ncontour; i<(2 * ncontour); i++) {
-            for (var vec of contours[i]) {
-                pgeom.vertices.push(new THREE.Vector3(
-                    vec[0], vec[1], vec[2]
-                ));
+            for (var vec of contours[i2]) {
+                pgeom.vertices.push(new THREE.Vector3(vec[0], vec[1], vec[2]));
             };
+            var nmesh = new THREE.LineSegments(ngeom, nmat.clone());
+            var pmesh = new THREE.LineSegments(pgeom, pmat.clone());
+            nmesh.name = labels[i].toFixed(6);
+            pmesh.name = labels[i2].toFixed(6);
+            meshes.push(nmesh);
+            meshes.push(pmesh);
         };
-        var pmesh = new THREE.LineSegments(pgeom,
-            new THREE.LineBasicMaterial({
-                color: colors["pos"],
-                linewidth: 4
-            }));
-        var nmesh = new THREE.LineSegments(ngeom,
-            new THREE.LineBasicMaterial({
-                color: colors["neg"],
-                linewidth: 4
-            }));
-        return [pmesh, nmesh];
+        return meshes;
     };
 
     add_scalar_field(field, iso, sides, colors) {
@@ -688,304 +728,133 @@ class App3D {
         of vertices that intersect the provided field magnitude (isovalue).
         There are a couple of algorithms that do this.
         */
-        sides = (sides === undefined) ? 1 : sides;
-        iso = (iso === undefined) ? 0 : iso;
+        var meshes;
+        iso = iso || 0;
+        sides = sides || 1;
         if (sides == 1) {
-            var meshes = this.march_cubes1(field, iso);
+            meshes = this.march_cubes1(field, iso);
         } else if (sides == 2) {
-            var meshes = this.march_cubes2(field, iso, colors);
+            meshes = this.march_cubes2(field, iso, colors);
         };
         return meshes;
     };
 
-    add_unit_axis() {
+    add_unit_axis(fill) {
         /*"""
         add_unit_axis
         ---------------
         Adds a unit length coordinate axis at the origin
         */
+        var r = 0.05;
+        var meshes = [];
+        var axes = ["X", "Y", "Z"];
+        var dirs = [new THREE.Vector3(1, 0, 0),
+                    new THREE.Vector3(0, 1, 0),
+                    new THREE.Vector3(0, 0, 1)];
         var origin = new THREE.Vector3(0, 0, 0);
-        var xdir = new THREE.Vector3(1, 0, 0);
-        var ydir = new THREE.Vector3(0, 1, 0);
-        var zdir = new THREE.Vector3(0, 0, 1);
-        var x = new THREE.ArrowHelper(xdir, origin, 1.0, 0xFF0000);
-        var y = new THREE.ArrowHelper(ydir, origin, 1.0, 0x00FF00);
-        var z = new THREE.ArrowHelper(zdir, origin, 1.0, 0x0000FF);
-        //var x = new THREE.ArrowHelper(xdir, origin, 6.0, 0xFF0000, 1.5, 1.5);
-        //var y = new THREE.ArrowHelper(ydir, origin, 6.0, 0x00FF00, 1.5, 1.5);
-        //var z = new THREE.ArrowHelper(zdir, origin, 6.0, 0x0000FF, 1.5, 1.5);
-        x.line.material.linewidth = 5;
-        y.line.material.linewidth = 5;
-        z.line.material.linewidth = 5;
-        return [x, y, z];
+        var cols = [0xFF0000, 0x00FF00, 0x0000FF];
+        for (var i=0; i < 3; i++) {
+            if (fill) {
+                var dir = new THREE.Vector3().subVectors(dirs[i], origin);
+                var cen = new THREE.Vector3().addVectors(dirs[i], origin);
+                var cln = dirs[i].clone();
+                cln.multiplyScalar(1.25);
+                var cdir = new THREE.Vector3().subVectors(cln, dirs[i]);
+                var ccen = new THREE.Vector3().addVectors(cln, dirs[i]);
+                cen.divideScalar(2.0);
+                ccen.divideScalar(2.0);
+                var len = dir.length();
+                var clen = cdir.length();
+                var g = new THREE.CylinderGeometry(r, r, len);
+                var c = new THREE.CylinderGeometry(0, 3 * r, clen);
+                g.applyMatrix(new THREE.Matrix4().makeRotationX(Math.PI / 2));
+                c.applyMatrix(new THREE.Matrix4().makeRotationX(Math.PI / 2));
+                var mat = new THREE.MeshPhongMaterial({
+                    vertexColors: THREE.VertexColors,
+                    color: cols[i], specular: cols[i], shininess: 5});
+                var bar = new THREE.Mesh(g, mat);
+                var cone = new THREE.Mesh(c, mat.clone());
+                bar.name = axes[i] + " axis";
+                cone.name = axes[i] + " axis";
+                bar.position.set(cen.x, cen.y, cen.z);
+                cone.position.set(ccen.x, ccen.y, ccen.z);
+                bar.lookAt(dir);
+                cone.lookAt(cln);
+                meshes.push(bar);
+                meshes.push(cone);
+            } else {
+                var mesh = new THREE.ArrowHelper(dirs[i], origin, 1.0, cols[i]);
+                mesh.line.material.linewidth = 4;
+                meshes.push(mesh);
+            };
+        };
+        return meshes;
     };
 
-    march_cubes1(field, isovalue) {
-        /*"""
-        march_cubes1
-        ------------------------
-        Run the marching cubes algorithm finding the volumetric shell that is
-        smaller than the isovalue.
-
-        The marching cubes algorithm takes a scalar field and for each field
-        vertex looks at the nearest indices (in an evenly space field this
-        forms a cube), determines along what edges the scalar field is less
-        than the isovalue, and creates new vertices along the edges of the
-        field's cube. The at each point in the field, a cube is created with
-        vertices numbered:
-               4-------5
-             / |     / |
-            7-------6  |
-            |  0----|--1
-            | /     | /
-            3-------2
-        Field values are given for each field vertex. Edges are
-        labeled as follows (see the lookup table below).
-
-                                            4
-               o-------o                o-------o
-             / |     / |            7 / | 6   / |  5
-            o-------o  |             o-------o  |
-            |  o----|--o             |  o----|--o
-          3 | /   0 | / 1            | /     | /
-            o-------o                o-------o
-               2
-        Edges 8, 9, 10, and 11 wrap around (clockwise looking from the top
-        as drawn) the vertical edges of the cube, with 8 being the vertical
-        edge between vertex 0 and 4 (see above).
-
-        Note:
-            Scalar fields are assumed to be in row major order (also known C
-            style, and implies that the last index is changing the fastest).
-
-        See Also:
-            **field.js**
-        */
-        console.log("mc1");
-        var nx = field.nx;
-        var ny = field.ny;
-        var nz = field.nz;
-        var nnx = nx - 1;
-        var nny = ny - 1;
-        var nnz = nz - 1;
-        // Field cube objects
-        var xyz = new Array(8);                    // vertex coordinates
-        var values = new Float32Array(8);          // vertex values (magnitudes)
-        var value_index;
-        var cube_index = 0;
-        var integer = 0;
-        var alpha = 0.5;
-        var check = 1;
-        // Resulting vertices
-        var face_vertices = new Int32Array(12);    // vertices of the resultant faces
-        // THREE
-        var geometry = new THREE.Geometry();
+    march_cubes1(field, iso) {
+        var start = new Date().getTime();
+        var nnx = field.nx - 1;
+        var nny = field.ny - 1;
+        var nnz = field.nz - 1;
+        var geom = new THREE.Geometry();
         for (var i=0; i<nnx; i++) {
             for (var j=0; j<nny; j++) {
                 for (var k=0; k<nnz; k++) {
-                    cube_index = 0;
-                    for (var m=0; m<8; m++) {    // Search the field cube
-                        var offset = this.cube_vertices[m];
-                        var oi = offset[0];
-                        var oj = offset[1];
-                        var ok = offset[2];
-                        var ii = i + oi;
-                        var jj = j + oj;
-                        var kk = k + ok;
-                        xyz[m] = new THREE.Vector3(field.x[ii], field.y[jj], field.z[kk]);
-                        var value_index = i * ny * nz + j * nz + k + oi * ny * nz + oj * nz + ok;
-                        values[m] = field.values[value_index];
-                        if (values[m] < isovalue) {
-                            cube_index |= this.bits[m];
-                        };
-                    };
-                    integer = this.edge_table[cube_index];
-                    if (integer === 0) continue;
-                    alpha = 0.5;
-                    for (var m=0; m<12; m++) {
-                        check = 1 << m;
-                        if (integer & check) {
-                            face_vertices[m] = geometry.vertices.length;
-                            var vertex_pair = this.cube_edges[m];
-                            var a = vertex_pair[0];
-                            var b = vertex_pair[1];
-                            var xyz_a = xyz[a];
-                            var xyz_b = xyz[b];
-                            var val_a = values[a];
-                            var val_b = values[b];
-                            alpha = (isovalue - val_a) / (val_b - val_a);
-                            var vertex = xyz_a.clone().lerp(xyz_b, alpha);    // Clone is critical otherwise reference to Vector3 object gets obfusticated
-                            geometry.vertices.push(vertex);
-                        };
-                    };
-
-                    var cur_face_verts = this.tri_table[cube_index];
-                    var num_face_verts = cur_face_verts.length;
-                    for (var m=0; m<num_face_verts; m+=3) {
-                        var i0 = face_vertices[cur_face_verts[m]];
-                        var i1 = face_vertices[cur_face_verts[m+1]];
-                        var i2 = face_vertices[cur_face_verts[m+2]];
-                        var face = new THREE.Face3(i0, i1, i2);
-                        geometry.faces.push(face);
-                    };
+                    this.traverse_cube_single(field, i, j, k, geom, iso);
                 };
             };
         };
-        geometry.mergeVertices();
-        geometry.computeFaceNormals();
-        geometry.computeVertexNormals();
-        var material = new THREE.MeshLambertMaterial({color:0x606060,
-                                                      side: THREE.DoubleSide});
-        var mat = new THREE.MeshBasicMaterial({color: 0x909090,
-                                               wireframe: true});
-        var frame = new THREE.Mesh(geometry, mat);
-        var filled = new THREE.Mesh(geometry, material);
+        geom.mergeVertices();
+        geom.computeFaceNormals();
+        geom.computeVertexNormals();
+        var frame = new THREE.Mesh(geom,
+            new THREE.MeshBasicMaterial({color: 0x909090, wireframe: true}));
+        var filled = new THREE.Mesh(geom,
+            new THREE.MeshLambertMaterial({color:0x606060, side: THREE.DoubleSide}));
+        var stop = new Date().getTime();
+        var diff = stop - start;
+        console.log("mc1: " + diff + " ms");
         return [filled, frame];
     };
 
-    march_cubes2(field, isovalue, colors) {
-        /*"""
-        march_cubes2
-        ------------------------
-        Similar to the above but for finding positive and negative surfaces.
-        */
-        console.log("mc2");
-        var nx = field.nx;
-        var ny = field.ny;
-        var nz = field.nz;
-        var nnx = nx - 1;
-        var nny = ny - 1;
-        var nnz = nz - 1;
-        // Field cube objects
-        var xyz = new Array(8);                    // vertex coordinates
-        var values = new Float32Array(8);          // vertex values (magnitudes)
-        var value_index;
-        var p_cube_index = 0;
-        var n_cube_index = 0;
-        var p_integer = 0;
-        var n_integer = 0;
-        var alpha = 0.5;
-        var check = 1;
-        // Resulting vertices
-        var face_vertices = new Int32Array(12);    // vertices of the resultant faces
-        // THREE
-        var p_geometry = new THREE.Geometry();
-        var n_geometry = new THREE.Geometry();
-        for (var i=0; i<nnx; i++) {
-            for (var j=0; j<nny; j++) {
-                for (var k=0; k<nnz; k++) {
-                    p_cube_index = 0;
-                    n_cube_index = 0;
-                    for (var m=0; m<8; m++) {    // Search the field cube
-                        var offset = this.cube_vertices[m];
-                        var oi = offset[0];
-                        var oj = offset[1];
-                        var ok = offset[2];
-                        var ii = i + oi;
-                        var jj = j + oj;
-                        var kk = k + ok;
-                        xyz[m] = new THREE.Vector3(field.x[ii], field.y[jj], field.z[kk]);
-                        var value_index = i * ny * nz + j * nz + k + oi * ny * nz + oj * nz + ok;
-                        values[m] = field.values[value_index];
-                        if (values[m] < isovalue) {
-                            p_cube_index |= this.bits[m];
-                        };
-                        if (values[m] < -isovalue) {
-                            n_cube_index |= this.bits[m];
-                        };
-                    };
-
-                    p_integer = this.edge_table[p_cube_index];
-                    if (p_integer !== 0) {
-                        alpha = 0.5;
-                        for (var m=0; m<12; m++) {
-                            check = 1 << m;
-                            if (p_integer & check) {
-                                face_vertices[m] = p_geometry.vertices.length;
-                                var vertex_pair = this.cube_edges[m];
-                                var a = vertex_pair[0];
-                                var b = vertex_pair[1];
-                                var xyz_a = xyz[a];
-                                var xyz_b = xyz[b];
-                                var val_a = values[a];
-                                var val_b = values[b];
-                                alpha = (isovalue - val_a) / (val_b - val_a);
-                                var vertex = xyz_a.clone().lerp(xyz_b, alpha);    // Clone is critical otherwise reference to Vector3 object gets obfusticated
-                                p_geometry.vertices.push(vertex);
-                            };
-                        };
-
-                        var cur_face_verts = this.tri_table[p_cube_index];
-                        var num_face_verts = cur_face_verts.length;
-                        for (var m=0; m<num_face_verts; m+=3) {
-                            var i0 = face_vertices[cur_face_verts[m]];
-                            var i1 = face_vertices[cur_face_verts[m+1]];
-                            var i2 = face_vertices[cur_face_verts[m+2]];
-                            var face = new THREE.Face3(i0, i1, i2);
-                            p_geometry.faces.push(face);
-                        };
-                    };
-
-                    n_integer = this.edge_table[n_cube_index];
-                    if (n_integer !== 0) {
-                        alpha = 0.5;
-                        for (var m=0; m<12; m++) {
-                            check = 1 << m;
-                            if (n_integer & check) {
-                                face_vertices[m] = n_geometry.vertices.length;
-                                var vertex_pair = this.cube_edges[m];
-                                var a = vertex_pair[0];
-                                var b = vertex_pair[1];
-                                var xyz_a = xyz[a];
-                                var xyz_b = xyz[b];
-                                var val_a = values[a];
-                                var val_b = values[b];
-                                alpha = (-isovalue - val_a) / (val_b - val_a);
-                                var vertex = xyz_a.clone().lerp(xyz_b, alpha);    // Clone is critical otherwise reference to Vector3 object gets obfusticated
-                                n_geometry.vertices.push(vertex);
-                            };
-                        };
-
-                        var cur_face_verts = this.tri_table[n_cube_index];
-                        var num_face_verts = cur_face_verts.length;
-                        for (var m=0; m<num_face_verts; m+=3) {
-                            var i0 = face_vertices[cur_face_verts[m]];
-                            var i1 = face_vertices[cur_face_verts[m+1]];
-                            var i2 = face_vertices[cur_face_verts[m+2]];
-                            var face = new THREE.Face3(i0, i1, i2);
-                            n_geometry.faces.push(face);
-                        };
-
-                    }
+    march_cubes2(field, iso, colors) {
+        var start = new Date().getTime();
+        var nnx, nny, nnz;
+        var nnx = field.nx - 1;
+        var nny = field.ny - 1;
+        var nnz = field.nz - 1;
+        var pgeom = new THREE.Geometry();
+        var ngeom = new THREE.Geometry();
+        for (var i = 0; i < nnx; i++) {
+            for (var j = 0; j < nny; j++) {
+                for (var k = 0; k < nnz; k++) {
+                    this.traverse_cube_double(field, i, j, k, pgeom, ngeom, iso);
                 };
             };
         };
-        p_geometry.mergeVertices();
-        p_geometry.computeFaceNormals();
-        p_geometry.computeVertexNormals();
-        n_geometry.mergeVertices();
-        n_geometry.computeFaceNormals();
-        n_geometry.computeVertexNormals();
-        var p_material = new THREE.MeshPhongMaterial({
-            color: colors['pos'],
-            specular: colors['pos'],
-            side: THREE.DoubleSide,
-            shininess: 15
-        });
-        var n_material = new THREE.MeshPhongMaterial({
-            color: colors['neg'],
-            specular: colors['neg'],
-            side: THREE.DoubleSide,
-            shininess: 15
-        });
-        var mesh1 = new THREE.Mesh(p_geometry, p_material);
-        var mesh2 = new THREE.Mesh(n_geometry, n_material);
-        return [mesh1, mesh2];
+        pgeom.mergeVertices();
+        ngeom.mergeVertices();
+        pgeom.computeFaceNormals();
+        ngeom.computeFaceNormals();
+        pgeom.computeVertexNormals();
+        ngeom.computeVertexNormals();
+        var pmesh = new THREE.Mesh(pgeom,
+            new THREE.MeshPhongMaterial({
+                color: colors["pos"], specular: colors["pos"],
+                side: THREE.DoubleSide, shininess: 15}));
+        var nmesh = new THREE.Mesh(ngeom,
+            new THREE.MeshPhongMaterial({
+                color: colors["neg"], specular: colors["neg"],
+                side: THREE.DoubleSide, shininess: 15}));
+        pmesh.name =  iso;
+        nmesh.name = -iso;
+        var stop = new Date().getTime();
+        var diff = stop - start;
+        console.log("mc2: " + diff + " ms");
+        return [pmesh, nmesh];
     };
 
     march_squares(field, ncontour, clims, axis, val) {
-        console.log("ms");
-
         // Get the contour values given the limits and number of lines
         var z = App3D.prototype.compute_contours(ncontour, clims);
         var nc = z.length;
@@ -1006,7 +875,6 @@ class App3D {
 
         // Probably don't need as many empty arrays as number of contours
         // but need at least two for positive and negative contours.
-        // exa.threejs.app.add_contours currently expects this behavior, however.
         var cverts = [];
         for(var i = 0; i < nc; i++) {
           cverts.push([]);
@@ -1045,10 +913,10 @@ class App3D {
             // But at the beginning of the x array
             for(var i = 0; i <= idim; i++) {
                 // The smallest and largest values in square of interest
-                tmp1 = Math.min(sq[i][j], sq[i][j + 1]);
+                tmp1 = Math.min(sq[  i  ][j], sq[  i  ][j + 1]);
                 tmp2 = Math.min(sq[i + 1][j], sq[i + 1][j + 1]);
                 dmin = Math.min(tmp1, tmp2);
-                tmp1 = Math.max(sq[i][j], sq[i][j + 1]);
+                tmp1 = Math.max(sq[  i  ][j], sq[  i  ][j + 1]);
                 tmp2 = Math.max(sq[i + 1][j], sq[i + 1][j + 1]);
                 dmax = Math.max(tmp1, tmp2);
                 // If outside all contour bounds, move along
@@ -1171,7 +1039,7 @@ class App3D {
         };
         // Default behavior of algorithm
         if (axis == "z") {
-            return cverts;
+            return {"verts": cverts, "contours": z};
         // cverts is populated assuming x, y correspond to x, y
         // dimensions in the cube file, but to avoid a double nested
         // if else inside the tight O(N^2) loop, just move around the
@@ -1196,10 +1064,136 @@ class App3D {
                 };
             };
         };
-        return rear;
+        return {"verts": rear, "contours": z};
     };
-
 };
+
+App3D.prototype.traverse_cube_single = function(field, i, j, k, geom, iso) {
+    /*"""
+    traverse_cube_single
+    ------------------------
+    Run the marching cubes algorithm finding the volumetric shell that is
+    smaller than the isovalue.
+
+    The marching cubes algorithm takes a scalar field and for each field
+    vertex looks at the nearest indices (in an evenly space field this
+    forms a cube), determines along what edges the scalar field is less
+    than the isovalue, and creates new vertices along the edges of the
+    field's cube. The at each point in the field, a cube is created with
+    vertices numbered:
+           4-------5
+         / |     / |
+        7-------6  |
+        |  0----|--1
+        | /     | /
+        3-------2
+    Field values are given for each field vertex. Edges are
+    labeled as follows (see the lookup table below).
+
+                                        4
+           o-------o                o-------o
+         / |     / |            7 / | 6   / |  5
+        o-------o  |             o-------o  |
+        |  o----|--o             |  o----|--o
+      3 | /   0 | / 1            | /     | /
+        o-------o                o-------o
+           2
+    Edges 8, 9, 10, and 11 wrap around (clockwise looking from the top
+    as drawn) the vertical edges of the cube, with 8 being the vertical
+    edge between vertex 0 and 4 (see above).
+
+    Note:
+        Scalar fields are assumed to be in row major order (also known C
+        style, and implies that the last index is changing the fastest).
+
+    */
+    var offset, nx, ny, nz, oi, oj, ok, ii, jj, kk, valdx, cubdx;
+    cubdx = 0;
+    nx = field.nx;
+    ny = field.ny;
+    nz = field.nz;
+    for (var m = 0; m < 8; m++) {
+        offset = App3D.prototype.cube_vertices[m];
+        oi = offset[0];
+        oj = offset[1];
+        ok = offset[2];
+        ii = i + oi;
+        jj = j + oj;
+        kk = k + ok;
+        App3D.prototype.vertex_coords[m] = new THREE.Vector3(
+            field.x[ii], field.y[jj], field.z[kk]);
+        var valdx = ( i * ny * nz +  j * nz +  k +
+                     oi * ny * nz + oj * nz + ok);
+        App3D.prototype.vertex_values[m] = field.values[valdx];
+        if (App3D.prototype.vertex_values[m] <  iso) {
+            cubdx |= App3D.prototype.bits[m];
+        };
+    };
+    App3D.prototype.push_vertices_and_faces(geom, cubdx,
+        App3D.prototype.vertex_coords, App3D.prototype.vertex_values, iso);
+};
+
+App3D.prototype.traverse_cube_double = function(field, i, j, k, pgeom, ngeom, iso) {
+    var offset, nx, ny, nz, oi, oj, ok, ii, jj, kk, valdx, pcubdx, ncubdx;
+    pcubdx = 0;
+    ncubdx = 0;
+    nx = field.nx;
+    ny = field.ny;
+    nz = field.nz;
+    for (var m = 0; m < 8; m++) {
+        offset = App3D.prototype.cube_vertices[m];
+        oi = offset[0];
+        oj = offset[1];
+        ok = offset[2];
+        ii = i + oi;
+        jj = j + oj;
+        kk = k + ok;
+        App3D.prototype.vertex_coords[m] = new THREE.Vector3(
+            field.x[ii], field.y[jj], field.z[kk]);
+        var valdx = ( i * ny * nz +  j * nz +  k +
+                     oi * ny * nz + oj * nz + ok);
+        App3D.prototype.vertex_values[m] = field.values[valdx];
+        if (App3D.prototype.vertex_values[m] <  iso) {
+            pcubdx |= App3D.prototype.bits[m];
+        };
+        if (App3D.prototype.vertex_values[m] < -iso) {
+            ncubdx |= App3D.prototype.bits[m];
+        };
+    };
+    App3D.prototype.push_vertices_and_faces(pgeom, pcubdx,
+        App3D.prototype.vertex_coords, App3D.prototype.vertex_values,  iso);
+    App3D.prototype.push_vertices_and_faces(ngeom, ncubdx,
+        App3D.prototype.vertex_coords, App3D.prototype.vertex_values, -iso);
+};
+
+
+App3D.prototype.push_vertices_and_faces = function(geom, idx, xyz, vals, iso) {
+    var check, interp, vpair, a, b;
+    var edge = App3D.prototype.edge_table[idx];
+    var curfaces = App3D.prototype.tri_table[idx];
+    if (edge !== 0) {
+        interp = 0.5;
+        for (var m = 0; m < 12; m++) {
+            check = 1 << m;
+            if (edge & check) {
+                App3D.prototype.face_vertices[m] = geom.vertices.length;
+                vpair = App3D.prototype.cube_edges[m];
+                a = vpair[0];
+                b = vpair[1];
+                interp = (iso - vals[a]) / (vals[b] - vals[a]);
+                geom.vertices.push(xyz[a].clone().lerp(xyz[b], interp));
+            };
+        };
+        var nfaces = curfaces.length;
+        for (var m = 0; m < nfaces; m += 3) {
+            var i0 = App3D.prototype.face_vertices[curfaces[  m  ]];
+            var i1 = App3D.prototype.face_vertices[curfaces[m + 1]];
+            var i2 = App3D.prototype.face_vertices[curfaces[m + 2]];
+            geom.faces.push(new THREE.Face3(i0, i1, i2));
+        };
+    };
+};
+
 
 App3D.prototype.sect = function(p1, p2, rh, w) {
     // Interpolate a value along the side of a square
@@ -1246,13 +1240,6 @@ App3D.prototype.get_square = function(field, val, axis) {
         ny = field["nz"];
         nz = field["nx"];
     };
-    //
-    // for(var i = 0; i < dims[xidx]; i++) {
-    //     x.push(orig[xidx] + i * scale[xidx]);
-    // };
-    // for(var j = 0; j < dims[yidx]; j++) {
-    //     y.push(orig[yidx] + j * scale[yidx]);
-    // };
 
     var idx = 0;
     var cur = 0;
@@ -1690,6 +1677,10 @@ App3D.prototype.cube_vertices = [[0, 0, 0], [1, 0, 0], [1, 1, 0], [0, 1, 0],
 App3D.prototype.cube_edges = [[0, 1], [1, 2], [2, 3], [3, 0], [4, 5], [5, 6],
                               [6, 7], [7, 4], [0, 4], [1, 5], [2, 6], [3, 7]];
 App3D.prototype.bits = [1, 2, 4, 8, 16, 32, 64, 128];
+App3D.prototype.face_vertices = new Int32Array(12);
+App3D.prototype.vertex_coords = new Array(8);
+App3D.prototype.vertex_values = new Float32Array(8);
+
 
 module.exports = {
     App3D: App3D
