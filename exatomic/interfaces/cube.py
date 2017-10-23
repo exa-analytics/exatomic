@@ -7,14 +7,20 @@ Cube File Support
 Cube files contain an atomic geometry and scalar field values corresponding to
 a physical quantity.
 """
+import six
 import numpy as np
 import pandas as pd
-from exa import Series
-from exatomic import __version__, Atom, Editor, AtomicField
+from exa import Series, TypedMeta
+from exatomic import __version__, Atom, Editor, AtomicField, Frame
 from exatomic.base import z2sym, sym2z
 
+class Meta(TypedMeta):
+    atom = Atom
+    frame = Frame
+    field = AtomicField
 
-class Cube(Editor):
+
+class Cube(six.with_metaclass(Meta, Editor)):
     """
     An editor for handling cube files.
 
