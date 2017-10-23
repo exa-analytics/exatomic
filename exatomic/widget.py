@@ -207,6 +207,7 @@ class ExatomicScene(DOMWidget):
             f.write(b64decode(content.replace(repl, '')))
 
     def _set_camera(self, c):
+        if c.new == -1: return
         self.send({'type': 'camera',
                    'content': self.cameras[c.new]})
 
@@ -259,9 +260,9 @@ class ExatomicBox(Box):
 
         copts = OrderedDict([
             ('get', Button(icon='arrow-circle-down', description=' Save')),
-            ('set', IntSlider(description='Load', min=0,
-                              max=max(len(self.scene.cameras)-1,0),
-                              value=0, step=1))])
+            ('set', IntSlider(description='Load', min=-1,
+                              max=len(self.scene.cameras) - 1,
+                              value=-1, step=1))])
         def _save_camera(b):
             self.scene.save_cam = self.scene.save_cam == False
             (self.active_controls['camera']
