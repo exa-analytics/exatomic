@@ -25,12 +25,12 @@ install:
   - git clone https://github.com/avmarchenko/exa.git
   - cd exa
   - conda install -q -c conda-forge `cat requirements.txt`
-  - conda install -q -c conda-forge pytables python-coveralls ply pandoc pypandoc nbsphinx sympy
+  - conda install -q -c conda-forge pytables python-coveralls ply pandoc pypandoc nbsphinx
   - pip install travis-sphinx codacy-coverage coverage
   - pip install .
   - cd ../
 # - conda install -q -c exaanalytics exa
-  - conda install -q -c conda-forge psutil numexpr nodejs ipywidgets
+  - conda install -q -c conda-forge psutil numexpr nodejs ipywidgets symengine python-symengine
   - pip install .
 
 script:

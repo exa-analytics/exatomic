@@ -4,6 +4,15 @@
 """
 Base Functionality
 ############################
+This module provides conversion/mappers between element symbols, Z, mass, and
+radius.
+
+Attributes:
+    sym2z: Mapper between element symbols and Z number
+    z2sym: Mapper from Z to element symbol
+    sym2mass: Mapper from symbol to mass
+    sym2radius: Mapper from symbol to radius
+    sym2color: Mapper from symbol to color
 """
 from exa.util import isotopes
 
