@@ -1,3 +1,4 @@
 ipywidgets
 psutil
 numexpr
+symengine

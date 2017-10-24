@@ -44,9 +44,5 @@ def _jupyter_nbextension_paths():
     }]
 
 
-__js_version__ = "0.3.9"
+__js_version__ = "0.4.0"
 from ._version import __version__
-from . import core
-from .core import Universe, Editor, Atom, AtomicField, Frame
-from .interfaces import XYZ, Cube
-from .widget import TestContainer, TestUniverse, UniverseWidget

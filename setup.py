@@ -10,7 +10,7 @@ from setuptools.command.egg_info import egg_info
 
 
 name = "exatomic"
-description = "A unified platform for theoretical and computational chemists."
+description = "A unified platform for theoretical and computational chemists"
 staticdir = "static"
 jsdir = "js"
 jsroot = os.path.abspath(jsdir)

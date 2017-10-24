@@ -10,7 +10,7 @@ forces, velocities, symbols, etc. (all data associated with atoms as points).
 from numbers import Integral
 import numpy as np
 import pandas as pd
-from exa import DataFrame, SparseDataFrame, Series
+from exa import DataFrame, SparseDataFrame, DataSeries
 from exa.util.units import Length
 from exatomic.base import sym2z, sym2mass
 from exatomic.algorithms.distance import modv
@@ -137,7 +137,7 @@ class Atom(DataFrame):
             labels (:class:`~exa.core.numerical.Series`): Enumerated atom labels (of type int)
         """
         nats = self.cardinal_groupby().size().values
-        labels = Series([i for nat in nats for i in range(nat)], dtype='category')
+        labels = DataSeries([i for nat in nats for i in range(nat)], dtype='category')
         labels.index = self.index
         return labels
 
