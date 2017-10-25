@@ -37,7 +37,7 @@ class GaussianBasisSet(DataFrame):
     $A$ imply quantities such as $x_A = x - A_x$.
 
     Attributes:
-        function (int): Tracks functions in a contracted basis
+        fn (int): Tracks functions in a contracted basis
         l (int): Orbital angular momentum quantum number
         m (int): Spin angular momentum quantum number (orbital orientation)
         a (float): Primitive exponent (see above)
@@ -47,7 +47,7 @@ class GaussianBasisSet(DataFrame):
     spherical = Typed(bool, doc="Spherical (true) or Cartesian (false) basis.")
     order = Typed(FunctionType, doc="Function that defines basis set order (expanded in spin).")
     prim = Index(int)
-    function = Column(int, required=True)
+    fn = Column(int, required=True)
     l = Column(int, required=True)
     a = Column(float, required=True)
     d = Column(float, required=True)
