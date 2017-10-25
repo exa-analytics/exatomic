@@ -32,8 +32,8 @@ method to get started with visualization is through the `Jupyter notebook`_.
     :maxdepth: 2
     :caption: Software 
 
-    adf.rst
-    nwchem.rst
+    software/adf/index.rst
+    software/nwchem/index.rst
 
 .. toctree::
     :maxdepth: 1

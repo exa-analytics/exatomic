@@ -28,7 +28,8 @@ can be found at :ref:`examples-label` or via help::
     :maxdepth: 2
     :caption: Core API
 
-    api/container.rst
+    api/atom.rst
+    api/basis.rst
 
 
 ########################
