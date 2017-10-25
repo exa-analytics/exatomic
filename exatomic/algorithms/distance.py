@@ -4,12 +4,19 @@
 """
 Two Body Properties Computations
 #####################################
+Full parallelized (for Linux/Unix based systems).
 """
 import numpy as np
 import numba as nb
+import platform
 
 
-@nb.vectorize(["float64(float64, float64, float64)"], nopython=True, target="parallel")
+parallel = False if "windows" in platform.system().lower() else True
+target = "parallel" if parallel else "cpu"
+
+
+@nb.vectorize(["float64(float64, float64, float64)"],
+              nopython=True, target=target)
 def cartmag(x, y, z):
     """
     Vectorized operation to compute the magnitude of a three component array.
@@ -17,7 +24,8 @@ def cartmag(x, y, z):
     return np.sqrt(x**2 + y**2 + z**2)
 
 
-@nb.vectorize(["float64(float64, float64)"], nopython=True, target="parallel")
+@nb.vectorize(["float64(float64, float64)"],
+              nopython=True, target=target)
 def modv(x, y):
     """
     Vectorized modulo operation.
@@ -32,7 +40,7 @@ def modv(x, y):
     return np.mod(x, y)
 
 
-@nb.jit(nopython=True, nogil=True, parallel=True)
+@nb.jit(nopython=True, nogil=True, parallel=parallel)
 def pdist_ortho(ux, uy, uz, a, b, c, index, dmax=8.0):
     """
     Pairwise two body calculation for bodies in an orthorhombic periodic cell.
@@ -122,7 +130,7 @@ def pdist_ortho(ux, uy, uz, a, b, c, index, dmax=8.0):
     return dx, dy, dz, dr, ii, jj, projection
 
 
-@nb.jit(nopython=True, nogil=True, parallel=True)
+@nb.jit(nopython=True, nogil=True, parallel=parallel)
 def pdist_ortho_nv(ux, uy, uz, a, b, c, index, dmax=8.0):
     """
     Pairwise two body calculation for bodies in an orthorhombic periodic cell.
@@ -203,7 +211,7 @@ def pdist_ortho_nv(ux, uy, uz, a, b, c, index, dmax=8.0):
     return dr, ii, jj, projection
 
 
-@nb.jit(nopython=True, nogil=True, parallel=True)
+@nb.jit(nopython=True, nogil=True, parallel=parallel)
 def pdist(x, y, z, index, dmax=8.0):
     """
     Pairwise distance computation for points in cartesian space.
@@ -246,7 +254,7 @@ def pdist(x, y, z, index, dmax=8.0):
     return dx, dy, dz, dr, atom0, atom1
 
 
-@nb.jit(nopython=True, nogil=True, parallel=True)
+@nb.jit(nopython=True, nogil=True, parallel=parallel)
 def pdist_nv(x, y, z, index, dmax=8.0):
     """
     Pairwise distance computation for points in cartesian space.
