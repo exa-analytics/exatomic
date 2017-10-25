@@ -2,39 +2,46 @@
 # Copyright (c) 2015-2017, Exa Analytics Development Team
 # Distributed under the terms of the Apache License 2.0
 """
-Basis Set Support
-##########################
-Specific functions for NWChem basis set support.
+Parser for Output File Basis Set Block
+########################################
+Standalone parser for the basis set block of NWChem output files.
 """
-import numpy as np
+import re
+from exa import Parser, Typed, DataFrame
+from exatomic.core.basis import GaussianBasisSet, str2l
 
 
-def cartesian_ordering_function(l):
+class BasisSet(Parser):
     """
-    Generates an array of coordinates corresponding to powers of x, y, and z
-    in a set of linearly dependent cartesian basis functions, representative of
-    spin angular momentum values for a given orbital angular momentum.
+    Parser for the NWChem's printing of basis sets.
     """
-    m = l + 1
-    n = (m + 1) * m // 2
-    values = np.empty((n, 4), dtype=np.int64)
-    h = 0
-    for i in range(l, -1, -1):
-        for j in range(l, -1, -1):
-            for k in range(l, -1, -1):
-                if i + j + k == l:
-                    values[h] = [l, i, j, k]
-                    h += 1
-    return values
+    _start = re.compile("^\s*Basis \"")
+    _ek = re.compile("^ Summary of \"")
+    _k = "spherical"
+    _k0 = "Exponent"
+    _k1 = "("
+    _i0 = 2
+    _i1 = 4
+    _cols = ("function", "l", "a", "d", "tag")
+    basis_set = Typed(GaussianBasisSet, doc="Gaussian basis set description.")
 
+    def _parse_end(self, starts):
+        return [self.regex_next(self._ek, cursor=i[0]) for i in starts]
 
-def spherical_ordering_function(l):
-    """
-    Generates an array of spin angular momentum values corresponding to a given
-    orbital angular momentum.
-    """
-    if l == 0:
-        return np.array([0], dtype=np.int64)
-    elif l == 1:
-        return np.array([1, -1, 0], dtype=np.int64)
-    return np.arange(-l, l+1, 1, dtype=np.int64)
+    def parse_basis_set(self):
+        """
+        """
+        data = []
+        tag = None
+        spherical = True if self._k in self.lines[0] else False
+        for line in self:
+            if self._k0 not in line:
+                ls = line.split()
+                if len(ls) == self._i0 and self._k1 in line:
+                    tag = ls[0]
+                elif len(ls) == self._i1:
+                    data.append(ls+[tag])
+        basis_set = DataFrame(data, columns=self._cols)
+        basis_set['l'] = basis_set['l'].str.lower().map(str2l)
+        self.basis_set = GaussianBasisSet(basis_set, spherical=spherical, order=lambda x: x)
+

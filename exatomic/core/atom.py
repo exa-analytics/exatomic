@@ -9,6 +9,7 @@ forces, velocities, symbols, etc. (all data associated with atoms as points).
 """
 from pandas.core.dtypes.dtypes import CategoricalDtypeType
 from exa import DataFrame, Column, Index
+from exa.util.units import Length
 from exatomic.base import z2sym, sym2z
 
 
@@ -27,14 +28,33 @@ class Atom(DataFrame):
         return self['Z'].map(z2sym)
 
     @classmethod
-    def from_xyz(cls, xyz):
+    def from_xyz(cls, xyz, unit="Angstrom"):
         """
         Construct an :class:`~exatomic.core.atom.Atom` object from a
         dataframe like object with 'symbols', 'x', 'y', 'z', columns only.
+
+        Args:
+            xyz (DataFrame): DataFrame with columns as above
+            units (str): Default XYZ units (of length) are Angstrom
         """
         xyz['Z'] = xyz['symbol'].map(sym2z)
         xyz['frame'] = 0
-        return cls(xyz)
+        atom = cls(xyz)
+        atom.convert_xyz("au", unit)
+        return atom
+
+    def convert_xyz(self, to, frm="au"):
+        """
+        Convert the units of specified columns to desired units (in-place).
+
+        Args:
+            to (str): Desired unit name
+            frm (str): Original unit (default 'au')
+        """
+        conversion = Length[frm, to]
+        for q in ("x", "y", "z"):
+            self[q] *= conversion
+
 
 #from numbers import Integral
 #import numpy as np
