@@ -60,7 +60,8 @@ install:
   - cmd: pip install travis-sphinx codacy-coverage coverage
   - cmd: pip install .
   - cmd: cd ../
-  - cmd: conda install -q -c conda-forge psutil numexpr nodejs ipywidgets symengine
+  - cmd: conda install -q -c conda-forge psutil numexpr nodejs ipywidgets
+ #- cmd: conda install -q -c conda-forge symengine
   - cmd: pip install .
 
 build: false
