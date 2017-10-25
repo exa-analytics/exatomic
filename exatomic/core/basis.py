@@ -48,10 +48,10 @@ class GaussianBasisSet(DataFrame):
     order = Typed(FunctionType, doc="Function that defines basis set order (expanded in spin).")
     prim = Index(int)
     function = Column(int, required=True)
-    l = Column(str, required=True)
+    l = Column(int, required=True)
     a = Column(float, required=True)
     d = Column(float, required=True)
-    m = Column(str)
+    m = Column(int)
 
     def expand(self):
         """

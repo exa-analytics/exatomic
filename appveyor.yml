@@ -61,7 +61,8 @@ install:
   - cmd: pip install .
   - cmd: cd ../
   - cmd: conda install -q -c conda-forge psutil numexpr nodejs ipywidgets
- #- cmd: conda install -q -c conda-forge symengine
+  - cmd: conda install -q -c conda-forge cmake cython
+  - cmd: conda install -q -c conda-forge symengine
   - cmd: pip install .
 
 build: false
