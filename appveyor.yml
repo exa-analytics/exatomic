@@ -55,12 +55,12 @@ install:
   - cmd: conda update -q -y --all
   - cmd: git clone https://github.com/avmarchenko/exa.git
   - cmd: cd exa
-  - cmd: conda install -q -c conda-forge numpy scipy matplotlib seaborn networkx pandas nose numba pytables six
-  - cmd: conda install -q -c conda-forge pytables python-coveralls ply pandoc pypandoc nbsphinx
+  - cmd: conda install -q -c conda-forge numpy scipy matplotlib seaborn networkx pandas nose numba pytables
+  - cmd: conda install -q -c conda-forge pytables python-coveralls ply pandoc pypandoc nbsphinx six
   - cmd: pip install travis-sphinx codacy-coverage coverage
   - cmd: pip install .
   - cmd: cd ../
-  - conda install -q -c conda-forge psutil numexpr nodejs ipywidgets symengine python-symengine
+  - cmd: conda install -q -c conda-forge psutil numexpr nodejs ipywidgets symengine
   - cmd: pip install .
 
 build: false
