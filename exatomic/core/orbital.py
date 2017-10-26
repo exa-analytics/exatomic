@@ -25,9 +25,10 @@ import numpy as np
 from numba import jit
 from pandas.core.dtypes.dtypes import CategoricalDtypeType
 from exa import DataFrame, Index, Column
+from exatomic.base import nbpll
 
 
-@jit(nopython=True, nogil=True, parallel=True)
+@jit(nopython=True, nogil=True, parallel=nbpll)
 def _gen_mo_index(n):
     """
     Generate a pair index.

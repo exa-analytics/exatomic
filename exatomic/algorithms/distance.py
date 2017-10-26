@@ -8,16 +8,11 @@ Full parallelized (for Linux/Unix based systems).
 """
 import numpy as np
 import numba as nb
-import platform
-
-
-sysname= platform.system().lower()
-parallel = True if "linux" in sysname else False
-target = "parallel" if parallel else "cpu"
+from exatomic.base import nbtgt, nbpll
 
 
 @nb.vectorize(["float64(float64, float64, float64)"],
-              nopython=True, target=target)
+              nopython=True, target=nbtgt)
 def cartmag(x, y, z):
     """
     Vectorized operation to compute the magnitude of a three component array.
@@ -26,7 +21,7 @@ def cartmag(x, y, z):
 
 
 @nb.vectorize(["float64(float64, float64)"],
-              nopython=True, target=target)
+              nopython=True, target=nbtgt)
 def modv(x, y):
     """
     Vectorized modulo operation.
@@ -41,7 +36,7 @@ def modv(x, y):
     return np.mod(x, y)
 
 
-@nb.jit(nopython=True, nogil=True, parallel=parallel)
+@nb.jit(nopython=True, nogil=True, parallel=nbpll)
 def pdist_ortho(ux, uy, uz, a, b, c, index, dmax=8.0):
     """
     Pairwise two body calculation for bodies in an orthorhombic periodic cell.
@@ -131,7 +126,7 @@ def pdist_ortho(ux, uy, uz, a, b, c, index, dmax=8.0):
     return dx, dy, dz, dr, ii, jj, projection
 
 
-@nb.jit(nopython=True, nogil=True, parallel=parallel)
+@nb.jit(nopython=True, nogil=True, parallel=nbpll)
 def pdist_ortho_nv(ux, uy, uz, a, b, c, index, dmax=8.0):
     """
     Pairwise two body calculation for bodies in an orthorhombic periodic cell.
@@ -212,7 +207,7 @@ def pdist_ortho_nv(ux, uy, uz, a, b, c, index, dmax=8.0):
     return dr, ii, jj, projection
 
 
-@nb.jit(nopython=True, nogil=True, parallel=parallel)
+@nb.jit(nopython=True, nogil=True, parallel=nbpll)
 def pdist(x, y, z, index, dmax=8.0):
     """
     Pairwise distance computation for points in cartesian space.
@@ -255,7 +250,7 @@ def pdist(x, y, z, index, dmax=8.0):
     return dx, dy, dz, dr, atom0, atom1
 
 
-@nb.jit(nopython=True, nogil=True, parallel=parallel)
+@nb.jit(nopython=True, nogil=True, parallel=nbpll)
 def pdist_nv(x, y, z, index, dmax=8.0):
     """
     Pairwise distance computation for points in cartesian space.

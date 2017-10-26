@@ -2,10 +2,12 @@
 # Copyright (c) 2015-2017, Exa Analytics Development Team
 # Distributed under the terms of the Apache License 2.0
 """
-Base Functionality
+Base Variables
 ############################
-This module provides conversion/mappers between element symbols, Z, mass, and
-radius.
+This module provides some global configuration-like variables for the exatomic
+package. Some variables are used as internal only, e.g. for compilation using
+`numba`_. Other variables may be useful at the user level, e.g. conversions
+and mappers between element symbols, Z, mass, etc.
 
 Attributes:
     sym2z: Mapper between element symbols and Z number
@@ -15,7 +17,14 @@ Attributes:
     sym2color: Mapper from symbol to color
 """
 import os
+from platform import system
 from exa.util import isotopes
+
+
+# For numba compiled functions
+sysname= system().lower()
+nbpll = True if "linux" in sysname else False
+pbtgt = "parallel" if nbpll else "cpu"
 
 
 # Taken from exa
@@ -43,6 +52,7 @@ def resource(name):
             return os.path.abspath(os.path.join(path, name))
 
 
+# Element mappers
 isotopedf = isotopes.as_df()
 sym2z = isotopedf.drop_duplicates("symbol").set_index("symbol")["Z"].to_dict()
 z2sym = {v: k for k, v in sym2z.items()}
