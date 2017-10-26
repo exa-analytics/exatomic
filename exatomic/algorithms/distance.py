@@ -11,7 +11,8 @@ import numba as nb
 import platform
 
 
-parallel = False if "windows" in platform.system().lower() else True
+sysname= platform.system().lower()
+parallel = True if "linux" in sysname else False
 target = "parallel" if parallel else "cpu"
 
 
