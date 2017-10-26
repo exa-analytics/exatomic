@@ -12,11 +12,10 @@ a collection of structure text files need to be parsed into Pythonic data object
 and then organized into a container to facilitate visualization. Useful examples 
 can be found at :ref:`examples-label` or via help::
 
-    import exatomic
     help(exatomic)             # Package help
     help(exatomic.isotopes)    # Module help
     help(exatomic.Universe)    # Class help
-    exatomic.Universe?         # In an IPython environment (including the Jupyter notebook)
+    exatomic.Universe?         # IPython environment
 
 .. automodule:: exatomic.__init__
     :members:
@@ -25,15 +24,15 @@ can be found at :ref:`examples-label` or via help::
     :members:
 
 .. toctree::
+    :maxdepth: 4
+    :caption: Usage
+
+    universe.rst
+
+.. toctree::
     :maxdepth: 2
-    :caption: Core API
+    :caption: Extended API 
 
-    api/atom.rst
-    api/basis.rst
-
-
-########################
-Unittest Docs
-########################
-Source code of tests can sometimes provide useful information for developers
-and users.
+    atom.rst
+    basis.rst
+    orbital.rst

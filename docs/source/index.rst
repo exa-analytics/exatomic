@@ -21,25 +21,26 @@ method to get started with visualization is through the `Jupyter notebook`_.
     install.rst
     started.rst
     examples.rst
+    contrib.rst
 
 .. toctree::
-    :maxdepth: 2
-    :caption: General
+    :maxdepth: 4
+    :caption: API
 
-    api.rst
+    api/index.rst
 
 .. toctree::
-    :maxdepth: 2
+    :maxdepth: 4
+    :caption: QM
+
+    qm/index.rst
+
+.. toctree::
+    :maxdepth: 4
     :caption: Software 
 
     software/adf/index.rst
     software/nwchem/index.rst
-
-.. toctree::
-    :maxdepth: 1
-    :caption: Contributors
-
-    contrib.rst
 
 
 ##################

@@ -4,6 +4,6 @@
 #####################################
 Description of Basis Sets
 #####################################
-.. automodule:: exatomic.core.orbital
+.. automodule:: exatomic.core.basis
     :members:
 
