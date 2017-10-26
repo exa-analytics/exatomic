@@ -7,9 +7,10 @@ Two Body Properties Computations
 """
 import numpy as np
 import numba as nb
+from exatomic.base import nbtgt, nbpll
 
 
-@nb.vectorize(["float64(float64, float64, float64)"], nopython=True, target="parallel")
+@nb.vectorize(["float64(float64, float64, float64)"], nopython=True, target=nbtgt)
 def cartmag(x, y, z):
     """
     Vectorized operation to compute the magnitude of a three component array.
@@ -17,7 +18,7 @@ def cartmag(x, y, z):
     return np.sqrt(x**2 + y**2 + z**2)
 
 
-@nb.vectorize(["float64(float64, float64)"], nopython=True, target="parallel")
+@nb.vectorize(["float64(float64, float64)"], nopython=True, target=nbtgt)
 def modv(x, y):
     """
     Vectorized modulo operation.

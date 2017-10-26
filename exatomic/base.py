@@ -6,7 +6,12 @@ Base Functionality
 ############################
 """
 from exa.util import isotopes
+from platform import system
 
+# For numba compiled functions
+sysname= system().lower()
+nbpll = True if "linux" in sysname else False
+nbtgt = "parallel" if nbpll else "cpu"
 
 isotopedf = isotopes.as_df()
 sym2z = isotopedf.drop_duplicates("symbol").set_index("symbol")["Z"].to_dict()
