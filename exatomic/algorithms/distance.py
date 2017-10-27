@@ -8,7 +8,7 @@ Full parallelized (for Linux/Unix based systems).
 """
 import numpy as np
 import numba as nb
-from exatomic.base import nbtgt, nbpll
+from exatomic.base import nbtgt, nbpll, nbche
 
 
 @nb.vectorize(["float64(float64, float64, float64)"],
@@ -36,7 +36,7 @@ def modv(x, y):
     return np.mod(x, y)
 
 
-@nb.jit(nopython=True, nogil=True, parallel=nbpll)
+@nb.jit(nopython=True, nogil=True, parallel=nbpll, cache=nbche)
 def pdist_ortho(ux, uy, uz, a, b, c, index, dmax=8.0):
     """
     Pairwise two body calculation for bodies in an orthorhombic periodic cell.

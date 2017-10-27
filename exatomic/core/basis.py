@@ -9,6 +9,7 @@ classes which describe various types of basis sets common to quantum chemistry.
 The class objects provided by this module are used for description purposes
 rather than compute purposes.
 """
+import sympy as sy
 from string import ascii_lowercase
 from types import FunctionType
 from exa import DataFrame, Column, Index, Typed
@@ -20,7 +21,17 @@ str2l.update({v: k for k, v in dict(enumerate(_letts, start=7)).items()})
 l2str ={v: k for k, v in str2l.items()}
 
 
-class GaussianBasisSet(DataFrame):
+class BasisSet(DataFrame):
+    """
+    A basis set is a representation of a molecular (or atomic) orbital (a
+    single particle function.
+
+    Basis sets are required to have an analytical form.
+    """
+    form = Typed(sy.Expr)
+
+
+class GaussianBasisSet(BasisSet):
     r"""
     Tabular description of a Gaussian basis set.
 

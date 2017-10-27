@@ -1,6 +1,39 @@
-## -*- coding: utf-8 -*-
-## Copyright (c) 2015-2017, Exa Analytics Development Team
-## Distributed under the terms of the Apache License 2.0
+# -*- coding: utf-8 -*-
+# Copyright (c) 2015-2017, Exa Analytics Development Team
+# Distributed under the terms of the Apache License 2.0
+"""
+The Universe Container
+###########################
+This module provides the primary data storage object ('container') for exatomic.
+The :class:`~exatomic.core.universe.Universe` houses a large number of standard
+data objects that are the result of quantum mechanical calculations, e.g.
+nuclear coordinates, interatomic distances, orbital eigenvalues, orbital
+coefficients, and other related information.
+
+.. code-block:: python
+
+    uni = Universe.from_xyz("path.xyz")
+    uni.atom                             # Table of nuclear coordinates
+    uni.frame                            # Table the global 'coordinate'
+    uni.atom_two                         # Interatomic distances
+    uni.orbital
+"""
+from exa import Container, Typed
+from .atom import Atom
+from .basis import BasisSet
+
+
+class Universe(Container):
+    """
+    A unified data object for the output of an atomistic calculation (or
+    calculations).
+    """
+    atom = Typed(Atom, doc="Table of atomic (nuclear) coordinates, forces, velocities, etc.")
+    basis_set = Typed(BasisSet, doc="Explictly defined basis set.")
+
+
+
+
 #"""
 #The Atomic Universe
 ##########################

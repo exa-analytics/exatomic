@@ -24,7 +24,8 @@ from exa.util import isotopes
 # For numba compiled functions
 sysname= system().lower()
 nbpll = True if "linux" in sysname else False
-pbtgt = "parallel" if nbpll else "cpu"
+nbtgt = "parallel" if nbpll else "cpu"
+nbche = False if nbpll else True
 
 
 # Taken from exa

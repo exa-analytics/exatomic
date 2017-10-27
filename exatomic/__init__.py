@@ -47,3 +47,5 @@ def _jupyter_nbextension_paths():
 
 __js_version__ = "0.4.0"
 from ._version import __version__
+from .core.universe import Universe
+from .xyz import XYZ
