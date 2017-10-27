@@ -23,7 +23,6 @@ are not typically normalized (normalization constants are omitted below).
         (z - A_z)^k e^{-a (z - A_z)^2}
         = x_A^iy_A^jz_A^k e^{-a r^2}
 """
-import numba as nb
 import sympy as sy
 
 

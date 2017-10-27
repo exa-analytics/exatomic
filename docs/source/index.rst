@@ -31,16 +31,16 @@ method to get started with visualization is through the `Jupyter notebook`_.
 
 .. toctree::
     :maxdepth: 4
-    :caption: QM
-
-    qm/index.rst
-
-.. toctree::
-    :maxdepth: 4
     :caption: Software 
 
     software/adf/index.rst
     software/nwchem/index.rst
+
+.. toctree::
+    :maxdepth: 4
+    :caption: QM
+
+    qm/index.rst
 
 
 ##################

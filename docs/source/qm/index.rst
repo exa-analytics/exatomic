@@ -8,6 +8,13 @@ Quantum Mechanics
 
 .. toctree::
     :maxdepth: 4
+    :caption: Fundamentals
+
+    radial.rst
+
+
+.. toctree::
+    :maxdepth: 4
     :caption: Basis Functions 
 
     basis/gaussian.rst

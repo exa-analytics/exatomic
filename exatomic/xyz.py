@@ -14,7 +14,7 @@ import numba as nb
 import pandas as pd
 from operator import itemgetter
 from exa import Parser, Typed
-from exatomic.base import sym2z, nbpll, nbche
+from exatomic.base import nbpll, nbche
 from exatomic.core.atom import Atom
 
 
@@ -22,7 +22,7 @@ from exatomic.core.atom import Atom
 def _build_indexes(start, stop):
     """Given the sections of an XYZ file, build the indexes."""
     m = len(start)
-    n = stop[-1] - 2*m
+    n = stop[-1] - 2*m     # Total number of atoms (in all frames)
     idx = np.empty((n, ), dtype=np.int64)
     fdx = idx.copy()
     cdx = np.empty((len(start), ), dtype=np.int64)
