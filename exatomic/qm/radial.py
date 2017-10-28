@@ -5,8 +5,10 @@ r"""
 Motion in a Centrally Symmetric Field
 #######################################
 """
+from exa import Field
 
 
-class RadialAO(object):
+class RadialAO(Field):
+    """
+    """
     pass
-

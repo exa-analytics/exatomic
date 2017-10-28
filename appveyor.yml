@@ -52,17 +52,15 @@ install:
 
   - cmd: conda config --set show_channel_urls true
   - cmd: conda config --set always_yes yes --set changeps1 no
-  - cmd: conda update -q -y --all
+  - cmd: conda update -q --all
+  - cmd: conda install -q -c conda-forge six numpy pandas pytables numba
+  - cmd: conda install -q -c conda-forge cmake cython sympy
+  - cmd: conda install -q -c conda-forge symengine python-symengine
   - cmd: git clone https://github.com/avmarchenko/exa.git
   - cmd: cd exa
-  - cmd: conda install -q -c conda-forge numpy scipy matplotlib seaborn networkx pandas nose numba pytables
-  - cmd: conda install -q -c conda-forge pytables python-coveralls ply pandoc pypandoc nbsphinx six
-  - cmd: pip install travis-sphinx codacy-coverage coverage
   - cmd: pip install .
   - cmd: cd ../
-  - cmd: conda install -q -c conda-forge psutil numexpr nodejs ipywidgets
-  - cmd: conda install -q -c conda-forge cmake cython sympy
-  - cmd: conda install -q -c conda-forge symengine
+  - cmd: conda install -q -c conda-forge numexpr nodejs ipywidgets
   - cmd: pip install .
 
 build: false
