@@ -56,6 +56,8 @@ install:
   - cmd: conda install -q -c conda-forge six numpy pandas pytables numba
   - cmd: conda install -q -c conda-forge cmake cython sympy
   - cmd: conda install -q -c conda-forge symengine python-symengine
+  - cmd: conda install -q -c conda-forge sphinx sphinx_rtd_theme ply pandox pypandoc nbsphinx
+  - cmd: conda install -q -c conda-forge python-coveralls nose
   - cmd: git clone https://github.com/avmarchenko/exa.git
   - cmd: cd exa
   - cmd: pip install .
