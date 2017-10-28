@@ -29,7 +29,7 @@ install:
   - conda install -q python=$TRAVIS_PYTHON_VERSION
   - conda install -q -c conda-forge six numpy pandas pytables numba sympy
   - conda install -q -c conda-forge symengine python-symengine
-  - conda install -q -c conda-forge sphinx sphinx_rtd_theme ply pandox pypandoc nbsphinx
+  - conda install -q -c conda-forge sphinx sphinx_rtd_theme ply pandoc pypandoc nbsphinx
   - conda install -q -c conda-forge python-coveralls nose
   - pip install travis-sphinx codacy-coverage coverage
   - git clone https://github.com/avmarchenko/exa.git
