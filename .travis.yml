@@ -1,34 +1,48 @@
-language: python
-
-os:
-  - linux
-  - osx
-
-python:
-  - "2.7"
-  - "3.5"
-  - "3.6"
+matrix:
+    include:
+        - os: linux
+          python: 2.7
+          env: TOXENV=py2.7
+        - os: linux
+          python: 3.5
+          env: TOXENV=py3.5
+        - os: linux
+          python: 3.6
+          env: TOXENV=py3.7
+        - os: osx
+          language: generic
+          sudo: required
+          env: TOXENV=py2.7
+        - os: osx
+          language: generic
+          sudo: required
+          env: TOXENV=py3.5
+        - os: osx
+          language: generic
+          sudo: required
+          env: TOXENV=py3.6
 
 before_install:
-  - deactivate
   - if [ $TRAVIS_OS_NAME == "osx" ]; then
       wget http://repo.continuum.io/miniconda/Miniconda3-latest-MacOSX-x86_64.sh -O miniconda.sh;
+      sudo Xvfb :99 -ac -screen 0 1024x768x8; echo ok;
     else
       wget http://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh -O miniconda.sh;
+      export DISPLAY=:99.0;
+      sh -e /etc/init.d/xvfb start;
+      sleep 3;
     fi
   - sh miniconda.sh -b -p ~/miniconda
-  - export NUMBA_DISABLE_JIT=1    # For coverage
-  - export DISPLAY=:99.0
-  - sh -e /etc/init.d/xvfb start
-  - sleep 3
-  - export PATH="$HOME/miniconda/bin:$PATH"
+  - export NUMBA_DISABLE_JIT=1    # For coverage report
+  - export PATH="~/miniconda/bin:$PATH"
   - conda config --set always_yes yes --set changeps1 no
   - conda update -q --all
 
+# There are a lot of requirements here because we do coverage, testing, reporting, doc building
 install:
   - conda install -q python=$TRAVIS_PYTHON_VERSION
   - conda install -q -c conda-forge six numpy pandas pytables numba sympy
-  - conda install -q -c symengine symengine 
+  - conda install -q -c symengine symengine
   - conda install -q -c symengine python-symengine
   - conda install -q -c conda-forge sphinx sphinx_rtd_theme ply pandoc pypandoc nbsphinx
   - conda install -q -c conda-forge python-coveralls nose ipython
@@ -36,7 +50,7 @@ install:
   - git clone https://github.com/avmarchenko/exa.git
   - cd exa
   - pip install .
-  - cd ../
+  - cd ../;
   - conda install -q -c conda-forge numexpr nodejs ipywidgets
   - pip install .
 
