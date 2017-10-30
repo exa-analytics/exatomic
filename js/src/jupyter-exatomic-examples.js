@@ -65,6 +65,27 @@ var TestSceneView = base.ExatomicSceneView.extend({
 });
 
 
+var TensorSceneModel = TestSceneModel.extend({
+
+    defaults: function() {
+        return _.extend({}, TestSceneModel.prototype.defaults, {
+            _model_name: "TensorSceneModel",
+            _view_name: "TensorSceneView",
+            geom: true,
+            field: "null",
+            field_ml: 0
+        })
+    }
+
+});
+
+
+
+var TensorSceneView = TestSceneView.extend({
+});
+
+
+
 var TestUniverseSceneModel = base.ExatomicSceneModel.extend({
 
     defaults: _.extend({}, base.ExatomicSceneModel.prototype.defaults, {
@@ -131,6 +152,17 @@ var TestContainerModel = base.ExatomicBoxModel.extend({
 var TestContainerView = base.ExatomicBoxView.extend({});
 
 
+var TensorContainerModel = TestContainerModel.extend({
+    defaults: _.extend({}, TestContainerModel.prototype.defaults, {
+        _model_name: "TensorContainerModel",
+        _view_name: "TensorContainerView"
+    })
+});
+
+var TensorContainerView = TestContainerView.extend({});
+
+
+
 var TestUniverseModel = base.ExatomicBoxModel.extend({
     defaults: _.extend({}, base.ExatomicBoxModel.prototype.defaults, {
         _model_name: "TestUniverseModel",
@@ -149,5 +181,9 @@ module.exports = {
     TestUniverseSceneModel: TestUniverseSceneModel,
     TestUniverseSceneView: TestUniverseSceneView,
     TestUniverseModel: TestUniverseModel,
-    TestUniverseView: TestUniverseView
+    TestUniverseView: TestUniverseView,
+    TensorSceneModel: TensorSceneModel,
+    TensorSceneView: TensorSceneView,
+    TensorContainerModel: TensorContainerModel,
+    TensorContainerView: TensorContainerView
 }
