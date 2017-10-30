@@ -39,7 +39,7 @@ class Cube(Editor):
         """
         Parse the :class:`~exatomic.atom.Atom` object from the cube file in place.
         """
-        nat = int(self[2].split()[0])
+        nat = abs(int(self[2].split()[0]))
         ncol = len(self[6].split())
         names = ['Z', 'Zeff', 'x', 'y', 'z']
         df = self.pandas_dataframe(6, nat + 6, names)
@@ -66,6 +66,7 @@ class Cube(Editor):
         nz, dzi, dzj, dzk = [typ(i) for typ, i in zip(typs, self[5].split())]
         nat, nx, ny, nz = abs(nat), abs(nx), abs(ny), abs(nz)
         volstart = nat + 6
+        if len(self[volstart].split()) < 5: volstart += 1
         ncol = len(self[volstart].split())
         data = self.pandas_dataframe(volstart, len(self), ncol).values.ravel()
         df = pd.Series({'ox': ox, 'oy': oy, 'oz': oz,

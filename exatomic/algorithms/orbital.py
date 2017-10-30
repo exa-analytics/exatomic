@@ -98,9 +98,9 @@ def make_fps(rmin=None, rmax=None, nr=None, nrfps=1,
              xmin=None, xmax=None, nx=None, frame=0,
              ymin=None, ymax=None, ny=None, field_type=0,
              zmin=None, zmax=None, nz=None, label=0,
-             ox=None, dxi=None, dxj=None, dxk=None,
-             oy=None, dyi=None, dyj=None, dyk=None,
-             oz=None, dzi=None, dzj=None, dzk=None):
+             ox=None, fx=None, dxi=None, dxj=None, dxk=None,
+             oy=None, fy=None, dyi=None, dyj=None, dyk=None,
+             oz=None, fz=None, dzi=None, dzj=None, dzk=None):
     """
     Generate the necessary field parameters of a numerical grid field
     as an exatomic.field.AtomicField.
@@ -261,9 +261,9 @@ def gen_basfns(uni, frame=None):
     """
     frame = uni.atom.nframes - 1 if frame is None else frame
     # Group the dataframes appropriately
-    sets = uni.basis_set.cardinal_groupby().get_group(frame).groupby('set')
-    funcs = uni.basis_set_order.cardinal_groupby().get_group(frame).groupby('center')
-    atom = uni.atom.cardinal_groupby().get_group(frame)
+    sets = uni.basis_set.groupby('frame').get_group(frame).groupby('set')
+    funcs = uni.basis_set_order.groupby('frame').get_group(frame).groupby('center')
+    atom = uni.atom.groupby('frame').get_group(frame)
     # Set some variables based on basis set info
     larg = {'sh': None, 'pre': None}
     if uni.basis_set.spherical:
@@ -292,6 +292,7 @@ def gen_basfns(uni, frame=None):
     else: exkey = 'r2'
     # Iterate over atomic positions
     basfns = []
+    print(ordrcols)
     for i, (seht, x, y, z) in enumerate(zip(atom['set'], atom['x'],
                                             atom['y'], atom['z'])):
         # Dict of strings of atomic position

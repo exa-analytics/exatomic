@@ -42,10 +42,10 @@ class Editor(BaseEditor, metaclass=Meta):
             else:
                 meta = self.meta
         kwargs = {'name': name,
-                  'description': description, 
+                  'description': description,
                   'meta': meta}
-        attrs = [attr.replace('parse_', '') 
-                 for attr in vars(self.__class__).keys() 
+        attrs = [attr.replace('parse_', '')
+                 for attr in vars(self.__class__).keys()
                  if attr.startswith('parse_')]
         for attr in attrs:
             result = None

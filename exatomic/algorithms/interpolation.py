@@ -52,7 +52,8 @@ def _interpolate(df, x, y, z, method, kind, yfirst, dim, minimum):
         newx = np.linspace(xdat.min(), xdat.max(), dim)
         interpz = convenience[method](xdat, zdat, **kwargs)
         newz = interpz(newx)
-        return {'x': newx, 'z': newz, 'y': df[dud].unique()}
+        return {'x': newx, 'z': newz, 'y': df[dud].unique(),
+                'min': (newx[newz.argmin()], newz.min())}
     # Check that the interpolation method is supported
     if method not in convenience.keys():
         raise Exception('method must be in {}'.format(convenience.keys()))

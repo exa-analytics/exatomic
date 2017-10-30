@@ -163,6 +163,7 @@ class Universe(Container, metaclass=Meta):
             if not hasattr(self, 'field'):
                 self.field = field
             else:
+                self.field._revert_categories()
                 new_field_values = self.field.field_values + field.field_values
                 newdx = range(len(self.field), len(self.field) + len(field))
                 field.index = newdx
@@ -276,4 +277,3 @@ def basis_function_contributions(universe, mo, mocoefs='coef',
         return together
     else:
         raise NotImplementedError("not clever enough for that.")
-

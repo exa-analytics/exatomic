@@ -7,7 +7,9 @@ try:
 except:
     from exa.tester import UnitTester
 
-from exatomic.basis import BasisSet, BasisSetOrder, Overlap, Primitive
+import pandas as pd
+from exatomic.basis import (BasisSet, BasisSetOrder, Overlap, Primitive,
+                            spher_lml_count, cart_lml_count)
 
 class TestBasisSet(UnitTester):
 
@@ -54,15 +56,37 @@ class TestBasisSet(UnitTester):
         self.assertEquals(self.lbs.nshells, 3)
 
     def test_functions_by_shell(self):
-        with self.assertRaises(ValueError):
-            self.bs.functions_by_shell()
-
+        self.assertEquals(type(self.bs.functions_by_shell()),
+                          pd.Series)
+        self.assertEquals(type(self.mbs.functions_by_shell()),
+                          pd.Series)
+        self.assertEquals(type(self.lbs.functions_by_shell()),
+                          pd.Series)
 
     def test_primitives_by_shell(self):
-        pass
+        self.assertTrue(
+            (self.bs.primitives_by_shell() == pd.Series({
+            (0, 0): 1})).all())
+        self.assertTrue(
+            (self.mbs.primitives_by_shell() == pd.Series({
+            (0, 0): 1, (0, 1): 1, (1, 0): 1})).all())
+        self.assertTrue(
+            (self.lbs.primitives_by_shell() == pd.Series({
+            (0, 0): 3, (0, 1): 2, (0, 2): 1, (1, 0): 2,
+            (1, 1) : 1})).all())
 
     def test_primitives(self):
-        pass
+        self.assertTrue(
+            (self.bs.primitives(spher_lml_count) == pd.Series({
+            0: 1})).all())
+        self.assertTrue(
+            (self.mbs.primitives(cart_lml_count) == pd.Series({
+            0: 4, 1: 1})).all())
+        self.assertTrue(
+            (self.lbs.primitives(spher_lml_count) == pd.Series({
+            0: 14, 1: 5})).all())
+
+
 
 class TestBasisSetOrder(UnitTester):
     pass

@@ -96,17 +96,14 @@ class BasisSet(DataFrame):
     def nshells(self):
         return len(self.shells)
 
-    def _sets(self):
-        """Group by basis set."""
-        return self.groupby('set')
-
     def functions_by_shell(self):
         """Return a series of (l, n function) pairs per set."""
-        mi = self._sets().apply(
+        mi = self.groupby('set').apply(
             lambda x: x.groupby('shell').apply(
             lambda y: y['L'].values[0]).value_counts())
         if type(mi) == pd.DataFrame:
-            return pd.Series(mi.values[0], index=pd.MultiIndex.from_product(
+            return pd.Series(mi.values[0],
+                             index=pd.MultiIndex.from_product(
                              [mi.index.values, mi.columns.values],
                              names=['set', 'L']))
         mi.index.names = ['set', 'L']
@@ -114,16 +111,23 @@ class BasisSet(DataFrame):
 
     def primitives_by_shell(self):
         """Return a series of (l, n primitive) pairs per set."""
-        return self._sets_ls().apply(
-            lambda y: y.apply(
-            lambda z: len(z['alpha'].unique()))).T.unstack()
+        prims = {}
+        for seht, grp in self.groupby('set'):
+            for L, sub in grp.groupby('L'):
+                if not len(sub.index): continue
+                prims[(seht, L)] = len(sub.alpha.unique())
+        return pd.Series(prims)
 
     def primitives(self, lml_count):
         """Total number of primitive functions per set."""
-        return self._sets().apply(
-            lambda x: x.groupby('alpha').apply(
-                lambda y: y.groupby('L').apply(
-                    lambda z: z.iloc[0])['L'].map(lml_count).sum()).sum())
+        prims = {}
+        for seht, grp in self.groupby('set'):
+            prims[seht] = 0
+            for a, sub in grp.groupby('alpha'):
+                for L, sml in sub.groupby('L'):
+                    if not len(sml.index): continue
+                    prims[seht] += lml_count[sml.iloc[0]['L']]
+        return pd.Series(prims)
 
     def __init__(self, *args, spherical=True, gaussian=True, **kwargs):
         super(BasisSet, self).__init__(*args, **kwargs)
