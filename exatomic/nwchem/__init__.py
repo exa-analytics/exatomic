@@ -13,3 +13,4 @@ Note:
 .. _NWChem: www.nwchem-sw.org
 .. _wiki: http://www.nwchem-sw.org/index.php/Release66:Top-level
 """
+from . import scf, dft

@@ -20,7 +20,7 @@ from .orbital import MOVectors
 from .header import Header
 
 
-class _GTO_Output(Parser):
+class _GTOOutput(Parser):
     """
     Base parser for NWChem output files: to be used as a mixin for output
     parsers for GTO code outputs.
@@ -77,7 +77,7 @@ class _GTO_Output(Parser):
 
     def __init__(self, *args, **kwargs):
         frame_map = kwargs.pop("frame_map", None)
-        super(_GTO_Output, self).__init__(*args, **kwargs)
+        super(_GTOOutput, self).__init__(*args, **kwargs)
         self.frame_map = frame_map
 
-_GTO_Output.add_parsers(Header, Geometry, BasisSet, MOVectors)
+_GTOOutput.add_parsers(Header, Geometry, BasisSet, MOVectors)

@@ -20,7 +20,8 @@ class MOVectors(Parser):
     Parser for NWChem's molecular orbital coefficient matrix output.
     """
     _start = "Final MO vectors"
-    _end = "center of mass"
+    _ek = ("center of mass",
+           "---------------------------------------------------------")
     _i0 = 6
     _i1 = -1
     _cols = (0, 1, 2, 3, 4, 5, 6)
@@ -38,6 +39,8 @@ class MOVectors(Parser):
         # Read in the mangled table
         c = pd.read_fwf(self[self._i0:self._i1].to_stream(),
                         names=self._cols, widths=self._wids)
+        # The following sets text to null so that we correctly count nbas
+        c[0] = pd.to_numeric(c[0], errors='coerce')
         # Remove null lines
         idx = c[c[0].isnull()].index.values
         c = c[~c.index.isin(idx)]
@@ -58,3 +61,5 @@ class MOVectors(Parser):
         df['frame'] = 0
         self.coefficient = df
 
+    def _parse_end(self, starts):
+        return [self.find_next(*self._ek, cursor=i[0]) for i in starts]

@@ -12,6 +12,7 @@ from setuptools.command.egg_info import egg_info
 name = "exatomic"
 description = "A unified platform for theoretical and computational chemists"
 staticdir = "static"
+nbdir = staticdir + "/nbextension"
 jsdir = "js"
 jsroot = os.path.abspath(jsdir)
 readme = "README.md"
@@ -74,8 +75,8 @@ def js_prerelease(command, strict=False):
 class NPM(Command):
     description = "install package.json dependencies using npm."
     user_options = []
-    targets = [os.path.join(root, name, staticdir, "extension.js"),
-               os.path.join(root, name, staticdir, "index.js")]
+    targets = [os.path.join(root, name, nbdir, "extension.js"),
+               os.path.join(root, name, nbdir, "index.js")]
 
     def initialize_options(self):
         pass
@@ -121,15 +122,16 @@ setup_args = {
     'version': version,
     'description': description,
     'long_description': long_description,
-    'package_data': {name: [staticdir + "/*"]},
+    'package_data': {name: [staticdir+"/cif", staticdir+"/nwchem",
+                            staticdir+"/qe", staticdir+"/xyz"]},
     'include_package_data': True,
     'install_requires': dependencies,
     'packages': find_packages(),
     'data_files': [
         ("share/jupyter/nbextensions/jupyter-" + name, [
-            os.path.join(name, staticdir, "extension.js"),
-            os.path.join(name, staticdir, "index.js"),
-            os.path.join(name, staticdir, "index.js.map")
+            os.path.join(name, nbdir, "extension.js"),
+            os.path.join(name, nbdir, "index.js"),
+            os.path.join(name, nbdir, "index.js.map")
         ]),
     ],
     'cmdclass': {

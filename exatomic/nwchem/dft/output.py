@@ -2,7 +2,7 @@
 # Copyright (c) 2015-2017, Exa Analytics Development Team
 # Distributed under the terms of the Apache License 2.0
 """
-Comprehensive HF Output Parser
+Comprehensive DFT Output Parser
 ########################################
 """
 from exatomic.nwchem.core.base import _GTOOutput
@@ -10,4 +10,3 @@ from exatomic.nwchem.core.base import _GTOOutput
 
 class Output(_GTOOutput):
     pass
-

@@ -40,4 +40,4 @@ class Geometry(Parser):
         # Helper function to identify symbols from tags
         get_symbol = lambda x: "".join([a for a in x if a.isalpha()])
         atom['symbol'] = atom[self._cols[1]].apply(get_symbol)
-        self.atom = Atom.from_xyz(atom, length=self._leng)
+        self.atom = Atom.from_xyz(atom, unit=self._leng)

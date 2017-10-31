@@ -5,3 +5,4 @@
 NWChem Hartree-Fock Module
 ##########################
 """
+from .output import Output

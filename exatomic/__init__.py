@@ -39,7 +39,7 @@ def _jupyter_nbextension_paths():
     """Jupyter notebook extension directory paths."""
     return [{
         'section': "notebook",
-        'src': "static",
+        'src': "static/nbextension",
         'dest': "jupyter-exatomic",
         'require': "jupyter-exatomic/extension"
     }]

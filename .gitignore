@@ -26,8 +26,7 @@ osx-64/
 doc/build/
 target/
 .settings/
-exatomic/static/*.js
-exatomic/static/*.map
+exatomic/static/nbextension
 package-lock.json
 
 # Compiled

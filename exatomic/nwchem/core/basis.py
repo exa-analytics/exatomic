@@ -16,17 +16,17 @@ class BasisSet(Parser):
     Parser for the NWChem's printing of basis sets.
     """
     _start = re.compile("^\s*Basis \"")
-    _ek = re.compile("^ Summary of \"")
     _k = "spherical"
+    _ek = 2
     _k0 = "Exponent"
     _k1 = "("
     _i0 = 2
     _i1 = 4
-    _cols = ("function", "l", "a", "d", "tag")
+    _cols = ("fn", "l", "a", "d", "tag")
     basis_set = Typed(GaussianBasisSet, doc="Gaussian basis set description.")
 
     def _parse_end(self, starts):
-        return [self.regex_next(self._ek, cursor=i[0]) for i in starts]
+        return [self.next_blank_line(n=self._ek, cursor=i[0]) for i in starts]
 
     def parse_basis_set(self):
         """
@@ -44,4 +44,3 @@ class BasisSet(Parser):
         basis_set = DataFrame(data, columns=self._cols)
         basis_set['l'] = basis_set['l'].str.lower().map(str2l)
         self.basis_set = GaussianBasisSet(basis_set, spherical=spherical, order=lambda x: x)
-
