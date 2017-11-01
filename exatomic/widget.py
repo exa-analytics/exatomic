@@ -71,6 +71,7 @@ class Folder(VBox):
         def _controller(b):
             self.open_folder = self.open_folder == False
             self.set_gui()
+        self.active_controls['folder'].tooltip = 'Expand'
         self.active_controls['folder'].on_click(_controller)
 
 
@@ -115,7 +116,10 @@ class Folder(VBox):
         """Open or close the folder."""
         self.children = list(self.active_controls.values())
         if not self.open_folder:
+            self.children[0].tooltip = 'Expand'
             self.children = self.children[:1]
+        else:
+            self.children[0].tooltip = 'Collapse'
         self.on_displayed(VBox._fire_children_displayed)
 
 
