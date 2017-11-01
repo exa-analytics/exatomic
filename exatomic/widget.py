@@ -35,6 +35,8 @@ class Folder(VBox):
     """A VBox with a main widget that will show or hide widgets."""
     mlo = Layout(width="205px")
     lo = gui_lo
+    lo.width = "175px"
+    lo.left = "20px"
 
 
     def _close(self):
@@ -123,6 +125,7 @@ class Folder(VBox):
         self.open_folder = show
         self._init_folder(control, content)
         layout = self.mlo if layout is None else layout
+        self._set_layout()
         super(Folder, self).__init__(list(self.active_controls.values()),
                                      layout=layout, **kwargs)
 
@@ -217,7 +220,7 @@ class ExatomicScene(DOMWidget):
 
     def __init__(self, *args, **kwargs):
         self.cameras = []
-        lo = Layout(width="400", height="400")
+        lo = Layout(width="500", height="500", flex="1 1 auto")
         super(DOMWidget, self).__init__(*args, layout=lo, **kwargs)
 
 

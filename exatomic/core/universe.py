@@ -175,20 +175,25 @@ class Universe(six.with_metaclass(Meta, Container)):
             raise TypeError('field must be an instance of exatomic.field.AtomicField or a list of them')
 
     def add_molecular_orbitals(self, field_params=None, mocoefs=None,
-                               vector=None, frame=None):
-        """
-        Adds molecular orbitals to universe. field_params define the numerical
-        field and may be a tuple of (min, max, nsteps) or a series containing
-        all of the columns specified in the exatomic.field.AtomicField table.
+                               vector=None, frame=None, replace=True):
+        """Add molecular orbitals to universe.
 
-        Warning:
-            Removes any existing field attribute of the universe.
+        Args
+            field_params (dict, pd.Series): numerical field parameters with
+                            (at a minimum) {'rmin', 'rmax', 'nr', ...}
+                            or a pd.Series containing the columns specified in the
+                            :class:`~exatomic.core.field.AtomicField`.
+            mocoefs (str): column in the :class:`~exatomic.core.orbital.MOMatrix`
+            vector (iter): indices of orbitals to evaluate (0-based)
+            frame (int): frame of atomic positions for the orbitals
+            replace (bool): if False, do not remove previous fields
         """
-        for attr in ['momatrix', 'basis_set', 'basis_set_order']:
-            if not hasattr(self, attr):
-                raise AttributeError("universe must have {} attribute.".format(attr))
+        attrs = ['momatrix', 'basis_set', 'basis_set_order']
+        if any((not hasattr(self, attr) for attr in attrs)):
+            raise AttributeError("universe must have {} attribute.".format(attr))
         add_molecular_orbitals(self, field_params=field_params,
-                               mocoefs=mocoefs, vector=vector, frame=frame)
+                               mocoefs=mocoefs, vector=vector,
+                               frame=frame, replace=replace)
 
     def __len__(self):
         return len(self.frame)
