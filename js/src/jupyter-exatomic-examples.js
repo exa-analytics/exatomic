@@ -79,10 +79,10 @@ var TestSceneView = base.ExatomicSceneView.extend({
 });
 
 
-var TensorSceneModel = TestSceneModel.extend({
+var TensorSceneModel = base.ExatomicSceneModel.extend({
 
     defaults: function() {
-        return _.extend({}, TestSceneModel.prototype.defaults, {
+        return _.extend({}, base.ExatomicSceneModel.prototype.defaults, {
             _model_name: "TensorSceneModel",
             _view_name: "TensorSceneView",
             geom: true,
@@ -95,7 +95,29 @@ var TensorSceneModel = TestSceneModel.extend({
 
 
 
-var TensorSceneView = TestSceneView.extend({
+var TensorSceneView = base.ExatomicSceneView.extend({
+
+    init: function() {
+        base.ExatomicSceneView.prototype.init.apply(this);
+        this.three_promises = this.app3d.finalize(this.three_promises)
+            .then(this.add_surface.bind(this))
+            .then(this.app3d.set_camera_from_scene.bind(this.app3d));
+    },
+
+    add_surface: function() {
+        console.log("Adding surface");
+        this.app3d.clear_meshes("generic");
+        if (this.model.get("geom")) {
+            this.app3d.meshes["generic"] = this.app3d.add_tensor_surface();
+        };
+        this.app3d.add_meshes("generic");
+    },
+
+    init_listeners: function() {
+        base.ExatomicSceneView.prototype.init_listeners.call(this);
+        this.listenTo(this.model, "change:geom", this.add_surface);
+    },
+
 });
 
 
@@ -168,14 +190,14 @@ var TestContainerModel = base.ExatomicBoxModel.extend({
 var TestContainerView = base.ExatomicBoxView.extend({});
 
 
-var TensorContainerModel = TestContainerModel.extend({
-    defaults: _.extend({}, TestContainerModel.prototype.defaults, {
+var TensorContainerModel = base.ExatomicBoxModel.extend({
+    defaults: _.extend({}, base.ExatomicBoxModel.prototype.defaults, {
         _model_name: "TensorContainerModel",
         _view_name: "TensorContainerView"
     })
 });
 
-var TensorContainerView = TestContainerView.extend({});
+var TensorContainerView = base.ExatomicBoxView.extend({});
 
 
 

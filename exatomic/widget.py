@@ -365,7 +365,7 @@ class TensorScene(ExatomicScene):
     """A basic scene to test some javascript."""
     _model_name = Unicode("TensorSceneModel").tag(sync=True)
     _view_name = Unicode("TensorSceneView").tag(sync=True)
-    field = Unicode("null").tag(sync=True)
+    # field = Unicode("null").tag(sync=True)
     geom = Bool(True).tag(sync=True)
 
 @register
@@ -375,25 +375,26 @@ class TensorContainer(ExatomicBox):
     _view_name = Unicode("TensorContainerView").tag(sync=True)
 
 
-    def init_gui(self):
+    def _init_gui(self):
         """Initialize specific GUI controls and register callbacks."""
 
-        super(TensorContainer, self).init_gui()
+        super(TensorContainer, self)._init_gui()
 
         geom = Button(icon="cubes", description=" Mesh", layout=gui_lo)
         def _geom(b): self.scene.geom = self.scene.geom == False
         geom.on_click(_geom)
         self.active_controls['geom'] = geom
+        # Add a TextArea ipywidget 
 
-        fopts = ['null', 'sphere', 'torus', 'ellipsoid']
-        fopts = Dropdown(options=fopts, layout=gui_lo)
-        def _field(c): self.scene.field = c.new
-        fopts.observe(_field, names='value')
+#        fopts = ['null', 'sphere', 'torus', 'ellipsoid']
+#        fopts = Dropdown(options=fopts, layout=gui_lo)
+#        def _field(c): self.scene.field = c.new
+#        fopts.observe(_field, names='value')
 
-        folder = self.inactive_controls.pop('field')
-        folder.insert(1, 'options', fopts)
-        folder.activate('iso', 'nx', 'ny', 'nz')
-        self.active_controls['field'] = folder
+#        folder = self.inactive_controls.pop('field')
+#        folder.insert(1, 'options', fopts)
+#        folder.activate('iso', 'nx', 'ny', 'nz')
+#        self.active_controls['field'] = folder
 
 
     def __init__(self, *args, **kwargs):
