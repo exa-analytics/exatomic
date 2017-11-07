@@ -14,6 +14,10 @@ _glo = Layout(flex='0 0 240px')
 _flo = Layout(width='100%', align_items='flex-end')
 # All widgets not in a folder have this layout
 _wlo = Layout(width='98%')
+# HBoxes within the final scene VBox have this layout
+_hboxlo = Layout(flex="1 1 auto", width="100%", height="100%")
+# The final VBox containing all scenes has this layout
+_vboxlo = Layout(width='100%', height='100%')
 
 class _ListDict(OrderedDict):
     """An OrderedDict that also slices and indexes as a list."""
@@ -83,9 +87,11 @@ class Folder(VBox):
         if update:
             self._set_gui()
 
-    def insert(self, idx, key, obj, update=False):
+    def insert(self, idx, key, obj, activate=True, update=False):
         obj.layout.width = str(98 - (self.level + 1) * self.indent) + '%'
         self._controls.insert(idx, key, obj)
+        if activate:
+            self.activate(key, enable=True)
         if update:
             self._set_gui()
 
@@ -178,24 +184,30 @@ class GUIBox(VBox):
         super(GUIBox, self).__init__(*args, layout=_glo, **kwargs)
 
 
-def _scene_grid(n):
-    alo = Layout(flex="1 1 auto", width="100%", height="100%")
+def _scene_grid(*unis, min_height=None, min_width=None):
+    n = None
+    if isinstance(unis[0], int):
+        n = unis[0]
+    if n is None:
+        n = len(unis)
     if n > 9: raise NotImplementedError("Too many scenes")
-    colors = ['red', 'green', 'blue', 'yellow', 'cyan',
-              'magenta', 'black', 'gray', 'orange']
     scns = []
-    if n < 4: mh = "300px"
-    elif n < 7: mh = "250px"
-    else: mh = "200px"
+    mh = min_height
+    mw = min_width
+    if mh is None:
+        if n < 4: mh = "350px"
+        elif n < 7: mh = "300px"
+        else: mh = "250px"
+    #if mw is None: mw = mh
     if n < 5: mod = 2
     else: mod = 3
+    kwargs = {'min_height': mh, 'min_width': mw}
+    print(kwargs)
     for i in range(n):
-        if not i % mod:
-            scns.append([])
-        scns[-1].append(widget.ExatomicScene(
-            bg=colors[i], min_height=mh, min_width=mh, index=i))
-    scns = [HBox(scn, layout=alo) for scn in scns]
-    return VBox(scns, layout=Layout(width='100%'))
+        if not i % mod: scns.append([])
+        kwargs['index'] = i
+        scns[-1].append(kwargs)
+    return unis, scns
 
 
 def gui_field_widgets(uni=False, test=False):

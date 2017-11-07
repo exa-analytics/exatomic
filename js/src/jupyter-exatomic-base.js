@@ -125,10 +125,13 @@ var ExatomicSceneView = widgets.DOMWidgetView.extend({
     },
 
     init: function() {
+        var func;
         window.addEventListener("resize", this.resize.bind(this));
         this.app3d = new three.App3D(this);
         this.three_promises = this.app3d.init_promise();
-        this.three_promises.then(this.add_geometry.bind(this))
+        if (this.model.get("uni")) { func = this.add_field }
+        else { func = this.add_geometry };
+        this.three_promises.then(func.bind(this))
             .then(this.app3d.set_camera_from_scene.bind(this.app3d));
     },
 
@@ -157,26 +160,12 @@ var ExatomicSceneView = widgets.DOMWidgetView.extend({
     },
 
     add_field: function() {
-        console.log(this.model.get("uni"));
         this.app3d.clear_meshes("field");
-        if (!this.model.get("uni")) {
-            this.app3d.meshes["field"] = this.app3d.add_scalar_field(
-                utils.scalar_field(
-                    utils.gen_field_arrays(this.get_fps()),
-                    utils[this.model.get("field")]
-                ),
-                this.model.get("field_iso"),
-                this.model.get("field_a")
-            );
-            this.app3d.meshes["field"][0].name = this.model.get("field");
-        } else {
+        if (this.model.get("uni")) {
             var field = this.model.get("field");
             var kind = this.model.get("field_kind");
             var ars = utils.gen_field_arrays(this.get_fps());
             var func = utils[field];
-            console.log(field);
-            console.log(kind);
-            console.log(ars);
             if (field === "SolidHarmonic") {
                 var fml = this.model.get("field_ml");
                 var tf = func(ars, kind, fml);
@@ -187,11 +176,21 @@ var ExatomicSceneView = widgets.DOMWidgetView.extend({
             };
             this.app3d.meshes["field"] = this.app3d.add_scalar_field(
                 tf, this.model.get("field_iso"),
-                this.model.get("field_a"), 2,
+                this.model.get("field_o"), 2,
                 this.colors());
             for (var i = 0; i < this.app3d.meshes["field"].length; i++) {
                 this.app3d.meshes["field"][i].name = name;
             };
+        } else {
+            this.app3d.meshes["field"] = this.app3d.add_scalar_field(
+                utils.scalar_field(
+                    utils.gen_field_arrays(this.get_fps()),
+                    utils[this.model.get("field")]
+                ),
+                this.model.get("field_iso"),
+                this.model.get("field_o")
+            );
+            this.app3d.meshes["field"][0].name = this.model.get("field");
         };
         this.app3d.add_meshes("field");
     },
@@ -200,7 +199,7 @@ var ExatomicSceneView = widgets.DOMWidgetView.extend({
         var meshes = this.app3d.meshes["field"];
         for (var i = 0; i < meshes.length; i++) {
             meshes[i].material.transparent = true;
-            meshes[i].material.opacity = this.model.get("field_a");
+            meshes[i].material.opacity = this.model.get("field_o");
             meshes[i].material.needsUpdate = true;
         };
     },
@@ -249,10 +248,12 @@ var ExatomicSceneView = widgets.DOMWidgetView.extend({
         // Test container
         this.listenTo(this.model, "change:geom", this.add_geometry);
         // Field stuff
-        this.listenTo(this.model, "change:field", this.add_field);
+        if (!this.model.get("uni")) {
+            this.listenTo(this.model, "change:field", this.add_field);
+        };
         this.listenTo(this.model, "change:field_kind", this.add_field);
         this.listenTo(this.model, "change:field_ml", this.add_field);
-        this.listenTo(this.model, "change:field_a", this.update_field);
+        this.listenTo(this.model, "change:field_o", this.update_field);
         this.listenTo(this.model, "change:field_nx", this.add_field);
         this.listenTo(this.model, "change:field_ny", this.add_field);
         this.listenTo(this.model, "change:field_nz", this.add_field);

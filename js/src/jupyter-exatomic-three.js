@@ -616,7 +616,7 @@ class App3D {
         return [filled, frame];
     };
 
-    march_cubes2(field, iso, colors, opac) {
+    march_cubes2(field, iso, opac, colors) {
         var start = new Date().getTime();
         var nnx, nny, nnz;
         var nnx = field.nx - 1;

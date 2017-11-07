@@ -12,10 +12,6 @@ from .widget_base import ExatomicScene, ExatomicBox
 from .widget_utils import _wlo, _ListDict, _scene_grid
 from .traits import atom_traits, field_traits, two_traits, frame_traits
 
-class TestContainer:
-    pass
-class TestUniverse:
-    pass
 class UniverseWidget:
     pass
 
@@ -57,9 +53,15 @@ class TestContainer(ExatomicBox):
 
 class TestUniverse(ExatomicBox):
 
+
     def _field_folder(self):
         for scn in self.scenes:
+            for attr in ['field_ox', 'field_oy', 'field_oz']:
+                setattr(scn, attr, -30.0)
+            for attr in ['field_fx', 'field_fy', 'field_fz']:
+                setattr(scn, attr, 30.0)
             scn.field = 'Hydrogenic'
+            scn.field_iso = 0.0005
             scn.field_kind = '1s'
         folder = super(TestUniverse, self)._field_folder()
         uni_field_lists = _ListDict([
@@ -75,86 +77,58 @@ class TestUniverse(ExatomicBox):
             (key, Dropdown(options=vals))
             for key, vals in uni_field_lists.items()])
         ml_widgets = _ListDict([
-            (str(l), Dropdown(options=range(-l, l+1)))
+            (str(l), Dropdown(options=[str(i) for i in range(-l, l+1)]))
             for l in range(8)])
         fopts = list(uni_field_lists.keys())
-        fopts = Dropdown(options=fopts)
-        fkind = field_widgets['Hydrogenic']
         folder.update(field_widgets, relayout=True)
         folder.update(ml_widgets, relayout=True)
 
         def _field(c):
+            folder.deactivate(c.old)
+            folder.activate(c.new, enable=True, update=True)
+            fk = uni_field_lists[c.new][0]
+            if c.new == 'SolidHarmonic':
+                folder.activate(fk, enable=True, update=True)
+            elif c.old == 'SolidHarmonic':
+                folder.deactivate(self.scenes[0].field_kind, update=True)
             for idx in self.active_scene_indices:
                 self.scenes[idx].field = c.new
-            fk = uni_field_lists[c.new][0]
             for idx in self.active_scene_indices:
                 self.scenes[idx].field_kind = fk
-            if self.scenes[0].field == 'SolidHarmonic':
-                folder.activate('fml', enable=True)
-                # folder.deactivate('fkind')
-                folder.move_to_end('iso', 'alpha', 'nx', 'ny', 'nz')
-                # folder.insert(2, 'fml', folder[fk], update=True)
-               # folder['fkind'].active = False
-                # folder.active_controls.pop('fkind')
-            elif 'fml' in folder._controls:
-                folder.deactivate('fml')
-                # if folder['fml'].active:
-                #     folder['fml'].active = False
-                # folder.active_controls.pop('fml')
-            folder['fkind'] = folder[c.new]
-            folder.activate('fkind', enable=True)
-            #.insert(2, 'fkind', folder[c.new], update=True)
-
-        fopts.observe(_field, names="value")
 
         def _field_kind(c):
             for idx in self.active_scene_indices:
                 self.scenes[idx].field_kind = c.new
+            print(c, self.scenes[0].field_ml)
             if self.scenes[0].field == 'SolidHarmonic':
                 for idx in self.active_scene_indices:
                     self.scenes[idx].field_ml = folder[c.new].options[0]
-                folder[c.new].disabled = False
-                folder[c.old].disabled = True
-                folder.insert(3, 'fml', folder[c.new], update=True)
-                # self.scene.field_ml = self.inactive_controls[c.new].options[0]
-                # folder.insert(3, 'fml', self.inactive_controls[c.new],
-                #               update=True)
-            elif 'fml' in folder._controls:
-                if folder['fml'].active:
-                    folder['fml'].active = False
-                # deactivate('fml', update=True)
-        for obj in field_widgets.values():
-            obj.active = False
-            obj.disabled = True
-            obj.observe(_field_kind, names='value')
+                folder.deactivate(c.old)
+                folder.activate(c.new, enable=True, update=True)
 
         def _field_ml(c):
             for idx in self.active_scene_indices:
                 self.scenes[idx].field_ml = c.new
-        for obj in ml_widgets.values():
-            obj.active = False
-            obj.disabled = True
+
+        for key, obj in field_widgets.items():
+            folder.deactivate(key)
+            obj.observe(_field_kind, names='value')
+
+        for key, obj in ml_widgets.items():
+            folder.deactivate(key)
             obj.observe(_field_ml, names='value')
 
-        fopts.active = True
-        fopts.disabled = False
-        fkind.active = True
-        fkind.disabled = False
+        fopts = Dropdown(options=fopts)
+        fopts.observe(_field, names="value")
         folder.insert(1, 'fopts', fopts)
-        #folder.insert(2, 'fkind', fkind)#, update=True)
-        # folder.activate('iso', 'nx', 'ny', 'nz')
-        # self.active_controls['field'] = folder
+        folder.activate('Hydrogenic', enable=True, update=True)
+        folder.move_to_end('alpha', 'iso', 'nx', 'ny', 'nz')
         return folder
+
 
     def _init_gui(self):
         mainopts = super(TestUniverse, self)._init_gui()
-        # geom = Button(icon="gear", description=" Mesh", layout=_wlo)
-        # def _geom(b):
-        #     for idx in self.active_scene_indices:
-        #         self.scenes[idx].geom = self.scenes[idx].geom == False
-        # geom.on_click(_geom)
-        mainopts.update([ #('geom', geom),
-                         ('field', self._field_folder())])
+        mainopts.update([('field', self._field_folder())])
         return mainopts
 
 
@@ -171,8 +145,8 @@ class TestUniverse(ExatomicBox):
 #
 
 #
-#
 # @register
+#
 # class TestScene(SandboxScene):
 #     """A basic scene to test some javascript."""
 #
@@ -563,7 +537,7 @@ class TestUniverse(ExatomicBox):
 #
 #     _model_name = Unicode("TestUniverseSceneModel").tag(sync=True)
 #     _view_name = Unicode("TestUniverseSceneView").tag(sync=True)
-#     field_iso = Float(0.0005).tag(sync=True)
+#     field_iso = float(0.0005).tag(sync=true)
 #     field = Unicode('Hydrogenic').tag(sync=True)
 #     field_kind = Unicode('1s').tag(sync=True)
 #     field_ox = Float(-30.0).tag(sync=True)

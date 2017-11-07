@@ -18,12 +18,15 @@ from ipywidgets import (
     # Unused = HBox, FloatSlider,
 )
 from exatomic import __js_version__
-from .widget_utils import (_glo, _flo, _wlo, _ListDict,
+from .widget_utils import (_glo, _flo, _wlo, _hboxlo, _vboxlo,
+                           _ListDict, _scene_grid,
                            Folder, GUIBox, gui_field_widgets)
 
 
 @register
 class ExatomicScene(DOMWidget):
+
+
     _model_module_version = Unicode(__js_version__).tag(sync=True)
     _model_module_version = Unicode(__js_version__).tag(sync=True)
     _view_module = Unicode("jupyter-exatomic").tag(sync=True)
@@ -43,9 +46,10 @@ class ExatomicScene(DOMWidget):
     field_pos = Unicode("#003399").tag(sync=True)
     field_neg = Unicode("#FF9900").tag(sync=True)
     field_iso = Float(2.0).tag(sync=True)
-    field_a = Float(1.0).tag(sync=True)
+    field_o = Float(1.0).tag(sync=True)
     field = Unicode("null").tag(sync=True)
     field_kind = Unicode("").tag(sync=True)
+    field_ml = Unicode("0").tag(sync=True)
     # Test containers
     test = Bool(False).tag(sync=True) # doesn't need sync
     uni = Bool(False).tag(sync=True)  # doesn't need sync
@@ -60,6 +64,7 @@ class ExatomicScene(DOMWidget):
     field_fz = Float(3.0).tag(sync=True)
     geom = Bool(True).tag(sync=True)
 
+
     def _handle_custom_msg(self, msg, callback):
         """Custom message handler."""
         if msg['type'] == 'image':
@@ -71,8 +76,10 @@ class ExatomicScene(DOMWidget):
                     "msg         : {}".format(msg['type'],
                                               msg['content']))
 
+
     def _handle_camera(self, content):
         self.cameras.append(content)
+
 
     def _save_image(self, content):
         """Save a PNG of the scene."""
@@ -102,24 +109,32 @@ class ExatomicScene(DOMWidget):
         with open(os.sep.join([savedir, fname]), 'wb') as f:
             f.write(b64decode(content.replace(repl, '')))
 
+
     def _set_camera(self, c):
         if c.new == -1: return
         self.send({'type': 'camera', 'content': self.cameras[c.new]})
 
+
     def _close(self):
         self.send({'type': 'close'})
         self.close()
+
 
     def __init__(self, *args, **kwargs):
         lo = kwargs.pop('layout', None)
         if lo is None:
             height = kwargs.pop('height', '100%')
             min_height = kwargs.pop('min_height', '400px')
+            min_width = kwargs.pop('min_width', '400px')
             flex = kwargs.pop('flex', '1 1 auto')
             lo = Layout(height=height, min_height=min_height,
-                        flex=flex)
+                        flex=flex, min_width=min_width)
+            print(lo)
         super(DOMWidget, self).__init__(
             *args, layout=lo, **kwargs)
+
+
+
 
 @register
 class ExatomicBox(Box):
@@ -203,7 +218,7 @@ class ExatomicBox(Box):
                 self.scenes[idx].field_iso = c.new
         def _alpha(c):
             for idx in self.active_scene_indices:
-                self.scenes[idx].field_a = c.new
+                self.scenes[idx].field_o = c.new
         def _nx(c):
             for idx in self.active_scene_indices:
                 self.scenes[idx].field_nx = c.new
@@ -244,15 +259,28 @@ class ExatomicBox(Box):
 
 
     def __init__(self, scenes, **kwargs):
-        self.scenes = []
-        if isinstance(scenes, VBox):
-            for scn in scenes.children:
-                for sub in scn.children:
-                    self.scenes.append(sub)
         if not hasattr(self, 'uni'):
             self.uni = kwargs.pop('uni', False)
         if not hasattr(self, 'test'):
             self.test = kwargs.pop('test', True)
+        if isinstance(scenes, DOMWidget):
+            scenes.uni = self.uni
+            scenes.test = self.test
+            self.scenes = [scenes]
+            scenes = VBox([HBox([scenes], layout=_hboxlo)], layout=_vboxlo)
+        else:
+            mh = kwargs.pop('min_height', None)
+            mw = kwargs.pop('min_width', None)
+            unis, grid = _scene_grid(scenes, min_height=mh, min_width=mw)
+            scenes = VBox([HBox([ExatomicScene(**scn)
+                           for scn in row], layout=_hboxlo)
+                           for row in grid], layout=_vboxlo)
+            self.scenes = []
+            for scn in scenes.children:
+                for sub in scn.children:
+                    sub.uni = self.uni
+                    sub.test = self.test
+                    self.scenes.append(sub)
         self._controls = self._init_gui()
         for key, obj in self._controls.items():
             if not hasattr(obj, 'active'): obj.active = True
