@@ -11,6 +11,8 @@ module.exports = _.extend({},
     require("./jupyter-exatomic-utils.js"),
     require("./jupyter-exatomic-three.js"),
     require("./jupyter-exatomic-widgets.js"),
-    require("./jupyter-exatomic-examples.js")
+    require("./jupyter-exatomic-examples.js"),
+
+    require("./jupyter-exatomic-editor.js")
 );
 module.exports["version"] = require("../package.json").version;

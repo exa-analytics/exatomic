@@ -129,7 +129,6 @@ class ExatomicScene(DOMWidget):
             flex = kwargs.pop('flex', '1 1 auto')
             lo = Layout(height=height, min_height=min_height,
                         flex=flex, min_width=min_width)
-            print(lo)
         super(DOMWidget, self).__init__(
             *args, layout=lo, **kwargs)
 

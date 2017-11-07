@@ -1,4 +1,5 @@
 var version = require("./package.json").version;
+var nbdir = "../exatomic/static/nbextension";
 
 // Custom webpack loaders are generally the same for all webpack bundles, hence
 // stored in a separate local variable.
@@ -19,7 +20,7 @@ module.exports = [
         entry: "./src/extension.js",
         output: {
             filename: "extension.js",
-            path: "../exatomic/static",
+            path: nbdir,
             libraryTarget: "amd"
         }
     },
@@ -32,7 +33,7 @@ module.exports = [
         entry: "./src/index.js",
         output: {
             filename: "index.js",
-            path: "../exatomic/static",
+            path: nbdir,
             libraryTarget: "amd"
         },
         devtool: "source-map",
