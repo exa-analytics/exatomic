@@ -27,7 +27,7 @@ def monatomic(element, unit="Angstrom", **kwargs):
     """
     if not isinstance(element, isotopes.Element):
         element = isotopes.get(element)
-    atom = ((0, 0.0, 0.0, 0.0, element))
+    atom = [(0, 0.0, 0.0, 0.0, element), ]
     return _builder(atom=atom, unit=unit, **kwargs)
 
 
@@ -49,10 +49,9 @@ def diatomic(element_a, element_b, length, unit="Angstrom",
     """
     if not isinstance(element_a, isotopes.Element):
         element_a = isotopes.get(element_a)
-    if not isinstance(element_a, isotopes.Element):
+    if not isinstance(element_b, isotopes.Element):
         element_b = isotopes.get(element_b)
-    print(type(element_a))
     z = length/2
-    atom = ((0, 0.0, 0.0, -z, element_a.Z),
-            (0, 0.0, 0.0, z, element_b.Z))
+    atom = [(0, 0.0, 0.0, -z, element_a.Z),
+            (0, 0.0, 0.0, z, element_b.Z)]
     return _builder(atom=atom, unit=unit, **kwargs)
