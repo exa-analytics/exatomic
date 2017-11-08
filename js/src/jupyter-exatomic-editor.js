@@ -19,6 +19,7 @@ var __assign = (this && this.__assign) || Object.assign || function(t) {
 };
 exports.__esModule = true;
 var base = require("./jupyter-exatomic-base.js");
+var three = require("three");
 var EditorSceneModel = /** @class */ (function (_super) {
     __extends(EditorSceneModel, _super);
     function EditorSceneModel() {
@@ -48,6 +49,30 @@ var EditorSceneView = /** @class */ (function (_super) {
         console.log(this);
         console.log(this.app3d);
         console.log(this.app3d.scene);
+        var that = this;
+        this.el.addEventListener('click', that.clicked);
+        console.log("added listener");
+    };
+    EditorSceneView.prototype.add_sphere = function (x, y) {
+        var geometry = new three.SphereGeometry(2, 32, 32);
+        var material = new three.MeshPhongMaterial(color = "blue");
+        var sphere = new three.Mesh(geometry, material);
+        sphere.position = new three.Vector3(x, y, 0);
+        console.log(sphere);
+        this.app3d.meshes['editor'] = [sphere];
+        this.app3d.add_meshes('editor');
+    };
+    EditorSceneView.prototype.del_sphere = function (x, y) {
+        console.log("Good luck deleting....");
+    };
+    EditorSceneView.prototype.clicked = function (e) {
+        console.log("clicked!");
+        switch (e.button) {
+            case 0:
+                this.add_sphere(e.clientX, e.clientY);
+            case 2:
+                this.del_sphere(e.clientX, e.clientY);
+        }
     };
     return EditorSceneView;
 }(base.ExatomicSceneView));

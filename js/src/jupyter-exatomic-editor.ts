@@ -7,6 +7,7 @@ jupyter-exatomic-editor
 declare function require(name: string);
 
 var base  = require("./jupyter-exatomic-base.js"); 
+var three = require("three");
 
 
 export class EditorSceneModel extends base.ExatomicSceneModel {
@@ -30,5 +31,32 @@ export class EditorSceneView extends base.ExatomicSceneView {
         console.log(this);
         console.log(this.app3d);
         console.log(this.app3d.scene);
+        var that = this;
+        this.el.addEventListener('click', that.clicked);
+        console.log("added listener");
+    }
+
+    add_sphere(x, y): any {
+        let geometry = new three.SphereGeometry(2, 32, 32);
+        let material = new three.MeshPhongMaterial(color="blue");
+        let sphere = new three.Mesh(geometry, material);
+        sphere.position = new three.Vector3(x, y, 0);
+        console.log(sphere);
+        this.app3d.meshes['editor'] = [sphere];
+        this.app3d.add_meshes('editor');
+    }
+
+    del_sphere(x, y): any {
+        console.log("Good luck deleting....");
+    }
+
+    clicked(e): any {
+        console.log("clicked!");
+        switch (e.button) {
+            case 0: 
+                this.add_sphere(e.clientX, e.clientY);
+            case 2:
+                this.del_sphere(e.clientX, e.clientY);
+        }
     }
 }
