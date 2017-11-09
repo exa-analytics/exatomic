@@ -79,3 +79,24 @@ class XYZ(Parser):
 
     def parse_comments(self):
         self.parse_atom()
+
+    @classmethod
+    def from_universe(cls, uni):
+        """
+        Create an XYZ editor-like object from a universe.
+
+        Args:
+            uni (:class:`~exatomic.core.universe.Universe`): The universe
+
+        Returns:
+            xyz (:class:`~exatomic.xyz.XYZ`): XYZ editor
+        """
+        text = ""
+        uni.atom['symbol'] = uni.atom.get_symbols()
+        for fdx, frame in uni.atom.groupby("frame"):
+            xyz = frame[['symbol', 'x', 'y', 'z']].to_csv(sep=" ", header=False, index=False)
+            text += "{}\n{}\n{}\n".format(len(frame), "Frame: "+str(fdx), xyz)
+        ed = cls(text)
+        del uni.atom['symbol']
+        ed.atom = uni.atom
+        return ed
