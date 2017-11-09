@@ -7,10 +7,30 @@ Atomic Position Data
 This module provides a collection of dataframes supporting nuclear positions,
 forces, velocities, symbols, etc. (all data associated with atoms as points).
 """
+import numba as nb
+import numpy as np
 from pandas.core.dtypes.dtypes import CategoricalDtypeType
-from exa import DataFrame, Column, Index
+from exa import DataFrame, Column, Index, DataSeries
 from exa.util.units import Length
-from exatomic.base import z2sym, sym2z
+from exatomic.base import z2sym, sym2z, nbpll, nbche
+
+
+@nb.jit(nopython=True, nogil=True, parallel=nbpll, cache=nbche)
+def _gen_labels(fdxs, nats):
+    """
+    Fast generation of Atom labels
+    """
+    n = np.sum(nats)
+    frames = np.empty((n, ), dtype=np.int64)
+    labels = np.empty((n, ), dtype=np.int64)
+    k = 0
+    for j, nat in enumerate(nats):
+        fdx = fdxs[j]
+        for i in range(nat):
+            labels[k] = i
+            frames[k] = fdx
+            k += 1
+    return frames, labels
 
 
 class Atom(DataFrame):
@@ -24,8 +44,25 @@ class Atom(DataFrame):
     y = Column(float, required=True)
     z = Column(float, required=True)
 
+    def get_nat(self):
+        """
+        Return the number of atoms per frame.
+        """
+        return self.groupby("frame").size()
+
     def get_symbols(self):
         return self['Z'].map(z2sym)
+
+    def get_labels(self):
+        """
+        Compute and return enumerated atoms.
+
+        Returns:
+            labels (:class:`~exa.core.numerical.Series`): Enumerated atom labels (of type int)
+        """
+        nats = self.get_nat()    # Number of atoms per frame
+        frame_indexes, label_values = _gen_labels(nats.index.values.astype(int), nats.values.astype(int))
+        return DataSeries(label_values, index=frame_indexes, dtype='category')
 
     @classmethod
     def from_xyz(cls, xyz, unit="Angstrom"):
