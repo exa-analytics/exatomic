@@ -12,8 +12,6 @@ communication logic for all container widget views.
 "use strict";
 var base = require("./jupyter-exatomic-base.js");
 var utils = require("./jupyter-exatomic-utils.js");
-var THREE = require("three");
-var App3D = require("./jupyter-exatomic-three.js").App3D;
 
 
 var UniverseSceneModel = base.ExatomicSceneModel.extend({
@@ -27,40 +25,21 @@ var UniverseSceneModel = base.ExatomicSceneModel.extend({
 
 });
 
-/* A few named functions to reduce boiler plate
-and improve tracebacks should anything go awry.*/
-
-var jsonparse = function(string) {
-    return new Promise(function(resolve, reject) {
-        try {resolve(JSON.parse(string))}
-        catch(e) {reject(e)}
-    });
-};
-
-var logerror = function(e) {console.log(e.message)};
-
-var fparse = function(obj, key) {
-    jsonparse(obj.model.get(key))
-    .then(function(p) {obj[key] = p}).catch(logerror)
-};
-
-var resolv = function(obj, key) {
-    return Promise.resolve(obj.model.get(key))
-    .then(function(p) {obj[key] = p}).catch(logerror)
-};
 
 var UniverseSceneView = base.ExatomicSceneView.extend({
 
     init: function() {
         base.ExatomicSceneView.prototype.init.call(this);
+        console.log("UniverseSceneView init");
+        console.log(this);
         var that = this;
-        this.promises = Promise.all([fparse(that, "atom_x"),
-            fparse(that, "atom_y"), fparse(that, "atom_z"),
-            fparse(that, "atom_s"), resolv(that, "atom_r"),
-            resolv(that, "atom_c"), fparse(that, "atom_l"),
-            fparse(that, "two_b0"), fparse(that, "two_b1"),
-            resolv(that, "field_i"), resolv(that, "field_p"),
-            fparse(that, "field_v")]);
+        this.promises = Promise.all([utils.fparse(this, "atom_x"),
+            utils.fparse(this, "atom_y"), utils.fparse(this, "atom_z"),
+            utils.fparse(this, "atom_s"), utils.mesolv(this, "atom_r"),
+            utils.mesolv(this, "atom_c"), utils.fparse(this, "atom_l"),
+            utils.fparse(this, "two_b0"), utils.fparse(this, "two_b1"),
+            utils.mesolv(this, "field_i"), utils.mesolv(this, "field_p"),
+            utils.fparse(this, "field_v")]);
         this.three_promises = this.app3d.finalize(this.three_promises)
             .then(this.add_atom.bind(this))
             .then(this.app3d.set_camera_from_scene.bind(this.app3d));
@@ -71,6 +50,7 @@ var UniverseSceneView = base.ExatomicSceneView.extend({
     },
 
     add_atom: function() {
+        console.log(this);
         this.app3d.clear_meshes("atom");
         this.app3d.clear_meshes("two");
         var fdx = this.model.get("frame_idx");
@@ -105,13 +85,14 @@ var UniverseSceneView = base.ExatomicSceneView.extend({
         var fdx = this.model.get("frame_idx");
         var idx = this.field_i[fdx][fldx];
         var fps = this.field_p[fdx][fldx];
+        if (fps === undefined) { return };
         this.app3d.meshes["field"] = this.app3d.add_scalar_field(
             utils.scalar_field(
                 utils.gen_field_arrays(fps),
                 this.field_v[idx]),
-            this.model.get("field_iso"), 2,
-            {"pos": this.model.get("field_pos"),
-             "neg": this.model.get("field_neg")});
+            this.model.get("field_iso"),
+            this.model.get("field_o"), 2,
+            this.colors());
         this.app3d.add_meshes("field");
     },
 
@@ -124,6 +105,7 @@ var UniverseSceneView = base.ExatomicSceneView.extend({
         var fdx = this.model.get("frame_idx");
         var idx = this.field_i[fdx][fldx];
         var fps = this.field_p[fdx][fldx];
+        if (fps === undefined) { return };
         this.app3d.meshes["contour"] = this.app3d.add_contour(
             utils.scalar_field(
                 utils.gen_field_arrays(fps),
@@ -132,8 +114,7 @@ var UniverseSceneView = base.ExatomicSceneView.extend({
             this.model.get("cont_lim"),
             this.model.get("cont_axis"),
             this.model.get("cont_val"),
-            {"pos": this.model.get("field_pos"),
-             "neg": this.model.get("field_neg")});
+            this.colors());
         this.app3d.add_meshes("contour");
     },
 

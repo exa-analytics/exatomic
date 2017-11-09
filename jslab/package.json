@@ -1,6 +1,6 @@
 {
   "name": "jupyterlab-exatomic",
-  "version": "0.4.0",
+  "version": "0.4.2",
   "description": "A unified platform for theoretical and computational chemists.",
   "author": "Thomas J. Duignan and Alex Marchenko",
   "license": "Apache-2.0",
@@ -9,8 +9,8 @@
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "dependencies": {
-    "@jupyter-widgets/jupyterlab-manager": "^0.23.2",
-    "jupyter-exatomic": "^0.4.0"
+    "@jupyter-widgets/jupyterlab-manager": "^0.28",
+    "jupyter-exatomic": "^0.4.2"
   },
   "jupyterlab": {
       "extension": true

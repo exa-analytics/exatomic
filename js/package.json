@@ -1,6 +1,6 @@
 {
   "name": "jupyter-exatomic",
-  "version": "0.4.0",
+  "version": "0.4.2",
   "description": "A unified platform for theoretical and computational chemists.",
   "author": "Thomas J. Duignan and Alex Marchenko",
   "license": "Apache-2.0",

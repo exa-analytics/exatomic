@@ -1,3 +1,8 @@
 exa
 ipywidgets
+<<<<<<< HEAD
+=======
+symengine
+python-symengine
+>>>>>>> m-0.3.9
 numexpr

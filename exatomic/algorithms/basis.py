@@ -11,14 +11,21 @@ This is preferred to an explicit parsing and storage of a given
 basis set ordering scheme.
 """
 import re
-import sympy
+#import sympy
 import numpy as np
-from sympy import Add, Mul
+#from sympy import Add, Mul
 from collections import OrderedDict
 from numba import jit, vectorize
 
+import re
+from operator import add
+from numexpr import evaluate
+from symengine import var, exp, Add, Mul, Integer
+from collections import OrderedDict
 
-x, y, z = sympy.symbols('x y z')
+var("x y z")
+
+
 lorder = ['s', 'p', 'd', 'f', 'g', 'h', 'i', 'k', 'l', 'm']
 lmap = {'s': 0, 'p': 1, 'd': 2, 'f': 3, 'g': 4, 'h': 5, 'i': 6, 'k': 7, 'l': 8,
         'm': 9, 'px': 1, 'py': 1, 'pz': 1}
@@ -47,7 +54,6 @@ gaussian_cartesian = enum_cartesian.copy()
 gaussian_cartesian[2] = [[2, 0, 0], [0, 2, 0], [0, 0, 2],
                          [1, 1, 0], [1, 0, 1], [0, 1, 1]]
 
-
 def solid_harmonics(l_max):
 
     def _top_sh(lcur, sp, sm):
@@ -69,7 +75,7 @@ def solid_harmonics(l_max):
                 (y * sp + (1 - kr) * x * sm))
 
     sh = OrderedDict()
-    sh[(0, 0)] = 1
+    sh[(0, 0)] = Integer(1)
     for l in range(1, l_max + 1):
         lpre = l - 1
         ml_all = list(range(-l, l + 1))
@@ -81,6 +87,129 @@ def solid_harmonics(l_max):
                 sh[(l, ml)] = _mid_sh(l, ml, sh[(lpre,ml)], sh[(lpre,ml)])
         sh[(l, ml_all[-1])] = _top_sh(l, sh[(lpre,lpre)], sh[(lpre,-(lpre))])
     return sh
+
+
+class PrimitiveFunction(object):
+
+    cart = {'x': x, 'y': y, 'z': z}
+
+    def gradient(self, cart='x', order=1, expr=None):
+        if not isinstance(order, int) or order < 0:
+            raise Exception("order must be non-negative int")
+        expr = self.kernel
+        for i in range(order):
+            expr = expr.diff(self.cart[cart])
+        return expr
+
+    def __str__(self):
+        return str(self.kernel)
+
+    def __init__(self, xa, ya, za, pre, N, alpha,
+                 gaussian=True):
+        """Assumes Ns are actually Nds"""
+        self.xA = xa
+        self.yA = ya
+        self.zA = za
+        self.xa = x - xa
+        self.ya = y - ya
+        self.za = z - za
+        self.r2 = self.xa ** 2 + self.ya ** 2 + self.za ** 2
+        self.r = self.r2 ** (0.5)
+        self.pre = pre.subs({'x': self.xa,
+                             'y': self.ya,
+                             'z': self.za})
+        if gaussian: self.exp = N * exp(-alpha * self.r2)
+        else:
+            self.exp = N * exp(-alphas * self.r)
+            print("ADF needs r-dependent pre-exponential")
+        self.kernel = self.pre * self.exp
+
+
+
+
+
+class BasisFunction(object):
+
+    cart = {'x': x, 'y': y, 'z': z}
+
+    def gradient(self, cart='x', order=1, expr=None):
+        if not isinstance(order, int) or order < 0:
+            raise Exception("order must be non-negative int")
+        expr = self.kernel
+        for i in range(order):
+            expr = expr.diff(self.cart[cart])
+        return expr
+
+    def _add(self, Ns, alphas, expnt, expr=None):
+        expr = Ns[0] * exp(-alphas[0] * expnt)
+        for N, alpha in zip(Ns[1:], alphas[1:]):
+            expr += N * exp(-alpha * expnt)
+        return expr
+
+    def __str__(self):
+        return str(self.kernel)
+
+    def __init__(self, xa, ya, za, pre, Ns, alphas,
+                 gaussian=True):
+        """Assumes Ns are actually Nds"""
+        self.xA = xa
+        self.yA = ya
+        self.zA = za
+        self.xa = x - xa
+        self.ya = y - ya
+        self.za = z - za
+        self.r2 = self.xa ** 2 + self.ya ** 2 + self.za ** 2
+        self.r = self.r2 ** (0.5)
+        self.pre = pre.subs({'x': self.xa,
+                             'y': self.ya,
+                             'z': self.za})
+        try:
+            Ns = Ns.values
+            alphas = alphas.values
+        except AttributeError:
+            pass
+        self.prim = len(Ns)
+        if gaussian:
+            self.exp = self._add(Ns, alphas, self.r2)
+        else:
+            self.exp = self._add(Ns, alphas, self.r)
+            print("ADF needs r-dependent pre-exponential")
+        self.kernel = self.pre * self.exp
+
+
+class CartesianBasisFunction(BasisFunction):
+
+    def __repr__(self):
+        return 'BsFn(x={:.2f},y={:.2f},z={:.2f},'\
+               'prim={},l={},m={},n={})'.format(
+                   self.xA, self.yA, self.zA,
+                   self.prim, self.l, self.m, self.n)
+
+    def __init__(self, xa, ya, za, Ns, alphas, l, m, n):
+        pre = x ** l * y ** m * z ** n
+        super(CartesianBasisFunction, self).__init__(
+            xa, ya, za, pre, Ns, alphas)
+        self.l = l
+        self.m = m
+        self.n = n
+
+
+class SphericalBasisFunction(BasisFunction):
+
+    sh = solid_harmonics(6)
+
+    def __repr__(self):
+        return 'BsFn(x={:.2f},y={:.2f},z={:.2f},'\
+               'prim={},L={},ml={})'.format(
+                   self.xA, self.yA, self.zA,
+                   self.prim, self.L, self.ml)
+
+    def __init__(self, xa, ya, za, Ns, alphas, L, ml):
+        pre = self.sh[(L, ml)]
+        super(SphericalBasisFunction, self).__init__(
+            xa, ya, za, pre, Ns, alphas)
+        self.L = L
+        self.ml = ml
 
 
 def clean_sh(sh):
@@ -97,11 +226,9 @@ def clean_sh(sh):
     _repatrn = re.compile('|'.join(_replace.keys()))
     clean = OrderedDict()
     for key, sym in sh.items():
-        if isinstance(sym, (Mul, Add)):
-            string = str(sym.expand()).replace(' + ', ' ')#.replace(' - ', ' -')
-            string = _repatrn.sub(lambda x: _replace[x.group(0)], string)
-            clean[key] = [pre + '*' for pre in string.split()]
-        else: clean[key] = ['']
+        string = str(sym.expand()).replace(' + ', ' ')
+        string = _repatrn.sub(lambda x: _replace[x.group(0)], string)
+        clean[key] = [pre + '*' for pre in string.split()]
     return clean
 
 
@@ -114,37 +241,63 @@ def car2sph(sh, cart):
         sh (OrderedDict): the result of solid_harmonics(l_tot)
         cart (dict): dictionary of l, cartesian l, m, n ordering
     """
-    keys, conv = {}, {}
-    prevL, mscnt = 0, 0
-    for L in cart:
-        for idx, (l, m, n) in enumerate(cart[L]):
-            key = ''
-            if l: key += 'x'
-            if l > 1: key += str(l)
-            if m: key += 'y'
-            if m > 1: key += str(m)
-            if n: key += 'z'
-            if n > 1: key += str(n)
-            keys[key] = idx
-    # TODO: six compatibility
-    for key, sym in sh.items():
-        L = key[0]
-        mscnt = mscnt if prevL == L else 0
+    conv, prevL, mlcnt = {}, 0, 0
+    for (L, ml), sym in sh.items():
+        if L > 5: continue
+        mlcnt = mlcnt if prevL == L else 0
         conv.setdefault(L, np.zeros((cart_lml_count[L],
                                      spher_lml_count[L]),
-                                     dtype=np.float64))
-        if isinstance(sym, (Mul, Add)):
-            string = (str(sym.expand())
-                      .replace(' + ', ' ')
-                      .replace(' - ', ' -'))
-            for chnk in string.split():
-                pre, exp = chnk.split('*', 1)
-                if L == 1: conv[L] = np.array(cart[L])
-                else: conv[L][keys[exp.replace('*', '')], mscnt] = float(pre)
+                                    dtype=np.float64))
+        coefs = sym.expand().as_coefficients_dict()
+        for i, (l, m, n) in enumerate(cart[L]):
+            if L == 1:
+                conv[L] = np.array(cart[L])
+                break
+            key = x ** l * y ** m * z ** n
+            conv[L][i, mlcnt] = coefs[key]
         prevL = L
-        mscnt += 1
-    conv[0] = np.array([[1]])
+        mlcnt += 1
     return conv
+    # keys, conv = {}, {}
+    # prevL, mscnt = 0, 0
+    # for L in cart:
+    #     for idx, (l, m, n) in enumerate(cart[L]):
+    #         key = ''
+    #         if l: key += 'x'
+    #         if l > 1: key += str(l)
+    #         if m: key += 'y'
+    #         if m > 1: key += str(m)
+    #         if n: key += 'z'
+    #         if n > 1: key += str(n)
+    #         keys[key] = idx
+    # # TODO: six compatibility
+    # for key, sym in sh.items():
+    #     L = key[0]
+    #     if L > 5: continue
+    #     mscnt = mscnt if prevL == L else 0
+    #     conv.setdefault(L, np.zeros((cart_lml_count[L],
+    #                                  spher_lml_count[L]),
+    #                                  dtype=np.float64))
+    #     if isinstance(sym, (Mul, Add)):
+    #         print(sym.expand().as_coefficients_dict())
+    #         string = (str(sym.expand())
+    #                   .replace(' + ', ' ')
+    #                   .replace(' - ', ' -'))
+    #         for chnk in string.split():
+    #             try:
+    #                 pre, exp = chnk.split('*', 1)
+    #             except:
+    #                 continue
+    #             if L == 1: conv[L] = np.array(cart[L])
+    #             else:
+    #                 print(L)
+    #                 print(exp.replace('*', ''))
+    #                 print(keys[exp.replace('*', '')])
+    #                 conv[L][keys[exp.replace('*', '')], mscnt] = np.float(pre)
+    #     prevL = L
+    #     mscnt += 1
+    # conv[0] = np.array([[1]])
+    # return conv
 
 
 
