@@ -30,6 +30,8 @@ var UniverseSceneView = base.ExatomicSceneView.extend({
 
     init: function() {
         base.ExatomicSceneView.prototype.init.call(this);
+        console.log("UniverseSceneView init");
+        console.log(this);
         var that = this;
         this.promises = Promise.all([utils.fparse(this, "atom_x"),
             utils.fparse(this, "atom_y"), utils.fparse(this, "atom_z"),
@@ -40,10 +42,7 @@ var UniverseSceneView = base.ExatomicSceneView.extend({
             utils.fparse(this, "field_v")]);
         this.three_promises = this.app3d.finalize(this.three_promises)
             .then(this.add_atom.bind(this))
-            .then(this.app3d.set_camera_from_scene.bind(this.app3d))
-            .then(function(o) {
-                console.log(that);
-            });
+            .then(this.app3d.set_camera_from_scene.bind(this.app3d));
     },
 
     render: function() {
@@ -51,6 +50,7 @@ var UniverseSceneView = base.ExatomicSceneView.extend({
     },
 
     add_atom: function() {
+        console.log(this);
         this.app3d.clear_meshes("atom");
         this.app3d.clear_meshes("two");
         var fdx = this.model.get("frame_idx");
@@ -85,13 +85,14 @@ var UniverseSceneView = base.ExatomicSceneView.extend({
         var fdx = this.model.get("frame_idx");
         var idx = this.field_i[fdx][fldx];
         var fps = this.field_p[fdx][fldx];
+        if (fps === undefined) { return };
         this.app3d.meshes["field"] = this.app3d.add_scalar_field(
             utils.scalar_field(
                 utils.gen_field_arrays(fps),
                 this.field_v[idx]),
-            this.model.get("field_iso"), 2,
-            {"pos": this.model.get("field_pos"),
-             "neg": this.model.get("field_neg")});
+            this.model.get("field_iso"),
+            this.model.get("field_o"), 2,
+            this.colors());
         this.app3d.add_meshes("field");
     },
 
@@ -104,6 +105,7 @@ var UniverseSceneView = base.ExatomicSceneView.extend({
         var fdx = this.model.get("frame_idx");
         var idx = this.field_i[fdx][fldx];
         var fps = this.field_p[fdx][fldx];
+        if (fps === undefined) { return };
         this.app3d.meshes["contour"] = this.app3d.add_contour(
             utils.scalar_field(
                 utils.gen_field_arrays(fps),
@@ -112,8 +114,7 @@ var UniverseSceneView = base.ExatomicSceneView.extend({
             this.model.get("cont_lim"),
             this.model.get("cont_axis"),
             this.model.get("cont_val"),
-            {"pos": this.model.get("field_pos"),
-             "neg": this.model.get("field_neg")});
+            this.colors());
         this.app3d.add_meshes("contour");
     },
 

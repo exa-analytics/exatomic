@@ -52,8 +52,7 @@ var ExatomicBoxView = control.BoxView.extend({
                             subpromises.push(scns[j]);
                         };
                     };
-                    return Promise.all(subpromises).then(
-                        function(p) { return p });
+                    return Promise.all(subpromises).then(p => p);
                 });
                 return promises;
             });
@@ -65,7 +64,6 @@ var ExatomicBoxView = control.BoxView.extend({
         });
     },
 
-
     link_controls: function() {
         var that = this;
         this.scene_ps.then(function(views) {
@@ -75,19 +73,18 @@ var ExatomicBoxView = control.BoxView.extend({
                 for (var i = 1; i < views.length; i++) {
                     var a = views[i].app3d;
                     a.camera = camera;
-                };
-                for (var i = 1; i < views.length; i++) {
-                    var a = views[i].app3d;
                     a.controls = a.init_controls();
                     a.controls.addEventListener("change", a.render.bind(a));
+                    // views[i].el.removeEventListener('mousemove', a.mouseover_listener);
                 };
             } else {
-                var cam = views[0].app3d.camera;
+                var camera = views[0].app3d.camera;
                 for (var i = 1; i < views.length; i++) {
                     var a = views[i].app3d;
-                    a.camera = cam.clone();
+                    a.camera = camera.clone();
                     a.controls = a.init_controls();
                     a.controls.addEventListener("change", a.render.bind(a));
+                    // a.finalize_mouseover();
                 };
             };
         });
@@ -129,10 +126,12 @@ var ExatomicSceneView = widgets.DOMWidgetView.extend({
         window.addEventListener("resize", this.resize.bind(this));
         this.app3d = new three.App3D(this);
         this.three_promises = this.app3d.init_promise();
-        if (this.model.get("uni")) { func = this.add_field }
-        else { func = this.add_geometry };
-        this.three_promises.then(func.bind(this))
-            .then(this.app3d.set_camera_from_scene.bind(this.app3d));
+        if (this.model.get("test")) {
+            if (this.model.get("uni")) { func = this.add_field }
+            else { func = this.add_geometry };
+            this.three_promises.then(func.bind(this))
+                .then(this.app3d.set_camera_from_scene.bind(this.app3d));
+        };
     },
 
     resize: function() {
@@ -169,7 +168,7 @@ var ExatomicSceneView = widgets.DOMWidgetView.extend({
             if (field === "SolidHarmonic") {
                 var fml = this.model.get("field_ml");
                 var tf = func(ars, kind, fml);
-                var name = field + "," + kind + "," + fml;
+                var name = "Sol.Har.," + kind + "," + fml;
             } else {
                 var tf = func(ars, kind);
                 var name = field + "," + kind;
@@ -245,6 +244,7 @@ var ExatomicSceneView = widgets.DOMWidgetView.extend({
         this.listenTo(this.model, "change:save", this.save);
         this.listenTo(this.model, "change:save_cam", this.save_camera);
         this.listenTo(this.model, "msg:custom", this._handle_custom_msg);
+        // this.listenTo(this.model, "change:h", this.resize);
         // Test container
         this.listenTo(this.model, "change:geom", this.add_geometry);
         // Field stuff

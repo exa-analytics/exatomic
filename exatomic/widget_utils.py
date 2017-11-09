@@ -15,9 +15,11 @@ _flo = Layout(width='100%', align_items='flex-end')
 # All widgets not in a folder have this layout
 _wlo = Layout(width='98%')
 # HBoxes within the final scene VBox have this layout
-_hboxlo = Layout(flex="1 1 auto", width="100%", height="100%")
+_hboxlo = Layout(flex='1 1 auto', width='auto', height='auto')
 # The final VBox containing all scenes has this layout
-_vboxlo = Layout(width='100%', height='100%')
+_vboxlo = Layout(flex='1 1 auto', width='auto', height='auto')
+# The box to end all boxes
+_bboxlo = Layout(flex='1 1 auto', width='auto', height='auto')
 
 class _ListDict(OrderedDict):
     """An OrderedDict that also slices and indexes as a list."""
@@ -78,19 +80,20 @@ class Folder(VBox):
             self._set_gui()
 
     def deactivate(self, *keys, **kwargs):
+        active = kwargs.pop('active', False)
         update = kwargs.pop('update', False)
         keys = self._get(True, True) if not keys else keys
         for key in keys:
             if key == 'main': continue
-            self._controls[key].active = False
+            self._controls[key].active = active
             self._controls[key].disabled = True
         if update:
             self._set_gui()
 
-    def insert(self, idx, key, obj, activate=True, update=False):
+    def insert(self, idx, key, obj, active=True, update=False):
         obj.layout.width = str(98 - (self.level + 1) * self.indent) + '%'
         self._controls.insert(idx, key, obj)
-        if activate:
+        if active:
             self.activate(key, enable=True)
         if update:
             self._set_gui()
@@ -103,6 +106,9 @@ class Folder(VBox):
     def move_to_end(self, *keys):
         for key in keys:
             self._controls.move_to_end(key)
+
+    def pop(self, key):
+        return self._controls.pop(key)
 
     def _close(self):
         for widget in self._get():
@@ -129,29 +135,25 @@ class Folder(VBox):
         self.on_displayed(VBox._fire_children_displayed)
 
     def _relayout(self, objs):
-        sw = str(98 - (self.level + 1) * self.indent) + '%'
         for obj in objs.values():
-            obj.layout.width = sw
+            obj.layout = self._slo
 
 
     def _init(self, control, content):
-        pw = 98 - self.level * self.indent
-        sw = str(pw - self.indent) + '%'
-        pw = str(pw) + '%'
         def _b(b):
             self.show = self.show == False
             self._set_gui()
         control.on_click(_b)
         control.active = True
         control.disabled = False
-        control.layout.width = pw
+        control.layout = self._plo
         self._controls = _ListDict([('main', control)])
         if content is not None:
             for key, obj in content.items():
                 if isinstance(obj, Folder):
                     obj.active = False
                     continue
-                obj.layout.width = sw
+                obj.layout = self._slo
                 if not hasattr(obj, 'active'):
                     obj.active = False
                 if not hasattr(obj, 'disabled'):
@@ -169,10 +171,14 @@ class Folder(VBox):
         self.show = kwargs.pop('show', False)
         self.indent = 5
         self.level = kwargs.pop('level', 0)
+        pw = 98 - self.level * self.indent
+        self._slo = Layout(width=str(pw - self.indent) + '%')
+        self._plo = Layout(width=str(pw) + '%')
         self._init(control, content)
         lo = kwargs.pop('layout', None)
+        lo = Layout(width='100%', align_items='flex-end')
         super(Folder, self).__init__(
-            children=self._get(), layout=_flo, **kwargs)
+            children=self._get(), layout=lo, **kwargs)
         self.active = True
         self.disabled = False
 
@@ -184,25 +190,21 @@ class GUIBox(VBox):
         super(GUIBox, self).__init__(*args, layout=_glo, **kwargs)
 
 
-def _scene_grid(*unis, min_height=None, min_width=None):
-    n = None
-    if isinstance(unis[0], int):
-        n = unis[0]
-    if n is None:
-        n = len(unis)
+def _scene_grid(unis, min_height=None, min_width=None):
+    n = unis[0] if isinstance(unis[0], int) else len(unis)
     if n > 9: raise NotImplementedError("Too many scenes")
     scns = []
     mh = min_height
     mw = min_width
     if mh is None:
-        if n < 4: mh = "350px"
-        elif n < 7: mh = "300px"
-        else: mh = "250px"
-    #if mw is None: mw = mh
+        if n < 1: mh = "700px"
+        elif n < 3: mh = "400px"
+        elif n < 5: mh = "300px"
+        elif n < 7: mh = "250px"
+        else: mh = "200px"
     if n < 5: mod = 2
     else: mod = 3
     kwargs = {'min_height': mh, 'min_width': mw}
-    print(kwargs)
     for i in range(n):
         if not i % mod: scns.append([])
         kwargs['index'] = i

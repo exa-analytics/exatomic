@@ -124,3 +124,17 @@ def frame_traits(uni):
     """Get frame table traits."""
     if not hasattr(uni, 'frame'): return {}
     return {}
+
+
+def uni_traits(uni, atomcolors=None, atomradii=None):
+    """Get Universe traits."""
+    unargs = {}
+    fields = []
+    if hasattr(uni, 'atom'):
+        unargs.update(atom_traits(uni.atom, atomcolors, atomradii))
+    if hasattr(uni, 'atom_two'):
+        unargs.update(two_traits(uni))
+    if hasattr(uni, 'field'):
+        unargs.update(field_traits(uni.field))
+        fields = ['null'] + unargs['field_i'][0]
+    return unargs, fields

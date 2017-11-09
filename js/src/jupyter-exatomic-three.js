@@ -82,7 +82,6 @@ class App3D {
     init_renderer() {
         var renderer = new THREE.WebGLRenderer({antialias: true,
                                                 alpha: true});
-        renderer.setSize(this.w, this.h);
         renderer.autoClear = false;
         return Promise.resolve(renderer);
     };
@@ -124,10 +123,9 @@ class App3D {
     };
 
     resize(w, h) {
-        // this.view.resize();
         this.set_dims(w, h);
         this.set_hud();
-        this.renderer.setSize(this.w, this.h);
+        this.renderer.setSize(this.w, this.h); //, false);
         this.camera.aspect = this.w / this.h;
         this.hudcamera.left   = -this.w2;
         this.hudcamera.right  =  this.w2;
@@ -136,14 +134,14 @@ class App3D {
         this.camera.updateProjectionMatrix();
         this.hudcamera.updateProjectionMatrix();
         this.controls.handleResize();
-        this.render();
+        this.camera.updateMatrix();
+        // this.render();
     };
 
     animate() {
         window.requestAnimationFrame(this.animate.bind(this));
         this.resize();
         this.controls.update();
-        this.camera.updateMatrix();
         this.render();
     };
 
@@ -230,7 +228,9 @@ class App3D {
         this.view.el.addEventListener('mousemove',
         function(event) {
             event.preventDefault();
-            var pos = that.renderer.domElement.getBoundingClientRect();
+            // var pos = that.renderer.domElement.getBoundingClientRect();
+            // console.log(pos.width, pos.height);
+            var pos = this.getBoundingClientRect();
             that.mouse.x =  ((event.clientX - pos.x) / that.w) * 2 - 1;
             that.mouse.y = -((event.clientY - pos.y) / that.h) * 2 + 1;
             that.raycaster.setFromCamera(that.mouse, that.camera);
@@ -245,12 +245,10 @@ class App3D {
             utils.resolv(this, 'scene'),
             Promise.all([
                 utils.resolv(this, 'camera'),
-                this.init_renderer().then(function(o) {
+                this.init_renderer(this.view.el).then(function(o) {
                     that.renderer = o;
                     that.view.el.appendChild(that.renderer.domElement);
                 })
-                // utils.resolv(this, 'renderer').then(function(o) {
-                //     that.view.el.appendChild(that.renderer.domElement)})
             ]).then(this.init_controls.bind(this))
               .then(function(o) {
                   that.controls = o;
@@ -639,14 +637,24 @@ class App3D {
         ngeom.computeVertexNormals();
         var pmesh = new THREE.Mesh(pgeom,
             new THREE.MeshPhongMaterial({
-                color: colors["pos"], specular: colors["pos"],
-                side: THREE.DoubleSide, shininess: 15,
-                transparent:true, opacity: opac}));
+                color: colors["pos"],
+                specular: colors["pos"],
+                side: THREE.DoubleSide,
+                shininess: 15,
+                transparent:true,
+                opacity: opac,
+                reflectivity: 0.8
+            }));
         var nmesh = new THREE.Mesh(ngeom,
             new THREE.MeshPhongMaterial({
-                color: colors["neg"], specular: colors["neg"],
-                side: THREE.DoubleSide, shininess: 15,
-                transparent: true, opacity: opac}));
+                color: colors["neg"],
+                specular: colors["neg"],
+                side: THREE.DoubleSide,
+                shininess: 15,
+                transparent: true,
+                opacity: opac,
+                reflectivity: 0.8
+            }));
         pmesh.name =  iso;
         nmesh.name = -iso;
         var stop = new Date().getTime();
@@ -867,198 +875,227 @@ class App3D {
         };
         return {"verts": rear, "contours": z};
     };
+
+    add_points(x, y, z, c, r) {
+        /*"""
+        add_points
+        ---------------
+        Create a point cloud from x, y, z coordinates
+
+        Args:
+            x (array-like): Array like object of x values
+            y (array-like): Array like object of y values
+            z (array-like): Array like object of z values
+            c (object): List like colors corresponding to every object
+            r (object): List like radii corresponding to every object
+
+        Returns:
+            points (THREE.Points): Reference to added points object
+
+        */
+        r = r || 1;
+        c = c || 0x808080;
+        c = (!c.length) ? utils.repeat_obj(c, n) : c;
+        r = (!r.length) ? utils.repeat_obj(r, n) : r;
+        c = App3D.prototype.flatten_color(c);
+        r = new Float32Array(r);
+        var geometry = new THREE.BufferGeometry();
+        var material = new THREE.ShaderMaterial({
+            vertexShader: App3D.prototype.vertex_shader,
+            fragmentShader: App3D.prototype.point_frag_shader,
+            transparent: true,
+            opacity: 1.0,
+            fog: true
+        });
+        var xyz = utils.create_float_array_xyz(x, y, z);
+        var n = Math.floor(xyz.length / 3);
+        geometry.addAttribute("position", new THREE.BufferAttribute(xyz, 3));
+        geometry.addAttribute("color", new THREE.BufferAttribute(c, 3));
+        geometry.addAttribute("size", new THREE.BufferAttribute(r, 1));
+        var points = new THREE.Points(geometry, material);
+        return [points];
+    };
+
+    add_lines(v0, v1, x, y, z, colors) {
+        /*"""
+        add_lines
+        ------------
+        Add lines between pairs of points.
+
+        Args:
+            v0 (array): Array of first vertex in pair
+            v1 (array): Array of second vertex
+            x (array): Position in x of vertices
+            y (array): Position in y of vertices
+            z (array): Position in z of vertices
+            colors (array): Colors of vertices
+
+        Returns:
+            linesegs (THREE.LineSegments): Line segment objects
+        */
+        var material = new THREE.LineBasicMaterial({
+            vertexColors: THREE.VertexColors,
+            linewidth: 4,
+        });
+        var geometry = new THREE.Geometry();
+        var n = v0.length;
+        for (var i=0; i<n; i++) {
+            var j = v0[i];
+            var k = v1[i];
+            var vector0 = new THREE.Vector3(x[j], y[j], z[j]);
+            var vector1 = new THREE.Vector3(x[k], y[k], z[k]);
+            geometry.vertices.push(vector0);
+            geometry.vertices.push(vector1);
+            geometry.colors.push(new THREE.Color(colors[j]));
+            geometry.colors.push(new THREE.Color(colors[k]));
+        };
+        var lines = new THREE.LineSegments(geometry, material);
+        return [lines];
+    };
+
+    add_spheres(x, y, z, c, r, l) {
+        /*"""
+        add_spheres
+        ---------------
+        Create a point cloud from x, y, z coordinates and colors and radii
+        (optional).
+
+        Args:
+            x (array-like): Array like object of x values
+            y (array-like): Array like object of y values
+            z (array-like): Array like object of z values
+            c (object): List like colors corresponding to every object
+            r (object): List like radii corresponding to every object
+            l (array-like): Array like object of atom labels
+
+        Returns:
+            spheres (list): List of THREE.Mesh objects
+        */
+        var n = 1;
+        r = r || 1;
+        c = c || x808080;
+        n = x.length || n;
+        n = y.length || n;
+        n = z.length || n;
+        c = (!c.hasOwnProperty("length")) ? utils.repeat_obj(c, n) : c;
+        r = (!r.hasOwnProperty("length")) ? utils.repeat_obj(r, n) : r;
+        l = (l == "") ? utils.repeat_obj(l, n) : l;
+        var geometries = {};
+        // var materials = {};
+        for (var i=0; i<n; i++) {
+            var color = c[i];
+            var radius = r[i];
+            if (!geometries.hasOwnProperty(color)) {
+                geometries[color] = new THREE.SphereGeometry(radius, 26, 26);
+            };
+            // if (materials.hasOwnProperty(color) === false) {
+            //     materials[color] = new THREE.MeshPhongMaterial({
+            //         color: color,
+            //         specular: color,
+            //         shininess: 5
+            //     });
+            // };
+        };
+        var xyz = utils.create_float_array_xyz(x, y, z);
+        var meshes = [];
+        for (var i=0, i3=0; i<n; i++, i3+=3) {
+            var color = c[i];
+            var material = new THREE.MeshPhongMaterial({
+                color: color,
+                specular: color,
+                shininess: 5,
+                reflectivity: 0.8
+            });
+            var mesh = new THREE.Mesh(geometries[color], material);
+            if (l[i] != "") { mesh.name = l[i] };
+            mesh.position.set(xyz[i3], xyz[i3+1], xyz[i3+2]);
+            meshes.push(mesh);
+        };
+        return meshes;
+    };
+
+    add_cylinders(v0, v1, x, y, z, colors) {
+        /*"""
+        add_cylinders
+        ------------
+        Add lines between pairs of points.
+
+        Args:
+            v0 (array): Array of first vertex in pair
+            v1 (array): Array of second vertex
+            x (array): Position in x of vertices
+            y (array): Position in y of vertices
+            z (array): Position in z of vertices
+            colors (array): Colors of vertices
+
+        Returns:
+            linesegs (THREE.LineSegments): Line segment objects
+        */
+        var r = 0.05;
+        var mat = new THREE.MeshPhongMaterial({
+            vertexColors: THREE.VertexColors,
+            color: 0x606060,
+            specular: 0x606060,
+            reflectivity: 0.8,
+            shininess: 5
+        });
+        var meshes = [];
+        var n = v0.length;
+        for (var i=0; i<n; i++) {
+            var j = v0[i];
+            var k = v1[i];
+            var vector0 = new THREE.Vector3(x[j], y[j], z[j]);
+            var vector1 = new THREE.Vector3(x[k], y[k], z[k]);
+            var direction = new THREE.Vector3().subVectors(vector0, vector1);
+            var center = new THREE.Vector3().addVectors(vector0, vector1);
+            center.divideScalar(2.0);
+            var length = direction.length();
+            var geometry = new THREE.CylinderGeometry(r, r, length);
+            geometry.applyMatrix(new THREE.Matrix4().makeRotationX( Math.PI / 2));
+            /*var nn = geometry.faces.length;
+            var color0 = new THREE.Color(colors[j]);
+            var color1 = new THREE.Color(colors[k]);
+            geometry.colors.push(color0.clone());
+            geometry.colors.push(color1.clone());
+            for (var l=0; l<nn; l++) {
+                geometry.faces[l].vertexColors[0] =
+            };*/
+            var mesh = new THREE.Mesh(geometry, mat.clone());
+            mesh.name = (length * 0.52918).toFixed(4) + "\u212B";
+            mesh.position.set(center.x, center.y, center.z);
+            mesh.lookAt(vector1);
+            meshes.push(mesh);
+        };
+        return meshes;
+    };
+
+    add_wireframe(vertices, color) {
+        /*"""
+        add_wireframe
+        -----------------
+        Create a wireframe object
+        */
+        color = color || 0x808080;
+        var geometry = new THREE.Geometry();
+        for (var v of vertices) {
+            geometry.vertices.push(new THREE.Vector3(v[0], v[1], v[2]));
+        };
+        var material = new THREE.MeshBasicMaterial({
+            transparent: true,
+            opacity: 0.2,
+            wireframeLinewidth: 8,
+            wireframe: true
+        });
+        var cell = new THREE.Mesh(geometry, material);
+        cell = new THREE.BoxHelper(cell);
+        cell.material.color.set(color);
+        return [cell];
+    };
+
+
 };
 
 
-// class App3D {
-//     /*"""
-//     App3D
-//     =========
-//     A 3D visualization application built on top of threejs
-//     that accepts an empty jupyter widget view and defines
-//     a simple threejs scene with a simplified threejs API.
-//     */
-//
-//     constructor(view) {
-//         this.view = view;
-//         this.meshes = {"generic": [], "frame": [],
-//                        "contour": [], "field": [],
-//                        "atom": [], "two": []};
-//         this.ACTIVE = null;
-//         this.set_dims();
-//     };
-//
-//     set_dims() {
-//         this.w = this.view.model.get("layout").get("width");
-//         this.h = this.view.model.get("layout").get("height");
-//         this.w2 = this.w / 2;
-//         this.h2 = this.h / 2;
-//     };
-//
-//     init_camera() {
-//         return new THREE.PerspectiveCamera(35, this.w / this.h, 1, 1000);
-//     };
-//
-//     init_scene() {
-//         var scene = new THREE.Scene();
-//         var amlight = new THREE.AmbientLight(0xFFFFFF, 0.5);
-//         var dlight0 = new THREE.DirectionalLight(0xFFFFFF, 0.3);
-//         var dlight1 = new THREE.DirectionalLight(0xFFFFFF, 0.3);
-//         dlight0.position.set(-100, -100, -100);
-//         dlight1.position.set(100, 100, 100);
-//         scene.add(amlight);
-//         scene.add(dlight0);
-//         scene.add(dlight1);
-//         return Promise.resolve(scene);
-//     };
-//
-//     init_renderer() {
-//         var renderer = new THREE.WebGLRenderer({antialias: true,
-//                                                 alpha: true});
-//         renderer.setSize(this.w, this.h);
-//         renderer.autoClear = false;
-//         return Promise.resolve(renderer);
-//     };
-//
-//     init_controls() {
-//         var controls = new TBC(this.camera,
-//                                this.renderer.domElement);
-//         controls.rotateSpeed = 10.0;
-//         controls.zoomSpeed = 5.0;
-//         controls.panSpeed = 0.5;
-//         controls.noZoom = false;
-//         controls.noPan = false;
-//         controls.staticMoving = true;
-//         controls.dynamicDampingFactor = 0.3;
-//         controls.keys = [65, 83, 68];
-//         controls.target = new THREE.Vector3(0.0, 0.0, 0.0);
-//         return controls;
-//     }
-//
-//     init_raycaster() {
-//         return new THREE.Raycaster();
-//     };
-//
-//     init_hudscene() {
-//         return new THREE.Scene();
-//     };
-//
-//     init_hudcamera() {
-//         var camera = new THREE.OrthographicCamera(
-//             -this.w2,  this.w2,
-//              this.h2, -this.h2, 1, 1500);
-//         camera.position.z = 1000;
-//         return camera;
-//
-//     };
-//
-//     init_mouse() {
-//         return new THREE.Vector2();
-//     };
-//
-//     resize(w, h) {
-//         w = (w === undefined) ? this.w : w;
-//         h = (h === undefined) ? this.h : h;
-//         var w2 = w / 2;
-//         var h2 = h / 2;
-//         this.set_dims();
-//         this.set_hud();
-//         this.renderer.setSize(w, h);
-//         this.camera.aspect = w / h;
-//         this.hudcamera.left   = -w2;
-//         this.hudcamera.right  =  w2;
-//         this.hudcamera.top    =  h2;
-//         this.hudcamera.bottom = -h2;
-//         this.camera.updateProjectionMatrix();
-//         this.hudcamera.updateProjectionMatrix();
-//         this.controls.handleResize();
-//     };
-//
-//     animate() {
-//         window.requestAnimationFrame(this.animate.bind(this));
-//         this.controls.update();
-//         this.resize();
-//         this.render();
-//     };
-//
-//     render() {
-//         this.renderer.clear();
-//         this.renderer.render(this.scene, this.camera);
-//         this.renderer.clearDepth();
-//         this.renderer.render(this.hudscene, this.hudcamera);
-//     };
-//
-//     finalize(promise) {
-//         return promise.then(this.animate.bind(this));
-//     };
-//
-//     init_hudcanvas() {
-//         var canvas = document.createElement("canvas");
-//         canvas.width = 1024;
-//         canvas.height = 1024;
-//         return Promise.resolve(canvas);
-//     };
-//
-//     finalize_hudcanvas() {
-//         this.context = this.hudcanvas.getContext("2d");
-//         this.context.textAlign = "bottom";
-//         this.context.textBaseline = "left";
-//         this.context.font = "64px Arial";
-//         this.texture = new THREE.Texture(this.hudcanvas);
-//         this.texture.anisotropy = this.renderer.getMaxAnisotropy();
-//         this.texture.minFilter = THREE.NearestMipMapLinearFilter;
-//         this.texture.magFilter = THREE.NearestFilter;
-//         this.texture.needsUpdate = true;
-//         var material = new THREE.SpriteMaterial({map: this.texture});
-//         this.sprite = new THREE.Sprite(material);
-//         this.sprite.position.set(1000, 1000, 1000);
-//         this.sprite.scale.set(256, 256, 1);
-//         this.hudscene.add(this.sprite);
-//     };
-//
-//
-//     lighten_color(color) {
-//         // Need to check if color being passed is hex or int
-//         var R = (color >> 16);
-//         var G = (color >> 8 & 0x00FF);
-//         var B = (color & 0x0000FF);
-//         R = (R == 0) ? 110 : R + 76;
-//         G = (G == 0) ? 110 : G + 76;
-//         B = (B == 0) ? 110 : B + 76;
-//         R = R < 255 ? R < 1 ? 0 : R : 255;
-//         G = G < 255 ? G < 1 ? 0 : G : 255;
-//         B = B < 255 ? B < 1 ? 0 : B : 255;
-//         return (0x1000000 + R * 0x10000 + G * 0x100 + B);
-//     };
-//
-//     highlight_active(intersects) {
-//         if (intersects.length > 0) {
-//             if (this.ACTIVE != intersects[0].object) {
-//                 if (this.ACTIVE != null) {
-//                     if (this.ACTIVE.material.color) {
-//                         this.ACTIVE.material.color.setHex(this.ACTIVE.currentHex);
-//                     };
-//                 };
-//                 this.ACTIVE = intersects[0].object;
-//                 if (this.ACTIVE.material.color) {
-//                     this.ACTIVE.currentHex = this.ACTIVE.material.color.getHex();
-//                     var newHex = this.lighten_color(this.ACTIVE.currentHex);
-//                     this.ACTIVE.material.color.setHex(newHex);
-//                 };
-//                 if (this.ACTIVE.name) { this.set_hud() }
-//                 else { this.unset_hud() };
-//             };
-//         } else {
-//             if (this.ACTIVE != null) {
-//                 if (this.ACTIVE.material.color) {
-//                     this.ACTIVE.material.color.setHex(this.ACTIVE.currentHex);
-//                 };
-//             };
-//             this.ACTIVE = null;
-//             this.unset_hud();
-//         };
-//     };
-//
 //     finalize_mouseover() {
 //         var that = this;
 //         this.view.el.addEventListener('mousemove',
