@@ -12,11 +12,13 @@ from glob import glob
 from base64 import b64decode
 from collections import OrderedDict
 from traitlets import (Bool, Int, Float, Unicode, CInt,
-                       List, Any, Dict, Instance, link)
+                       List, Any, Dict, Instance, link,
+                       Tuple)
 from ipywidgets import (
     Box, VBox, HBox, FloatSlider, IntSlider, Play,
     IntRangeSlider, Widget, DOMWidget, Layout, Button,
-    Dropdown, register, jslink, widget_serialization
+    Dropdown, register, jslink, widget_serialization,
+    FloatText
 )
 from exa.relational.isotope import symbol_to_radius, symbol_to_color
 from exatomic import __js_version__
@@ -360,19 +362,40 @@ class TestContainer(ExatomicBox):
                                             **kwargs)
 
 
+
 @register
 class TensorScene(ExatomicScene):
     """A basic scene to test some javascript."""
     _model_name = Unicode("TensorSceneModel").tag(sync=True)
     _view_name = Unicode("TensorSceneView").tag(sync=True)
-    # field = Unicode("null").tag(sync=True)
+    field = Unicode("null").tag(sync=True)
     geom = Bool(True).tag(sync=True)
+    generate = Bool(False).tag(sync=True)
+    tensor = Tuple([[1.0,1.0,1.0],[1.0,1.0,1.0],[1.0,1.0,1.0]]).tag(sync=True)
+    print("re-execute")
+    print(tensor)
 
 @register
 class TensorContainer(ExatomicBox):
     """A basic container to test some javascript."""
     _model_name = Unicode("TensorContainerModel").tag(sync=True)
     _view_name = Unicode("TensorContainerView").tag(sync=True)
+
+    def _generateTensor(self,b):
+        if self.scene.generate:
+            self.scene.generate = False
+        else:
+            self.scene.generate = True
+        tempTensor = []
+        for rows in range(3):
+            tempTensor.append([])
+            for cols in range(3):
+                tempTensor[-1].append(self.tensor.children[rows].children[cols].value)
+        print(self.scene.tensor)
+        self.scene.tensor = tempTensor
+        print(self.scene.tensor)
+        print(self.scene.generate)
+        print(tempTensor)
 
 
     def _init_gui(self):
@@ -381,9 +404,27 @@ class TensorContainer(ExatomicBox):
         super(TensorContainer, self)._init_gui()
 
         geom = Button(icon="cubes", description=" Mesh", layout=gui_lo)
+        generate = Button(icon="cubes", description=" Generate",layout=gui_lo)
+        '''Tensor elements
+            |xx xy xz|
+            |yx yy yz|
+            |zx zy zz|'''
+        self.x = HBox([FloatText(value=1.0),FloatText(value=1.0), \
+                                                    FloatText(value=1.0)])
+        self.y = HBox([FloatText(value=1.0),FloatText(value=1.0), \
+                                                    FloatText(value=1.0)])
+        self.z = HBox([FloatText(value=1.0),FloatText(value=1.0), \
+                                                    FloatText(value=1.0)])
+        self.tensor = VBox([self.x,self.y,self.z])
+        display(self.tensor)
+
         def _geom(b): self.scene.geom = self.scene.geom == False
+            
         geom.on_click(_geom)
+        generate.on_click(self._generateTensor)
         self.active_controls['geom'] = geom
+        self.active_controls['gen'] = generate
+        #self.active_controls['tensor'] = self.tensor
         # Add a TextArea ipywidget 
 
 #        fopts = ['null', 'sphere', 'torus', 'ellipsoid']
@@ -399,8 +440,7 @@ class TensorContainer(ExatomicBox):
 
     def __init__(self, *args, **kwargs):
         super(TensorContainer, self).__init__(*args,
-                                            scene=TensorScene(),
-                                            **kwargs)
+                                            scene=TensorScene(),**kwargs)
 
 ###########################
 # Universe example widget #

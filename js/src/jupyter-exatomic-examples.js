@@ -105,7 +105,6 @@ var TensorSceneView = base.ExatomicSceneView.extend({
     },
 
     add_surface: function() {
-        console.log("Adding surface");
         this.app3d.clear_meshes("generic");
         if (this.model.get("geom")) {
             this.app3d.meshes["generic"] = this.app3d.add_tensor_surface();
@@ -113,9 +112,15 @@ var TensorSceneView = base.ExatomicSceneView.extend({
         this.app3d.add_meshes("generic");
     },
 
+    generate_tensor: function() {
+        console.log(this.model.get("generate"));
+        console.log(this.model.get("tensor")[0]);
+    },
+
     init_listeners: function() {
         base.ExatomicSceneView.prototype.init_listeners.call(this);
         this.listenTo(this.model, "change:geom", this.add_surface);
+        this.listenTo(this.model, "change:generate", this.generate_tensor);
     },
 
 });
