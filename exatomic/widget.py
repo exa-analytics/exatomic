@@ -371,7 +371,7 @@ class TensorScene(ExatomicScene):
     field = Unicode("null").tag(sync=True)
     geom = Bool(True).tag(sync=True)
     generate = Bool(False).tag(sync=True)
-    tensor = Tuple([[1.0,1.0,1.0],[1.0,1.0,1.0],[1.0,1.0,1.0]]).tag(sync=True)
+    tensor = List([[1.0,0.0,0.0],[0.0,1.0,0.0],[0.0,0.0,1.0]]).tag(sync=True)
     print("re-execute")
     print(tensor)
 
@@ -391,10 +391,12 @@ class TensorContainer(ExatomicBox):
             tempTensor.append([])
             for cols in range(3):
                 tempTensor[-1].append(self.tensor.children[rows].children[cols].value)
+        print("self.scene.tensor")
         print(self.scene.tensor)
         self.scene.tensor = tempTensor
+        print("self.scene.tensor")
         print(self.scene.tensor)
-        print(self.scene.generate)
+        print("tempTensor")
         print(tempTensor)
 
 
@@ -406,9 +408,9 @@ class TensorContainer(ExatomicBox):
         geom = Button(icon="cubes", description=" Mesh", layout=gui_lo)
         generate = Button(icon="cubes", description=" Generate",layout=gui_lo)
         '''Tensor elements
-            |xx xy xz|
-            |yx yy yz|
-            |zx zy zz|'''
+    self.x = |xx xy xz|
+    self.y = |yx yy yz|
+    self.z = |zx zy zz|'''
         self.x = HBox([FloatText(value=1.0),FloatText(value=1.0), \
                                                     FloatText(value=1.0)])
         self.y = HBox([FloatText(value=1.0),FloatText(value=1.0), \

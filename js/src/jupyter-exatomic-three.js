@@ -323,14 +323,14 @@ class App3D {
         return [psurf, nsurf];
     };
 
-    add_tensor_surface() {
+    add_tensor_surface( tensor ) {
         var tensor_mult = function( x , y , z , scaling ) {
             /*var tensor = [[100.472 , 91.193 , -4.279],
                           [91.193 , 67.572 , -1.544],
-                          [-4.279 , -1.544 , -2.329]]*/
+                          [-4.279 , -1.544 , -2.329]]
             var tensor = [[-9.788 , 20.694 , -108.299],
                           [20.694 , 2.741 , -63.712],
-                          [-108.299 , -63.712 , 93.601]]
+                          [-108.299 , -63.712 , 93.601]]*/
             return x*x*tensor[0][0]+y*y*tensor[1][1]+z*z*tensor[2][2]+
         x*y*(tensor[1][0]+tensor[0][1])+x*z*(tensor[2][0]+tensor[0][2])+
         y*z*(tensor[1][2]+tensor[2][1])*scaling
@@ -348,6 +348,7 @@ class App3D {
             z = g * Math.cos(v)
             return new THREE.Vector3(x,y,z)
         };
+        console.log(tensor);
         var geom = new THREE.ParametricGeometry(func, 50, 50);
         var pmat = new THREE.MeshLambertMaterial({color: 'green', side: THREE.FrontSide});
         var nmat = new THREE.MeshLambertMaterial({color: 'yellow', side: THREE.BackSide});
