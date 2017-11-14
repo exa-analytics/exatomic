@@ -208,7 +208,7 @@ class UniverseScene(ExatomicScene):
     two_b1 = Unicode().tag(sync=True)
     # Field traits
     field_i = List().tag(sync=True)
-    field_v = Unicode().tag(sync=True)
+    field_v = List().tag(sync=True)
     field_p = Dict().tag(sync=True)
     field_idx = Any().tag(sync=True)
     field_iso = Float(0.03).tag(sync=True)

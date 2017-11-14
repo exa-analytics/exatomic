@@ -38,7 +38,7 @@ var UniverseSceneView = base.ExatomicSceneView.extend({
             utils.mesolv(this, "atom_c"), utils.fparse(this, "atom_l"),
             utils.fparse(this, "two_b0"), utils.fparse(this, "two_b1"),
             utils.mesolv(this, "field_i"), utils.mesolv(this, "field_p"),
-            utils.fparse(this, "field_v")]);
+            utils.mesolv(this, "field_v")]);
         this.three_promises = this.app3d.finalize(this.three_promises)
             .then(this.add_atom.bind(this))
             .then(this.app3d.set_camera_from_scene.bind(this.app3d));
@@ -76,23 +76,51 @@ var UniverseSceneView = base.ExatomicSceneView.extend({
         this.app3d.add_meshes();
     },
 
+    // parse_or_return_field: function(idx) {
+    //     // var fldx = this.model.get("field_idx");
+    //     // if (fldx === "null") { return };
+    //     // var fdx = this.model.get("frame_idx");
+    //     // var idx = this.field_i[fdx][fldx];
+    //     if (typeof this.field_v[idx] === 'string') {
+    //         utils.jsonparse(this.field_v[idx]).then(f => f);
+    //     };
+    //     return this.field_v[idx];
+    // },
+
     add_field: function() {
         this.app3d.clear_meshes("field");
-        if (this.model.get("field_show") === false) { return };
+        if (!this.model.get("field_show")) { return };
         var fldx = this.model.get("field_idx");
         if (fldx === "null") { return };
         var fdx = this.model.get("frame_idx");
-        var idx = this.field_i[fdx][fldx];
+        // var values = JSON.Parse(field_v[idx]);
         var fps = this.field_p[fdx][fldx];
         if (fps === undefined) { return };
-        this.app3d.meshes["field"] = this.app3d.add_scalar_field(
-            utils.scalar_field(
-                utils.gen_field_arrays(fps),
-                this.field_v[idx]),
-            this.model.get("field_iso"),
-            this.model.get("field_o"), 2,
-            this.colors());
-        this.app3d.add_meshes("field");
+        var idx = this.field_i[fdx][fldx];
+        var that = this;
+        if (typeof this.field_v[idx] === 'string') {
+            utils.jsonparse(this.field_v[idx])
+                .then(function(values) {
+                    that.field_v[idx] = values;
+                    that.app3d.meshes["field"] = that.app3d.add_scalar_field(
+                        utils.scalar_field(
+                            utils.gen_field_arrays(fps),
+                            values),
+                    that.model.get("field_iso"),
+                    that.model.get("field_o"), 2,
+                    that.colors());
+                    that.app3d.add_meshes("field");
+                });
+        } else {
+            this.app3d.meshes["field"] = this.app3d.add_scalar_field(
+                utils.scalar_field(
+                    utils.gen_field_arrays(fps),
+                    this.field_v[idx]),
+                this.model.get("field_iso"),
+                this.model.get("field_o"), 2,
+                this.colors());
+            this.app3d.add_meshes("field");
+        };
     },
 
     add_contour: function() {
@@ -105,16 +133,34 @@ var UniverseSceneView = base.ExatomicSceneView.extend({
         var idx = this.field_i[fdx][fldx];
         var fps = this.field_p[fdx][fldx];
         if (fps === undefined) { return };
-        this.app3d.meshes["contour"] = this.app3d.add_contour(
-            utils.scalar_field(
-                utils.gen_field_arrays(fps),
-                this.field_v[idx]),
-            this.model.get("cont_num"),
-            this.model.get("cont_lim"),
-            this.model.get("cont_axis"),
-            this.model.get("cont_val"),
-            this.colors());
-        this.app3d.add_meshes("contour");
+        var that = this;
+        if (typeof this.field_v[idx] === 'string') {
+            utils.jsonparse(this.field_v[idx])
+                .then(function(values) {
+                    that.field_v[idx] = values;
+                    that.app3d.meshes["contour"] = that.app3d.add_contour(
+                        utils.scalar_field(
+                            utils.gen_field_arrays(fps),
+                            values),
+                        that.model.get("cont_num"),
+                        that.model.get("cont_lim"),
+                        that.model.get("cont_axis"),
+                        that.model.get("cont_val"),
+                        that.colors());
+                    that.app3d.add_meshes("contour");
+                });
+        } else {
+            this.app3d.meshes["contour"] = this.app3d.add_contour(
+                utils.scalar_field(
+                    utils.gen_field_arrays(fps),
+                    this.field_v[idx]),
+                this.model.get("cont_num"),
+                this.model.get("cont_lim"),
+                this.model.get("cont_axis"),
+                this.model.get("cont_val"),
+                this.colors());
+            that.app3d.add_meshes("contour");
+        };
     },
 
     add_axis: function() {

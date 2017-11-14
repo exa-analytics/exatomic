@@ -445,29 +445,29 @@ class App3D {
         //     .setPath('cmap/')
         //     .load(['px.jpg', 'nx.jpg', 'py.jpg',
         //            'ny.jpg', 'pz.jpg', 'nz.jpg']);
-        // // var shader = THREE.ShaderLib.cube;
-        // // shader.uniforms.tCube.value = textureCube;
-        // // var mat = new THREE.ShaderMaterial({
-        // //     fragmentShader: shader.fragmentShader,
-        // //     vertexShader: shader.vertexShader,
-        // //     uniforms: shader.uniforms,
-        // //     depthWrite: false,
-        // //     side: THREE.Backside
-        // // });
-        // // var geom = new THREE.BoxGeometry(10000, 10000, 10000);
-        // // var mesh = new THREE.Mesh(geom, mat);
-        //
+        // var shader = THREE.ShaderLib.cube;
+        // shader.uniforms.tCube.value = textureCube;
+        // var mat = new THREE.ShaderMaterial({
+        //     fragmentShader: shader.fragmentShader,
+        //     vertexShader: shader.vertexShader,
+        //     uniforms: shader.uniforms,
+        //     depthWrite: false,
+        //     side: THREE.Backside
+        // });
+        // var geom = new THREE.BoxGeometry(10000, 10000, 10000);
+        // var mesh = new THREE.Mesh(geom, mat);
+
         // var acubecamera = new THREE.CubeCamera(1, 10000, 128);
         // var bcubecamera = new THREE.CubeCamera(1, 10000, 128);
         // this.acubecamera = acubecamera;
         // this.bcubecamera = bcubecamera;
         // var ageom = new THREE.SphereGeometry(3, 26, 26);
         // var amat = new THREE.MeshStandardMaterial({
-        //     color: 0x888888,
+        //     color: 0xFF9600,
         //     roughness: 0.4,
         //     metalness: 1.0,
         //     envMap: acubecamera.renderTarget.texture,
-        //     envMapIntensity: 0.4,
+        //     envMapIntensity: 1.0,
         //     side: THREE.DoubleSide
         //     // shininess: 50,
         //     // color: 0xffffff,
@@ -488,10 +488,11 @@ class App3D {
         // var bmat = new THREE.MeshPhongMaterial({
         //     reflectivity: 1.0,
         //     shininess: 50,
-        //     color: 0xffffff,
+        //     color: 0x003399,
         //     specular: 0x999999,
         //     side: THREE.DoubleSide,
-        //     envMap: bcubecamera.renderTarget.texture
+        //     envMap: bcubecamera.renderTarget.texture,
+        //     envMapIntensity: 1.0
         // });
         // var bmesh = new THREE.Mesh(bgeom, bmat);
         // bmesh.castShadow = true;
@@ -504,9 +505,9 @@ class App3D {
         // var cmat = new THREE.MeshStandardMaterial({
         //     metalness: 1.0,
         //     roughness: 0.8,
-        //     shininess: 50,
+        //     // shininess: 50,
         //     color: 0xffffff,
-        //     specular: 0x999999,
+        //     // specular: 0x999999,
         //     side: THREE.DoubleSide
         // })
         // var cmesh = new THREE.Mesh(cgeom, cmat);

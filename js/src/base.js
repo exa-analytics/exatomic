@@ -15,99 +15,99 @@ var three = require("./appthree.js");
 var utils = require("./utils.js");
 var version = "~" + require("../package.json").version;
 
-// var datawidgets = require("jupyter-datawidgets");
-var ds = require("jupyter-dataserializers");
-
-// var deserialize = ds.array_serialization.deserialize;
-
-var FancySceneModel = widgets.DOMWidgetModel.extend({
-
-    defaults: function() {
-        return _.extend({}, widgets.DOMWidgetModel.prototype.defaults, {
-            _model_module_version: version,
-            _view_module_version: version,
-            _model_module: "exatomic",
-            _view_module: "exatomic",
-            _model_name: "DataSceneModel",
-            _view_name: "DataSceneView"
-
-        });
-    }
-});
-
-
-var FancySceneView = widgets.DOMWidgetView.extend({
-
-    initialize: function() {
-        widgets.DOMWidgetView.prototype.initialize.apply(this, arguments);
-        this.init();
-    },
-
-
-    init: function() {
-        var that = this;
-        this.displayed.then(function() {
-            that.app3d = new three.FancyApp(this);
-        })
-    },
-
-});
-
-
-
-var DataSceneModel = widgets.DOMWidgetModel.extend({
-
-    defaults: function() {
-        return _.extend({}, widgets.DOMWidgetModel.prototype.defaults, {
-            _model_module_version: version,
-            _view_module_version: version,
-            _model_module: "exatomic",
-            _view_module: "exatomic",
-            _model_name: "DataSceneModel",
-            _view_name: "DataSceneView"
-
-        });
-    }
-// });
-},
-    {
-    serializers: _.extend({
-        a0: ds.array_serialization,
-    }, widgets.DOMWidgetModel.serializers)
-});
-
-var logerror = function(e) {console.log(e.message)};
-
-var de_array = function(obj, key) {
-    return Promise.resolve(dataserializers.array_serialization.deserialize(obj.model.get(key)))
-                  .then(p => {obj[key] = p}).catch(logerror)
-};
-
-
-var DataSceneView = widgets.DOMWidgetView.extend({
-
-    initialize: function() {
-        widgets.DOMWidgetView.prototype.initialize.apply(this, arguments);
-        this.init();
-    },
-
-
-    init: function() {
-        var a = this.model.get("a0");
-        console.log("success");
-        // console.log(this.model.get("l0"));
-        // console.log(this.model.get("d0"));
-        // this.de_promises = Promise.all([
-        //     de_array(this, "array0")
-        // ]);
-        // console.log(this);
-    },
-
-    // render: function() {
-    //     // return Promise.resolve(this.de_promises);
-    // }
-
-});
+//// var datawidgets = require("jupyter-datawidgets");
+//var ds = require("jupyter-dataserializers");
+//
+//// var deserialize = ds.array_serialization.deserialize;
+//
+//var FancySceneModel = widgets.DOMWidgetModel.extend({
+//
+//    defaults: function() {
+//        return _.extend({}, widgets.DOMWidgetModel.prototype.defaults, {
+//            _model_module_version: version,
+//            _view_module_version: version,
+//            _model_module: "exatomic",
+//            _view_module: "exatomic",
+//            _model_name: "DataSceneModel",
+//            _view_name: "DataSceneView"
+//
+//        });
+//    }
+//});
+//
+//
+//var FancySceneView = widgets.DOMWidgetView.extend({
+//
+//    initialize: function() {
+//        widgets.DOMWidgetView.prototype.initialize.apply(this, arguments);
+//        this.init();
+//    },
+//
+//
+//    init: function() {
+//        var that = this;
+//        this.displayed.then(function() {
+//            that.app3d = new three.FancyApp(this);
+//        })
+//    },
+//
+//});
+//
+//
+//
+//var DataSceneModel = widgets.DOMWidgetModel.extend({
+//
+//    defaults: function() {
+//        return _.extend({}, widgets.DOMWidgetModel.prototype.defaults, {
+//            _model_module_version: version,
+//            _view_module_version: version,
+//            _model_module: "exatomic",
+//            _view_module: "exatomic",
+//            _model_name: "DataSceneModel",
+//            _view_name: "DataSceneView"
+//
+//        });
+//    }
+//// });
+//},
+//    {
+//    serializers: _.extend({
+//        a0: ds.array_serialization,
+//    }, widgets.DOMWidgetModel.serializers)
+//});
+//
+//var logerror = function(e) {console.log(e.message)};
+//
+//var de_array = function(obj, key) {
+//    return Promise.resolve(dataserializers.array_serialization.deserialize(obj.model.get(key)))
+//                  .then(p => {obj[key] = p}).catch(logerror)
+//};
+//
+//
+//var DataSceneView = widgets.DOMWidgetView.extend({
+//
+//    initialize: function() {
+//        widgets.DOMWidgetView.prototype.initialize.apply(this, arguments);
+//        this.init();
+//    },
+//
+//
+//    init: function() {
+//        var a = this.model.get("a0");
+//        console.log("success");
+//        // console.log(this.model.get("l0"));
+//        // console.log(this.model.get("d0"));
+//        // this.de_promises = Promise.all([
+//        //     de_array(this, "array0")
+//        // ]);
+//        // console.log(this);
+//    },
+//
+//    // render: function() {
+//    //     // return Promise.resolve(this.de_promises);
+//    // }
+//
+//});
 
 
 
@@ -475,8 +475,8 @@ var ExatomicSceneView = widgets.DOMWidgetView.extend({
 module.exports = {
     ExatomicSceneModel: ExatomicSceneModel,
     ExatomicSceneView: ExatomicSceneView,
-    DataSceneModel: DataSceneModel,
-    DataSceneView: DataSceneView,
+//    DataSceneModel: DataSceneModel,
+//    DataSceneView: DataSceneView,
     ExatomicBoxModel: ExatomicBoxModel,
     ExatomicBoxView: ExatomicBoxView,
     unpack_models: widgets.unpack_models

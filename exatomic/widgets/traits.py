@@ -14,7 +14,7 @@ import numpy as np
 import pandas as pd
 
 from exatomic.base import sym2radius, sym2color
-# 
+#
 # def atom_data_traits(df, atomcolors=None, atomradii=None):
 #     atomcolors = pd.Series() if atomcolors is None else pd.Series(atomcolors)
 #     atomradii = pd.Series() if atomradii is None else pd.Series(atomradii)
@@ -104,8 +104,9 @@ def field_traits(df):
     # vals = np.empty((shape0, shape1), dtype=np.float32)
     # for i in range(shape0):
     #     vals[i] = df.field_values[i].values
-    vals = '[' + ','.join([f.to_json(orient='values',
-                           double_precision=5) for f in df.field_values]) + ']'
+    # '[' + ','.join(listcomp) + ']'
+    vals = [f.to_json(orient='values',
+                      double_precision=5) for f in df.field_values]
     return {'field_v': vals, 'field_i': idxs, 'field_p': fps}
 
 #def two_traits(df, lbls):

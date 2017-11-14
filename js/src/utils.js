@@ -461,6 +461,7 @@ module.exports = {
     Ellipsoid: Ellipsoid,
     Sphere: Sphere,
     Torus: Torus,
+    jsonparse: jsonparse,
     fparse: fparse,
     mesolv: mesolv,
     resolv: resolv

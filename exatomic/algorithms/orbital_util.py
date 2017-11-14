@@ -13,7 +13,7 @@ import pandas as pd
 from numba import jit
 from numexpr import evaluate, set_vml_accuracy_mode
 acc = set_vml_accuracy_mode('high')
-print('Numexpr accuracy set to:', acc)
+# print('Numexpr accuracy set to:', acc)
 
 from .basis import (CartesianBasisFunction,
                     SphericalBasisFunction)
