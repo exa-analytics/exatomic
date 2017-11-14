@@ -49,5 +49,5 @@ from ._version import __version__
 from . import core
 from .core import Universe, Editor, Atom, AtomicField, Frame
 from .interfaces import XYZ, Cube
-from .widgets import TestContainer, TestUniverse, UniverseWidget
+from .widgets import TestContainer, TestUniverse, UniverseWidget, TensorContainer
 # from . import widgets

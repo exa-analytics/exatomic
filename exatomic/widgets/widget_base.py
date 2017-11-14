@@ -384,6 +384,11 @@ class ExatomicBox(Box):
         for rows in grid:
             scenes.append([])
             for kws in rows:
+                if isinstance(objs[cnt], ExatomicScene):
+                    self.scenes.append(objs[cnt])
+                    scenes[-1].append(objs[cnt])
+                    cnt += 1
+                    continue
                 if exists:
                     kws.update(objs[cnt])
                 else: kws.update({'uni': self.uni, 'test': self.test})

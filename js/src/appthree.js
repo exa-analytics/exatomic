@@ -111,6 +111,7 @@ var utils = require("./utils.js");
 class App3D {
 
     constructor(view) {
+        console.log("Constructing THREEjs scene");
         this.view = view;
         this.meshes = {"generic": [], "frame": [],
                        "contour": [], "field": [],
@@ -435,147 +436,153 @@ class App3D {
         Example of a render
         */
 
-        // var geom = new THREE.IcosahedronGeometry(2, 1);
-        // var mat = new THREE.MeshBasicMaterial({color: 0x000000,
-        //                                        wireframe: true});
-        // var mesh = new THREE.Mesh(geom, mat);
-        // mesh.name = "Icosahedron";
-        // return [mesh];
+        var geom = new THREE.IcosahedronGeometry(2, 1);
+        var mat = new THREE.MeshBasicMaterial({color: 0x000000,
+                                               wireframe: true});
+        var mesh = new THREE.Mesh(geom, mat);
+        mesh.name = "Icosahedron";
+        return [mesh];
 
-        var reflectionCube = new THREE.CubeTextureLoader()
-            .setPath('cmap/')
-            .load(['px.jpg', 'nx.jpg', 'py.jpg',
-                   'ny.jpg', 'pz.jpg', 'nz.jpg']);
-        // var shader = THREE.ShaderLib.cube;
-        // shader.uniforms.tCube.value = textureCube;
-        // var mat = new THREE.ShaderMaterial({
-        //     fragmentShader: shader.fragmentShader,
-        //     vertexShader: shader.vertexShader,
-        //     uniforms: shader.uniforms,
-        //     depthWrite: false,
-        //     side: THREE.Backside
+        // var reflectionCube = new THREE.CubeTextureLoader()
+        //     .setPath('cmap/')
+        //     .load(['px.jpg', 'nx.jpg', 'py.jpg',
+        //            'ny.jpg', 'pz.jpg', 'nz.jpg']);
+        // // var shader = THREE.ShaderLib.cube;
+        // // shader.uniforms.tCube.value = textureCube;
+        // // var mat = new THREE.ShaderMaterial({
+        // //     fragmentShader: shader.fragmentShader,
+        // //     vertexShader: shader.vertexShader,
+        // //     uniforms: shader.uniforms,
+        // //     depthWrite: false,
+        // //     side: THREE.Backside
+        // // });
+        // // var geom = new THREE.BoxGeometry(10000, 10000, 10000);
+        // // var mesh = new THREE.Mesh(geom, mat);
+        //
+        // var acubecamera = new THREE.CubeCamera(1, 10000, 128);
+        // var bcubecamera = new THREE.CubeCamera(1, 10000, 128);
+        // this.acubecamera = acubecamera;
+        // this.bcubecamera = bcubecamera;
+        // var ageom = new THREE.SphereGeometry(3, 26, 26);
+        // var amat = new THREE.MeshStandardMaterial({
+        //     color: 0x888888,
+        //     roughness: 0.4,
+        //     metalness: 1.0,
+        //     envMap: acubecamera.renderTarget.texture,
+        //     envMapIntensity: 0.4,
+        //     side: THREE.DoubleSide
+        //     // shininess: 50,
+        //     // color: 0xffffff,
+        //     // specular: 0x999999,
+        //     // side: THREE.DoubleSide,
+        //     // reflectivity: 0.8
+        //     // envMap: cubeCamera.renderTarget,
+        //  });
+        // var amesh = new THREE.Mesh(ageom, amat);
+        // amesh.castShadow = true;
+        // amesh.receiveShadow = true;
+        // amesh.position.set(5, 0, 0);
+        // this.amesh = amesh;
+        // this.meshes["generic"].push(amesh);
+        // amesh.add(acubecamera);
+        //
+        // var bgeom = new THREE.SphereGeometry(2, 26, 26);
+        // var bmat = new THREE.MeshPhongMaterial({
+        //     reflectivity: 1.0,
+        //     shininess: 50,
+        //     color: 0xffffff,
+        //     specular: 0x999999,
+        //     side: THREE.DoubleSide,
+        //     envMap: bcubecamera.renderTarget.texture
         // });
-        // var geom = new THREE.BoxGeometry(10000, 10000, 10000);
-        // var mesh = new THREE.Mesh(geom, mat);
-
-        var acubecamera = new THREE.CubeCamera(1, 10000, 128);
-        var bcubecamera = new THREE.CubeCamera(1, 10000, 128);
-        this.acubecamera = acubecamera;
-        this.bcubecamera = bcubecamera;
-        var ageom = new THREE.SphereGeometry(3, 26, 26);
-        var amat = new THREE.MeshStandardMaterial({
-            color: 0x888888,
-            roughness: 0.4,
-            metalness: 1.0,
-            envMap: acubecamera.renderTarget.texture,
-            envMapIntensity: 0.4,
-            side: THREE.DoubleSide
-            // shininess: 50,
-            // color: 0xffffff,
-            // specular: 0x999999,
-            // side: THREE.DoubleSide,
-            // reflectivity: 0.8
-            // envMap: cubeCamera.renderTarget,
-         });
-        var amesh = new THREE.Mesh(ageom, amat);
-        amesh.castShadow = true;
-        amesh.receiveShadow = true;
-        amesh.position.set(5, 0, 0);
-        this.amesh = amesh;
-        this.meshes["generic"].push(amesh);
-        amesh.add(acubecamera);
-
-        var bgeom = new THREE.SphereGeometry(2, 26, 26);
-        var bmat = new THREE.MeshPhongMaterial({
-            reflectivity: 1.0,
-            shininess: 50,
-            color: 0xffffff,
-            specular: 0x999999,
-            side: THREE.DoubleSide,
-            envMap: bcubecamera.renderTarget.texture
-        });
-        var bmesh = new THREE.Mesh(bgeom, bmat);
-        bmesh.castShadow = true;
-        bmesh.receiveShadow = true;
-        this.bmesh = bmesh;
-        bmesh.position.set(0, 5, 0);
-        this.meshes["generic"].push(bmesh);
-        bmesh.add(bcubecamera);
-        var cgeom = new THREE.BoxGeometry(3, 3, 3);
-        var cmat = new THREE.MeshStandardMaterial({
-            metalness: 1.0,
-            roughness: 0.8,
-            shininess: 50,
-            color: 0xffffff,
-            specular: 0x999999,
-            side: THREE.DoubleSide
-        })
-        var cmesh = new THREE.Mesh(cgeom, cmat);
-        cmesh.castShadow = true;
-        cmesh.receiveShadow = true;
-        cmesh.position.set(5, 5, 0);
-        this.meshes["generic"].push(cmesh);
-
-        var dgeom = new THREE.SphereGeometry(1, 26, 26);
-        var dmat = new THREE.MeshPhongMaterial({
-            shininess: 50,
-            color: 0xFF9600,
-            specular: 0xFF5500,
-            side: THREE.DoubleSide
-        });
-        var dmesh = new THREE.Mesh(dgeom, dmat);
-        dmesh.castShadow = true;
-        dmesh.receiveShadow = true;
-        dmesh.position.set(5, 5, 5);
-        this.meshes["generic"].push(dmesh);
-
-        var textureLoader = new THREE.TextureLoader();
-        var textureSquares = textureLoader.load("cmap/lavatile.jpg");
-        textureSquares.repeat.set(50, 50);
-        textureSquares.wrapS = textureSquares.wrapT = THREE.RepeatWrapping;
-        textureSquares.magFilter = THREE.NearestFilter;
-        textureSquares.format = THREE.RGBFormat;
-
-        var groundMaterial = new THREE.MeshPhongMaterial({
-            shininess: 80,
-            color: 0xffffff,
-            specular: 0xffffff,
-            side: THREE.DoubleSide,
-            map: textureSquares
-        });
-
-        var planeGeometry = new THREE.PlaneBufferGeometry(10, 10);
-        var ground = new THREE.Mesh(planeGeometry, groundMaterial);
-        ground.rotation.z = - Math.PI / 2;
-        ground.scale.set(10, 10, 10);
-        ground.position.set(0, 0, -3);
-        ground.receiveShadow = true;
-        this.meshes["generic"].push(ground);
-        this.add_meshes("generic");
-        // this.render();
-
-        this.meshes["generic"][0].visible = false;
-        this.acubecamera.updateCubeMap(this.renderer, this.scene);
-        this.meshes["generic"][0].visible = true;
-        // this.meshes["generic"][1].visible = false;
-        this.bcubecamera.updateCubeMap(this.renderer, this.scene);
-        // this.meshes["generic"][1].visible = true;
-
-        console.log(this);
-        console.log(this.meshes);
-        // Update the render target cube
-        // car.setVisible( false );
-        // console.log(cubeCamera);
-        // cubeCamera.position.copy( car.position );
-        // cubeCamera.updateCubeMap( this.renderer, this.scene );
-
-        // this.cubecamera = cubeCamera;
-        // this.cubescene = cubeScene;
-
-        // Render the scene
-        // car.setVisible( true );
-        // renderer.render( scene, camera );
+        // var bmesh = new THREE.Mesh(bgeom, bmat);
+        // bmesh.castShadow = true;
+        // bmesh.receiveShadow = true;
+        // this.bmesh = bmesh;
+        // bmesh.position.set(0, 5, 0);
+        // this.meshes["generic"].push(bmesh);
+        // bmesh.add(bcubecamera);
+        // var cgeom = new THREE.BoxGeometry(3, 3, 3);
+        // var cmat = new THREE.MeshStandardMaterial({
+        //     metalness: 1.0,
+        //     roughness: 0.8,
+        //     shininess: 50,
+        //     color: 0xffffff,
+        //     specular: 0x999999,
+        //     side: THREE.DoubleSide
+        // })
+        // var cmesh = new THREE.Mesh(cgeom, cmat);
+        // cmesh.castShadow = true;
+        // cmesh.receiveShadow = true;
+        // cmesh.position.set(5, 5, 0);
+        // this.meshes["generic"].push(cmesh);
+        //
+        // var dgeom = new THREE.SphereGeometry(1, 26, 26);
+        // var dmat = new THREE.MeshPhongMaterial({
+        //     shininess: 50,
+        //     color: 0xFF9600,
+        //     specular: 0xFF5500,
+        //     side: THREE.DoubleSide
+        // });
+        // var dmesh = new THREE.Mesh(dgeom, dmat);
+        // dmesh.castShadow = true;
+        // dmesh.receiveShadow = true;
+        // dmesh.position.set(5, 5, 5);
+        // this.meshes["generic"].push(dmesh);
+        //
+        // var textureLoader = new THREE.TextureLoader();
+        // var textureSquares = textureLoader.load("cmap/lavatile.jpg");
+        // textureSquares.repeat.set(50, 50);
+        // textureSquares.wrapS = textureSquares.wrapT = THREE.RepeatWrapping;
+        // textureSquares.magFilter = THREE.NearestFilter;
+        // textureSquares.format = THREE.RGBFormat;
+        //
+        // var groundMaterial = new THREE.MeshPhongMaterial({
+        //     shininess: 80,
+        //     color: 0xffffff,
+        //     specular: 0xffffff,
+        //     side: THREE.DoubleSide,
+        //     map: textureSquares
+        // });
+        //
+        // var planeGeometry = new THREE.PlaneBufferGeometry(10, 10);
+        // var ground = new THREE.Mesh(planeGeometry, groundMaterial);
+        // ground.rotation.z = - Math.PI / 2;
+        // ground.scale.set(10, 10, 10);
+        // ground.position.set(0, 0, -3);
+        // ground.receiveShadow = true;
+        // this.meshes["generic"].push(ground);
+        // this.add_meshes("generic");
+        // // this.render();
+        //
+        // this.meshes["generic"][0].visible = false;
+        // this.acubecamera.updateCubeMap(this.renderer, this.scene);
+        // this.meshes["generic"][0].visible = true;
+        // // this.meshes["generic"][1].visible = false;
+        // this.bcubecamera.updateCubeMap(this.renderer, this.scene);
+        // // this.meshes["generic"][1].visible = true;
+        //
+        // console.log(this);
+        // console.log(this.meshes);
+        // // Update the render target cube
+        // // car.setVisible( false );
+        // // console.log(cubeCamera);
+        // // cubeCamera.position.copy( car.position );
+        // // cubeCamera.updateCubeMap( this.renderer, this.scene );
+        //
+        // // this.cubecamera = cubeCamera;
+        // // this.cubescene = cubeScene;
+        //
+        // // Render the scene
+        // // car.setVisible( true );
+        // // renderer.render( scene, camera );
     };
+
+//    add_tensor(xx, xy, xz, ... ) {
+//
+//        var func = function(
+//            var x = r * Math.sin() * Math.cos() ..
+
 
     add_parametric_surface() {
         var func = function(ou, ov) {
@@ -588,7 +595,43 @@ class App3D {
         };
         var geom = new THREE.ParametricGeometry(func, 24, 24);
         var pmat = new THREE.MeshLambertMaterial({color: 'green', side: THREE.FrontSide});
-        var nmat = new THREE.MeshLambertMaterial({color: 'yellow', side: THREE.FrontSide});
+        var nmat = new THREE.MeshLambertMaterial({color: 'yellow', side: THREE.BackSide});
+        var psurf = new THREE.Mesh(geom, pmat);
+        var nsurf = new THREE.Mesh(geom, nmat);
+        psurf.name = "Positive";
+        nsurf.name = "Negative";
+        return [psurf, nsurf];
+    };
+
+    add_tensor_surface( tensor ) {
+        var tensor_mult = function( x , y , z , scaling ) {
+            /*var tensor = [[100.472 , 91.193 , -4.279],
+                          [91.193 , 67.572 , -1.544],
+                          [-4.279 , -1.544 , -2.329]]
+            var tensor = [[-9.788 , 20.694 , -108.299],
+                          [20.694 , 2.741 , -63.712],
+                          [-108.299 , -63.712 , 93.601]]*/
+            return x*x*tensor[0][0]+y*y*tensor[1][1]+z*z*tensor[2][2]+
+        x*y*(tensor[1][0]+tensor[0][1])+x*z*(tensor[2][0]+tensor[0][2])+
+        y*z*(tensor[1][2]+tensor[2][1])*scaling
+        };
+        var func = function( ou , ov ) {
+            var u = 2 * Math.PI * ou;
+            var v = 2 * Math.PI * ov;
+            var x = Math.cos(u) * Math.sin(v);
+            var y = Math.sin(u) * Math.sin(v);
+            var z = Math.cos(v)
+            var scaling = 1.
+            var g = tensor_mult(x,y,z,scaling)
+            x = g * Math.cos(u) * Math.sin(v);
+            y = g * Math.sin(u) * Math.sin(v);
+            z = g * Math.cos(v)
+            return new THREE.Vector3(x,y,z)
+        };
+        console.log(tensor);
+        var geom = new THREE.ParametricGeometry(func, 50, 50);
+        var pmat = new THREE.MeshLambertMaterial({color: 'green', side: THREE.FrontSide});
+        var nmat = new THREE.MeshLambertMaterial({color: 'yellow', side: THREE.BackSide});
         var psurf = new THREE.Mesh(geom, pmat);
         var nsurf = new THREE.Mesh(geom, nmat);
         psurf.name = "Positive";

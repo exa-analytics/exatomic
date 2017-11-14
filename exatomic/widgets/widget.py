@@ -8,12 +8,14 @@ Universe Notebook Widget
 
 from traitlets import Bool, Unicode, Float, Dict, Any, List, Int
 from ipywidgets import (Button, Dropdown, jslink, register, VBox, HBox,
-                        IntSlider, IntRangeSlider, FloatSlider, Play)
+                        IntSlider, IntRangeSlider, FloatSlider, Play,
+                        FloatText)
 
 from .widget_base import ExatomicScene, ExatomicBox
 from .widget_utils import _wlo, _hboxlo, _vboxlo, _ListDict, _scene_grid, Folder
 from .traits import ( #atom_traits, field_traits, two_traits, frame_traits,
 uni_traits)
+
 
 
 class TestContainer(ExatomicBox):
@@ -51,6 +53,104 @@ class TestContainer(ExatomicBox):
         self.uni = False
         self.test = True
         super(TestContainer, self).__init__(*scenes, **kwargs)
+
+
+
+
+
+@register
+class TensorScene(ExatomicScene):
+
+    _model_name = Unicode("TensorSceneModel").tag(sync=True)
+    _view_name = Unicode("TensorSceneView").tag(sync=True)
+    field = Unicode("null").tag(sync=True)
+    geom = Bool(True).tag(sync=True)
+    generate = Bool(False).tag(sync=True)
+    tensor = List([[1.0,0.0,0.0],[0.0,1.0,0.0],[0.0,0.0,1.0]]).tag(sync=True)
+    print("re-execute")
+    print(tensor)
+
+
+
+@register
+class TensorContainer(ExatomicBox):
+    """A basic container to test some javascript."""
+    _model_name = Unicode("TensorContainerModel").tag(sync=True)
+    _view_name = Unicode("TensorContainerView").tag(sync=True)
+
+    def _generateTensor(self,b):
+        for idx in self.active_scene_indices:
+            self.scenes[idx].generate = self.scenes[idx].generate == False
+        # if self.scene.generate:
+        #     self.scene.generate = False
+        # else:
+        #     self.scene.generate = True
+        tempTensor = []
+        for rows in range(3):
+            tempTensor.append([])
+            for cols in range(3):
+                tempTensor[-1].append(self.tensor.children[rows].children[cols].value)
+        # print("self.scene.tensor")
+        # print(self.scene.tensor)
+        print(self.scenes)
+        for idx in self.active_scene_indices:
+            self.scenes[idx].tensor = tempTensor
+        # print("self.scene.tensor")
+        # print(self.scene.tensor)
+        print(self.scenes)
+        print("tempTensor")
+        print(tempTensor)
+
+
+    def _init_gui(self, **kwargs):
+        """Initialize specific GUI controls and register callbacks."""
+
+        mainopts = super(TensorContainer, self)._init_gui(**kwargs)
+
+        geom = Button(icon="cubes", description=" Mesh", layout=_wlo)
+        generate = Button(icon="cubes", description=" Generate",layout=_wlo)
+        '''Tensor elements
+        self.x = |xx xy xz|
+        self.y = |yx yy yz|
+        self.z = |zx zy zz|'''
+        self.x = HBox([FloatText(value=1.0),FloatText(value=1.0), \
+                                                    FloatText(value=1.0)])
+        self.y = HBox([FloatText(value=1.0),FloatText(value=1.0), \
+                                                    FloatText(value=1.0)])
+        self.z = HBox([FloatText(value=1.0),FloatText(value=1.0), \
+                                                    FloatText(value=1.0)])
+        self.tensor = VBox([self.x,self.y,self.z])
+        display(self.tensor)
+
+        def _geom(b):
+            for idx in self.active_scene_indices:
+                self.scenes[idx].geom = self.scenes[idx].geom == False
+
+        geom.on_click(_geom)
+        generate.on_click(self._generateTensor)
+        mainopts.update([('geom', geom),
+                         ('gen', generate)])
+
+        return mainopts
+        # self._controls['geom'] = geom
+        # self._controls['gen'] = generate
+        #self.active_controls['tensor'] = self.tensor
+        # Add a TextArea ipywidget
+
+#        fopts = ['null', 'sphere', 'torus', 'ellipsoid']
+#        fopts = Dropdown(options=fopts, layout=gui_lo)
+#        def _field(c): self.scene.field = c.new
+#        fopts.observe(_field, names='value')
+
+#        folder = self.inactive_controls.pop('field')
+#        folder.insert(1, 'options', fopts)
+#        folder.activate('iso', 'nx', 'ny', 'nz')
+#        self.active_controls['field'] = folder
+
+
+    def __init__(self, *args, **kwargs):
+        super(TensorContainer, self).__init__(*[TensorScene()], **kwargs)
+
 
 
 
@@ -160,6 +260,8 @@ class TestUniverse(ExatomicBox):
         self.uni = True
         self.test = True
         super(TestUniverse, self).__init__(*scenes, **kwargs)
+
+
 
 
 

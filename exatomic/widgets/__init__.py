@@ -2,4 +2,4 @@
 # Copyright (c) 2015-2017, Exa Analytics Development Team
 # Distributed under the terms of the Apache License 2.0
 
-from .widget import TestContainer, TestUniverse, UniverseWidget
+from .widget import TensorContainer, TestContainer, TestUniverse, UniverseWidget

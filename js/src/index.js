@@ -13,6 +13,7 @@ module.exports = _.extend({},
     require("./base.js"),
     require("./utils.js"),
     require("./appthree.js"),
-    require("./widgets.js")
+    require("./widgets.js"),
+    require("./tensor.js")
 );
 module.exports["version"] = require("../package.json").version;
