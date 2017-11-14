@@ -39,8 +39,8 @@ def _jupyter_nbextension_paths():
     return [{
         'section': "notebook",
         'src': "static",
-        'dest': "jupyter-exatomic",
-        'require': "jupyter-exatomic/extension"
+        'dest': "exatomic",
+        'require': "exatomic/extension"
     }]
 
 
@@ -49,4 +49,5 @@ from ._version import __version__
 from . import core
 from .core import Universe, Editor, Atom, AtomicField, Frame
 from .interfaces import XYZ, Cube
-from .widget import TestContainer, TestUniverse, UniverseWidget
+from .widgets import TestContainer, TestUniverse, UniverseWidget
+# from . import widgets

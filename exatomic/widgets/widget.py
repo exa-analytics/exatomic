@@ -47,10 +47,10 @@ class TestContainer(ExatomicBox):
         return mainopts
 
 
-    def __init__(self, scenes, **kwargs):
+    def __init__(self, *scenes, **kwargs):
         self.uni = False
         self.test = True
-        super(TestContainer, self).__init__(scenes, **kwargs)
+        super(TestContainer, self).__init__(*scenes, **kwargs)
 
 
 
@@ -156,10 +156,10 @@ class TestUniverse(ExatomicBox):
         return mainopts
 
 
-    def __init__(self, scenes, **kwargs):
+    def __init__(self, *scenes, **kwargs):
         self.uni = True
         self.test = True
-        super(TestUniverse, self).__init__(scenes, **kwargs)
+        super(TestUniverse, self).__init__(*scenes, **kwargs)
 
 
 

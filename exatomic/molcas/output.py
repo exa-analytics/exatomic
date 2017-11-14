@@ -149,6 +149,15 @@ class Output(six.with_metaclass(OutMeta, Editor)):
         df.loc[df[df['n'] == 0].index, 'n'] = fill
         df['L'] = df['type'].str[1].map(lmap)
         df['ml'] = df['type'].str[2:]
+        try:
+            df['l'] = df['ml'].copy()
+            df['l'].update(df['l'].map({'': 0, 'x': 1, 'y': 0, 'z': 0}))
+            df['m'] = df['ml'].copy()
+            df['m'].update(df['m'].map({'': 0, 'y': 1, 'x': 0, 'z': 0}))
+            df['n'] = df['ml'].copy()
+            df['n'].update(df['n'].map({'': 0, 'z': 1, 'x': 0, 'y': 0}))
+        except:
+            pass
         df['ml'].update(df['ml'].map(mldict))
         df['ml'].update(df['ml'].str[::-1])
         df['ml'] = df['ml'].astype(np.int64)

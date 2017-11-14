@@ -2,7 +2,7 @@
 // Distributed under the terms of the Apache License 2.0
 /*"""
 =================
-jupyter-exatomic-base.js
+base.js
 =================
 JavaScript "frontend" complement of exatomic's Universe
 for use within the Jupyter notebook interface.
@@ -11,9 +11,104 @@ for use within the Jupyter notebook interface.
 "use strict";
 var widgets = require("@jupyter-widgets/base");
 var control = require("@jupyter-widgets/controls");
-var three = require("./jupyter-exatomic-three.js");
-var utils = require("./jupyter-exatomic-utils.js");
+var three = require("./appthree.js");
+var utils = require("./utils.js");
 var version = "~" + require("../package.json").version;
+
+// var datawidgets = require("jupyter-datawidgets");
+var ds = require("jupyter-dataserializers");
+
+// var deserialize = ds.array_serialization.deserialize;
+
+var FancySceneModel = widgets.DOMWidgetModel.extend({
+
+    defaults: function() {
+        return _.extend({}, widgets.DOMWidgetModel.prototype.defaults, {
+            _model_module_version: version,
+            _view_module_version: version,
+            _model_module: "exatomic",
+            _view_module: "exatomic",
+            _model_name: "DataSceneModel",
+            _view_name: "DataSceneView"
+
+        });
+    }
+});
+
+
+var FancySceneView = widgets.DOMWidgetView.extend({
+
+    initialize: function() {
+        widgets.DOMWidgetView.prototype.initialize.apply(this, arguments);
+        this.init();
+    },
+
+
+    init: function() {
+        var that = this;
+        this.displayed.then(function() {
+            that.app3d = new three.FancyApp(this);
+        })
+    },
+
+});
+
+
+
+var DataSceneModel = widgets.DOMWidgetModel.extend({
+
+    defaults: function() {
+        return _.extend({}, widgets.DOMWidgetModel.prototype.defaults, {
+            _model_module_version: version,
+            _view_module_version: version,
+            _model_module: "exatomic",
+            _view_module: "exatomic",
+            _model_name: "DataSceneModel",
+            _view_name: "DataSceneView"
+
+        });
+    }
+// });
+},
+    {
+    serializers: _.extend({
+        a0: ds.array_serialization,
+    }, widgets.DOMWidgetModel.serializers)
+});
+
+var logerror = function(e) {console.log(e.message)};
+
+var de_array = function(obj, key) {
+    return Promise.resolve(dataserializers.array_serialization.deserialize(obj.model.get(key)))
+                  .then(p => {obj[key] = p}).catch(logerror)
+};
+
+
+var DataSceneView = widgets.DOMWidgetView.extend({
+
+    initialize: function() {
+        widgets.DOMWidgetView.prototype.initialize.apply(this, arguments);
+        this.init();
+    },
+
+
+    init: function() {
+        var a = this.model.get("a0");
+        console.log("success");
+        // console.log(this.model.get("l0"));
+        // console.log(this.model.get("d0"));
+        // this.de_promises = Promise.all([
+        //     de_array(this, "array0")
+        // ]);
+        // console.log(this);
+    },
+
+    // render: function() {
+    //     // return Promise.resolve(this.de_promises);
+    // }
+
+});
+
 
 
 var ExatomicBoxModel = control.BoxModel.extend({
@@ -21,8 +116,8 @@ var ExatomicBoxModel = control.BoxModel.extend({
     defaults: _.extend({}, control.BoxModel.prototype.defaults, {
             _model_module_version: version,
             _view_module_version: version,
-            _model_module: "jupyter-exatomic",
-            _view_module: "jupyter-exatomic",
+            _model_module: "exatomic",
+            _view_module: "exatomic",
             _model_name: "ExatomicBoxModel",
             _view_name: "ExatomicBoxView",
             linked: false
@@ -42,6 +137,9 @@ var ExatomicBoxView = control.BoxView.extend({
         this.init_listeners();
         var that = this;
         this.displayed.then(function() {
+            // TODO :: Instead of referencing the first camera object
+            //      :: just set camera.rotation (and camera.zoom??) to
+            //      :: copy original camera.
             that.scene_ps = that.children_views.views[1].then(function(vbox) {
                 var hboxs = vbox.children_views.views;
                 var promises = Promise.all(hboxs).then(function(hbox) {
@@ -103,8 +201,8 @@ var ExatomicSceneModel = widgets.DOMWidgetModel.extend({
         return _.extend({}, widgets.DOMWidgetModel.prototype.defaults, {
             _model_module_version: version,
             _view_module_version: version,
-            _model_module: "jupyter-exatomic",
-            _view_module: "jupyter-exatomic",
+            _model_module: "exatomic",
+            _view_module: "exatomic",
             _model_name: "ExatomicSceneModel",
             _view_name: "ExatomicSceneView"
 
@@ -130,13 +228,14 @@ var ExatomicSceneView = widgets.DOMWidgetView.extend({
             if (this.model.get("uni")) { func = this.add_field }
             else { func = this.add_geometry };
             this.three_promises.then(func.bind(this))
-                .then(this.app3d.set_camera_from_scene.bind(this.app3d));
+                .then(this.app3d.set_camera.bind(this.app3d));
+                //.then(this.app3d.set_camera_from_scene.bind(this.app3d));
         };
     },
 
     resize: function() {
         var w = this.el.offsetWidth;
-        var h = this.el.offsetHeight - 5; // why -5?
+        var h = this.el.offsetHeight - 5; // canvas is 5 smaller than div
         this.model.set("w", w);
         this.model.set("h", h);
     },
@@ -376,8 +475,8 @@ var ExatomicSceneView = widgets.DOMWidgetView.extend({
 module.exports = {
     ExatomicSceneModel: ExatomicSceneModel,
     ExatomicSceneView: ExatomicSceneView,
-    // SandboxSceneModel: SandboxSceneModel,
-    // SandboxSceneView: SandboxSceneView,
+    DataSceneModel: DataSceneModel,
+    DataSceneView: DataSceneView,
     ExatomicBoxModel: ExatomicBoxModel,
     ExatomicBoxView: ExatomicBoxView,
     unpack_models: widgets.unpack_models

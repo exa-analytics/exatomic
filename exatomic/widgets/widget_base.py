@@ -6,6 +6,7 @@ Universe Notebook Widget
 #########################
 """
 import os
+import numpy as np
 from base64 import b64decode
 from traitlets import (Bool, Int, Float, Unicode,
                        List, Any, Dict, Instance, link)
@@ -23,13 +24,65 @@ from .widget_utils import (_glo, _flo, _wlo, _hboxlo, _vboxlo, _bboxlo,
                            _ListDict, _scene_grid,
                            Folder, GUIBox, gui_field_widgets)
 
+from ipydatawidgets import NDArray
+from ipydatawidgets import array_serialization as a_s
+from traittypes import DataFrame as TraitDF
+
+@register
+class DataScene(DOMWidget):
+    _model_module_version = Unicode(__js_version__).tag(sync=True)
+    _model_module_version = Unicode(__js_version__).tag(sync=True)
+    _view_module = Unicode("exatomic").tag(sync=True)
+    _model_module = Unicode("exatomic").tag(sync=True)
+    _model_name = Unicode("DataSceneModel").tag(sync=True)
+    _view_name = Unicode("DataSceneView").tag(sync=True)
+
+    # Top level traits
+    fdx = Int(0).tag(sync=True)
+    a0 = NDArray(np.array(0.)).tag(sync=True, **a_s)
+    # axis = Bool(False).tag(sync=True)
+    # fill = Bool(False).tag(sync=True)
+    #
+    # Atom traits
+    # atom_s = NDArray(np.array(0, dtype=np.int32)).tag(sync=True, **a_s)
+    # atom_x = NDArray(np.array(0.)).tag(sync=True, **a_s)
+    # atom_y = NDArray(np.array(0.)).tag(sync=True, **a_s)
+    # atom_z = NDArray(np.array(0.)).tag(sync=True, **a_s)
+    # atom_r = Dict().tag(sync=True)
+    # atom_c = Dict().tag(sync=True)
+    # atom_l = List().tag(sync=True)
+    # atom_i = Dict().tag(sync=True)
+
+    # # Two traits
+    # two_b0 = Unicode().tag(sync=True)
+    # two_b1 = Unicode().tag(sync=True)
+
+    # Field traits
+    # fields = NDArray(allow_none=True).tag(sync=True, **array_serialization)
+    # fps = Dict().tag(sync=True)
+
+    # # Field traits
+    # field_i = List().tag(sync=True)
+    # field_v = Unicode().tag(sync=True)
+    # field_p = Dict().tag(sync=True)
+    # field_idx = Any().tag(sync=True)
+    # field_iso = Float(0.03).tag(sync=True)
+    # field_show = Bool(False).tag(sync=True)
+    # cont_show = Bool(False).tag(sync=True)
+    # cont_axis = Unicode("z").tag(sync=True)
+    # cont_num = Int(10).tag(sync=True)
+    # cont_lim = List([-8, -1]).tag(sync=True)
+    # cont_val = Float(0.0).tag(sync=True)
+    # # Frame traits
+
+
 
 @register
 class ExatomicScene(DOMWidget):
     _model_module_version = Unicode(__js_version__).tag(sync=True)
     _model_module_version = Unicode(__js_version__).tag(sync=True)
-    _view_module = Unicode("jupyter-exatomic").tag(sync=True)
-    _model_module = Unicode("jupyter-exatomic").tag(sync=True)
+    _view_module = Unicode("exatomic").tag(sync=True)
+    _model_module = Unicode("exatomic").tag(sync=True)
     _model_name = Unicode("ExatomicSceneModel").tag(sync=True)
     _view_name = Unicode("ExatomicSceneView").tag(sync=True)
     # Base controls and GUI
@@ -175,8 +228,8 @@ class ExatomicBox(Box):
 
     _model_module_version = Unicode(__js_version__).tag(sync=True)
     _model_module_version = Unicode(__js_version__).tag(sync=True)
-    _model_module = Unicode("jupyter-exatomic").tag(sync=True)
-    _view_module = Unicode("jupyter-exatomic").tag(sync=True)
+    _model_module = Unicode("exatomic").tag(sync=True)
+    _view_module = Unicode("exatomic").tag(sync=True)
     _model_name = Unicode("ExatomicBoxModel").tag(sync=True)
     _view_name = Unicode("ExatomicBoxView").tag(sync=True)
     active_scene_indices = List().tag(sync=True)
@@ -321,6 +374,7 @@ class ExatomicBox(Box):
             self.uni = kwargs.pop('uni', False)
         if not hasattr(self, 'test'):
             self.test = kwargs.pop('test', True)
+        if not objs: objs = (1,)
         mh = kwargs.pop('min_height', None)
         mw = kwargs.pop('min_width', None)
         objs, grid = _scene_grid(objs, min_height=mh, min_width=mw)

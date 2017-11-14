@@ -1,5 +1,5 @@
 {
-  "name": "jupyter-exatomic",
+  "name": "exatomic",
   "version": "0.4.2",
   "description": "A unified platform for theoretical and computational chemists.",
   "author": "Thomas J. Duignan and Alex Marchenko",
@@ -29,6 +29,8 @@
   "dependencies": {
     "@jupyter-widgets/base": "^1.0.0",
     "@jupyter-widgets/controls": "^1.0.0",
+    "jupyter-datawidgets": "^3.0.0",
+    "jupyter-dataserializers": "^1.0.0",
     "underscore": "^1.8.3",
     "three": "^0.82.0",
     "three-trackballcontrols": "^0.0.5",

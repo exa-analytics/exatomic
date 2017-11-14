@@ -8,7 +8,104 @@
 "use strict";
 var THREE = require("three");
 var TBC = require("three-trackballcontrols");
-var utils = require("./jupyter-exatomic-utils.js");
+var utils = require("./utils.js");
+
+//
+// class FancyApp {
+//
+//     constructor(view) {
+//         this.view = view;
+//         this.meshes = {"generic": [], "frame": [],
+//                        "contour": [], "field": [],
+//                           "atom": [],   "two": []};
+//         this.ACTIVE = null;
+//         this.set_dims();
+//     };
+//
+//     init_camera() {
+//         return new THREE.PerspectiveCamera(35, this.w / this.h, 1, 1000);
+//     };
+//
+//     init_scene() {
+//         var scene = new THREE.Scene();
+//         var amlight = new THREE.AmbientLight(0xFFFFFF, 0.5);
+//         var dlight0 = new THREE.DirectionalLight(0xFFFFFF, 0.3);
+//         var dlight1 = new THREE.DirectionalLight(0xFFFFFF, 0.3);
+//         dlight0.position.set(-100, -100, -100);
+//         dlight1.position.set(100, 100, 100);
+//         scene.add(amlight);
+//         scene.add(dlight0);
+//         scene.add(dlight1);
+//         return Promise.resolve(scene);
+//     };
+//
+//     init_renderer() {
+//         var renderer = new THREE.WebGLRenderer({antialias: true,
+//                                                 alpha: true});
+//         renderer.autoClear = false;
+//         return Promise.resolve(renderer);
+//     };
+//
+//     init_controls() {
+//         var controls = new TBC(this.camera,
+//                                this.renderer.domElement);
+//         controls.rotateSpeed = 10.0;
+//         controls.zoomSpeed = 5.0;
+//         controls.panSpeed = 0.5;
+//         controls.noZoom = false;
+//         controls.noPan = false;
+//         controls.staticMoving = true;
+//         controls.dynamicDampingFactor = 0.3;
+//         controls.keys = [65, 83, 68];
+//         controls.target = new THREE.Vector3(0.0, 0.0, 0.0);
+//         return controls;
+//     };
+//
+//     animate() {
+//         window.requestAnimationFrame(this.animate.bind(this));
+//         this.resize();
+//         this.controls.update();
+//         this.render();
+//     };
+//
+//     render() {
+//         this.renderer.clear();
+//         this.renderer.render(this.cubescene, this.cubecamera);
+//         this.renderer.clearDepth();
+//         this.renderer.render(this.scene, this.camera);
+//         this.renderer.clearDepth();
+//         this.renderer.render(this.hudscene, this.hudcamera);
+//     };
+//
+//     init_promise() {
+//         var that = this;
+//         return Promise.all([
+//             utils.resolv(this, 'scene'),
+//             Promise.all([
+//                 utils.resolv(this, 'camera'),
+//                 this.init_renderer(this.view.el).then(function(o) {
+//                     that.renderer = o;
+//                     that.view.el.appendChild(that.renderer.domElement);
+//                 })
+//             ]).then(this.init_controls.bind(this))
+//               .then(function(o) {
+//                   that.controls = o;
+//                   that.controls.addEventListener(
+//                       "change", that.render.bind(that));
+//             }).then(this.init_hudcanvas.bind(this))
+//                 .then(function(o) {that.hudcanvas = o})
+//                 .then(this.finalize_hudcanvas.bind(this)),
+//             utils.resolv(this, 'raycaster'),
+//             utils.resolv(this, 'hudscene'),
+//             utils.resolv(this, 'hudcamera'),
+//             utils.resolv(this, 'mouse')
+//                 .then(this.finalize_mouseover.bind(this))
+//         ]);
+//     };
+//
+//
+// };
+//
 
 
 class App3D {
@@ -63,19 +160,28 @@ class App3D {
     };
 
     init_camera() {
-        return new THREE.PerspectiveCamera(35, this.w / this.h, 1, 1000);
+        return new THREE.PerspectiveCamera(35, this.w / this.h, 1, 100000);
     };
 
     init_scene() {
         var scene = new THREE.Scene();
-        var amlight = new THREE.AmbientLight(0xFFFFFF, 0.5);
-        var dlight0 = new THREE.DirectionalLight(0xFFFFFF, 0.3);
-        var dlight1 = new THREE.DirectionalLight(0xFFFFFF, 0.3);
-        dlight0.position.set(-100, -100, -100);
-        dlight1.position.set(100, 100, 100);
+        var amlight = new THREE.AmbientLight(0x808080, 0.5);
+        // var dlight0 = new THREE.DirectionalLight(0xFFFFFF, 0.3);
+        // var dlight1 = new THREE.DirectionalLight(0xFFFFFF, 0.3);
+        // dlight0.position.set(-100, -100, -100);
+        // dlight1.position.set(100, 100, 100);
+        var sunlight = new THREE.SpotLight(0xffffff, 0.3, 0, Math.PI/2);
+        sunlight.position.set(1000, 2000, 1000);
+        sunlight.castShadow = true;
+        sunlight.shadow = new THREE.LightShadow(
+            new THREE.PerspectiveCamera(30, 1, 1500, 5000));
+        sunlight.shadow.bias = 0.;
         scene.add(amlight);
-        scene.add(dlight0);
-        scene.add(dlight1);
+        scene.add(sunlight);
+        // var shadowcamerahelper = new THREE.CameraHelper(sunlight.shadow.camera);
+        // shadowcamerahelper.visible = sha
+        // scene.add(dlight0);
+        // scene.add(dlight1);
         return Promise.resolve(scene);
     };
 
@@ -83,6 +189,10 @@ class App3D {
         var renderer = new THREE.WebGLRenderer({antialias: true,
                                                 alpha: true});
         renderer.autoClear = false;
+        renderer.shadowMap.enabled = true;
+        renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+        renderer.gammaInput = true;
+        renderer.gammaOutput = true;
         return Promise.resolve(renderer);
     };
 
@@ -99,7 +209,7 @@ class App3D {
         controls.keys = [65, 83, 68];
         controls.target = new THREE.Vector3(0.0, 0.0, 0.0);
         return controls;
-    }
+    };
 
     init_raycaster() {
         return new THREE.Raycaster();
@@ -146,7 +256,17 @@ class App3D {
     };
 
     render() {
+        //renderfunc
         this.renderer.clear();
+        // this.renderer.render(this.cubescene, this.cubecamera);
+        // this.cubecamera.rotation.copy(this.camera.rotation);
+        // this.renderer.clearDepth();
+        // this.meshes["generic"][0].visible = false;
+        // this.acubecamera.updateCubeMap(this.renderer, this.scene);
+        // this.meshes["generic"][0].visible = true;
+        // this.meshes["generic"][1].visible = false;
+        // this.bcubecamera.updateCubeMap(this.renderer, this.scene);
+        // this.meshes["generic"][1].visible = true;
         this.renderer.render(this.scene, this.camera);
         this.renderer.clearDepth();
         this.renderer.render(this.hudscene, this.hudcamera);
@@ -188,7 +308,7 @@ class App3D {
         var B = (color & 0x0000FF);
         R = (R == 0) ? 110 : R + 76;
         G = (G == 0) ? 110 : G + 76;
-        B = (B == 0) ? 110 : B + 76;
+        B = (B == 0) ? 111 : B + 76;
         R = R < 255 ? R < 1 ? 0 : R : 255;
         G = G < 255 ? G < 1 ? 0 : G : 255;
         B = B < 255 ? B < 1 ? 0 : B : 255;
@@ -314,12 +434,147 @@ class App3D {
         ---------------
         Example of a render
         */
-        var geom = new THREE.IcosahedronGeometry(2, 1);
-        var mat = new THREE.MeshBasicMaterial({color: 0x000000,
-                                               wireframe: true});
-        var mesh = new THREE.Mesh(geom, mat);
-        mesh.name = "Icosahedron";
-        return [mesh];
+
+        // var geom = new THREE.IcosahedronGeometry(2, 1);
+        // var mat = new THREE.MeshBasicMaterial({color: 0x000000,
+        //                                        wireframe: true});
+        // var mesh = new THREE.Mesh(geom, mat);
+        // mesh.name = "Icosahedron";
+        // return [mesh];
+
+        var reflectionCube = new THREE.CubeTextureLoader()
+            .setPath('cmap/')
+            .load(['px.jpg', 'nx.jpg', 'py.jpg',
+                   'ny.jpg', 'pz.jpg', 'nz.jpg']);
+        // var shader = THREE.ShaderLib.cube;
+        // shader.uniforms.tCube.value = textureCube;
+        // var mat = new THREE.ShaderMaterial({
+        //     fragmentShader: shader.fragmentShader,
+        //     vertexShader: shader.vertexShader,
+        //     uniforms: shader.uniforms,
+        //     depthWrite: false,
+        //     side: THREE.Backside
+        // });
+        // var geom = new THREE.BoxGeometry(10000, 10000, 10000);
+        // var mesh = new THREE.Mesh(geom, mat);
+
+        var acubecamera = new THREE.CubeCamera(1, 10000, 128);
+        var bcubecamera = new THREE.CubeCamera(1, 10000, 128);
+        this.acubecamera = acubecamera;
+        this.bcubecamera = bcubecamera;
+        var ageom = new THREE.SphereGeometry(3, 26, 26);
+        var amat = new THREE.MeshStandardMaterial({
+            color: 0x888888,
+            roughness: 0.4,
+            metalness: 1.0,
+            envMap: acubecamera.renderTarget.texture,
+            envMapIntensity: 0.4,
+            side: THREE.DoubleSide
+            // shininess: 50,
+            // color: 0xffffff,
+            // specular: 0x999999,
+            // side: THREE.DoubleSide,
+            // reflectivity: 0.8
+            // envMap: cubeCamera.renderTarget,
+         });
+        var amesh = new THREE.Mesh(ageom, amat);
+        amesh.castShadow = true;
+        amesh.receiveShadow = true;
+        amesh.position.set(5, 0, 0);
+        this.amesh = amesh;
+        this.meshes["generic"].push(amesh);
+        amesh.add(acubecamera);
+
+        var bgeom = new THREE.SphereGeometry(2, 26, 26);
+        var bmat = new THREE.MeshPhongMaterial({
+            reflectivity: 1.0,
+            shininess: 50,
+            color: 0xffffff,
+            specular: 0x999999,
+            side: THREE.DoubleSide,
+            envMap: bcubecamera.renderTarget.texture
+        });
+        var bmesh = new THREE.Mesh(bgeom, bmat);
+        bmesh.castShadow = true;
+        bmesh.receiveShadow = true;
+        this.bmesh = bmesh;
+        bmesh.position.set(0, 5, 0);
+        this.meshes["generic"].push(bmesh);
+        bmesh.add(bcubecamera);
+        var cgeom = new THREE.BoxGeometry(3, 3, 3);
+        var cmat = new THREE.MeshStandardMaterial({
+            metalness: 1.0,
+            roughness: 0.8,
+            shininess: 50,
+            color: 0xffffff,
+            specular: 0x999999,
+            side: THREE.DoubleSide
+        })
+        var cmesh = new THREE.Mesh(cgeom, cmat);
+        cmesh.castShadow = true;
+        cmesh.receiveShadow = true;
+        cmesh.position.set(5, 5, 0);
+        this.meshes["generic"].push(cmesh);
+
+        var dgeom = new THREE.SphereGeometry(1, 26, 26);
+        var dmat = new THREE.MeshPhongMaterial({
+            shininess: 50,
+            color: 0xFF9600,
+            specular: 0xFF5500,
+            side: THREE.DoubleSide
+        });
+        var dmesh = new THREE.Mesh(dgeom, dmat);
+        dmesh.castShadow = true;
+        dmesh.receiveShadow = true;
+        dmesh.position.set(5, 5, 5);
+        this.meshes["generic"].push(dmesh);
+
+        var textureLoader = new THREE.TextureLoader();
+        var textureSquares = textureLoader.load("cmap/lavatile.jpg");
+        textureSquares.repeat.set(50, 50);
+        textureSquares.wrapS = textureSquares.wrapT = THREE.RepeatWrapping;
+        textureSquares.magFilter = THREE.NearestFilter;
+        textureSquares.format = THREE.RGBFormat;
+
+        var groundMaterial = new THREE.MeshPhongMaterial({
+            shininess: 80,
+            color: 0xffffff,
+            specular: 0xffffff,
+            side: THREE.DoubleSide,
+            map: textureSquares
+        });
+
+        var planeGeometry = new THREE.PlaneBufferGeometry(10, 10);
+        var ground = new THREE.Mesh(planeGeometry, groundMaterial);
+        ground.rotation.z = - Math.PI / 2;
+        ground.scale.set(10, 10, 10);
+        ground.position.set(0, 0, -3);
+        ground.receiveShadow = true;
+        this.meshes["generic"].push(ground);
+        this.add_meshes("generic");
+        // this.render();
+
+        this.meshes["generic"][0].visible = false;
+        this.acubecamera.updateCubeMap(this.renderer, this.scene);
+        this.meshes["generic"][0].visible = true;
+        // this.meshes["generic"][1].visible = false;
+        this.bcubecamera.updateCubeMap(this.renderer, this.scene);
+        // this.meshes["generic"][1].visible = true;
+
+        console.log(this);
+        console.log(this.meshes);
+        // Update the render target cube
+        // car.setVisible( false );
+        // console.log(cubeCamera);
+        // cubeCamera.position.copy( car.position );
+        // cubeCamera.updateCubeMap( this.renderer, this.scene );
+
+        // this.cubecamera = cubeCamera;
+        // this.cubescene = cubeScene;
+
+        // Render the scene
+        // car.setVisible( true );
+        // renderer.render( scene, camera );
     };
 
     add_parametric_surface() {
@@ -2578,5 +2833,6 @@ App3D.prototype.vertex_values = new Float32Array(8);
 
 module.exports = {
     App3D: App3D
+    // FancyApp: FancyApp
     // NewApp3D: NewApp3D
 };
