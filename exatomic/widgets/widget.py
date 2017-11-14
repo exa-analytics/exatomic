@@ -6,10 +6,10 @@ Universe Notebook Widget
 #########################
 """
 
-from traitlets import Bool, Unicode, Float, Dict, Any, List, Int
+from traitlets import Bool, Unicode, Float, Dict, Any, List, Int, link
 from ipywidgets import (Button, Dropdown, jslink, register, VBox, HBox,
                         IntSlider, IntRangeSlider, FloatSlider, Play,
-                        FloatText)
+                        FloatText, Layout)
 
 from .widget_base import ExatomicScene, ExatomicBox
 from .widget_utils import _wlo, _hboxlo, _vboxlo, _ListDict, _scene_grid, Folder
@@ -66,9 +66,18 @@ class TensorScene(ExatomicScene):
     field = Unicode("null").tag(sync=True)
     geom = Bool(True).tag(sync=True)
     generate = Bool(False).tag(sync=True)
-    tensor = List([[1.0,0.0,0.0],[0.0,1.0,0.0],[0.0,0.0,1.0]]).tag(sync=True)
-    print("re-execute")
-    print(tensor)
+    # tensor = List([[1., 0., 0.],
+    #                [0., 1., 0.],
+    #                [0., 0., 1.]]).tag(sync=True)
+    txx = Float(1.).tag(sync=True)
+    txy = Float(0.).tag(sync=True)
+    txz = Float(0.).tag(sync=True)
+    tyx = Float(0.).tag(sync=True)
+    tyy = Float(1.).tag(sync=True)
+    tyz = Float(0.).tag(sync=True)
+    tzx = Float(0.).tag(sync=True)
+    tzy = Float(0.).tag(sync=True)
+    tzz = Float(1.).tag(sync=True)
 
 
 
@@ -78,28 +87,20 @@ class TensorContainer(ExatomicBox):
     _model_name = Unicode("TensorContainerModel").tag(sync=True)
     _view_name = Unicode("TensorContainerView").tag(sync=True)
 
-    def _generateTensor(self,b):
-        for idx in self.active_scene_indices:
-            self.scenes[idx].generate = self.scenes[idx].generate == False
-        # if self.scene.generate:
-        #     self.scene.generate = False
-        # else:
-        #     self.scene.generate = True
-        tempTensor = []
-        for rows in range(3):
-            tempTensor.append([])
-            for cols in range(3):
-                tempTensor[-1].append(self.tensor.children[rows].children[cols].value)
-        # print("self.scene.tensor")
-        # print(self.scene.tensor)
-        print(self.scenes)
-        for idx in self.active_scene_indices:
-            self.scenes[idx].tensor = tempTensor
-        # print("self.scene.tensor")
-        # print(self.scene.tensor)
-        print(self.scenes)
-        print("tempTensor")
-        print(tempTensor)
+    # def _update_tensor(self, b):
+    #     for idx in self.active_scene_indices:
+    #         self.scenes[idx].generate = self.scenes[idx].generate == False
+    #     temptensor = []
+    #     for rows in range(3):
+    #         temptensor.append([])
+    #         for el in range(3):
+    #             tempTensor[-1].append(self.tensor.children[rows].children[cols].value)
+    #     print(self.scenes)
+    #     for idx in self.active_scene_indices:
+    #         self.scenes[idx].tensor = tempTensor
+    #     # print(self.scenes)
+    #     # print("tempTensor")
+    #     # print(tempTensor)
 
 
     def _init_gui(self, **kwargs):
@@ -113,23 +114,38 @@ class TensorContainer(ExatomicBox):
         self.x = |xx xy xz|
         self.y = |yx yy yz|
         self.z = |zx zy zz|'''
-        self.x = HBox([FloatText(value=1.0),FloatText(value=1.0), \
-                                                    FloatText(value=1.0)])
-        self.y = HBox([FloatText(value=1.0),FloatText(value=1.0), \
-                                                    FloatText(value=1.0)])
-        self.z = HBox([FloatText(value=1.0),FloatText(value=1.0), \
-                                                    FloatText(value=1.0)])
-        self.tensor = VBox([self.x,self.y,self.z])
-        display(self.tensor)
+        alo = Layout(width='74px')
+        rlo = Layout(width='234px')
+        carts = ['x', 'y', 'z']
+        xs = [FloatText(value=1., layout=alo),
+              FloatText(value=0., layout=alo),
+              FloatText(value=0., layout=alo)]
+        ys = [FloatText(value=0., layout=alo),
+              FloatText(value=1., layout=alo),
+              FloatText(value=0., layout=alo)]
+        zs = [FloatText(value=0., layout=alo),
+              FloatText(value=0., layout=alo),
+              FloatText(value=1., layout=alo)]
+        for i, ks in enumerate([xs, ys, zs]):
+            for j, cart in enumerate(carts):
+                # Here we link all the scenes to the GUI even if inactive
+                for scn in self.scenes:
+                    link((ks[j], 'value'), (scn, 't' + carts[i] + cart))
+        xbox = HBox(xs, layout=rlo)
+        ybox = HBox(ys, layout=rlo)
+        zbox = HBox(zs, layout=rlo)
 
         def _geom(b):
             for idx in self.active_scene_indices:
                 self.scenes[idx].geom = self.scenes[idx].geom == False
 
         geom.on_click(_geom)
-        generate.on_click(self._generateTensor)
+        # generate.on_click(self._update_tensor)
         mainopts.update([('geom', geom),
-                         ('gen', generate)])
+                        #  ('gen', generate),
+                         ('xbox', xbox),
+                         ('ybox', ybox),
+                         ('zbox', zbox)])
 
         return mainopts
         # self._controls['geom'] = geom

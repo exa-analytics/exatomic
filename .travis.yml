@@ -34,7 +34,7 @@ install:
   - pip install .
   - cd ../
 # - conda install -q -c exaanalytics exa
-  - conda install -q -c conda-forge psutil numexpr nodejs ipywidgets
+  - conda install -q -c conda-forge psutil numexpr nodejs ipywidgets symengine python-symengine
   - pip install .
 
 script:

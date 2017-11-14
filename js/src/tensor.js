@@ -36,33 +36,39 @@ var TensorSceneView = base.ExatomicSceneView.extend({
     init: function() {
         base.ExatomicSceneView.prototype.init.apply(this);
         this.three_promises = this.app3d.finalize(this.three_promises)
-            .then(this.add_surface.bind(this))
+            .then(this.generate_tensor.bind(this))
             .then(this.app3d.set_camera_from_scene.bind(this.app3d));
     },
 
-    add_surface: function() {
+    generate_tensor: function() {
         this.app3d.clear_meshes("generic");
         if (this.model.get("geom")) {
             this.app3d.meshes["generic"] =
-                this.app3d.add_tensor_surface( this.model.get("tensor") );
+                   this.app3d.add_tensor_surface(this.get_tensor());
         };
         this.app3d.add_meshes("generic");
     },
 
-    generate_tensor: function() {
-        var tensor = this.model.get("tensor");
-        console.log(this.model.get("generate"));
-        console.log(tensor[0]);
-        this.app3d.clear_meshes("generic");
-        this.app3d.meshes["generic"] =
-               this.app3d.add_tensor_surface( tensor );
-        this.app3d.add_meshes("generic");
+    get_tensor: function() {
+        return [
+            [this.model.get("txx"), this.model.get("txy"), this.model.get("txz")],
+            [this.model.get("tyx"), this.model.get("tyy"), this.model.get("tyz")],
+            [this.model.get("tzx"), this.model.get("tzy"), this.model.get("tzz")]
+        ];
     },
 
     init_listeners: function() {
         base.ExatomicSceneView.prototype.init_listeners.call(this);
-        this.listenTo(this.model, "change:geom", this.add_surface);
-        this.listenTo(this.model, "change:generate", this.generate_tensor);
+        this.listenTo(this.model, "change:geom", this.generate_tensor);
+        this.listenTo(this.model, "change:txx", this.generate_tensor);
+        this.listenTo(this.model, "change:txy", this.generate_tensor);
+        this.listenTo(this.model, "change:txz", this.generate_tensor);
+        this.listenTo(this.model, "change:tyx", this.generate_tensor);
+        this.listenTo(this.model, "change:tyy", this.generate_tensor);
+        this.listenTo(this.model, "change:tyz", this.generate_tensor);
+        this.listenTo(this.model, "change:tzx", this.generate_tensor);
+        this.listenTo(this.model, "change:tzy", this.generate_tensor);
+        this.listenTo(this.model, "change:tzz", this.generate_tensor);
     },
 
 });

@@ -177,7 +177,7 @@ class ExatomicScene(DOMWidget):
         if lo is None:
             height = kwargs.pop('height', 'auto')
             min_height = kwargs.pop('min_height', '400px')
-            min_width = kwargs.pop('min_width', '400px')
+            min_width = kwargs.pop('min_width', '300px')
             flex = kwargs.pop('flex', '1 1 auto')
             lo = Layout(height=height, min_height=min_height,
                         flex=flex, min_width=min_width)
