@@ -74,8 +74,8 @@ def js_prerelease(command, strict=False):
 class NPM(Command):
     description = "install package.json dependencies using npm."
     user_options = []
-    targets = [os.path.join(root, name, staticdir, "extension.js"),
-               os.path.join(root, name, staticdir, "index.js")]
+    targets = [os.path.join(root, name, staticdir, "js", "extension.js"),
+               os.path.join(root, name, staticdir, "js", "index.js")]
 
     def initialize_options(self):
         pass
