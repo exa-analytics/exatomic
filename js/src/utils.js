@@ -2,7 +2,7 @@
 // Distributed under the terms of the Apache License 2.0
 /*"""
 ================
-jupyter-exatomic-util.js
+utils.js
 ================
 Helper JS functions.
 */
@@ -62,6 +62,31 @@ var mapper = function(indices, map) {
     };
     return mapped;
 };
+
+var jsonparse = function(string) {
+    return new Promise(function(resolve, reject) {
+        try {resolve(JSON.parse(string))}
+        catch(e) {reject(e)}
+    });
+};
+
+var logerror = function(e) {console.log(e.message)};
+
+var fparse = function(obj, key) {
+    jsonparse(obj.model.get(key))
+    .then(function(p) {obj[key] = p}).catch(logerror)
+};
+
+var resolv = function(obj, key) {
+    return Promise.resolve(obj['init_' + key]())
+    .then(function(p) {obj[key] = p}).catch(logerror)
+};
+
+var mesolv = function(obj, key) {
+    return Promise.resolve(obj.model.get(key))
+    .then(function(p) {obj[key] = p}).catch(logerror)
+};
+
 
 var linspace = function(min, max, n) {
     var n1 = n - 1;
@@ -435,5 +460,9 @@ module.exports = {
     Gaussian: Gaussian,
     Ellipsoid: Ellipsoid,
     Sphere: Sphere,
-    Torus: Torus
+    Torus: Torus,
+    jsonparse: jsonparse,
+    fparse: fparse,
+    mesolv: mesolv,
+    resolv: resolv
 };

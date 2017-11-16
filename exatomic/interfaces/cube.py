@@ -7,14 +7,20 @@ Cube File Support
 Cube files contain an atomic geometry and scalar field values corresponding to
 a physical quantity.
 """
+import six
 import numpy as np
 import pandas as pd
-from exa import Series
-from exatomic import __version__, Atom, Editor, AtomicField
+from exa import Series, TypedMeta
+from exatomic import __version__, Atom, Editor, AtomicField, Frame
 from exatomic.base import z2sym, sym2z
 
+class Meta(TypedMeta):
+    atom = Atom
+    frame = Frame
+    field = AtomicField
 
-class Cube(Editor):
+
+class Cube(six.with_metaclass(Meta, Editor)):
     """
     An editor for handling cube files.
 
@@ -60,7 +66,9 @@ class Cube(Editor):
         nz, dzi, dzj, dzk = [typ(i) for typ, i in zip(typs, self[5].split())]
         nat, nx, ny, nz = abs(nat), abs(nx), abs(ny), abs(nz)
         volstart = nat + 6
-        if len(self[volstart].split()) < 5: volstart += 1
+        if len(self[volstart].split()) < 5:
+            if not len(self[volstart + 1].split()) < 5:
+                volstart += 1
         ncol = len(self[volstart].split())
         data = self.pandas_dataframe(volstart, len(self), ncol).values.ravel()
         df = pd.Series({'ox': ox, 'oy': oy, 'oz': oz,
@@ -125,3 +133,18 @@ class Cube(Editor):
         super(Cube, self).__init__(*args, **kwargs)
         self.label = label
         self.field_type = field_type
+
+
+
+def uni_from_cubes(adir, verbose=False):
+    """Put a bunch of cubes into one universe."""
+    import os
+    from glob import glob
+    if not adir.endswith(os.sep): adir += os.sep
+    cubes = sorted(glob(adir + '*cube'))
+    if verbose:
+        for cub in cubes: print(cub)
+    uni = Cube(cubes[0]).to_universe()
+    flds = [Cube(cub).field for cub in cubes[1:]]
+    uni.add_field(flds)
+    return uni

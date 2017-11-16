@@ -7,19 +7,26 @@ Molcas Output Parser
 Multiple frames are not currently supported
 """
 import os
+import six
 import pandas as pd
 import numpy as np
 from io import StringIO
 
+from exa import TypedMeta
+
 from .editor import Editor
 
+from exatomic import Atom
 from exatomic.algorithms.basis import lmap, spher_lml_count
-from exatomic.core.basis import Overlap
-from exatomic.core.orbital import DensityMatrix
+from exatomic.core.basis import Overlap, BasisSet, BasisSetOrder
+from exatomic.core.orbital import DensityMatrix, MOMatrix
 from exatomic.base import sym2z
 
+class OrbMeta(TypedMeta):
+    momatrix = MOMatrix
 
-class Orb(Editor):
+
+class Orb(six.with_metaclass(OrbMeta, Editor)):
     def to_universe(self):
         raise NotImplementedError("No atom information given. " \
                                   "Attach these attributes to a universe.")
@@ -101,7 +108,12 @@ _re_occ = 'OCCUPATION NUMBERS'
 _re_ens = 'ONE ELECTRON ENERGIES'
 
 
-class Output(Editor):
+class OutMeta(TypedMeta):
+    atom = Atom
+    basis_set = BasisSet
+    basis_set_order = BasisSetOrder
+
+class Output(six.with_metaclass(OutMeta, Editor)):
 
     def parse_atom(self):
         """Parses the atom list generated in SEWARD."""
@@ -137,6 +149,15 @@ class Output(Editor):
         df.loc[df[df['n'] == 0].index, 'n'] = fill
         df['L'] = df['type'].str[1].map(lmap)
         df['ml'] = df['type'].str[2:]
+        try:
+            df['l'] = df['ml'].copy()
+            df['l'].update(df['l'].map({'': 0, 'x': 1, 'y': 0, 'z': 0}))
+            df['m'] = df['ml'].copy()
+            df['m'].update(df['m'].map({'': 0, 'y': 1, 'x': 0, 'z': 0}))
+            df['n'] = df['ml'].copy()
+            df['n'].update(df['n'].map({'': 0, 'z': 1, 'x': 0, 'y': 0}))
+        except:
+            pass
         df['ml'].update(df['ml'].map(mldict))
         df['ml'].update(df['ml'].str[::-1])
         df['ml'] = df['ml'].astype(np.int64)

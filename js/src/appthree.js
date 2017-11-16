@@ -8,57 +8,95 @@
 "use strict";
 var THREE = require("three");
 var TBC = require("three-trackballcontrols");
-var utils = require("./jupyter-exatomic-utils.js");
+var utils = require("./utils");
+
 
 
 class App3D {
-    /*"""
-    App3D
-    =========
-    A 3D visualization application built on top of threejs
-    that accepts an empty jupyter widget view and defines
-    a simple threejs scene with a simplified threejs API.
-    */
 
     constructor(view) {
+        console.log("Constructing THREEjs scene");
         this.view = view;
         this.meshes = {"generic": [], "frame": [],
                        "contour": [], "field": [],
-                       "atom": [], "two": []};
+                          "atom": [],   "two": []};
         this.ACTIVE = null;
         this.set_dims();
     };
 
-    set_dims() {
-        this.w = this.view.model.get("layout").get("width");
-        this.h = this.view.model.get("layout").get("height");
+    save() {
+        this.resize(1920, 1080);
+        this.render();
+        var image = this.renderer.domElement.toDataURL("image/png");
+        this.resize();
+        this.render();
+        return image;
+    };
+
+    close() {
+        console.log("Disposing exatomic THREE objects.");
+        for (var idx in this.meshes) {
+            for (var sub in this.meshes[idx]) {
+                if (this.meshes[idx][sub].geometry) {
+                    this.meshes[idx][sub].geometry.dispose();
+                };
+                if (this.meshes[idx][sub].material) {
+                    this.meshes[idx][sub].geometry.dispose();
+                };
+            };
+        };
+        this.texture.dispose();
+        this.renderer.forceContextLoss();
+        this.renderer.dispose();
+    };
+
+    set_dims(w, h) {
+        this.oldw = (this.w === undefined) ? 200 : this.w;
+        this.oldh = (this.h === undefined) ? 200 : this.h;
+        this.w = (w === undefined) ? this.view.model.get("w") : w;
+        this.h = (h === undefined) ? this.view.model.get("h") : h;
         this.w2 = this.w / 2;
         this.h2 = this.h / 2;
+        // When python kernel is restarted prevent
+        // view from infinite growth down the page
+        if (Math.abs(this.h - this.oldh - 20) < 2) {
+            this.h = this.oldh;
+            this.h2 = this.h / 2;
+        };
     };
 
     init_camera() {
-        var camera = new THREE.PerspectiveCamera(35, this.w / this.h, 1, 1000);
-        return Promise.resolve(camera);
+        return new THREE.PerspectiveCamera(35, this.w / this.h, 1, 100000);
     };
 
     init_scene() {
         var scene = new THREE.Scene();
-        var amlight = new THREE.AmbientLight(0xFFFFFF, 0.5);
-        var dlight0 = new THREE.DirectionalLight(0xFFFFFF, 0.3);
-        var dlight1 = new THREE.DirectionalLight(0xFFFFFF, 0.3);
-        dlight0.position.set(-100, -100, -100);
-        dlight1.position.set(100, 100, 100);
+        var amlight = new THREE.AmbientLight(0x808080, 0.5);
+        var dlight0 = new THREE.DirectionalLight(0xa0a0a0, 0.3);
+        var dlight1 = new THREE.DirectionalLight(0xa0a0a0, 0.3);
+        dlight0.position.set(-1000, -1000, -1000);
+        // dlight1.position.set(1000, 1000, 1000);
+        var sunlight = new THREE.SpotLight(0xffffff, 0.3, 0, Math.PI/2);
+        sunlight.position.set(1000, 1000, 1000);
+        sunlight.castShadow = true;
+        sunlight.shadow = new THREE.LightShadow(
+            new THREE.PerspectiveCamera(30, 1, 1500, 5000));
+        sunlight.shadow.bias = 0.;
         scene.add(amlight);
         scene.add(dlight0);
-        scene.add(dlight1);
+        scene.add(sunlight);
+        // scene.add(dlight1);
         return Promise.resolve(scene);
     };
 
     init_renderer() {
         var renderer = new THREE.WebGLRenderer({antialias: true,
                                                 alpha: true});
-        renderer.setSize(this.w, this.h);
         renderer.autoClear = false;
+        renderer.shadowMap.enabled = true;
+        renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+        renderer.gammaInput = true;
+        renderer.gammaOutput = true;
         return Promise.resolve(renderer);
     };
 
@@ -74,57 +112,65 @@ class App3D {
         controls.dynamicDampingFactor = 0.3;
         controls.keys = [65, 83, 68];
         controls.target = new THREE.Vector3(0.0, 0.0, 0.0);
-        return Promise.resolve(controls)
-    }
+        return controls;
+    };
 
     init_raycaster() {
-        return Promise.resolve(new THREE.Raycaster());
+        return new THREE.Raycaster();
     };
 
-    init_hud_scene() {
-        return Promise.resolve(new THREE.Scene());
+    init_hudscene() {
+        return new THREE.Scene();
     };
 
-    init_hud_camera() {
+    init_hudcamera() {
         var camera = new THREE.OrthographicCamera(
             -this.w2,  this.w2,
              this.h2, -this.h2, 1, 1500);
         camera.position.z = 1000;
-        return Promise.resolve(camera);
+        return camera;
+      };
 
-    };
 
     init_mouse() {
-        return Promise.resolve(new THREE.Vector2());
+        return new THREE.Vector2();
     };
 
     resize(w, h) {
-        w = (w === undefined) ? this.w : w;
-        h = (h === undefined) ? this.h : h;
-        var w2 = w / 2;
-        var h2 = h / 2;
-        this.set_dims();
+        this.set_dims(w, h);
         this.set_hud();
-        this.renderer.setSize(w, h);
-        this.camera.aspect = w / h;
-        this.hudcamera.left   = -w2;
-        this.hudcamera.right  =  w2;
-        this.hudcamera.top    =  h2;
-        this.hudcamera.bottom = -h2;
+        this.renderer.setSize(this.w, this.h); //, false);
+        this.camera.aspect = this.w / this.h;
+        this.hudcamera.left   = -this.w2;
+        this.hudcamera.right  =  this.w2;
+        this.hudcamera.top    =  this.h2;
+        this.hudcamera.bottom = -this.h2;
         this.camera.updateProjectionMatrix();
         this.hudcamera.updateProjectionMatrix();
         this.controls.handleResize();
+        this.camera.updateMatrix();
+        // this.render();
     };
 
     animate() {
         window.requestAnimationFrame(this.animate.bind(this));
-        this.controls.update();
         this.resize();
+        this.controls.update();
         this.render();
     };
 
     render() {
+        //renderfunc
         this.renderer.clear();
+        // this.renderer.render(this.cubescene, this.cubecamera);
+        // this.cubecamera.rotation.copy(this.camera.rotation);
+        // this.renderer.clearDepth();
+        // this.meshes["generic"][0].visible = false;
+        // this.acubecamera.updateCubeMap(this.renderer, this.scene);
+        // this.meshes["generic"][0].visible = true;
+        // this.meshes["generic"][1].visible = false;
+        // this.bcubecamera.updateCubeMap(this.renderer, this.scene);
+        // this.meshes["generic"][1].visible = true;
         this.renderer.render(this.scene, this.camera);
         this.renderer.clearDepth();
         this.renderer.render(this.hudscene, this.hudcamera);
@@ -134,6 +180,31 @@ class App3D {
         return promise.then(this.animate.bind(this));
     };
 
+    init_hudcanvas() {
+        var canvas = document.createElement("canvas");
+        canvas.width = 1024;
+        canvas.height = 1024;
+        return Promise.resolve(canvas);
+    };
+
+    finalize_hudcanvas() {
+        this.context = this.hudcanvas.getContext("2d");
+        this.context.textAlign = "bottom";
+        this.context.textBaseline = "left";
+        this.context.font = "64px Arial";
+        this.texture = new THREE.Texture(this.hudcanvas);
+        this.texture.anisotropy = this.renderer.getMaxAnisotropy();
+        this.texture.minFilter = THREE.NearestMipMapLinearFilter;
+        this.texture.magFilter = THREE.NearestFilter;
+        this.texture.needsUpdate = true;
+        var material = new THREE.SpriteMaterial({map: this.texture});
+        this.sprite = new THREE.Sprite(material);
+        this.sprite.position.set(1000, 1000, 1000);
+        this.sprite.scale.set(256, 256, 1);
+        this.hudscene.add(this.sprite);
+    };
+
+
     lighten_color(color) {
         // Need to check if color being passed is hex or int
         var R = (color >> 16);
@@ -141,7 +212,7 @@ class App3D {
         var B = (color & 0x0000FF);
         R = (R == 0) ? 110 : R + 76;
         G = (G == 0) ? 110 : G + 76;
-        B = (B == 0) ? 110 : B + 76;
+        B = (B == 0) ? 111 : B + 76;
         R = R < 255 ? R < 1 ? 0 : R : 255;
         G = G < 255 ? G < 1 ? 0 : G : 255;
         B = B < 255 ? B < 1 ? 0 : B : 255;
@@ -176,16 +247,18 @@ class App3D {
         };
     };
 
-    finalize_mouse_over() {
+    finalize_mouseover() {
         var that = this;
         this.view.el.addEventListener('mousemove',
         function(event) {
             event.preventDefault();
-            var pos = that.renderer.domElement.getBoundingClientRect();
+            // var pos = that.renderer.domElement.getBoundingClientRect();
+            // console.log(pos.width, pos.height);
+            var pos = this.getBoundingClientRect();
             that.mouse.x =  ((event.clientX - pos.x) / that.w) * 2 - 1;
             that.mouse.y = -((event.clientY - pos.y) / that.h) * 2 + 1;
-            that.ray.setFromCamera(that.mouse, that.camera);
-            var intersects = that.ray.intersectObjects(that.scene.children);
+            that.raycaster.setFromCamera(that.mouse, that.camera);
+            var intersects = that.raycaster.intersectObjects(that.scene.children);
             that.highlight_active(intersects);
         }, false);
     };
@@ -193,51 +266,27 @@ class App3D {
     init_promise() {
         var that = this;
         return Promise.all([
-            this.init_scene().then(function(o) {that.scene = o}),
+            utils.resolv(this, 'scene'),
             Promise.all([
-                this.init_camera().then(function(o) {that.camera = o}),
-                this.init_renderer().then(function(o) {
+                utils.resolv(this, 'camera'),
+                this.init_renderer(this.view.el).then(function(o) {
                     that.renderer = o;
                     that.view.el.appendChild(that.renderer.domElement);
                 })
             ]).then(this.init_controls.bind(this))
-                .then(function(o) {
-                    that.controls = o;
-                    that.controls.addEventListener(
-                        "change", that.render.bind(that));
-            }).then(this.init_hud_canvas.bind(this))
+              .then(function(o) {
+                  that.controls = o;
+                  that.controls.addEventListener(
+                      "change", that.render.bind(that));
+            }).then(this.init_hudcanvas.bind(this))
                 .then(function(o) {that.hudcanvas = o})
-                .then(this.finalize_hud_canvas.bind(this)),
-            this.init_raycaster().then(function(o) {that.ray = o}),
-            this.init_hud_scene().then(function(o) {that.hudscene = o}),
-            this.init_hud_camera().then(function(o) {that.hudcamera = o}),
-            this.init_mouse().then(function(o) {that.mouse = o})
-                .then(this.finalize_mouse_over.bind(this))
+                .then(this.finalize_hudcanvas.bind(this)),
+            utils.resolv(this, 'raycaster'),
+            utils.resolv(this, 'hudscene'),
+            utils.resolv(this, 'hudcamera'),
+            utils.resolv(this, 'mouse')
+                .then(this.finalize_mouseover.bind(this))
         ]);
-    };
-
-    init_hud_canvas() {
-        var canvas = document.createElement("canvas");
-        canvas.width = 1024;
-        canvas.height = 1024;
-        return Promise.resolve(canvas);
-    };
-
-    finalize_hud_canvas() {
-        this.context = this.hudcanvas.getContext("2d");
-        this.context.textAlign = "bottom";
-        this.context.textBaseline = "left";
-        this.context.font = "64px Arial";
-        this.texture = new THREE.Texture(this.hudcanvas);
-        this.texture.anisotropy = this.renderer.getMaxAnisotropy();
-        this.texture.minFilter = THREE.NearestMipMapLinearFilter;
-        this.texture.magFilter = THREE.NearestFilter;
-        this.texture.needsUpdate = true;
-        var material = new THREE.SpriteMaterial({map: this.texture});
-        this.sprite = new THREE.Sprite(material);
-        this.sprite.position.set(1000, 1000, 1000);
-        this.sprite.scale.set(256, 256, 1);
-        this.hudscene.add(this.sprite);
     };
 
     set_hud() {
@@ -289,13 +338,155 @@ class App3D {
         ---------------
         Example of a render
         */
+
         var geom = new THREE.IcosahedronGeometry(2, 1);
         var mat = new THREE.MeshBasicMaterial({color: 0x000000,
                                                wireframe: true});
         var mesh = new THREE.Mesh(geom, mat);
         mesh.name = "Icosahedron";
         return [mesh];
+
+        // var reflectionCube = new THREE.CubeTextureLoader()
+        //     .setPath('cmap/')
+        //     .load(['px.jpg', 'nx.jpg', 'py.jpg',
+        //            'ny.jpg', 'pz.jpg', 'nz.jpg']);
+        // var shader = THREE.ShaderLib.cube;
+        // shader.uniforms.tCube.value = textureCube;
+        // var mat = new THREE.ShaderMaterial({
+        //     fragmentShader: shader.fragmentShader,
+        //     vertexShader: shader.vertexShader,
+        //     uniforms: shader.uniforms,
+        //     depthWrite: false,
+        //     side: THREE.Backside
+        // });
+        // var geom = new THREE.BoxGeometry(10000, 10000, 10000);
+        // var mesh = new THREE.Mesh(geom, mat);
+
+        // var acubecamera = new THREE.CubeCamera(1, 10000, 128);
+        // var bcubecamera = new THREE.CubeCamera(1, 10000, 128);
+        // this.acubecamera = acubecamera;
+        // this.bcubecamera = bcubecamera;
+        // var ageom = new THREE.SphereGeometry(3, 26, 26);
+        // var amat = new THREE.MeshStandardMaterial({
+        //     color: 0xFF9600,
+        //     roughness: 0.4,
+        //     metalness: 1.0,
+        //     envMap: acubecamera.renderTarget.texture,
+        //     envMapIntensity: 1.0,
+        //     side: THREE.DoubleSide
+        //     // shininess: 50,
+        //     // color: 0xffffff,
+        //     // specular: 0x999999,
+        //     // side: THREE.DoubleSide,
+        //     // reflectivity: 0.8
+        //     // envMap: cubeCamera.renderTarget,
+        //  });
+        // var amesh = new THREE.Mesh(ageom, amat);
+        // amesh.castShadow = true;
+        // amesh.receiveShadow = true;
+        // amesh.position.set(5, 0, 0);
+        // this.amesh = amesh;
+        // this.meshes["generic"].push(amesh);
+        // amesh.add(acubecamera);
+        //
+        // var bgeom = new THREE.SphereGeometry(2, 26, 26);
+        // var bmat = new THREE.MeshPhongMaterial({
+        //     reflectivity: 1.0,
+        //     shininess: 50,
+        //     color: 0x003399,
+        //     specular: 0x999999,
+        //     side: THREE.DoubleSide,
+        //     envMap: bcubecamera.renderTarget.texture,
+        //     envMapIntensity: 1.0
+        // });
+        // var bmesh = new THREE.Mesh(bgeom, bmat);
+        // bmesh.castShadow = true;
+        // bmesh.receiveShadow = true;
+        // this.bmesh = bmesh;
+        // bmesh.position.set(0, 5, 0);
+        // this.meshes["generic"].push(bmesh);
+        // bmesh.add(bcubecamera);
+        // var cgeom = new THREE.BoxGeometry(3, 3, 3);
+        // var cmat = new THREE.MeshStandardMaterial({
+        //     metalness: 1.0,
+        //     roughness: 0.8,
+        //     // shininess: 50,
+        //     color: 0xffffff,
+        //     // specular: 0x999999,
+        //     side: THREE.DoubleSide
+        // })
+        // var cmesh = new THREE.Mesh(cgeom, cmat);
+        // cmesh.castShadow = true;
+        // cmesh.receiveShadow = true;
+        // cmesh.position.set(5, 5, 0);
+        // this.meshes["generic"].push(cmesh);
+        //
+        // var dgeom = new THREE.SphereGeometry(1, 26, 26);
+        // var dmat = new THREE.MeshPhongMaterial({
+        //     shininess: 50,
+        //     color: 0xFF9600,
+        //     specular: 0xFF5500,
+        //     side: THREE.DoubleSide
+        // });
+        // var dmesh = new THREE.Mesh(dgeom, dmat);
+        // dmesh.castShadow = true;
+        // dmesh.receiveShadow = true;
+        // dmesh.position.set(5, 5, 5);
+        // this.meshes["generic"].push(dmesh);
+        //
+        // var textureLoader = new THREE.TextureLoader();
+        // var textureSquares = textureLoader.load("cmap/lavatile.jpg");
+        // textureSquares.repeat.set(50, 50);
+        // textureSquares.wrapS = textureSquares.wrapT = THREE.RepeatWrapping;
+        // textureSquares.magFilter = THREE.NearestFilter;
+        // textureSquares.format = THREE.RGBFormat;
+        //
+        // var groundMaterial = new THREE.MeshPhongMaterial({
+        //     shininess: 80,
+        //     color: 0xffffff,
+        //     specular: 0xffffff,
+        //     side: THREE.DoubleSide,
+        //     map: textureSquares
+        // });
+        //
+        // var planeGeometry = new THREE.PlaneBufferGeometry(10, 10);
+        // var ground = new THREE.Mesh(planeGeometry, groundMaterial);
+        // ground.rotation.z = - Math.PI / 2;
+        // ground.scale.set(10, 10, 10);
+        // ground.position.set(0, 0, -3);
+        // ground.receiveShadow = true;
+        // this.meshes["generic"].push(ground);
+        // this.add_meshes("generic");
+        // // this.render();
+        //
+        // this.meshes["generic"][0].visible = false;
+        // this.acubecamera.updateCubeMap(this.renderer, this.scene);
+        // this.meshes["generic"][0].visible = true;
+        // // this.meshes["generic"][1].visible = false;
+        // this.bcubecamera.updateCubeMap(this.renderer, this.scene);
+        // // this.meshes["generic"][1].visible = true;
+        //
+        // console.log(this);
+        // console.log(this.meshes);
+        // // Update the render target cube
+        // // car.setVisible( false );
+        // // console.log(cubeCamera);
+        // // cubeCamera.position.copy( car.position );
+        // // cubeCamera.updateCubeMap( this.renderer, this.scene );
+        //
+        // // this.cubecamera = cubeCamera;
+        // // this.cubescene = cubeScene;
+        //
+        // // Render the scene
+        // // car.setVisible( true );
+        // // renderer.render( scene, camera );
     };
+
+//    add_tensor(xx, xy, xz, ... ) {
+//
+//        var func = function(
+//            var x = r * Math.sin() * Math.cos() ..
+
 
     add_parametric_surface() {
         var func = function(ou, ov) {
@@ -308,7 +499,7 @@ class App3D {
         };
         var geom = new THREE.ParametricGeometry(func, 24, 24);
         var pmat = new THREE.MeshLambertMaterial({color: 'green', side: THREE.FrontSide});
-        var nmat = new THREE.MeshLambertMaterial({color: 'yellow', side: THREE.FrontSide});
+        var nmat = new THREE.MeshLambertMaterial({color: 'yellow', side: THREE.BackSide});
         var psurf = new THREE.Mesh(geom, pmat);
         var nsurf = new THREE.Mesh(geom, nmat);
         psurf.name = "Positive";
@@ -316,239 +507,184 @@ class App3D {
         return [psurf, nsurf];
     };
 
-    close() {
-        console.log("Disposing exatomic THREE objects.");
-        for (var idx in this.meshes) {
-            for (var sub in this.meshes[idx]) {
-                if (this.meshes[idx][sub].geometry) {
-                    this.meshes[idx][sub].geometry.dispose();
-                };
-                if (this.meshes[idx][sub].material) {
-                    this.meshes[idx][sub].geometry.dispose();
-                };
-            };
+    add_tensor_surface( tensor ) {
+        var tensor_mult = function( x , y , z , scaling ) {
+            /*
+            var tensor = [[100.472 , 91.193 , -4.279],
+                          [91.193 , 67.572 , -1.544],
+                          [-4.279 , -1.544 , -2.329]];
+            /*
+            var tensor = [[-9.788 , 20.694 , -108.299],
+                          [20.694 , 2.741 , -63.712],
+                          [-108.299 , -63.712 , 93.601]]*/
+            return x * x * tensor[0][0] +
+                   y * y * tensor[1][1] +
+                   z * z * tensor[2][2] +
+                   x * y * (tensor[1][0] + tensor[0][1]) +
+                   x * z * (tensor[2][0] + tensor[0][2]) +
+                   y * z * (tensor[1][2] + tensor[2][1]) * scaling;
         };
-        this.texture.dispose();
-        this.renderer.dispose();
+        var func = function( ou , ov ) {
+            var u = 2 * Math.PI * ou;
+            var v = 2 * Math.PI * ov;
+            var x = Math.cos(u) * Math.sin(v);
+            var y = Math.sin(u) * Math.sin(v);
+            var z = Math.cos(v);
+            var scaling = 1.
+            var g = tensor_mult(x, y, z, scaling);
+            x = g * Math.cos(u) * Math.sin(v);
+            y = g * Math.sin(u) * Math.sin(v);
+            z = g * Math.cos(v)
+            return new THREE.Vector3(x, y, z);
+        };
+        // May want to consider THREE.ShapeUtils.triangulateShape
+        // on the vectors directly returned from "func" to circumvent
+        // needing the constraints of the parameterized geometry.
+        var geom = new THREE.ParametricGeometry(func, 50, 50);
+        console.log(tensor);
+        console.log(geom);
+        var pmat = new THREE.MeshLambertMaterial({color: 'green', side: THREE.FrontSide});
+        // var nmat = new THREE.MeshLambertMaterial({color: 'yellow', side: THREE.BackSide});
+        var psurf = new THREE.Mesh(geom, pmat);
+        // var nsurf = new THREE.Mesh(geom, nmat);
+        psurf.name = "Positive";
+        // nsurf.name = "Negative";
+        return [psurf]; //, nsurf];
     };
 
-    save() {
-        this.resize(1920, 1080);
-        this.render();
-        var image = this.renderer.domElement.toDataURL("image/png");
-        this.resize();
-        this.render();
-        return image;
-    };
-
-    add_points(x, y, z, c, r) {
+    add_unit_axis(fill) {
         /*"""
-        add_points
+        add_unit_axis
         ---------------
-        Create a point cloud from x, y, z coordinates
-
-        Args:
-            x (array-like): Array like object of x values
-            y (array-like): Array like object of y values
-            z (array-like): Array like object of z values
-            c (object): List like colors corresponding to every object
-            r (object): List like radii corresponding to every object
-
-        Returns:
-            points (THREE.Points): Reference to added points object
-
-        */
-        r = r || 1;
-        c = c || 0x808080;
-        c = (!c.length) ? utils.repeat_obj(c, n) : c;
-        r = (!r.length) ? utils.repeat_obj(r, n) : r;
-        c = App3D.prototype.flatten_color(c);
-        r = new Float32Array(r);
-        var geometry = new THREE.BufferGeometry();
-        var material = new THREE.ShaderMaterial({
-            vertexShader: App3D.prototype.vertex_shader,
-            fragmentShader: App3D.prototype.point_frag_shader,
-            transparent: true,
-            opacity: 1.0,
-            fog: true
-        });
-        var xyz = utils.create_float_array_xyz(x, y, z);
-        var n = Math.floor(xyz.length / 3);
-        geometry.addAttribute("position", new THREE.BufferAttribute(xyz, 3));
-        geometry.addAttribute("color", new THREE.BufferAttribute(c, 3));
-        geometry.addAttribute("size", new THREE.BufferAttribute(r, 1));
-        var points = new THREE.Points(geometry, material);
-        return [points];
-    };
-
-    add_lines(v0, v1, x, y, z, colors) {
-        /*"""
-        add_lines
-        ------------
-        Add lines between pairs of points.
-
-        Args:
-            v0 (array): Array of first vertex in pair
-            v1 (array): Array of second vertex
-            x (array): Position in x of vertices
-            y (array): Position in y of vertices
-            z (array): Position in z of vertices
-            colors (array): Colors of vertices
-
-        Returns:
-            linesegs (THREE.LineSegments): Line segment objects
-        */
-        var material = new THREE.LineBasicMaterial({
-            vertexColors: THREE.VertexColors,
-            linewidth: 4,
-        });
-        var geometry = new THREE.Geometry();
-        var n = v0.length;
-        for (var i=0; i<n; i++) {
-            var j = v0[i];
-            var k = v1[i];
-            var vector0 = new THREE.Vector3(x[j], y[j], z[j]);
-            var vector1 = new THREE.Vector3(x[k], y[k], z[k]);
-            geometry.vertices.push(vector0);
-            geometry.vertices.push(vector1);
-            geometry.colors.push(new THREE.Color(colors[j]));
-            geometry.colors.push(new THREE.Color(colors[k]));
-        };
-        var lines = new THREE.LineSegments(geometry, material);
-        return [lines];
-    };
-
-    add_spheres(x, y, z, c, r, l) {
-        /*"""
-        add_spheres
-        ---------------
-        Create a point cloud from x, y, z coordinates and colors and radii
-        (optional).
-
-        Args:
-            x (array-like): Array like object of x values
-            y (array-like): Array like object of y values
-            z (array-like): Array like object of z values
-            c (object): List like colors corresponding to every object
-            r (object): List like radii corresponding to every object
-            l (array-like): Array like object of atom labels
-
-        Returns:
-            spheres (list): List of THREE.Mesh objects
-        */
-        var n = 1;
-        r = r || 1;
-        c = c || x808080;
-        n = x.length || n;
-        n = y.length || n;
-        n = z.length || n;
-        c = (!c.hasOwnProperty("length")) ? utils.repeat_obj(c, n) : c;
-        r = (!r.hasOwnProperty("length")) ? utils.repeat_obj(r, n) : r;
-        l = (l == "") ? utils.repeat_obj(l, n) : l;
-        var geometries = {};
-        // var materials = {};
-        for (var i=0; i<n; i++) {
-            var color = c[i];
-            var radius = r[i];
-            if (!geometries.hasOwnProperty(color)) {
-                geometries[color] = new THREE.SphereGeometry(radius, 20, 20);
-            };
-            // if (materials.hasOwnProperty(color) === false) {
-            //     materials[color] = new THREE.MeshPhongMaterial({
-            //         color: color,
-            //         specular: color,
-            //         shininess: 5
-            //     });
-            // };
-        };
-        var xyz = utils.create_float_array_xyz(x, y, z);
-        var meshes = [];
-        for (var i=0, i3=0; i<n; i++, i3+=3) {
-            var color = c[i];
-            var material = new THREE.MeshPhongMaterial({
-                color: color, specular: color, shininess: 5});
-            var mesh = new THREE.Mesh(geometries[color], material);
-            if (l[i] != "") { mesh.name = l[i] };
-            mesh.position.set(xyz[i3], xyz[i3+1], xyz[i3+2]);
-            meshes.push(mesh);
-        };
-        return meshes;
-    };
-
-    add_cylinders(v0, v1, x, y, z, colors) {
-        /*"""
-        add_cylinders
-        ------------
-        Add lines between pairs of points.
-
-        Args:
-            v0 (array): Array of first vertex in pair
-            v1 (array): Array of second vertex
-            x (array): Position in x of vertices
-            y (array): Position in y of vertices
-            z (array): Position in z of vertices
-            colors (array): Colors of vertices
-
-        Returns:
-            linesegs (THREE.LineSegments): Line segment objects
+        Adds a unit length coordinate axis at the origin
         */
         var r = 0.05;
-        var mat = new THREE.MeshPhongMaterial({
-            vertexColors: THREE.VertexColors,
-            color: 0x606060,
-            specular: 0x606060,
-            shininess: 5});
         var meshes = [];
-        var n = v0.length;
-        for (var i=0; i<n; i++) {
-            var j = v0[i];
-            var k = v1[i];
-            var vector0 = new THREE.Vector3(x[j], y[j], z[j]);
-            var vector1 = new THREE.Vector3(x[k], y[k], z[k]);
-            var direction = new THREE.Vector3().subVectors(vector0, vector1);
-            var center = new THREE.Vector3().addVectors(vector0, vector1);
-            center.divideScalar(2.0);
-            var length = direction.length();
-            var geometry = new THREE.CylinderGeometry(r, r, length);
-            geometry.applyMatrix(new THREE.Matrix4().makeRotationX( Math.PI / 2));
-            /*var nn = geometry.faces.length;
-            var color0 = new THREE.Color(colors[j]);
-            var color1 = new THREE.Color(colors[k]);
-            geometry.colors.push(color0.clone());
-            geometry.colors.push(color1.clone());
-            for (var l=0; l<nn; l++) {
-                geometry.faces[l].vertexColors[0] =
-            };*/
-            var mesh = new THREE.Mesh(geometry, mat.clone());
-            mesh.name = (length * 0.52918).toFixed(4) + "\u212B";
-            mesh.position.set(center.x, center.y, center.z);
-            mesh.lookAt(vector1);
-            meshes.push(mesh);
+        var axes = ["X", "Y", "Z"];
+        var dirs = [new THREE.Vector3(1, 0, 0),
+                    new THREE.Vector3(0, 1, 0),
+                    new THREE.Vector3(0, 0, 1)];
+        var origin = new THREE.Vector3(0, 0, 0);
+        var cols = [0xFF0000, 0x00FF00, 0x0000FF];
+        for (var i=0; i < 3; i++) {
+            if (fill) {
+                var dir = new THREE.Vector3().subVectors(dirs[i], origin);
+                var cen = new THREE.Vector3().addVectors(dirs[i], origin);
+                var cln = dirs[i].clone();
+                cln.multiplyScalar(1.25);
+                var cdir = new THREE.Vector3().subVectors(cln, dirs[i]);
+                var ccen = new THREE.Vector3().addVectors(cln, dirs[i]);
+                cen.divideScalar(2.0);
+                ccen.divideScalar(2.0);
+                var len = dir.length();
+                var clen = cdir.length();
+                var g = new THREE.CylinderGeometry(r, r, len);
+                var c = new THREE.CylinderGeometry(0, 3 * r, clen);
+                g.applyMatrix(new THREE.Matrix4().makeRotationX(Math.PI / 2));
+                c.applyMatrix(new THREE.Matrix4().makeRotationX(Math.PI / 2));
+                var mat = new THREE.MeshPhongMaterial({
+                    vertexColors: THREE.VertexColors,
+                    color: cols[i], specular: cols[i], shininess: 5});
+                var bar = new THREE.Mesh(g); //, mat);
+                var cone = new THREE.Mesh(c); //, mat.clone());
+                bar.position.set(cen.x, cen.y, cen.z);
+                cone.position.set(ccen.x, ccen.y, ccen.z);
+                bar.lookAt(dir);
+                cone.lookAt(cln);
+                bar.updateMatrix();
+                cone.updateMatrix();
+                var both = new THREE.Geometry();
+                both.merge(bar.geometry, bar.matrix);
+                both.merge(cone.geometry, cone.matrix);
+                var mesh = new THREE.Mesh(both, mat);
+                mesh.name = axes[i] + " axis";
+                meshes.push(mesh);
+                // bar.name = axes[i] + " axis";
+                // cone.name = axes[i] + " axis";
+                // meshes.push(bar);
+                // meshes.push(cone);
+            } else {
+                var mesh = new THREE.ArrowHelper(dirs[i], origin, 1.0, cols[i]);
+                mesh.line.material.linewidth = 4;
+                meshes.push(mesh);
+            };
         };
         return meshes;
     };
 
-    add_wireframe(vertices, color) {
+    set_camera_from_camera(camera) {
+        var loader = new THREE.ObjectLoader();
+        var newcam = loader.parse(camera);
+        this.camera = newcam;
+        var that = this;
+        this.controls = this.init_controls();
+        this.controls.addEventListener("change", this.render.bind(this));
+        this.render();
+    };
+
+    set_camera_from_scene() {
         /*"""
-        add_wireframe
-        -----------------
-        Create a wireframe object
+        set_camera_from_scene
+        ------------------------
         */
-        color = color || 0x808080;
-        var geometry = new THREE.Geometry();
-        for (var v of vertices) {
-            geometry.vertices.push(new THREE.Vector3(v[0], v[1], v[2]));
+        var bbox = new THREE.Box3().setFromObject(this.scene);
+        var min = bbox.min;
+        var max = bbox.max;
+        var ox = (max.x + min.x) / 2;
+        var oy = (max.y + min.y) / 2;
+        var oz = (max.z + min.z) / 2;
+        max.x *= 2.0;
+        max.y *= 2.0;
+        max.z *= 2.0;
+        max.x = Math.max(max.x, 30);
+        max.y = Math.max(max.y, 30);
+        max.z = Math.max(max.z, 30);
+        var kwargs = {"x": max.x, "y": max.y, "z": max.z,
+                      "ox": ox, "oy": oy, "oz": oz};
+        this.set_camera(kwargs);
+    };
+
+    set_camera_from_mesh(mesh, rx, ry, rz) {
+        /*"""
+        */
+        rx = rx || 2.0;
+        ry = ry || 2.0;
+        rz = rz || 2.0;
+        var position;
+        if (mesh.geometry.type === "BufferGeometry") {
+            position = mesh.geometry.attributes.position.array;
+        } else {
+            var n = mesh.geometry.vertices.length;
+            position = new Float32Array(n * 3);
+            for (var i=0; i<n; i+=3) {
+                position[i] = mesh.geometry.vertices[i].x;
+                position[i+1] = mesh.geometry.vertices[i].y;
+                position[i+2] = mesh.geometry.vertices[i].z;
+            }
         };
-        var material = new THREE.MeshBasicMaterial({
-            transparent: true,
-            opacity: 0.2,
-            wireframeLinewidth: 8,
-            wireframe: true
-        });
-        var cell = new THREE.Mesh(geometry, material);
-        cell = new THREE.BoxHelper(cell);
-        cell.material.color.set(color);
-        return [cell];
+        var n = position.length / 3;
+        var i = n;
+        var oxyz = [0.0, 0.0, 0.0];
+        while (i--) {
+            oxyz[0] += position[3 * i];
+            oxyz[1] += position[3 * i + 1];
+            oxyz[2] += position[3 * i + 2];
+        };
+        oxyz[0] /= n;
+        oxyz[1] /= n;
+        oxyz[2] /= n;
+        mesh.geometry.computeBoundingBox();
+        var bbox = mesh.geometry.boundingBox;
+        var xyz = bbox.max;
+        xyz.x *= 1.2;
+        xyz.x += rx;
+        xyz.y *= 1.2;
+        xyz.y += ry;
+        xyz.z *= 1.2;
+        xyz.z += rz;
+        var kwargs = {"x": xyz.x, "y": xyz.y, "z": xyz.z,
+                      "ox": oxyz[0], "oy": oxyz[1], "oz": oxyz[2]};
+        this.set_camera(kwargs);
     };
 
     get_camera() {
@@ -605,85 +741,6 @@ class App3D {
         this.controls.target = this.target;
     };
 
-    set_camera_from_camera(camera) {
-        var loader = new THREE.ObjectLoader();
-        var newcam = loader.parse(camera);
-        this.camera = newcam;
-        var that = this;
-        this.init_controls()
-            .then(function(o) {
-                that.controls = o;
-                that.controls.addEventListener(
-                    "change", that.render.bind(that))
-            });
-        this.render();
-    };
-
-    set_camera_from_mesh(mesh, rx, ry, rz) {
-        /*"""
-        */
-        rx = rx || 2.0;
-        ry = ry || 2.0;
-        rz = rz || 2.0;
-        var position;
-        if (mesh.geometry.type === "BufferGeometry") {
-            position = mesh.geometry.attributes.position.array;
-        } else {
-            var n = mesh.geometry.vertices.length;
-            position = new Float32Array(n * 3);
-            for (var i=0; i<n; i+=3) {
-                position[i] = mesh.geometry.vertices[i].x;
-                position[i+1] = mesh.geometry.vertices[i].y;
-                position[i+2] = mesh.geometry.vertices[i].z;
-            }
-        };
-        var n = position.length / 3;
-        var i = n;
-        var oxyz = [0.0, 0.0, 0.0];
-        while (i--) {
-            oxyz[0] += position[3 * i];
-            oxyz[1] += position[3 * i + 1];
-            oxyz[2] += position[3 * i + 2];
-        };
-        oxyz[0] /= n;
-        oxyz[1] /= n;
-        oxyz[2] /= n;
-        mesh.geometry.computeBoundingBox();
-        var bbox = mesh.geometry.boundingBox;
-        var xyz = bbox.max;
-        xyz.x *= 1.2;
-        xyz.x += rx;
-        xyz.y *= 1.2;
-        xyz.y += ry;
-        xyz.z *= 1.2;
-        xyz.z += rz;
-        var kwargs = {"x": xyz.x, "y": xyz.y, "z": xyz.z,
-                      "ox": oxyz[0], "oy": oxyz[1], "oz": oxyz[2]};
-        this.set_camera(kwargs);
-    };
-
-    set_camera_from_scene() {
-        /*"""
-        set_camera_from_scene
-        ------------------------
-        */
-        var bbox = new THREE.Box3().setFromObject(this.scene);
-        var min = bbox.min;
-        var max = bbox.max;
-        var ox = (max.x + min.x) / 2;
-        var oy = (max.y + min.y) / 2;
-        var oz = (max.z + min.z) / 2;
-        max.x *= 2.0;
-        max.y *= 2.0;
-        max.z *= 2.0;
-        max.x = Math.max(max.x, 30);
-        max.y = Math.max(max.y, 30);
-        max.z = Math.max(max.z, 30);
-        var kwargs = {"x": max.x, "y": max.y, "z": max.z,
-                      "ox": ox, "oy": oy, "oz": oz};
-        this.set_camera(kwargs);
-    };
-
     add_contour(field, ncontour, clims, axis, val, colors) {
         /*"""
         add_contour
@@ -718,7 +775,7 @@ class App3D {
         return meshes;
     };
 
-    add_scalar_field(field, iso, sides, colors) {
+    add_scalar_field(field, iso, opac, sides, colors) {
         /*"""
         add_scalar_field
         -------------------------
@@ -732,66 +789,14 @@ class App3D {
         iso = iso || 0;
         sides = sides || 1;
         if (sides == 1) {
-            meshes = this.march_cubes1(field, iso);
+            meshes = this.march_cubes1(field, iso, opac);
         } else if (sides == 2) {
-            meshes = this.march_cubes2(field, iso, colors);
+            meshes = this.march_cubes2(field, iso, opac, colors);
         };
         return meshes;
     };
 
-    add_unit_axis(fill) {
-        /*"""
-        add_unit_axis
-        ---------------
-        Adds a unit length coordinate axis at the origin
-        */
-        var r = 0.05;
-        var meshes = [];
-        var axes = ["X", "Y", "Z"];
-        var dirs = [new THREE.Vector3(1, 0, 0),
-                    new THREE.Vector3(0, 1, 0),
-                    new THREE.Vector3(0, 0, 1)];
-        var origin = new THREE.Vector3(0, 0, 0);
-        var cols = [0xFF0000, 0x00FF00, 0x0000FF];
-        for (var i=0; i < 3; i++) {
-            if (fill) {
-                var dir = new THREE.Vector3().subVectors(dirs[i], origin);
-                var cen = new THREE.Vector3().addVectors(dirs[i], origin);
-                var cln = dirs[i].clone();
-                cln.multiplyScalar(1.25);
-                var cdir = new THREE.Vector3().subVectors(cln, dirs[i]);
-                var ccen = new THREE.Vector3().addVectors(cln, dirs[i]);
-                cen.divideScalar(2.0);
-                ccen.divideScalar(2.0);
-                var len = dir.length();
-                var clen = cdir.length();
-                var g = new THREE.CylinderGeometry(r, r, len);
-                var c = new THREE.CylinderGeometry(0, 3 * r, clen);
-                g.applyMatrix(new THREE.Matrix4().makeRotationX(Math.PI / 2));
-                c.applyMatrix(new THREE.Matrix4().makeRotationX(Math.PI / 2));
-                var mat = new THREE.MeshPhongMaterial({
-                    vertexColors: THREE.VertexColors,
-                    color: cols[i], specular: cols[i], shininess: 5});
-                var bar = new THREE.Mesh(g, mat);
-                var cone = new THREE.Mesh(c, mat.clone());
-                bar.name = axes[i] + " axis";
-                cone.name = axes[i] + " axis";
-                bar.position.set(cen.x, cen.y, cen.z);
-                cone.position.set(ccen.x, ccen.y, ccen.z);
-                bar.lookAt(dir);
-                cone.lookAt(cln);
-                meshes.push(bar);
-                meshes.push(cone);
-            } else {
-                var mesh = new THREE.ArrowHelper(dirs[i], origin, 1.0, cols[i]);
-                mesh.line.material.linewidth = 4;
-                meshes.push(mesh);
-            };
-        };
-        return meshes;
-    };
-
-    march_cubes1(field, iso) {
+    march_cubes1(field, iso, opac) {
         var start = new Date().getTime();
         var nnx = field.nx - 1;
         var nny = field.ny - 1;
@@ -810,14 +815,17 @@ class App3D {
         var frame = new THREE.Mesh(geom,
             new THREE.MeshBasicMaterial({color: 0x909090, wireframe: true}));
         var filled = new THREE.Mesh(geom,
-            new THREE.MeshLambertMaterial({color:0x606060, side: THREE.DoubleSide}));
+            new THREE.MeshLambertMaterial({color:0x606060,
+                                           side: THREE.DoubleSide,
+                                           transparent: true,
+                                           opacity: opac}));
         var stop = new Date().getTime();
         var diff = stop - start;
         console.log("mc1: " + diff + " ms");
         return [filled, frame];
     };
 
-    march_cubes2(field, iso, colors) {
+    march_cubes2(field, iso, opac, colors) {
         var start = new Date().getTime();
         var nnx, nny, nnz;
         var nnx = field.nx - 1;
@@ -840,12 +848,24 @@ class App3D {
         ngeom.computeVertexNormals();
         var pmesh = new THREE.Mesh(pgeom,
             new THREE.MeshPhongMaterial({
-                color: colors["pos"], specular: colors["pos"],
-                side: THREE.DoubleSide, shininess: 15}));
+                color: colors["pos"],
+                specular: colors["pos"],
+                side: THREE.DoubleSide,
+                shininess: 15,
+                transparent:true,
+                opacity: opac,
+                reflectivity: 0.8
+            }));
         var nmesh = new THREE.Mesh(ngeom,
             new THREE.MeshPhongMaterial({
-                color: colors["neg"], specular: colors["neg"],
-                side: THREE.DoubleSide, shininess: 15}));
+                color: colors["neg"],
+                specular: colors["neg"],
+                side: THREE.DoubleSide,
+                shininess: 15,
+                transparent: true,
+                opacity: opac,
+                reflectivity: 0.8
+            }));
         pmesh.name =  iso;
         nmesh.name = -iso;
         var stop = new Date().getTime();
@@ -1066,7 +1086,226 @@ class App3D {
         };
         return {"verts": rear, "contours": z};
     };
+
+    add_points(x, y, z, c, r) {
+        /*"""
+        add_points
+        ---------------
+        Create a point cloud from x, y, z coordinates
+
+        Args:
+            x (array-like): Array like object of x values
+            y (array-like): Array like object of y values
+            z (array-like): Array like object of z values
+            c (object): List like colors corresponding to every object
+            r (object): List like radii corresponding to every object
+
+        Returns:
+            points (THREE.Points): Reference to added points object
+
+        */
+        r = r || 1;
+        c = c || 0x808080;
+        c = (!c.length) ? utils.repeat_obj(c, n) : c;
+        r = (!r.length) ? utils.repeat_obj(r, n) : r;
+        c = App3D.prototype.flatten_color(c);
+        r = new Float32Array(r);
+        var geometry = new THREE.BufferGeometry();
+        var material = new THREE.ShaderMaterial({
+            vertexShader: App3D.prototype.vertex_shader,
+            fragmentShader: App3D.prototype.point_frag_shader,
+            transparent: true,
+            opacity: 1.0,
+            fog: true
+        });
+        var xyz = utils.create_float_array_xyz(x, y, z);
+        var n = Math.floor(xyz.length / 3);
+        geometry.addAttribute("position", new THREE.BufferAttribute(xyz, 3));
+        geometry.addAttribute("color", new THREE.BufferAttribute(c, 3));
+        geometry.addAttribute("size", new THREE.BufferAttribute(r, 1));
+        var points = new THREE.Points(geometry, material);
+        return [points];
+    };
+
+    add_lines(v0, v1, x, y, z, colors) {
+        /*"""
+        add_lines
+        ------------
+        Add lines between pairs of points.
+
+        Args:
+            v0 (array): Array of first vertex in pair
+            v1 (array): Array of second vertex
+            x (array): Position in x of vertices
+            y (array): Position in y of vertices
+            z (array): Position in z of vertices
+            colors (array): Colors of vertices
+
+        Returns:
+            linesegs (THREE.LineSegments): Line segment objects
+        */
+        var material = new THREE.LineBasicMaterial({
+            vertexColors: THREE.VertexColors,
+            linewidth: 4,
+        });
+        var geometry = new THREE.Geometry();
+        var n = v0.length;
+        for (var i=0; i<n; i++) {
+            var j = v0[i];
+            var k = v1[i];
+            var vector0 = new THREE.Vector3(x[j], y[j], z[j]);
+            var vector1 = new THREE.Vector3(x[k], y[k], z[k]);
+            geometry.vertices.push(vector0);
+            geometry.vertices.push(vector1);
+            geometry.colors.push(new THREE.Color(colors[j]));
+            geometry.colors.push(new THREE.Color(colors[k]));
+        };
+        var lines = new THREE.LineSegments(geometry, material);
+        return [lines];
+    };
+
+    add_spheres(x, y, z, c, r, l) {
+        /*"""
+        add_spheres
+        ---------------
+        Create a point cloud from x, y, z coordinates and colors and radii
+        (optional).
+
+        Args:
+            x (array-like): Array like object of x values
+            y (array-like): Array like object of y values
+            z (array-like): Array like object of z values
+            c (object): List like colors corresponding to every object
+            r (object): List like radii corresponding to every object
+            l (array-like): Array like object of atom labels
+
+        Returns:
+            spheres (list): List of THREE.Mesh objects
+        */
+        var n = 1;
+        r = r || 1;
+        c = c || x808080;
+        n = x.length || n;
+        n = y.length || n;
+        n = z.length || n;
+        c = (!c.hasOwnProperty("length")) ? utils.repeat_obj(c, n) : c;
+        r = (!r.hasOwnProperty("length")) ? utils.repeat_obj(r, n) : r;
+        l = (l == "") ? utils.repeat_obj(l, n) : l;
+        var geometries = {};
+        // var materials = {};
+        for (var i=0; i<n; i++) {
+            var color = c[i];
+            var radius = r[i];
+            if (!geometries.hasOwnProperty(color)) {
+                geometries[color] = new THREE.SphereGeometry(radius, 26, 26);
+            };
+            // if (materials.hasOwnProperty(color) === false) {
+            //     materials[color] = new THREE.MeshPhongMaterial({
+            //         color: color,
+            //         specular: color,
+            //         shininess: 5
+            //     });
+            // };
+        };
+        var xyz = utils.create_float_array_xyz(x, y, z);
+        var meshes = [];
+        for (var i=0, i3=0; i<n; i++, i3+=3) {
+            var color = c[i];
+            var material = new THREE.MeshPhongMaterial({
+                color: color,
+                specular: color,
+                shininess: 5,
+                reflectivity: 0.8
+            });
+            var mesh = new THREE.Mesh(geometries[color], material);
+            if (l[i] != "") { mesh.name = l[i] };
+            mesh.position.set(xyz[i3], xyz[i3+1], xyz[i3+2]);
+            meshes.push(mesh);
+        };
+        return meshes;
+    };
+
+    add_cylinders(v0, v1, x, y, z, colors) {
+        /*"""
+        add_cylinders
+        ------------
+        Add lines between pairs of points.
+
+        Args:
+            v0 (array): Array of first vertex in pair
+            v1 (array): Array of second vertex
+            x (array): Position in x of vertices
+            y (array): Position in y of vertices
+            z (array): Position in z of vertices
+            colors (array): Colors of vertices
+
+        Returns:
+            linesegs (THREE.LineSegments): Line segment objects
+        */
+        var r = 0.05;
+        var mat = new THREE.MeshPhongMaterial({
+            vertexColors: THREE.VertexColors,
+            color: 0x606060,
+            specular: 0x606060,
+            reflectivity: 0.8,
+            shininess: 5
+        });
+        var meshes = [];
+        var n = v0.length;
+        for (var i=0; i<n; i++) {
+            var j = v0[i];
+            var k = v1[i];
+            var vector0 = new THREE.Vector3(x[j], y[j], z[j]);
+            var vector1 = new THREE.Vector3(x[k], y[k], z[k]);
+            var direction = new THREE.Vector3().subVectors(vector0, vector1);
+            var center = new THREE.Vector3().addVectors(vector0, vector1);
+            center.divideScalar(2.0);
+            var length = direction.length();
+            var geometry = new THREE.CylinderGeometry(r, r, length);
+            geometry.applyMatrix(new THREE.Matrix4().makeRotationX( Math.PI / 2));
+            /*var nn = geometry.faces.length;
+            var color0 = new THREE.Color(colors[j]);
+            var color1 = new THREE.Color(colors[k]);
+            geometry.colors.push(color0.clone());
+            geometry.colors.push(color1.clone());
+            for (var l=0; l<nn; l++) {
+                geometry.faces[l].vertexColors[0] =
+            };*/
+            var mesh = new THREE.Mesh(geometry, mat.clone());
+            mesh.name = (length * 0.52918).toFixed(4) + "\u212B";
+            mesh.position.set(center.x, center.y, center.z);
+            mesh.lookAt(vector1);
+            meshes.push(mesh);
+        };
+        return meshes;
+    };
+
+    add_wireframe(vertices, color) {
+        /*"""
+        add_wireframe
+        -----------------
+        Create a wireframe object
+        */
+        color = color || 0x808080;
+        var geometry = new THREE.Geometry();
+        for (var v of vertices) {
+            geometry.vertices.push(new THREE.Vector3(v[0], v[1], v[2]));
+        };
+        var material = new THREE.MeshBasicMaterial({
+            transparent: true,
+            opacity: 0.2,
+            wireframeLinewidth: 8,
+            wireframe: true
+        });
+        var cell = new THREE.Mesh(geometry, material);
+        cell = new THREE.BoxHelper(cell);
+        cell.material.color.set(color);
+        return [cell];
+    };
+
+
 };
+
 
 App3D.prototype.traverse_cube_single = function(field, i, j, k, geom, iso) {
     /*"""

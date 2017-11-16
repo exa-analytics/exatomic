@@ -1,16 +1,16 @@
 
 "use strict";
 var _ = require("underscore");
-var base = require("./jupyter-exatomic-base.js");
-var utils = require("./jupyter-exatomic-utils.js");
+var base = require("./base.js");
+var utils = require("./utils.js");
 
 // Taken from another file -- check imports and package references
 //var ExatomicWidgetModel = widgets.WidgetModel.extend({
 //
 //    defaults: function() {
 //        return _.extend({}, widgets.WidgetModel.prototype.defaults, {
-//            _model_module: "jupyter-exatomic",
-//            _view_module: "jupyter-exatomic",
+//            _model_module: "exatomic",
+//            _view_module: "exatomic",
 //            _model_name: "ExatomicWidgetModel",
 //            _view_name: "ExatomicWidgetView"
 //        })

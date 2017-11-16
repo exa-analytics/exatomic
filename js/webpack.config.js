@@ -19,7 +19,7 @@ module.exports = [
         entry: "./src/extension.js",
         output: {
             filename: "extension.js",
-            path: "../exatomic/static",
+            path: "../exatomic/static/js",
             libraryTarget: "amd"
         }
     },
@@ -32,7 +32,7 @@ module.exports = [
         entry: "./src/index.js",
         output: {
             filename: "index.js",
-            path: "../exatomic/static",
+            path: "../exatomic/static/js",
             libraryTarget: "amd"
         },
         devtool: "source-map",
@@ -42,7 +42,7 @@ module.exports = [
         //externals: ["jupyter-js-widgets"]
         externals: ["@jupyter-widgets/base", "@jupyter-widgets/controls"]
     },
-    {// Embeddable jupyter-exatomic bundle
+    {// Embeddable exatomic bundle
      //
      // This bundle is generally almost identical to the notebook bundle
      // containing the custom widget views and models.
@@ -61,7 +61,7 @@ module.exports = [
             filename: "index.js",
             path: "./dist/",
             libraryTarget: "amd",
-            publicPath: "https://unpkg.com/jupyter-exatomic@" + version + "/dist/"
+            publicPath: "https://unpkg.com/exatomic@" + version + "/dist/"
         },
         devtool: "source-map",
         module: {

@@ -23,4 +23,4 @@ for k, v in vars(isotopes).items():
     if isinstance(v, isotopes.Element):
         sym2mass[k] = v.mass
         sym2radius[k] = v.radius
-        sym2color[k] = v.color
+        sym2color[k] = '#' + v.color[-2:] + v.color[3:5] + v.color[1:3]
