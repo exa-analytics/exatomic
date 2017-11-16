@@ -9,8 +9,10 @@ the Jupyter notebook interface.
 */
 
 "use strict";
-var base = require("./base.js");
-var utils = require("./utils.js");
+var base = require("./base");
+var utils = require("./utils");
+var three = require("./appthree");
+var _ = require('underscore');
 
 
 var UniverseSceneModel = base.ExatomicSceneModel.extend({
@@ -28,10 +30,9 @@ var UniverseSceneModel = base.ExatomicSceneModel.extend({
 var UniverseSceneView = base.ExatomicSceneView.extend({
 
     init: function() {
-        base.ExatomicSceneView.prototype.init.call(this);
-        console.log("UniverseSceneView init");
-        console.log(this);
-        var that = this;
+        window.addEventListener("resize", this.resize.bind(this));
+        this.app3d = new three.App3D(this);
+        this.three_promises = this.app3d.init_promise();
         this.promises = Promise.all([utils.fparse(this, "atom_x"),
             utils.fparse(this, "atom_y"), utils.fparse(this, "atom_z"),
             utils.fparse(this, "atom_s"), utils.mesolv(this, "atom_r"),
@@ -49,7 +50,6 @@ var UniverseSceneView = base.ExatomicSceneView.extend({
     },
 
     add_atom: function() {
-        console.log(this);
         this.app3d.clear_meshes("atom");
         this.app3d.clear_meshes("two");
         var fdx = this.model.get("frame_idx");

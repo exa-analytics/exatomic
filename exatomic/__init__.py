@@ -38,13 +38,13 @@ def _jupyter_nbextension_paths():
     """Jupyter notebook extension directory paths."""
     return [{
         'section': "notebook",
-        'src': "static",
+        'src': "static/js",
         'dest': "exatomic",
         'require': "exatomic/extension"
     }]
 
 
-__js_version__ = "0.4.2"
+__js_version__ = "^0.4.6"
 from ._version import __version__
 from . import core
 from .core import Universe, Editor, Atom, AtomicField, Frame

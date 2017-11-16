@@ -9,8 +9,8 @@ var utils = require("./utils.js");
 //
 //    defaults: function() {
 //        return _.extend({}, widgets.WidgetModel.prototype.defaults, {
-//            _model_module: "jupyter-exatomic",
-//            _view_module: "jupyter-exatomic",
+//            _model_module: "exatomic",
+//            _view_module: "exatomic",
 //            _model_name: "ExatomicWidgetModel",
 //            _view_name: "ExatomicWidgetView"
 //        })

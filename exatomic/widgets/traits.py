@@ -14,23 +14,6 @@ import numpy as np
 import pandas as pd
 
 from exatomic.base import sym2radius, sym2color
-#
-# def atom_data_traits(df, atomcolors=None, atomradii=None):
-#     atomcolors = pd.Series() if atomcolors is None else pd.Series(atomcolors)
-#     atomradii = pd.Series() if atomradii is None else pd.Series(atomradii)
-#     grps = df.groupby('frame')
-#     cols = ['x', 'y', 'z']
-#     atoms = grps.apply(lambda d: d[cols].values).tolist()
-#     syms = grps.apply(lambda d: d['symbol'].cat.codes.tolist()).tolist()
-#     symmap = {i: v for i, v in enumerate(df['symbol'].cat.categories)
-#               if v in df.unique_atoms}
-#     unq = df['symbol'].astype(str).unique()
-#     radii = {k: sym2radius[k] for k in unq}
-#     colors = {k: sym2color[k] for k in unq}
-#     colors.update(atomcolors)
-#     radii.update(atomradii)
-#     traits['atom_r'] = {i: 0.5 * radii[v] for i, v in symmap.items()}
-#     traits['atom_c'] = {i: colors[v] for i, v in symmap.items()}
 
 
 
@@ -143,6 +126,7 @@ def two_traits(uni):
 def frame_traits(uni):
     """Get frame table traits."""
     if not hasattr(uni, 'frame'): return {}
+    # TODO :: Implement me!!
     return {}
 
 

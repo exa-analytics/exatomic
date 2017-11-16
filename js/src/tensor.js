@@ -9,8 +9,9 @@ Jupyter notebook environment.
 */
 
 "use strict";
-var base = require("./base.js");
-var utils = require("./utils.js");
+var base = require("./base");
+var utils = require("./utils");
+var _ = require('underscore');
 // var App3D = require("./appthree.js").App3D;
 
 
