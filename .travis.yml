@@ -1,49 +1,62 @@
-language: python
+matrix:
+    include:
+        - os: linux
+          language: python
+          python: 2.7
+          env: PYTHONVER=2.7
 
-os:
-  - linux
+        - os: linux
+          language: python
+          python: 3.5
+          env: PYTHONVER=3.5
 
-python:
-  - "2.7"
- #- "3.5"
-  - "3.6"
+        - os: linux
+          language: python
+          python: 3.6
+          env: PYTHONVER=3.6
 
-before_install:
-  - deactivate
-  - wget http://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh -O miniconda.sh
-  - bash miniconda.sh -b -p $HOME/miniconda
-  - export NUMBA_DISABLE_JIT=1
-  - export DISPLAY=:99.0
-  - sh -e /etc/init.d/xvfb start
-  - sleep 3
-  - export PATH="$HOME/miniconda/bin:$PATH"
-  - conda config --set always_yes yes --set changeps1 no
-  - conda update -q conda
-  - conda install -q -c conda-forge 'icu=56.*'
+        - os: osx
+          language: generic
+          env: PYTHONVER=3.6
 
+# There are a lot of requirements here because we do coverage, testing, reporting, doc building
 install:
-  - conda install --yes python=$TRAVIS_PYTHON_VERSION
-# 3.9 DEV
-  - git clone https://github.com/exa-analytics/exa.git
-  - cd exa
-  - git fetch origin
-  - git checkout 0.3.9
-  - conda install -q -c conda-forge `cat requirements.txt`
-  - conda install -q -c conda-forge pytables python-coveralls ply pandoc pypandoc nbsphinx sympy
-  - pip install travis-sphinx codacy-coverage coverage
-  - pip install .
-  - cd ../
-# - conda install -q -c exaanalytics exa
-  - conda install -q -c conda-forge psutil numexpr nodejs ipywidgets symengine
-  - conda install -q -c conda-forge python-symengine
-  - pip install .
+    - if [[ $TRAVIS_OS_NAME == "osx" ]]; then
+          wget https://repo.continuum.io/miniconda/Miniconda3-latest-MacOSX-x86_64.sh -O miniconda.sh;
+      else
+          wget https://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh -O miniconda.sh;
+      fi;
+      echo "DONE"
+    - bash miniconda.sh -b -p $HOME/miniconda
+    - export NUMBA_DISABLE_JIT=1    # For coverage report
+    - export PATH="$HOME/miniconda/bin:$PATH"
+    - conda config --set always_yes yes --set changeps1 no
+    - conda update -q --all
+    - conda create -n test python=$PYTHONVER
+    - source activate test
+    - conda install -q -c conda-forge six numpy pandas pytables numba sympy
+    - conda install -q symengine -c symengine -c conda-forge
+    - conda install -q python-symengine -c symengine -c conda-forge
+    - conda install -q -c conda-forge sphinx sphinx_rtd_theme ply 
+    - conda install -c conda-forge pandoc pypandoc nbsphinx ipython
+    - conda install -q -c conda-forge python-coveralls coverage pytest pytest-cov
+    - pip install travis-sphinx codacy-coverage
+    - pip install .
 
 script:
-  - nosetests --with-coverage
-  - coverage xml
-  - travis-sphinx -n build
+    - if [[ $TRAVIS_OS_NAME == "linux" ]]; then
+          pytest --cov;
+          coverage xml;
+      else
+          pytest;
+      fi
+    - if [[ $TRAVIS_OS_NAME == "linux" ]] && [[ $PYTHONVER == 3.6 ]]; then
+          travis-sphinx -n build;
+      fi
 
 after_success:
-  - coveralls
-  - python-codacy-coverage -r coverage.xml
-  - travis-sphinx -n deploy
+    - if [[ $TRAVIS_OS_NAME == "linux" ]] && [[ $PYTHONVER == 3.6 ]]; then
+          coveralls;
+          python-codacy-coverage -r coverage.xml;
+          travis-sphinx -n deploy;
+      fi
