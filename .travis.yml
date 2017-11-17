@@ -51,14 +51,14 @@ install:
     - conda install -q -c conda-forge numexpr nodejs ipywidgets
     - pip install .
 
-# Prevent creation of __pycache__ directories (for pytest)
 script:
     - export PYTHONDONTWRITEBYTECODE=1
     - if [[ $TRAVIS_OS_NAME == "linux" ]]; then
           pytest --cov;
           coverage xml;
       else
-          echo "backend: TkAgg" > ~/.matplotlib/matplotlibrc;
+          mkdir -p ~/.matplotlib;
+          echo "backend: TkAgg" | tee ~/.matplotlib/matplotlibrc;
           pytest;
       fi
     - if [[ $TRAVIS_OS_NAME == "linux" ]] && [[ $PYTHONVER == 3.6 ]]; then
