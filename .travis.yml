@@ -51,7 +51,9 @@ install:
     - conda install -q -c conda-forge numexpr nodejs ipywidgets
     - pip install .
 
+# Prevent creation of __pycache__ directories (for pytest)
 script:
+    - export PYTHONDONTWRITEBYTECODE=1
     - if [[ $TRAVIS_OS_NAME == "linux" ]]; then
           pytest --cov;
           coverage xml;
@@ -66,5 +68,5 @@ after_success:
     - if [[ $TRAVIS_OS_NAME == "linux" ]] && [[ $PYTHONVER == 3.6 ]]; then
           coveralls;
           python-codacy-coverage -r coverage.xml;
-          travis-sphinx -n deploy;
+          travis-sphinx deploy;
       fi
