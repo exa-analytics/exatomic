@@ -58,6 +58,7 @@ script:
           pytest --cov;
           coverage xml;
       else
+          echo "backend: TkAgg" > ~/.matplotlib/matplotlibrc;
           pytest;
       fi
     - if [[ $TRAVIS_OS_NAME == "linux" ]] && [[ $PYTHONVER == 3.6 ]]; then
