@@ -54,18 +54,8 @@ class XYZ(Parser):
         xyz.parse(("symbol", "charge", "x", "y", "z"))
         xyz.atom              # The atom table has an additional column 'charge'
     """
-    _start = re.compile("^\s*(\d+)")
     atom = Typed(Atom, doc="Table of nuclear coordinates")
     comments = Typed(dict, doc="Dictionary of comments")
-
-    def _parse_end(self, starts):
-        """Stop when the number of atoms plus two is found."""
-        matches = []
-        for k, v in starts:
-            n = k + int(v.split()[0]) + 1
-            text = self.lines[n]
-            matches.append((n, text))
-        return matches
 
     def parse_atom(self, columns=("symbol", "x", "y", "z")):
         """Perform complete parsing."""
@@ -100,3 +90,25 @@ class XYZ(Parser):
         del uni.atom['symbol']
         ed.atom = uni.atom
         return ed
+
+    def _parse_both(self):
+        """
+        Parse the starting points and stopping points by counting.
+        """
+        n = len(self)
+        cnat = 0
+        nat = int(str(self[0]))
+        cnat += nat
+        starts = [(0, "")]
+        ends = [(nat+1, "")]
+        while cnat + 2*len(ends) < n:
+            try:
+                line_num = cnat + 2*len(ends)
+                text = str(self[line_num])
+                nat = int(text)
+                starts.append((line_num, ""))
+                ends.append((line_num+nat+1, ""))
+                cnat += nat
+            except IndexError:
+                break
+        return starts, ends
