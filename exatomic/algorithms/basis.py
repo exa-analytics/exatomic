@@ -258,46 +258,6 @@ def car2sph(sh, cart):
         prevL = L
         mlcnt += 1
     return conv
-    # keys, conv = {}, {}
-    # prevL, mscnt = 0, 0
-    # for L in cart:
-    #     for idx, (l, m, n) in enumerate(cart[L]):
-    #         key = ''
-    #         if l: key += 'x'
-    #         if l > 1: key += str(l)
-    #         if m: key += 'y'
-    #         if m > 1: key += str(m)
-    #         if n: key += 'z'
-    #         if n > 1: key += str(n)
-    #         keys[key] = idx
-    # # TODO: six compatibility
-    # for key, sym in sh.items():
-    #     L = key[0]
-    #     if L > 5: continue
-    #     mscnt = mscnt if prevL == L else 0
-    #     conv.setdefault(L, np.zeros((cart_lml_count[L],
-    #                                  spher_lml_count[L]),
-    #                                  dtype=np.float64))
-    #     if isinstance(sym, (Mul, Add)):
-    #         print(sym.expand().as_coefficients_dict())
-    #         string = (str(sym.expand())
-    #                   .replace(' + ', ' ')
-    #                   .replace(' - ', ' -'))
-    #         for chnk in string.split():
-    #             try:
-    #                 pre, exp = chnk.split('*', 1)
-    #             except:
-    #                 continue
-    #             if L == 1: conv[L] = np.array(cart[L])
-    #             else:
-    #                 print(L)
-    #                 print(exp.replace('*', ''))
-    #                 print(keys[exp.replace('*', '')])
-    #                 conv[L][keys[exp.replace('*', '')], mscnt] = np.float(pre)
-    #     prevL = L
-    #     mscnt += 1
-    # conv[0] = np.array([[1]])
-    # return conv
 
 
 
@@ -330,6 +290,19 @@ def prim_normalize(alpha, l, m, n):
     numer = 2 ** (L) * alpha ** ((L + 1.5) / 2)
     denom = (fac2(2*l - 1) * fac2(2*m - 1) * fac2(2*n - 1)) ** (0.5)
     return prefac * numer / denom
+
+@jit(nopython=True, cache=True)
+def cont_normalize(alphas, ds, l, m, n):
+    L = l + m + n
+    prefac = np.pi ** (1.5) / 2 ** L
+    fc = fac2(2*l - 1) * fac2(2*m - 1) * fac2(2*n - 1)
+    summ = 0.
+    for ai, di in zip(alphas, ds):
+        for aj, dj in zip(alphas, ds):
+            summ += di * dj / (ai + aj) ** (L + 1.5)
+    return (prefac * fc * summ) ** -0.5
+
+
 
 
 @jit(nopython=True, cache=True)
@@ -372,7 +345,8 @@ def _ovl_indices(nbas, nel):
 @jit(nopython=True, cache=True)
 def _nin(o1, o2, po1, po2, gamma, pg12):
     otot = o1 + o2
-    if not otot: return pg12
+    if not otot:
+        return pg12
     oio = 0.
     ii = ((otot - 1) // 2 + 1) if (otot % 2) else (otot // 2 + 1)
     for i in range(ii):
@@ -391,32 +365,35 @@ def _nin(o1, o2, po1, po2, gamma, pg12):
     return oio
 
 @jit(nopython=True, cache=True)
-def _overlap(x1, x2, y1, y2, z1, z2, N1, N2,
-             a1, a2, l1, l2, m1, m2, n1, n2):
-    """Compute the primitive overlap between two gaussians."""
-    ab2 = (x1 - x2) ** 2 + (y1 - y2) ** 2 + (z1 - z2) ** 2
-    if ab2 < 1e-8:
-        ll = l1 + l2
-        mm = m1 + m2
-        nn = n1 + n2
-        if ll % 2 or mm % 2 or nn % 2: return 0.
-        ltot = ll // 2 + mm // 2 + nn // 2
-        numer = np.pi ** (1.5) * fac2(ll - 1) * fac2(mm - 1) * fac2(nn - 1)
-        denom = (2 ** ltot) * (a1 + a2) ** (ltot + 1.5)
-        return N1 * N2 * numer / denom
-    gamma = a1 + a2
-    exp = a1 * a2 * ab2 / gamma
-    pg12 = np.sqrt(np.pi / gamma)
-    xp = (a1 * x1 + a2 * x2) / gamma
-    yp = (a1 * y1 + a2 * y2) / gamma
-    zp = (a1 * z1 + a2 * z2) / gamma
-    xix = _nin(l1, l2, xp - x1, xp - x2, gamma, pg12)
-    yiy = _nin(m1, m2, yp - y1, yp - y2, gamma, pg12)
-    ziz = _nin(n1, n2, zp - z1, zp - z2, gamma, pg12)
-    return N1 * N2 * np.exp(-exp) * xix * yiy * ziz
+def _overlap_1c(alp1, alp2, l1, m1, n1, l2, m2, n2):
+    """Compute overlap of primitive gaussians on the same center."""
+    ll = l1 + l2
+    mm = m1 + m2
+    nn = n1 + n2
+    if ll % 2 or mm % 2 or nn % 2:
+        return 0
+    ltot = ll // 2 + mm // 2 + nn // 2
+    numer = np.pi ** (1.5) * fac2(ll - 1) * fac2(mm - 1) * fac2(nn - 1)
+    denom = (2 ** ltot) * (alp1 + alp2) ** (ltot + 1.5)
+    return numer / denom
 
 
 @jit(nopython=True, cache=True)
+def _overlap_2c(ab2, pax, pay, paz, pbx, pby, pbz,
+                gamma, alp1, alp2, l1, m1, n1, l2, m2, n2):
+    """Compute the overlap between two cartesian gaussians."""
+    pg12 = np.sqrt(np.pi / gamma)
+    xix = _nin(l1, l2, pax, pbx, gamma, pg12)
+    yiy = _nin(m1, m2, pay, pby, gamma, pg12)
+    ziz = _nin(n1, n2, paz, pbz, gamma, pg12)
+    exp = alp1 * alp2 * ab2 / gamma
+    return np.exp(-exp) * xix * yiy * ziz
+    #return N1 * N2 * np.exp(-exp) * xix * yiy * ziz
+
+
+
+@jit(nopython=True, cache=True)
+#def _wrap_overlap(x, y, z, l, m, n, N, alpha):
 def _wrap_overlap(x, y, z, l, m, n, N, alpha):
     nprim, cnt = len(x), 0
     arlen = nprim * (nprim + 1) // 2
@@ -427,8 +404,45 @@ def _wrap_overlap(x, y, z, l, m, n, N, alpha):
         for j in range(i + 1):
             chi0[cnt] = i
             chi1[cnt] = j
-            ovl[cnt] = _overlap(x[i], x[j], y[i], y[j], z[i], z[j],
-                                N[i], N[j], alpha[i], alpha[j],
-                                l[i], l[j], m[i], m[j], n[i], n[j])
+            xA = x[i]
+            yA = y[i]
+            zA = z[i]
+            xB = x[j]
+            yB = y[j]
+            zB = z[j]
+            l1 = l[i]
+            m1 = m[i]
+            n1 = n[i]
+            l2 = l[j]
+            m2 = m[j]
+            n2 = n[j]
+            N1 = N[i]
+            N2 = N[j]
+            alpha1 = alpha[i]
+            alpha2 = alpha[j]
+            abx = xA - xB
+            aby = yA - yB
+            abz = zA - zB
+            ab2 = abx ** 2 + aby ** 2 + abz ** 2
+            if ab2 < 1e-8:
+                ovl[cnt] = _overlap_1c(alpha1, alpha2,
+                                                l1, m1, n1,
+                                                l2, m2, n2)
+            else:
+                gamma = alpha1 + alpha2
+                xP = (alpha1 * xA + alpha2 * xB) / gamma
+                yP = (alpha1 * yA + alpha2 * yB) / gamma
+                zP = (alpha1 * zA + alpha2 * zB) / gamma
+                pax = xP - xA
+                pay = yP - yA
+                paz = zP - zA
+                pbx = xP - xB
+                pby = yP - yB
+                pbz = zP - zB
+                ovl[cnt] = _overlap_2c(ab2, pax, pay, paz,
+                                               pbx, pby, pbz, gamma,
+                                               alpha1, alpha2,
+                                               l1, m1, n1,
+                                               l2, m2, n2)
             cnt += 1
     return chi0, chi1, ovl
