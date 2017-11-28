@@ -21,6 +21,7 @@ coefficients, and other related information.
 from exa import Container, Typed
 from .atom import Atom
 from .basis import BasisSet
+from .two import AtomTwo, compute_atom_two
 
 
 class Universe(Container):
@@ -28,8 +29,18 @@ class Universe(Container):
     A unified data object for the output of an atomistic calculation (or
     calculations).
     """
+    _setters = ("compute", ) 
     atom = Typed(Atom, doc="Table of atomic (nuclear) coordinates, forces, velocities, etc.")
     basis_set = Typed(BasisSet, doc="Explictly defined basis set.")
+    atom_two = Typed(AtomTwo, doc="Table of interatomic distances, distance vectors, bonds, etc.")
+
+    def compute_atom_two(self, *args, **kwargs):
+        self.atom_two = compute_atom_two(self, *args, **kwargs)
+
+
+Universe.compute_atom_two.__doc__ = compute_atom_two.__doc__
+
+
 
 
 
