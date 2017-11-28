@@ -16,21 +16,16 @@ from exatomic.base import z2sym, sym2z, nbpll, nbche
 
 
 @nb.jit(nopython=True, nogil=True, parallel=nbpll, cache=nbche)
-def _gen_labels(fdxs, nats):
-    """
-    Fast generation of Atom labels
-    """
+def _gen_labels(nats):
+    """Fast generation of Atom labels."""
     n = np.sum(nats)
-    frames = np.empty((n, ), dtype=np.int64)
     labels = np.empty((n, ), dtype=np.int64)
     k = 0
-    for j, nat in enumerate(nats):
-        fdx = fdxs[j]
-        for i in range(nat):
-            labels[k] = i
-            frames[k] = fdx
+    for nat in nats:
+        for label in range(nat):
+            labels[k] = label
             k += 1
-    return frames, labels
+    return labels
 
 
 class Atom(DataFrame):
@@ -45,9 +40,7 @@ class Atom(DataFrame):
     z = Column(float, required=True)
 
     def get_nat(self):
-        """
-        Return the number of atoms per frame.
-        """
+        """Return the number of atoms per frame."""
         return self.groupby("frame").size()
 
     def get_symbols(self):
@@ -60,9 +53,7 @@ class Atom(DataFrame):
         Returns:
             labels (:class:`~exa.core.numerical.Series`): Enumerated atom labels (of type int)
         """
-        nats = self.get_nat()    # Number of atoms per frame
-        frame_indexes, label_values = _gen_labels(nats.index.values.astype(int), nats.values.astype(int))
-        return DataSeries(label_values, index=frame_indexes, dtype='category')
+        return DataSeries(_gen_labels(self.get_nat().values), index=self.index.values)
 
     @classmethod
     def from_xyz(cls, xyz, unit="Angstrom"):
