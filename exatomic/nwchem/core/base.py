@@ -34,6 +34,7 @@ class _GTOOutput(Parser):
     atom = Typed(Atom, doc="Full atom table from all 'frames'.")
     basis_set = Typed(GaussianBasisSet, doc="Gaussian basis set description.")
     coefficient = Typed(Coefficient, doc="Full molecular orbital coefficient table.")
+    frame_map = Typed((list, tuple), doc="Correctly ordered frames")
 
     def parse_atom(self):
         """

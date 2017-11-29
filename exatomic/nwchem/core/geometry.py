@@ -14,9 +14,7 @@ from exatomic.core.atom import Atom
 
 
 class Geometry(Parser):
-    """
-    Parser for the 'Geometry' section of NWChem output files.
-    """
+    """Parser for the 'Geometry' section of NWChem output files."""
     _start = re.compile("^\s*Geometry \".*\" -> \".*\"")
     _end = re.compile("^\s*Atomic Mass")
     _int0 = 7
@@ -38,7 +36,7 @@ class Geometry(Parser):
             length (str): Unit of length for coordinates
         """
         if length is None:
-            length = "Angstrom" if "angstrom" in str(self[self._int2]) else "au"
+            length = "Angstrom" if "angstrom" in str(self[self._int2]).lower() else "au"
         atom = pd.read_fwf(self[self._int0:self._int1].to_stream(),
                            widths=self._wids, names=self._cols)
         atom[self._cols[0]] = atom[self._cols[0]].astype(int)

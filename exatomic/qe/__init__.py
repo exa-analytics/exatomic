@@ -5,4 +5,5 @@
 Quantum ESPRESSO
 #####################
 """
-from .cp.dynamics import parse_symbols_from_input, parse_evp, parse_xyz
+#from .cp.dynamics import parse_symbols_from_input, parse_evp, parse_xyz
+from . import pw
