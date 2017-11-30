@@ -58,8 +58,7 @@ class _ListDict(OrderedDict):
 
     def __init__(self, *args, **kwargs):
         super(_ListDict, self).__init__(*args, **kwargs)
-        keys = self.keys()
-        if not all((isinstance(key, str) for key in keys)):
+        if not all((isinstance(key, str) for key in self.keys())):
             raise TypeError('_ListDict keys must be of type str.')
 
 
@@ -165,7 +164,7 @@ class Folder(VBox):
         """Set initial layout of primary button and widgets."""
 
         def _b(b):
-            self.show = self.show == False
+            self.show = not self.show
             self._set_gui()
         control.on_click(_b)
         control.active = True

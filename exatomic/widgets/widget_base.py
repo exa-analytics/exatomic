@@ -221,12 +221,10 @@ class ExatomicBox(Box):
     def _update_active(self, b):
         """Control which scenes are controlled by the GUI."""
 
-        self.active_scene_indices = []
-        for i, (key, obj) in enumerate(self._controls['active']
-                                           ._controls.items()):
-            if key == 'main': continue
-            if obj.value:
-                self.active_scene_indices.append(i - 1)
+        items = list(self._controls['active']._controls.items())[1:]
+
+        self.active_scene_indices = [i for i, (key, obj) in enumerate(items)
+                                     if obj.value]
 
 
     def _close(self, b):
@@ -256,6 +254,8 @@ class ExatomicBox(Box):
             (str(i), ToggleButton(description=str(i), value=True))
             for i, scn in enumerate(self.scenes)])
         for key, obj in opts.items():
+            print(obj)
+            print(obj.value)
             obj.observe(self._update_active, names='value')
 
         return Folder(active, opts)
@@ -378,6 +378,9 @@ class ExatomicBox(Box):
 
         return mainopts
 
+    def active(self):
+        return [self.scenes[idx] for idx in self.active_scene_indices]
+
 
     def __init__(self, *objs, **kwargs):
 
@@ -393,7 +396,7 @@ class ExatomicBox(Box):
 
         self.scenes, scenes = _scene_grid(objs, mh, mw, test,
                                           uni, typ, scenekwargs)
-        self.active_scene_indices = list(range(len(self.scenes)))
+        # self.active_scene_indices = list(range(len(self.scenes)))
 
         self._controls = self._init_gui(nframes=nframes,
                                         fields=fields,
@@ -408,7 +411,9 @@ class ExatomicBox(Box):
         children = [gui, scenes] if self.scenes else [gui]
 
         super(ExatomicBox, self).__init__(
-                children, layout=_bboxlo, **kwargs)
+                children, layout=_bboxlo,
+                active_scene_indices=list(range(len(self.scenes))),
+                **kwargs)
 
 
 
@@ -418,7 +423,7 @@ def _scene_grid(objs, mh, mw, test, uni, typ, scenekwargs):
     n = objs[0] if isinstance(objs[0], int) else len(objs)
     if n > 9: raise NotImplementedError('Too many scenes')
     if mh is None:
-        if n < 2: mh = '700px'
+        if n < 2: mh = '500px'
         elif n < 3: mh = '400px'
         elif n < 5: mh = '300px'
         elif n < 7: mh = '250px'
@@ -427,21 +432,27 @@ def _scene_grid(objs, mh, mw, test, uni, typ, scenekwargs):
     else: mod = 3
     kwargs = {'min_height': mh, 'min_width': mw, 'uni': uni}
     kwargs.update(scenekwargs)
-    anew = n == len(objs)
+    #anew = n == len(objs)
 
     flatscns, scenes = [], []
+    print(kwargs)
     for i in range(n):
         kwargs['index'] = i
         if not i % mod: scenes.append([])
         try:
+            # print('try')
             if isinstance(objs[i], DOMWidget):
+                # print('if')
                 obj = objs[i]
             elif isinstance(objs[i], dict):
+                # print('elif')
                 objs[i].update(kwargs)
                 obj = typ(**objs[i])
             else:
+                # print('else')
                 obj = typ(**kwargs)
         except IndexError:
+            # print('except')
             obj = typ(**kwargs)
         scenes[-1].append(obj)
         flatscns.append(obj)

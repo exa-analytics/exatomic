@@ -108,7 +108,7 @@ def add_orb_ang_mom(uni, field_params=None, rcoefs=None, icoefs=None,
         maxes = np.eye(3)
 
     _determine_bfns(uni, frame, norm)
-    fps = _determine_fps(uni, field_params, 1)
+    fps = _determine_fps(uni, field_params, 4)
     x, y, z = numerical_grid_from_field_params(fps)
     occvec = uni.orbital[colocc].values
 

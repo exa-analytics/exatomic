@@ -19,7 +19,7 @@ from .editor import Editor
 from exatomic import Atom
 from exatomic.algorithms.basis import lmap, spher_lml_count
 from exatomic.core.basis import Overlap, BasisSet, BasisSetOrder
-from exatomic.core.orbital import DensityMatrix, MOMatrix
+from exatomic.core.orbital import DensityMatrix, MOMatrix, Orbital
 from exatomic.base import sym2z
 
 class OrbMeta(TypedMeta):
@@ -56,7 +56,9 @@ class Orb(six.with_metaclass(OrbMeta, Editor)):
         cols = 4 if ncol == 1 else ncol
         chnk = np.ceil(dim / cols).astype(np.int64)
         orbdx = np.repeat(range(dim), chnk)
+        osh = False
         if len(occs) == 2:
+            osh = True
             skips.insert(dim, skips[dim] - 1)
             orbdx = np.concatenate([orbdx, orbdx])
         skips = [i - skips[0] for i in skips]
@@ -98,6 +100,8 @@ class Orb(six.with_metaclass(OrbMeta, Editor)):
         self.momatrix = pd.DataFrame.from_dict(mo)
         if ens:
             self.orbital = pd.DataFrame.from_dict(orb)
+        else:
+            self.orbital = Orbital.from_occupation_vector(occs[0], os=osh)
 
     def __init__(self, *args, **kwargs):
         super(Orb, self).__init__(*args, **kwargs)
