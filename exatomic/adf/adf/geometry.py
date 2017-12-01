@@ -1,19 +1,29 @@
-## -*- coding: utf-8 -*-
-## Copyright (c) 2015-2017, Exa Analytics Development Team
-## Distributed under the terms of the Apache License 2.0
-#"""
-#Parser for ADF's Geometry Section
-####################################
-#"""
-#import re
-#import pandas as pd
-#from exa import Parser, Matches, DataFrame, Typed
-#
-#
-#class Geometry(Parser):
-#    """
-#    """
-#    _start = " Coordinates (Cartesian)"
+# -*- coding: utf-8 -*-
+# Copyright (c) 2015-2017, Exa Analytics Development Team
+# Distributed under the terms of the Apache License 2.0
+"""
+Geometry Parser ('A D F' Calculations)
+#########################################
+"""
+import re
+import pandas as pd
+from exa import Parser, Typed
+from exatomic.core.atom import Atom
+
+
+class Geometry(Parser):
+    """
+    Parser for the data block labeled 'Coordinates (Cartesian)' in 'A D F' output sections.
+    """
+    _start = " Coordinates (Cartesian)"
+    atom = Typed(Atom, doc="Coordinates")
+
+    def _parse_end(self, starts):
+        return [self.find_next_blank_line(cursor=i[0]) for i in starts]
+
+
+
+
 #    _stop = -1
 #    _skey = re.compile(" Number of elements of the density matrix on this node|^1")
 #    _skey1 = "----"
