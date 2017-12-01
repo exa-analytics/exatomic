@@ -217,7 +217,7 @@ class Overlap(DataFrame):
     def square(self, frame=0):
         nbas = np.round(np.roots([1, 1, -2 * self.shape[0]])[1]).astype(np.int64)
         tri = self[self['frame'] == frame].pivot('chi0', 'chi1', 'coef').fillna(value=0)
-        print("warning: iv overlap is not normalized, result is incorrect")
+        print("warning: If overlap is not normalized, result is incorrect")
         return tri + tri.T - np.eye(nbas)
 
     @classmethod

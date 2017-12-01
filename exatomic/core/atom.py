@@ -82,7 +82,7 @@ class Atom(DataFrame):
 
 
     def to_xyz(self, tag='symbol', header=False, comments='', columns=None,
-               frame=None, units='A'):
+               frame=None, units='Angstrom'):
         """
         Return atomic data in XYZ format, by default without the first 2 lines.
         If multiple frames are specified, return an XYZ trajectory format. If

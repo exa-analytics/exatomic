@@ -304,12 +304,13 @@ class MOMatrix(DataFrame):
         return tmp[np.abs(tmp[mocoefs]) > tol]
 
 
-    def square(self, frame=0, column='coef'):
+    def square(self, frame=0, column='coef', mocoefs=None):
         """
         Returns a square dataframe corresponding to the canonical C matrix
         representation.
         """
-        movec = self[self['frame'] == frame][column].values
+        if mocoefs is None: mocoefs = column
+        movec = self[self['frame'] == frame][mocoefs].values
         square = pd.DataFrame(momatrix_as_square(movec))
         square.index.name = 'chi'
         square.columns.name = 'orbital'
@@ -325,16 +326,16 @@ class DensityMatrix(DataFrame):
     +-------------------+----------+-------------------------------------------+
     | Column            | Type     | Description                               |
     +===================+==========+===========================================+
-    | chi1              | int      | first basis function                      |
+    | chi0              | int      | first index in matrix                     |
     +-------------------+----------+-------------------------------------------+
-    | chi2              | int      | second basis function                     |
+    | chi1              | int      | second index in matrix                    |
     +-------------------+----------+-------------------------------------------+
     | coef              | float    | overlap matrix element                    |
     +-------------------+----------+-------------------------------------------+
     | frame             | category | non-unique integer (req.)                 |
     +-------------------+----------+-------------------------------------------+
     """
-    _columns = ['chi1', 'chi2', 'coef']
+    _columns = ['chi0', 'chi1', 'coef']
     _cardinal = ('frame', np.int64)
     _index = 'index'
 
@@ -342,12 +343,12 @@ class DensityMatrix(DataFrame):
         """Returns a square dataframe of the density matrix."""
         denvec = self[self['frame'] == frame]['coef'].values
         square = pd.DataFrame(density_as_square(denvec))
-        square.index.name = 'chi1'
-        square.columns.name = 'chi2'
+        square.index.name = 'chi0'
+        square.columns.name = 'chi1'
         return square
 
     @classmethod
-    def from_momatrix(cls, momatrix, occvec, column='coef'):
+    def from_momatrix(cls, momatrix, occvec, mocoefs='coef'):
         """
         A density matrix can be constructed from an MOMatrix by:
         .. math::
@@ -362,7 +363,29 @@ class DensityMatrix(DataFrame):
         Returns:
             ret (:class:`~exatomic.orbital.DensityMatrix`): The density matrix
         """
-        cmat = momatrix.square(column=column).values
-        chi1, chi2, dens, frame = density_from_momatrix(cmat, occvec)
-        return cls.from_dict({'chi1': chi1, 'chi2': chi2,
+        cmat = momatrix.square(column=mocoefs).values
+        chi0, chi1, dens, frame = density_from_momatrix(cmat, occvec)
+        return cls.from_dict({'chi0': chi0, 'chi1': chi1,
+                              'coef': dens, 'frame': frame})
+
+    @classmethod
+    def from_universe(cls, uni, mocoefs, orbocc):
+        """
+        The density matrix is defined as:
+        .. math::
+
+            D_{uv} = \sum_{i}^{N} C_{ui} C_{vi} n_{i}
+
+        Args:
+            uni (:class:`~exatomic.core.universe.Universe`): a universe containing momatrix and orbital
+            mocoefs (str): column name of C matrix in uni.momatrix
+            orbocc (str): column name of occupation vector in uni.orbital
+
+        Returns:
+            ret (:class:`~exatomic.orbital.DensityMatrix`): The density matrix
+        """
+        cmat = uni.momatrix.square(mocoefs=mocoefs).values
+        occvec = uni.orbital[orbocc].values
+        chi0, chi1, dens, frame = density_from_momatrix(cmat, occvec)
+        return cls.from_dict({'chi0': chi0, 'chi1': chi1,
                               'coef': dens, 'frame': frame})

@@ -89,7 +89,7 @@ def momatrix_as_square(movec):
 
 
 def add_orb_ang_mom(uni, field_params=None, rcoefs=None, icoefs=None,
-                    frame=None, colocc=None, maxes=None, inplace=True,
+                    frame=None, orbocc=None, maxes=None, inplace=True,
                     norm='Nd'):
     """Compute the orbital angular momentum and add it to a universe."""
     t0 = datetime.now()
@@ -99,9 +99,9 @@ def add_orb_ang_mom(uni, field_params=None, rcoefs=None, icoefs=None,
         print("Either rcoefs {} or icoefs {} are " \
               "not in uni.momatrix".format(rcoefs, icoefs))
         return
-    colocc = rcoefs if colocc is None else colocc
-    if colocc not in uni.orbital.columns:
-        print("colocc {} is not in uni.orbital".format(colocc))
+    orbocc = rcoefs if orbocc is None else orbocc
+    if orbocc not in uni.orbital.columns:
+        print("orbocc {} is not in uni.orbital".format(orbocc))
         return
     if maxes is None:
         print("If magnetic axes are not an identity matrix, specify maxes.")
@@ -110,7 +110,7 @@ def add_orb_ang_mom(uni, field_params=None, rcoefs=None, icoefs=None,
     _determine_bfns(uni, frame, norm)
     fps = _determine_fps(uni, field_params, 4)
     x, y, z = numerical_grid_from_field_params(fps)
-    occvec = uni.orbital[colocc].values
+    occvec = uni.orbital[orbocc].values
 
     bfns = uni.basis_functions[frame]
     grx, gry, grz = gen_gradients(bfns)
@@ -132,22 +132,22 @@ def add_orb_ang_mom(uni, field_params=None, rcoefs=None, icoefs=None,
 
 
 
-def add_density(uni, field_params=None, mocoefs=None, colocc=None,
+def add_density(uni, field_params=None, mocoefs=None, orbocc=None,
                 inplace=True, frame=None, norm='Nd'):
     """Compute a density and add it to a universe."""
     t1 = datetime.now()
     frame = uni.atom.nframes - 1 if frame is None else frame
     if mocoefs is None:
         mocoefs = 'coef'
-        if colocc is None:
-            colocc = 'occupation'
+        if orbocc is None:
+            orbocc = 'occupation'
     else:
-        if colocc is None:
-            colocc = mocoefs
+        if orbocc is None:
+            orbocc = mocoefs
     if (mocoefs not in uni.momatrix.columns) or \
-       (colocc not in uni.orbital.columns):
+       (orbocc not in uni.orbital.columns):
         print('Either mocoefs {} is not in uni.momatrix or'.format(mocoefs))
-        print('colocc {} is not in uni.orbital'.format(colocc))
+        print('orbocc {} is not in uni.orbital'.format(orbocc))
         return
     _determine_bfns(uni, frame, norm)
     orbs = uni.momatrix.groupby('orbital')
@@ -159,44 +159,13 @@ def add_density(uni, field_params=None, mocoefs=None, colocc=None,
     cmat = uni.momatrix.square(column=mocoefs).values
     oflds = _compute_orbitals(bflds, vector, cmat)
     # oflds = _compute_orbitals(bflds, vector, orbs, mocoefs)
-    dens = _compute_density(oflds, uni.orbital[colocc].values)
+    dens = _compute_density(oflds, uni.orbital[orbocc].values)
     t2 = datetime.now()
     print('Timing: compute density     - {:.2f}s'.format((t2-t1).total_seconds()))
 
     if not inplace: return _make_field(dens, fps.loc[0])
     uni.add_field(_make_field(dens, fps.loc[0]))
 
-
-# def add_density(uni, field_params=None, mocoefs=None, colocc=None,
-#                 inplace=True, frame=None):
-#     """Compute a density and add it to a universe."""
-#     t1 = datetime.now()
-#     frame = uni.atom.nframes - 1 if frame is None else frame
-#     if mocoefs is None:
-#         mocoefs = 'coef'
-#         if colocc is None:
-#             colocc = 'occupation'
-#     else:
-#         if colocc is None:
-#             colocc = mocoefs
-#     if (mocoefs not in uni.momatrix.columns) or \
-#        (colocc not in uni.orbital.columns):
-#         print('Either mocoefs {} is not in uni.momatrix or'.format(mocoefs))
-#         print('colocc {} is not in uni.orbital'.format(colocc))
-#         return
-#     _determine_bfns(uni, frame)
-#     orbs = uni.momatrix.groupby('orbital')
-#     vector = range(uni.momatrix.orbital.max() + 1)
-#     fps = _determine_fps(uni, field_params, len(vector))
-#
-#     bflds = _evaluate_basis(uni.basis_functions[frame], fps)
-#     oflds = _compute_orbitals(bflds, vector, orbs, mocoefs)
-#     dens = _compute_density(oflds, uni.orbital[colocc].values)
-#     t2 = datetime.now()
-#     print('Timing: compute density  - {:.2f}s'.format((t2-t1).total_seconds()))
-#
-#     if not inplace: return _make_field(dens, fps.loc[0])
-#     uni.add_field(_make_field(dens, fps.loc[0]))
 
 
 def add_molecular_orbitals(uni, field_params=None, mocoefs=None,

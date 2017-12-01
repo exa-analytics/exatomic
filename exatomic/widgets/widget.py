@@ -312,7 +312,7 @@ class UniverseWidget(ExatomicBox):
         def _scn_frame(c):
             for scn in self.active(): scn.frame_idx = c.new
         content['scn_frame'].observe(_scn_frame, names='value')
-        # content['playing'].active = True
+        content['playing'].active = False
 
         jslink((content['playing'], 'value'),
                (content['scn_frame'], 'value'))

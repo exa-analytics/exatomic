@@ -28,8 +28,7 @@ class OrbMeta(TypedMeta):
 
 class Orb(six.with_metaclass(OrbMeta, Editor)):
     def to_universe(self):
-        raise NotImplementedError("No atom information given. " \
-                                  "Attach these attributes to a universe.")
+        raise NotImplementedError("This editor has no parse_atom method.")
 
     def _one_el(self, starts, step, ncol):
         func = pd.read_csv
