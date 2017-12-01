@@ -75,14 +75,14 @@ class ExatomicScene(DOMWidget):
         if msg['type'] == 'image':
             self._save_image(msg['content'])
         elif msg['type'] == 'camera':
-            self._handle_camera(msg['content'])
+            self._save_camera(msg['content'])
         else: print('Custom msg not handled.\n'
                     'type of msg : {}\n'
                     'msg         : {}'.format(msg['type'],
                                               msg['content']))
 
 
-    def _handle_camera(self, content):
+    def _save_camera(self, content):
         """Cache a save state of the current camera."""
         self.cameras.append(content)
 
@@ -123,7 +123,10 @@ class ExatomicScene(DOMWidget):
     def _set_camera(self, c):
         """Ship the camera to JS to set a cached camera."""
         if c.new == -1: return
-        self.send({'type': 'camera', 'content': self.cameras[c.new]})
+        try:
+            self.send({'type': 'camera', 'content': self.cameras[c.new]})
+        except IndexError:
+            pass
 
 
     def _close(self):
@@ -295,8 +298,7 @@ class ExatomicBox(Box):
                                max=ncams-1, value=-1, step=1))])
 
         def _save_cam(b):
-            for idx in self.active_scene_indices:
-                scn = self.scenes[idx]
+            for scn in self.active():
                 scn.save_cam = not scn.save_cam
                 btn = self._controls['camera']._controls['set']
                 btn.max = len(scn.cameras)
