@@ -429,7 +429,7 @@ class Ecce(Editor):
         self.parse_momatrix()
 
 
-    def __init__(self, *args, kind=None, spin=None, **kwargs):
+    def __init__(self, kind=None, spin=None, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self._kind = kind
         self._spin = spin
