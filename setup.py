@@ -11,7 +11,7 @@ from setuptools.command.egg_info import egg_info
 
 name = "exatomic"
 description = "A unified platform for theoretical and computational chemists."
-staticdir = "static/js"
+staticdir = "static"
 jsdir = "js"
 jsroot = os.path.abspath(jsdir)
 readme = "README.md"
