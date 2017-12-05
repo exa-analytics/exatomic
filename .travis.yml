@@ -21,7 +21,6 @@ matrix:
 
 # There are a lot of requirements here because we do coverage, testing, reporting, doc building
 install:
-<<<<<<< HEAD
     - if [[ $TRAVIS_OS_NAME == "osx" ]]; then
           wget https://repo.continuum.io/miniconda/Miniconda3-latest-MacOSX-x86_64.sh -O miniconda.sh;
       else
@@ -35,9 +34,7 @@ install:
     - conda update -q --all
     - conda create -n test python=$PYTHONVER
     - source activate test
-    - conda install -q -c conda-forge six numpy pandas pytables numba sympy
-    - conda install -q symengine -c symengine #-c conda-forge
-    - conda install -q python-symengine -c symengine # -c conda-forge
+    - conda install -q -c conda-forge six numpy pandas pytables numba sympy python-symengine
     - conda install -q -c conda-forge sphinx sphinx_rtd_theme ply 
     - conda install -c conda-forge pandoc pypandoc nbsphinx ipython
     - conda install -q -c conda-forge python-coveralls coverage pytest pytest-cov
