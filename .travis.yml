@@ -53,6 +53,7 @@ script:
     - export PYTHONDONTWRITEBYTECODE=1
     - mkdir -p ~/.matplotlib
     - echo "backend: TkAgg" > ~/.matplotlib/matplotlibrc
+    - find . | grep -E "(__pycache__|\.pyc|\.pyo$)" | xargs rm -rf
     - if [[ $TRAVIS_OS_NAME == "linux" ]]; then
           pytest --cov;
           coverage xml;
