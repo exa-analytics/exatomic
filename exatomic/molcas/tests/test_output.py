@@ -63,22 +63,22 @@ class TestOutput(TestCase):
         self.assertIs(type(uni), Universe)
 
 
-class TestOrb(TestCase):
-    """Test the Molcas Orb file parser."""
-    def setUp(self):
-        cd = os.path.abspath(__file__).split(os.sep)[:-1]
-        self.uo2sporb = Orb(os.sep.join(cd + ['mol-uo2-anomb.scforb']))
-        self.mamcart = Orb(os.sep.join(cd + ['mol-ch3nh2-631g.scforb']))
-        self.mamsphr = Orb(os.sep.join(cd + ['mol-ch3nh2-anovdzp.scforb']))
-
-    def test_parse_momatrix(self):
-        """Test the momatrix table parser."""
-        self.uo2sporb.parse_momatrix()
-        self.assertEqual(self.uo2sporb.momatrix.shape, (4761, 4))
-        self.assertTrue(np.all(pd.notnull(self.uo2sporb.momatrix)))
-        self.mamcart.parse_momatrix()
-        self.assertEqual(self.mamcart.momatrix.shape, (784, 4))
-        self.assertTrue(np.all(pd.notnull(self.mamcart.momatrix)))
-        self.mamsphr.parse_momatrix()
-        self.assertEqual(self.mamsphr.momatrix.shape, (2809, 4))
-        self.assertTrue(np.all(pd.notnull(self.mamsphr.momatrix)))
+# class TestOrb(TestCase):
+#     """Test the Molcas Orb file parser."""
+#     def setUp(self):
+#         cd = os.path.abspath(__file__).split(os.sep)[:-1]
+#         self.uo2sporb = Orb(os.sep.join(cd + ['mol-uo2-anomb.scforb']))
+#         self.mamcart = Orb(os.sep.join(cd + ['mol-ch3nh2-631g.scforb']))
+#         self.mamsphr = Orb(os.sep.join(cd + ['mol-ch3nh2-anovdzp.scforb']))
+#
+#     def test_parse_momatrix(self):
+#         """Test the momatrix table parser."""
+#         self.uo2sporb.parse_momatrix()
+#         self.assertEqual(self.uo2sporb.momatrix.shape, (4761, 4))
+#         self.assertTrue(np.all(pd.notnull(self.uo2sporb.momatrix)))
+#         self.mamcart.parse_momatrix()
+#         self.assertEqual(self.mamcart.momatrix.shape, (784, 4))
+#         self.assertTrue(np.all(pd.notnull(self.mamcart.momatrix)))
+#         self.mamsphr.parse_momatrix()
+#         self.assertEqual(self.mamsphr.momatrix.shape, (2809, 4))
+#         self.assertTrue(np.all(pd.notnull(self.mamsphr.momatrix)))
