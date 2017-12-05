@@ -9,7 +9,7 @@ User Docs
 The following sections describe syntax and usage of the functions and classes
 provided by the Exa package. Documentation is organized for the typical use case;
 a collection of structure text files need to be parsed into Pythonic data objects
-and then organized into a container to facilitate visualization. Useful examples 
+and then organized into a container to facilitate visualization. Useful examples
 can be found at :ref:`examples-label` or via help::
 
     import exatomic
@@ -20,7 +20,7 @@ can be found at :ref:`examples-label` or via help::
 
 .. automodule:: exatomic.__init__
     :members:
-    
+
 .. automodule:: exatomic._version
     :members:
 
@@ -28,7 +28,9 @@ can be found at :ref:`examples-label` or via help::
     :maxdepth: 2
     :caption: Core API
 
-    api/container.rst
+    api/universe.rst
+    notebooks/nwchem.ipynb
+    notebooks/qe.ipynb
 
 
 ########################

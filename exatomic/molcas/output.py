@@ -24,6 +24,7 @@ from exatomic.base import sym2z
 
 class OrbMeta(TypedMeta):
     momatrix = MOMatrix
+    orbital = Orbital
 
 
 class Orb(six.with_metaclass(OrbMeta, Editor)):

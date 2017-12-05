@@ -28,9 +28,9 @@ def universe_from_cclib(ccobj):
 def parse_ccobj_atom(data):
     """Gets atom table information from ccobj."""
     if 'atomcoords' not in data or 'atomnos' not in data: return
-    x = data['atomcoords'][:,:,0].flatten() * Length['A', 'au']
-    y = data['atomcoords'][:,:,1].flatten() * Length['A', 'au']
-    z = data['atomcoords'][:,:,2].flatten() * Length['A', 'au']
+    x = data['atomcoords'][:,:,0].flatten() * Length['Angstrom', 'au']
+    y = data['atomcoords'][:,:,1].flatten() * Length['Angstrom', 'au']
+    z = data['atomcoords'][:,:,2].flatten() * Length['Angstrom', 'au']
     Z = data['atomnos']
     nframe = len(z) // len(Z)
     frame = np.repeat(range(nframe), len(z) // nframe)

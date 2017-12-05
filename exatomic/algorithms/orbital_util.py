@@ -22,7 +22,7 @@ from .basis import (CartesianBasisFunction,
 from exatomic.core.field import AtomicField
 
 
-def compare_fields(*unis, rtol=5e-5, atol=1e-12, mtol=None, signed=True, verbose=True):
+def compare_fields(rtol=5e-5, atol=1e-12, mtol=None, signed=True, verbose=True, *unis):
     """Compare field values of multiple universe.
     It is expected that fields are in the same order."""
     flds = (uni.field.field_values for uni in unis)

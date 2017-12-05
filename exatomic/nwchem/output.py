@@ -6,22 +6,33 @@ NWChem Output
 #######################
 Parse NWChem output files and convert them into an exatomic Universe container.
 """
+import six
 from os import sep, path
 import numpy as np
 import pandas as pd
 from io import StringIO
+from exa import TypedMeta
 from exa.util.units import Length
 from exatomic.core.frame import compute_frame_from_atom
 from exatomic.algorithms.orbital import build_pair_index
 from exatomic.algorithms.basis import lmap
+from exatomic.core.frame import Frame
 from exatomic.core.atom import Atom
-from exatomic.core.basis import BasisSet
-from exatomic.core.orbital import Orbital
+from exatomic.core.basis import BasisSet, BasisSetOrder
+from exatomic.core.orbital import Orbital, MOMatrix
 from .editor import Editor
 from .basis import cartesian_ordering_function, spherical_ordering_function
 
 
-class Output(Editor):
+class OutMeta(TypedMeta):
+    atom = Atom
+    orbital = Orbital
+    momatrix = MOMatrix
+    basis_set = BasisSet
+    basis_set_order = BasisSetOrder
+    frame = Frame
+
+class Output(six.with_metaclass(OutMeta, Editor)):
     """
     Editor for NWChem calculation output file (stdout).
     """
@@ -137,9 +148,10 @@ class Output(Editor):
             c = np.concatenate(coefs)
             del coefs
             orbital, chi = build_pair_index(len(self.basis_set_order))
-            momatrix = pd.DataFrame.from_dict({'coef': c, 'chi': chi, 'orbital': orbital})
-            momatrix['frame'] = 0
-            self.momatrix = momatrix
+            self.momatrix = MOMatrix.from_dict({'coef': c, 'chi': chi, 'orbital': orbital, 'frame': 0})
+            # momatrix = pd.DataFrame.from_dict({'coef': c, 'chi': chi, 'orbital': orbital})
+            # momatrix['frame'] = 0
+            # self.momatrix = momatrix
 
 
 
@@ -276,8 +288,9 @@ class Output(Editor):
                     for L, ll, m, n in cartesian_ordering_function(l):
                         bso[cnt] = (center, shell, l, ll, m, n)
                         cnt += 1
-        self.basis_set_order = pd.DataFrame(bso)
-        self.basis_set_order['frame'] = 0
+        bso = pd.DataFrame(bso)
+        bso['frame'] = 0
+        self.basis_set_order = bso
 
     def parse_frame(self):
         """
@@ -322,7 +335,7 @@ _redften = 'Total DFT energy'
 _reallmos = 'Final MO vectors'
 
 
-class Ecce(Editor):
+class Ecce(six.with_metaclass(OutMeta, Editor)):
     def _parse_movecs(self, start, stop):
         ndim = int(self[start].split('%')[3].split()[0])
         vals = []
@@ -429,7 +442,7 @@ class Ecce(Editor):
         self.parse_momatrix()
 
 
-    def __init__(self, *args, kind=None, spin=None, **kwargs):
+    def __init__(self, kind=None, spin=None, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self._kind = kind
         self._spin = spin
