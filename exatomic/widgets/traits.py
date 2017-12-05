@@ -62,6 +62,7 @@ def atom_traits(df, atomcolors=None, atomradii=None):
     colors.update(atomcolors)
     radii.update(atomradii)
     traits['atom_s'] = syms.to_json(orient='values')
+    # TODO : This multiplication by 0.5 is in a bad place
     traits['atom_r'] = {i: 0.5 * radii[v] for i, v in symmap.items()}
     traits['atom_c'] = {i: colors[v] for i, v in symmap.items()}
     return traits

@@ -403,8 +403,6 @@ class App3D {
         // on the vectors directly returned from "func" to circumvent
         // needing the constraints of the parameterized geometry.
         var geom = new THREE.ParametricGeometry(func, 50, 50);
-        console.log(tensor);
-        console.log(geom);
         var pmat = new THREE.MeshLambertMaterial({color: 'green', side: THREE.FrontSide});
         // var nmat = new THREE.MeshLambertMaterial({color: 'yellow', side: THREE.BackSide});
         var psurf = new THREE.Mesh(geom, pmat);

@@ -37,12 +37,20 @@ class _ListDict(OrderedDict):
         """Insert as a list."""
         key = str(key)
         keys = list(self.keys())
-        nkeys = len(keys)
         self[key] = obj
         keys.insert(idx, key)
-        for k in keys[idx:]:
-            # Only python >= 3.2?
-            self.move_to_end(k, last=True)
+        try:
+            # Only python >= 3.2
+            for k in keys[idx:]:
+                self.move_to_end(k, last=True)
+        except AttributeError:
+            # Manually reorder
+            old = list(self.items())
+            for key in self.keys():
+                self.pop(key)
+            for key, obj in old:
+                self[key] = obj
+
 
     def __setitem__(self, key, obj):
         if not isinstance(key, str):
@@ -53,7 +61,7 @@ class _ListDict(OrderedDict):
         if isinstance(key, str):
             return super(_ListDict, self).__getitem__(key)
         if isinstance(key, (int, slice)):
-            return list(self.items())[key]
+            return list(self.values())[key]
         raise TypeError('_ListDict slice must be of type str/int/slice.')
 
     def __init__(self, *args, **kwargs):
@@ -66,6 +74,8 @@ class Folder(VBox):
     """A VBox that shows and hides widgets. For proper
     indentation, instantiate sub-folders before passing to
     super-folders. Should not exist outside of a GUI box."""
+
+    # Cannot also have a keys method -- used by ipywidgets
 
     def activate(self, *keys, **kwargs):
         """Activate (show) widgets that are not disabled."""
@@ -107,7 +117,7 @@ class Folder(VBox):
 
 
     def update(self, objs, relayout=False):
-        """Update the Folder widgets, behaves as dict.update ."""
+        """Update the Folder widgets, behaves as dict.update."""
         if relayout:
             self._relayout(objs)
         self._controls.update(objs)
@@ -115,8 +125,14 @@ class Folder(VBox):
 
     def move_to_end(self, *keys):
         """Move widget(s) to the end of the folder."""
-        for key in keys:
-            self._controls.move_to_end(key)
+        try:
+            for key in keys:
+                self._controls.move_to_end(key)
+        except AttributeError:
+            objs = [self._controls.pop(key) for key in keys]
+            for key, obj in zip(keys, objs):
+                self[key] = obj
+
 
 
     def pop(self, key):
@@ -147,10 +163,11 @@ class Folder(VBox):
 
     def _set_gui(self):
         """Update the 'view' of the folder."""
-        self.children = [self._controls['main']]
         if self.show:
             self.activate()
             self.children = self._get()
+        else:
+            self.children = [self._controls['main']]
         self.on_displayed(VBox._fire_children_displayed)
 
 
@@ -180,7 +197,7 @@ class Folder(VBox):
                     continue
                 obj.layout = self._slo
                 if not hasattr(obj, 'active'):
-                    obj.active = False
+                    obj.active = self.show
                 if not hasattr(obj, 'disabled'):
                     obj.disabled = False
             self._controls.update(content)

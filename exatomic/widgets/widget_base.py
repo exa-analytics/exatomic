@@ -276,8 +276,8 @@ class ExatomicBox(Box):
             link((saveopts['dir'], 'value'), (scn, 'savedir'))
             link((saveopts['name'], 'value'), (scn, 'imgname'))
         def _saves(b):
-            for idx in self.active_scene_indices:
-                self.scenes[idx].save = not self.scenes[idx].save
+            for scn in self.active():
+                scn.save = not scn.save
 
         saveopts['save'].on_click(_saves)
 
@@ -330,20 +330,20 @@ class ExatomicBox(Box):
         fdict = gui_field_widgets(uni, test)
 
         def _iso(c):
-            for idx in self.active_scene_indices:
-                self.scenes[idx].field_iso = c.new
+            for scn in self.active():
+                scn.field_iso = c.new
         def _alpha(c):
-            for idx in self.active_scene_indices:
-                self.scenes[idx].field_o = c.new
+            for scn in self.active():
+                scn.field_o = c.new
         def _nx(c):
-            for idx in self.active_scene_indices:
-                self.scenes[idx].field_nx = c.new
+            for scn in self.active():
+                scn.field_nx = c.new
         def _ny(c):
-            for idx in self.active_scene_indices:
-                self.scenes[idx].field_ny = c.new
+            for scn in self.active():
+                scn.field_ny = c.new
         def _nz(c):
-            for idx in self.active_scene_indices:
-                self.scenes[idx].field_nz = c.new
+            for scn in self.active():
+                scn.field_nz = c.new
 
         fdict['iso'].observe(_iso, names='value')
         fdict['alpha'].observe(_alpha, names='value')
@@ -367,8 +367,8 @@ class ExatomicBox(Box):
 
         if self.scenes:
             def _clear(b):
-                for idx in self.active_scene_indices:
-                    self.scenes[idx].clear = not self.scenes[idx].clear
+                for scn in self.active():
+                    scn.clear = not scn.clear
             mainopts['close'].on_click(self._close)
             mainopts['clear'].on_click(_clear)
 
@@ -396,7 +396,6 @@ class ExatomicBox(Box):
 
         self.scenes, scenes = _scene_grid(objs, mh, mw, test,
                                           uni, typ, scenekwargs)
-        # self.active_scene_indices = list(range(len(self.scenes)))
 
         self._controls = self._init_gui(nframes=nframes,
                                         fields=fields,
@@ -432,7 +431,6 @@ def _scene_grid(objs, mh, mw, test, uni, typ, scenekwargs):
     else: mod = 3
     kwargs = {'min_height': mh, 'min_width': mw, 'uni': uni}
     kwargs.update(scenekwargs)
-    #anew = n == len(objs)
 
     flatscns, scenes = [], []
     for i in range(n):

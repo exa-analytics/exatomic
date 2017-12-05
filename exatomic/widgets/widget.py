@@ -18,20 +18,20 @@ from .traits import uni_traits
 
 
 
-class TestContainer(ExatomicBox):
+class DemoContainer(ExatomicBox):
     """A proof-of-concept mixing GUI controls with a three.js scene."""
 
     def _field_folder(self, **kwargs):
         """Folder that houses field GUI controls."""
 
-        folder = super(TestContainer, self)._field_folder(**kwargs)
+        folder = super(DemoContainer, self)._field_folder(**kwargs)
         fopts = Dropdown(options=['null', 'Sphere', 'Torus', 'Ellipsoid'])
         fopts.active = True
         fopts.disabled = False
 
         def _field(c):
-            for idx in self.active_scene_indices:
-                self.scenes[idx].field = c.new
+            for scn in self.active():
+                scn.field = c.new
 
         fopts.observe(_field, names='value')
         folder.insert(1, 'options', fopts)
@@ -42,12 +42,12 @@ class TestContainer(ExatomicBox):
     def _init_gui(self, **kwargs):
         """Initialize generic GUI controls and observe callbacks."""
 
-        mainopts = super(TestContainer, self)._init_gui()
+        mainopts = super(DemoContainer, self)._init_gui()
 
         geom = Button(icon='gear', description=' Mesh', layout=_wlo)
         def _geom(b):
-            for idx in self.active_scene_indices:
-                self.scenes[idx].geom = not self.scenes[idx].geom
+            for scn in self.active():
+                scn.geom = not scn.geom
         geom.on_click(_geom)
 
         mainopts.update([('geom', geom),
@@ -56,7 +56,7 @@ class TestContainer(ExatomicBox):
 
 
     def __init__(self, *scenes, **kwargs):
-        super(TestContainer, self).__init__(*scenes,
+        super(DemoContainer, self).__init__(*scenes,
                                             uni=False,
                                             test=True,
                                             typ=ExatomicScene,
@@ -161,7 +161,7 @@ class TensorContainer(ExatomicBox):
 
 
 
-class TestUniverse(ExatomicBox):
+class DemoUniverse(ExatomicBox):
     """A showcase of functional forms used in quantum chemistry."""
 
     def _update_active(self, b):
@@ -169,7 +169,7 @@ class TestUniverse(ExatomicBox):
         Additionally align traits with active scenes so that
         the GUI reflects that correct values of active scenes."""
 
-        super(TestUniverse, self)._update_active(b)
+        super(DemoUniverse, self)._update_active(b)
         scns = [self.scenes[idx] for idx in self.active_scene_indices]
         if not scns: return
         flds = [scn.field for scn in scns]
@@ -201,7 +201,7 @@ class TestUniverse(ExatomicBox):
     def _field_folder(self, **kwargs):
         """Folder that houses field GUI controls."""
 
-        folder = super(TestUniverse, self)._field_folder(**kwargs)
+        folder = super(DemoUniverse, self)._field_folder(**kwargs)
 
         uni_field_lists = _ListDict([
             ('Hydrogenic', ['1s',   '2s',   '2px', '2py', '2pz',
@@ -231,11 +231,12 @@ class TestUniverse(ExatomicBox):
                 scn.field = c.new
                 scn.field_kind = fk
             folder.deactivate(c.old)
+            folder[c.new].value = fk
             folder.activate(c.new, enable=True)
             if c.new == 'SolidHarmonic':
                 folder.activate(fk, enable=True)
             else:
-                aml = [i for i in folder._get(keys=True) if i.isnumeric()]
+                aml = [key for key in folder._get(keys=True) if key.isnumeric()]
                 if aml: folder.deactivate(*aml)
             folder._set_gui()
 
@@ -244,9 +245,15 @@ class TestUniverse(ExatomicBox):
                 scn.field_kind = c.new
                 if scn.field == 'SolidHarmonic':
                     scn.field_ml = folder[c.new].options[0]
-            folder.activate(c.new, enable=True)
-            aml = [i for i in folder._get(keys=True) if i.isnumeric()]
-            if aml: folder.deactivate(*aml)
+                    folder.activate(c.new, enable=True)
+                    folder.deactivate(c.old)
+                    if scn.field_ml != '0':
+                        folder.deactivate('0')
+                else:
+                    aml = [i for i in folder._get(keys=True) if i.isnumeric()]
+                    if aml:
+                        folder.deactivate(*aml)
+            # folder.activate(c.new, enable=True)
             folder._set_gui()
 
         def _field_ml(c):
@@ -281,13 +288,13 @@ class TestUniverse(ExatomicBox):
             scn.field_iso = 0.0005
             scn.field_kind = '1s'
 
-        mainopts = super(TestUniverse, self)._init_gui()
+        mainopts = super(DemoUniverse, self)._init_gui()
         mainopts.update([('field', self._field_folder(**kwargs))])
         return mainopts
 
 
     def __init__(self, *scenes, **kwargs):
-        super(TestUniverse, self).__init__(*scenes, uni=True, test=True,
+        super(DemoUniverse, self).__init__(*scenes, uni=True, test=True,
                                            typ=ExatomicScene, **kwargs)
 
 

@@ -56,6 +56,10 @@ class AtomicField(Field):
     _columns = ['nx', 'ny', 'nz', 'ox', 'oy', 'oz', 'dxi', 'dxj', 'dxk',
                 'dyi', 'dyj', 'dyk', 'dzi', 'dzj', 'dzk', 'frame']
 
+    @property
+    def nfields(self):
+        return len(self.field_values)
+
     def compute_dv(self):
         """
         Compute the volume element for each field.

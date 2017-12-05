@@ -11,15 +11,11 @@ class TestEditor(TestCase):
 
     def test_no_meta(self):
         """Test that program metadata is set by default."""
-        with warnings.catch_warnings():
-            warnings.simplefilter('ignore')
-            fl = Editor('')
+        fl = Editor('', ignore=True)
         self.assertTrue(fl.meta['program'] == 'gaussian')
 
     def test_with_meta(self):
         """Test that passed metadata is respected and program is set."""
-        with warnings.catch_warnings():
-            warnings.simplefilter('ignore')
-            fl = Editor('', meta={'meta': 'data'})
+        fl = Editor('', meta={'meta': 'data'}, ignore=True)
         self.assertEqual(fl.meta['meta'], 'data')
         self.assertEqual(fl.meta['program'], 'gaussian')
