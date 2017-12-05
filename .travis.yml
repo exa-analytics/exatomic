@@ -52,14 +52,14 @@ install:
 script:
     - export PYTHONDONTWRITEBYTECODE=1
     - mkdir -p ~/.matplotlib
-    - echo "backend: TkAgg" > ~/.matplotlib/matplotlibrc
-    - find . | grep -E "(__pycache__|\.pyc|\.pyo$)" | xargs rm -rf
-    - if [[ $TRAVIS_OS_NAME == "linux" ]]; then
-          pytest --cov;
-          coverage xml;
-      else
-          pytest;
-      fi
+#   - echo "backend\: TkAgg" > ~/.matplotlib/matplotlibrc
+#   - find . | grep -E "(__pycache__|\.pyc|\.pyo$)" | xargs rm -rf
+#   - if [[ $TRAVIS_OS_NAME == "linux" ]]; then
+#         pytest --cov;
+#         coverage xml;
+#     else
+#         pytest;
+#     fi
     - if [[ $TRAVIS_OS_NAME == "linux" ]] && [[ $PYTHONVER == 3.6 ]]; then
           travis-sphinx build;
       fi
