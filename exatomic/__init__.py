@@ -12,6 +12,8 @@ based interactive (multi-programming language) environment.
 Warning:
     This package uses the `atomic`_ unit system (Hartree) by default.
 
+.. _atomic: https://en.wikipedia.org/wiki/Atomic_units
+
 Supported Software
 ---------------------
 The list below contains third-party software that is supported by this package.

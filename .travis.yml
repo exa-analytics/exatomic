@@ -21,6 +21,7 @@ matrix:
 
 # There are a lot of requirements here because we do coverage, testing, reporting, doc building
 install:
+<<<<<<< HEAD
     - if [[ $TRAVIS_OS_NAME == "osx" ]]; then
           wget https://repo.continuum.io/miniconda/Miniconda3-latest-MacOSX-x86_64.sh -O miniconda.sh;
       else
@@ -62,7 +63,7 @@ script:
           pytest;
       fi
     - if [[ $TRAVIS_OS_NAME == "linux" ]] && [[ $PYTHONVER == 3.6 ]]; then
-          travis-sphinx -n build;
+          travis-sphinx build;
       fi
 
 after_success:

@@ -74,19 +74,21 @@ var ExatomicBoxView = control.BoxView.extend({
         var that = this;
         this.scene_ps.then(function(views) {
             if (that.model.get('linked')) {
-                var controls = views[0].app3d.controls;
-                var camera = views[0].app3d.camera;
-                for (var i = 1; i < views.length; i++) {
-                    var a = views[i].app3d;
+                var idxs = that.model.get('active_scene_indices');
+                var controls = views[idxs[0]].app3d.controls;
+                var camera = views[idxs[0]].app3d.camera;
+                for (var i = 1; i < idxs.length; i++) {
+                    var a = views[idxs[i]].app3d;
                     a.camera = camera;
                     a.controls = a.init_controls();
                     a.controls.addEventListener('change', a.render.bind(a));
                 };
             } else {
-                var camera = views[0].app3d.camera;
-                for (var i = 1; i < views.length; i++) {
+                // var camera = views[0].app3d.camera;
+                for (var i = 0; i < views.length; i++) {
                     var a = views[i].app3d;
-                    a.camera = camera.clone();
+                    // var camera = a.camera;
+                    a.camera = a.camera.clone();
                     a.controls = a.init_controls();
                     a.controls.addEventListener('change', a.render.bind(a));
                 };
@@ -128,9 +130,9 @@ var ExatomicSceneView = widgets.DOMWidgetView.extend({
         window.addEventListener('resize', this.resize.bind(this));
         this.app3d = new three.App3D(this);
         this.three_promises = this.app3d.init_promise();
-        if (this.model.get('uni')) { 
+        if (this.model.get('uni')) {
             func = this.add_field;
-        } else { 
+        } else {
             func = this.add_geometry;
         };
         this.three_promises.then(func.bind(this))

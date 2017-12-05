@@ -29,7 +29,7 @@ class Output(Editor):
         atom = self.pandas_dataframe(start, stop, 7)
         atom.drop([0, 2, 3], axis=1, inplace=True)
         atom.columns = ['symbol', 'x', 'y', 'z']
-        for c in ['x', 'y', 'z']: atom[c] *= Length['A', 'au']
+        for c in ['x', 'y', 'z']: atom[c] *= Length['Angstrom', 'au']
         atom['Z'] = atom['symbol'].map(sym2z)
         atom['frame'] = 0
         self.atom = atom

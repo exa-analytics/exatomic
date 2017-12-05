@@ -75,14 +75,14 @@ class ExatomicScene(DOMWidget):
         if msg['type'] == 'image':
             self._save_image(msg['content'])
         elif msg['type'] == 'camera':
-            self._handle_camera(msg['content'])
+            self._save_camera(msg['content'])
         else: print('Custom msg not handled.\n'
                     'type of msg : {}\n'
                     'msg         : {}'.format(msg['type'],
                                               msg['content']))
 
 
-    def _handle_camera(self, content):
+    def _save_camera(self, content):
         """Cache a save state of the current camera."""
         self.cameras.append(content)
 
@@ -123,7 +123,10 @@ class ExatomicScene(DOMWidget):
     def _set_camera(self, c):
         """Ship the camera to JS to set a cached camera."""
         if c.new == -1: return
-        self.send({'type': 'camera', 'content': self.cameras[c.new]})
+        try:
+            self.send({'type': 'camera', 'content': self.cameras[c.new]})
+        except IndexError:
+            pass
 
 
     def _close(self):
@@ -221,12 +224,10 @@ class ExatomicBox(Box):
     def _update_active(self, b):
         """Control which scenes are controlled by the GUI."""
 
-        self.active_scene_indices = []
-        for i, (key, obj) in enumerate(self._controls['active']
-                                           ._controls.items()):
-            if key == 'main': continue
-            if obj.value:
-                self.active_scene_indices.append(i - 1)
+        items = list(self._controls['active']._controls.items())[1:]
+
+        self.active_scene_indices = [i for i, (key, obj) in enumerate(items)
+                                     if obj.value]
 
 
     def _close(self, b):
@@ -295,8 +296,7 @@ class ExatomicBox(Box):
                                max=ncams-1, value=-1, step=1))])
 
         def _save_cam(b):
-            for idx in self.active_scene_indices:
-                scn = self.scenes[idx]
+            for scn in self.active():
                 scn.save_cam = not scn.save_cam
                 btn = self._controls['camera']._controls['set']
                 btn.max = len(scn.cameras)
@@ -378,6 +378,9 @@ class ExatomicBox(Box):
 
         return mainopts
 
+    def active(self):
+        return [self.scenes[idx] for idx in self.active_scene_indices]
+
 
     def __init__(self, *objs, **kwargs):
 
@@ -393,7 +396,7 @@ class ExatomicBox(Box):
 
         self.scenes, scenes = _scene_grid(objs, mh, mw, test,
                                           uni, typ, scenekwargs)
-        self.active_scene_indices = list(range(len(self.scenes)))
+        # self.active_scene_indices = list(range(len(self.scenes)))
 
         self._controls = self._init_gui(nframes=nframes,
                                         fields=fields,
@@ -408,7 +411,9 @@ class ExatomicBox(Box):
         children = [gui, scenes] if self.scenes else [gui]
 
         super(ExatomicBox, self).__init__(
-                children, layout=_bboxlo, **kwargs)
+                children, layout=_bboxlo,
+                active_scene_indices=list(range(len(self.scenes))),
+                **kwargs)
 
 
 
@@ -418,7 +423,7 @@ def _scene_grid(objs, mh, mw, test, uni, typ, scenekwargs):
     n = objs[0] if isinstance(objs[0], int) else len(objs)
     if n > 9: raise NotImplementedError('Too many scenes')
     if mh is None:
-        if n < 2: mh = '700px'
+        if n < 2: mh = '500px'
         elif n < 3: mh = '400px'
         elif n < 5: mh = '300px'
         elif n < 7: mh = '250px'
@@ -427,7 +432,7 @@ def _scene_grid(objs, mh, mw, test, uni, typ, scenekwargs):
     else: mod = 3
     kwargs = {'min_height': mh, 'min_width': mw, 'uni': uni}
     kwargs.update(scenekwargs)
-    anew = n == len(objs)
+    #anew = n == len(objs)
 
     flatscns, scenes = [], []
     for i in range(n):

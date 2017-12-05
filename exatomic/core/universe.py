@@ -139,11 +139,28 @@ class Universe(six.with_metaclass(Meta, Container)):
         """Compute number of molecules per frame."""
         self.frame['molecule_count'] = compute_molecule_count(self)
 
-    def compute_density(self):
-        """Compute density from momatrix and occupation vector."""
-        if not hasattr(self, 'occupation_vector'):
-            raise Exception('Universe must have momatrix and occupation_vector attributes')
-        self.density = DensityMatrix.from_momatrix(self.momatrix, self.occupation_vector)
+    # def compute_density(self, mocoefs=None, orbocc=None):
+    #     """Compute density from momatrix and occupation vector."""
+    #     if not hasattr(self, 'momatrix'):
+    #         raise Exception('Universe must have momatrix')
+    #     if not hasattr(self, 'orbital'):
+    #         raise Exception('Universe must have orbital')
+    #     if mocoefs is None and orbocc is None:
+    #         mocoefs = 'coef'
+    #         orbocc = 'occupation'
+    #     elif mocoefs is not None and orbocc is None:
+    #         orbocc = mocoefs
+    #     elif orbocc is not None and mocoefs is None:
+    #         mocoefs = orbocc
+    #     if mocoefs not in self.momatrix.columns:
+    #         raise Exception('{} must be in uni.momatrix.columns'.format(mocoefs))
+    #     if orbocc not in self.orbital.columns:
+    #         raise Exception('{} must be in uni.orbital.columns'.format(orbocc))
+    #     d = DensityMatrix.from_universe(self, mocoefs, orbocc)
+    #     if hasattr(self, 'density'):
+    #         self.density[mocoefs+'-'+orbocc] = d['coef']
+    #     else:
+    #         self.density = d
 
     def add_field(self, field):
         """Adds a field object to the universe."""
@@ -179,10 +196,7 @@ class Universe(six.with_metaclass(Meta, Container)):
         """Add molecular orbitals to universe.
 
         Args
-            field_params (dict, pd.Series): numerical field parameters with
-                            (at a minimum) {'rmin', 'rmax', 'nr', ...}
-                            or a pd.Series containing the columns specified in the
-                            :class:`~exatomic.core.field.AtomicField`.
+            field_params (dict, pd.Series): see `:meth:exatomic.algorithms.orbital_util.make_fps`
             mocoefs (str): column in the :class:`~exatomic.core.orbital.MOMatrix`
             vector (iter): indices of orbitals to evaluate (0-based)
             frame (int): frame of atomic positions for the orbitals

@@ -8,6 +8,8 @@ Molecular orbitals are constructed symbolically
 then evaluated on a numerical grid.
 These are their stories.
 '''
+from ipywidgets import FloatProgress, HBox
+from IPython.display import display
 import numpy as np
 import pandas as pd
 from numba import jit
@@ -20,7 +22,7 @@ from .basis import (CartesianBasisFunction,
 from exatomic.core.field import AtomicField
 
 
-def compare_fields(*unis, rtol=5e-5, atol=1e-12, mtol=None, signed=True, verbose=True):
+def compare_fields(rtol=5e-5, atol=1e-12, mtol=None, signed=True, verbose=True, *unis):
     """Compare field values of multiple universe.
     It is expected that fields are in the same order."""
     flds = (uni.field.field_values for uni in unis)
@@ -111,7 +113,7 @@ def _evaluate_symbolic(bfns, x, y, z):
     """Evaluate symbolic functions on a numerical grid."""
     flds = np.empty((len(bfns), len(x)), dtype=np.float64)
     for i, bas in enumerate(bfns):
-        flds[i] = evaluate(str(bas), optimization='moderate')
+        flds[i] = evaluate(str(bas))
     return flds
 
 
@@ -135,6 +137,95 @@ def _compute_density(ovs, occvec):
     return dens
 
 
+def _compute_current_density_numexpr(bvs, gvx, gvy, gvz, cmatr, cmati, occvec):
+    nbas, npts = bvs.shape
+    # chigradx = np.empty(npts, dtype=np.float64)
+    # chigrady = np.empty(npts, dtype=np.float64)
+    # chigradz = np.empty(npts, dtype=np.float64)
+    curx = np.zeros(npts, dtype=np.float64)
+    cury = np.zeros(npts, dtype=np.float64)
+    curz = np.zeros(npts, dtype=np.float64)
+    fp = FloatProgress(description='Total:')
+    # ifp = FloatProgress(description='Inner:')
+    # box = HBox([fp, ifp])
+    display(fp)
+    for mu in range(nbas):
+        fp.value = mu / nbas * 100
+        crmu = cmatr[mu]
+        cimu = cmati[mu]
+        bvmu = bvs[mu]
+        gvxmu = gvx[mu]
+        gvymu = gvy[mu]
+        gvzmu = gvz[mu]
+        for nu in range(nbas):
+            # ifp.value = nu / nbas * 100
+            crnu = cmatr[nu]
+            cinu = cmati[nu]
+            bvnu = bvs[nu]
+            gvxnu = gvx[nu]
+            gvynu = gvy[nu]
+            gvznu = gvz[nu]
+            cval = evaluate('-0.5 * (occvec * (crmu * cinu - cimu * crnu))').sum()
+            # chigradx = evaluate('bvmu * gvxnu - gvxmu * bvnu')
+            # chigrady = evaluate('bvmu * gvynu - gvymu * bvnu')
+            # chigradz = evaluate('bvmu * gvznu - gvzmu * bvnu')
+            curx = evaluate('curx + cval * (bvmu * gvxnu - gvxmu * bvnu)')
+            cury = evaluate('cury + cval * (bvmu * gvynu - gvymu * bvnu)')
+            curz = evaluate('curz + cval * (bvmu * gvznu - gvzmu * bvnu)')
+    # box.close()
+    fp.close()
+    # ifp.close()
+    return curx, cury, curz
+
+
+@jit(nopython=True, nogil=True, parallel=True)
+def _compute_current_density_inner_jit(bvmu, gvxmu, gvymu, gvzmu, nbas,
+                                       cmatr, cmati, occvec, mu,
+                                       curx, cury, curz):
+    for nu in range(nbas):
+        cval = (-0.5 * (occvec * (cmatr[mu] * cmati[nu]
+                                - cmati[mu] * cmatr[nu]))).sum()
+        chigradx = bvs[mu] * gvx[nu] - gvx[mu] * bvs[nu]
+        chigrady = bvs[mu] * gvy[nu] - gvy[mu] * bvs[nu]
+        chigradz = bvs[mu] * gvz[nu] - gvz[mu] * bvs[nu]
+        curx += cval * chigradx
+        cury += cval * chigrady
+        curz += cval * chigradz
+
+@jit(nopython=True, nogil=True, parallel=True)
+def _compute_current_density_innerest_jit(bvmu, gvxmu, gvymu, gvzmu, nbas,
+                                          cmatr, cmati, occvec, mu,
+                                          curx, cury, curz):
+    for nu in range(nbas):
+        cval = (-0.5 * (occvec * (cmatr[mu] * cmati[nu]
+                                - cmati[mu] * cmatr[nu]))).sum()
+        chigradx = bvs[mu] * gvx[nu] - gvx[mu] * bvs[nu]
+        chigrady = bvs[mu] * gvy[nu] - gvy[mu] * bvs[nu]
+        chigradz = bvs[mu] * gvz[nu] - gvz[mu] * bvs[nu]
+        curx += cval * chigradx
+        cury += cval * chigrady
+        curz += cval * chigradz
+
+
+
+
+@jit(nopython=True, nogil=True, parallel=True)
+def _compute_current_density_jit(bvs, gvx, gvy, gvz, cmatr, cmati, occvec):
+    """Compute the current density in each cartesian direction."""
+    nbas, npts = bvs.shape
+    chigradx = np.empty(npts, dtype=np.float64)
+    chigrady = np.empty(npts, dtype=np.float64)
+    chigradz = np.empty(npts, dtype=np.float64)
+    curx = np.zeros(npts, dtype=np.float64)
+    cury = np.zeros(npts, dtype=np.float64)
+    curz = np.zeros(npts, dtype=np.float64)
+    for mu in range(nbas):
+        _compute_current_density_inner_jit(bvs[mu], gvx[mu], gvy[mu], gvz[mu], nbas,
+                                           cmatr, cmati, occvec,
+                                           mu, curx, cury, curz)
+    return curx, cury, curz
+
+
 @jit(nopython=True, nogil=True, parallel=True)
 def _compute_current_density(bvs, gvx, gvy, gvz, cmatr, cmati, occvec):
     """Compute the current density in each cartesian direction."""
@@ -156,6 +247,22 @@ def _compute_current_density(bvs, gvx, gvy, gvz, cmatr, cmati, occvec):
             cury += cval * chigrady
             curz += cval * chigradz
     return curx, cury, curz
+
+
+def _compute_orb_ang_mom_numexpr(rx, ry, rz, jx, jy, jz, maxes):
+    """Compute the orbital angular momentum in each direction and the sum."""
+    ang_mom = np.empty((4, rx.shape[0]), dtype=np.float64)
+    mxx, mxy, mxz = maxes[0]
+    myx, myy, myz = maxes[1]
+    mzx, mzy, mzz = maxes[2]
+    a0 = evaluate('ry * jz - rz * jy')
+    a1 = evaluate('rz * jx - rx * jz')
+    a2 = evaluate('rx * jy - ry * jx')
+    ang_mom[0] = evaluate('mxx * a0 + mxy * a1 + mxz * a2')
+    ang_mom[1] = evaluate('myx * a0 + myy * a1 + myz * a2')
+    ang_mom[2] = evaluate('mzx * a0 + mzy * a1 + mzz * a2')
+    ang_mom[3] = ang_mom[0] + ang_mom[1] + ang_mom[2]
+    return ang_mom
 
 
 @jit(nopython=True, nogil=True, parallel=True)

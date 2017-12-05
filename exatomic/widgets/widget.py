@@ -73,40 +73,79 @@ class TensorContainer(ExatomicBox):
     _model_name = Unicode('TensorContainerModel').tag(sync=True)
     _view_name = Unicode('TensorContainerView').tag(sync=True)
 
+    def _update_active(self, b):
+        """Control which scenes are controlled by the GUI.
+        Additionally align traits with active scenes so that
+        the GUI reflects that correct values of active scenes."""
+
+        super(TensorContainer, self)._update_active(b)
+        #scns = [self.scenes[idx] for idx in self.active_scene_indices]
+        scns = self.active()
+        if not scns or len(scns) == 1: return
+        carts = ['x', 'y', 'z']
+        cache = {}
+        for i in carts:
+            for j in carts:
+                tij = 't' + i + j
+                cache[tij] = getattr(scns[0], tij)
+        for tij, val in cache.items():
+            for scn in scns[1:]:
+                setattr(scn, tij, val)
+
     def _init_gui(self, **kwargs):
         """Initialize generic GUI controls and observe callbacks."""
 
         mainopts = super(TensorContainer, self)._init_gui(**kwargs)
 
-        geom = Button(icon='cubes', description=' Mesh', layout=_wlo)
+        scn = self.scenes[0]
+
         alo = Layout(width='74px')
+        xs = [FloatText(value=scn.txx, layout=alo),
+              FloatText(value=scn.txy, layout=alo),
+              FloatText(value=scn.txz, layout=alo)]
+        ys = [FloatText(value=scn.tyx, layout=alo),
+              FloatText(value=scn.tyy, layout=alo),
+              FloatText(value=scn.tyz, layout=alo)]
+        zs = [FloatText(value=scn.tzx, layout=alo),
+              FloatText(value=scn.tzy, layout=alo),
+              FloatText(value=scn.tzz, layout=alo)]
+        def _x0(c):
+            for scn in self.active(): scn.txx = c.new
+        def _x1(c):
+            for scn in self.active(): scn.txy = c.new
+        def _x2(c):
+            for scn in self.active(): scn.txz = c.new
+        def _y0(c):
+            for scn in self.active(): scn.tyx = c.new
+        def _y1(c):
+            for scn in self.active(): scn.tyy = c.new
+        def _y2(c):
+            for scn in self.active(): scn.tyz = c.new
+        def _z0(c):
+            for scn in self.active(): scn.tzx = c.new
+        def _z1(c):
+            for scn in self.active(): scn.tzy = c.new
+        def _z2(c):
+            for scn in self.active(): scn.tzz = c.new
+        xs[0].observe(_x0, names='value')
+        xs[1].observe(_x1, names='value')
+        xs[2].observe(_x2, names='value')
+        ys[0].observe(_y0, names='value')
+        ys[1].observe(_y1, names='value')
+        ys[2].observe(_y2, names='value')
+        zs[0].observe(_z0, names='value')
+        zs[1].observe(_z1, names='value')
+        zs[2].observe(_z2, names='value')
         rlo = Layout(width='234px')
-
-        xs = [FloatText(value=1., layout=alo),
-              FloatText(value=0., layout=alo),
-              FloatText(value=0., layout=alo)]
-        ys = [FloatText(value=0., layout=alo),
-              FloatText(value=1., layout=alo),
-              FloatText(value=0., layout=alo)]
-        zs = [FloatText(value=0., layout=alo),
-              FloatText(value=0., layout=alo),
-              FloatText(value=1., layout=alo)]
-
-        carts = ['x', 'y', 'z']
-        for i, ks in enumerate([xs, ys, zs]):
-            for j, cart in enumerate(carts):
-                for scn in self.scenes:
-                    link((scn, 't' + carts[i] + cart), (ks[j], 'value'))
-
         xbox = HBox(xs, layout=rlo)
         ybox = HBox(ys, layout=rlo)
         zbox = HBox(zs, layout=rlo)
 
+        geom = Button(icon='cubes', description=' Mesh', layout=_wlo)
         def _geom(b):
-            for idx in self.active_scene_indices:
-                self.scenes[idx].geom = not self.scenes[idx].geom
-
+            for scn in self.active(): scn.geom = not scn.geom
         geom.on_click(_geom)
+
         mainopts.update([('geom', geom),
                          ('xbox', xbox),
                          ('ybox', ybox),
@@ -174,7 +213,7 @@ class TestUniverse(ExatomicBox):
                           'f030', 'f021', 'f012', 'f003']),
             ('SolidHarmonic', [str(i) for i in range(8)])])
 
-        field_widgets = _ListDict([
+        kind_widgets = _ListDict([
             (key, Dropdown(options=vals))
             for key, vals in uni_field_lists.items()])
 
@@ -183,29 +222,37 @@ class TestUniverse(ExatomicBox):
             for l in range(8)])
 
         fopts = list(uni_field_lists.keys())
-        folder.update(field_widgets, relayout=True)
+        folder.update(kind_widgets, relayout=True)
         folder.update(ml_widgets, relayout=True)
 
         def _field(c):
-            for idx in self.active_scene_indices:
-                self.scenes[idx].field = c.new
             fk = uni_field_lists[c.new][0]
-            for idx in self.active_scene_indices:
-                self.scenes[idx].field_kind = fk
-            self._update_active(None)
+            for scn in self.active():
+                scn.field = c.new
+                scn.field_kind = fk
+            folder.deactivate(c.old)
+            folder.activate(c.new, enable=True)
+            if c.new == 'SolidHarmonic':
+                folder.activate(fk, enable=True)
+            else:
+                aml = [i for i in folder._get(keys=True) if i.isnumeric()]
+                if aml: folder.deactivate(*aml)
+            folder._set_gui()
 
         def _field_kind(c):
-            for idx in self.active_scene_indices:
-                self.scenes[idx].field_kind = c.new
-                if self.scenes[idx].field == 'SolidHarmonic':
-                    self.scenes[idx].field_ml = folder[c.new].options[0]
-            self._update_active(None)
+            for scn in self.active():
+                scn.field_kind = c.new
+                if scn.field == 'SolidHarmonic':
+                    scn.field_ml = folder[c.new].options[0]
+            folder.activate(c.new, enable=True)
+            aml = [i for i in folder._get(keys=True) if i.isnumeric()]
+            if aml: folder.deactivate(*aml)
+            folder._set_gui()
 
         def _field_ml(c):
-            for idx in self.active_scene_indices:
-                self.scenes[idx].field_ml = c.new
+            for scn in self.active(): scn.field_ml = c.new
 
-        for key, obj in field_widgets.items():
+        for key, obj in kind_widgets.items():
             folder.deactivate(key)
             obj.observe(_field_kind, names='value')
 
@@ -263,9 +310,9 @@ class UniverseWidget(ExatomicBox):
             ('scn_frame', IntSlider(description='Frame', **flims))])
 
         def _scn_frame(c):
-            for idx in self.active_scene_indices:
-                self.scenes[idx].frame_idx = c.new
+            for scn in self.active(): scn.frame_idx = c.new
         content['scn_frame'].observe(_scn_frame, names='value')
+        content['playing'].active = False
 
         jslink((content['playing'], 'value'),
                (content['scn_frame'], 'value'))
@@ -403,6 +450,7 @@ class UniverseWidget(ExatomicBox):
                       for uni in unis)) if len(unis) else 1
 
         super(UniverseWidget, self).__init__(*masterkwargs,
+                                             uni=True, test=False,
                                              nframes=nframes,
                                              fields=fields,
                                              typ=UniverseScene,
