@@ -196,10 +196,7 @@ class Universe(six.with_metaclass(Meta, Container)):
         """Add molecular orbitals to universe.
 
         Args
-            field_params (dict, pd.Series): numerical field parameters with
-                            (at a minimum) {'rmin', 'rmax', 'nr', ...}
-                            or a pd.Series containing the columns specified in the
-                            :class:`~exatomic.core.field.AtomicField`.
+            field_params (dict, pd.Series): see `:meth:exatomic.algorithms.orbital_util.make_fps`
             mocoefs (str): column in the :class:`~exatomic.core.orbital.MOMatrix`
             vector (iter): indices of orbitals to evaluate (0-based)
             frame (int): frame of atomic positions for the orbitals

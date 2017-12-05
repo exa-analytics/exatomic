@@ -7,9 +7,9 @@
 *A unified platform for theoretical and computational chemists*
 
 This package provides a platform for computational and theoretical chemists
-and physicists to parse, process, analyze, and visualize data coming from 
-quantum mechanics calculations. Included in this package are sub-packages 
-dedicated to parsing data from software programs used in the field. A quick 
+and physicists to parse, process, analyze, and visualize data coming from
+quantum mechanics calculations. Included in this package are sub-packages
+dedicated to parsing data from software programs used in the field. A quick
 method to get started with visualization is through the `Jupyter notebook`_.
 
 .. flashy example (todo)
@@ -30,8 +30,9 @@ method to get started with visualization is through the `Jupyter notebook`_.
 
 .. toctree::
     :maxdepth: 2
-    :caption: Software 
+    :caption: Software
 
+..
     adf.rst
     nwchem.rst
 
@@ -40,6 +41,7 @@ method to get started with visualization is through the `Jupyter notebook`_.
     :caption: Contributors
 
     contrib.rst
+    concepts.rst
 
 
 ##################

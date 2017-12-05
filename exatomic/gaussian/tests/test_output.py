@@ -7,7 +7,13 @@ import pandas as pd
 from unittest import TestCase
 from exatomic import Universe
 from exatomic.gaussian import Output
-
+# def decompress(fname):
+#     """Helper function for decompressing example."""
+#     path = os.path.abspath(os.path.join(os.path.abspath(exatomic.__file__), "../static/gaussian/" + fname + ".bz2"))
+#     with bz2.open(path) as f:
+#         if 'fchk' in fname:
+#             return gaussian.Fchk(f.read().decode("utf-8"))
+#         return gaussian.Output(f.read().decode("utf-8"))
 
 class TestOutput(TestCase):
     """

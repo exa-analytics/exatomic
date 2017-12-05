@@ -29,6 +29,8 @@ can be found at :ref:`examples-label` or via help::
     :caption: Core API
 
     api/universe.rst
+    notebooks/nwchem.ipynb
+    notebooks/qe.ipynb
 
 
 ########################

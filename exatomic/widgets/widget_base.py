@@ -257,8 +257,6 @@ class ExatomicBox(Box):
             (str(i), ToggleButton(description=str(i), value=True))
             for i, scn in enumerate(self.scenes)])
         for key, obj in opts.items():
-            print(obj)
-            print(obj.value)
             obj.observe(self._update_active, names='value')
 
         return Folder(active, opts)
@@ -437,24 +435,18 @@ def _scene_grid(objs, mh, mw, test, uni, typ, scenekwargs):
     #anew = n == len(objs)
 
     flatscns, scenes = [], []
-    print(kwargs)
     for i in range(n):
         kwargs['index'] = i
         if not i % mod: scenes.append([])
         try:
-            # print('try')
             if isinstance(objs[i], DOMWidget):
-                # print('if')
                 obj = objs[i]
             elif isinstance(objs[i], dict):
-                # print('elif')
                 objs[i].update(kwargs)
                 obj = typ(**objs[i])
             else:
-                # print('else')
                 obj = typ(**kwargs)
         except IndexError:
-            # print('except')
             obj = typ(**kwargs)
         scenes[-1].append(obj)
         flatscns.append(obj)
