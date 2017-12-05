@@ -30,7 +30,7 @@ install:
   - git checkout 0.3.9
   - conda install -q -c conda-forge `cat requirements.txt`
   - conda install -q -c conda-forge pytables python-coveralls ply pandoc pypandoc nbsphinx sympy
-  - pip install travis-sphinx codacy-coverage coverage
+  - pip install travis-sphinx codacy-coverage coverage sphinx_rtd_theme
   - pip install .
   - cd ../
 # - conda install -q -c exaanalytics exa
