@@ -1,7 +1,7 @@
 [![exatomic logo](docs/source/static/logo.png)](https://exa-analytics.github.io)
 *A unified platform for computational chemists*
 
-![](http://i.imgur.com/a/dMTL0.gif)
+![](https://i.imgur.com/g9X3gPa.gif)
 
 
 # Installation
