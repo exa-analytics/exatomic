@@ -1,18 +1,22 @@
 # -*- coding: utf-8 -*-
-'''
+# Copyright (c) 2015-2016, Exa Analytics Development Team
+# Distributed under the terms of the Apache License 2.0
+"""
 Geometry
 ======================
 Functions for constructing molecular and solid state geometries with
 symmetry adapted or crystalline structures.
-'''
+"""
 import numpy as np
 import pandas as pd
-from exatomic import Length
+from exa.util.units import Length
+
 
 columns = ['x', 'y', 'z', 'symbol', 'frame', 'label']
 
+
 def make_small_molecule(center=None, ligand=None, distance=None, geometry=None,
-                        offset=None, plane=None, axis=None, domains=None, unit='A'):
+                        offset=None, plane=None, axis=None, domains=None, unit='Angstrom'):
     """
     A minimal molecule builder for simple one-center, homogeneous ligand
     molecules of various general chemistry molecular geometries. If `domains'

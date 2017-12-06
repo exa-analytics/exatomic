@@ -1,20 +1,15 @@
 # -*- coding: utf-8 -*-
-# Copyright (c) 2015-2016, Exa Analytics Development Team
+# Copyright (c) 2015-2017, Exa Analytics Development Team
 # Distributed under the terms of the Apache License 2.0
-
 import os
 import numpy as np
 from glob import glob
-
-try:
-    from exa.test.tester import UnitTester
-except:
-    from exa.tester import UnitTester
+from unittest import TestCase
 from exatomic.adf.output import Output
 from exatomic import Cube
 
 
-class TestOrbital(UnitTester):
+class TestOrbital(TestCase):
     """Tests that orbitals are generated correctly for ADF."""
     def setUp(self):
         pass

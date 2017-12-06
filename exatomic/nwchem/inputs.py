@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# Copyright (c) 2015-2016, Exa Analytics Development Team
+# Copyright (c) 2015-2017, Exa Analytics Development Team
 # Distributed under the terms of the Apache License 2.0
 """
 Input Generator and Parser
@@ -27,10 +27,9 @@ NWChem and values corresponding to the parameters in a calculation.
 # """
 import pandas as pd
 import numpy as np
-from exa.relational import Length as L
-from exatomic.atom import Atom
-from exatomic.container import Universe
 from .editor import Editor
+from exa.util.units import Length as L
+from exatomic import Atom, Universe
 
 
 _template = """echo
@@ -140,7 +139,9 @@ class Input(Editor):
             return fl
 
     def __init__(self, *args, **kwargs):
+
         super(Input, self).__init__(*args, **kwargs)
+
 
 def _handle_arg(opt, info):
     type1 = {'basis': 'library', 'ecp': 'library'}

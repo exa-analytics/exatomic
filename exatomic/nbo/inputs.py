@@ -1,25 +1,22 @@
 # -*- coding: utf-8 -*-
-# Copyright (c) 2015-2016, Exa Analytics Development Team
+# Copyright (c) 2015-2017, Exa Analytics Development Team
 # Distributed under the terms of the Apache License 2.0
 """
 exnbo Input Generator and Parser
-===================================
+###################################
 """
-
 import numpy as np
 import pandas as pd
-
-from exa.relational.isotope import symbol_to_z
-symbol_to_Z = symbol_to_z()
-
 from exatomic import __version__
 from .editor import Editor
-from exatomic.orbital import DensityMatrix
-from exatomic.basis import (solid_harmonics, lorder,
-                            cart_lml_count, spher_lml_count)
+from exatomic.core.orbital import DensityMatrix
+from exatomic.core.basis import (solid_harmonics, lorder,
+                                 cart_lml_count, spher_lml_count)
 from itertools import combinations_with_replacement as cwr
 
+
 _exaver = 'exatomic.v' + __version__
+
 
 _header = """\
 $GENNBO NATOMS={nat}    NBAS={nbas}  UPPER  BODM BOHR $END
@@ -42,6 +39,7 @@ $CONTRACT
 {coeffs}
 $END"""
 
+
 _matrices = """
 $OVERLAP
 {overlap}
@@ -50,8 +48,9 @@ $DENSITY
 {density}
 $END"""
 
+
 def _nbo_labels():
-    """Generate data frames of L, (ml | l, m, n), NBO label."""
+    """Generate dataframes of NBO label, L, and ml or l, m, n."""
     sph = pd.DataFrame(list(solid_harmonics(6).keys()),
                        columns=('L', 'ml'))
     # See the NBO 6.0 manual for more details
@@ -70,8 +69,8 @@ def _nbo_labels():
     # Even NBO 6.0 doesn't support cartesian basis
     # functions with an l value greater than g functions
     for i in range(5):
-        t = i * 100 + 1
-        label += list(range(t, t + cart_lml_count[i]))
+        start = i * 100 + 1
+        label += list(range(start, start + cart_lml_count[i]))
         car = [''.join(i) for i in list(cwr('xyz', i))]
         Ls += [i for k in car]
         ls += [i.count('x') for i in car]
@@ -121,36 +120,38 @@ def _clean_to_string(arr, ncol=4, width=16, decimals='', just=True):
 
 def _obtain_arrays(uni):
     """Get numerical arrays of information from a universe."""
-    kwargs = {}
     # Get number of functions by shell
     shells = uni.basis_set.functions_by_shell()
     # This is how many times each L value shows up
     shlcnt = shells.index.get_level_values(0)
     # Add subshells for each time L shows up
     shells = shells.groupby(shlcnt).apply(lambda x: x.sum())
-    # Map it onto the atoms with each basis set
-    nshell = uni.atom['set'].map(shells).sum()
-    kwargs['nshell'] = nshell
+
     # Group our basis sets, will be used later
     bases = uni.basis_set[np.abs(uni.basis_set['d']) > 0].groupby('set')
     # Exponents per basis set
     expnts = bases.apply(lambda x: x.shape[0])
     # mapped onto the atoms with each basis set
-    nexpnt = uni.atom['set'].map(expnts).sum()
-    kwargs['nexpnt'] = nexpnt
-    # Grab already correct arrays from basis_set_order
-    kwargs['center'] = uni.basis_set_order['center'].values.copy()
-    kwargs['L'] = uni.basis_set_order['L'].values
+
+    kwargs = {'center': uni.basis_set_order['center'].values.copy(),
+              'nshell': uni.atom['set'].map(shells).sum(),
+              'nexpnt': uni.atom['set'].map(expnts).sum(),
+                   'L': uni.basis_set_order['L'].values}
+    kwargs['center'] += 1
+    nshell = kwargs['nshell']
+    nexpnt = kwargs['nexpnt']
+
     if uni.basis_set.spherical:
         # Spherical basis set
-        kwargs['ml'] = uni.basis_set_order['ml'].values
+        kwargs.update({'ml': uni.basis_set_order['ml'].values})
         lml_count = spher_lml_count
     else:
         # Cartesian basis set
-        kwargs['l'] = uni.basis_set_order['l'].values
-        kwargs['m'] = uni.basis_set_order['m'].values
-        kwargs['n'] = uni.basis_set_order['n'].values
+        kwargs.update({'l': uni.basis_set_order['l'].values,
+                       'm': uni.basis_set_order['m'].values,
+                       'n': uni.basis_set_order['n'].values})
         lml_count = cart_lml_count
+
     # For the NBO specicific arrays
     lmax = uni.basis_set['L'].cat.as_ordered().max()
     # ---- There are 3 that are length nshell
@@ -183,41 +184,129 @@ def _obtain_arrays(uni):
             for i, ang in enumerate(ds):
                 ds[i][xpc] = d if i == l else 0
             xpc += 1
-    kwargs['nprims'] = nprims
-    kwargs['ncomps'] = ncomps
-    kwargs['npntrs'] = npntrs
-    kwargs['expnts'] = expnts
-    kwargs['coeffs'] = ds
+    kwargs.update({'nprims': nprims, 'ncomps': ncomps,
+                   'npntrs': npntrs, 'expnts': expnts,
+                   'coeffs': ds})
     return kwargs
+
+
+
+    # kwargs = {}
+    # # Get number of functions by shell
+    # shells = uni.basis_set.functions_by_shell()
+    # # This is how many times each L value shows up
+    # shlcnt = shells.index.get_level_values(0)
+    # # Add subshells for each time L shows up
+    # shells = shells.groupby(shlcnt).apply(lambda x: x.sum())
+    # # Map it onto the atoms with each basis set
+    # nshell = uni.atom['set'].map(shells).sum()
+    # kwargs['nshell'] = nshell
+    # # Group our basis sets, will be used later
+    # bases = uni.basis_set[np.abs(uni.basis_set['d']) > 0].groupby('set')
+    # # Exponents per basis set
+    # expnts = bases.apply(lambda x: x.shape[0])
+    # # mapped onto the atoms with each basis set
+    # nexpnt = uni.atom['set'].map(expnts).sum()
+    # kwargs['nexpnt'] = nexpnt
+    # # Grab already correct arrays from basis_set_order
+    # kwargs['center'] = uni.basis_set_order['center'].values.copy()
+    # kwargs['L'] = uni.basis_set_order['L'].values
+    # if uni.basis_set.spherical:
+    #     # Spherical basis set
+    #     kwargs['ml'] = uni.basis_set_order['ml'].values
+    #     lml_count = spher_lml_count
+    # else:
+    #     # Cartesian basis set
+    #     kwargs['l'] = uni.basis_set_order['l'].values
+    #     kwargs['m'] = uni.basis_set_order['m'].values
+    #     kwargs['n'] = uni.basis_set_order['n'].values
+    #     lml_count = cart_lml_count
+    # # For the NBO specicific arrays
+    # lmax = uni.basis_set['L'].cat.as_ordered().max()
+    # # ---- There are 3 that are length nshell
+    # # The number of components per basis function (l degeneracy)
+    # ncomps = np.empty(nshell, dtype=np.int64)
+    # # The number of primitive functions per basis function
+    # nprims = np.empty(nshell, dtype=np.int64)
+    # # The pointers in the arrays above for each basis funciton
+    # npntrs = np.empty(nshell, dtype=np.int64)
+    # # ---- And 2 that are length nexpnt
+    # # The total number of exponents in the basis set
+    # expnts = np.empty(nexpnt, dtype=np.float64)
+    # # The contraction coefficients within the basis set
+    # ds = np.empty((lmax + 1, nexpnt), dtype=np.float64)
+    # # The following algorithm must be generalized
+    # # and simplified by either some bound methods
+    # # on basis_set attributes
+    # cnt, ptr, xpc = 0, 1, 0
+    # for seht in uni.atom['set']:
+    #     b = bases.get_group(seht)
+    #     for sh, grp in b.groupby('shell'):
+    #         if len(grp) == 0: continue
+    #         ncomps[cnt] = lml_count[grp['L'].values[0]]
+    #         nprims[cnt] = grp.shape[0]
+    #         npntrs[cnt] = ptr
+    #         ptr += nprims[cnt]
+    #         cnt += 1
+    #     for l, d, exp in zip(b['L'], b['d'], b['alpha']):
+    #         expnts[xpc] = exp
+    #         for i, ang in enumerate(ds):
+    #             ds[i][xpc] = d if i == l else 0
+    #         xpc += 1
+    # kwargs['nprims'] = nprims
+    # kwargs['ncomps'] = ncomps
+    # kwargs['npntrs'] = npntrs
+    # kwargs['expnts'] = expnts
+    # kwargs['coeffs'] = ds
+    # return kwargs
 
 
 class Input(Editor):
 
     @classmethod
-    def from_universe(cls, uni, occvec=None, column=None, name=''):
+    def from_universe(cls, uni, mocoefs=None, orbocc=None, name=''):
         """
         Generate an NBO input from a properly populated universe.
         uni must have atom, basis_set, basis_set_order, overlap,
-        momatrix and occupation_vector information.
+        momatrix and orbital information.
 
         Args
             uni (:class:`~exatomic.container.Universe`): containing the above attributes
-            occvec (np.array): occupation vector that relates momatrix to density matrix
+            mocoefs (str): column name of MO coefficients to use in uni.momatrix
+            orbocc (str): column name of occupations in uni.orbital
+            name (str): prefix of file name to write
 
         Returns
             editor (:class:`~exatomic.nbo.Input`)
         """
-        if column is not None and occvec is None:
-            raise Exception('If supplying non-default column, must supply occvec')
-        # Grab all array data from new orbital code
+        for attr in ['overlap', 'momatrix', 'orbital']:
+            if not hasattr(uni, attr):
+                raise Exception('uni must have {} attribute.'.format(attr))
+        if mocoefs is None and orbocc is None:
+            mocoefs = 'coef'
+            orbocc = 'occupation'
+        elif mocoefs is not None and orbocc is None:
+            orbocc = mocoefs
+        elif orbocc is not None and mocoefs is None:
+            mocoefs = orbocc
+        if mocoefs not in uni.momatrix.columns:
+            raise Exception('{} must be in uni.momatrix.columns'.format(mocoefs))
+        if orbocc not in uni.orbital.columns:
+            raise Exception('{} must be in uni.orbital.columns'.format(orbocc))
+        print('Assuming "{}" vector corresponds to "{}" matrix'.format(orbocc, mocoefs))
+
+        # Grab all the useful array data
         kwargs = _obtain_arrays(uni)
         # Manicure it slightly for NBO inputs
-        kwargs['exaver'] = _exaver
-        kwargs['name'] = name
-        kwargs['center'] += 1
-        kwargs['nat'] = kwargs['center'].max()
-        kwargs['nbas'] = len(kwargs['center'])
-        kwargs['check'] = ''
+        kwargs.update({'exaver': _exaver, 'name': name, 'check': '',
+                       'nat': kwargs['center'].max(),
+                       'nbas': len(kwargs['center'])})
+        # kwargs['exaver'] = _exaver
+        # kwargs['name'] = name
+        # kwargs['center'] += 1
+        # kwargs['nat'] = kwargs['center'].max()
+        # kwargs['nbas'] = len(kwargs['center'])
+        # kwargs['check'] = ''
         columns = ('Z', 'Z', 'x', 'y', 'z')
         if 'Zeff' in uni.atom.columns:
             columns = ('Z', 'Zeff', 'x', 'y', 'z')
@@ -243,25 +332,36 @@ class Input(Editor):
         # requirements so overlap/density must be very precise (12 decimals).
         matargs = {'overlap': '', 'density': ''}
         margs = {'decimals': 15, 'width': 23, 'just': False}
-        if hasattr(uni, '_overlap'):
-            o = uni.overlap['coef'].values
-            matargs['overlap'] = _clean_to_string(o, **margs)
-        # Still no clean solution for an occupation vector yet
-        d = None
-        if hasattr(uni, '_density'):
-            d = uni.density
-        elif hasattr(uni, 'occupation_vector'):
-            d = DensityMatrix.from_momatrix(uni.momatrix, uni.occupation_vector)
-        elif occvec is not None:
-            if column is None:
-                raise Exception("Must provide column name if providing occvec.")
-            d = DensityMatrix.from_momatrix(uni.momatrix, occvec, column=column)
-        if d is not None:
-            matargs['density'] = _clean_to_string(d['coef'].values, **margs)
-        # Compute tr[P*S] must be equal to number of electrons
-        if matargs['density']:
-            kwargs['check'] = np.trace(np.dot(d.square(), uni.overlap.square()))
+        matargs['overlap'] = _clean_to_string(uni.overlap['coef'].values,
+                                              **margs)
+        # if hasattr(uni, 'density'):
+        #     d = uni.density
+        # else:
+        d = DensityMatrix.from_momatrix(uni.momatrix,
+                                        uni.orbital[orbocc].values,
+                                        mocoefs=mocoefs)
+        matargs['density'] = _clean_to_string(d['coef'].values, **margs)
+        kwargs['check'] = np.trace(np.dot(d.square(), uni.overlap.square()))
+        print('If {:.8f} is not the correct number of electrons,'
+              ' "{}" vector in uni.orbital may not correspond to "{}" matrix'
+              ' in uni.momatrix'.format(kwargs['check'], orbocc, mocoefs))
         return cls(_header.format(**kwargs) + _matrices.format(**matargs))
+        # Still no clean solution for an occupation vector yet
+        # d = None
+        # if hasattr(uni, '_density'):
+        #     d = uni.density
+        # elif hasattr(uni, 'occupation_vector'):
+        #     d = DensityMatrix.from_momatrix(uni.momatrix, uni.occupation_vector)
+        # elif orbocc is not None:
+        #     if mocoefs is None:
+        #         raise Exception("Must provide column name if providing orbocc.")
+        #     d = DensityMatrix.from_momatrix(uni.momatrix, orbocc, column=mocoefs)
+        # if d is not None:
+            # matargs['density'] = _clean_to_string(d['coef'].values, **margs)
+        # Compute tr[P*S] must be equal to number of electrons
+        # if matargs['density']:
+        #     kwargs['check'] = np.trace(np.dot(d.square(), uni.overlap.square()))
+        # return cls(_header.format(**kwargs) + _matrices.format(**matargs))
 
     def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+        super(Input, self).__init__(*args, **kwargs)

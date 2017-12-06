@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# Copyright (c) 2015-2016, Exa Analytics Development Team
+# Copyright (c) 2015-2017, Exa Analytics Development Team
 # Distributed under the terms of the Apache License 2.0
 """
 Gaussian Output Editor
@@ -7,23 +7,25 @@ Gaussian Output Editor
 Editor classes for various types of Gaussian output files
 """
 import re
+import six
 import numpy as np
 import pandas as pd
 from io import StringIO
-
-from exatomic import Length
+from exa import TypedMeta
+from exa.util.units import Length, Energy
 from .editor import Editor
-from exa.relational.isotope import z_to_symbol
-from exatomic import Energy
-from exatomic.frame import compute_frame_from_atom
-from exatomic.basis import BasisSet
-from exatomic.orbital import Orbital
+from exatomic.base import z2sym
+from exatomic.core.frame import compute_frame_from_atom
+
+from exatomic.core.frame import Frame
+from exatomic.core.atom import Atom, Frequency
+from exatomic.core.basis import BasisSet, BasisSetOrder, Overlap
+from exatomic.core.orbital import Orbital, MOMatrix, Excitation
 from exatomic.algorithms.basis import lmap, lorder
-
-z_to_symbol = z_to_symbol()
-
 from numba import jit, int64
-@jit(nopython=True, cache=True)
+
+
+@jit(nopython=True, nogil=True, cache=True)
 def _triangular_indices(ncol, nbas):
     dim = nbas * (nbas + 1) // 2
     idx = np.empty((dim, 3), dtype=np.int64)
@@ -37,7 +39,19 @@ def _triangular_indices(ncol, nbas):
                 cnt += 1
     return idx
 
-class Output(Editor):
+class GauMeta(TypedMeta):
+    atom = Atom
+    basis_set = BasisSet
+    basis_set_order = BasisSetOrder
+    orbital = Orbital
+    momatrix = MOMatrix
+    basis_set_order = BasisSetOrder
+    frame = Frame
+    excitation = Excitation
+    frequency = Frequency
+    overlap = Overlap
+
+class Output(six.with_metaclass(GauMeta, Editor)):
 
     def _parse_triangular_matrix(self, regex, column='coef', values_only=False):
         found = self.find_next(_rebas01, keys_only=True)
@@ -89,11 +103,11 @@ class Output(Editor):
         # Zero-based indexing
         atom['set'] -= 1
         # Convert to atomic units
-        atom['x'] *= Length['A', 'au']
-        atom['y'] *= Length['A', 'au']
-        atom['z'] *= Length['A', 'au']
+        atom['x'] *= Length['Angstrom', 'au']
+        atom['y'] *= Length['Angstrom', 'au']
+        atom['z'] *= Length['Angstrom', 'au']
         # Map atomic symbols onto Z numbers
-        atom['symbol'] = atom['Z'].map(z_to_symbol)
+        atom['symbol'] = atom['Z'].map(z2sym)
         self.atom = atom
 
     def parse_basis_set(self):
@@ -137,6 +151,8 @@ class Output(Editor):
         # Deduplicate basis sets and expand 'SP' shells if present
         df, setmap = _dedup(df, sp=sp)
         spherical = '5D' in self[found[_rebas03][0]]
+        if df['L'].max() < 2:
+            spherical = True
         self.basis_set = BasisSet(df, spherical=spherical)
         self.atom['set'] = self.atom['set'].map(setmap)
 
@@ -346,7 +362,7 @@ class Output(Editor):
             stacked = pd.DataFrame.from_dict({'Z': zs, 'label': labels,
                                     'dx': dx, 'dy': dy, 'dz': dz,
                                     'frequency': freqs, 'freqdx': freqdxs})
-            stacked['symbol'] = stacked['Z'].map(z_to_symbol)
+            stacked['symbol'] = stacked['Z'].map(z2sym)
             dfs.append(stacked)
         # Now put all our frequencies together
         frequency = pd.concat(dfs).reset_index(drop=True)
@@ -354,9 +370,9 @@ class Output(Editor):
         # TODO: verify with an external program that vibrational
         #       modes look the same as the ones generated with
         #       this methodology.
-        frequency['dx'] *= Length['A', 'au']
-        frequency['dy'] *= Length['A', 'au']
-        frequency['dz'] *= Length['A', 'au']
+        frequency['dx'] *= Length['Angstrom', 'au']
+        frequency['dy'] *= Length['Angstrom', 'au']
+        frequency['dz'] *= Length['Angstrom', 'au']
         # Frame not really implemented here either
         frequency['frame'] = 0
         self.frequency = frequency
@@ -375,7 +391,7 @@ class Output(Editor):
 
 
     def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+        super(Output, self).__init__(*args, **kwargs)
 
 
 
@@ -451,7 +467,7 @@ _reexcst = 'Excited State'
 _reovl01 = '*** Overlap ***'
 _reixn = 'IX=    {}'
 
-class Fchk(Editor):
+class Fchk(six.with_metaclass(GauMeta, Editor)):
 
     def _intme(self, fitem, idx=0):
         """Helper gets an integer of interest."""
@@ -473,7 +489,7 @@ class Fchk(Editor):
         # Atom identifiers
         znums = self._dfme(found[_reznum], nat)
         # Atomic symbols
-        symbols = list(map(lambda x: z_to_symbol[x], znums))
+        symbols = list(map(lambda x: z2sym[x], znums))
         # Z effective if ECPs are used
         zeffs = self._dfme(found[_rezeff], nat).astype(np.int64)
         # Atomic positions
@@ -588,7 +604,7 @@ class Fchk(Editor):
         ae = self._intme(found[_reorboc], idx=0)
         be = self._intme(found[_reorboc], idx=1)
         nbas = self._intme(found[_reorben])
-        ens = np.concatenate([self._dfme(start, nbas, idx=i)
+        ens = np.concatenate([self._dfme(found[_reorben], nbas, idx=i)
                               for i, start in enumerate(found[_reorben])])
         os = nbas != len(ens)
         self.orbital = Orbital.from_energies(ens, ae, be, os=os)

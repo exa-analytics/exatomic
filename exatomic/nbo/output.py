@@ -1,25 +1,23 @@
 # -*- coding: utf-8 -*-
-# Copyright (c) 2015-2016, Exa Analytics Development Team
+# Copyright (c) 2015-2017, Exa Analytics Development Team
 # Distributed under the terms of the Apache License 2.0
-'''
+"""
 exnbo Output Editor
 ####################################
-'''
+"""
 import re
 import numpy as np
 import pandas as pd
 from io import StringIO
-
-from exa.relational.isotope import symbol_to_z, z_to_symbol
-
 from .editor import Editor
-from exatomic import Length
-from exatomic.orbital import Orbital
+from exa.util.units import Length
+from exatomic.core.orbital import Orbital
+
 
 csv_args = {'delim_whitespace': True}
 
-class Output(Editor):
 
+class Output(Editor):
     _to_universe = Editor.to_universe
 
     def to_universe(self):
@@ -56,13 +54,15 @@ class Output(Editor):
         pass
 
     def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+        super(Output, self).__init__(*args, **kwargs)
+
 
 # Regex for NBO output file
 _re_nao_start = 'NAO Atom No lang   Type(AO)    Occupancy'
 _re_nao_stop01 = ' Summary of Natural Population Analysis'
 _re_nao_stop02 = 'low occupancy.*core orbitals found on'
 _re_nao_stop03 = 'electrons found in the effective core potential'
+
 
 class MOMatrix(Editor):
     """
@@ -120,4 +120,4 @@ class MOMatrix(Editor):
             self.occupation_vector[column + '1'] = betaocc
 
     def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+        super(MOMatrix, self).__init__(*args, **kwargs)

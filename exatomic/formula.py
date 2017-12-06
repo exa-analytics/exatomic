@@ -7,8 +7,8 @@ Simple Formula
 """
 import numpy as np
 import pandas as pd
-from exatomic import Isotope
-from exatomic.error import StringFormulaError
+from .core.error import StringFormulaError
+from exatomic.base import isotopes, sym2mass
 
 
 class SimpleFormula(pd.Series):
@@ -28,7 +28,7 @@ class SimpleFormula(pd.Series):
             mass (float): Mass (in atomic units) of the associated formula
         """
         df = self.to_frame()
-        df['mass'] = df.index.map(Isotope.symbol_to_mass())
+        df['mass'] = df.index.map(sym2mass)
         return (df['mass'] * df['count']).sum()
 
     def as_string(self):

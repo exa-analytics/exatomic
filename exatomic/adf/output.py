@@ -1,26 +1,26 @@
 # -*- coding: utf-8 -*-
-# Copyright (c) 2015-2016, Exa Analytics Development Team
+# Copyright (c) 2015-2017, Exa Analytics Development Team
 # Distributed under the terms of the Apache License 2.0
-'''
-Output Parser
-#####################
-Multiple frames are not currently supported
-'''
+"""
+ADF Composite Output
+#########################
+This module provides the primary (user facing) output parser.
+"""
 import re
 import numpy as np
 import pandas as pd
 from io import StringIO
-
-from exa.relational.isotope import symbol_to_z
+from exatomic.base import sym2z
 from exatomic.algorithms.basis import lmap, enum_cartesian
-from exatomic.basis import BasisSet
-from exatomic import Length
+from exatomic.core.basis import BasisSet
+from exa.util.units import Length
 from .editor import Editor
 
-symbol_to_z = symbol_to_z()
 
 class Output(Editor):
-
+    """
+    The ADF output parser.
+    """
 
     def parse_atom(self):
         # TODO : only supports single frame, gets last atomic positions
@@ -29,8 +29,8 @@ class Output(Editor):
         atom = self.pandas_dataframe(start, stop, 7)
         atom.drop([0, 2, 3], axis=1, inplace=True)
         atom.columns = ['symbol', 'x', 'y', 'z']
-        for c in ['x', 'y', 'z']: atom[c] *= Length['A', 'au']
-        atom['Z'] = atom['symbol'].map(symbol_to_z)
+        for c in ['x', 'y', 'z']: atom[c] *= Length['Angstrom', 'au']
+        atom['Z'] = atom['symbol'].map(sym2z)
         atom['frame'] = 0
         self.atom = atom
 

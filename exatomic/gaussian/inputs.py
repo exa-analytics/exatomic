@@ -1,16 +1,16 @@
 # -*- coding: utf-8 -*-
-# Copyright (c) 2015-2016, Exa Analytics Development Team
+# Copyright (c) 2015-2017, Exa Analytics Development Team
 # Distributed under the terms of the Apache License 2.0
 """
 Gaussian Input Generator
 ###########################
 Editor class and helper function for writing input files.
 """
-
 import os
 import numpy as np
 from .editor import Editor
 from exatomic import __version__
+
 
 _template = """\
 {link0}
@@ -25,8 +25,8 @@ _template = """\
 
 """
 
-class Input(Editor):
 
+class Input(Editor):
     @classmethod
     def from_universe(cls, uni, link0='', route='#P HF/6-31G(d)', title='', name='',
                       charge=0, mult=1, basis='', ecp='', options='', writedir=None):
