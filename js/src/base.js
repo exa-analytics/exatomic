@@ -198,7 +198,6 @@ var ExatomicSceneView = widgets.DOMWidgetView.extend({
             );
             this.app3d.meshes['field'][0].name = this.model.get('field');
         };
-        console.log(this.app3d.meshes);
         this.app3d.add_meshes('field');
     },
 

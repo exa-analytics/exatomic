@@ -604,7 +604,7 @@ class Fchk(six.with_metaclass(GauMeta, Editor)):
         ae = self._intme(found[_reorboc], idx=0)
         be = self._intme(found[_reorboc], idx=1)
         nbas = self._intme(found[_reorben])
-        ens = np.concatenate([self._dfme(start, nbas, idx=i)
+        ens = np.concatenate([self._dfme(found[_reorben], nbas, idx=i)
                               for i, start in enumerate(found[_reorben])])
         os = nbas != len(ens)
         self.orbital = Orbital.from_energies(ens, ae, be, os=os)
