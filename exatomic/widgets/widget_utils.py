@@ -20,6 +20,7 @@ _hboxlo = Layout(flex='1 1 auto', width='auto', height='auto')
 _vboxlo = Layout(flex='1 1 auto', width='auto', height='auto')
 # The box to end all boxes
 _bboxlo = Layout(flex='1 1 auto', width='auto', height='auto')
+# Box layouts above are separate so it is easier to restyle
 
 
 class _ListDict(OrderedDict):
