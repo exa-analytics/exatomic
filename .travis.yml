@@ -1,22 +1,20 @@
+language: python
 matrix:
     include:
         - os: linux
-          language: python
           python: 2.7
           env: PYTHONVER=2.7
 
         - os: linux
-          language: python
           python: 3.5
           env: PYTHONVER=3.5
 
         - os: linux
-          language: python
           python: 3.6
           env: PYTHONVER=3.6
 
         - os: osx
-          language: generic
+          python: 3.6
           env: PYTHONVER=3.6
 
 # There are a lot of requirements here because we do coverage, testing, reporting, doc building
@@ -35,7 +33,7 @@ install:
     - conda create -n test python=$PYTHONVER
     - source activate test
     - conda install -q -c conda-forge six numpy pandas pytables numba sympy python-symengine
-    - conda install -q -c conda-forge sphinx sphinx_rtd_theme ply 
+    - conda install -q -c conda-forge sphinx sphinx_rtd_theme ply
     - conda install -c conda-forge pandoc pypandoc nbsphinx ipython
     - conda install -q -c conda-forge python-coveralls coverage pytest pytest-cov
 
@@ -54,19 +52,22 @@ script:
     - mkdir -p ~/.matplotlib
 #   - echo "backend\: TkAgg" > ~/.matplotlib/matplotlibrc
 #   - find . | grep -E "(__pycache__|\.pyc|\.pyo$)" | xargs rm -rf
-#   - if [[ $TRAVIS_OS_NAME == "linux" ]]; then
-#         pytest --cov;
-#         coverage xml;
-#     else
-#         pytest;
-#     fi
-    - if [[ $TRAVIS_OS_NAME == "linux" ]] && [[ $PYTHONVER == 3.6 ]]; then
-          travis-sphinx build;
+    - |
+      if [[ $TRAVIS_OS_NAME == "linux" ]]; then
+          pytest --cov;
+          coverage xml;
+      else
+          pytest;
+      fi
+    - |
+      if [[ $TRAVIS_OS_NAME == "linux" ]] && [[ $PYTHONVER == 3.6 ]]; then
+           travis-sphinx build;
       fi
 
 after_success:
-    - if [[ $TRAVIS_OS_NAME == "linux" ]] && [[ $PYTHONVER == 3.6 ]]; then
+    - |
+      if [[ $TRAVIS_OS_NAME == "linux" ]] && [[ $PYTHONVER == 3.6 ]]; then
           travis-sphinx deploy;
-#         coveralls;
-#         python-codacy-coverage -r coverage.xml;
+          coveralls;
+          python-codacy-coverage -r coverage.xml;
       fi
