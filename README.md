@@ -4,7 +4,6 @@
 ![](http://i.imgur.com/a/dMTL0.gif)
 
 
-
 # Installation
 [![conda Badge](https://anaconda.org/exaanalytics/exatomic/badges/installer/conda.svg)](https://conda.anaconda.org/exaanalytics)
 [![pypi badge](https://badge.fury.io/py/exatomic.svg)](https://badge.fury.io/py/exatomic)
