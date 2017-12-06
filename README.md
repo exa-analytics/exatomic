@@ -1,6 +1,9 @@
 [![exatomic logo](docs/source/static/logo.png)](https://exa-analytics.github.io)
 *A unified platform for computational chemists*
 
+![](http://i.imgur.com/a/dMTL0.gif)
+
+
 
 # Installation
 [![conda Badge](https://anaconda.org/exaanalytics/exatomic/badges/installer/conda.svg)](https://conda.anaconda.org/exaanalytics)
