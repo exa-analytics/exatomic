@@ -14,7 +14,6 @@ matrix:
           env: PYTHONVER=3.6
 
         - os: osx
-          python: 3.6
           env: PYTHONVER=3.6
 
 # There are a lot of requirements here because we do coverage, testing, reporting, doc building
