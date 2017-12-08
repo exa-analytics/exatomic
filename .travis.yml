@@ -45,7 +45,7 @@ install:
     - git checkout 0.3.9
     - pip install .
     - cd ../
-    - rm -r exa
+    - rm -rf exa
 
     - conda install -q -c conda-forge numexpr nodejs ipywidgets
     - pip install .
