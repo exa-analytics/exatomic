@@ -12,7 +12,7 @@ quantum mechanics calculations. Included in this package are sub-packages
 dedicated to parsing data from software programs used in the field. A quick 
 method to get started with visualization is through the `Jupyter notebook`_.
 
-.. flashy example (todo)
+.. image:: static/demo.gif
 
 .. toctree::
     :maxdepth: 1
