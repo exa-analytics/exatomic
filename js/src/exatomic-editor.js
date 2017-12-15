@@ -18,7 +18,7 @@ var __assign = (this && this.__assign) || Object.assign || function(t) {
     return t;
 };
 exports.__esModule = true;
-var base = require("./jupyter-exatomic-base.js");
+var base = require("./exatomic-base.js");
 var three = require("three");
 var EditorSceneModel = /** @class */ (function (_super) {
     __extends(EditorSceneModel, _super);

@@ -6,7 +6,7 @@ jupyter-exatomic-editor
 */
 declare function require(name: string);
 
-var base  = require("./jupyter-exatomic-base.js"); 
+var base = require("./exatomic-base.js"); 
 var three = require("three");
 
 

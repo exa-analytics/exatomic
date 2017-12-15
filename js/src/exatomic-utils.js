@@ -2,7 +2,7 @@
 // Distributed under the terms of the Apache License 2.0
 /*"""
 ================
-jupyter-exatomic-util.js
+exatomic-util.js
 ================
 Helper JS functions.
 */

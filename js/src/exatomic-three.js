@@ -8,7 +8,7 @@
 "use strict";
 var THREE = require("three");
 var TBC = require("three-trackballcontrols");
-var utils = require("./jupyter-exatomic-utils.js");
+var utils = require("./exatomic-utils.js");
 
 
 class App3D {

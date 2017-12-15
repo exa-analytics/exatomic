@@ -2,7 +2,7 @@
 // Distributed under the terms of the Apache License 2.0
 /*"""
 =================
-jupyter-exatomic.js
+exatomic-widgets.js
 =================
 JavaScript "frontend" complement of exatomic's Container for use within
 the Jupyter notebook interface. This "module" standardizes bidirectional
@@ -10,8 +10,8 @@ communication logic for all container widget views.
 */
 
 "use strict";
-var base = require("./jupyter-exatomic-base.js");
-var utils = require("./jupyter-exatomic-utils.js");
+var base = require("./exatomic-base.js");
+var utils = require("./exatomic-utils.js");
 
 
 var UniverseSceneModel = base.ExatomicSceneModel.extend({
