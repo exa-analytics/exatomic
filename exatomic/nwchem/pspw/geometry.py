@@ -13,4 +13,4 @@ from exatomic.nwchem.core.geometry import Geometry as _Geometry
 
 class Geometry(_Geometry):
     """Parser for plane wave geometry sections."""
-    _end = re.compile("^\s*Lattice Parameters")
+    pass

@@ -16,7 +16,7 @@ from exatomic.core.atom import Atom
 class Geometry(Parser):
     """Parser for the 'Geometry' section of NWChem output files."""
     _start = re.compile("^\s*Geometry \".*\" -> \".*\"")
-    _end = re.compile("^\s*Atomic Mass")
+    _end = re.compile("^\s*(Lattice Parameters|Atomic Mass)")
     _int0 = 7
     _int1 = -2
     _int2 = 3
