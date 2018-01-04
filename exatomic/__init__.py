@@ -40,8 +40,8 @@ def _jupyter_nbextension_paths():
     return [{
         'section': "notebook",
         'src': "static/nbextension",
-        'dest': "jupyter-exatomic",
-        'require': "jupyter-exatomic/extension"
+        'dest': "exatomic",
+        'require': "exatomic/extension"
     }]
 
 

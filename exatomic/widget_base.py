@@ -28,8 +28,8 @@ from .widget_utils import (_glo, _flo, _wlo, _hboxlo, _vboxlo, _bboxlo,
 class ExatomicScene(DOMWidget):
     _model_module_version = Unicode(__js_version__).tag(sync=True)
     _model_module_version = Unicode(__js_version__).tag(sync=True)
-    _view_module = Unicode("jupyter-exatomic").tag(sync=True)
-    _model_module = Unicode("jupyter-exatomic").tag(sync=True)
+    _view_module = Unicode("exatomic").tag(sync=True)
+    _model_module = Unicode("exatomic").tag(sync=True)
     _model_name = Unicode("ExatomicSceneModel").tag(sync=True)
     _view_name = Unicode("ExatomicSceneView").tag(sync=True)
     # Base controls and GUI
@@ -175,8 +175,8 @@ class ExatomicBox(Box):
 
     _model_module_version = Unicode(__js_version__).tag(sync=True)
     _model_module_version = Unicode(__js_version__).tag(sync=True)
-    _model_module = Unicode("jupyter-exatomic").tag(sync=True)
-    _view_module = Unicode("jupyter-exatomic").tag(sync=True)
+    _model_module = Unicode("exatomic").tag(sync=True)
+    _view_module = Unicode("exatomic").tag(sync=True)
     _model_name = Unicode("ExatomicBoxModel").tag(sync=True)
     _view_name = Unicode("ExatomicBoxView").tag(sync=True)
     active_scene_indices = List().tag(sync=True)

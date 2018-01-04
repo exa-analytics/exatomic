@@ -21,10 +21,10 @@ class DOMWidgetModel extends ipywidgets.DOMWidgetModel {
     get defaults() {
         return _.extend({}, ipywidgets.DOMWidgetModel.prototype.defaults, {
             _view_name: "DOMWidgetView",
-            _view_module: "jupyter-exa",
+            _view_module: "exa",
             _view_module_version: "^0.4.0",
             _model_name: "DOMWidgetModel",
-            _model_module: "jupyter-exa",
+            _model_module: "exa",
             _model_module_version: "^0.4.0"
         });
     }
