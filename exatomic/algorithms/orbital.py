@@ -20,7 +20,10 @@ from .orbital_util import (
     _determine_fps, _determine_vector, _determine_bfns,
     _compute_current_density, _compute_orb_ang_mom,
     _compute_orbitals, _compute_density,
-    _make_field, _evaluate_symbolic,)
+    _make_field, _evaluate_symbolic,
+    # _compute_current_density_nojit,
+    _compute_current_density_jit,
+    _compute_current_density_numexpr)
 
 
 #####################################################################
@@ -88,8 +91,52 @@ def momatrix_as_square(movec):
     return square
 
 
-def add_orb_ang_mom(uni, field_params=None, rcoefs=None, icoefs=None,
-                    frame=None, colocc=None, maxes=None, inplace=True):
+# def add_orb_ang_mom_display(uni, field_params=None, rcoefs=None, icoefs=None,
+#                             frame=None, orbocc=None, maxes=None, inplace=True,
+#                             norm='Nd'):
+#     """Compute the orbital angular momentum and add it to a universe."""
+#     t0 = datetime.now()
+#     frame = uni.atom.nframes - 1 if frame is None else frame
+#     if (rcoefs not in uni.momatrix.columns) or \
+#        (icoefs not in uni.momatrix.columns):
+#         print("Either rcoefs {} or icoefs {} are " \
+#               "not in uni.momatrix".format(rcoefs, icoefs))
+#         return
+#     orbocc = rcoefs if orbocc is None else orbocc
+#     if orbocc not in uni.orbital.columns:
+#         print("orbocc {} is not in uni.orbital".format(orbocc))
+#         return
+#     if maxes is None:
+#         print("If magnetic axes are not an identity matrix, specify maxes.")
+#         maxes = np.eye(3)
+#
+#     _determine_bfns(uni, frame, norm)
+#     fps = _determine_fps(uni, field_params, 4)
+#     x, y, z = numerical_grid_from_field_params(fps)
+#     occvec = uni.orbital[orbocc].values
+#
+#     bfns = uni.basis_functions[frame]
+#     grx, gry, grz = gen_gradients(bfns)
+#     t1 = datetime.now()
+#     bvs = _evaluate_symbolic(bfns, x, y, z)
+#     grx = _evaluate_symbolic(grx, x, y, z)
+#     gry = _evaluate_symbolic(gry, x, y, z)
+#     grz = _evaluate_symbolic(grz, x, y, z)
+#     t2 = datetime.now()
+#     print('Timing: grid evaluation     - {:.2f}s'.format((t2-t1).total_seconds()))
+#     cmatr = uni.momatrix.square(column=rcoefs).values
+#     cmati = uni.momatrix.square(column=icoefs).values
+#     curx, cury, curz = _compute_current_density_nojit(bvs, grx, gry, grz, cmatr, cmati, occvec)
+#     t3 = datetime.now()
+#     print('Timing: current density 1D  - {:.2f}s'.format((t3-t2).total_seconds()))
+#     ang_mom = _compute_orb_ang_mom(x, y, z, curx, cury, curz, maxes)
+#     if not inplace: return _make_field(ang_mom, fps)
+#     uni.add_field(_make_field(ang_mom, fps))
+
+
+def add_orb_ang_mom_jit(uni, field_params=None, rcoefs=None, icoefs=None,
+                            frame=None, orbocc=None, maxes=None, inplace=True,
+                            norm='Nd'):
     """Compute the orbital angular momentum and add it to a universe."""
     t0 = datetime.now()
     frame = uni.atom.nframes - 1 if frame is None else frame
@@ -98,32 +145,117 @@ def add_orb_ang_mom(uni, field_params=None, rcoefs=None, icoefs=None,
         print("Either rcoefs {} or icoefs {} are " \
               "not in uni.momatrix".format(rcoefs, icoefs))
         return
-    colocc = rcoefs if colocc is None else colocc
-    if colocc not in uni.orbital.columns:
-        print("colocc {} is not in uni.orbital".format(colocc))
+    orbocc = rcoefs if orbocc is None else orbocc
+    if orbocc not in uni.orbital.columns:
+        print("orbocc {} is not in uni.orbital".format(orbocc))
         return
     if maxes is None:
         print("If magnetic axes are not an identity matrix, specify maxes.")
         maxes = np.eye(3)
 
-    _determine_bfns(uni, frame)
-    fps = _determine_fps(uni, field_params, 1)
+    _determine_bfns(uni, frame, norm)
+    fps = _determine_fps(uni, field_params, 4)
     x, y, z = numerical_grid_from_field_params(fps)
-    occvec = uni.orbital[colocc].values
+    occvec = uni.orbital[orbocc].values
 
     bfns = uni.basis_functions[frame]
     grx, gry, grz = gen_gradients(bfns)
     t1 = datetime.now()
-    print('Timing: symbolic evaluation - {:.2f}s'.format((t1-t0).total_seconds()))
     bvs = _evaluate_symbolic(bfns, x, y, z)
     grx = _evaluate_symbolic(grx, x, y, z)
     gry = _evaluate_symbolic(gry, x, y, z)
     grz = _evaluate_symbolic(grz, x, y, z)
     t2 = datetime.now()
-    print('Timing: numeric evaluation  - {:.2f}s'.format((t2-t1).total_seconds()))
+    print('Timing: grid evaluation     - {:.2f}s'.format((t2-t1).total_seconds()))
     cmatr = uni.momatrix.square(column=rcoefs).values
     cmati = uni.momatrix.square(column=icoefs).values
+    curx, cury, curz = _compute_current_density_jit(bvs, grx, gry, grz, cmatr, cmati, occvec)
+    t3 = datetime.now()
+    print('Timing: current density 1D  - {:.2f}s'.format((t3-t2).total_seconds()))
+    ang_mom = _compute_orb_ang_mom(x, y, z, curx, cury, curz, maxes)
+    if not inplace: return _make_field(ang_mom, fps)
+    uni.add_field(_make_field(ang_mom, fps))
 
+
+def add_orb_ang_mom_numexpr(uni, field_params=None, rcoefs=None, icoefs=None,
+                            frame=None, orbocc=None, maxes=None, inplace=True,
+                            norm='Nd'):
+    """Compute the orbital angular momentum and add it to a universe."""
+    t0 = datetime.now()
+    frame = uni.atom.nframes - 1 if frame is None else frame
+    if (rcoefs not in uni.momatrix.columns) or \
+       (icoefs not in uni.momatrix.columns):
+        print("Either rcoefs {} or icoefs {} are " \
+              "not in uni.momatrix".format(rcoefs, icoefs))
+        return
+    orbocc = rcoefs if orbocc is None else orbocc
+    if orbocc not in uni.orbital.columns:
+        print("orbocc {} is not in uni.orbital".format(orbocc))
+        return
+    if maxes is None:
+        print("If magnetic axes are not an identity matrix, specify maxes.")
+        maxes = np.eye(3)
+
+    _determine_bfns(uni, frame, norm)
+    fps = _determine_fps(uni, field_params, 4)
+    x, y, z = numerical_grid_from_field_params(fps)
+    occvec = uni.orbital[orbocc].values
+
+    bfns = uni.basis_functions[frame]
+    grx, gry, grz = gen_gradients(bfns)
+    t1 = datetime.now()
+    bvs = _evaluate_symbolic(bfns, x, y, z)
+    grx = _evaluate_symbolic(grx, x, y, z)
+    gry = _evaluate_symbolic(gry, x, y, z)
+    grz = _evaluate_symbolic(grz, x, y, z)
+    t2 = datetime.now()
+    print('Timing: grid evaluation     - {:.2f}s'.format((t2-t1).total_seconds()))
+    cmatr = uni.momatrix.square(column=rcoefs).values
+    cmati = uni.momatrix.square(column=icoefs).values
+    curx, cury, curz = _compute_current_density_numexpr(bvs, grx, gry, grz, cmatr, cmati, occvec)
+    t3 = datetime.now()
+    print('Timing: current density 1D  - {:.2f}s'.format((t3-t2).total_seconds()))
+    ang_mom = _compute_orb_ang_mom(x, y, z, curx, cury, curz, maxes)
+    if not inplace: return _make_field(ang_mom, fps)
+    uni.add_field(_make_field(ang_mom, fps))
+
+
+
+def add_orb_ang_mom(uni, field_params=None, rcoefs=None, icoefs=None,
+                    frame=None, orbocc=None, maxes=None, inplace=True,
+                    norm='Nd'):
+    """Compute the orbital angular momentum and add it to a universe."""
+    t0 = datetime.now()
+    frame = uni.atom.nframes - 1 if frame is None else frame
+    if (rcoefs not in uni.momatrix.columns) or \
+       (icoefs not in uni.momatrix.columns):
+        print("Either rcoefs {} or icoefs {} are " \
+              "not in uni.momatrix".format(rcoefs, icoefs))
+        return
+    orbocc = rcoefs if orbocc is None else orbocc
+    if orbocc not in uni.orbital.columns:
+        print("orbocc {} is not in uni.orbital".format(orbocc))
+        return
+    if maxes is None:
+        print("If magnetic axes are not an identity matrix, specify maxes.")
+        maxes = np.eye(3)
+
+    _determine_bfns(uni, frame, norm)
+    fps = _determine_fps(uni, field_params, 4)
+    x, y, z = numerical_grid_from_field_params(fps)
+    occvec = uni.orbital[orbocc].values
+
+    bfns = uni.basis_functions[frame]
+    grx, gry, grz = gen_gradients(bfns)
+    t1 = datetime.now()
+    bvs = _evaluate_symbolic(bfns, x, y, z)
+    grx = _evaluate_symbolic(grx, x, y, z)
+    gry = _evaluate_symbolic(gry, x, y, z)
+    grz = _evaluate_symbolic(grz, x, y, z)
+    t2 = datetime.now()
+    print('Timing: grid evaluation     - {:.2f}s'.format((t2-t1).total_seconds()))
+    cmatr = uni.momatrix.square(column=rcoefs).values
+    cmati = uni.momatrix.square(column=icoefs).values
     curx, cury, curz = _compute_current_density(bvs, grx, gry, grz, cmatr, cmati, occvec)
     t3 = datetime.now()
     print('Timing: current density 1D  - {:.2f}s'.format((t3-t2).total_seconds()))
@@ -132,69 +264,25 @@ def add_orb_ang_mom(uni, field_params=None, rcoefs=None, icoefs=None,
     uni.add_field(_make_field(ang_mom, fps))
 
 
-# def add_orb_ang_mom(uni, field_params=None, rcoefs=None, icoefs=None,
-#                     frame=None, colocc=None, maxes=None, inplace=True,
-#                     new=False):
-#     """Compute the orbital angular momentum and add it to a universe."""
-#     t1 = datetime.now()
-#     frame = uni.atom.nframes - 1 if frame is None else frame
-#     if (rcoefs not in uni.momatrix.columns) or \
-#        (icoefs not in uni.momatrix.columns):
-#         print("Either rcoefs {} or icoefs {} are " \
-#               "not in uni.momatrix".format(rcoefs, icoefs))
-#         return
-#     colocc = rcoefs if colocc is None else colocc
-#     if colocc not in uni.orbital.columns:
-#         print("colocc {} is not in uni.orbital".format(colocc))
-#         return
-#     if maxes is None:
-#         print("If magnetic axes are not an identity matrix, specify maxes.")
-#         maxes = np.eye(3)
-#     _determine_bfns(uni, frame)
-#     fps = _determine_fps(uni, field_params, 1)
-#     cmatc = uni.momatrix.square(column=rcoefs).values + \
-#             uni.momatrix.square(column=icoefs).values * 1j
-#     occvec = uni.orbital[colocc].values
-#     bfns = uni.basis_functions[frame]
-#     x, y, z = numerical_grid_from_field_params(fps)
-#     bvs = _evaluate_basis(bfns, fps, x=x, y=y, z=z)
-#     grx, gry, grz = _evaluate_gradients(bfns, fps, x=x, y=y, z=z)
-#     t2 = datetime.now()
-#     print('Timing: evaluate gradients  - {:.2f}s'.format((t2-t1).total_seconds()))
-#     jx, jy, jz, cvals = _compute_current_density(bvs, grx, gry, grz, cmatc, occvec)
-#     t3 = datetime.now()
-#     print('Timing: compute current density  - {:.2f}s'.format((t3-t2).total_seconds()))
-#     if new:
-#         ang_mom = _new_compute_orb_ang_mom(x, y, z, jx, jy, jz, maxes)
-#     else:
-#         ang_mom = _compute_orb_ang_mom(x, y, z, jx, jy, jz, maxes)
-#     t4 = datetime.now()
-#     print('Timing: compute orb ang mom  - {:.2f}s'.format((t4-t3).total_seconds()))
-#     # t2 = datetime.now()
-#     # print('Timing: compute ang_mom  - {:.2f}s'.format((t2-t1).total_seconds()))
-#     if not inplace: return _make_field(ang_mom, fps)
-#     uni.add_field(_make_field(ang_mom, fps))
-#
 
-
-def add_density(uni, field_params=None, mocoefs=None, colocc=None,
-                inplace=True, frame=None):
+def add_density(uni, field_params=None, mocoefs=None, orbocc=None,
+                inplace=True, frame=None, norm='Nd'):
     """Compute a density and add it to a universe."""
     t1 = datetime.now()
     frame = uni.atom.nframes - 1 if frame is None else frame
     if mocoefs is None:
         mocoefs = 'coef'
-        if colocc is None:
-            colocc = 'occupation'
+        if orbocc is None:
+            orbocc = 'occupation'
     else:
-        if colocc is None:
-            colocc = mocoefs
+        if orbocc is None:
+            orbocc = mocoefs
     if (mocoefs not in uni.momatrix.columns) or \
-       (colocc not in uni.orbital.columns):
+       (orbocc not in uni.orbital.columns):
         print('Either mocoefs {} is not in uni.momatrix or'.format(mocoefs))
-        print('colocc {} is not in uni.orbital'.format(colocc))
+        print('orbocc {} is not in uni.orbital'.format(orbocc))
         return
-    _determine_bfns(uni, frame)
+    _determine_bfns(uni, frame, norm)
     orbs = uni.momatrix.groupby('orbital')
     vector = np.array(range(uni.momatrix.orbital.max() + 1))
     fps = _determine_fps(uni, field_params, len(vector))
@@ -204,49 +292,18 @@ def add_density(uni, field_params=None, mocoefs=None, colocc=None,
     cmat = uni.momatrix.square(column=mocoefs).values
     oflds = _compute_orbitals(bflds, vector, cmat)
     # oflds = _compute_orbitals(bflds, vector, orbs, mocoefs)
-    dens = _compute_density(oflds, uni.orbital[colocc].values)
+    dens = _compute_density(oflds, uni.orbital[orbocc].values)
     t2 = datetime.now()
-    print('Timing: compute density  - {:.2f}s'.format((t2-t1).total_seconds()))
+    print('Timing: compute density     - {:.2f}s'.format((t2-t1).total_seconds()))
 
     if not inplace: return _make_field(dens, fps.loc[0])
     uni.add_field(_make_field(dens, fps.loc[0]))
 
 
-# def add_density(uni, field_params=None, mocoefs=None, colocc=None,
-#                 inplace=True, frame=None):
-#     """Compute a density and add it to a universe."""
-#     t1 = datetime.now()
-#     frame = uni.atom.nframes - 1 if frame is None else frame
-#     if mocoefs is None:
-#         mocoefs = 'coef'
-#         if colocc is None:
-#             colocc = 'occupation'
-#     else:
-#         if colocc is None:
-#             colocc = mocoefs
-#     if (mocoefs not in uni.momatrix.columns) or \
-#        (colocc not in uni.orbital.columns):
-#         print('Either mocoefs {} is not in uni.momatrix or'.format(mocoefs))
-#         print('colocc {} is not in uni.orbital'.format(colocc))
-#         return
-#     _determine_bfns(uni, frame)
-#     orbs = uni.momatrix.groupby('orbital')
-#     vector = range(uni.momatrix.orbital.max() + 1)
-#     fps = _determine_fps(uni, field_params, len(vector))
-#
-#     bflds = _evaluate_basis(uni.basis_functions[frame], fps)
-#     oflds = _compute_orbitals(bflds, vector, orbs, mocoefs)
-#     dens = _compute_density(oflds, uni.orbital[colocc].values)
-#     t2 = datetime.now()
-#     print('Timing: compute density  - {:.2f}s'.format((t2-t1).total_seconds()))
-#
-#     if not inplace: return _make_field(dens, fps.loc[0])
-#     uni.add_field(_make_field(dens, fps.loc[0]))
-
 
 def add_molecular_orbitals(uni, field_params=None, mocoefs=None,
                            vector=None, frame=None, inplace=True,
-                           replace=True):
+                           replace=True, norm='Nd'):
     """
     If a universe contains enough information to generate
     molecular orbitals (basis_set, basis_set_order and momatrix),
@@ -279,7 +336,7 @@ def add_molecular_orbitals(uni, field_params=None, mocoefs=None,
 
     print('Evaluating {} basis functions once.'.format(
         len(uni.basis_set_order.index)))
-    _determine_bfns(uni, frame)
+    _determine_bfns(uni, frame, norm)
 
     x, y, z = numerical_grid_from_field_params(fps)
     orbs = uni.momatrix.groupby('orbital')
@@ -291,7 +348,7 @@ def add_molecular_orbitals(uni, field_params=None, mocoefs=None,
     field = _make_field(oflds, fps)
 
     t2 = datetime.now()
-    print('Timing: compute orbitals - {:.2f}s'.format((t2-t1).total_seconds()))
+    print('Timing: compute orbitals    - {:.2f}s'.format((t2-t1).total_seconds()))
 
     if not inplace: return field
     if replace:

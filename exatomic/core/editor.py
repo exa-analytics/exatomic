@@ -36,7 +36,7 @@ class Editor(six.with_metaclass(TypedMeta, _Editor)):
         self.frame = compute_frame_from_atom(self.atom)
 
 
-    def to_universe(self, name=None, description=None, meta=None, verbose=True):
+    def to_universe(self, name=None, description=None, meta=None, ignore=False):
         """
         Convert the editor to a :class:`~exatomic.container.Universe` object.
         """
@@ -56,7 +56,7 @@ class Editor(six.with_metaclass(TypedMeta, _Editor)):
             try:
                 result = getattr(self, attr)
             except Exception as e:
-                if verbose:
+                if not ignore:
                     if not str(e).startswith('Please compute'):
                         print('parse_{} failed with: {}'.format(attr, e))
             if result is not None:

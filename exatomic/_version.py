@@ -8,7 +8,8 @@ The version can be checked using the following command:
 
 .. code-block:: Python
 
-    exatomic.__verion__
+    exa.version_info
+    exa.__verion__
 """
-version_info = (0, 4, 0)
+version_info = (0, 3, 9)
 __version__ = ".".join(map(str, version_info))

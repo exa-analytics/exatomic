@@ -10,9 +10,8 @@ from setuptools.command.egg_info import egg_info
 
 
 name = "exatomic"
-description = "A unified platform for theoretical and computational chemists"
+description = "A unified platform for theoretical and computational chemists."
 staticdir = "static"
-nbdir = staticdir + "/nbextension"
 jsdir = "js"
 jsroot = os.path.abspath(jsdir)
 readme = "README.md"
@@ -75,8 +74,8 @@ def js_prerelease(command, strict=False):
 class NPM(Command):
     description = "install package.json dependencies using npm."
     user_options = []
-    targets = [os.path.join(root, name, nbdir, "extension.js"),
-               os.path.join(root, name, nbdir, "index.js")]
+    targets = [os.path.join(root, name, staticdir, "js", "extension.js"),
+               os.path.join(root, name, staticdir, "js", "index.js")]
 
     def initialize_options(self):
         pass
@@ -110,7 +109,7 @@ class NPM(Command):
             if not os.path.exists(t):
                 msg = "Missing file: %s" % t
                 if not self.has_npm():
-                    msg += "\nnpm is required to build a development version of jupyter-" + name
+                    msg += "\nnpm is required to build a development version of " + name
                 raise ValueError(msg)
 
         # update package data in case this created new files
@@ -122,16 +121,15 @@ setup_args = {
     'version': version,
     'description': description,
     'long_description': long_description,
-    'package_data': {name: [staticdir+"/cif", staticdir+"/nwchem",
-                            staticdir+"/qe", staticdir+"/xyz"]},
+    'package_data': {name: [staticdir + "/*"]},
     'include_package_data': True,
     'install_requires': dependencies,
     'packages': find_packages(),
     'data_files': [
-        ("share/jupyter/nbextensions/jupyter-" + name, [
-            os.path.join(name, nbdir, "extension.js"),
-            os.path.join(name, nbdir, "index.js"),
-            os.path.join(name, nbdir, "index.js.map")
+        ("share/jupyter/nbextensions/" + name, [
+            os.path.join(name, staticdir, "js", "extension.js"),
+            os.path.join(name, staticdir, "js", "index.js"),
+            os.path.join(name, staticdir, "js", "index.js.map")
         ]),
     ],
     'cmdclass': {

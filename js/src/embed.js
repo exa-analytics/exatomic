@@ -5,12 +5,14 @@
 // already be loaded by the notebook otherwise.
 
 // Export widget models and views, and the npm package version number.
-var _ = require("underscore");
-module.exports = _.extend({},
-    require("./exatomic-base.js"),
-    require("./exatomic-utils.js"),
-    require("./exatomic-three.js"),
-    require("./exatomic-widgets.js"),
-    require("./exatomic-editor.js")
-);
-module.exports["version"] = require("../package.json").version;
+// var _ = require("underscore");
+//module.exports = { //_.extend({},
+//    base: require("./base.js"),
+//    utils: require("./utils.js"),
+//    appthree: require("./appthree.js"),
+//    widgets: require("./widgets.js"),
+//    tensor: require("./tensor.js")
+////);
+//};
+//module.exports["version"] = require("../package.json").version;
+module.exports = require('./index');

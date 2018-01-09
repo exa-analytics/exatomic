@@ -1,4 +1,6 @@
 # -*- coding: utf-8 -*-
+# Copyright (c) 2015-2017, Exa Analytics Development Team
+# Distributed under the terms of the Apache License 2.0
 '''
 Molecular Orbital Utilities
 ##############################
@@ -6,44 +8,52 @@ Molecular orbitals are constructed symbolically
 then evaluated on a numerical grid.
 These are their stories.
 '''
+from ipywidgets import FloatProgress, HBox
+from IPython.display import display
 import numpy as np
 import pandas as pd
 from numba import jit
-from numexpr import evaluate
+from numexpr import evaluate, set_vml_accuracy_mode
+acc = set_vml_accuracy_mode('high')
+# print('Numexpr accuracy set to:', acc)
 
 from .basis import (CartesianBasisFunction,
                     SphericalBasisFunction)
 from exatomic.core.field import AtomicField
 
 
-def compare_fields(*unis, rtol=1e-4, atol=1e-8, signed=True, verbose=True):
+def compare_fields(rtol=5e-5, atol=1e-12, mtol=None, signed=True, verbose=True, *unis):
     """Compare field values of multiple universe.
     It is expected that fields are in the same order."""
     flds = (uni.field.field_values for uni in unis)
+    kws = {'rtol': rtol, 'atol': atol}
     fracs = []
     if verbose:
-        fmt = '{:<6}:{:>10}'
-        print(fmt.format("Field", "% Same"))
+        fmt = '{:<12}:{:>18}{:>18}'
     for i, fls in enumerate(zip(*flds)):
         compare = fls[0]
+        if not i and verbose: print(fmt.format(len(compare), "Np.isclose(0, 1)", "Np.isclose(1, 0)"))
         percents = []
         for fl in fls[1:]:
-            n = np.isclose(compare, fl,
-                           rtol=rtol, atol=atol).sum()
+            n = np.isclose(compare, fl, **kws).sum()
+            on = np.isclose(fl, compare, **kws).sum()
             if not signed:
-                m = np.isclose(compare, -fl,
-                               rtol=rtol, atol=atol).sum()
+                m = np.isclose(compare, -fl, **kws).sum()
+                om = np.isclose(-fl, compare, **kws).sum()
                 n = max(n, m)
+                on = max(on, om)
             percents.append((n / len(compare)) * 100)
+            percents.append((on / len(compare)) * 100)
             fracs.append(n / len(compare))
-        form = '{:<6}:' + '{:>10.4f}' * len(percents)
+            fracs.append(on / len(compare))
+        form = '{:<12}:' + '{:>18.12f}' * len(percents)
         if verbose:
             print(form.format(i, *percents))
     if not verbose:
         return fracs
 
 
-def gen_bfns(uni, frame=None):
+def gen_bfns(uni, frame=None, norm='Nd'):
     """Generate a list of symbolic basis functions
     from a universe containing basis set information."""
     frame = uni.atom.nframes - 1 if frame is None else frame
@@ -53,7 +63,7 @@ def gen_bfns(uni, frame=None):
                 uni.basis_set_order['frame'] == frame].groupby('center')
     atom = uni.atom[uni.atom['frame'] == frame]
     if uni.basis_set.spherical:
-        return _gen_spher_basfns(atom, funcs, sets)
+        return _gen_spher_basfns(atom, funcs, sets, norm=norm)
     return _gen_cart_basfns(atom, funcs, sets, uni.basis_set.gaussian)
 
 
@@ -70,14 +80,14 @@ def _gen_cart_basfns(atom, funcs, sets, gaussian=True):
         bas = sets.get_group(seht).groupby('L')
         ordr = funcs.get_group(i)
         for args in zip(*(ordr[col] for col in args)):
-            shell = bas.get_group(L).groupby('shell').get_group(args[-1])
+            shell = bas.get_group(args[0]).groupby('shell').get_group(args[-1])
             basfns.append(CartesianBasisFunction(x, y, z, shell['Nd'],
                                                  shell['alpha'], args[1],
                                                  args[2], args[3]))
     return basfns
 
 
-def _gen_spher_basfns(atom, funcs, sets):
+def _gen_spher_basfns(atom, funcs, sets, norm='Nd'):
     """Return a list of spherical basis functions."""
     basfns = []
     for i, (seht, x, y, z) in enumerate(zip(atom['set'], atom['x'],
@@ -86,7 +96,7 @@ def _gen_spher_basfns(atom, funcs, sets):
         ordr = funcs.get_group(i)
         for L, ml, shell in zip(ordr['L'], ordr['ml'], ordr['shell']):
             shell = bas.get_group(L).groupby('shell').get_group(shell)
-            basfns.append(SphericalBasisFunction(x, y, z, shell['Nd'],
+            basfns.append(SphericalBasisFunction(x, y, z, shell[norm],
                                                  shell['alpha'], L, ml))
     return basfns
 
@@ -127,6 +137,95 @@ def _compute_density(ovs, occvec):
     return dens
 
 
+def _compute_current_density_numexpr(bvs, gvx, gvy, gvz, cmatr, cmati, occvec):
+    nbas, npts = bvs.shape
+    # chigradx = np.empty(npts, dtype=np.float64)
+    # chigrady = np.empty(npts, dtype=np.float64)
+    # chigradz = np.empty(npts, dtype=np.float64)
+    curx = np.zeros(npts, dtype=np.float64)
+    cury = np.zeros(npts, dtype=np.float64)
+    curz = np.zeros(npts, dtype=np.float64)
+    fp = FloatProgress(description='Total:')
+    # ifp = FloatProgress(description='Inner:')
+    # box = HBox([fp, ifp])
+    display(fp)
+    for mu in range(nbas):
+        fp.value = mu / nbas * 100
+        crmu = cmatr[mu]
+        cimu = cmati[mu]
+        bvmu = bvs[mu]
+        gvxmu = gvx[mu]
+        gvymu = gvy[mu]
+        gvzmu = gvz[mu]
+        for nu in range(nbas):
+            # ifp.value = nu / nbas * 100
+            crnu = cmatr[nu]
+            cinu = cmati[nu]
+            bvnu = bvs[nu]
+            gvxnu = gvx[nu]
+            gvynu = gvy[nu]
+            gvznu = gvz[nu]
+            cval = evaluate('-0.5 * (occvec * (crmu * cinu - cimu * crnu))').sum()
+            # chigradx = evaluate('bvmu * gvxnu - gvxmu * bvnu')
+            # chigrady = evaluate('bvmu * gvynu - gvymu * bvnu')
+            # chigradz = evaluate('bvmu * gvznu - gvzmu * bvnu')
+            curx = evaluate('curx + cval * (bvmu * gvxnu - gvxmu * bvnu)')
+            cury = evaluate('cury + cval * (bvmu * gvynu - gvymu * bvnu)')
+            curz = evaluate('curz + cval * (bvmu * gvznu - gvzmu * bvnu)')
+    # box.close()
+    fp.close()
+    # ifp.close()
+    return curx, cury, curz
+
+
+@jit(nopython=True, nogil=True, parallel=True)
+def _compute_current_density_inner_jit(bvmu, gvxmu, gvymu, gvzmu, nbas,
+                                       cmatr, cmati, occvec, mu,
+                                       curx, cury, curz):
+    for nu in range(nbas):
+        cval = (-0.5 * (occvec * (cmatr[mu] * cmati[nu]
+                                - cmati[mu] * cmatr[nu]))).sum()
+        chigradx = bvs[mu] * gvx[nu] - gvx[mu] * bvs[nu]
+        chigrady = bvs[mu] * gvy[nu] - gvy[mu] * bvs[nu]
+        chigradz = bvs[mu] * gvz[nu] - gvz[mu] * bvs[nu]
+        curx += cval * chigradx
+        cury += cval * chigrady
+        curz += cval * chigradz
+
+@jit(nopython=True, nogil=True, parallel=True)
+def _compute_current_density_innerest_jit(bvmu, gvxmu, gvymu, gvzmu, nbas,
+                                          cmatr, cmati, occvec, mu,
+                                          curx, cury, curz):
+    for nu in range(nbas):
+        cval = (-0.5 * (occvec * (cmatr[mu] * cmati[nu]
+                                - cmati[mu] * cmatr[nu]))).sum()
+        chigradx = bvs[mu] * gvx[nu] - gvx[mu] * bvs[nu]
+        chigrady = bvs[mu] * gvy[nu] - gvy[mu] * bvs[nu]
+        chigradz = bvs[mu] * gvz[nu] - gvz[mu] * bvs[nu]
+        curx += cval * chigradx
+        cury += cval * chigrady
+        curz += cval * chigradz
+
+
+
+
+@jit(nopython=True, nogil=True, parallel=True)
+def _compute_current_density_jit(bvs, gvx, gvy, gvz, cmatr, cmati, occvec):
+    """Compute the current density in each cartesian direction."""
+    nbas, npts = bvs.shape
+    chigradx = np.empty(npts, dtype=np.float64)
+    chigrady = np.empty(npts, dtype=np.float64)
+    chigradz = np.empty(npts, dtype=np.float64)
+    curx = np.zeros(npts, dtype=np.float64)
+    cury = np.zeros(npts, dtype=np.float64)
+    curz = np.zeros(npts, dtype=np.float64)
+    for mu in range(nbas):
+        _compute_current_density_inner_jit(bvs[mu], gvx[mu], gvy[mu], gvz[mu], nbas,
+                                           cmatr, cmati, occvec,
+                                           mu, curx, cury, curz)
+    return curx, cury, curz
+
+
 @jit(nopython=True, nogil=True, parallel=True)
 def _compute_current_density(bvs, gvx, gvy, gvz, cmatr, cmati, occvec):
     """Compute the current density in each cartesian direction."""
@@ -148,6 +247,22 @@ def _compute_current_density(bvs, gvx, gvy, gvz, cmatr, cmati, occvec):
             cury += cval * chigrady
             curz += cval * chigradz
     return curx, cury, curz
+
+
+def _compute_orb_ang_mom_numexpr(rx, ry, rz, jx, jy, jz, maxes):
+    """Compute the orbital angular momentum in each direction and the sum."""
+    ang_mom = np.empty((4, rx.shape[0]), dtype=np.float64)
+    mxx, mxy, mxz = maxes[0]
+    myx, myy, myz = maxes[1]
+    mzx, mzy, mzz = maxes[2]
+    a0 = evaluate('ry * jz - rz * jy')
+    a1 = evaluate('rz * jx - rx * jz')
+    a2 = evaluate('rx * jy - ry * jx')
+    ang_mom[0] = evaluate('mxx * a0 + mxy * a1 + mxz * a2')
+    ang_mom[1] = evaluate('myx * a0 + myy * a1 + myz * a2')
+    ang_mom[2] = evaluate('mzx * a0 + mzy * a1 + mzz * a2')
+    ang_mom[3] = ang_mom[0] + ang_mom[1] + ang_mom[2]
+    return ang_mom
 
 
 @jit(nopython=True, nogil=True, parallel=True)
@@ -246,12 +361,12 @@ def numerical_grid_from_field_params(fps):
     return meshgrid3d(x, y, z)
 
 
-def _determine_bfns(uni, frame):
+def _determine_bfns(uni, frame, norm):
     """Attach symbolic basis functions if they don't exist."""
     if hasattr(uni, 'basis_functions'):
         if frame in uni.basis_functions: pass
-        else: uni.basis_functions[frame] = gen_bfns(uni, frame=frame)
-    else: uni.basis_functions = {frame: gen_bfns(uni, frame=frame)}
+        else: uni.basis_functions[frame] = gen_bfns(uni, frame=frame, norm=norm)
+    else: uni.basis_functions = {frame: gen_bfns(uni, frame=frame, norm=norm)}
 
 
 def _determine_vector(uni, vector):

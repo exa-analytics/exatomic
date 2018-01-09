@@ -7,7 +7,7 @@ if (window.require) {
     window.require.config({
         map: {
             "*" : {
-                "exatomic": "nbextensions/exatomic/index"//,
+                "exatomic": "nbextensions/exatomic/index"
             }
         }
     });
