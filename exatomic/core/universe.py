@@ -203,8 +203,9 @@ class Universe(six.with_metaclass(Meta, Container)):
             replace (bool): if False, do not remove previous fields
         """
         attrs = ['momatrix', 'basis_set', 'basis_set_order']
-        if any((not hasattr(self, attr) for attr in attrs)):
-            raise AttributeError("universe must have {} attribute.".format(attr))
+        for attr in attrs:
+            if not hasattr(self, attr):
+                raise AttributeError("universe must have {} attribute.".format(attr))
         add_molecular_orbitals(self, field_params=field_params,
                                mocoefs=mocoefs, vector=vector,
                                frame=frame, replace=replace)

@@ -11,438 +11,595 @@ This is preferred to an explicit parsing and storage of a given
 basis set ordering scheme.
 """
 import re
-#import sympy
+from operator import mul
+from functools import reduce
+from abc import ABC, abstractmethod
+from collections import OrderedDict, Counter
+from itertools import combinations_with_replacement as cwr
+
 import numpy as np
-#from sympy import Add, Mul
-from collections import OrderedDict
-from numba import jit, vectorize
-
-import re
-from operator import add
+from numba import jit, vectorize, prange
 from numexpr import evaluate
+
 from symengine import var, exp, Add, Mul, Integer
-from collections import OrderedDict
-
-var("x y z")
-
+x, y, z = var("x y z")
+# _x, _y, _z = var("_x _y _z")
 
 lorder = ['s', 'p', 'd', 'f', 'g', 'h', 'i', 'k', 'l', 'm']
-lmap = {'s': 0, 'p': 1, 'd': 2, 'f': 3, 'g': 4, 'h': 5, 'i': 6, 'k': 7, 'l': 8,
-        'm': 9, 'px': 1, 'py': 1, 'pz': 1}
-rlmap = {value: key for key, value in lmap.items() if len(key) == 1}
-spher_ml_count = {'s': 1, 'p': 3, 'd': 5, 'f': 7, 'g': 9, 'h': 11, 'i': 13, 'k': 15,
-                  'l': 17, 'm': 19}
-spher_lml_count = {lorder.index(key): value for key, value in spher_ml_count.items()}
-cart_ml_count = {'s': 1, 'p': 3, 'd': 6, 'f': 10, 'g': 15, 'h': 21, 'i': 28}
-cart_lml_count = {lorder.index(key): value for key, value in cart_ml_count.items()}
+_spher = [2 * i + 1 for i in range(len(lorder))]
+_carts = [  1,   3,   6,  10,  15,  21,  28]
+
+lmap = OrderedDict([(l, i) for i, l in enumerate(lorder)])
+lmap.update([('px', 1), ('py', 1), ('pz', 1)])
+rlmap = {value: key for key, value
+         in lmap.items() if len(key) == 1}
+
+spher_ml_count = OrderedDict([(l, d) for l, d in zip(lorder, _spher)])
+spher_lml_count = OrderedDict([(i, d) for i, d in
+                              enumerate(spher_ml_count.values())])
+cart_ml_count = OrderedDict([(l, d) for l, d in zip(lorder, _carts)])
+cart_lml_count = OrderedDict([(i, d) for i, d in
+                             enumerate(cart_ml_count.values())])
+
 enum_cartesian = {0: [[0, 0, 0]],
                   1: [[1, 0, 0], [0, 1, 0], [0, 0, 1]],
                   2: [[2, 0, 0], [1, 1, 0], [1, 0, 1],
                       [0, 2, 0], [0, 1, 1], [0, 0, 2]],
                   3: [[3, 0, 0], [2, 1, 0], [2, 0, 1],
                       [1, 2, 0], [1, 1, 1], [1, 0, 2],
-                      [0, 3, 0], [0, 2, 1], [0, 1, 2], [0, 0, 3]],
-                  4: [[4, 0, 0], [3, 1, 0], [3, 0, 1], [2, 2, 0], [2, 1, 1],
-                      [2, 0, 2], [1, 3, 0], [1, 2, 1], [1, 1, 2], [1, 0, 3],
-                      [0, 4, 0], [0, 3, 1], [0, 2, 2], [0, 1, 3], [0, 0, 4]],
-                  5: [[5, 0, 0], [4, 1, 0], [4, 0, 1], [3, 2, 0], [3, 1, 1],
-                      [3, 0, 2], [2, 3, 0], [2, 2, 1], [2, 1, 2], [2, 0, 3],
-                      [1, 4, 0], [1, 3, 1], [1, 2, 2], [1, 1, 3], [1, 0, 4],
-                      [0, 5, 0], [0, 4, 1], [0, 3, 2], [0, 2, 3], [0, 1, 4],
-                      [0, 0, 5]]}
+                      [0, 3, 0], [0, 2, 1], [0, 1, 2],
+                      [0, 0, 3]],
+                  4: [[4, 0, 0], [3, 1, 0], [3, 0, 1],
+                      [2, 2, 0], [2, 1, 1], [2, 0, 2],
+                      [1, 3, 0], [1, 2, 1], [1, 1, 2],
+                      [1, 0, 3], [0, 4, 0], [0, 3, 1],
+                      [0, 2, 2], [0, 1, 3], [0, 0, 4]],
+                  5: [[5, 0, 0], [4, 1, 0], [4, 0, 1],
+                      [3, 2, 0], [3, 1, 1], [3, 0, 2],
+                      [2, 3, 0], [2, 2, 1], [2, 1, 2],
+                      [2, 0, 3], [1, 4, 0], [1, 3, 1],
+                      [1, 2, 2], [1, 1, 3], [1, 0, 4],
+                      [0, 5, 0], [0, 4, 1], [0, 3, 2],
+                      [0, 2, 3], [0, 1, 4], [0, 0, 5]]}
 gaussian_cartesian = enum_cartesian.copy()
 gaussian_cartesian[2] = [[2, 0, 0], [0, 2, 0], [0, 0, 2],
                          [1, 1, 0], [1, 0, 1], [0, 1, 1]]
 
-def solid_harmonics(l_max):
 
-    def _top_sh(lcur, sp, sm):
-        lpre = lcur - 1
-        kr = 1 if lpre == 0 else 0
-        return (np.sqrt(2 ** kr * (2 * lpre + 1) / (2 * lpre + 2)) *
+
+def new_solid_harmonics(lmax):
+    """Symbolic, recursive solid harmonics for the angular component
+    of a wave function."""
+    def _top_sh(lp, sp, sm):
+        kr = int(not lp)
+        return (np.sqrt(2 ** kr * (2 * lp + 1) / (2 * lp + 2)) *
                 (x * sp - (1 - kr) * y * sm))
-
-    def _mid_sh(lcur, m, sm, smm):
-        lpre = lcur - 1
-        return (((2 * lpre + 1) * z * sm - np.sqrt((lpre + m) *
-                (lpre - m)) * (x*x + y*y + z*z) * smm) /
-                (np.sqrt((lpre + m + 1) * (lpre - m + 1))))
-
-    def _bot_sh(lcur, sp, sm):
-        lpre = lcur - 1
-        kr = 1 if lpre == 0 else 0
-        return (np.sqrt(2 ** kr * (2 * lpre + 1) / (2 * lpre + 2)) *
+    def _mid_sh(lp, m, sm, smm):
+        return (((2 * lp + 1) * z * sm - np.sqrt((lp + m) *
+                (lp - m)) * (x*x + y*y + z*z) * smm) /
+                (np.sqrt((lp + m + 1) * (lp - m + 1))))
+    def _bot_sh(lp, sp, sm):
+        kr = int(not lp)
+        return (np.sqrt(2 ** kr * (2 * lp + 1) / (2 * lp + 2)) *
                 (y * sp + (1 - kr) * x * sm))
-
-    sh = OrderedDict()
-    sh[(0, 0)] = Integer(1)
-    for l in range(1, l_max + 1):
-        lpre = l - 1
-        ml_all = list(range(-l, l + 1))
-        sh[(l, ml_all[0])] = _bot_sh(l, sh[(lpre,lpre)], sh[(lpre,-(lpre))])
-        for ml in ml_all[1:-1]:
+    sh = OrderedDict([(l, OrderedDict([])) for l in range(lmax + 1)])
+    sh[0][0] = Integer(1)
+    for l in range(1, lmax + 1):
+        lp = l - 1
+        mls = list(range(-l, l + 1))
+        sh[l][mls[0]] = _bot_sh(lp, sh[lp][lp], sh[lp][-lp])
+        for ml in mls[1:-1]:
             try:
-                sh[(l, ml)] = _mid_sh(l, ml, sh[(lpre,ml)], sh[(lpre-1,ml)])
+                rec = sh[lp - 1][ml]
             except KeyError:
-                sh[(l, ml)] = _mid_sh(l, ml, sh[(lpre,ml)], sh[(lpre,ml)])
-        sh[(l, ml_all[-1])] = _top_sh(l, sh[(lpre,lpre)], sh[(lpre,-(lpre))])
+                rec = sh[lp][ml]
+            sh[l][ml] = _mid_sh(lp, ml, sh[lp][ml], rec)
+        sh[l][mls[-1]] = _top_sh(lp, sh[lp][lp], sh[lp][-lp])
     return sh
 
 
-class PrimitiveFunction(object):
+def solid_harmonics(lmax):
+    """Symbolic, recursive solid harmonics for the angular component
+    of a wave function."""
+    def _top_sh(lp, sp, sm):
+        kr = int(not lp)
+        return ((2 ** kr * (2 * lp + 1) / (2 * lp + 2)) ** 0.5 *
+                (x * sp - (1 - kr) * y * sm))
+    def _mid_sh(lp, m, sm, smm):
+        return (((2 * lp + 1) * z * sm - ((lp + m) * (lp - m)) ** 0.5 *
+                (x*x + y*y + z*z) * smm) /
+                (((lp + m + 1) * (lp - m + 1)) ** 0.5))
+    def _bot_sh(lp, sp, sm):
+        kr = int(not lp)
+        return ((2 ** kr * (2 * lp + 1) / (2 * lp + 2)) ** 0.5 *
+                (y * sp + (1 - kr) * x * sm))
+    sh = OrderedDict([((0, 0), Integer(1))])
+    for l in range(1, lmax + 1):
+        lp = l - 1
+        mls = list(range(-l, l + 1))
+        sh[(l, mls[0])] = _bot_sh(lp, sh[(lp, lp)], sh[(lp, -lp)])
+        for ml in mls[1:-1]:
+            try:
+                rec = sh[(lp - 1, ml)]
+            except KeyError:
+                rec = sh[(lp, ml)]
+            sh[(l, ml)] = _mid_sh(lp, ml, sh[(lp, ml)], rec)
+        sh[(l, mls[-1])] = _top_sh(lp, sh[(lp, lp)], sh[(lp, -lp)])
+    return sh
 
-    cart = {'x': x, 'y': y, 'z': z}
+# def car2sph(sh, cart):
+#     """Turns symbolic solid harmonic functions into a dictionary of
+#     arrays containing cartesian to spherical transformation matrices.
+#
+#     Args
+#         sh (OrderedDict): the result of solid_harmonics(l_tot)
+#         cart (dict): dictionary of l, cartesian l, m, n ordering
+#     """
+#     conv, prevL, mlcnt = {}, 0, 0
+#     for (L, ml), sym in sh.items():
+#         if L > 5: continue
+#         mlcnt = mlcnt if prevL == L else 0
+#         conv.setdefault(L, np.zeros((cart_lml_count[L],
+#                                      spher_lml_count[L]),
+#                                     dtype=np.float64))
+#         coefs = sym.expand().as_coefficients_dict()
+#         for i, (l, m, n) in enumerate(cart[L]):
+#             if L == 1:
+#                 conv[L] = np.array(cart[L])
+#                 break
+#             key = x ** l * y ** m * z ** n
+#             conv[L][i, mlcnt] = coefs[key]
+#         prevL = L
+#         mlcnt += 1
+#     return conv
 
-    def gradient(self, cart='x', order=1, expr=None):
+
+new_enum_cartesian = {0: [[0, 0, 0]]}
+for L in range(1, 9):
+    combs = [Counter(c) for c in cwr('xyz', L)]
+    new_enum_cartesian[L] = [[c[i] for i in 'xyz'] for c in combs]
+
+
+def new_solid_harmonics(lmax):
+    """Symbolic, recursive solid harmonics for the angular component
+    of a wave function."""
+    def _top_sh(lp, sp, sm):
+        kr = int(not lp)
+        return ((2 ** kr * (2 * lp + 1) / (2 * lp + 2)) ** 0.5 *
+                (x * sp - (1 - kr) * y * sm))
+    def _mid_sh(lp, m, sm, smm):
+        return (((2 * lp + 1) * z * sm - ((lp + m) * (lp - m)) ** 0.5 *
+                (x*x + y*y + z*z) * smm) /
+                (((lp + m + 1) * (lp - m + 1)) ** 0.5))
+    def _bot_sh(lp, sp, sm):
+        kr = int(not lp)
+        return ((2 ** kr * (2 * lp + 1) / (2 * lp + 2)) ** 0.5 *
+                (y * sp + (1 - kr) * x * sm))
+    sh = OrderedDict([(l, OrderedDict([])) for l in range(lmax + 1)])
+    sh[0][0] = Integer(1)
+    for l in range(1, lmax + 1):
+        lp = l - 1
+        mls = list(range(-l, l + 1))
+        sh[l][mls[0]] = _bot_sh(lp, sh[lp][lp], sh[lp][-lp])
+        for ml in mls[1:-1]:
+            try:
+                rec = sh[lp - 1][ml]
+            except KeyError:
+                rec = sh[lp][ml]
+            sh[l][ml] = _mid_sh(lp, ml, sh[lp][ml], rec)
+        sh[l][mls[-1]] = _top_sh(lp, sh[lp][lp], sh[lp][-lp])
+    return sh
+
+
+def new_car2sph(sh, cart, orderedp=True):
+    conv = {L: np.zeros((cart_lml_count[L],
+                        spher_lml_count[L]))
+            for L in range(max(sh.keys()) + 1)}
+    for L, mls in sh.items():
+        if not L or (L == 1 and orderedp):
+            conv[L] = np.array(cart[L])
+            continue
+        enum = [Counter(c) for c in cwr('xyz', L)]
+        lmn = [[en[i] for i in 'xyz'] for en in enum]
+        cdxs = [reduce(mul, i) for i in cwr((x, y, z), L)]
+        for ml, sym in mls.items():
+            mli = ml + L
+            coefs = sym.expand().as_coefficients_dict()
+            for crt, coef in coefs.items():
+                if isinstance(crt, Integer): continue
+                idx = cdxs.index(crt)
+                l, m, n = lmn[idx]
+                dif = max(l,m,n) - min(l,m,n)
+                # Hack job ??
+                if dif == L:
+                    fc = 1
+                elif L == 3 and not dif:
+                    fc = np.sqrt(15)
+                elif L == 4 and dif == 2:
+                    fc = np.sqrt(105) / 3
+                elif L == 4 and dif == 1:
+                    fc = np.sqrt(35)
+                else:
+                    fc = np.sqrt(2 * L - 1)
+                conv[L][idx, mli] = 1 / fc * coefs[cdxs[idx]]
+    return conv
+
+
+class Basis(object):
+
+    def evaluate_diff(self, xs, ys, zs, cart='x', order=1):
+        flds = np.empty((self.nbas, len(xs)), dtype=np.float64)
+        for i, f in enumerate(self.functions):
+            flds[i] = evaluate(str(f.diff(cart=cart, order=order)))
+        return flds
+
+    def evaluate(self, xs, ys, zs):
+        flds = np.empty((self.nbas, len(xs)), dtype=np.float64)
+        for i, f in enumerate(self.functions):
+            flds[i] = evaluate(str(f))
+        return flds
+
+    def __repr__(self):
+        return 'Basis({})'.format(self.nbas)
+
+    def __len__(self):
+        return len(self.functions)
+
+    def __getitem__(self, key):
+        return self.functions.__getitem__(key)
+
+    def __init__(self, functions):
+        self.functions = functions
+        self.nbas = len(self.functions)
+
+
+class _Function(ABC):
+
+    _x = property(lambda self: var("_x"))
+    _y = property(lambda self: var("_y"))
+    _z = property(lambda self: var("_z"))
+    _r = property(lambda self: (_x**2 + _y**2 + _z**2)**0.5)
+    _r2 = property(lambda self: _x**2 + _y**2 + _z**2)
+
+    @classmethod
+    def diff(cls, cart='x', order=1, expr=None):
+        """Compute the nth order derivative with respect to cart.
+
+        Args
+            cart (str): 'x', 'y', or 'z'
+            order (int): order of differentiation
+
+        Returns
+            expr (symbolic): The symbolic derivative
+        """
         if not isinstance(order, int) or order < 0:
             raise Exception("order must be non-negative int")
-        expr = self.kernel
+        expr = self._expr
         for i in range(order):
-            expr = expr.diff(self.cart[cart])
-        return expr
+            expr = expr.diff('_'+cart+'s')
+        return cls(expr)
 
-    def __str__(self):
-        return str(self.kernel)
+    def evaluate(self, xs, ys, zs):
+        return evaluate(self._expr.subs({'_x': 'xs',
+                                         '_y': 'ys',
+                                         '_z': 'zs'}))
 
-    def __init__(self, xa, ya, za, pre, N, alpha,
-                 gaussian=True):
-        """Assumes Ns are actually Nds"""
-        self.xA = xa
-        self.yA = ya
-        self.zA = za
-        self.xa = x - xa
-        self.ya = y - ya
-        self.za = z - za
-        self.r2 = self.xa ** 2 + self.ya ** 2 + self.za ** 2
-        self.r = self.r2 ** (0.5)
-        self.pre = pre.subs({'x': self.xa,
-                             'y': self.ya,
-                             'z': self.za})
-        if gaussian: self.exp = N * exp(-alpha * self.r2)
-        else:
-            self.exp = N * exp(-alphas * self.r)
-            print("ADF needs r-dependent pre-exponential")
-        self.kernel = self.pre * self.exp
+    def __init__(self, expr):
+        self._expr = expr
 
 
+class BasisFunction(ABC):
+    """Abstract base class for simple container of basis set information.
 
+    Attributes
+        x, y, z (symbolic): symbolic cartesian values
+        r, r2 (symbolic): symbolic radial values (in terms of x,y,z)
+        center (int): arbitrary atom center index
+        xa, ya, za (float): atomic positions
+        expnt (symbolic): exponential radial dependence
+        alphas (np.array): primitive exponents
+        ds (np.array): primitive contraction coefficients
+        Ns (np.array): primitive normalization constants
+        cs (np.array): overall contraction coefficients
+        ps (int): length of the above arrays
+    """
+    # Class level properties as they can be shared between instances
+    x = property(lambda self: x)
+    y = property(lambda self: y)
+    z = property(lambda self: z)
+    r = property(lambda self: (x**2 + y**2 + z**2)**0.5)
+    r2 = property(lambda self: x**2 + y**2 + z**2)
 
+    # Abstract methods must be implemented in all sub-classes
+    @abstractmethod
+    def _angular(self): pass
+    @abstractmethod
+    def _prim_norm(self): pass
+    @abstractmethod
+    def _cont_norm(self): pass
 
-class BasisFunction(object):
+    # Symbolic derivative of the basis function
+    def diff(self, cart='x', order=1, expr=None):
+        """Compute the nth order derivative with respect to cart.
 
-    cart = {'x': x, 'y': y, 'z': z}
+        Args
+            cart (str): 'x', 'y', or 'z'
+            order (int): order of differentiation
 
-    def gradient(self, cart='x', order=1, expr=None):
+        Returns
+            expr (symbolic): The symbolic derivative
+        """
         if not isinstance(order, int) or order < 0:
             raise Exception("order must be non-negative int")
-        expr = self.kernel
+        expr = self._angular() * self._radial()
         for i in range(order):
-            expr = expr.diff(self.cart[cart])
+            expr = expr.diff(cart+'s')
         return expr
 
-    def _add(self, Ns, alphas, expnt, expr=None):
-        expr = Ns[0] * exp(-alphas[0] * expnt)
-        for N, alpha in zip(Ns[1:], alphas[1:]):
-            expr += N * exp(-alpha * expnt)
-        return expr
+    # Radial dependence should be the same regardless of angular terms
+    def _radial(self):
+        return sum((c * exp(-a * self.expnt)
+                    for c, a in zip(self.cs, self.alphas)))
+
+    # Substitute atomic position into a symbolic expression
+    def _subs(self, expr):
+        return expr.subs({'x': 'xs-{}'.format(self.xa),
+                          'y': 'ys-{}'.format(self.ya),
+                          'z': 'zs-{}'.format(self.za)})
 
     def __str__(self):
-        return str(self.kernel)
+        return str(self._angular() * self._radial())
 
-    def __init__(self, xa, ya, za, pre, Ns, alphas,
+    def __init__(self, center, xa, ya, za, ds, alphas,
                  gaussian=True):
-        """Assumes Ns are actually Nds"""
-        self.xA = xa
-        self.yA = ya
-        self.zA = za
-        self.xa = x - xa
-        self.ya = y - ya
-        self.za = z - za
-        self.r2 = self.xa ** 2 + self.ya ** 2 + self.za ** 2
-        self.r = self.r2 ** (0.5)
-        self.pre = pre.subs({'x': self.xa,
-                             'y': self.ya,
-                             'z': self.za})
+        self.center = center
+        self.xa = xa
+        self.ya = ya
+        self.za = za
+        ex = self.r2 if gaussian else self.r
+        self.expnt = self._subs(ex)
         try:
-            Ns = Ns.values
-            alphas = alphas.values
+            self.ds = ds.values
+            self.alphas = alphas.values
         except AttributeError:
-            pass
-        self.prim = len(Ns)
-        if gaussian:
-            self.exp = self._add(Ns, alphas, self.r2)
-        else:
-            self.exp = self._add(Ns, alphas, self.r)
-            print("ADF needs r-dependent pre-exponential")
-        self.kernel = self.pre * self.exp
+            self.ds = ds
+            self.alphas = alphas
+        self.ps = len(self.ds)
+        self.Ns = self._prim_norm()
+        self.cs = self._cont_norm()
 
 
 class CartesianBasisFunction(BasisFunction):
+    """A basis function with cartesian angular dependence.
+    (See also :class:`~exatomic.algorithms.basis.BasisFunction`.)
+
+    Attributes:
+        l (int): cartesian power in x
+        m (int): cartesian power in y
+        n (int): cartesian power in z
+        L (int): sum of l, m, and n
+    """
+
+    def _angular(self):
+        addtl = 1
+        if self.rpre: addtl *= self.rpre
+        if self.rpow: addtl *= self.r ** rpow
+        return self._subs(addtl * self.x ** self.l *
+                                  self.y ** self.m *
+                                  self.z ** self.n)
+
+    def _prim_norm(self):
+        if self.gaussian:
+            return _prim_cart_norm(self.alphas, self.l, self.m, self.n)
+        return _prim_sto_norm(self.alphas, self.rpow)
+
+    def _cont_norm(self):
+        return self.Ns * self.ds * _cont_norm(self.ds, self.alphas, self.Ns,
+                                              self.l, self.m, self.n)
 
     def __repr__(self):
-        return 'BsFn(x={:.2f},y={:.2f},z={:.2f},'\
-               'prim={},l={},m={},n={})'.format(
-                   self.xA, self.yA, self.zA,
-                   self.prim, self.l, self.m, self.n)
+        return (f'CBF(x={self.xa:.2f},y={self.ya:.2f},z={self.za:.2f},'
+                f'l={self.l},m={self.m},n={self.n},p={self.ps})')
 
-    def __init__(self, xa, ya, za, Ns, alphas, l, m, n):
-        pre = x ** l * y ** m * z ** n
-        super(CartesianBasisFunction, self).__init__(
-            xa, ya, za, pre, Ns, alphas)
+    def __init__(self, center, xa, ya, za, ds, alphas, l, m, n,
+                 gaussian=True, rpow=0, rpre=0):
         self.l = l
         self.m = m
         self.n = n
+        self.L = l + m + n
+        self.rpow = rpow
+        self.rpre = rpre
+        self.gaussian = gaussian
+        super(CartesianBasisFunction, self).__init__(
+            center, xa, ya, za, ds, alphas, gaussian=gaussian)
 
 
 class SphericalBasisFunction(BasisFunction):
+    """A basis function with spherical angular dependence.
+    (See also :class:`~exatomic.algorithms.basis.BasisFunction`.)
 
-    sh = solid_harmonics(6)
+    Attributes:
+        L (int): orbital angular momentum
+        ml (int): magnetic quantum number
+    """
+
+    sh = property(lambda self: new_solid_harmonics(6))
+
+    def _angular(self):
+        return self._subs(self.sh[self.L][self.ml])
+
+    def _prim_norm(self):
+        return _prim_sphr_norm(self.alphas, self.L)
+
+    def _cont_norm(self):
+        return self.Ns * self.ds
 
     def __repr__(self):
-        return 'BsFn(x={:.2f},y={:.2f},z={:.2f},'\
-               'prim={},L={},ml={})'.format(
-                   self.xA, self.yA, self.zA,
-                   self.prim, self.L, self.ml)
+        return (f'SBF(x={self.xa:.2f},y={self.ya:.2f},z={self.za:.2f},'
+                f'L={self.L},ml={self.ml},p={self.ps})')
 
-    def __init__(self, xa, ya, za, Ns, alphas, L, ml):
-        pre = self.sh[(L, ml)]
-        super(SphericalBasisFunction, self).__init__(
-            xa, ya, za, pre, Ns, alphas)
+    def __init__(self, center, xa, ya, za, ds, alphas, L, ml,
+                 gaussian=True, l=0, m=0, n=0):
         self.L = L
         self.ml = ml
+        self.l = l
+        self.m = m
+        self.n = n
+        super(SphericalBasisFunction, self).__init__(
+            center, xa, ya, za, ds, alphas, gaussian=gaussian)
 
 
-def clean_sh(sh):
-    """Turns symbolic solid harmonic functions into string representations
-    to be using in generating basis functions.
-
-    Args
-        sh (OrderedDict): Output from exatomic.algorithms.basis.solid_harmonics
-
-    Returns
-        clean (OrderedDict): cleaned strings
-    """
-    _replace = {'x': '{x}', 'y': '{y}', 'z': '{z}', ' - ': ' -'}
-    _repatrn = re.compile('|'.join(_replace.keys()))
-    clean = OrderedDict()
-    for key, sym in sh.items():
-        string = str(sym.expand()).replace(' + ', ' ')
-        string = _repatrn.sub(lambda x: _replace[x.group(0)], string)
-        clean[key] = [pre + '*' for pre in string.split()]
-    return clean
-
-
-def car2sph(sh, cart):
-    """
-    Turns symbolic solid harmonic functions into a dictionary of
-    arrays containing cartesian to spherical transformation matrices.
-
-    Args
-        sh (OrderedDict): the result of solid_harmonics(l_tot)
-        cart (dict): dictionary of l, cartesian l, m, n ordering
-    """
-    conv, prevL, mlcnt = {}, 0, 0
-    for (L, ml), sym in sh.items():
-        if L > 5: continue
-        mlcnt = mlcnt if prevL == L else 0
-        conv.setdefault(L, np.zeros((cart_lml_count[L],
-                                     spher_lml_count[L]),
-                                    dtype=np.float64))
-        coefs = sym.expand().as_coefficients_dict()
-        for i, (l, m, n) in enumerate(cart[L]):
-            if L == 1:
-                conv[L] = np.array(cart[L])
-                break
-            key = x ** l * y ** m * z ** n
-            conv[L][i, mlcnt] = coefs[key]
-        prevL = L
-        mlcnt += 1
-    return conv
-
+def gen_bfns(uni, frame=0, forcecart=False):
+    bso = uni.basis_set_order.groupby(['frame', 'center'])
+    sets = uni.basis_set.groupby(['frame', 'set'])
+    atom = uni.atom.groupby('frame').get_group(frame)
+    atom = enumerate(zip(atom['set'], atom['x'],
+                         atom['y'], atom['z']))
+    bfns = []
+    # for i, (seht, x, y, z) in atom:
+    #     ordr = bso.get_group((frame, i))
+    #     bas = sets.get_group((frame, seht)).groupby(('L', 'shell'))
+    #     for L, ml, shl, l, m, n in zip(ordr['L'], ordr['ml'],
+    #                                    ordr['shell'], ordr['l'],
+    #                                    ordr['m'], ordr['n']):
+    #         s = bas.get_group((L, shl))
+    #         if L < 2:
+    #             bfns.append(CartesianBasisFunction(
+    #                 i, x, y, z, s['d'], s['alpha'], L, l, m, n))
+    #         else:
+    #             bfns.append(SphericalBasisFunction(
+    #                 i, x, y, z, s['d'], s['alpha'], L, ml))
+    # return Basis(bfns)
+    if forcecart:
+        for i, (seht, x, y, z) in atom:
+            bas = sets.get_group((frame, seht)).groupby('L')
+            for L, grp in bas:
+                for l, m, n in new_enum_cartesian[L]:
+                    for sh, sub in grp.groupby('shell'):
+                        bfns.append(CartesianBasisFunction(
+                            i, x, y, z, sub['d'], sub['alpha'], l, m, n))
+    elif uni.basis_set.spherical:
+        for i, (seht, x, y, z) in atom:
+            ordr = bso.get_group((frame, i))
+            bas = sets.get_group((frame, seht)).groupby(['L', 'shell'])
+            for L, ml, shl in zip(ordr['L'], ordr['ml'],
+                                  ordr['shell']):
+                s = bas.get_group((L, shl))
+                bfns.append(SphericalBasisFunction(
+                    i, x, y, z, s['d'], s['alpha'], L, ml))
+    elif all(i in uni.basis_set_order.columns for i in ('l', 'm', 'n')):
+        for i, (seht, x, y, z) in atom:
+            ordr = bso.get_group((frame, i))
+            bas = sets.get_group((frame, seht)).groupby('L')
+            for L, l, m, n in zip(ordr['L'], ordr['l'],
+                                  ordr['m'], ordr['n']):
+                s = bas.get_group((L, shl))
+                bfns.append(CartesianBasisFunction(
+                    i, x, y, z, s['d'], s['alpha'], l, m, n))
+    else:
+        print('basis not obtained')
+    return Basis(bfns)
 
 
 @jit(nopython=True, cache=True)
 def _fac(n,v): return _fac(n-1, n*v) if n else v
-
-@jit(nopython=True, cache=True)
-def fac(n): return _fac(n, 1)
-
 @jit(nopython=True, cache=True)
 def _fac2(n,v): return _fac2(n-2, n*v) if n > 0 else v
-
 @jit(nopython=True, cache=True)
-def fac2(n):
-    if n < -1: return 0
-    if n < 2: return 1
-    return _fac2(n, 1)
+def fac(n): return _fac(n, 1) if n > -1 else 0
+@jit(nopython=True, cache=True)
+def fac2(n): return _fac2(n, 1) if n > 1 else 1 if n > -2 else 0
+@jit(nopython=True, cache=True)
+def dfac21(n): return fac2(2 * n - 1)
+
+@vectorize(['int64(int64)'])
+def _vec_fac(n): return fac(n)
+@vectorize(['int64(int64)'])
+def _vec_fac2(n): return fac2(n)
+@vectorize(['int64(int64)'])
+def _vec_dfac21(n): return dfac21(n)
 
 @jit(nopython=True, cache=True)
 def normalize(alpha, L):
     prefac = (2 / np.pi) ** (0.75)
-    numer = 2 ** (L) * alpha ** ((L + 1.5) / 2)
-    denom = (fac2(2 * L - 1)) ** (0.5)
+    numer = 2 ** L * alpha ** ((L + 1.5) / 2)
+    denom = dfac21(L) ** 0.5
     return prefac * numer / denom
+@jit(nopython=True, cache=True)
+def _prim_sphr_norm(alphas, L):
+    Ns = np.empty(len(alphas), dtype=np.float64)
+    for i, a in enumerate(alphas):
+        Ns[i] = normalize(a, L)
+    return Ns
+@vectorize('float64(float64,int64)')
+def _vec_sphr_norm(alpha, L):
+    return normalize(alpha, L)
 
 @jit(nopython=True, cache=True)
 def prim_normalize(alpha, l, m, n):
-    L = l + m + n
-    prefac = (2 / np.pi) ** (0.75)
-    numer = 2 ** (L) * alpha ** ((L + 1.5) / 2)
-    denom = (fac2(2*l - 1) * fac2(2*m - 1) * fac2(2*n - 1)) ** (0.5)
-    return prefac * numer / denom
-
+    numer = dfac21(l) * dfac21(m) * dfac21(n)
+    denom = alpha ** (l + m + n)
+    prefa = (np.pi / (2 * alpha)) ** 1.5
+    return 1 / np.sqrt(prefa * numer / denom)
 @jit(nopython=True, cache=True)
-def cont_normalize(alphas, ds, l, m, n):
-    L = l + m + n
-    prefac = np.pi ** (1.5) / 2 ** L
-    fc = fac2(2*l - 1) * fac2(2*m - 1) * fac2(2*n - 1)
-    summ = 0.
-    for ai, di in zip(alphas, ds):
-        for aj, dj in zip(alphas, ds):
-            summ += di * dj / (ai + aj) ** (L + 1.5)
-    return (prefac * fc * summ) ** -0.5
-
-
-
+def _prim_cart_norm(alphas, l, m, n):
+    Ns = np.empty(len(alphas), dtype=np.float64)
+    for i, a in enumerate(alphas):
+        Ns[i] = prim_normalize(a, l, m, n)
+    return Ns
 
 @jit(nopython=True, cache=True)
 def sto_normalize(alpha, n):
     return (2 * alpha) ** n * ((2 * alpha) / fac(2 * n)) ** 0.5
-
-@vectorize(['int64(int64)'])
-def _vec_fac(n):
-    return fac(n)
-
-@vectorize(['int64(int64)'])
-def _vec_fac2(n):
-    return fac2(n)
-
-@vectorize(['float64(float64,int64)'])
-def _vec_normalize(alpha, L):
-    return normalize(alpha, L)
-
-@vectorize(['float64(float64,int64,int64,int64)'])
-def _vec_prim_normalize(alpha, l, m, n):
-    return prim_normalize(alpha, l, m, n)
-
-@vectorize(['float64(float64,int64)'])
-def _vec_sto_normalize(alpha, n):
+@jit(nopython=True, cache=True)
+def _prim_sto_norm(alphas, n):
+    Ns = np.empty(len(alphas), dtype=np.float64)
+    for i, a in enumerate(alphas):
+        Ns[i] = sto_normalize(a, n)
+    return Ns
+@vectorize('float64(float64,int64)')
+def _vec_sto_norm(alpha, n):
     return sto_normalize(alpha, n)
 
-### Is this necessary?
 @jit(nopython=True, cache=True)
-def _ovl_indices(nbas, nel):
-    chis = np.empty((nel, 2), dtype=np.int64)
+def _cont_norm(ds, alphas, Ns, l, m, n):
+    tot = 0.
+    for di, ai, ni in zip(ds, alphas, Ns):
+        for dj, aj, nj in zip(ds, alphas, Ns):
+            t = 1 / (ai + aj)
+            S00 = np.pi ** 1.5 * t ** 1.5 * ni * nj
+            t = 0.5 * t
+            t1 = dfac21(l) * t ** l
+            t2 = dfac21(m) * t ** m
+            t3 = dfac21(n) * t ** n
+            tot += di * dj * S00 * t1 * t2 * t3
+    #tot = 1 / np.sqrt(tot)
+    return 1 / np.sqrt(tot)
+    #return Ns * ds * tot
+
+
+@jit(nopython=True, cache=True)
+def _ovl_indices(vals):
+    nel = vals.shape[0]
+    nbas = int(np.round(np.roots(np.array([1, 1, -2 * vals.shape[0]]))[1]))
+    chi0 = np.empty(nel, dtype=np.int64)
+    chi1 = np.empty(nel, dtype=np.int64)
     cnt = 0
-    for i in range(nbas):
-        for j in range(i + 1):
-            chis[cnt, 0] = i
-            chis[cnt, 1] = j
-            cnt += 1
-    return chis
-
-
-@jit(nopython=True, cache=True)
-def _nin(o1, o2, po1, po2, gamma, pg12):
-    otot = o1 + o2
-    if not otot:
-        return pg12
-    oio = 0.
-    ii = ((otot - 1) // 2 + 1) if (otot % 2) else (otot // 2 + 1)
-    for i in range(ii):
-        k = 2 * i
-        prod = pg12 * fac2(k - 1) / ((2 * gamma) ** i)
-        qlo = max(-k, (k - 2 * o2))
-        qhi = min( k, (2 * o1 - k)) + 1
-        fk = 0.
-        for q in range(qlo, qhi, 2):
-            xx = (k + q) // 2
-            zz = (k - q) // 2
-            newt1 = fac(o1) / fac(xx) / fac(o1 - xx)
-            newt2 = fac(o2) / fac(zz) / fac(o2 - zz)
-            fk += newt1 * newt2 * (po1 ** (o1 - xx)) * (po2 ** (o2 - zz))
-        oio += prod * fk
-    return oio
-
-@jit(nopython=True, cache=True)
-def _overlap_1c(alp1, alp2, l1, m1, n1, l2, m2, n2):
-    """Compute overlap of primitive gaussians on the same center."""
-    ll = l1 + l2
-    mm = m1 + m2
-    nn = n1 + n2
-    if ll % 2 or mm % 2 or nn % 2:
-        return 0
-    ltot = ll // 2 + mm // 2 + nn // 2
-    numer = np.pi ** (1.5) * fac2(ll - 1) * fac2(mm - 1) * fac2(nn - 1)
-    denom = (2 ** ltot) * (alp1 + alp2) ** (ltot + 1.5)
-    return numer / denom
-
-
-@jit(nopython=True, cache=True)
-def _overlap_2c(ab2, pax, pay, paz, pbx, pby, pbz,
-                gamma, alp1, alp2, l1, m1, n1, l2, m2, n2):
-    """Compute the overlap between two cartesian gaussians."""
-    pg12 = np.sqrt(np.pi / gamma)
-    xix = _nin(l1, l2, pax, pbx, gamma, pg12)
-    yiy = _nin(m1, m2, pay, pby, gamma, pg12)
-    ziz = _nin(n1, n2, paz, pbz, gamma, pg12)
-    exp = alp1 * alp2 * ab2 / gamma
-    return np.exp(-exp) * xix * yiy * ziz
-    #return N1 * N2 * np.exp(-exp) * xix * yiy * ziz
-
-
-
-@jit(nopython=True, cache=True)
-#def _wrap_overlap(x, y, z, l, m, n, N, alpha):
-def _wrap_overlap(x, y, z, l, m, n, N, alpha):
-    nprim, cnt = len(x), 0
-    arlen = nprim * (nprim + 1) // 2
-    chi0 = np.empty(arlen, dtype=np.int64)
-    chi1 = np.empty(arlen, dtype=np.int64)
-    ovl = np.empty(arlen, dtype=np.float64)
-    for i in range(nprim):
-        for j in range(i + 1):
+    for i in prange(nbas):
+        for j in prange(i + 1):
             chi0[cnt] = i
             chi1[cnt] = j
-            xA = x[i]
-            yA = y[i]
-            zA = z[i]
-            xB = x[j]
-            yB = y[j]
-            zB = z[j]
-            l1 = l[i]
-            m1 = m[i]
-            n1 = n[i]
-            l2 = l[j]
-            m2 = m[j]
-            n2 = n[j]
-            N1 = N[i]
-            N2 = N[j]
-            alpha1 = alpha[i]
-            alpha2 = alpha[j]
-            abx = xA - xB
-            aby = yA - yB
-            abz = zA - zB
-            ab2 = abx ** 2 + aby ** 2 + abz ** 2
-            if ab2 < 1e-8:
-                ovl[cnt] = _overlap_1c(alpha1, alpha2,
-                                                l1, m1, n1,
-                                                l2, m2, n2)
-            else:
-                gamma = alpha1 + alpha2
-                xP = (alpha1 * xA + alpha2 * xB) / gamma
-                yP = (alpha1 * yA + alpha2 * yB) / gamma
-                zP = (alpha1 * zA + alpha2 * zB) / gamma
-                pax = xP - xA
-                pay = yP - yA
-                paz = zP - zA
-                pbx = xP - xB
-                pby = yP - yB
-                pbz = zP - zB
-                ovl[cnt] = _overlap_2c(ab2, pax, pay, paz,
-                                               pbx, pby, pbz, gamma,
-                                               alpha1, alpha2,
-                                               l1, m1, n1,
-                                               l2, m2, n2)
             cnt += 1
-    return chi0, chi1, ovl
+    return chi0, chi1
+
+@jit(nopython=True, cache=True)
+def _square(vals):
+    nbas = int(np.round(np.roots(np.array([1, 1, -2 * vals.shape[0]]))[1]))
+    square = np.empty((nbas, nbas), dtype=np.float64)
+    cnt = 0
+    for i in prange(nbas):
+        for j in prange(i + 1):
+            square[i, j] = vals[cnt]
+            square[j, i] = vals[cnt]
+            cnt += 1
+    return square

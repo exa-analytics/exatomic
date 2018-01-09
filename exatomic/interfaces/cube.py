@@ -136,12 +136,14 @@ class Cube(six.with_metaclass(Meta, Editor)):
 
 
 
-def uni_from_cubes(adir, verbose=False):
+def uni_from_cubes(adir, verbose=False, ncubes=None):
     """Put a bunch of cubes into one universe."""
     import os
     from glob import glob
     if not adir.endswith(os.sep): adir += os.sep
     cubes = sorted(glob(adir + '*cube'))
+    if ncubes is not None:
+        cubes = cubes[:ncubes]
     if verbose:
         for cub in cubes: print(cub)
     uni = Cube(cubes[0]).to_universe()

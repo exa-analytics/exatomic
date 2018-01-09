@@ -8,345 +8,39 @@ Molecular orbitals are constructed symbolically
 then evaluated on a numerical grid.
 These are their stories.
 '''
-from ipywidgets import FloatProgress, HBox
-from IPython.display import display
 import numpy as np
 import pandas as pd
 from numba import jit
-from numexpr import evaluate, set_vml_accuracy_mode
-acc = set_vml_accuracy_mode('high')
-# print('Numexpr accuracy set to:', acc)
+from numexpr import evaluate
+from IPython.display import display
+from ipywidgets import FloatProgress, HBox
 
-from .basis import (CartesianBasisFunction,
-                    SphericalBasisFunction)
 from exatomic.core.field import AtomicField
+from exatomic.algorithms.basis import gen_bfns
 
 
-def compare_fields(rtol=5e-5, atol=1e-12, mtol=None, signed=True, verbose=True, *unis):
+def compare_fields(uni0, uni1, rtol=5e-5, atol=1e-12, signed=True, verbose=True):
     """Compare field values of multiple universe.
     It is expected that fields are in the same order."""
-    flds = (uni.field.field_values for uni in unis)
-    kws = {'rtol': rtol, 'atol': atol}
-    fracs = []
+    fracs, kws = [], {'rtol': rtol, 'atol': atol}
+    for i, (f0, f1) in enumerate(zip(uni0.field.field_values,
+                                     uni1.field.field_values)):
+        n = np.isclose(f0, f1, **kws).sum()
+        if not signed:
+            n = max(n, np.isclose(f0, -f1, **kwargs).sum())
+        fracs.append(n / f0.shape[0])
     if verbose:
-        fmt = '{:<12}:{:>18}{:>18}'
-    for i, fls in enumerate(zip(*flds)):
-        compare = fls[0]
-        if not i and verbose: print(fmt.format(len(compare), "Np.isclose(0, 1)", "Np.isclose(1, 0)"))
-        percents = []
-        for fl in fls[1:]:
-            n = np.isclose(compare, fl, **kws).sum()
-            on = np.isclose(fl, compare, **kws).sum()
-            if not signed:
-                m = np.isclose(compare, -fl, **kws).sum()
-                om = np.isclose(-fl, compare, **kws).sum()
-                n = max(n, m)
-                on = max(on, om)
-            percents.append((n / len(compare)) * 100)
-            percents.append((on / len(compare)) * 100)
-            fracs.append(n / len(compare))
-            fracs.append(on / len(compare))
-        form = '{:<12}:' + '{:>18.12f}' * len(percents)
-        if verbose:
-            print(form.format(i, *percents))
-    if not verbose:
+        fmt = '{:<12}:{:>18}'
+        print(fmt.format(len(fracs), 'Fraction'))
+        fmt = fmt.replace('18', '18.12f')
+        for i, f in enumerate(fracs):
+            print(fmt.format(i, f))
+    else:
         return fracs
 
 
-def gen_bfns(uni, frame=None, norm='Nd'):
-    """Generate a list of symbolic basis functions
-    from a universe containing basis set information."""
-    frame = uni.atom.nframes - 1 if frame is None else frame
-    sets = uni.basis_set[(uni.basis_set['d'] != 0) &
-                         (uni.basis_set['frame'] == frame)].groupby('set')
-    funcs = uni.basis_set_order[
-                uni.basis_set_order['frame'] == frame].groupby('center')
-    atom = uni.atom[uni.atom['frame'] == frame]
-    if uni.basis_set.spherical:
-        return _gen_spher_basfns(atom, funcs, sets, norm=norm)
-    return _gen_cart_basfns(atom, funcs, sets, uni.basis_set.gaussian)
-
-
-def _gen_cart_basfns(atom, funcs, sets, gaussian=True):
-    """Return a list of cartesian basis functions."""
-    basfns = []
-    args = ['L', 'l', 'm', 'n']
-    if not gaussian:
-        raise NotImplementedError("Re-work ADF stuff.")
-        args += ['r', 'prefac']
-    args += ['shell']
-    for i, (seht, x, y, z) in enumerate(zip(atom['set'], atom['x'],
-                                            atom['y'], atom['z'])):
-        bas = sets.get_group(seht).groupby('L')
-        ordr = funcs.get_group(i)
-        for args in zip(*(ordr[col] for col in args)):
-            shell = bas.get_group(args[0]).groupby('shell').get_group(args[-1])
-            basfns.append(CartesianBasisFunction(x, y, z, shell['Nd'],
-                                                 shell['alpha'], args[1],
-                                                 args[2], args[3]))
-    return basfns
-
-
-def _gen_spher_basfns(atom, funcs, sets, norm='Nd'):
-    """Return a list of spherical basis functions."""
-    basfns = []
-    for i, (seht, x, y, z) in enumerate(zip(atom['set'], atom['x'],
-                                            atom['y'], atom['z'])):
-        bas = sets.get_group(seht).groupby('L')
-        ordr = funcs.get_group(i)
-        for L, ml, shell in zip(ordr['L'], ordr['ml'], ordr['shell']):
-            shell = bas.get_group(L).groupby('shell').get_group(shell)
-            basfns.append(SphericalBasisFunction(x, y, z, shell[norm],
-                                                 shell['alpha'], L, ml))
-    return basfns
-
-
-def gen_gradients(bfns):
-    """Evaluate symbolic gradients."""
-    grx = [bas.gradient(cart='x') for bas in bfns]
-    gry = [bas.gradient(cart='y') for bas in bfns]
-    grz = [bas.gradient(cart='z') for bas in bfns]
-    return grx, gry, grz
-
-
-def _evaluate_symbolic(bfns, x, y, z):
-    """Evaluate symbolic functions on a numerical grid."""
-    flds = np.empty((len(bfns), len(x)), dtype=np.float64)
-    for i, bas in enumerate(bfns):
-        flds[i] = evaluate(str(bas))
-    return flds
-
-
-@jit(nopython=True, nogil=True, parallel=True)
-def _compute_orbitals(bvs, vecs, cmat): #orbs, mocoefs):
-    """Compute orbitals from numerical basis functions."""
-    ovs = np.empty((len(vecs), bvs.shape[1]), dtype=np.float64)
-    for i, vec in enumerate(vecs):
-        ovs[i] = np.dot(cmat[:, vec], bvs)
-    return ovs
-
-
-@jit(nopython=True, nogil=True, parallel=True)
-def _compute_density(ovs, occvec):
-    """Sum orbitals multiplied by their occupations."""
-    norb, npts = ovs.shape
-    dens = np.empty(npts, dtype=np.float64)
-    for i in range(norb):
-        ovs[i] *= ovs[i]
-    dens = np.dot(occvec, ovs)
-    return dens
-
-
-def _compute_current_density_numexpr(bvs, gvx, gvy, gvz, cmatr, cmati, occvec):
-    nbas, npts = bvs.shape
-    # chigradx = np.empty(npts, dtype=np.float64)
-    # chigrady = np.empty(npts, dtype=np.float64)
-    # chigradz = np.empty(npts, dtype=np.float64)
-    curx = np.zeros(npts, dtype=np.float64)
-    cury = np.zeros(npts, dtype=np.float64)
-    curz = np.zeros(npts, dtype=np.float64)
-    fp = FloatProgress(description='Total:')
-    # ifp = FloatProgress(description='Inner:')
-    # box = HBox([fp, ifp])
-    display(fp)
-    for mu in range(nbas):
-        fp.value = mu / nbas * 100
-        crmu = cmatr[mu]
-        cimu = cmati[mu]
-        bvmu = bvs[mu]
-        gvxmu = gvx[mu]
-        gvymu = gvy[mu]
-        gvzmu = gvz[mu]
-        for nu in range(nbas):
-            # ifp.value = nu / nbas * 100
-            crnu = cmatr[nu]
-            cinu = cmati[nu]
-            bvnu = bvs[nu]
-            gvxnu = gvx[nu]
-            gvynu = gvy[nu]
-            gvznu = gvz[nu]
-            cval = evaluate('-0.5 * (occvec * (crmu * cinu - cimu * crnu))').sum()
-            # chigradx = evaluate('bvmu * gvxnu - gvxmu * bvnu')
-            # chigrady = evaluate('bvmu * gvynu - gvymu * bvnu')
-            # chigradz = evaluate('bvmu * gvznu - gvzmu * bvnu')
-            curx = evaluate('curx + cval * (bvmu * gvxnu - gvxmu * bvnu)')
-            cury = evaluate('cury + cval * (bvmu * gvynu - gvymu * bvnu)')
-            curz = evaluate('curz + cval * (bvmu * gvznu - gvzmu * bvnu)')
-    # box.close()
-    fp.close()
-    # ifp.close()
-    return curx, cury, curz
-
-
-@jit(nopython=True, nogil=True, parallel=True)
-def _compute_current_density_inner_jit(bvmu, gvxmu, gvymu, gvzmu, nbas,
-                                       cmatr, cmati, occvec, mu,
-                                       curx, cury, curz):
-    for nu in range(nbas):
-        cval = (-0.5 * (occvec * (cmatr[mu] * cmati[nu]
-                                - cmati[mu] * cmatr[nu]))).sum()
-        chigradx = bvs[mu] * gvx[nu] - gvx[mu] * bvs[nu]
-        chigrady = bvs[mu] * gvy[nu] - gvy[mu] * bvs[nu]
-        chigradz = bvs[mu] * gvz[nu] - gvz[mu] * bvs[nu]
-        curx += cval * chigradx
-        cury += cval * chigrady
-        curz += cval * chigradz
-
-@jit(nopython=True, nogil=True, parallel=True)
-def _compute_current_density_innerest_jit(bvmu, gvxmu, gvymu, gvzmu, nbas,
-                                          cmatr, cmati, occvec, mu,
-                                          curx, cury, curz):
-    for nu in range(nbas):
-        cval = (-0.5 * (occvec * (cmatr[mu] * cmati[nu]
-                                - cmati[mu] * cmatr[nu]))).sum()
-        chigradx = bvs[mu] * gvx[nu] - gvx[mu] * bvs[nu]
-        chigrady = bvs[mu] * gvy[nu] - gvy[mu] * bvs[nu]
-        chigradz = bvs[mu] * gvz[nu] - gvz[mu] * bvs[nu]
-        curx += cval * chigradx
-        cury += cval * chigrady
-        curz += cval * chigradz
-
-
-
-
-@jit(nopython=True, nogil=True, parallel=True)
-def _compute_current_density_jit(bvs, gvx, gvy, gvz, cmatr, cmati, occvec):
-    """Compute the current density in each cartesian direction."""
-    nbas, npts = bvs.shape
-    chigradx = np.empty(npts, dtype=np.float64)
-    chigrady = np.empty(npts, dtype=np.float64)
-    chigradz = np.empty(npts, dtype=np.float64)
-    curx = np.zeros(npts, dtype=np.float64)
-    cury = np.zeros(npts, dtype=np.float64)
-    curz = np.zeros(npts, dtype=np.float64)
-    for mu in range(nbas):
-        _compute_current_density_inner_jit(bvs[mu], gvx[mu], gvy[mu], gvz[mu], nbas,
-                                           cmatr, cmati, occvec,
-                                           mu, curx, cury, curz)
-    return curx, cury, curz
-
-
-@jit(nopython=True, nogil=True, parallel=True)
-def _compute_current_density(bvs, gvx, gvy, gvz, cmatr, cmati, occvec):
-    """Compute the current density in each cartesian direction."""
-    nbas, npts = bvs.shape
-    chigradx = np.empty(npts, dtype=np.float64)
-    chigrady = np.empty(npts, dtype=np.float64)
-    chigradz = np.empty(npts, dtype=np.float64)
-    curx = np.zeros(npts, dtype=np.float64)
-    cury = np.zeros(npts, dtype=np.float64)
-    curz = np.zeros(npts, dtype=np.float64)
-    for mu in range(nbas):
-        for nu in range(nbas):
-            cval = (-0.5 * (occvec * (cmatr[mu] * cmati[nu]
-                                    - cmati[mu] * cmatr[nu]))).sum()
-            chigradx = bvs[mu] * gvx[nu] - gvx[mu] * bvs[nu]
-            chigrady = bvs[mu] * gvy[nu] - gvy[mu] * bvs[nu]
-            chigradz = bvs[mu] * gvz[nu] - gvz[mu] * bvs[nu]
-            curx += cval * chigradx
-            cury += cval * chigrady
-            curz += cval * chigradz
-    return curx, cury, curz
-
-
-def _compute_orb_ang_mom_numexpr(rx, ry, rz, jx, jy, jz, maxes):
-    """Compute the orbital angular momentum in each direction and the sum."""
-    ang_mom = np.empty((4, rx.shape[0]), dtype=np.float64)
-    mxx, mxy, mxz = maxes[0]
-    myx, myy, myz = maxes[1]
-    mzx, mzy, mzz = maxes[2]
-    a0 = evaluate('ry * jz - rz * jy')
-    a1 = evaluate('rz * jx - rx * jz')
-    a2 = evaluate('rx * jy - ry * jx')
-    ang_mom[0] = evaluate('mxx * a0 + mxy * a1 + mxz * a2')
-    ang_mom[1] = evaluate('myx * a0 + myy * a1 + myz * a2')
-    ang_mom[2] = evaluate('mzx * a0 + mzy * a1 + mzz * a2')
-    ang_mom[3] = ang_mom[0] + ang_mom[1] + ang_mom[2]
-    return ang_mom
-
-
-@jit(nopython=True, nogil=True, parallel=True)
-def _compute_orb_ang_mom(rx, ry, rz, jx, jy, jz, mxs):
-    """Compute the orbital angular momentum in each direction and the sum."""
-    npts = rx.shape[0]
-    ang_mom = np.empty((4, npts), dtype=np.float64)
-    a0 = ry * jz - rz * jy
-    a1 = rz * jx - rx * jz
-    a2 = rx * jy - ry * jx
-    ang_mom[0] = mxs[0,0] * a0 + mxs[1,0] * a1 + mxs[2,0] * a2
-    ang_mom[1] = mxs[0,1] * a0 + mxs[1,1] * a1 + mxs[2,1] * a2
-    ang_mom[2] = mxs[0,2] * a0 + mxs[1,2] * a1 + mxs[2,2] * a2
-    ang_mom[3] = ang_mom[0] + ang_mom[1] + ang_mom[2]
-    return ang_mom
-
-
-# @jit(nopython=True, nogil=True, cache=True)
-# def compute_mos(basvals, cmat):
-#     npts, nbas = basvals.shape
-#     orbs = np.zeros((npts, nbas), dtype=np.float64)
-#     for p in range(nbas):
-#         for mu in range(nbas):
-#             orbs[:,p] += cmat[mu, p] * basvals[:,mu]
-#     return orbs
-
-# @jit(nopython=True, nogil=True, cache=True)
-# def nb_compute_density(basvals, cmat, occvec):
-#     npts, nbas = basvals.shape
-#     dens = np.zeros(npts, dtype=np.float64)
-#     orb = np.zeros(npts, dtype=np.float64)
-#     for p in range(nbas):
-#         for mu in range(nbas):
-#             orb += cmat[mu, p] * basvals[:,mu]
-#         dens += occvec[p] * orb ** 2
-#         orb[:] = 0
-#     return dens
-
-# @jit(nopython=True, nogil=True, cache=True)
-# def compute_dumb_density(basvals, cmat, occvec):
-#     npts, nbas = basvals.shape
-#     dens = np.zeros(npts, dtype=np.float64)
-#     orb = np.zeros(npts, dtype=np.float64)
-#     for p in range(nbas):
-#         for mu in range(nbas):
-#             for nu in range(nbas):
-#                 dens += occvec[p] * cmat[mu, p] * cmat[nu, p] * basvals[:,mu] * basvals[:,nu]
-#     return dens
-
-def _make_field(flds, fps):
-    """Return an AtomicField from field arrays and parameters."""
-    try:
-        nvec = flds.shape[0]
-        if len(fps.index) == nvec:
-            fps.reset_index(drop=True, inplace=True)
-            return AtomicField(
-                fps, field_values=[flds[i] for i in range(nvec)])
-        return AtomicField(
-            make_fps(nrfps=nvec, fps=fps),
-            field_values=[flds[i] for i in range(nvec)])
-    except:
-        return AtomicField(
-            make_fps(nrfps=1, **fps),
-            field_values=[flds])
-
-
-@jit(nopython=True, nogil=True, parallel=True)
-def meshgrid3d(x, y, z):
-    tot = len(x) * len(y) * len(z)
-    xs = np.empty(tot, dtype=np.float64)
-    ys = np.empty(tot, dtype=np.float64)
-    zs = np.empty(tot, dtype=np.float64)
-    cnt = 0
-    for i in x:
-        for j in y:
-            for k in z:
-                xs[cnt] = i
-                ys[cnt] = j
-                zs[cnt] = k
-                cnt += 1
-    return xs, ys, zs
-
-
 def numerical_grid_from_field_params(fps):
+    """Construct numerical grid arrays from field parameters."""
     if isinstance(fps, pd.DataFrame):
         fps = fps.loc[0]
     ox, nx, dx = fps.ox, int(fps.nx), fps.dxi
@@ -358,58 +52,7 @@ def numerical_grid_from_field_params(fps):
     x = np.linspace(ox, mx, nx)
     y = np.linspace(oy, my, ny)
     z = np.linspace(oz, mz, nz)
-    return meshgrid3d(x, y, z)
-
-
-def _determine_bfns(uni, frame, norm):
-    """Attach symbolic basis functions if they don't exist."""
-    if hasattr(uni, 'basis_functions'):
-        if frame in uni.basis_functions: pass
-        else: uni.basis_functions[frame] = gen_bfns(uni, frame=frame, norm=norm)
-    else: uni.basis_functions = {frame: gen_bfns(uni, frame=frame, norm=norm)}
-
-
-def _determine_vector(uni, vector):
-    """Find some orbital indices in a universe."""
-    if isinstance(vector, int): return np.array([vector])
-    typs = (list, tuple, range, np.ndarray)
-    if isinstance(vector, typs): return np.array(vector)
-    norb = len(uni.basis_set_order.index)
-    if vector is None:
-        if hasattr(uni, 'orbital'):
-            homo = uni.orbital.get_orbital().vector
-        elif hasattr(uni.frame, 'N_e'):
-            homo = uni.frame['N_e'].values[0]
-        elif hasattr(uni.atom, 'Zeff'):
-            homo = uni.atom['Zeff'].sum() // 2
-        elif hasattr(uni.atom, 'Z'):
-            homo = uni.atom['Z'].sum() // 2
-        else:
-            uni.atom['Z'] = uni.atom['symbol'].map(sym2z)
-            homo = uni.atom['Z'].sum() // 2
-        if homo < 5:
-            if norb < 10: return range(norb)
-            else: return np.array(range(0, homo + 5))
-        else: return np.array(range(homo - 5, homo + 7))
-    else: raise TypeError('Try specifying vector as a list or int')
-
-
-def _determine_fps(uni, fps, nvec):
-    """Find some numerical grid paramters from a universe."""
-    if fps is None:
-        if hasattr(uni, 'field'):
-            return make_fps(nrfps=nvec, **uni.field.loc[0])
-        desc = uni.atom.describe()
-        kwargs = {'xmin': desc['x']['min'] - 5,
-                  'xmax': desc['x']['max'] + 5,
-                  'ymin': desc['y']['min'] - 5,
-                  'ymax': desc['y']['max'] + 5,
-                  'zmin': desc['z']['min'] - 5,
-                  'zmax': desc['z']['max'] + 5,
-                  'nx': 41, 'ny': 41, 'nz': 41,
-                  'nrfps': nvec}
-        return make_fps(**kwargs)
-    return make_fps(nrfps=nvec, **fps)
+    return _meshgrid3d(x, y, z)
 
 
 def make_fps(rmin=None, rmax=None, nr=None, nrfps=1,
@@ -488,3 +131,185 @@ def make_fps(rmin=None, rmax=None, nr=None, nrfps=1,
         'field_type': field_type
         })
     return pd.concat([fp] * nrfps, axis=1).T
+
+
+def _make_field(flds, fps):
+    """Return an AtomicField from field arrays and parameters."""
+    try:
+        nvec = flds.shape[0]
+        if len(fps.index) == nvec:
+            fps.reset_index(drop=True, inplace=True)
+            return AtomicField(
+                fps, field_values=[flds[i] for i in range(nvec)])
+        return AtomicField(
+            make_fps(nrfps=nvec, fps=fps),
+            field_values=[flds[i] for i in range(nvec)])
+    except:
+        return AtomicField(
+            make_fps(nrfps=1, **fps),
+            field_values=[flds])
+
+
+def _compute_current_density(bvs, gvx, gvy, gvz, cmatr, cmati, occvec, verbose=True):
+    """Compute the current density in each cartesian direction."""
+    nbas, npts = bvs.shape
+    curx = np.zeros(npts, dtype=np.float64)
+    cury = np.zeros(npts, dtype=np.float64)
+    curz = np.zeros(npts, dtype=np.float64)
+    fp = FloatProgress(description='Computing:')
+    if verbose:
+        display(fp)
+    for mu in range(nbas):
+        fp.value = mu / nbas * 100
+        crmu = cmatr[mu]
+        cimu = cmati[mu]
+        bvmu = bvs[mu]
+        gvxmu = gvx[mu]
+        gvymu = gvy[mu]
+        gvzmu = gvz[mu]
+        for nu in range(nbas):
+            crnu = cmatr[nu]
+            cinu = cmati[nu]
+            bvnu = bvs[nu]
+            gvxnu = gvx[nu]
+            gvynu = gvy[nu]
+            gvznu = gvz[nu]
+            cval = evaluate('-0.5 * (occvec * (crmu * cinu - cimu * crnu))').sum()
+            curx = evaluate('curx + cval * (bvmu * gvxnu - gvxmu * bvnu)')
+            cury = evaluate('cury + cval * (bvmu * gvynu - gvymu * bvnu)')
+            curz = evaluate('curz + cval * (bvmu * gvznu - gvzmu * bvnu)')
+    fp.close()
+    return curx, cury, curz
+
+
+def _determine_bfns(uni, frame, norm, forcecart=False):
+    """Cache and return symbolic basis functions if they don't exist."""
+    if hasattr(uni, 'basis_functions'):
+        if frame in uni.basis_functions:
+            return uni.basis_functions[frame]
+        else:
+            uni.basis_functions[frame] = gen_bfns(uni, frame=frame,
+                                                  forcecart=forcecart)
+            return uni.basis_functions[frame]
+    else:
+        uni.basis_functions = {frame: gen_bfns(uni, frame=frame,
+                                               forcecart=forcecart)}
+        return uni.basis_functions[frame]
+
+
+def _determine_vector(uni, vector):
+    """Find some orbital indices in a universe."""
+    if isinstance(vector, int): return np.array([vector])
+    typs = (list, tuple, range, np.ndarray)
+    if isinstance(vector, typs): return np.array(vector)
+    norb = len(uni.basis_set_order.index)
+    if vector is None:
+        if norb < 10:
+            return np.array(range(norb))
+        if hasattr(uni, 'orbital'):
+            homo = uni.orbital.get_orbital().vector
+        elif hasattr(uni.frame, 'N_e'):
+            homo = uni.frame['N_e'].values[0]
+        elif hasattr(uni.atom, 'Zeff'):
+            homo = uni.atom['Zeff'].sum() // 2
+        elif hasattr(uni.atom, 'Z'):
+            homo = uni.atom['Z'].sum() // 2
+        else:
+            uni.atom['Z'] = uni.atom['symbol'].map(sym2z)
+            homo = uni.atom['Z'].sum() // 2
+        if homo < 5:
+            return np.array(range(0, homo + 5))
+        else:
+            return np.array(range(homo - 5, homo + 7))
+    else:
+        raise TypeError('Try specifying vector as a list or int')
+
+
+def _determine_fps(uni, fps, nvec):
+    """Find some numerical grid parameters in a universe."""
+    if fps is None:
+        if hasattr(uni, 'field'):
+            return make_fps(nrfps=nvec, **uni.field.loc[0])
+        desc = uni.atom.describe()
+        kwargs = {'xmin': desc['x']['min'] - 5,
+                  'xmax': desc['x']['max'] + 5,
+                  'ymin': desc['y']['min'] - 5,
+                  'ymax': desc['y']['max'] + 5,
+                  'zmin': desc['z']['min'] - 5,
+                  'zmax': desc['z']['max'] + 5,
+                  'nx': 41, 'ny': 41, 'nz': 41,
+                  'nrfps': nvec}
+        return make_fps(**kwargs)
+    return make_fps(nrfps=nvec, **fps)
+
+
+def _check_column(uni, df, key): # mocoefs, orbocc, rcoefs, icoefs):
+    """Repetitive checking of columns in a universe."""
+    if key is None:
+        if df == 'momatrix':
+            key = 'coef'
+        elif df == 'orbital':
+            key = 'occupation'
+    err = '"{}" not in uni.{}.columns'.format
+    if key not in getattr(uni, df).columns:
+        raise Exception(err(key, df))
+    return key
+
+
+@jit(nopython=True, nogil=True, parallel=True)
+def _compute_orbitals(bvs, vecs, cmat):
+    """Compute orbitals from numerical basis functions."""
+    ovs = np.empty((len(vecs), bvs.shape[1]), dtype=np.float64)
+    for i, vec in enumerate(vecs):
+        ovs[i] = np.dot(cmat[:, vec], bvs)
+    return ovs
+
+def _compute_orbitals_nojit(bvs, vecs, cmat):
+    """Compute orbitals from numerical basis functions."""
+    ovs = np.empty((len(vecs), bvs.shape[1]), dtype=np.float64)
+    for i, vec in enumerate(vecs):
+        ovs[i] = np.dot(cmat[:, vec], bvs)
+    return ovs
+
+
+@jit(nopython=True, nogil=True, parallel=True)
+def _compute_density(ovs, occvec):
+    """Sum orbitals multiplied by their occupations."""
+    norb, npts = ovs.shape
+    dens = np.empty(npts, dtype=np.float64)
+    for i in range(norb):
+        ovs[i] *= ovs[i]
+    dens = np.dot(occvec, ovs)
+    return dens
+
+
+@jit(nopython=True, nogil=True, parallel=True)
+def _compute_orb_ang_mom(rx, ry, rz, jx, jy, jz, mxs):
+    """Compute the orbital angular momentum in each direction and the sum."""
+    npts = rx.shape[0]
+    ang_mom = np.empty((4, npts), dtype=np.float64)
+    a0 = ry * jz - rz * jy
+    a1 = rz * jx - rx * jz
+    a2 = rx * jy - ry * jx
+    ang_mom[0] = mxs[0,0] * a0 + mxs[1,0] * a1 + mxs[2,0] * a2
+    ang_mom[1] = mxs[0,1] * a0 + mxs[1,1] * a1 + mxs[2,1] * a2
+    ang_mom[2] = mxs[0,2] * a0 + mxs[1,2] * a1 + mxs[2,2] * a2
+    ang_mom[3] = ang_mom[0] + ang_mom[1] + ang_mom[2]
+    return ang_mom
+
+
+@jit(nopython=True, nogil=True, parallel=True)
+def _meshgrid3d(x, y, z):
+    tot = len(x) * len(y) * len(z)
+    xs = np.empty(tot, dtype=np.float64)
+    ys = np.empty(tot, dtype=np.float64)
+    zs = np.empty(tot, dtype=np.float64)
+    cnt = 0
+    for i in x:
+        for j in y:
+            for k in z:
+                xs[cnt] = i
+                ys[cnt] = j
+                zs[cnt] = k
+                cnt += 1
+    return xs, ys, zs

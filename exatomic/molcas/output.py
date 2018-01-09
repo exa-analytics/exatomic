@@ -180,9 +180,8 @@ class Output(six.with_metaclass(OutMeta, Editor)):
 
 
     def parse_basis_set(self):
-        """
-        Parses the primitive exponents, coefficients and shell if BSSHOW specified in SEWARD.
-        """
+        """Parses the primitive exponents, coefficients and
+        shell if BSSHOW specified in SEWARD."""
         found = self.find(_re_bas_0, _re_bas_1, _re_bas_2, keys_only=True)
         bmaps = [i + 1 for i in found[_re_bas_0]]
         atoms = [i + 2 for i in found[_re_bas_1]]
@@ -207,14 +206,20 @@ class Output(six.with_metaclass(OutMeta, Editor)):
                                                basmap['nPrim'], basmap['nBasis']):
             if pset != seht: shell = 0
             # In case contraction coefficients overflow to next line
-            neat = len(self[start].split()) == len(self[start + 1].split())
-            if neat: block = self.pandas_dataframe(start, start + nprim, nbas + 2)
+            nmatch = len(self[start].split())
+            neat = nmatch == len(self[start + 1].split())
+            if neat:
+                block = self.pandas_dataframe(start, start + nprim, nbas + 2)
             else:
-                stop = start + 2 * nprim
-                most = self[start:stop:2]
-                extr = self[start + 1:stop:2]
-                ncols = len(most[0].split()) + len(extr[0].split())
-                block = pd.read_csv(StringIO('\n'.join([i + j for i, j in zip(most, extr)])),
+                # Extra obfuscation to handle exotic cases
+                ext = 1
+                while nmatch != len(self[start + ext].split()):
+                    ext += 1
+                stop = start + ext * nprim
+                collated = [''.join(self[start + i * ext : start + i * ext + ext])
+                            for i in range(nprim)]
+                ncols = len(collated[0].split())
+                block = pd.read_csv(StringIO('\n'.join(collated)),
                                     delim_whitespace=True, names=range(ncols))
             alps = (pd.concat([block[1]] * nbas).reset_index(drop=True)
                     .str.replace('D', 'E').astype(np.float64))

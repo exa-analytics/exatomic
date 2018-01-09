@@ -3,7 +3,7 @@
 # Distributed under the terms of the Apache License 2.0
 from . import error
 from .atom import Atom, UnitAtom, ProjectedAtom, VisualAtom, Frequency
-from .basis import BasisSet, BasisSetOrder, Overlap, Primitive
+from .basis import BasisSet, BasisSetOrder, Overlap
 from .field import AtomicField
 from .frame import Frame
 from .universe import Universe

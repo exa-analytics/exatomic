@@ -7,17 +7,32 @@ ADF Composite Output
 This module provides the primary (user facing) output parser.
 """
 import re
+import six
 import numpy as np
 import pandas as pd
 from io import StringIO
+
+from exa.util.units import Length
+from exa import TypedMeta
+
 from exatomic.base import sym2z
 from exatomic.algorithms.basis import lmap, enum_cartesian
-from exatomic.core.basis import BasisSet
-from exa.util.units import Length
+from ..core.atom import Atom
+from exatomic.core.basis import BasisSet, BasisSetOrder
+from ..core.orbital import Orbital, Excitation, MOMatrix
 from .editor import Editor
 
+class OutMeta(TypedMeta):
+    atom = Atom
+    basis_set = BasisSet
+    basis_set_order = BasisSetOrder
+    orbital = Orbital
+    contribution = pd.DataFrame
+    excitation = Excitation
+    momatrix = MOMatrix
 
-class Output(Editor):
+
+class Output(six.with_metaclass(OutMeta, Editor)):
     """
     The ADF output parser.
     """
