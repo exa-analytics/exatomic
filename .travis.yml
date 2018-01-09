@@ -1,67 +1,70 @@
-language: python
-
 matrix:
     include:
         - os: linux
+          language: python
           python: 2.7
-          env: TOXENV=py2.7
-        - os: linux
-          python: 3.5
-          env: TOXENV=py3.5
-        - os: linux
-          python: 3.6
-          env: TOXENV=py3.7
-        - os: osx
-          language: generic
-          sudo: required
-          env: TOXENV=py2.7
-        - os: osx
-          language: generic
-          sudo: required
-          env: TOXENV=py3.5
-        - os: osx
-          language: generic
-          sudo: required
-          env: TOXENV=py3.6
+          env: PYTHONVER=2.7
 
-before_install:
-  - if [ $TRAVIS_OS_NAME == "osx" ]; then
-      wget http://repo.continuum.io/miniconda/Miniconda3-latest-MacOSX-x86_64.sh -O miniconda.sh;
-      sudo Xvfb :99 -ac -screen 0 1024x768x8; echo ok;
-    else
-      wget http://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh -O miniconda.sh;
-      export DISPLAY=:99.0;
-      sh -e /etc/init.d/xvfb start;
-      sleep 3;
-    fi
-  - sh miniconda.sh -b -p ~/miniconda
-  - export NUMBA_DISABLE_JIT=1    # For coverage report
-  - export PATH="~/miniconda/bin:$PATH"
-  - conda config --set always_yes yes --set changeps1 no
-  - conda update -q --all
+        - os: linux
+          language: python
+          python: 3.5
+          env: PYTHONVER=3.5
+
+        - os: linux
+          language: python
+          python: 3.6
+          env: PYTHONVER=3.6
+
+        - os: osx
+          language: generic
+          env: PYTHONVER=3.6
 
 # There are a lot of requirements here because we do coverage, testing, reporting, doc building
 install:
-  - conda install -q python=$TRAVIS_PYTHON_VERSION
-  - conda install -q -c conda-forge six numpy pandas pytables numba sympy
-  - conda install -q symengine -c symengine -c conda-forge
-  - conda install -q python-symengine -c symegine -c conda-forge
-  - conda install -q -c conda-forge sphinx sphinx_rtd_theme ply pandoc pypandoc nbsphinx
-  - conda install -q -c conda-forge python-coveralls nose ipython
-  - pip install travis-sphinx codacy-coverage coverage
-  - git clone https://github.com/avmarchenko/exa.git
-  - cd exa
-  - pip install .
-  - cd ../;
-  - conda install -q -c conda-forge numexpr nodejs ipywidgets
-  - pip install .
+    - if [[ $TRAVIS_OS_NAME == "osx" ]]; then
+          wget https://repo.continuum.io/miniconda/Miniconda3-latest-MacOSX-x86_64.sh -O miniconda.sh;
+      else
+          wget https://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh -O miniconda.sh;
+      fi;
+      echo "DONE"
+    - bash miniconda.sh -b -p $HOME/miniconda
+    - export NUMBA_DISABLE_JIT=1    # For coverage report
+    - export PATH="$HOME/miniconda/bin:$PATH"
+    - conda config --set always_yes yes --set changeps1 no
+    - conda update -q --all
+    - conda create -n test python=$PYTHONVER
+    - source activate test
+    - conda install -q -c conda-forge six numpy pandas pytables numba sympy python-symengine
+    - conda install -q -c conda-forge sphinx sphinx_rtd_theme ply 
+    - conda install -c conda-forge pandoc pypandoc nbsphinx ipython
+    - conda install -q -c conda-forge python-coveralls coverage pytest pytest-cov
+
+    - pip install travis-sphinx codacy-coverage
+    - git clone https://github.com/exa-analytics/exa.git
+    - cd exa
+    - git checkout 0.3.9
+    - pip install .
+    - cd ../
+    - rm -rf exa
+
+    - conda install -q -c conda-forge numexpr nodejs ipywidgets
+    - pip install .
 
 script:
-  - nosetests --with-coverage
-  - coverage xml
-  - travis-sphinx -n build
+    - export PYTHONDONTWRITEBYTECODE=1
+    - if [[ $TRAVIS_OS_NAME == "linux" ]]; then
+          pytest --cov;
+          coverage xml;
+      else
+          pytest;
+      fi
+    - if [[ $TRAVIS_OS_NAME == "linux" ]] && [[ $PYTHONVER == 3.6 ]]; then
+          travis-sphinx build;
+      fi
 
 after_success:
-  - coveralls
-  - python-codacy-coverage -r coverage.xml
-  - travis-sphinx -n deploy
+    - if [[ $TRAVIS_OS_NAME == "linux" ]] && [[ $PYTHONVER == 3.6 ]]; then
+          coveralls;
+          python-codacy-coverage -r coverage.xml;
+          travis-sphinx deploy;
+      fi
