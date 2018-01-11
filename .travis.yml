@@ -46,7 +46,6 @@ install:
     - pip install .
     - cd ../
     - rm -rf exa
-
     - conda install -q -c conda-forge numexpr nodejs ipywidgets
     - pip install .
 

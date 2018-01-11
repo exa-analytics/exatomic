@@ -1,4 +1,4 @@
-{% set name = "exa" %}
+{% set name = "exatomic" %}
 {% set version = "0.3.9" %}
 {% set build = 0 %}
 
