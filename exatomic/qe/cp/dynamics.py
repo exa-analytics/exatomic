@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# Copyright (c) 2015-2017, Exa Analytics Development Team
+# Copyright (c) 2015-2018, Exa Analytics Development Team
 # Distributed under the terms of the Apache License 2.0
 """
 QE cp.x Molecular Dynamics
@@ -352,7 +352,7 @@ def parse_xyz(path, symbols, columns=("x", "y", "z"), **kwargs):
 #    return Frame(df)
 ###=======
 #### -*- coding: utf-8 -*-
-#### Copyright (c) 2015-2017, Exa Analytics Development Team
+#### Copyright (c) 2015-2018, Exa Analytics Development Team
 #### Distributed under the terms of the Apache License 2.0
 ###"""
 ###QE cp.x Molecular Dynamics
