@@ -1,12 +1,12 @@
 # -*- coding: utf-8 -*-
 # Copyright (c) 2015-2018, Exa Analytics Development Team
 # Distributed under the terms of the Apache License 2.0
-import os
-import numpy as np
-from glob import glob
+#import os
+#import numpy as np
+#from glob import glob
 from unittest import TestCase
-from exatomic.adf.output import Output
-from exatomic import Cube
+#from exatomic.adf.output import Output
+#from exatomic import Cube
 
 
 class TestOrbital(TestCase):

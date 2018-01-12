@@ -10,7 +10,7 @@ from exatomic import Editor as AtomicEditor
 
 class Editor(AtomicEditor):
     def __init__(self, *args, **kwargs):
-        super(Editor, self).__init__(*args, **kwargs)
+        super(AtomicEditor, self).__init__(*args, **kwargs)
         if self.meta is None:
             self.meta = {'program': 'adf'}
         else:
