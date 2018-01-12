@@ -181,7 +181,7 @@ html_last_updated_fmt = "%b %d, %Y"
 
 # If true, SmartyPants will be used to convert quotes and dashes to
 # typographically correct entities.
-html_use_smartypants = True
+#html_use_smartypants = True
 
 # Custom sidebar templates, maps document names to template names.
 #html_sidebars = {}
@@ -319,7 +319,7 @@ texinfo_show_urls = "footnote"
 epub_title = project
 epub_author = author
 epub_publisher = author
-epub_copyright = copyrite
+#epub_copyright = copyrite
 
 # The basename for the epub file. It defaults to the project name.
 #epub_basename = project
