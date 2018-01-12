@@ -50,6 +50,5 @@ __js_version__ = "^0.4.6"
 from ._version import __version__
 from . import core
 from .core import Universe, Editor, Atom, AtomicField, Frame
-from .interfaces import XYZ, Cube
+from .interfaces import Cube, XYZ
 from .widgets import DemoContainer, DemoUniverse, UniverseWidget, TensorContainer
-# from . import widgets

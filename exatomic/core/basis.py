@@ -259,11 +259,9 @@ class Overlap(DataFrame):
 # (NCartPrim, NSphrPrim) dimensions and (NPrim, NBas) dimensions
 class Primitive(DataFrame):
     """
-    Notice: Primitive is just a join of basis set and atom, re-work needed.
-    Contains the required information to perform molecular integrals. Some
-    repetition of data with GaussianBasisSet but for convenience also produced
-    here. This is an intermediary DataFrame which won't exist in a production
-    implementation
+    Note:
+        Primitive is just a join of basis set and atom, re-work needed.
+        Contains the required information to perform molecular integrals.
 
     +-------------------+----------+-------------------------------------------+
     | Column            | Type     | Description                               |

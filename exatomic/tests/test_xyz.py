@@ -7,14 +7,14 @@ Tests for :mod:`~exatomic.xyz`
 """
 from unittest import TestCase
 from exatomic.base import resource
-from exatomic.xyz import XYZ
+from exatomic import XYZ
 
 
-check = {'H2O.xyz.bz2': 3, 'H2.xyz.bz2': 2, 'O2.xyz.bz2': 2, 'UCl6.xyz.bz2': 7,
-         'UO2.xyz.bz2': 3, 'ZnPorphyrin.xyz.bz2': 77, 'ZrO2.xyz.bz2': 3,
-         'H2O.traj.xyz.bz2': 225600, 'benzene.xyz.bz2': 12, 'CH3NH2.xyz.bz2': 7,
-         'methyl_134_triazole.xyz.bz2': 11, 'kaolinite.xyz.bz2': 26,
-         'magnesite.xyz.bz2': 60, 'zabuyelite.xyz.bz2': 24}
+check = {'H2O.xyz': 3, 'H2.xyz': 2, 'O2.xyz': 2, 'UCl6.xyz': 7,
+         'UO2.xyz': 3, 'ZnPorphyrin.xyz': 77, 'ZrO2.xyz': 3,
+         'H2O.traj.xyz': 225600, 'benzene.xyz': 12, 'CH3NH2.xyz': 7,
+         'methyl_134_triazole.xyz': 11, 'kaolinite.xyz': 26,
+         'magnesite.xyz': 60, 'zabuyelite.xyz': 24}
 
 
 class TestXYZ(TestCase):
@@ -24,4 +24,6 @@ class TestXYZ(TestCase):
     """
     def test_sizes(self):
         for name, size in check.items():
-            self.assertEqual(XYZ(resource(name)).atom.shape[0], size)
+            xyz = XYZ(resource(name))
+            xyz.parse_atom()
+            self.assertEqual(xyz.atom.shape[0], size)
