@@ -81,7 +81,7 @@ def combine_curvature(curvs, order=None):
     return pd.concat(reordered, axis=1)
 
 
-def compute_curvature(*args, neut=None, tag='', extras=True):
+def compute_curvature(*args, **kwargs):
     """
     Computes the curvature of the energy of a system as a function
     of the number of electrons in the system E(N).
@@ -94,6 +94,9 @@ def compute_curvature(*args, neut=None, tag='', extras=True):
     Returns
         df (pd.DataFrame): The energy as a function of N
     """
+    neut = kwargs.pop('neut', None)
+    tag = kwargs.pop('tag', '')
+    extras = kwargs.pop('extras', True)
     if len(args) == 1:
         raise Exception("Must have at least 2 systems "
                         "differing in electron number.")

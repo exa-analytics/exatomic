@@ -52,7 +52,8 @@ since some auxiliary packages come from there.
 Note that to test a build, set uploading to false (anaconda_upload: false in .condarc) and
 in the meta.yaml source change the url to `git_url: ./`.
 ```bash
-conda build .    # conda build . --output
+conda build .    # conda build . --output to see location
+# For other python version, conda build --python x.x
 conda convert -f --platform all /path/to/conda-bld/pltfrm/exa-...tar.bz2 -o /path/to/outputdir/
 conda upload /path/to/build/build.tar.bz2    # For each build
 ```

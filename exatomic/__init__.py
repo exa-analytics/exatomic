@@ -46,7 +46,7 @@ def _jupyter_nbextension_paths():
     }]
 
 
-__js_version__ = "^0.4.6"
+__js_version__ = "^0.4.7"
 from ._version import __version__
 from . import core
 from .core import Universe, Editor, Atom, AtomicField, Frame
