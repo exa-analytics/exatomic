@@ -59,6 +59,7 @@ install:
   - cmd: git checkout 0.3.9
   - cmd: conda install -q -y -c conda-forge numpy scipy matplotlib seaborn networkx pandas nose numba pytables six
   - cmd: conda install -q -c conda-forge pytables python-coveralls ply pandoc pypandoc nbsphinx sympy
+  - cmd: conda install -q -c symengine symengine python-symengine
   - cmd: conda install -q -c conda-forge 'icu=56.*'
   - cmd: pip install travis-sphinx codacy-coverage coverage
   - cmd: pip install .
