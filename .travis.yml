@@ -34,7 +34,8 @@ install:
     - conda update -q --all
     - conda create -n test python=$PYTHONVER
     - source activate test
-    - conda install -q -c conda-forge six numpy pandas pytables numba sympy python-symengine
+    - conda install -q -c symengine symengine python-symengine
+    - conda install -q -c conda-forge six numpy pandas pytables numba sympy
     - conda install -q -c conda-forge sphinx sphinx_rtd_theme ply 
     - conda install -c conda-forge pandoc pypandoc nbsphinx ipython
     - conda install -q -c conda-forge python-coveralls coverage pytest pytest-cov
