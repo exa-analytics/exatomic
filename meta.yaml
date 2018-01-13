@@ -1,12 +1,13 @@
 {% set name = "exatomic" %}
-{% set version = "0.3.9" %}
+{% set version = "0.3.10" %}
 
 package:
   name: {{ name }}
   version: {{ version }}
 
 source:
-  git_url: ./
+  fn: {{ name }}-{{ version }}.tar.gz
+  url: https://pypi.io/packages/source/{{ name[0] }}/{{ name }}/{{ name }}-{{ version }}.tar.gz
 
 requirements:
   build:
