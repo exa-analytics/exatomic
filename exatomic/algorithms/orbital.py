@@ -14,7 +14,7 @@ from datetime import datetime
 
 # Local
 from exatomic.base import sym2z
-from exatomic.core.field import AtomicField
+#from exatomic.core.field import AtomicField
 from .orbital_util import (
     numerical_grid_from_field_params, gen_bfns, gen_gradients,
     _determine_fps, _determine_vector, _determine_bfns,
@@ -138,7 +138,7 @@ def add_orb_ang_mom_jit(uni, field_params=None, rcoefs=None, icoefs=None,
                             frame=None, orbocc=None, maxes=None, inplace=True,
                             norm='Nd'):
     """Compute the orbital angular momentum and add it to a universe."""
-    t0 = datetime.now()
+    #t0 = datetime.now()
     frame = uni.atom.nframes - 1 if frame is None else frame
     if (rcoefs not in uni.momatrix.columns) or \
        (icoefs not in uni.momatrix.columns):
@@ -181,7 +181,7 @@ def add_orb_ang_mom_numexpr(uni, field_params=None, rcoefs=None, icoefs=None,
                             frame=None, orbocc=None, maxes=None, inplace=True,
                             norm='Nd'):
     """Compute the orbital angular momentum and add it to a universe."""
-    t0 = datetime.now()
+    #t0 = datetime.now()
     frame = uni.atom.nframes - 1 if frame is None else frame
     if (rcoefs not in uni.momatrix.columns) or \
        (icoefs not in uni.momatrix.columns):
@@ -225,7 +225,7 @@ def add_orb_ang_mom(uni, field_params=None, rcoefs=None, icoefs=None,
                     frame=None, orbocc=None, maxes=None, inplace=True,
                     norm='Nd'):
     """Compute the orbital angular momentum and add it to a universe."""
-    t0 = datetime.now()
+    #t0 = datetime.now()
     frame = uni.atom.nframes - 1 if frame is None else frame
     if (rcoefs not in uni.momatrix.columns) or \
        (icoefs not in uni.momatrix.columns):

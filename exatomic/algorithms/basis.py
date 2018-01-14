@@ -20,7 +20,7 @@ from numba import jit, vectorize
 import re
 from operator import add
 from numexpr import evaluate
-from symengine import var, exp, Add, Mul, Integer
+from symengine import var, exp, Mul, Integer#, Add
 
 var("x y z")
 

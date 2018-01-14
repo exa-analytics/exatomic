@@ -5,7 +5,7 @@
 Geometry Parser ('A D F' Calculations)
 #########################################
 """
-import re
+#import re
 import pandas as pd
 from exa import Parser, Typed
 from exatomic.core.atom import Atom

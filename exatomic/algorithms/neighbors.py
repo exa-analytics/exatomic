@@ -47,7 +47,8 @@ def nearest_molecules(universe, n, sources, restrictions=None, how='atom',
     Returns:
         unis (dict): Dictionary of number of neighbors keys, universe values
     """
-    source_atoms, other_atoms, source_molecules, other_molecules, n = _slice_atoms_molecules(universe, sources, restrictions, n)
+    #source_atoms, other_atoms, source_molecules, other_molecules, n = _slice_atoms_molecules(universe, sources, restrictions, n)
+    source_atoms, other_atoms, source_molecules, _, n = _slice_atoms_molecules(universe, sources, restrictions, n)
     ordered_molecules, ordered_twos = _compute_neighbors_by_atom(universe, source_atoms, other_atoms, source_molecules)
     unis = {}
     if free_boundary == True:
