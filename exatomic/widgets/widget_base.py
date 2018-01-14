@@ -9,9 +9,7 @@ import os
 import numpy as np
 from base64 import b64decode
 from traitlets import (Bool, Int, Float, Unicode,
-                       List, Any, Dict, Instance, link)
-                       # Unused == Any, Instance
-
+                       List, Any, Dict, link) #Instance, link)
 from ipywidgets import (
     Box, VBox, HBox, FloatSlider, IntSlider, Play, Text,
     IntRangeSlider, DOMWidget, Layout, Button, Dropdown,
@@ -256,7 +254,8 @@ class ExatomicBox(Box):
         opts = _ListDict([
             (str(i), ToggleButton(description=str(i), value=True))
             for i, scn in enumerate(self.scenes)])
-        for key, obj in opts.items():
+        #for key, obj in opts.items():
+        for _, obj in opts.items():
             obj.observe(self._update_active, names='value')
 
         return Folder(active, opts)
@@ -402,10 +401,12 @@ class ExatomicBox(Box):
                                         test=test,
                                         uni=uni)
 
-        for key, obj in self._controls.items():
+        #for key, obj in self._controls.items():
+        for _, obj in self._controls.items():
             if not hasattr(obj, 'active'): obj.active = True
 
-        lo = kwargs.pop('layout', None)
+        #lo = kwargs.pop('layout', None)
+        _ = kwargs.pop('layout', None)
         gui = GUIBox(self._get())
         children = [gui, scenes] if self.scenes else [gui]
 

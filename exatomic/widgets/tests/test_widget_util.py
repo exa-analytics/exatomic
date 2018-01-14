@@ -62,7 +62,8 @@ class TestFolder(TestCase):
         fol = Folder(Button(), _ListDict([('a', Button()), ('b', Button())]))
         fol.pop('a')
         with self.assertRaises(KeyError):
-            a = fol['a']
+            fol['a']
+            #a = fol['a']
 
     def test_get(self):
         fol = Folder(Button(), _ListDict([('a', Button()), ('b', Button())]))

@@ -36,7 +36,7 @@ def absolute_squared_displacement(universe, ref_frame=None):
     universe.atom['label'] = universe.atom.get_atom_labels()
     groups = universe.atom.groupby('label')
     msd = np.empty((groups.ngroups, ), dtype='O')
-    for i, (label, group) in enumerate(groups):
+    for i, (_, group) in enumerate(groups):
         xyz = group[['x', 'y', 'z']].values
         msd[i] = ((xyz - xyz[0])**2).sum(axis=1)
     del universe.atom['label']

@@ -171,7 +171,8 @@ class Output(six.with_metaclass(OutMeta, Editor)):
             tot = 0
             lml_count = spher_lml_count
             for l, n in funcs[seht].items():
-                for i in range(lml_count[l]):
+                #for i in range(lml_count[l]):
+                for _ in range(lml_count[l]):
                     shells += list(range(tot, n + tot))
                 tot += n
         df['shell'] = shells

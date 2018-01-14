@@ -224,15 +224,15 @@ def _build_universe(universe, ordered_molecules, ordered_twos, n):
     """
     raise NotImplementedError()
     # TODO CONVERT TO A GENERIC AND COMPLETE SLICER
-    molecules = np.concatenate([m[:n] for m in ordered_molecules])
-    twos = np.concatenate([t[:n] for t in ordered_twos])
-    atom = universe.atom[universe.atom['molecule'].isin(molecules)].copy().sort_index()
-    two = universe.atom_two[universe.atom_two['atom0'].isin(atom.index) &
-                            universe.atom_two['atom1'].isin(atom.index)].copy().sort_index()
-    projected_atom = universe.projected_atom.ix[two.index.values].copy().sort_index()
-    visual_atom = universe.visual_atom.ix[atom.index].copy().sort_index()
-    molecule = universe.molecule.ix[molecules].copy().sort_index()
-    frame = universe.frame.copy().sort_index()
-    uni = Universe(atom=atom, atom_two=two, molecule=molecule, frame=frame,
-                   visual_atom=visual_atom, projected_atom=projected_atom)
-    return uni
+#    molecules = np.concatenate([m[:n] for m in ordered_molecules])
+#    twos = np.concatenate([t[:n] for t in ordered_twos])
+#    atom = universe.atom[universe.atom['molecule'].isin(molecules)].copy().sort_index()
+#    two = universe.atom_two[universe.atom_two['atom0'].isin(atom.index) &
+#                            universe.atom_two['atom1'].isin(atom.index)].copy().sort_index()
+#    projected_atom = universe.projected_atom.ix[two.index.values].copy().sort_index()
+#    visual_atom = universe.visual_atom.ix[atom.index].copy().sort_index()
+#    molecule = universe.molecule.ix[molecules].copy().sort_index()
+#    frame = universe.frame.copy().sort_index()
+#    uni = Universe(atom=atom, atom_two=two, molecule=molecule, frame=frame,
+#                   visual_atom=visual_atom, projected_atom=projected_atom)
+#    return uni

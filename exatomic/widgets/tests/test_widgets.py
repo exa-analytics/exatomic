@@ -80,6 +80,3 @@ class TestUniverseWidget(TestCase):
         self.assertEqual(list(main.keys()),
                          ['close', 'clear', 'active', 'saves',
                           'camera', 'atom_3d', 'axis', 'frame'])
-
-
-    pass

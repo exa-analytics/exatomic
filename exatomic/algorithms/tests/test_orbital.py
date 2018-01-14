@@ -4,10 +4,10 @@
 """
 Tests for building molecular orbitals
 """
-import numpy as np
-import pandas as pd
-from unittest import TestCase
-from exatomic.algorithms.basis import clean_sh, solid_harmonics
+#import numpy as np
+#import pandas as pd
+#from unittest import TestCase
+#from exatomic.algorithms.basis import clean_sh, solid_harmonics
 # from exatomic.algorithms.orbital import (_make_fps #, _atompos, _sphr_prefac,
 #                                          )#_cart_prefac, gen_basfn)
 #

@@ -234,10 +234,11 @@ def functional_inputs(uni, name, mult, charge, basis,
             this_link = [('chk', jobname + '.chk')]
             field = field if field is not None else ''
             this_route = ['Charge'] if field else []
-            opts = {'title': jobname, 'mult': mul, 'charge': chg,
-                    'link0': link_opts + this_link,
-                    'route': route_opts + this_route,
-                    'writedir': writedir, 'postatom': field,
-                    'basis': basis}
+            # opts unused?
+            #opts = {'title': jobname, 'mult': mul, 'charge': chg,
+            #        'link0': link_opts + this_link,
+            #        'route': route_opts + this_route,
+            #        'writedir': writedir, 'postatom': field,
+            #        'basis': basis}
             editors.append(Input.from_universe(uni, **args))
     return editors

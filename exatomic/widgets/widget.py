@@ -34,7 +34,7 @@ class DemoContainer(ExatomicBox):
         folder.insert(1, 'options', fopts)
         return folder
 
-
+    # Parameters differ why/needs fix?
     def _init_gui(self, **kwargs):
         """Initialize generic GUI controls and observe callbacks."""
         mainopts = super(DemoContainer, self)._init_gui()
@@ -46,7 +46,6 @@ class DemoContainer(ExatomicBox):
         mainopts.update([('geom', geom),
                          ('field', self._field_folder(**kwargs))])
         return mainopts
-
 
     def __init__(self, *scenes, **kwargs):
         super(DemoContainer, self).__init__(*scenes,

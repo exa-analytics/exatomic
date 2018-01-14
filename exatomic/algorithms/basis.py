@@ -21,7 +21,6 @@ import re
 from operator import add
 from numexpr import evaluate
 from symengine import var, exp, Add, Mul, Integer
-from collections import OrderedDict
 
 var("x y z")
 
@@ -416,8 +415,10 @@ def _wrap_overlap(x, y, z, l, m, n, N, alpha):
             l2 = l[j]
             m2 = m[j]
             n2 = n[j]
+            # Unused?
             N1 = N[i]
             N2 = N[j]
+            #
             alpha1 = alpha[i]
             alpha2 = alpha[j]
             abx = xA - xB

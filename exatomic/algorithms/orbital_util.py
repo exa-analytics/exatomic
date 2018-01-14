@@ -8,7 +8,7 @@ Molecular orbitals are constructed symbolically
 then evaluated on a numerical grid.
 These are their stories.
 '''
-from ipywidgets import FloatProgress, HBox
+from ipywidgets import FloatProgress
 from IPython.display import display
 import numpy as np
 import pandas as pd

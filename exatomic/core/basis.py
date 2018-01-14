@@ -132,7 +132,7 @@ class BasisSet(DataFrame):
         for seht, grp in self.groupby('set'):
             prims[seht] = 0
             for a, sub in grp.groupby('alpha'):
-                for L, sml in sub.groupby('L'):
+                for _, sml in sub.groupby('L'):
                     if not len(sml.index): continue
                     prims[seht] += lml_count[sml.iloc[0]['L']]
         return pd.Series(prims)
@@ -364,12 +364,14 @@ class Primitive(DataFrame):
                 # Cartesian to spherical prim
                 c2s = conv[L]
                 cplus, splus = c2s.shape
-                for j in range(pdim):
+                #for j in range(pdim):
+                for _ in range(pdim):
                     sphrdf[pidx:pidx + cplus,sidx:sidx + splus] = c2s
                     pidx += cplus
                     sidx += splus
                 # Spherical primitive to contracted
-                for k in range(lml_count[L]):
+                #for k in range(lml_count[L]):
+                for _ in range(lml_count[L]):
                     contdf[ridx:ridx + pdim,cidx:cidx + cdim] = chnk.values
                     cidx += cdim
                     ridx += pdim
