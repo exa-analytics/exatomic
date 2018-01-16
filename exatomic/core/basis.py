@@ -13,25 +13,17 @@ also analytical and discrete manipulations of the basis set.
 See Also:
     For symbolic and discrete manipulations see :mod:`~exatomic.algorithms.basis`.
 """
-import pandas as pd
+import os
 import numpy as np
+import pandas as pd
+from io import StringIO
+
 from exa import DataFrame
-from exatomic.algorithms.basis import (enum_cartesian, gaussian_cartesian,
-                                       cart_lml_count, spher_lml_count,
-                                       _vec_normalize, _wrap_overlap, lorder,
-                                       _vec_sto_normalize, _ovl_indices,
-                                       solid_harmonics, car2sph)
+from exatomic.algorithms.basis import (cart_lml_count, spher_lml_count,
+                                       lorder, _ovl_indices, _square,
+                                       _vec_sphr_norm, _vec_sto_norm)
 
 
-# Abbreviations
-# NCartPrim -- Total number of cartesian primitive functions
-# NSphrPrim -- Total number of spherical primitive functions
-# NPrim     -- Total number of primitive basis functions (one of the above)
-# Nbas      -- Total number of contracted basis functions
-# NbasTri   -- Nbas * (Nbas + 1) // 2
-
-
-# Truncated NPrim dimensions indexed to save space
 class BasisSet(DataFrame):
     """
     Stores information about a basis set. Common basis set types in use for
@@ -95,47 +87,34 @@ class BasisSet(DataFrame):
         return len(self.shells)
 
     def functions_by_shell(self):
-        """Return a series of (l, n function) pairs per set."""
-#        mi = self.groupby('set').apply(
-#            lambda x: x.groupby('shell').apply(
-#            lambda y: y['L'].values[0]).value_counts())
-#        if type(mi) == pd.DataFrame:
-#            return pd.Series(mi.values[0],
-#                             index=pd.MultiIndex.from_product(
-#                             [mi.index.values, mi.columns.values],
-#                             names=['set', 'L']))
-#        mi.index.names = ['set', 'L']
-#        return mi.sort_index()
-#       The following always returns a series and is about 30x faster
-        return self.groupby(["set", "L"])['shell'].nunique()
+        """Return a series of n functions per (set, L).
+        This does not include degenerate functions."""
+        return self.groupby(['set', 'L'])['shell'].nunique()
 
-    def functions(self):
-        if self.spherical:
+    def primitives_by_shell(self):
+        """Return a series of n primitives per (set, L).
+        This does not include degenerate primitives."""
+        return self.groupby(['set', 'L'])['alpha'].nunique()
+
+    def functions(self, spherical):
+        """Return a series of n functions per (set, L).
+        This does include degenerate functions."""
+        if spherical:
             mapper = lambda x: spher_lml_count[x]
         else:
             mapper = lambda x: cart_lml_count[x]
         n = self.functions_by_shell()
-        return n*n.index.get_level_values("L").map(mapper)
+        return n * n.index.get_level_values('L').map(mapper)
 
-    def primitives_by_shell(self):
-        """Return a series of (l, n primitive) pairs per set."""
-        prims = {}
-        for seht, grp in self.groupby('set'):
-            for L, sub in grp.groupby('L'):
-                if not len(sub.index): continue
-                prims[(seht, L)] = len(sub.alpha.unique())
-        return pd.Series(prims)
-
-    def primitives(self, lml_count):
-        """Total number of primitive functions per set."""
-        prims = {}
-        for seht, grp in self.groupby('set'):
-            prims[seht] = 0
-            for a, sub in grp.groupby('alpha'):
-                for _, sml in sub.groupby('L'):
-                    if not len(sml.index): continue
-                    prims[seht] += lml_count[sml.iloc[0]['L']]
-        return pd.Series(prims)
+    def primitives(self, spherical):
+        """Return a series of n primitives per (set, L).
+        This does include degenerate primitives."""
+        if spherical:
+            mapper = lambda x: spher_lml_count[x]
+        else:
+            mapper = lambda x: cart_lml_count[x]
+        n = self.primitives_by_shell()
+        return n * n.index.get_level_values('L').map(mapper)
 
     def __init__(self, *args, **kwargs):
         spherical = kwargs.pop("spherical", True)
@@ -143,18 +122,16 @@ class BasisSet(DataFrame):
         super(BasisSet, self).__init__(*args, **kwargs)
         self.spherical = spherical
         self.gaussian = gaussian
-        norm = _vec_normalize if gaussian else _vec_sto_normalize
+        norm = _vec_sphr_norm if gaussian else _vec_sto_norm
         colm = 'L' if gaussian else 'n'
         self['N'] = norm(self['alpha'].values, self[colm].values)
         self['Nd'] = self['d'] * self['N']
 
 
-
-# Nbas dimensions
 class BasisSetOrder(DataFrame):
     """
     BasisSetOrder uniquely determines the basis function ordering scheme for
-    a given :class:`~exatomic.universe.Universe`. This table is provided to
+    a given :class:`~exatomic.core.universe.Universe`. This table is provided to
     make transparent the characteristic ordering scheme of various quantum
     codes. Either (L, ml) or (l, m, n) must be provided to have access to
     orbital visualization functionality.
@@ -187,8 +164,6 @@ class BasisSetOrder(DataFrame):
     _categories = {'L': np.int64}
 
 
-# More general than the Overlap matrix but
-# has NBasTri dimensions
 class Overlap(DataFrame):
     """
     Overlap enumerates the overlap matrix elements between basis functions in
@@ -214,25 +189,29 @@ class Overlap(DataFrame):
     _columns = ['chi0', 'chi1', 'coef', 'frame']
     _index = 'index'
 
-    def square(self, frame=0):
-        nbas = np.round(np.roots([1, 1, -2 * self.shape[0]])[1]).astype(np.int64)
-        tri = self[self['frame'] == frame].pivot('chi0', 'chi1', 'coef').fillna(value=0)
-        print("warning: If overlap is not normalized, result is incorrect")
-        return tri + tri.T - np.eye(nbas)
+    def square(self, frame=0, column='coef'):
+        """Return a 'square' matrix DataFrame of the Overlap."""
+        sq = pd.DataFrame(_square(self[column].values))
+        sq.index.name = 'chi0'
+        sq.columns.name = 'chi1'
+        return sq
 
     @classmethod
     def from_column(cls, source):
         """Create an Overlap from a file with just the array of coefficients or
         an array of the values directly."""
         # Assuming source is a file of triangular elements of the overlap matrix
-        try: vals = pd.read_csv(source, header=None).values.flatten()
-        except: vals = source
-        # Reverse engineer the number of basis functions given len(ovl) = n * (n + 1) / 2
-        nbas = np.round(np.roots((1, 1, -2 * vals.shape[0]))[1]).astype(np.int64)
-        # Index chi0 and chi1, they are interchangeable as overlap is symmetric
-        chis = _ovl_indices(nbas, vals.shape[0])
-        return cls(pd.DataFrame.from_dict({'chi0': chis[:, 0],
-                                           'chi1': chis[:, 1],
+        if isinstance(source, np.ndarray):
+            vals = source
+        elif isinstance(source, str):
+            if os.sep in source:
+                vals = pd.read_csv(source, header=None).values.flatten()
+            else:
+            # except FileNotFoundError:
+                vals = pd.read_csv(StringIO(source), header=None).values.flatten()
+        chi0, chi1 = _ovl_indices(vals)
+        return cls(pd.DataFrame.from_dict({'chi0': chi0,
+                                           'chi1': chi1,
                                            'coef': vals,
                                            'frame': 0}))
 
@@ -252,127 +231,3 @@ class Overlap(DataFrame):
                 ret[cnt] = (i, j, arr[i, j], 0)
                 cnt += 1
         return cls(ret)
-
-
-# NPrim dimensions
-# Additionally, from_universe returns additional matrices with
-# (NCartPrim, NSphrPrim) dimensions and (NPrim, NBas) dimensions
-class Primitive(DataFrame):
-    """
-    Note:
-        Primitive is just a join of basis set and atom, re-work needed.
-        Contains the required information to perform molecular integrals.
-
-    +-------------------+----------+-------------------------------------------+
-    | Column            | Type     | Description                               |
-    +===================+==========+===========================================+
-    | xa                | float    | center in x direction of primitive        |
-    +-------------------+----------+-------------------------------------------+
-    | ya                | float    | center in y direction of primitive        |
-    +-------------------+----------+-------------------------------------------+
-    | za                | float    | center in z direction of primitive        |
-    +-------------------+----------+-------------------------------------------+
-    | alpha             | float    | value of :math:`\\alpha`, the exponent     |
-    +-------------------+----------+-------------------------------------------+
-    | N                 | float    | value of the normalization constant       |
-    +-------------------+----------+-------------------------------------------+
-    | l                 | int      | pre-exponential power of x                |
-    +-------------------+----------+-------------------------------------------+
-    | m                 | int      | pre-exponential power of y                |
-    +-------------------+----------+-------------------------------------------+
-    | n                 | int      | pre-exponential power of z                |
-    +-------------------+----------+-------------------------------------------+
-    | L                 | int/cat  | sum of l + m + n                          |
-    +-------------------+----------+-------------------------------------------+
-    | set               | int/cat  | unique basis set identifier               |
-    +-------------------+----------+-------------------------------------------+
-    """
-    _columns = ['xa', 'ya', 'za', 'alpha', 'N', 'l', 'm', 'n', 'L', 'set']
-    _index = 'primitive'
-    _categories = {'l': np.int64, 'm': np.int64, 'n': np.int64, 'L': np.int64}
-
-    def primitive_overlap(self, norm='N'):
-        """Compute the complete primitive cartesian overlap matrix."""
-        cols = ['xa', 'ya', 'za', 'l', 'm', 'n', 'N', 'alpha']
-        self._revert_categories()
-        chi0, chi1, ovl = _wrap_overlap(*(self[col].values for col in cols))
-        self._set_categories()
-        return Overlap.from_dict({'chi0': chi0, 'chi1': chi1,
-                                  'coef': ovl, 'frame': 0})
-
-    @classmethod
-    def from_universe(cls, uni, grpby='L', frame=None, debug=True):
-        """
-        Generate the DF and associated contraction matrices. Currently
-        spits out the Primitive dataframe along with cartesian to spherical
-        and contraction matrices, as this class will disappear in an appropriate
-        implementation.
-
-        Args
-            uni (exatomic.container.Universe): a universe with basis set
-            grpby (str): one of 'L' or 'shell' for different basis sets
-            frame (int): always blue?
-        """
-        frame = uni.atom.nframes - 1 if frame is None else frame
-        uni.basis_set._set_categories()
-        sh = solid_harmonics(uni.basis_set.lmax)
-        uni.basis_set._revert_categories()
-        sets = uni.basis_set.cardinal_groupby().get_group(frame).groupby('set')
-        funcs = uni.basis_set_order.cardinal_groupby().get_group(frame).groupby('center')
-        atom = uni.atom.cardinal_groupby().get_group(frame)
-        cart = gaussian_cartesian if uni.meta['program'] == 'gaussian' else enum_cartesian
-        conv = car2sph(sh, cart)
-
-        cprim = uni.atom.set.map(uni.basis_set.primitives(cart_lml_count)).sum()
-        sprim = uni.atom.set.map(uni.basis_set.primitives(spher_lml_count)).sum()
-        ncont = len(uni.basis_set_order.index)
-        if uni.basis_set.spherical:
-            contdim = sprim
-            lml_count = spher_lml_count
-        else:
-            contdim = cprim
-            lml_count = cart_lml_count
-
-        cols = ['xa', 'ya', 'za', 'alpha', 'N', 'l', 'm', 'n', 'L', 'set']
-        typs = ['f8', 'f8', 'f8', 'f8', 'f8', 'i8', 'i8', 'i8', 'i8', 'i8']
-        primdf = np.empty((cprim,), dtype=[(i, j) for i, j in zip(cols, typs)])
-        sphrdf = np.zeros((cprim, sprim), dtype=np.float64)
-        contdf = np.zeros((contdim, ncont), dtype=np.float64)
-
-        if debug:
-            print('Overlap grouping by', grpby)
-            print('{} cprims, {} sprims, {} ncont'.format(cprim, sprim, ncont))
-
-        pcnt, ridx, cidx, pidx, sidx = 0, 0, 0, 0, 0
-        for i, (seht, x, y, z) in enumerate(zip(atom['set'], atom['x'],
-                                                atom['y'], atom['z'])):
-            setdf = sets.get_group(seht).groupby(grpby)
-            aobas = funcs.get_group(i).groupby(grpby)
-            for idx, contsh in aobas:
-                if not len(contsh.index): continue
-                try: sh = setdf.get_group(idx)
-                except: continue
-                L = idx if grpby == 'L' else sh['L'].values[0]
-                chnk = sh.pivot('alpha', 'shell', 'd').loc[sh.alpha.unique()].fillna(0.0)
-                sh = sh.drop_duplicates('alpha')
-                pdim, cdim = chnk.shape
-                # Minimum primitive information
-                for l, m, n in cart[L]:
-                    for alpha, N in zip(sh.alpha, sh.N):
-                        primdf[pcnt] = (x, y, z, alpha, N, l, m, n, L, seht)
-                        pcnt += 1
-                # Cartesian to spherical prim
-                c2s = conv[L]
-                cplus, splus = c2s.shape
-                #for j in range(pdim):
-                for _ in range(pdim):
-                    sphrdf[pidx:pidx + cplus,sidx:sidx + splus] = c2s
-                    pidx += cplus
-                    sidx += splus
-                # Spherical primitive to contracted
-                #for k in range(lml_count[L]):
-                for _ in range(lml_count[L]):
-                    contdf[ridx:ridx + pdim,cidx:cidx + cdim] = chnk.values
-                    cidx += cdim
-                    ridx += pdim
-        return cls(primdf, columns=cols), pd.DataFrame(sphrdf), pd.DataFrame(contdf)
