@@ -15,7 +15,7 @@ and :func:`~exatomic.molecule.Molecule.classify`.
 """
 import numpy as np
 import pandas as pd
-from exatomic.algorithms.distance import _compute
+#from exatomic.algorithms.distance import _compute
 
 
 def nearest_molecules(universe, n, sources, restrictions=None, how='atom',
@@ -169,6 +169,7 @@ def _build_free_universe(universe, ordered_molecules, ordered_twos, n,
                          source_atoms, source_molecules):
     """
     """
+    print(ordered_molecules)
     molecule = np.concatenate([mcules[:n] for mcules in ordered_molecules])
     molecule = np.concatenate((molecule, source_molecules.index.tolist()))
     molecule = universe.molecule[universe.molecule.index.isin(molecule)].copy()
@@ -178,45 +179,45 @@ def _build_free_universe(universe, ordered_molecules, ordered_twos, n,
     frame = universe.frame[universe.frame.index.isin(atom['frame'])].copy()
     frame['periodic'] = False
     uni = universe.__class__(atom=atom, molecule=molecule, frame=frame, atom_two=atom_two)
-    if universe.frame.is_periodic():
-        uni.atom.update(universe.visual_atom)
-        if 'cx' not in uni.molecule.columns:
-            uni.compute_molecule_com()
-        uni.atom._revert_categories()
-        mapper = uni.atom.drop_duplicates('molecule').set_index('molecule')['frame']
-        uni.atom._set_categories()
-        uni.molecule['frame'] = uni.molecule.index.map(lambda x: mapper[x])
-        sources = source_atoms.groupby('frame')
-        groups = uni.molecule.groupby('frame')
-        n = groups.ngroups
-        dx = np.empty((n, ), dtype=np.ndarray)
-        dy = np.empty((n, ), dtype=np.ndarray)
-        dz = np.empty((n, ), dtype=np.ndarray)
-        index = np.empty((n, ), dtype=np.ndarray)
-        for i, (frame, group) in enumerate(groups):
-            cx = group['cx'].values
-            cy = group['cy'].values
-            cz = group['cz'].values
-            ccx, ccy, ccz = sources.get_group(frame)[['x', 'y', 'z']].mean().values
-    #        ccx, ccy, ccz = mcules.ix[mcules['classification'] == 'solute', ['cx', 'cy', 'cz']].values[0]
-            rx, ry, rz = uni.frame.ix[frame, ['rx', 'ry', 'rz']].values
-            dxf, dyf, dzf = _compute(cx, cy, cz, rx, ry, rz, ccx, ccy, ccz)
-            dx[i] = dxf
-            dy[i] = dyf
-            dz[i] = dzf
-            index[i] = group.index.values
-        del uni.molecule['frame']
-        dx = np.concatenate(dx)
-        dy = np.concatenate(dy)
-        dz = np.concatenate(dz)
-        index = np.concatenate(index)
-        df = pd.DataFrame.from_dict({'x': dx, 'y': dy, 'z': dz, 'molecule': index})
-        df.set_index('molecule', inplace=True)
-        for molecule in df.index:
-            dx, dy, dz = df.ix[molecule].values
-            uni.atom.ix[uni.atom['molecule'] == molecule, 'x'] += dx
-            uni.atom.ix[uni.atom['molecule'] == molecule, 'y'] += dy
-            uni.atom.ix[uni.atom['molecule'] == molecule, 'z'] += dz
+#    if universe.frame.is_periodic():
+#        uni.atom.update(universe.visual_atom)
+#        if 'cx' not in uni.molecule.columns:
+#            uni.compute_molecule_com()
+#        uni.atom._revert_categories()
+#        mapper = uni.atom.drop_duplicates('molecule').set_index('molecule')['frame']
+#        uni.atom._set_categories()
+#        uni.molecule['frame'] = uni.molecule.index.map(lambda x: mapper[x])
+#        sources = source_atoms.groupby('frame')
+#        groups = uni.molecule.groupby('frame')
+#        n = groups.ngroups
+#        dx = np.empty((n, ), dtype=np.ndarray)
+#        dy = np.empty((n, ), dtype=np.ndarray)
+#        dz = np.empty((n, ), dtype=np.ndarray)
+#        index = np.empty((n, ), dtype=np.ndarray)
+#        for i, (frame, group) in enumerate(groups):
+#            cx = group['cx'].values
+#            cy = group['cy'].values
+#            cz = group['cz'].values
+#            ccx, ccy, ccz = sources.get_group(frame)[['x', 'y', 'z']].mean().values
+#    #        ccx, ccy, ccz = mcules.ix[mcules['classification'] == 'solute', ['cx', 'cy', 'cz']].values[0]
+#            rx, ry, rz = uni.frame.ix[frame, ['rx', 'ry', 'rz']].values
+#            dxf, dyf, dzf = _compute(cx, cy, cz, rx, ry, rz, ccx, ccy, ccz)
+#            dx[i] = dxf
+#            dy[i] = dyf
+#            dz[i] = dzf
+#            index[i] = group.index.values
+#        del uni.molecule['frame']
+#        dx = np.concatenate(dx)
+#        dy = np.concatenate(dy)
+#        dz = np.concatenate(dz)
+#        index = np.concatenate(index)
+#        df = pd.DataFrame.from_dict({'x': dx, 'y': dy, 'z': dz, 'molecule': index})
+#        df.set_index('molecule', inplace=True)
+#        for molecule in df.index:
+#            dx, dy, dz = df.ix[molecule].values
+#            uni.atom.ix[uni.atom['molecule'] == molecule, 'x'] += dx
+#            uni.atom.ix[uni.atom['molecule'] == molecule, 'y'] += dy
+#            uni.atom.ix[uni.atom['molecule'] == molecule, 'z'] += dz
     return uni
 
 
