@@ -169,7 +169,6 @@ def _build_free_universe(universe, ordered_molecules, ordered_twos, n,
                          source_atoms, source_molecules):
     """
     """
-    print(ordered_molecules)
     molecule = np.concatenate([mcules[:n] for mcules in ordered_molecules])
     molecule = np.concatenate((molecule, source_molecules.index.tolist()))
     molecule = universe.molecule[universe.molecule.index.isin(molecule)].copy()
