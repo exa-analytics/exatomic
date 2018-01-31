@@ -205,6 +205,21 @@ class UniverseScene(ExatomicScene):
     cont_val = Float(0.0).tag(sync=True)
     # Frame traits
 
+    # Tensor traits
+    txx = Float(1.).tag(sync=True)
+    txy = Float(0.).tag(sync=True)
+    txz = Float(0.).tag(sync=True)
+    tyx = Float(0.).tag(sync=True)
+    tyy = Float(1.).tag(sync=True)
+    tyz = Float(0.).tag(sync=True)
+    tzx = Float(0.).tag(sync=True)
+    tzy = Float(0.).tag(sync=True)
+    tzz = Float(1.).tag(sync=True)
+    tens = Bool(False).tag(sync=True)
+    scale = Float(1.).tag(sync=True)
+    activeTensor = Int(0).tag(sync=True)
+    tensorAtom = Int(0).tag(sync=True)
+
 
 
 @register

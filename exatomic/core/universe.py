@@ -24,7 +24,7 @@ from .field import AtomicField
 from .orbital import Orbital, Excitation, MOMatrix, DensityMatrix
 from .basis import Overlap, BasisSet, BasisSetOrder
 from exatomic.algorithms.orbital import add_molecular_orbitals
-
+from .tensor import Tensor
 
 class Meta(TypedMeta):
     atom = Atom
@@ -46,6 +46,7 @@ class Meta(TypedMeta):
     contribution = DataFrame
     basis_set_order = BasisSetOrder
     basis_set = BasisSet
+    tensor = Tensor
 
 
 class Universe(six.with_metaclass(Meta, Container)):

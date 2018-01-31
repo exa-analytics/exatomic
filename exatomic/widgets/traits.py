@@ -136,8 +136,10 @@ def uni_traits(uni, atomcolors=None, atomradii=None):
     unargs = {}
     fields = []
     if hasattr(uni, 'atom'):
+        #print('atom')
         unargs.update(atom_traits(uni.atom, atomcolors, atomradii))
     if hasattr(uni, 'atom_two'):
+        #print('atom_two')
         unargs.update(two_traits(uni))
     if hasattr(uni, 'field'):
         unargs.update(field_traits(uni.field))

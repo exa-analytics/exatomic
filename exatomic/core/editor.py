@@ -40,25 +40,46 @@ class Editor(six.with_metaclass(TypedMeta, _Editor)):
         """
         Convert the editor to a :class:`~exatomic.container.Universe` object.
         """
+        print('to_universe-44---')
+        print(self.meta)
+        print('-----------------')
         if hasattr(self, 'meta') and self.meta is not None:
+            print('to_universe-48---')
+            print(self.meta)
+            print('-----------------')
             if meta is not None:
                 meta.update(self.meta)
             else:
                 meta = self.meta
+        #print(name,description,meta)
         kwargs = {'name': name,
                   'description': description,
                   'meta': meta}
+#        attrs = []
+#        for attr in vars(self.__class__).keys():
+#            print(attr)
+#            if attr.startswith('parse_'):
+#                attr.replace('parse_','')
+#                attrs.append(attr)
         attrs = [attr.replace('parse_', '')
                  for attr in vars(self.__class__).keys()
                  if attr.startswith('parse_')]
+        print('to_universe-62---')
+        print(attrs)
+        print('-----------------')
         for attr in attrs:
             result = None
+#            print(attr)
             try:
                 result = getattr(self, attr)
+                print('to_universe---')
+                print(result)
+                print('--------------')
             except Exception as e:
                 if not ignore:
                     if not str(e).startswith('Please compute'):
                         print('parse_{} failed with: {}'.format(attr, e))
             if result is not None:
                 kwargs[attr] = result
+            #print(kwargs)
         return Universe(**kwargs)

@@ -42,6 +42,7 @@ var UniverseSceneView = base.ExatomicSceneView.extend({
             utils.mesolv(this, "field_v")]);
         this.three_promises = this.app3d.finalize(this.three_promises)
             .then(this.add_atom.bind(this))
+            .then(this.generate_tensor.bind(this))
             .then(this.app3d.set_camera_from_scene.bind(this.app3d));
     },
 
@@ -172,6 +173,32 @@ var UniverseSceneView = base.ExatomicSceneView.extend({
         this.app3d.add_meshes("generic");
     },
 
+    get_tensor: function() {
+        return [
+            [this.model.get("txx"), this.model.get("txy"), this.model.get("txz")],
+            [this.model.get("tyx"), this.model.get("tyy"), this.model.get("tyz")],
+            [this.model.get("tzx"), this.model.get("tzy"), this.model.get("tzz")]]
+    },
+
+    generate_tensor: function() {
+        this.app3d.clear_meshes("generic");
+        var atomIndex = this.model.get("tensorAtom");
+        var sceneIndex = this.model.get("activeTensor");
+        var scaling = this.model.get("scale");
+        //console.log(sceneIndex);
+        if ( this.model.get("tens") ) {
+            //console.log("hallo");
+            this.app3d.meshes["generic"] = 
+                    this.app3d.add_tensor_surface( this.get_tensor(),
+                        this.atom_x[sceneIndex][atomIndex],
+                        this.atom_y[sceneIndex][atomIndex],
+                        this.atom_z[sceneIndex][atomIndex],
+                        scaling );
+            //console.log("generic");
+        };
+        this.app3d.add_meshes("generic");
+    },
+
     init_listeners: function() {
         base.ExatomicSceneView.prototype.init_listeners.call(this);
         this.listenTo(this.model, "change:frame_idx", this.add_atom);
@@ -186,6 +213,21 @@ var UniverseSceneView = base.ExatomicSceneView.extend({
         this.listenTo(this.model, "change:cont_val", this.add_contour);
         this.listenTo(this.model, "change:atom_3d", this.add_axis);
         this.listenTo(this.model, "change:axis", this.add_axis);
+
+        //Tensor listeners
+        this.listenTo(this.model, "change:tens", this.generate_tensor);
+        this.listenTo(this.model, "change:txx", this.generate_tensor);
+        this.listenTo(this.model, "change:txy", this.generate_tensor);
+        this.listenTo(this.model, "change:txz", this.generate_tensor);
+        this.listenTo(this.model, "change:tyx", this.generate_tensor);
+        this.listenTo(this.model, "change:tyy", this.generate_tensor);
+        this.listenTo(this.model, "change:tyz", this.generate_tensor);
+        this.listenTo(this.model, "change:tzx", this.generate_tensor);
+        this.listenTo(this.model, "change:tzy", this.generate_tensor);
+        this.listenTo(this.model, "change:tzz", this.generate_tensor);
+        this.listenTo(this.model, "change:scale", this.generate_tensor);
+        this.listenTo(this.model, "change:tensorAtom", this.generate_tensor);
+        this.listenTo(this.model, "change:activeTensor", this.generate_tensor);
     }
 
 });
