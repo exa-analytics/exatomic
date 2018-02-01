@@ -136,11 +136,11 @@ def _compute_neighbors_by_atom(universe, source_atoms, other_atoms, source_molec
     """
     """
     universe.atom_two._revert_categories()
-    two = universe.atom_two.ix[(universe.atom_two['atom0'].isin(source_atoms.index) &
-                                universe.atom_two['atom1'].isin(other_atoms.index)) |
-                               (universe.atom_two['atom1'].isin(source_atoms.index) &
-                                universe.atom_two['atom0'].isin(other_atoms.index)),
-                               ['atom0', 'atom1', 'distance', 'frame']].sort_values('distance')
+    two = universe.atom_two.loc[(universe.atom_two['atom0'].isin(source_atoms.index.values) &
+                                 universe.atom_two['atom1'].isin(other_atoms.index.values)) |
+                                (universe.atom_two['atom1'].isin(source_atoms.index.values) &
+                                 universe.atom_two['atom0'].isin(other_atoms.index.values)),
+                                ['atom0', 'atom1', 'dr', 'frame']].sort_values('dr')
     mapper = universe.atom['molecule'].astype(np.int64)
     groups = two['atom0'].map(mapper).to_frame()
     groups.columns = ['molecule0']
