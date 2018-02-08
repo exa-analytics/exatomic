@@ -8,4 +8,4 @@ from .field import AtomicField
 from .frame import Frame
 from .universe import Universe
 from .editor import Editor
-from .tensor import Tensor
+from .tensor import Tensor, add_tensor

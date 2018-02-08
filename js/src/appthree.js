@@ -369,7 +369,8 @@ class App3D {
         return [psurf, nsurf];
     };
 
-    add_tensor_surface( tensor , atom_x , atom_y , atom_z , scaling ) {
+    add_tensor_surface( tensor , atom_x , atom_y , atom_z , scaling , 
+                        color , label ) {
         var tensor_mult = function( x , y , z , scaling ) {
             /*
             var tensor = [[100.472 , 91.193 , -4.279],
@@ -379,7 +380,6 @@ class App3D {
             var tensor = [[-9.788 , 20.694 , -108.299],
                           [20.694 , 2.741 , -63.712],
                           [-108.299 , -63.712 , 93.601]]*/
-            //console.log([x,y,z,scaling]);
             return (x * x * tensor[0][0] +
                    y * y * tensor[1][1] +
                    z * z * tensor[2][2] +
@@ -397,19 +397,19 @@ class App3D {
             x = g * Math.cos(u) * Math.sin(v) + atom_x;
             y = g * Math.sin(u) * Math.sin(v) + atom_y;
             z = g * Math.cos(v) + atom_z;
-            //console.log([g]);
             return new THREE.Vector3(x, y, z);
         };
         // May want to consider THREE.ShapeUtils.triangulateShape
         // on the vectors directly returned from "func" to circumvent
         // needing the constraints of the parameterized geometry.
         var geom = new THREE.ParametricGeometry(func, 50, 50);
-        var pmat = new THREE.MeshLambertMaterial({color: 'green', side: THREE.FrontSide});
+        var pmat = new THREE.MeshLambertMaterial({color: color});
         // var nmat = new THREE.MeshLambertMaterial({color: 'yellow', side: THREE.BackSide});
         var psurf = new THREE.Mesh(geom, pmat);
         // var nsurf = new THREE.Mesh(geom, nmat);
-        psurf.name = "Positive";
+        psurf.name = label;
         // nsurf.name = "Negative";
+
         return [psurf]; //, nsurf];
     };
 

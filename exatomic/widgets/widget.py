@@ -9,7 +9,7 @@ Universe Notebook Widget
 from traitlets import Unicode, link
 from ipywidgets import (Button, Dropdown, jslink, register, VBox, HBox,
                         IntSlider, IntRangeSlider, FloatSlider, Play,
-                        FloatText, Layout, BoundedFloatText)
+                        FloatText, Layout, Text, Label)
 
 from .widget_base import (ExatomicScene, UniverseScene,
                           TensorScene, ExatomicBox)
@@ -79,10 +79,12 @@ class TensorContainer(ExatomicBox):
             for j in carts:
                 tij = 't' + i + j
                 cache[tij] = getattr(scns[0], tij)
-        print(cache)
         for tij, val in cache.items():
             for scn in scns[1:]:
                 setattr(scn, tij, val)
+
+    def _tensor_widgets(self):
+        pass
 
 
     def _init_gui(self, **kwargs):
@@ -366,98 +368,63 @@ class UniverseWidget(ExatomicBox):
     def _tensor_folder(self):
         alo = Layout(width='70px')
         rlo = Layout(width='220px')
-        tens = Button(description='Plot Tensor')
-        scene = []
-        for i in range(len(self.scenes)):
-            scene.append("Scene "+str(i+1))
-        #print(scene)
-        self.sceneIndex = Dropdown(options=scene,value=scene[0])
-        #print(self.sceneIndex.index)
-        scn = self.scenes[self.sceneIndex.index]
-        self.atomIndex = Dropdown(options=[0],value=0)
-
-        # to be able to scale the tensor plot
-        scaleSlide = FloatSlider(max=10.0, step=0.01, readout=False)
-        scaleRead = BoundedFloatText(value=1.0, layout=alo, min=0, max=10.0, step=0.5)
-        scale = HBox([scaleSlide,scaleRead],layout=rlo)
-        jslink((scaleRead, 'value'), (scaleSlide,'value'))
-        
-        xs = [FloatText(value=scn.txx, layout=alo),
-              FloatText(value=scn.txy, layout=alo),
-              FloatText(value=scn.txz, layout=alo)]
-        ys = [FloatText(value=scn.tyx, layout=alo),
-              FloatText(value=scn.tyy, layout=alo),
-              FloatText(value=scn.tyz, layout=alo)]
-        zs = [FloatText(value=scn.tzx, layout=alo),
-              FloatText(value=scn.tzy, layout=alo),
-              FloatText(value=scn.tzz, layout=alo)]
-        def _x0(c):
-            for scn in self.active(): scn.txx = c.new
-        def _x1(c):
-            for scn in self.active(): scn.txy = c.new
-        def _x2(c):
-            for scn in self.active(): scn.txz = c.new
-        def _y0(c):
-            for scn in self.active(): scn.tyx = c.new
-        def _y1(c):
-            for scn in self.active(): scn.tyy = c.new
-        def _y2(c):
-            for scn in self.active(): scn.tyz = c.new
-        def _z0(c):
-            for scn in self.active(): scn.tzx = c.new
-        def _z1(c):
-            for scn in self.active(): scn.tzy = c.new
-        def _z2(c):
-            for scn in self.active(): scn.tzz = c.new
-        def _scale(c):
-            for scn in self.active(): scn.scale = c.new
-        def _index(c):
-            for scn in self.active(): scn.tensorAtom = c.new
-        def _active(c):
-            for scn in self.active(): scn.activeTensor = c.new
-        xs[0].observe(_x0, names='value')
-        xs[1].observe(_x1, names='value')
-        xs[2].observe(_x2, names='value')
-        ys[0].observe(_y0, names='value')
-        ys[1].observe(_y1, names='value')
-        ys[2].observe(_y2, names='value')
-        zs[0].observe(_z0, names='value')
-        zs[1].observe(_z1, names='value')
-        zs[2].observe(_z2, names='value')
-        scaleRead.observe(_scale, names='value')
-        self.atomIndex.observe(_index, names='index')
-        self.sceneIndex.observe(_active, names='value')
+        tens = Button(description=' Tensors', icon='bank')
+        scale =  FloatSlider(max=10.0, step=0.01, readout=True, value=1.0)
+        scn = self.active()
+        xs = [Text(layout=alo),
+              Text(layout=alo),
+              Text(layout=alo)]
+        ys = [Text(layout=alo),
+              Text(layout=alo),
+              Text(layout=alo)]
+        zs = [Text(layout=alo),
+              Text(layout=alo),
+              Text(layout=alo)]
         xbox = HBox(xs, layout=rlo)
         ybox = HBox(ys, layout=rlo)
         zbox = HBox(zs, layout=rlo)
-        content = _ListDict([
-                ('scene', self.sceneIndex),
-                ('labels', self.atomIndex),
-                ('xbox', xbox),
-                ('ybox', ybox),
-                ('zbox', zbox),
-                ('scale', scale)])
-
+        self.tensor_cont = VBox([xbox,ybox,zbox])
+        self.tensorIndex = Dropdown(options=[0],value=0)
+        ten_label = Label(value="Change tensor:")
+        sel_label = Label(value="Selected tensor in Blue")
+        
         def _tens(c):
-            for scn in self.active():
-                scn.tens = not scn.tens
-                #print(scn.tens)
-                if scn.tens:
-                    self.sceneIndex.options = self.active_scene_indices
-                    self.sceneIndex.value = self.active_scene_indices[0]
-                    self.labels = self._filter_labels(self.sceneIndex.value)
-                    self.atomIndex.options = self.labels
-                    self.atomIndex.value = self.labels[0]
-
-        def _scnChange(b):
-            self.labels = self._filter_labels(self.sceneIndex.value)
-            self.atomIndex.options = self.labels
-            self.atomIndex.value = self.labels[0]
-
+            for scn in self.active(): scn.tens = not scn.tens
+            carts = ['x','y','z']
+            self.tensorIndex.options = [x for x in range( \
+                                        len(self.active()[0].tensor_d[0]))]
+            self.tensorIndex.value = self.tensorIndex.options[0]
+            tdx = self.tensorIndex.value
+            for i,bra in enumerate(carts):
+                for j,ket in enumerate(carts):
+                    self.tensor_cont.children[i].children[j].disabled=False
+                    self.tensor_cont.children[i].children[j].value = \
+                            str(self.active()[0].tensor_d[0][tdx][bra+ket])
+                    self.tensor_cont.children[i].children[j].disabled=True
+        def _scale(c):
+            for scn in self.active(): scn.scale = c.new
+        def _idx(c):
+            for scn in self.active(): scn.tidx = c.new
+            carts = ['x','y','z']
+            tdx = c.new
+            for i,bra in enumerate(carts):
+                for j,ket in enumerate(carts):
+                    self.tensor_cont.children[i].children[j].disabled=False
+                    self.tensor_cont.children[i].children[j].value = \
+                            str(self.active()[0].tensor_d[0][tdx][bra+ket])
+                    self.tensor_cont.children[i].children[j].disabled=True
+            
         tens.on_click(_tens)
-        self.sceneIndex.observe(_scnChange, names = 'value')
-        tensorFolder = Folder(tens,content)
-        return tensorFolder
+        scale.observe(_scale, names='value')
+        self.tensorIndex.observe(_idx, names='value')
+        content = _ListDict([
+                ('scale', scale),
+                ('ten', ten_label),
+                ('tdx', self.tensorIndex),
+                ('tensor', self.tensor_cont),
+                ('sel', sel_label)])
+        return Folder(tens, content)
+        
 
     def _init_gui(self, nframes=1, fields=None, **kwargs):
         mainopts = super(UniverseWidget, self)._init_gui(**kwargs)
@@ -493,11 +460,9 @@ class UniverseWidget(ExatomicBox):
         atomradii = scenekwargs.get('atomradii', None)
         fields, masterkwargs = [], []
         for uni in unis:
-            print(uni)
             unargs, flds = uni_traits(uni,
                                       atomcolors=atomcolors,
                                       atomradii=atomradii)
-            #print(unargs,flds)
             fields = flds if len(flds) > len(fields) else fields
             unargs.update(scenekwargs)
             masterkwargs.append(unargs)

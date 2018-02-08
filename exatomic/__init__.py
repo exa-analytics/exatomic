@@ -49,7 +49,7 @@ def _jupyter_nbextension_paths():
 __js_version__ = "^0.4.6"
 from ._version import __version__
 from . import core
-from .core import Universe, Editor, Atom, AtomicField, Frame
-from .interfaces import XYZ, Cube, RTensor
+from .core import Universe, Editor, Atom, AtomicField, Frame, Tensor, add_tensor
+from .interfaces import XYZ, Cube
 from .widgets import DemoContainer, DemoUniverse, UniverseWidget, TensorContainer
 # from . import widgets
