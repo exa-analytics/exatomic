@@ -1,4 +1,4 @@
-.. Copyright (c) 2015-2017, Exa Analytics Development Team
+.. Copyright (c) 2015-2018, Exa Analytics Development Team
 .. Distributed under the terms of the Apache License 2.0
 
 #############################
@@ -7,9 +7,9 @@
 *A unified platform for theoretical and computational chemists*
 
 This package provides a platform for computational and theoretical chemists
-and physicists to parse, process, analyze, and visualize data coming from 
-quantum mechanics calculations. Included in this package are sub-packages 
-dedicated to parsing data from software programs used in the field. A quick 
+and physicists to parse, process, analyze, and visualize data coming from
+quantum mechanics calculations. Included in this package are sub-packages
+dedicated to parsing data from software programs used in the field. A quick
 method to get started with visualization is through the `Jupyter notebook`_.
 
 .. flashy example (todo)
@@ -26,20 +26,23 @@ method to get started with visualization is through the `Jupyter notebook`_.
     :maxdepth: 2
     :caption: General
 
-    api.rst
+    api/index.rst
+    notebooks/nwchem.ipynb
+    notebooks/qe.ipynb
 
 .. toctree::
     :maxdepth: 2
-    :caption: Software 
+    :caption: Software
 
-    adf.rst
-    nwchem.rst
+    software/adf/index.rst
+    software/nwchem/index.rst
 
 .. toctree::
     :maxdepth: 1
     :caption: Contributors
 
     contrib.rst
+    concepts.rst
 
 
 ##################

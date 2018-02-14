@@ -18,22 +18,15 @@ cache/
 .tox/
 .coverage/
 parts/
-win-32/
-win-64/
-linux-32/
-linux-64/
-osx-64/
+win-*/
+linux-*/
+osx-*/
 doc/build/
 target/
 .settings/
-<<<<<<< HEAD
-exatomic/static/
-=======
-exatomic/static/*.js
-exatomic/static/*.map
+exatomic/static/nbextension
+exatomic/static/js/
 package-lock.json
->>>>>>> 1c37655b6be3dca60b2adbeee8ca3767e5477943
-
 
 # Compiled
 *.py[cod]

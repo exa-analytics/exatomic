@@ -1,29 +1,7 @@
 # -*- coding: utf-8 -*-
-# Copyright (c) 2015-2017, Exa Analytics Development Team
+# Copyright (c) 2015-2018, Exa Analytics Development Team
 # Distributed under the terms of the Apache License 2.0
-<<<<<<< HEAD
-#
-#try:
-#    from exa.test.tester import UnitTester
-#except:
-#    from exa.tester import UnitTester
-#from exatomic.gaussian.editor import Editor
-#
-#
-#class TestEditor(UnitTester):
-#    """Tests that metadata is set appropriately for Gaussian editors."""
-#
-#    def test_no_meta(self):
-#        """Test that program metadata is set by default."""
-#        fl = Editor('')
-#        self.assertTrue(fl.meta['program'] == 'gaussian')
-#
-#    def test_with_meta(self):
-#        """Test that passed metadata is respected and program is set."""
-#        fl = Editor('', meta={'meta': 'data'})
-#        self.assertEqual(fl.meta['meta'], 'data')
-#        self.assertEqual(fl.meta['program'], 'gaussian')
-=======
+#import warnings
 from unittest import TestCase
 from exatomic.gaussian.editor import Editor
 
@@ -33,12 +11,11 @@ class TestEditor(TestCase):
 
     def test_no_meta(self):
         """Test that program metadata is set by default."""
-        fl = Editor('')
+        fl = Editor('', ignore=True)
         self.assertTrue(fl.meta['program'] == 'gaussian')
 
     def test_with_meta(self):
         """Test that passed metadata is respected and program is set."""
-        fl = Editor('', meta={'meta': 'data'})
+        fl = Editor('', meta={'meta': 'data'}, ignore=True)
         self.assertEqual(fl.meta['meta'], 'data')
         self.assertEqual(fl.meta['program'], 'gaussian')
->>>>>>> 1c37655b6be3dca60b2adbeee8ca3767e5477943

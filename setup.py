@@ -74,8 +74,8 @@ def js_prerelease(command, strict=False):
 class NPM(Command):
     description = "install package.json dependencies using npm."
     user_options = []
-    targets = [os.path.join(root, name, staticdir, "extension.js"),
-               os.path.join(root, name, staticdir, "index.js")]
+    targets = [os.path.join(root, name, staticdir, "js", "extension.js"),
+               os.path.join(root, name, staticdir, "js", "index.js")]
 
     def initialize_options(self):
         pass
@@ -109,7 +109,7 @@ class NPM(Command):
             if not os.path.exists(t):
                 msg = "Missing file: %s" % t
                 if not self.has_npm():
-                    msg += "\nnpm is required to build a development version of jupyter-" + name
+                    msg += "\nnpm is required to build a development version of " + name
                 raise ValueError(msg)
 
         # update package data in case this created new files
@@ -126,10 +126,10 @@ setup_args = {
     'install_requires': dependencies,
     'packages': find_packages(),
     'data_files': [
-        ("share/jupyter/nbextensions/jupyter-" + name, [
-            os.path.join(name, staticdir, "extension.js"),
-            os.path.join(name, staticdir, "index.js"),
-            os.path.join(name, staticdir, "index.js.map")
+        ("share/jupyter/nbextensions/" + name, [
+            os.path.join(name, staticdir, "js", "extension.js"),
+            os.path.join(name, staticdir, "js", "index.js"),
+            os.path.join(name, staticdir, "js", "index.js.map")
         ]),
     ],
     'cmdclass': {

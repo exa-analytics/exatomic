@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-# Copyright (c) 2015-2017, Exa Analytics Development Team
+# Copyright (c) 2015-2018, Exa Analytics Development Team
 # Distributed under the terms of the Apache License 2.0
 #
 # exatomic documentation build configuration file, created by
@@ -77,7 +77,7 @@ master_doc = "index"
 
 # General information about the project.
 project = "exatomic"
-copyrite = "Copyright (c) 2015-2017, Exa Analytics Development Team"
+copyrite = "Copyright (c) 2015-2018, Exa Analytics Development Team"
 author = "Thomas J. Duignan and Alex Marchenko"
 
 # The version info for the project you"re documenting, acts as replacement for
@@ -181,7 +181,7 @@ html_last_updated_fmt = "%b %d, %Y"
 
 # If true, SmartyPants will be used to convert quotes and dashes to
 # typographically correct entities.
-html_use_smartypants = True
+#html_use_smartypants = True
 
 # Custom sidebar templates, maps document names to template names.
 #html_sidebars = {}
@@ -297,7 +297,7 @@ texinfo_documents = [
   (master_doc, "exatomic", "Exatomic Documentation",
    author, "Thomas J. Duignan and Alex Marchenko",
    "A unified platform for computational and theoretical chemists and physicists",
-   "Copyright (c) 2015-2017, Exa Analytics Development Team")
+   "Copyright (c) 2015-2018, Exa Analytics Development Team")
 ]
 
 # Documents to append as an appendix to all manuals.
@@ -319,7 +319,7 @@ texinfo_show_urls = "footnote"
 epub_title = project
 epub_author = author
 epub_publisher = author
-epub_copyright = copyrite
+#epub_copyright = copyrite
 
 # The basename for the epub file. It defaults to the project name.
 #epub_basename = project

@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# Copyright (c) 2015-2017, Exa Analytics Development Team
+# Copyright (c) 2015-2018, Exa Analytics Development Team
 # Distributed under the terms of the Apache License 2.0
 """
 Neighbor Selection Algorithms
@@ -15,7 +15,7 @@ and :func:`~exatomic.molecule.Molecule.classify`.
 """
 import numpy as np
 import pandas as pd
-from exatomic.algorithms.distance import _compute
+#from exatomic.algorithms.distance import _compute
 
 
 def nearest_molecules(universe, n, sources, restrictions=None, how='atom',
@@ -47,7 +47,8 @@ def nearest_molecules(universe, n, sources, restrictions=None, how='atom',
     Returns:
         unis (dict): Dictionary of number of neighbors keys, universe values
     """
-    source_atoms, other_atoms, source_molecules, other_molecules, n = _slice_atoms_molecules(universe, sources, restrictions, n)
+    #source_atoms, other_atoms, source_molecules, other_molecules, n = _slice_atoms_molecules(universe, sources, restrictions, n)
+    source_atoms, other_atoms, source_molecules, _, n = _slice_atoms_molecules(universe, sources, restrictions, n)
     ordered_molecules, ordered_twos = _compute_neighbors_by_atom(universe, source_atoms, other_atoms, source_molecules)
     unis = {}
     if free_boundary == True:
@@ -135,11 +136,11 @@ def _compute_neighbors_by_atom(universe, source_atoms, other_atoms, source_molec
     """
     """
     universe.atom_two._revert_categories()
-    two = universe.atom_two.ix[(universe.atom_two['atom0'].isin(source_atoms.index) &
-                                universe.atom_two['atom1'].isin(other_atoms.index)) |
-                               (universe.atom_two['atom1'].isin(source_atoms.index) &
-                                universe.atom_two['atom0'].isin(other_atoms.index)),
-                               ['atom0', 'atom1', 'distance', 'frame']].sort_values('distance')
+    two = universe.atom_two.loc[(universe.atom_two['atom0'].isin(source_atoms.index.values) &
+                                 universe.atom_two['atom1'].isin(other_atoms.index.values)) |
+                                (universe.atom_two['atom1'].isin(source_atoms.index.values) &
+                                 universe.atom_two['atom0'].isin(other_atoms.index.values)),
+                                ['atom0', 'atom1', 'dr', 'frame']].sort_values('dr')
     mapper = universe.atom['molecule'].astype(np.int64)
     groups = two['atom0'].map(mapper).to_frame()
     groups.columns = ['molecule0']
@@ -177,45 +178,45 @@ def _build_free_universe(universe, ordered_molecules, ordered_twos, n,
     frame = universe.frame[universe.frame.index.isin(atom['frame'])].copy()
     frame['periodic'] = False
     uni = universe.__class__(atom=atom, molecule=molecule, frame=frame, atom_two=atom_two)
-    if universe.frame.is_periodic():
-        uni.atom.update(universe.visual_atom)
-        if 'cx' not in uni.molecule.columns:
-            uni.compute_molecule_com()
-        uni.atom._revert_categories()
-        mapper = uni.atom.drop_duplicates('molecule').set_index('molecule')['frame']
-        uni.atom._set_categories()
-        uni.molecule['frame'] = uni.molecule.index.map(lambda x: mapper[x])
-        sources = source_atoms.groupby('frame')
-        groups = uni.molecule.groupby('frame')
-        n = groups.ngroups
-        dx = np.empty((n, ), dtype=np.ndarray)
-        dy = np.empty((n, ), dtype=np.ndarray)
-        dz = np.empty((n, ), dtype=np.ndarray)
-        index = np.empty((n, ), dtype=np.ndarray)
-        for i, (frame, group) in enumerate(groups):
-            cx = group['cx'].values
-            cy = group['cy'].values
-            cz = group['cz'].values
-            ccx, ccy, ccz = sources.get_group(frame)[['x', 'y', 'z']].mean().values
-    #        ccx, ccy, ccz = mcules.ix[mcules['classification'] == 'solute', ['cx', 'cy', 'cz']].values[0]
-            rx, ry, rz = uni.frame.ix[frame, ['rx', 'ry', 'rz']].values
-            dxf, dyf, dzf = _compute(cx, cy, cz, rx, ry, rz, ccx, ccy, ccz)
-            dx[i] = dxf
-            dy[i] = dyf
-            dz[i] = dzf
-            index[i] = group.index.values
-        del uni.molecule['frame']
-        dx = np.concatenate(dx)
-        dy = np.concatenate(dy)
-        dz = np.concatenate(dz)
-        index = np.concatenate(index)
-        df = pd.DataFrame.from_dict({'x': dx, 'y': dy, 'z': dz, 'molecule': index})
-        df.set_index('molecule', inplace=True)
-        for molecule in df.index:
-            dx, dy, dz = df.ix[molecule].values
-            uni.atom.ix[uni.atom['molecule'] == molecule, 'x'] += dx
-            uni.atom.ix[uni.atom['molecule'] == molecule, 'y'] += dy
-            uni.atom.ix[uni.atom['molecule'] == molecule, 'z'] += dz
+#    if universe.frame.is_periodic():
+#        uni.atom.update(universe.visual_atom)
+#        if 'cx' not in uni.molecule.columns:
+#            uni.compute_molecule_com()
+#        uni.atom._revert_categories()
+#        mapper = uni.atom.drop_duplicates('molecule').set_index('molecule')['frame']
+#        uni.atom._set_categories()
+#        uni.molecule['frame'] = uni.molecule.index.map(lambda x: mapper[x])
+#        sources = source_atoms.groupby('frame')
+#        groups = uni.molecule.groupby('frame')
+#        n = groups.ngroups
+#        dx = np.empty((n, ), dtype=np.ndarray)
+#        dy = np.empty((n, ), dtype=np.ndarray)
+#        dz = np.empty((n, ), dtype=np.ndarray)
+#        index = np.empty((n, ), dtype=np.ndarray)
+#        for i, (frame, group) in enumerate(groups):
+#            cx = group['cx'].values
+#            cy = group['cy'].values
+#            cz = group['cz'].values
+#            ccx, ccy, ccz = sources.get_group(frame)[['x', 'y', 'z']].mean().values
+#    #        ccx, ccy, ccz = mcules.ix[mcules['classification'] == 'solute', ['cx', 'cy', 'cz']].values[0]
+#            rx, ry, rz = uni.frame.ix[frame, ['rx', 'ry', 'rz']].values
+#            dxf, dyf, dzf = _compute(cx, cy, cz, rx, ry, rz, ccx, ccy, ccz)
+#            dx[i] = dxf
+#            dy[i] = dyf
+#            dz[i] = dzf
+#            index[i] = group.index.values
+#        del uni.molecule['frame']
+#        dx = np.concatenate(dx)
+#        dy = np.concatenate(dy)
+#        dz = np.concatenate(dz)
+#        index = np.concatenate(index)
+#        df = pd.DataFrame.from_dict({'x': dx, 'y': dy, 'z': dz, 'molecule': index})
+#        df.set_index('molecule', inplace=True)
+#        for molecule in df.index:
+#            dx, dy, dz = df.ix[molecule].values
+#            uni.atom.ix[uni.atom['molecule'] == molecule, 'x'] += dx
+#            uni.atom.ix[uni.atom['molecule'] == molecule, 'y'] += dy
+#            uni.atom.ix[uni.atom['molecule'] == molecule, 'z'] += dz
     return uni
 
 
@@ -224,15 +225,15 @@ def _build_universe(universe, ordered_molecules, ordered_twos, n):
     """
     raise NotImplementedError()
     # TODO CONVERT TO A GENERIC AND COMPLETE SLICER
-    molecules = np.concatenate([m[:n] for m in ordered_molecules])
-    twos = np.concatenate([t[:n] for t in ordered_twos])
-    atom = universe.atom[universe.atom['molecule'].isin(molecules)].copy().sort_index()
-    two = universe.atom_two[universe.atom_two['atom0'].isin(atom.index) &
-                            universe.atom_two['atom1'].isin(atom.index)].copy().sort_index()
-    projected_atom = universe.projected_atom.ix[two.index.values].copy().sort_index()
-    visual_atom = universe.visual_atom.ix[atom.index].copy().sort_index()
-    molecule = universe.molecule.ix[molecules].copy().sort_index()
-    frame = universe.frame.copy().sort_index()
-    uni = Universe(atom=atom, atom_two=two, molecule=molecule, frame=frame,
-                   visual_atom=visual_atom, projected_atom=projected_atom)
-    return uni
+#    molecules = np.concatenate([m[:n] for m in ordered_molecules])
+#    twos = np.concatenate([t[:n] for t in ordered_twos])
+#    atom = universe.atom[universe.atom['molecule'].isin(molecules)].copy().sort_index()
+#    two = universe.atom_two[universe.atom_two['atom0'].isin(atom.index) &
+#                            universe.atom_two['atom1'].isin(atom.index)].copy().sort_index()
+#    projected_atom = universe.projected_atom.ix[two.index.values].copy().sort_index()
+#    visual_atom = universe.visual_atom.ix[atom.index].copy().sort_index()
+#    molecule = universe.molecule.ix[molecules].copy().sort_index()
+#    frame = universe.frame.copy().sort_index()
+#    uni = Universe(atom=atom, atom_two=two, molecule=molecule, frame=frame,
+#                   visual_atom=visual_atom, projected_atom=projected_atom)
+#    return uni

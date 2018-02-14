@@ -16,7 +16,7 @@ columns = ['x', 'y', 'z', 'symbol', 'frame', 'label']
 
 
 def make_small_molecule(center=None, ligand=None, distance=None, geometry=None,
-                        offset=None, plane=None, axis=None, domains=None, unit='A'):
+                        offset=None, plane=None, axis=None, domains=None, unit='Angstrom'):
     """
     A minimal molecule builder for simple one-center, homogeneous ligand
     molecules of various general chemistry molecular geometries. If `domains'
@@ -200,4 +200,3 @@ def _6_domain(center, ligand, distance, geometry, offset, plane, axis):
         geom.append([xi, yi, zi, ligand, 0, cnt])
         cnt += 1
     return pd.DataFrame(geom, columns=columns)
->>>>>>> 1c37655b6be3dca60b2adbeee8ca3767e5477943

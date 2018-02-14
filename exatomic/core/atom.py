@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# Copyright (c) 2015-2017, Exa Analytics Development Team
+# Copyright (c) 2015-2018, Exa Analytics Development Team
 # Distributed under the terms of the Apache License 2.0
 """
 Atomic Position Data
@@ -11,7 +11,10 @@ from numbers import Integral
 import numpy as np
 import pandas as pd
 from exa import DataFrame, SparseDataFrame, Series
+from exa.util.units import Length
 from exatomic.base import sym2z, sym2mass
+from exatomic.algorithms.distance import modv
+from exatomic.core.error import PeriodicUniverseError
 from exatomic.algorithms.geometry import make_small_molecule
 
 
@@ -79,7 +82,7 @@ class Atom(DataFrame):
 
 
     def to_xyz(self, tag='symbol', header=False, comments='', columns=None,
-               frame=None, units='A'):
+               frame=None, units='Angstrom'):
         """
         Return atomic data in XYZ format, by default without the first 2 lines.
         If multiple frames are specified, return an XYZ trajectory format. If
@@ -131,7 +134,7 @@ class Atom(DataFrame):
         Compute and return enumerated atoms.
 
         Returns:
-            labels (:class:`~exa.numerical.Series`): Enumerated atom labels (of type int)
+            labels (:class:`~exa.core.numerical.Series`): Enumerated atom labels (of type int)
         """
         nats = self.cardinal_groupby().size().values
         labels = Series([i for nat in nats for i in range(nat)], dtype='category')
@@ -140,7 +143,7 @@ class Atom(DataFrame):
 
     @classmethod
     def from_small_molecule_data(cls, center=None, ligand=None, distance=None, geometry=None,
-                                 offset=None, plane=None, axis=None, domains=None, unit='A'):
+                                 offset=None, plane=None, axis=None, domains=None, unit='Angstrom'):
         '''
         A minimal molecule builder for simple one-center, homogeneous ligand
         molecules of various general chemistry molecular geometries. If domains
@@ -173,22 +176,20 @@ class UnitAtom(SparseDataFrame):
     _index = 'atom'
     _columns = ['x', 'y', 'z']
 
-#    @classmethod
-#    def from_universe(cls, universe):
-#        """
-#        """
-#        if universe.frame.is_periodic():
-#            atom = universe.atom[['x', 'y', 'z']].copy()
-#            atom.update(universe.unit_atom)
-#            bonded = universe.atom_two.ix[universe.atom_two['bond'] == True, 'atom1'].astype(np.int64)
-#            prjd = universe.projected_atom.ix[bonded.index].to_dense()
-#            prjd['atom'] = bonded
-#            prjd.drop_duplicates('atom', inplace=True)
-#            prjd.set_index('atom', inplace=True)
-#            atom.update(prjd)
-#            atom = atom[atom != universe.atom[['x', 'y', 'z']]].to_sparse()
-#            return cls(atom)
-#        raise PeriodicUniverseError()
+    @classmethod
+    def from_universe(cls, universe):
+        if universe.periodic:
+            if "rx" not in universe.frame.columns:
+                universe.frame.compute_cell_magnitudes()
+            a, b, c = universe.frame[["rx", "ry", "rz"]].max().values
+            x = modv(universe.atom['x'].values, a)
+            y = modv(universe.atom['y'].values, b)
+            z = modv(universe.atom['z'].values, c)
+            df = pd.DataFrame.from_dict({'x': x, 'y': y, 'z': z})
+            df.index = universe.atom.index
+            df = df[universe.atom[['x', 'y', 'z']] != df].to_sparse()
+            return cls(df)
+        raise PeriodicUniverseError()
 
 
 class ProjectedAtom(SparseDataFrame):

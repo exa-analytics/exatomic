@@ -1,6 +1,6 @@
 {
-  "name": "jupyter-exatomic",
-  "version": "0.4.0",
+  "name": "exatomic",
+  "version": "0.4.7",
   "description": "A unified platform for theoretical and computational chemists.",
   "author": "Thomas J. Duignan and Alex Marchenko",
   "license": "Apache-2.0",
@@ -23,15 +23,16 @@
   },
   "devDependencies": {
     "json-loader": "^0.5.4",
-    "webpack": "^1.12.14",
-    "jsdoc": "^3.4.3"
+    "webpack": "^1.12.14"
   },
   "dependencies": {
     "@jupyter-widgets/base": "^1.0.0",
     "@jupyter-widgets/controls": "^1.0.0",
     "underscore": "^1.8.3",
     "three": "^0.82.0",
-    "three-trackballcontrols": "^0.0.5",
-    "d3": "^4.8.0"
+    "three-trackballcontrols": "^0.0.5"
+  },
+  "jupyterlab": {
+    "extension": "src/jupyterlab-plugin"
   }
 }

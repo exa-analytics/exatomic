@@ -1,10 +1,12 @@
-[![exatomic logo](docs/source/static/logo.png)](https://exa-analytics.github.io)  
-*A unified platform for theoretical and computational chemists*
+[![exatomic logo](docs/source/static/logo.png)](https://exa-analytics.github.io)
+*A unified platform for computational chemists*
+
+![](https://i.imgur.com/g9X3gPa.gif)
 
 
 # Installation
-[![conda Badge](https://anaconda.org/exaanalytics/exatomic/badges/installer/conda.svg)](https://conda.anaconda.org/exaanalytics)  
-[![pypi badge](https://badge.fury.io/py/exatomic.svg)](https://badge.fury.io/py/exatomic)  
+[![conda Badge](https://anaconda.org/exaanalytics/exatomic/badges/installer/conda.svg)](https://conda.anaconda.org/exaanalytics)
+[![pypi badge](https://badge.fury.io/py/exatomic.svg)](https://badge.fury.io/py/exatomic)
 Exa is available through [anaconda](https://www.continuum.io/downloads)
 
     $ conda install -c exaanalytics exatomic

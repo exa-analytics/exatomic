@@ -1,43 +1,41 @@
 # -*- coding: utf-8 -*-
-# Copyright (c) 2015-2017, Exa Analytics Development Team
+# Copyright (c) 2015-2018, Exa Analytics Development Team
 # Distributed under the terms of the Apache License 2.0
 """
-<<<<<<< HEAD
 ADF Composite Output
 #########################
 This module provides the primary (user facing) output parser.
 """
-from exa import Parser
-from .dirac import DIRAC
-from .adf import ADF
-
-
-class Output(Parser):
-    """
-    The ADF output parser.
-    """
-    pass
-=======
-Output Parser
-#####################
-Multiple frames are not currently supported
-"""
 import re
+import six
 import numpy as np
 import pandas as pd
 from io import StringIO
+
+from exa.util.units import Length
+from exa import TypedMeta
+
 from exatomic.base import sym2z
 from exatomic.algorithms.basis import lmap, enum_cartesian
-from exatomic.core.basis import BasisSet
-from exa.util.units import Length
+from ..core.atom import Atom
+from exatomic.core.basis import BasisSet, BasisSetOrder
+from ..core.orbital import Orbital, Excitation, MOMatrix
 from .editor import Editor
 
->>>>>>> 1c37655b6be3dca60b2adbeee8ca3767e5477943
+class OutMeta(TypedMeta):
+    atom = Atom
+    basis_set = BasisSet
+    basis_set_order = BasisSetOrder
+    orbital = Orbital
+    contribution = pd.DataFrame
+    excitation = Excitation
+    momatrix = MOMatrix
 
 
-<<<<<<< HEAD
-Output.add_parsers(DIRAC, ADF)
-=======
+class Output(six.with_metaclass(OutMeta, Editor)):
+    """
+    The ADF output parser.
+    """
 
     def parse_atom(self):
         # TODO : only supports single frame, gets last atomic positions
@@ -46,7 +44,7 @@ Output.add_parsers(DIRAC, ADF)
         atom = self.pandas_dataframe(start, stop, 7)
         atom.drop([0, 2, 3], axis=1, inplace=True)
         atom.columns = ['symbol', 'x', 'y', 'z']
-        for c in ['x', 'y', 'z']: atom[c] *= Length['A', 'au']
+        for c in ['x', 'y', 'z']: atom[c] *= Length['Angstrom', 'au']
         atom['Z'] = atom['symbol'].map(sym2z)
         atom['frame'] = 0
         self.atom = atom
@@ -281,4 +279,3 @@ _re_exc_01 = ' no.     E/a.u.        E/eV      f           Symmetry'
 _re_mo_00 = 'Eigenvectors .* in BAS representation'
 _re_mo_01 = 'row '
 _re_mo_02 = 'nosym'
->>>>>>> 1c37655b6be3dca60b2adbeee8ca3767e5477943
