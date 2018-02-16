@@ -7,6 +7,37 @@ import numpy as np
 import pandas as pd
 
 class Tensor(DataFrame):
+    """
+    The tensor dataframe.
+
+    +---------------+----------+-----------------------------------------+
+    | Column        | Type     | Description                             |
+    +===============+==========+=========================================+
+    | xx            | float    | 0,0 position in tensor                  |
+    +---------------+----------+-----------------------------------------+
+    | xy            | float    | 0,1 position in tensor                  |
+    +---------------+----------+-----------------------------------------+
+    | xz            | float    | 0,2 position in tensor                  |
+    +---------------+----------+-----------------------------------------+
+    | yx            | float    | 1,0 position in tensor                  |
+    +---------------+----------+-----------------------------------------+
+    | yy            | float    | 1,1 position in tensor                  |
+    +---------------+----------+-----------------------------------------+
+    | yz            | float    | 1,2 position in tensor                  |
+    +---------------+----------+-----------------------------------------+
+    | zx            | float    | 3,0 position in tensor                  |
+    +---------------+----------+-----------------------------------------+
+    | zy            | float    | 3,1 position in tensor                  |
+    +---------------+----------+-----------------------------------------+
+    | zz            | float    | 3,2 position in tensor                  |
+    +---------------+----------+-----------------------------------------+
+    | frame         | category | frame value to which atach tensor       |
+    +---------------+----------+-----------------------------------------+
+    | atom          | int      | atom index of molecule to place tensor  |
+    +---------------+----------+-----------------------------------------+
+    | label         | category | label of the type of tensor             |
+    +---------------+----------+-----------------------------------------+
+    """
     _index = 'tensor'
     _columns = ['xx','xy','xz','yx','yy','yz','zx','zy','zz',
                                                     'frame','atom','label']
@@ -28,7 +59,27 @@ class Tensor(DataFrame):
 
 
     @classmethod
-    def from_file(cls, filename, frame=0, atom_index=0):
+    def from_file(cls, filename):
+        """
+        A file reader that will take a tensor file and extract all 
+        necessary information. There is a specific file format in place 
+        and is as follows.
+
+        frame label atom
+        xx xy xz
+        yx yy yz
+        zx zy zz
+
+        For multiple tensors just append the same format as above without 
+        whitespace unless leaving the frame, label, atom attributes as 
+        empty.
+        
+        Args:
+            filename (str): file pathname
+        
+        Returns:
+            exatomic.tensor.Tensor: Tensor table with the tensor attributes
+        """
         df = pd.read_csv(filename, delim_whitespace=True, header=None,
                          skip_blank_lines=False)
         meta = df[::4]
@@ -39,8 +90,8 @@ class Tensor(DataFrame):
         df['grp'] = [i for i in range(n) for j in range(3)]
 #        eigen = cls._get_eigen(cls, n, df)
         df = pd.DataFrame(df.groupby('grp').apply(lambda x: 
-                          x.unstack().values[:-3]).values.tolist(),
-                          columns=['xx','xy','xz','yx','yy','yz','zx','zy','zz'])
+                     x.unstack().values[:-3]).values.tolist(),
+                     columns=['xx','xy','xz','yx','yy','yz','zx','zy','zz'])
         meta.reset_index(drop=True, inplace=True)
         meta.rename(columns={0: 'frame', 1: 'label', 2: 'atom'}, inplace=True)
         df = pd.concat([meta, df], axis=1)
@@ -49,4 +100,11 @@ class Tensor(DataFrame):
         return cls(df)
 
 def add_tensor(uni, fp):
+    """
+    Simple function to add a tensor object to the universe.
+    
+    Args:
+        uni (universe): Universe object
+        fp (str): file pathname
+    """
     uni.tensor = Tensor.from_file(fp)

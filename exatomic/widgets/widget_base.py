@@ -401,12 +401,15 @@ class ExatomicBox(Box):
         mw = kwargs.pop('min_width', None)
         nframes = kwargs.pop('nframes', None)
         fields = kwargs.pop('fields', None)
+        tensors = kwargs.pop('tensors', None)
+
 
         self.scenes, scenes = _scene_grid(objs, mh, mw, test,
                                           uni, typ, scenekwargs)
 
         self._controls = self._init_gui(nframes=nframes,
                                         fields=fields,
+                                        tensors=tensors,
                                         test=test,
                                         uni=uni)
 

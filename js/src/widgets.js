@@ -198,6 +198,7 @@ var UniverseSceneView = base.ExatomicSceneView.extend({
 //                }
         var tdx = this.model.get("tidx");
         var color = 0x00ff00;
+        console.log(this.tensor_d[fdx]);
         for ( var property in this.tensor_d[fdx] ) {
             if ( this.tensor_d[fdx].hasOwnProperty( property ) ) {
                 if ( property == tdx ) {

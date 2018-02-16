@@ -369,8 +369,9 @@ class App3D {
         return [psurf, nsurf];
     };
 
-    add_tensor_surface( tensor , atom_x , atom_y , atom_z , scaling , 
-                        color , label ) {
+    add_tensor_surface( tensor , atom_x = 0 , atom_y = 0 , atom_z = 0 , scaling = 1 , 
+                        color = 0x0000ff , label = 'tensor') {
+        var tensorsnuff = new Array()
         var tensor_mult = function( x , y , z , scaling ) {
             /*
             var tensor = [[100.472 , 91.193 , -4.279],
@@ -394,22 +395,94 @@ class App3D {
             var y = Math.sin(u) * Math.sin(v);
             var z = Math.cos(v);
             var g = tensor_mult(x, y, z, scaling);
+            if ( g <= 0 ) {
+                var col = new THREE.Color(0xff0000)
+            } else {
+                var col = new THREE.Color(color);
+            }
             x = g * Math.cos(u) * Math.sin(v) + atom_x;
             y = g * Math.sin(u) * Math.sin(v) + atom_y;
             z = g * Math.cos(v) + atom_z;
-            return new THREE.Vector3(x, y, z);
+            return [new THREE.Vector3(x, y, z),col];
         };
-        // May want to consider THREE.ShapeUtils.triangulateShape
-        // on the vectors directly returned from "func" to circumvent
-        // needing the constraints of the parameterized geometry.
-        var geom = new THREE.ParametricGeometry(func, 50, 50);
-        var pmat = new THREE.MeshLambertMaterial({color: color});
-        // var nmat = new THREE.MeshLambertMaterial({color: 'yellow', side: THREE.BackSide});
-        var psurf = new THREE.Mesh(geom, pmat);
-        // var nsurf = new THREE.Mesh(geom, nmat);
-        psurf.name = label;
-        // nsurf.name = "Negative";
+//        var func = function( ou , ov ) {
+//            var u = 2 * Math.PI * ou;
+//            var v = 2 * Math.PI * ov;
+//            var x = Math.cos(u) * Math.sin(v);
+//            var y = Math.sin(u) * Math.sin(v);
+//            var z = Math.cos(v);
+//            var g = tensor_mult(x, y, z, scaling);
+//            x = g * Math.cos(u) * Math.sin(v) + atom_x;
+//            y = g * Math.sin(u) * Math.sin(v) + atom_y;
+//            z = g * Math.cos(v) + atom_z;
+//            tensorsnuff.push(new THREE.Vector3(x, y, z) );
+//            return new THREE.Vector3(x, y, z);
+//        };
+//        // May want to consider THREE.ShapeUtils.triangulateShape
+//        // on the vectors directly returned from "func" to circumvent
+//        // needing the constraints of the parameterized geometry.
+//        var geom = new THREE.ParametricGeometry(func, 50, 50);
+////        for ( var i = 0 ; i < 1000 ; i++ ) {
+////            geom.faces[i].color = 0xff0000;
+////        }
+//        console.log(geom);
+//// https://stackoverflow.com/questions/17504531/change-material-or-color-in-mesh-face
+////        var pmat = new THREE.MeshLambertMaterial({color: color});
+//        var pmat = new THREE.MeshBasicMaterial({color:'white',shading: THREE.FlatShading,
+//                                                side: THREE.DoubleSide,
+//                                                vertexColors: THREE.FaceColors,
+//                                                needsUpdate: true});
+//        // var nmat = new THREE.MeshLambertMaterial({color: 'yellow', side: THREE.BackSide});
+//        var psurf = new THREE.Mesh(geom, pmat);
+//        // var nsurf = new THREE.Mesh(geom, nmat);
+//        psurf.name = label;
+////        console.log(tensorsnuff,atom_x,atom_y,atom_z);
+////        console.log(psurf);
+//        // nsurf.name = "Negative";
+        var geometry = new THREE.Geometry();
+        var slices = 50, stacks = 50;
+        var sliceCount = slices+1
+        for ( var i = 0 ; i <= slices ; i++ ) {
+            var ov = i / slices; 
+            for ( var j = 0 ; j <= stacks ; j++ ) {
+                var ou = j / stacks;
+                var p = func(ou, ov);
+                geometry.vertices.push(p[0]);
+                geometry.colors.push(p[1]);
+            }
+        }
+        var a,b,c,d;
+//        var vertex = new THREE.VertexColor(0xffffff);
+        for ( var i = 0 ; i < slices ; i++ ) {
+            for ( var j = 0 ; j < stacks ; j++ ) {
+                a = i * sliceCount + j;
+                b = i * sliceCount + j + 1;
+                c = ( i + 1 ) * sliceCount + j + 1;
+                d = ( i + 1 ) * sliceCount + j;
+                geometry.faces.push(new THREE.Face3( a,b,d ));
+                geometry.faces.push(new THREE.Face3( b,c,d ));
 
+                var sub_face = geometry.faces.slice(-2);
+                
+                sub_face[0].color = geometry.colors[a];
+                sub_face[1].color = geometry.colors[b];
+//                sub_face[0].vertexColors = [vertex,vertex,vertex];
+//                sub_face[1].vertexColors = [vertex,vertex,vertex];
+                
+                //console.log(geometry.colors[a],a);
+            }
+        }
+        console.log(geometry)
+//        console.log(geometry.colors)
+        geometry.computeBoundingSphere();
+        var pmat = new THREE.MeshBasicMaterial({color:'white',shading: THREE.FlatShading,
+                                                side: THREE.DoubleSide,
+                                                vertexColors: THREE.FaceColors,
+                                                needsUpdate: true});
+        var psurf = new THREE.Mesh(geometry, pmat);
+        
+        psurf.name = label;
+        console.log(psurf);
         return [psurf]; //, nsurf];
     };
 
