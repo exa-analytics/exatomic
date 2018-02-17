@@ -474,7 +474,7 @@ class App3D {
         }
         console.log(geometry)
 //        console.log(geometry.colors)
-        geometry.computeBoundingSphere();
+        geometry.computeVertexNormals();
         var pmat = new THREE.MeshBasicMaterial({color:'white',shading: THREE.FlatShading,
                                                 side: THREE.DoubleSide,
                                                 vertexColors: THREE.FaceColors,
