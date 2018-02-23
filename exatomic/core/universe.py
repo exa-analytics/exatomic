@@ -24,6 +24,9 @@ from .field import AtomicField
 from .orbital import Orbital, Excitation, MOMatrix, DensityMatrix
 from .basis import Overlap, BasisSet, BasisSetOrder
 from exatomic.algorithms.orbital import add_molecular_orbitals
+from exatomic.algorithms.basis import Basis
+
+from exatomic.core.tensor import Tensor
 
 
 class Meta(TypedMeta):
@@ -38,14 +41,17 @@ class Meta(TypedMeta):
     molecule_two = MoleculeTwo
     field = AtomicField
     orbital = Orbital
-    overlap = Overlap
-    multipole = DataFrame
     momatrix = MOMatrix
     excitation = Excitation
+    overlap = Overlap
     density = DensityMatrix
-    contribution = DataFrame
     basis_set_order = BasisSetOrder
     basis_set = BasisSet
+    basis_dims = dict
+    basis_functions = Basis
+    contribution = DataFrame
+    multipole = DataFrame
+    tensor = Tensor
 
 
 class Universe(six.with_metaclass(Meta, Container)):
@@ -139,6 +145,22 @@ class Universe(six.with_metaclass(Meta, Container)):
         """Compute number of molecules per frame."""
         self.frame['molecule_count'] = compute_molecule_count(self)
 
+    def compute_basis_dims(self):
+        """Compute basis dimensions."""
+        self.basis_dims = {
+            'npc': self.atom.set.map(self.basis_set.primitives(False)
+                                     .groupby('set').sum()).sum(),
+            'nps': self.atom.set.map(self.basis_set.primitives(True)
+                                     .groupby('set').sum()).sum(),
+            'ncc': self.atom.set.map(self.basis_set.functions(False)
+                                     .groupby('set').sum()).sum(),
+            'ncs': self.atom.set.map(self.basis_set.functions(True)
+                                     .groupby('set').sum()).sum(),
+            'sets': self.basis_set.functions_by_shell()}
+
+    def compute_basis_functions(self, **kwargs):
+        self.basis_functions = Basis(self)
+
     # def compute_density(self, mocoefs=None, orbocc=None):
     #     """Compute density from momatrix and occupation vector."""
     #     if not hasattr(self, 'momatrix'):
@@ -192,7 +214,7 @@ class Universe(six.with_metaclass(Meta, Container)):
             raise TypeError('field must be an instance of exatomic.field.AtomicField or a list of them')
 
     def add_molecular_orbitals(self, field_params=None, mocoefs=None,
-                               vector=None, frame=None, replace=True):
+                               vector=None, frame=0, replace=True):
         """Add molecular orbitals to universe.
 
         Args
@@ -202,10 +224,9 @@ class Universe(six.with_metaclass(Meta, Container)):
             frame (int): frame of atomic positions for the orbitals
             replace (bool): if False, do not remove previous fields
         """
-        attrs = ['momatrix', 'basis_set', 'basis_set_order']
-        for attr in attrs:
-            if not hasattr(self, attr):
-                raise AttributeError("universe must have {} attribute.".format(attr))
+        assert hasattr(self, 'momatrix')
+        assert hasattr(self, 'basis_set')
+        assert hasattr(self, 'basis_set_order')
         add_molecular_orbitals(self, field_params=field_params,
                                mocoefs=mocoefs, vector=vector,
                                frame=frame, replace=replace)

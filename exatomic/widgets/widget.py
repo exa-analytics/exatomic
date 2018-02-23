@@ -334,6 +334,16 @@ class UniverseWidget(ExatomicBox):
         folder['fopts'] = fopts
         return folder
 
+    def _tensor_folder(self, tensor):
+
+        tens = Button(description = ' Tensors', icon='bank')
+
+        content = _ListDict([
+            ('scale', FloatSlider(max=10.0, step=0.01))
+        ])
+
+        return folder(tens, content)
+
 
     def _iso_folder(self, folder):
 
@@ -427,6 +437,9 @@ class UniverseWidget(ExatomicBox):
 
             mainopts.update([('field', folder)])
 
+        # if tensors is not None:
+        #     mainopts.update([('tensor', self._tensor_folder())])
+
         return mainopts
 
 
@@ -449,6 +462,8 @@ class UniverseWidget(ExatomicBox):
         nframes = max((uni.atom.nframes
                       for uni in unis)) if len(unis) else 1
 
+        # print(masterkwargs)
+        # print(kwargs)
         super(UniverseWidget, self).__init__(*masterkwargs,
                                              uni=True, test=False,
                                              nframes=nframes,

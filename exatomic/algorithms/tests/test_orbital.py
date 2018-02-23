@@ -12,12 +12,15 @@ from exatomic import molcas
 from exatomic.molcas import Output as MolOutput
 from exatomic.molcas import Orb
 from exatomic.core.basis import Overlap
-from exatomic.algorithms.basis import gen_bfns
+#from exatomic.algorithms.basis import gen_bfns
 from exatomic.interfaces.cube import Cube
-from ..orbital_util import compare_fields
-from ..orbital import (add_molecular_orbitals, add_density, add_orb_ang_mom,
-                       build_pair_index, density_from_momatrix,
-                       density_as_square, momatrix_as_square)
+from exatomic.algorithms.orbital_util import compare_fields
+#from ..orbital_util import compare_fields
+from exatomic.algorithms.orbital import (
+    add_molecular_orbitals, add_density, add_orb_ang_mom,
+    build_pair_index, density_from_momatrix,
+    density_as_square, momatrix_as_square)
+
 
 class TestMolcasOrbital(TestCase):
     def setUp(self):
@@ -40,7 +43,7 @@ class TestMolcasOrbital(TestCase):
                 orb = Orb(f.read().decode('utf-8'))
                 uni.momatrix[col] = orb.momatrix['coef']
                 uni.orbital[col] = orb.orbital['occupation']
-        uni.basis_functions = {0: gen_bfns(uni, forcecart=True)}
+        #uni.basis_functions = {0: gen_bfns(uni, forcecart=True)}
 
         flds, cubfmt = [], 'mol-carbon-dz-{}.cube.bz2'.format
         for i, c in enumerate(['1', '2', '3', '4', '5', 'dens',
@@ -64,3 +67,8 @@ class TestMolcasOrbital(TestCase):
     def test_compare_fields(self):
         res = compare_fields(self.uni, self.chk, verbose=False)
         self.assertEquals(len(res), sum(res))
+
+
+#a = TestMolcasOrbital()
+#a.setUp()
+#a.test_compare_fields()

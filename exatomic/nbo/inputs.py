@@ -10,8 +10,7 @@ import pandas as pd
 from exatomic import __version__
 from .editor import Editor
 from exatomic.core.orbital import DensityMatrix
-from exatomic.algorithms.basis import (solid_harmonics, lorder,
-                                       cart_lml_count, spher_lml_count)
+from exatomic.algorithms.basis import lorder, cart_lml_count, spher_lml_count
 from exatomic.algorithms.orbital_util import _check_column
 from itertools import combinations_with_replacement as cwr
 
@@ -52,8 +51,11 @@ $END"""
 
 def _nbo_labels():
     """Generate dataframes of NBO label, L, and ml or l, m, n."""
-    sph = pd.DataFrame(list(solid_harmonics(6).keys()),
+    #sph = pd.DataFrame([(L, m) for m in range(-L, L + 1) for L in range(6)],
+    sph = pd.DataFrame([(L, m) for L in range(7) for m in range(-L, L + 1)],
+                       #list(solid_harmonics(6).keys()),
                        columns=('L', 'ml'))
+
     # See the NBO 6.0 manual for more details
     # This is the basis function labeling scheme
     # In order of increasing ml from most negative

@@ -19,9 +19,9 @@ import pandas as pd
 from io import StringIO
 
 from exa import DataFrame
-from exatomic.algorithms.basis import (cart_lml_count, spher_lml_count,
-                                       lorder, _ovl_indices, _square,
-                                       _vec_sphr_norm, _vec_sto_norm)
+from exatomic.algorithms.basis import cart_lml_count, spher_lml_count
+from exatomic.algorithms.numerical import (_vec_sphr_norm, _vec_sto_norm,
+                                           _tri_indices, _square, Shell)
 
 
 class BasisSet(DataFrame):
@@ -78,13 +78,32 @@ class BasisSet(DataFrame):
     def lmax(self):
         return self['L'].cat.as_ordered().max()
 
-    @property
+    # @property
+    # def shells(self):
+    #     return [lorder[l] for l in self.L.unique()]
+    #
+    # @property
+    # def nshells(self):
+    #     return len(self.shells)
     def shells(self):
-        return [lorder[l] for l in self.L.unique()]
-
-    @property
-    def nshells(self):
-        return len(self.shells)
+        def _shell_gau(df):
+            piv = ('alpha', 'shell', 'd')
+            alphas = df.alpha.unique()
+            piv = df.pivot(*piv).loc[alphas].fillna(0.)
+            return Shell(piv.values.flatten(),
+                         alphas, piv.columns.values,
+                         *piv.shape, df.L.values[0],
+                         None, None)
+        def _shell_sto(df):
+            piv = ('alpha', 'shell', 'd')
+            alphas = df.alpha.unique()
+            piv = df.pivot(*piv).loc[alphas].fillna(0.)
+            return Shell(piv.values.flatten(),
+                         alphas, piv.columns.values,
+                         *piv.shape, df.L.values[0],
+                         df.r.values, df.n.values)
+        _shell = _shell_gau if self.gaussian else _shell_sto
+        return self.groupby(['set', 'L']).apply(_shell).reset_index()
 
     def functions_by_shell(self):
         """Return a series of n functions per (set, L).
@@ -209,7 +228,7 @@ class Overlap(DataFrame):
             else:
             # except FileNotFoundError:
                 vals = pd.read_csv(StringIO(source), header=None).values.flatten()
-        chi0, chi1 = _ovl_indices(vals)
+        chi0, chi1 = _tri_indices(vals)
         return cls(pd.DataFrame.from_dict({'chi0': chi0,
                                            'chi1': chi1,
                                            'coef': vals,

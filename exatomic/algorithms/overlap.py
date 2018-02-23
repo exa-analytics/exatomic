@@ -8,103 +8,71 @@ Utilities for computing the overlap between gaussian type functions.
 """
 
 import numpy as np
-from numba import jit
-
-from ..core.basis import Overlap
-from .basis import (gen_bfns, new_solid_harmonics,
-                    new_car2sph, new_enum_cartesian,
-                    fac, fac2, cart_lml_count)
-
-
-
-def _overlap(bfns, p2c, c, x, y, z, l, m, n, a):
-    """Build arrays for numbafied overlap."""
-    ix, pf = 0, bfns[0]
-    for j, f in enumerate(bfns):
-        ii = f.ps
-        if pf.l != f.l or pf.m != f.m or pf.n != f.n or not j:
-            if j: ix += pf.ps
-            c[ix : ix + ii] = f.center
-            x[ix : ix + ii] = f.xa
-            y[ix : ix + ii] = f.ya
-            z[ix : ix + ii] = f.za
-            l[ix : ix + ii] = f.l
-            m[ix : ix + ii] = f.m
-            n[ix : ix + ii] = f.n
-            a[ix : ix + ii] = f.alphas
-        p2c[ix : ix + ii, j] = f.cs
-        pf = f
-    # return c, x, y, z, l, m, n, a
-    chi0, chi1, ovl = _wrap_overlap(c, x, y, z, l, m, n, a)
-    return p2c, Overlap.from_dict({'chi0': chi0, 'chi1': chi1,
-                                   'coef': ovl, 'frame': 0})
-
-
-_cartouche = new_car2sph(new_solid_harmonics(6),
-                         new_enum_cartesian)
-
-def _cart_to_sphr(shls, sets, ncc, ncs):
-    """Generate cartesian to spherical transform matrix."""
-    c2s = np.zeros((ncc, ncs), dtype=np.float64)
-    cx, sx = 0, 0
-    for seht in sets:
-        shl = shls[seht]
-        for L, n in shl.items():
-            exp = np.kron(_cartouche[L], np.eye(n)) if L else np.eye(n)
-            ci, si = exp.shape
-            c2s[cx : cx + ci, sx : sx + si] = exp
-            cx += ci
-            sx += si
-    return c2s
-
-def cart_to_sphr(uni):
-    """Compute the cartesian to spherical contraction matrix."""
-    ncc = uni.atom.set.map(uni.basis_set.functions(False)
-                           .groupby('set').sum()).sum()
-    ncs = uni.atom.set.map(uni.basis_set.functions(True)
-                           .groupby('set').sum()).sum()
-    shls = uni.basis_set.functions_by_shell()
-    return _cart_to_sphr(shls, uni.atom.set, ncc, ncs)
-
-def prim_cart_overlap(uni):
-    """Compute the primitive overlap and contraction matrices from a universe."""
-    # Generate the basis functions
-    if hasattr(uni, 'basis_functions'):
-        bfns = uni.basis_functions[0]
-    else:
-        uni.basis_functions = {0: gen_bfns(uni, forcecart=True)}
-        bfns = uni.basis_functions[0]
-    # Number of functions per shell
-    shls = uni.basis_set.functions_by_shell()
-    # Number of primitive cartesians
-    npc = uni.atom.set.map(uni.basis_set.primitives(False)
-                           .groupby('set').sum()).sum()
-    # Number of contracted cartesians
-    ncc = uni.atom.set.map(uni.basis_set.functions(False)
-                           .groupby('set').sum()).sum()
-    # Number of contracted sphericals
-    ncs = uni.atom.set.map(uni.basis_set.functions(True)
-                           .groupby('set').sum()).sum()
-    # Cartesian to spherical transformation matrix
-    c2s = np.zeros((ncc, ncs), dtype=np.float64)
-    c2s = _cart_to_sphr(shls, uni.atom.set, ncc, ncs)
-    # Allocate arrays to feed to numba
-    p2c = np.zeros((npc, ncc), dtype=np.float64)
-    c = np.empty(npc, dtype=np.int64)
-    x = np.empty(npc, dtype=np.float64)
-    y = np.empty(npc, dtype=np.float64)
-    z = np.empty(npc, dtype=np.float64)
-    l = np.empty(npc, dtype=np.int64)
-    m = np.empty(npc, dtype=np.int64)
-    n = np.empty(npc, dtype=np.int64)
-    a = np.empty(npc, dtype=np.float64)
-    p2c, ovl = _overlap(bfns, p2c, c, x, y, z, l, m, n, a)
-    return p2c, c2s, ovl
-
+from numba import jit, prange
+from .numerical import fac, fac2, dfac21, sdist, choose
 
 
 @jit(nopython=True, cache=True)
-def _overlap_1c(alp1, alp2, l1, m1, n1, l2, m2, n2):
+def _fj(j, l, m, a, b):
+    tot = 0.
+    for k in prange(max(0, j - m), min(j, l) + 1):
+        tot += (choose(l, k) *
+                choose(m, int(j - k)) *
+                a ** (l - k) *
+                b ** (m + k - j))
+    return tot
+
+@jit(nopython=True, cache=True)
+def _nin(l, m, pa, pb, gamma, N):
+    ltot = l + m
+    if not ltot: return N
+    tot = 0.
+    for j in prange(int(ltot // 2 + 1)):
+        tot += _fj(2 * j, l, m, pa, pb) * dfac21(j) / (2 * gamma) ** j
+    return tot * N
+
+@jit(nopython=True, cache=True)
+def _new_gaussian_product(a, b, ax, ay, az, bx, by, bz):
+    p = a + b
+    mu = a * b / p
+    px = (a * ax + b * bx) / p
+    py = (a * ay + b * by) / p
+    pz = (a * az + b * bz) / p
+    pax = px - ax
+    pay = py - ay
+    paz = pz - az
+    pbx = px - bx
+    pby = py - by
+    pbz = pz - bz
+    ab2 = sdist(ax, ay, az, bx, by, bz)
+    return np.sqrt(np.pi / p), p, mu, ab2, pax, pay, paz, pbx, pby, pbz
+
+@jit(nopython=True, cache=True)
+def _gaussian_product(a1, a2, ax, ay, az, bx, by, bz):
+    gamma = a1 + a2
+    N = np.sqrt(np.pi / gamma)
+    px = (a1 * ax + a2 * bx) / gamma
+    py = (a1 * ay + a2 * by) / gamma
+    pz = (a1 * az + a2 * bz) / gamma
+    pax = px - ax
+    pay = py - ay
+    paz = pz - az
+    pbx = px - bx
+    pby = py - by
+    pbz = pz - bz
+    ab2 = sdist(ax, ay, az, bx, by, bz)
+    return N, gamma, ab2, pax, pay, paz, pbx, pby, pbz
+
+@jit(nopython=True, cache=True)
+def _overlap_product(N, gamma, ab2, pax, pay, paz, pbx, pby, pbz,
+                     a1, a2, l1, m1, n1, l2, m2, n2):
+    return (np.exp(-a1 * a2 * ab2 / gamma) *
+            _nin(l1, l2, pax, pbx, gamma, N) *
+            _nin(m1, m2, pay, pby, gamma, N) *
+            _nin(n1, n2, paz, pbz, gamma, N))
+
+@jit(nopython=True, cache=True)
+def _overlap_1c(a1, a2, l1, m1, n1, l2, m2, n2):
     """Compute overlap between gaussian functions on the same center."""
     ll = l1 + l2
     mm = m1 + m2
@@ -112,74 +80,168 @@ def _overlap_1c(alp1, alp2, l1, m1, n1, l2, m2, n2):
     if ll % 2 or mm % 2 or nn % 2: return 0
     ltot = ll // 2 + mm // 2 + nn // 2
     numer = np.pi ** (1.5) * fac2(ll - 1) * fac2(mm - 1) * fac2(nn - 1)
-    denom = (2 ** ltot) * (alp1 + alp2) ** (ltot + 1.5)
+    denom = (2 ** ltot) * (a1 + a2) ** (ltot + 1.5)
     return numer / denom
 
+@jit(nopython=True, cache=True)
+def _overlap_2c(a1, a2, ax, ay, az, bx, by, bz, l1, m1, n1, l2, m2, n2):
+    return _overlap_product(*_gaussian_product(a1, a2, ax, ay, az, bx, by, bz),
+                            a1, a2, l1, m1, n1, l2, m2, n2)
 
 @jit(nopython=True, cache=True)
-def _nin(o1, o2, po1, po2, gamma, pg12):
-    """Helper function for gaussian overlap between 2 centers."""
-    otot = o1 + o2
-    if not otot: return pg12
-    if otot % 2: otot -= 1
-    oio = 0.
-    for i in range(otot // 2 + 1):
-        k = 2 * i
-        prod = pg12 * fac2(k - 1) / ((2 * gamma) ** i)
-        qlo = max(-k, (k - 2 * o2))
-        qhi = min( k, (2 * o1 - k)) + 1
-        fk = 0.
-        for q in range(qlo, qhi, 2):
-            xx = (k + q) // 2
-            zz = (k - q) // 2
-            newt1 = fac(o1) / fac(xx) / fac(o1 - xx)
-            newt2 = fac(o2) / fac(zz) / fac(o2 - zz)
-            fk += newt1 * newt2 * (po1 ** (o1 - xx)) * (po2 ** (o2 - zz))
-        oio += prod * fk
-    return oio
-
+def _kinetic_1c(a1, a2, l1, m1, n1, l2, m2, n2):
+    """Compute kinetic energy of gaussian functions on the same center."""
+    t =  4 * a1 * a2 * _overlap_1c(a1, a2, l1 + 1, m1, n1, l2 + 1, m2, n2)
+    t += 4 * a1 * a2 * _overlap_1c(a1, a2, l1, m1 + 1, n1, l2, m2 + 1, n2)
+    t += 4 * a1 * a2 * _overlap_1c(a1, a2, l1, m1, n1 + 1, l2, m2, n2 + 1)
+    if l1 and l2:
+        t += l1 * l2 * _overlap_1c(a1, a2, l1 - 1, m1, n1, l2 - 1, m2, n2)
+    if m1 and m2:
+        t += m1 * m2 * _overlap_1c(a1, a2, l1, m1 - 1, n1, l2, m2 - 1, n2)
+    if n1 and n2:
+        t += n1 * n2 * _overlap_1c(a1, a2, l1, m1, n1 - 1, l2, m2, n2 - 1)
+    if l1: t -= 2 * a2 * l1 * _overlap_1c(a1, a2, l1 - 1, m1, n1, l2 + 1, m2, n2)
+    if l2: t -= 2 * a1 * l2 * _overlap_1c(a1, a2, l1 + 1, m1, n1, l2 - 1, m2, n2)
+    if m1: t -= 2 * a2 * m1 * _overlap_1c(a1, a2, l1, m1 - 1, n1, l2, l2 + 1, n2)
+    if m2: t -= 2 * a1 * m2 * _overlap_1c(a1, a2, l1, m1 + 1, n1, l2, m2 - 1, n2)
+    if n1: t -= 2 * a2 * n1 * _overlap_1c(a1, a2, l1, m1, n1 - 1, l2, l2, n2 + 1)
+    if n2: t -= 2 * a1 * n2 * _overlap_1c(a1, a2, l1, m1, n1 + 1, l2, m2, n2 - 1)
+    return t / 2
 
 @jit(nopython=True, cache=True)
-def _overlap_2c(ab2, pax, pay, paz, pbx, pby, pbz,
-                gamma, alp1, alp2, l1, m1, n1, l2, m2, n2):
-    """Compute the overlap between two gaussian functions on different centers."""
-    pg12 = np.sqrt(np.pi / gamma)
-    xix = _nin(l1, l2, pax, pbx, gamma, pg12)
-    yiy = _nin(m1, m2, pay, pby, gamma, pg12)
-    ziz = _nin(n1, n2, paz, pbz, gamma, pg12)
-    exp = alp1 * alp2 * ab2 / gamma
-    return np.exp(-exp) * xix * yiy * ziz
+def _kinetic_2c(a1, a2, ax, ay, az, bx, by, bz, l1, m1, n1, l2, m2, n2):
+    """Compute the kinetic energy of two gaussian functions on different centers."""
+    args = _gaussian_product(a1, a2, ax, ay, az, bx, by, bz)
+    t =  4 * a1 * a2 * _overlap_product(*args, a1, a2, l1 - 1, m1, n1, l2 - 1, m2, n2)
+    t += 4 * a1 * a2 * _overlap_product(*args, a1, a2, l1, m1 - 1, n1, l2, m2 - 2, n2)
+    t += 4 * a1 * a2 * _overlap_product(*args, a1, a2, l1, m1, n1 - 1, l2, m2, n2 - 1)
+    if l1 and l2:
+        t += l1 * l2 * _overlap_product(*args, a1, a2, l1 - 1, m1, n1, l2 - 1, m2, n2)
+    if m1 and m2:
+        t += l1 * l2 * _overlap_product(*args, a1, a2, l1, m1 - 1, n1, l2, m2 - 1, n2)
+    if n1 and n2:
+        t += l1 * l2 * _overlap_product(*args, a1, a2, l1, m1, n1 - 1, l2, m2, n2 - 1)
+    if l1: t -=  2 * a2 * l1 * _overlap_product(*args, a1, a2, l1 - 1, m1, n1, l2 + 1, m2, n2)
+    if l2: t -=  2 * a1 * l2 * _overlap_product(*args, a1, a2, l1 + 1, m1, n1, l2 - 1, m2, n2)
+    if m1: t -=  2 * a2 * m1 * _overlap_product(*args, a1, a2, l1, m1 - 1, n1, l2, m2 + 1, n2)
+    if m2: t -=  2 * a1 * m2 * _overlap_product(*args, a1, a2, l1, m1 + 1, n1, l2, m2 - 1, n2)
+    if n1: t -=  2 * a2 * n1 * _overlap_product(*args, a1, a2, l1, m1, n1 - 1, l2, m2, n2 + 1)
+    if n2: t -=  2 * a1 * n2 * _overlap_product(*args, a1, a2, l1, m1, n1 + 1, l2, m2, n2 - 1)
+    return t / 2
 
+# @njit
+# def _iter_pairs(c, x, y, z, l, m, n, a):
+#     nprim = len(x)
+#     for i in prange(len(x)):
+#         for j in prange(i + 1):
+#             if c[i] == c[j]:
+#                 yield a[i], a[j], l[i], m[i], n[i], l[j], m[j], n[j]
+#             else:
+#                 yield a[i], a[j], x[i], y[i], z[i], x[j], y[j], z[j], \
+#                                   l[i], m[i], n[i], l[j], m[j], n[j]
 
 @jit(nopython=True, cache=True)
-def _wrap_overlap(c, x, y, z, l, m, n, a):
+def _primitive_overlap(c, x, y, z, l, m, n, a):
     """Compute a triangular portion of the primitive overlap matrix."""
     nprim, cnt = len(x), 0
-    arlen = nprim * (nprim + 1) // 2
-    chi0 = np.empty(arlen, dtype=np.int64)
-    chi1 = np.empty(arlen, dtype=np.int64)
-    ovl = np.empty(arlen, dtype=np.float64)
-    for i in range(nprim):
-        for j in range(i + 1):
-            chi0[cnt] = i
-            chi1[cnt] = j
+    ndim = nprim * (nprim + 1) // 2
+    ovl = np.empty(ndim, dtype=np.float64)
+    # for args in _iter_pairs(c, x, y, z, l, m, n, a):
+    for i in prange(nprim):
+        for j in prange(i + 1):
             if c[i] == c[j]:
-                ovl[cnt] = _overlap_1c(
-                    a[i], a[j], l[i], m[i], n[i], l[j], m[j], n[j])
+                ovl[cnt] = _overlap_1c(a[i], a[j],
+                                       l[i], m[i], n[i], l[j], m[j], n[j])
             else:
-                gamma = a[i] + a[j]
-                xp = (a[i] * x[i] + a[j] * x[j]) / gamma
-                yp = (a[i] * y[i] + a[j] * y[j]) / gamma
-                zp = (a[i] * z[i] + a[j] * z[j]) / gamma
-                pix = xp - x[i]
-                piy = yp - y[i]
-                piz = zp - z[i]
-                pjx = xp - x[j]
-                pjy = yp - y[j]
-                pjz = zp - z[j]
-                ovl[cnt] = _overlap_2c(
-                    (x[i] - x[j]) ** 2 + (y[i] - y[j]) ** 2 + (z[i] - z[j]) ** 2,
-                    pix, piy, piz, pjx, pjy, pjz, gamma,
-                    a[i], a[j], l[i], m[i], n[i], l[j], m[j], n[j])
+                ovl[cnt] = _overlap_2c(a[i], a[j],
+                                       x[i], y[i], z[i], x[j], y[j], z[j],
+                                       l[i], m[i], n[i], l[j], m[j], n[j])
             cnt += 1
-    return chi0, chi1, ovl
+    return ovl
+
+
+@jit(nopython=True, cache=True)
+def _primitive_kinetic(c, x, y, z, l, m, n, a):
+    """Compute a triangular portion of the primitive overlap matrix."""
+    nprim, cnt = len(x), 0
+    ndim = nprim * (nprim + 1) // 2
+    kin = np.empty(ndim, dtype=np.float64)
+    for i in prange(nprim):
+        for j in prange(i + 1):
+            if c[i] == c[j]:
+                kin[cnt] = _kinetic_1c(a[i], a[j],
+                                       l[i], m[i], n[i], l[j], m[j], n[j])
+            else:
+                kin[cnt] = _kinetic_2c(a[i], a[j],
+                                       x[i], y[i], z[i], x[j], y[j], z[j],
+                                       l[i], m[i], z[i], l[j], m[j], n[j])
+            cnt += 1
+    return kin
+
+
+@jit(nopython=True, cache=True)
+def _primitive_nucattr(c, x, y, z, l, m, n, a):
+    """Compute a triangular portion of the primitive overlap matrix."""
+    nprim, cnt = len(x), 0
+    ndim = nprim * (nprim + 1) // 2
+    nuc = np.empty(ndim, dtype=np.float64)
+    for i in prange(nprim):
+        for j in prange(i + 1):
+            if c[i] == c[j]:
+                nuc[cnt] = _nucattr_1c(a[i], a[j],
+                                       l[i], m[i], n[i], l[j], m[j], n[j])
+            else:
+                nuc[cnt] = _nucattr_2c(a[i], a[j],
+                                       x[i], y[i], z[i], x[j], y[j], z[j],
+                                       l[i], m[i], z[i], l[j], m[j], n[j])
+            cnt += 1
+    return nuc
+# @jit(nopython=True, cache=True)
+# def _nucattr_1c(a1, a2, l1, m1, n1, l2, m2, n2):
+#     pass
+#                 # gamma = a[i] + a[j]
+#                 # xp = (a[i] * x[i] + a[j] * x[j]) / gamma
+#                 # yp = (a[i] * y[i] + a[j] * y[j]) / gamma
+#                 # zp = (a[i] * z[i] + a[j] * z[j]) / gamma
+#                 # pax = xp - x[i]
+#                 # pay = yp - y[i]
+#                 # paz = zp - z[i]
+#                 # pbx = xp - x[j]
+#                 # pby = yp - y[j]
+#
+# @jit(nopython=True, cache=True)
+# def _nucattr_2c(ax, ay, az, bx, by, bz, pax, pay, paz, pbx, pby, pbz,
+#                 gamma, a1, a2, l1, m1, n1, l2, m2, n2):
+#     # pre = 2 * np.pi / gamma * np.exp(-a1 * a2 * sdist())
+#     ab2 = sdist(ax, ay, az, bx, by, bz)
+#     pg12 = 2 * np.pi / gamma
+#     cx = (ax + bx) / 2
+#     cy = (ay + by) / 2
+#     cz = (az + bz) / 2
+#     xix = _nin(l1, l2, pax, pbx, gamma, pg12)
+#     yiy = _nin(m1, m2, pay, pby, gamma, pg12)
+#     ziz = _nin(n1, n2, paz, pbz, gamma, pg12)
+#     exp = a1 * a2 * ab2 / gamma
+#
+#     # return pg12 *
+
+@jit(nopython=True, cache=True)
+def _old_nin(l, m, pa, pb, gamma, N):
+    ltot = l + m
+    if not ltot: return N
+    if ltot % 2: ltot -= 1
+    tot = 0.
+    for j in range(ltot // 2 + 1):
+        k = 2 * j
+        prod = N * fac2(k - 1) / ((2 * gamma) ** j)
+        qlo = max(-k, (k - 2 * m))
+        qhi = min( k, (2 * l - k)) + 1
+        fk = 0.
+        for q in range(qlo, qhi, 2):
+            lt = (k + q) // 2
+            mt = (k - q) // 2
+            newt1 = fac(l) / fac(lt) / fac(l - lt)
+            newt2 = fac(m) / fac(mt) / fac(m - mt)
+            fk += newt1 * newt2 * (pa ** (l - lt)) * (pb ** (m - mt))
+        tot += prod * fk
+    return tot

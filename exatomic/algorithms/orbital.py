@@ -15,7 +15,7 @@ from exatomic.base import sym2z
 from exatomic.core.field import AtomicField
 from .orbital_util import (
     numerical_grid_from_field_params,
-    _determine_fps, _determine_vector, _determine_bfns,
+    _determine_fps, _determine_vector, #_determine_bfns,
     _compute_orb_ang_mom, _compute_current_density,
     _compute_orbitals, _compute_density, _check_column,
     _make_field, _compute_orbitals_nojit)
@@ -87,7 +87,7 @@ def momatrix_as_square(movec):
 
 def add_molecular_orbitals(uni, field_params=None, mocoefs=None,
                            vector=None, frame=0, inplace=True,
-                           replace=True, norm='Nd', forcecart=False,
+                           replace=False, norm='Nd', forcecart=False,
                            verbose=True):
     """A universe must contain basis_set, basis_set_order, and
     momatrix attributes to use this function.  Evaluate molecular
@@ -113,7 +113,8 @@ def add_molecular_orbitals(uni, field_params=None, mocoefs=None,
               ' Consider adding tests.')
     t1 = datetime.now()
     vector = _determine_vector(uni, vector)
-    bfns = _determine_bfns(uni, frame, norm, forcecart=forcecart)
+    # bfns = _determine_bfns(uni, frame, norm, forcecart=forcecart)
+    bfns = uni.basis_functions
     fps = _determine_fps(uni, field_params, len(vector))
     mocoefs = _check_column(uni, 'momatrix', mocoefs)
     if verbose:
@@ -124,9 +125,12 @@ def add_molecular_orbitals(uni, field_params=None, mocoefs=None,
     orbs = uni.momatrix.groupby('orbital')
     bvs = bfns.evaluate(x, y, z)
     cmat = uni.momatrix.square(column=mocoefs).values
+    print(bvs.shape)
+    print(vector.shape)
+    print(cmat.shape)
     try:
         ovs = _compute_orbitals(bvs, vector, cmat)
-    except IndexError:
+    except (IndexError, AssertionError):
         ovs = _compute_orbitals_nojit(bvs, vector, cmat)
     field = _make_field(ovs, fps)
     t2 = datetime.now()
@@ -157,7 +161,8 @@ def add_density(uni, field_params=None, mocoefs=None, orbocc=None,
     mocoefs = _check_column(uni, 'momatrix', mocoefs)
     orbocc = mocoefs if orbocc is None and mocoefs != 'coef' else orbocc
     orbocc = _check_column(uni, 'orbital', orbocc)
-    bfns = _determine_bfns(uni, frame, norm)
+    # bfns = _determine_bfns(uni, frame, norm)
+    bfns = uni.basis_functions
     orbs = uni.momatrix.groupby('orbital')
     vector = np.array(range(uni.momatrix.orbital.max() + 1))
     fps = _determine_fps(uni, field_params, len(vector))
@@ -172,7 +177,7 @@ def add_density(uni, field_params=None, mocoefs=None, orbocc=None,
     dens = _compute_density(ovs, uni.orbital[orbocc].values)
     t2 = datetime.now()
     if verbose:
-        p1 = 'Timing: compute density     - {:.2f}s'
+        p1 = 'Timing: compute density  - {:>8.2f}s.'
         print(p1.format((t2-t1).total_seconds()))
     if not inplace: return _make_field(dens, fps.loc[0])
     uni.add_field(_make_field(dens, fps.loc[0]))
@@ -206,7 +211,8 @@ def add_orb_ang_mom(uni, field_params=None, rcoefs=None, icoefs=None,
                   "matrix, specify maxes.")
         maxes = np.eye(3)
     t1 = datetime.now()
-    bfns = _determine_bfns(uni, frame, norm)
+    # bfns = _determine_bfns(uni, frame, norm)
+    bfns = uni.basis_functions
     fps = _determine_fps(uni, field_params, 4)
 
     x, y, z = numerical_grid_from_field_params(fps)
@@ -217,7 +223,7 @@ def add_orb_ang_mom(uni, field_params=None, rcoefs=None, icoefs=None,
     grz = bfns.evaluate_diff(x, y, z, cart='z')
     t2 = datetime.now()
     if verbose:
-        p1 = 'Timing: grid evaluation     - {:.2f}s'
+        p1 = 'Timing: grid evaluation  - {:>8.2f}s.'
         print(p1.format((t2-t1).total_seconds()))
 
     cmatr = uni.momatrix.square(column=rcoefs).values
@@ -226,7 +232,7 @@ def add_orb_ang_mom(uni, field_params=None, rcoefs=None, icoefs=None,
         bvs, grx, gry, grz, cmatr, cmati, occvec, verbose=verbose)
     t3 = datetime.now()
     if verbose:
-        p2 = 'Timing: current density 1D  - {:.2f}s'
+        p2 = 'Timing: current density  - {:>8.2f}s.'
         print(p2.format((t3-t2).total_seconds()))
     ang_mom = _compute_orb_ang_mom(x, y, z, curx, cury, curz, maxes)
     if not inplace: return _make_field(ang_mom, fps)

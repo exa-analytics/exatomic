@@ -52,13 +52,30 @@ class Output(six.with_metaclass(OutMeta, Editor)):
 
     def parse_basis_set(self):
         # Find the basis set
+        _re_bas_00 = '(Slater-type)  F U N C T I O N S'
+        _re_bas_01 = 'Atom Type'
         start = self.find(_re_bas_00, keys_only=True)[-1] + 3
-        stopa = self.find_next(_re_bas_01, start=start, keys_only=True)
-        stopb = self.find_next(_re_bas_02, start=start, keys_only=True)
-        try: stop = min(stopa, stopb)
-        except TypeError: stop = stopa
+        starts = self.find(_re_bas_01, start=start, keys_only=True)
+        lines = []
+        for ext in starts:
+            for i in range(4):
+                lines.append(start + ext + i)
+            stop = start + ext + 4
+            while self[stop].strip():
+                lines.append(stop)
+                stop += 1
+        #_re_bas_01 = 'BAS: List of all Elementary Cartesian Basis Functions'
+        #_re_bas_02 = 'Frozen Core Shells'
+        #_re_bas_03 = 'Charge Fitting Sets'
+        #stopa = self.find_next(_re_bas_01, start=start, keys_only=True)
+        #stopb = self.find_next(_re_bas_02, start=start, keys_only=True)
+        #stopc = self.find_next(_re_bas_03, start=start, keys_only=True)
+        #try: stop = min(stopa, stopb, stopc)
+        #except TypeError: stop = stopa
         # Grab everything
-        df = pd.read_fwf(StringIO('\n'.join(self[start:stop])),
+        #print(start, stop)
+        #print(lines)
+        df = pd.read_fwf(StringIO('\n'.join([self[i] for i in lines])),
                          widths=[4, 2, 12, 4],
                          names=['n', 'L', 'alpha', 'symbol'])
         # Where atom types change
@@ -263,10 +280,6 @@ class Output(six.with_metaclass(OutMeta, Editor)):
 
 # Atom
 _re_bso_00 = 'Atoms in this Fragment     Cart. coord.s (Angstrom)'
-# Basis Set
-_re_bas_00 = '(Slater-type)  F U N C T I O N S'
-_re_bas_01 = 'BAS: List of all Elementary Cartesian Basis Functions'
-_re_bas_02 = 'Frozen Core Shells'
 # Orbital
 _re_orb_00 = 'Orbital Energies, both Spins'
 _re_orb_01 = 'Orbital Energies, per Irrep and Spin'

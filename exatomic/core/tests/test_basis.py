@@ -39,16 +39,16 @@ class TestBasisSet(TestCase):
         self.assertEquals(self.bs.lmax, 0)
         self.assertEquals(self.mbs.lmax, 1)
         self.assertEquals(self.lbs.lmax, 2)
-
-    def test_shells(self):
-        self.assertEquals(self.bs.shells, ['s'])
-        self.assertEquals(self.mbs.shells, ['s', 'p'])
-        self.assertEquals(self.lbs.shells, ['s', 'p', 'd'])
-
-    def test_nshells(self):
-        self.assertEquals(self.bs.nshells, 1)
-        self.assertEquals(self.mbs.nshells, 2)
-        self.assertEquals(self.lbs.nshells, 3)
+    # 
+    # def test_shells(self):
+    #     self.assertEquals(self.bs.shells, ['s'])
+    #     self.assertEquals(self.mbs.shells, ['s', 'p'])
+    #     self.assertEquals(self.lbs.shells, ['s', 'p', 'd'])
+    #
+    # def test_nshells(self):
+    #     self.assertEquals(self.bs.nshells, 1)
+    #     self.assertEquals(self.mbs.nshells, 2)
+    #     self.assertEquals(self.lbs.nshells, 3)
 
     def test_functions_by_shell(self):
         n = ['set', 'L']

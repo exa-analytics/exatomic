@@ -16,7 +16,7 @@ from IPython.display import display
 from ipywidgets import FloatProgress, HBox
 
 from exatomic.core.field import AtomicField
-from exatomic.algorithms.basis import gen_bfns
+# from exatomic.algorithms.basis import gen_bfns
 
 
 def compare_fields(uni0, uni1, rtol=5e-5, atol=1e-12, signed=True, verbose=True):
@@ -26,13 +26,12 @@ def compare_fields(uni0, uni1, rtol=5e-5, atol=1e-12, signed=True, verbose=True)
     for i, (f0, f1) in enumerate(zip(uni0.field.field_values,
                                      uni1.field.field_values)):
         n = np.isclose(f0, f1, **kws).sum()
-        if not signed:
-            n = max(n, np.isclose(f0, -f1, **kwargs).sum())
+        if not signed: n = max(n, np.isclose(f0, -f1, **kws).sum())
         fracs.append(n / f0.shape[0])
     if verbose:
-        fmt = '{:<12}:{:>18}'
+        fmt = '{{:<{}}}:{{:>9}}'.format(len(str(len(fracs))) + 1)
         print(fmt.format(len(fracs), 'Fraction'))
-        fmt = fmt.replace('18', '18.12f')
+        fmt = fmt.replace('9', '9.5f')
         for i, f in enumerate(fracs):
             print(fmt.format(i, f))
     else:
@@ -181,21 +180,21 @@ def _compute_current_density(bvs, gvx, gvy, gvz, cmatr, cmati, occvec, verbose=T
     fp.close()
     return curx, cury, curz
 
-
-def _determine_bfns(uni, frame, norm, forcecart=False):
-    """Cache and return symbolic basis functions if they don't exist."""
-    if hasattr(uni, 'basis_functions'):
-        if frame in uni.basis_functions:
-            return uni.basis_functions[frame]
-        else:
-            uni.basis_functions[frame] = gen_bfns(uni, frame=frame,
-                                                  forcecart=forcecart)
-            return uni.basis_functions[frame]
-    else:
-        uni.basis_functions = {frame: gen_bfns(uni, frame=frame,
-                                               forcecart=forcecart)}
-        return uni.basis_functions[frame]
-
+#
+# def _determine_bfns(uni, frame, norm, forcecart=False):
+#     """Cache and return symbolic basis functions if they don't exist."""
+#     if hasattr(uni, 'basis_functions'):
+#         if frame in uni.basis_functions:
+#             return uni.basis_functions[frame]
+#         else:
+#             uni.basis_functions[frame] = gen_bfns(uni, frame=frame,
+#                                                   forcecart=forcecart)
+#             return uni.basis_functions[frame]
+#     else:
+#         uni.basis_functions = {frame: gen_bfns(uni, frame=frame,
+#                                                forcecart=forcecart)}
+#         return uni.basis_functions[frame]
+#
 
 def _determine_vector(uni, vector):
     """Find some orbital indices in a universe."""
