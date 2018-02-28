@@ -421,24 +421,35 @@ class App3D {
                 geometry.faces.push(new THREE.Face3( b,c,d ));
 
                 var sub_face = geometry.faces.slice(-2);
-                
-                sub_face[0].color = geometry.colors[a];
-                sub_face[1].color = geometry.colors[b];
-//                sub_face[0].vertexColors = [vertex,vertex,vertex];
-//                sub_face[1].vertexColors = [vertex,vertex,vertex];
-                
-                //console.log(geometry.colors[a],a);
+                red = ((cArray[a].r+cArray[b].r+cArray[d].r)/3)*256;
+                green = ((cArray[a].g+cArray[b].g+cArray[d].g)/3)*256;
+                blue = ((cArray[a].b+cArray[b].b+cArray[d].b)/3)*256;
+                mix = 'rgb('+parseInt(red)+', '+parseInt(green)+', '+parseInt(blue)+')'
+                sub_face[0].color = new THREE.Color(mix);
+                red = ((cArray[b].r+cArray[c].r+cArray[d].r)/3)*256;
+                green = ((cArray[b].g+cArray[c].g+cArray[d].g)/3)*256;
+                blue = ((cArray[b].b+cArray[c].b+cArray[d].b)/3)*256;
+                mix = 'rgb('+parseInt(red)+', '+parseInt(green)+', '+parseInt(blue)+')'
+                sub_face[1].color = new THREE.Color(mix);
             }
         }
-        console.log(geometry)
-//        console.log(geometry.colors)
         geometry.computeVertexNormals();
-        var pmat = new THREE.MeshBasicMaterial({color:'white',shading: THREE.FlatShading,
+        var pmat = new THREE.MeshPhongMaterial({color:'white',
+                                                shading: THREE.FlatShading,
                                                 side: THREE.DoubleSide,
                                                 vertexColors: THREE.FaceColors,
-                                                needsUpdate: true});
+                                                reflectivity: 0.8,
+                                                needsUpdate: true
+                                                });
+
         var psurf = new THREE.Mesh(geometry, pmat);
-        
+
+        var geo = new THREE.EdgesGeometry( psurf.geometry );
+        var mat = new THREE.LineBasicMaterial( {color: 0x000000, linewidth: 1} );
+        var wireframe = new THREE.LineSegments( geo,mat );
+
+        psurf.add( wireframe );
+        //var coord = " ("+atom_x.toFixed(3)+","+atom_y.toFixed(3)+","+atom_z.toFixed(3)+")";
         psurf.name = label;
         console.log(psurf);
         return [psurf]; //, nsurf];
