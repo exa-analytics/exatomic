@@ -86,12 +86,25 @@ class TensorContainer(ExatomicBox):
     def _tensor_widgets(self):
         pass
 
+    def _open_file(self, fp):
+        fn = open(fp)
+        data = []
+        for i in fn.readlines():
+            if i == "":
+                continue
+            data.append([])
+            d = i.split()
+            for j in d:
+                data[-1].append(j)
+        return data
+
 
     def _init_gui(self, **kwargs):
         """Initialize generic GUI controls and observe callbacks."""
         mainopts = super(TensorContainer, self)._init_gui(**kwargs)
         scn = self.scenes[0]
         alo = Layout(width='74px')
+        rlo = Layout(width='240px')
         xs = [FloatText(value=scn.txx, layout=alo),
               FloatText(value=scn.txy, layout=alo),
               FloatText(value=scn.txz, layout=alo)]
@@ -103,6 +116,9 @@ class TensorContainer(ExatomicBox):
               FloatText(value=scn.tzz, layout=alo)]
         scale =  FloatSlider(max=10.0, step=0.01, readout=True, value=1.0)
         tensorIndex = Dropdown(options=[0],value=0)
+        fileTensor = Text(value=self.file, layout=Layout(width='154px'))
+        tens = Button(description="Open",layout=alo)
+        filebox = HBox([fileTensor,tens],layout=rlo)
         def _x0(c):
             for scn in self.active(): scn.txx = c.new
         def _x1(c):
@@ -134,18 +150,40 @@ class TensorContainer(ExatomicBox):
         xbox = HBox(xs, layout=rlo)
         ybox = HBox(ys, layout=rlo)
         zbox = HBox(zs, layout=rlo)
-        geom = Button(icon='cubes', description=' Mesh', layout=_wlo)
+        geom = Button(icon='cubes', description=' Geometry', layout=_wlo)
         def _geom(b):
             for scn in self.active(): scn.geom = not scn.geom
+        def _tens(c):
+            for scn in self.active(): scn.tens = not scn.tens
+            tensor = self._open_file(fileTensor.value)
+            for i in range(len(tensor)):
+                if i == 0:
+                    continue
+                for j in range(len(tensor[i])):
+                    if i == 1:
+                        xs[j].value = tensor[i][j]
+                    elif i == 2:
+                        ys[j].value = tensor[i][j]
+                    elif i == 3:
+                        zs[j].value = tensor[i][j]
+                    else:
+                        break
+                        
+        tens.on_click(_tens)
         geom.on_click(_geom)
+        
         mainopts.update([('geom', geom),
+                         ('file', filebox),
                          ('xbox', xbox),
                          ('ybox', ybox),
                          ('zbox', zbox)])
         return mainopts
 
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args, fp=None, **kwargs):
+        self.file = ""
+        if fp != None:
+            self.file = fp
         super(TensorContainer, self).__init__(*args,
                                               uni=False,
                                               test=False,
