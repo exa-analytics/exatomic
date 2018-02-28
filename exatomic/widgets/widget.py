@@ -309,6 +309,16 @@ class UniverseWidget(ExatomicBox):
         folder['fopts'] = fopts
         return folder
 
+    def _tensor_folder(self, tensor):
+
+        tens = Button(description = ' Tensors', icon='bank')
+
+        content = _ListDict([
+            ('scale', FloatSlider(max=10.0, step=0.01))
+        ])
+
+        return folder(tens, content)
+
 
     def _iso_folder(self, folder):
         isos = Button(description=' Isosurfaces', icon='cube')

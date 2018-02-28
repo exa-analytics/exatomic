@@ -131,6 +131,8 @@ def frame_traits(uni):
     return {}
 
 
+
+
 def uni_traits(uni, atomcolors=None, atomradii=None):
     """Get Universe traits."""
     unargs = {}
@@ -142,4 +144,7 @@ def uni_traits(uni, atomcolors=None, atomradii=None):
     if hasattr(uni, 'field'):
         unargs.update(field_traits(uni.field))
         fields = ['null'] + unargs['field_i'][0]
+    if hasattr(uni, 'tensor'):
+        unargs.update({'tensor_d': uni.tensor.groupby('frame').apply(
+            lambda x: x.T.to_dict()).to_dict()})
     return unargs, fields

@@ -36,7 +36,8 @@ class Editor(six.with_metaclass(TypedMeta, _Editor)):
         self.frame = compute_frame_from_atom(self.atom)
 
 
-    def to_universe(self, name=None, description=None, meta=None, ignore=False):
+    def to_universe(self, name=None, description=None, meta=None, verbose=True,
+                    ignore=False, kwargs=None):
         """
         Convert the editor to a :class:`~exatomic.container.Universe` object.
         """
@@ -45,9 +46,12 @@ class Editor(six.with_metaclass(TypedMeta, _Editor)):
                 meta.update(self.meta)
             else:
                 meta = self.meta
-        kwargs = {'name': name,
-                  'description': description,
-                  'meta': meta}
+        if kwargs is None:
+            kwargs = {'name': name, 'description': description,
+                      'meta': meta}
+        else:
+            kwargs.update({'name': name, 'description': description,
+                           'meta': meta})
         attrs = [attr.replace('parse_', '')
                  for attr in vars(self.__class__).keys()
                  if attr.startswith('parse_')]

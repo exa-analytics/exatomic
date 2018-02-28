@@ -10,8 +10,8 @@ import pandas as pd
 from exatomic import __version__
 from .editor import Editor
 from exatomic.core.orbital import DensityMatrix
-from exatomic.core.basis import (solid_harmonics, lorder,
-                                 cart_lml_count, spher_lml_count)
+from exatomic.algorithms.basis import lorder, cart_lml_count, spher_lml_count
+from exatomic.algorithms.orbital_util import _check_column
 from itertools import combinations_with_replacement as cwr
 
 
@@ -51,8 +51,11 @@ $END"""
 
 def _nbo_labels():
     """Generate dataframes of NBO label, L, and ml or l, m, n."""
-    sph = pd.DataFrame(list(solid_harmonics(6).keys()),
+    #sph = pd.DataFrame([(L, m) for m in range(-L, L + 1) for L in range(6)],
+    sph = pd.DataFrame([(L, m) for L in range(7) for m in range(-L, L + 1)],
+                       #list(solid_harmonics(6).keys()),
                        columns=('L', 'ml'))
+
     # See the NBO 6.0 manual for more details
     # This is the basis function labeling scheme
     # In order of increasing ml from most negative
@@ -281,32 +284,17 @@ class Input(Editor):
         """
         for attr in ['overlap', 'momatrix', 'orbital']:
             if not hasattr(uni, attr):
-                raise Exception('uni must have {} attribute.'.format(attr))
-        if mocoefs is None and orbocc is None:
-            mocoefs = 'coef'
-            orbocc = 'occupation'
-        elif mocoefs is not None and orbocc is None:
-            orbocc = mocoefs
-        elif orbocc is not None and mocoefs is None:
-            mocoefs = orbocc
-        if mocoefs not in uni.momatrix.columns:
-            raise Exception('{} must be in uni.momatrix.columns'.format(mocoefs))
-        if orbocc not in uni.orbital.columns:
-            raise Exception('{} must be in uni.orbital.columns'.format(orbocc))
-        print('Assuming "{}" vector corresponds to "{}" matrix'.format(orbocc, mocoefs))
+                raise Exception('uni must have "{}" attribute.'.format(attr))
+        mocoefs = _check_column(uni, 'momatrix', mocoefs)
+        orbocc = mocoefs if orbocc is None and mocoefs != 'coef' else orbocc
+        orbocc = _check_column(uni, 'orbital', orbocc)
+        p1 = 'Assuming "{}" vector corresponds to "{}" matrix'
+        print(p1.format(orbocc, mocoefs))
 
-        # Grab all the useful array data
         kwargs = _obtain_arrays(uni)
-        # Manicure it slightly for NBO inputs
         kwargs.update({'exaver': _exaver, 'name': name, 'check': '',
                        'nat': kwargs['center'].max(),
                        'nbas': len(kwargs['center'])})
-        # kwargs['exaver'] = _exaver
-        # kwargs['name'] = name
-        # kwargs['center'] += 1
-        # kwargs['nat'] = kwargs['center'].max()
-        # kwargs['nbas'] = len(kwargs['center'])
-        # kwargs['check'] = ''
         columns = ('Z', 'Z', 'x', 'y', 'z')
         if 'Zeff' in uni.atom.columns:
             columns = ('Z', 'Zeff', 'x', 'y', 'z')
@@ -327,24 +315,19 @@ class Input(Editor):
         kwargs['npntrs'] = _clean_to_string(kwargs['npntrs'], ncol=10, width=5)
         kwargs['expnts'] = _clean_to_string(kwargs['expnts'], decimals=10, width=18)
         kwargs['coeffs'] = _clean_coeffs(kwargs['coeffs'])
-        # Separated matrices for debugging the top half when these
-        # arrays are harder to come by. NBO has strict precision
-        # requirements so overlap/density must be very precise (12 decimals).
+
         matargs = {'overlap': '', 'density': ''}
         margs = {'decimals': 15, 'width': 23, 'just': False}
         matargs['overlap'] = _clean_to_string(uni.overlap['coef'].values,
                                               **margs)
-        # if hasattr(uni, 'density'):
-        #     d = uni.density
-        # else:
         d = DensityMatrix.from_momatrix(uni.momatrix,
                                         uni.orbital[orbocc].values,
                                         mocoefs=mocoefs)
         matargs['density'] = _clean_to_string(d['coef'].values, **margs)
         kwargs['check'] = np.trace(np.dot(d.square(), uni.overlap.square()))
-        print('If {:.8f} is not the correct number of electrons,'
-              ' "{}" vector in uni.orbital may not correspond to "{}" matrix'
-              ' in uni.momatrix'.format(kwargs['check'], orbocc, mocoefs))
+        print('If {:.8f} is not the correct number of electrons,\n'
+              '"{}" vector in uni.orbital may not correspond to "{}" matrix\n'
+              'in uni.momatrix'.format(kwargs['check'], orbocc, mocoefs))
         return cls(_header.format(**kwargs) + _matrices.format(**matargs))
         # Still no clean solution for an occupation vector yet
         # d = None

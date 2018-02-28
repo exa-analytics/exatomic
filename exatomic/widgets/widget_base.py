@@ -142,8 +142,8 @@ class ExatomicScene(DOMWidget):
             min_height = kwargs.pop('min_height', '400px')
             min_width = kwargs.pop('min_width', '300px')
             flex = kwargs.pop('flex', '1 1 auto')
-            lo = Layout(height=height, min_height=min_height,
-                        flex=flex, min_width=min_width)
+        lo = Layout(height=height, min_height=min_height,
+                    flex=flex, min_width=min_width)
         super(DOMWidget, self).__init__(
             *args, layout=lo, **kwargs)
 
@@ -203,6 +203,8 @@ class UniverseScene(ExatomicScene):
     cont_num = Int(10).tag(sync=True)
     cont_lim = List([-8, -1]).tag(sync=True)
     cont_val = Float(0.0).tag(sync=True)
+    # Tensor traits
+    tensor_d = Dict().tag(sync=True)
     # Frame traits
 
 
@@ -431,6 +433,9 @@ def _scene_grid(objs, mh, mw, test, uni, typ, scenekwargs):
     else: mod = 3
     kwargs = {'min_height': mh, 'min_width': mw, 'uni': uni}
     kwargs.update(scenekwargs)
+
+    # print(scenekwargs)
+    # print(kwargs)
 
     flatscns, scenes = [], []
     for i in range(n):

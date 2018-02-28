@@ -45,6 +45,9 @@ class Orb(six.with_metaclass(OrbMeta, Editor)):
     def parse_momatrix(self):
         dim = int(self[5])
         #ndim = dim * dim
+        _re_orb = 'ORBITAL'
+        _re_occ = 'OCCUPATION NUMBERS'
+        _re_ens = 'ONE ELECTRON ENERGIES'
         found = self.find(_re_orb, _re_occ,
                           _re_ens, keys_only=True)
         skips = found[_re_orb]
@@ -107,10 +110,6 @@ class Orb(six.with_metaclass(OrbMeta, Editor)):
         super(Orb, self).__init__(*args, **kwargs)
 
 
-_re_orb = 'ORBITAL'
-_re_occ = 'OCCUPATION NUMBERS'
-_re_ens = 'ONE ELECTRON ENERGIES'
-
 
 class OutMeta(TypedMeta):
     atom = Atom
@@ -119,25 +118,62 @@ class OutMeta(TypedMeta):
 
 class Output(six.with_metaclass(OutMeta, Editor)):
 
+    def add_orb(self, path, mocoefs='coef', orbocc='occupation'):
+        orb = Orb(path)
+        for attr, col, de in [['momatrix', mocoefs, 'coef'],
+                              ['orbital', orbocc, 'occupation']]:
+            df = getattr(self, attr, None)
+            if df is None:
+                setattr(self, attr, getattr(orb, attr))
+            elif col in df.columns:
+                 raise Exception('This action would replace '
+                                 '"{}" in uni.{}'.format(col, attr))
+            else:
+                df[col] = getattr(orb, attr)[de]
+
+    def add_overlap(self, path):
+        self.overlap = Overlap.from_column(path)
+
     def parse_atom(self):
         """Parses the atom list generated in SEWARD."""
-        start = stop = self.find(_re_atom, keys_only=True)[0] + 8
-        while self[stop].split(): stop += 1
-        # Sometimes prints an '--' after the atoms..
-        if self[stop - 1].strip() == '--': stop -= 1
-        columns = ['label', 'tag', 'x', 'y', 'z', 5, 6, 7]
-        atom = self.pandas_dataframe(start, stop, columns).drop([5, 6, 7], axis=1)
+        _re_atom = 'Label   Cartesian Coordinates'
+        starts = [i + 2 for i in self.find(_re_atom, keys_only=True)]
+        lns = []
+        for start in starts:
+            stop = start
+            while len(self[stop].strip().split()) > 1:
+                lns.append(stop)
+                stop += 1
+                if not self[stop].strip():
+                    break
+        cols = ['tag', 'x', 'y', 'z']
+        atom = pd.read_csv(StringIO('\n'.join([self._lines[i] for i in lns])),
+                           delim_whitespace=True, names=cols)
         atom['symbol'] = atom['tag'].str.extract('([A-z]{1,})([0-9]*)',
                                                  expand=False)[0].str.lower().str.title()
         atom['Z'] = atom['symbol'].map(sym2z).astype(np.int64)
-        atom['label'] -= 1
+        atom['label'] = range(atom.shape[0])
         atom['frame'] = 0
         self.atom = atom
+        # _re_atom = 'Molecular structure info'
+        # start = stop = self.find(_re_atom, keys_only=True)[0] + 8
+        # while self[stop].split(): stop += 1
+        # # Sometimes prints an '--' after the atoms..
+        # if self[stop - 1].strip() == '--': stop -= 1
+        # columns = ['label', 'tag', 'x', 'y', 'z', 5, 6, 7]
+        # atom = self.pandas_dataframe(start, stop, columns).drop([5, 6, 7], axis=1)
+        # atom['symbol'] = atom['tag'].str.extract('([A-z]{1,})([0-9]*)',
+        #                                          expand=False)[0].str.lower().str.title()
+        # atom['Z'] = atom['symbol'].map(sym2z).astype(np.int64)
+        # atom['label'] -= 1
+        # atom['frame'] = 0
+        # self.atom = atom
 
     def parse_basis_set_order(self):
         """
         Parses the shell ordering scheme if BSSHOW specified in SEWARD.
         """
+        _re_bas_order = 'Basis Label        Type   Center'
         start = stop = self.find(_re_bas_order, keys_only=True)[0] + 1
         while self[stop].strip(): stop += 1
         df = self.pandas_dataframe(start, stop, ['idx', 'tag', 'type', 'center'])
@@ -180,9 +216,11 @@ class Output(six.with_metaclass(OutMeta, Editor)):
 
 
     def parse_basis_set(self):
-        """
-        Parses the primitive exponents, coefficients and shell if BSSHOW specified in SEWARD.
-        """
+        """Parses the primitive exponents, coefficients and
+        shell if BSSHOW specified in SEWARD."""
+        _re_bas_0 = 'Shell  nPrim  nBasis  Cartesian Spherical Contaminant'
+        _re_bas_1 = 'Label   Cartesian Coordinates / Bohr'
+        _re_bas_2 = 'No.      Exponent    Contraction Coefficients'
         found = self.find(_re_bas_0, _re_bas_1, _re_bas_2, keys_only=True)
         bmaps = [i + 1 for i in found[_re_bas_0]]
         atoms = [i + 2 for i in found[_re_bas_1]]
@@ -207,14 +245,20 @@ class Output(six.with_metaclass(OutMeta, Editor)):
                                                basmap['nPrim'], basmap['nBasis']):
             if pset != seht: shell = 0
             # In case contraction coefficients overflow to next line
-            neat = len(self[start].split()) == len(self[start + 1].split())
-            if neat: block = self.pandas_dataframe(start, start + nprim, nbas + 2)
+            nmatch = len(self[start].split())
+            neat = nmatch == len(self[start + 1].split())
+            if neat:
+                block = self.pandas_dataframe(start, start + nprim, nbas + 2)
             else:
-                stop = start + 2 * nprim
-                most = self[start:stop:2]
-                extr = self[start + 1:stop:2]
-                ncols = len(most[0].split()) + len(extr[0].split())
-                block = pd.read_csv(StringIO('\n'.join([i + j for i, j in zip(most, extr)])),
+                # Extra obfuscation to handle exotic cases
+                ext = 1
+                while nmatch != len(self[start + ext].split()):
+                    ext += 1
+                stop = start + ext * nprim
+                collated = [''.join(self[start + i * ext : start + i * ext + ext])
+                            for i in range(nprim)]
+                ncols = len(collated[0].split())
+                block = pd.read_csv(StringIO('\n'.join(collated)),
                                     delim_whitespace=True, names=range(ncols))
             alps = (pd.concat([block[1]] * nbas).reset_index(drop=True)
                     .str.replace('D', 'E').astype(np.float64))
@@ -230,16 +274,13 @@ class Output(six.with_metaclass(OutMeta, Editor)):
         prims = pd.concat(prims).reset_index(drop=True)
         prims['frame'] = 0
         self.basis_set = prims
+        if self.basis_set.lmax < 2:
+            self.basis_set.spherical = False
 
     def __init__(self, *args, **kwargs):
         super(Output, self).__init__(*args, **kwargs)
 
 
-_re_atom = 'Molecular structure info'
-_re_bas_order = 'Basis Label        Type   Center'
-_re_bas_0 = 'Shell  nPrim  nBasis  Cartesian Spherical Contaminant'
-_re_bas_1 = 'Label   Cartesian Coordinates / Bohr'
-_re_bas_2 = 'No.      Exponent    Contraction Coefficients'
 
 
 def parse_molcas(fp, momatrix=None, overlap=None, occvec=None, **kwargs):
