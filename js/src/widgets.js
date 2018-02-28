@@ -181,47 +181,43 @@ var UniverseSceneView = base.ExatomicSceneView.extend({
     ];
     },
 
-    generate_tensor: function() {
-        var scaling = this.model.get("scale");
-        var fdx = this.model.get("frame_idx");
-//        console.log(Object.keys(this.tensor_d[fdx]));
-//        console.log(this.tensor_d);
-//                var adx = this.tensor_d[fdx][0]["atom"];
-//                if ( this.model.get("tens") ) {
-//                    this.app3d.meshes["generic"] =
-//                                    this.app3d.add_tensor_surface( 
-//                                            this.get_tensor(fdx, 0),
-//                                            this.atom_x[fdx][adx],
-//                                            this.atom_y[fdx][adx],
-//                                            this.atom_z[fdx][adx],
-//                                            scaling ) ;
-//                }
+    color_tensor: function() {
         var tdx = this.model.get("tidx");
-        var color = 0x00ff00;
-        console.log(this.tensor_d[fdx]);
+        var fdx = this.model.get("frame_idx");
+        var color;
         for ( var property in this.tensor_d[fdx] ) {
             if ( this.tensor_d[fdx].hasOwnProperty( property ) ) {
-                if ( property == tdx ) {
-                    color = 0x0000ff;
-                } else {
-                    color = 0x00ff00;
+                if ( property == tdx ) { color = 0xafafaf; }
+                else { color = 0x000000; }
+                if ( this.model.get("tens") ) {
+                    this.app3d.meshes["tensor"+property][0].children[0].material.color.setHex(color);
                 }
+            }
+        } 
+    },
+
+    add_tensor: function() {
+        var scaling = this.model.get("scale");
+        var fdx = this.model.get("frame_idx");
+        for ( var property in this.tensor_d[fdx] ) {
+            if ( this.tensor_d[fdx].hasOwnProperty( property ) ) {
                 this.app3d.clear_meshes("tensor"+property);
                 var adx = this.tensor_d[fdx][property]["atom"];
                 if ( this.model.get("tens") ) {
                     this.app3d.meshes["tensor"+property] =
                                 this.app3d.add_tensor_surface( 
                                     this.get_tensor(fdx, property),
+                                    this.colors(),
                                     this.atom_x[fdx][adx],
                                     this.atom_y[fdx][adx],
                                     this.atom_z[fdx][adx],
                                     scaling,
-                                    color,
                                     this.tensor_d[fdx][property]["label"]);
                 }
                 this.app3d.add_meshes("tensor"+property);
             }
         }
+        this.color_tensor();
     },
 
     init_listeners: function() {
@@ -238,9 +234,9 @@ var UniverseSceneView = base.ExatomicSceneView.extend({
         this.listenTo(this.model, "change:cont_val", this.add_contour);
         this.listenTo(this.model, "change:atom_3d", this.add_axis);
         this.listenTo(this.model, "change:axis", this.add_axis);
-        this.listenTo(this.model, "change:tens", this.generate_tensor);
-        this.listenTo(this.model, "change:scale", this.generate_tensor);
-        this.listenTo(this.model, "change:tidx", this.generate_tensor);
+        this.listenTo(this.model, "change:tens", this.add_tensor);
+        this.listenTo(this.model, "change:scale", this.add_tensor);
+        this.listenTo(this.model, "change:tidx", this.color_tensor);
     }
 
 });
