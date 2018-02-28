@@ -369,18 +369,9 @@ class App3D {
         return [psurf, nsurf];
     };
 
-    add_tensor_surface( tensor , atom_x = 0 , atom_y = 0 , atom_z = 0 , scaling = 1 , 
-                        color = 0x0000ff , label = 'tensor') {
-        var tensorsnuff = new Array()
+    add_tensor_surface( tensor , colors , atom_x = 0 , atom_y = 0 , atom_z = 0 , 
+                        scaling = 1 , label = 'tensor') {
         var tensor_mult = function( x , y , z , scaling ) {
-            /*
-            var tensor = [[100.472 , 91.193 , -4.279],
-                          [91.193 , 67.572 , -1.544],
-                          [-4.279 , -1.544 , -2.329]];
-            /*
-            var tensor = [[-9.788 , 20.694 , -108.299],
-                          [20.694 , 2.741 , -63.712],
-                          [-108.299 , -63.712 , 93.601]]*/
             return (x * x * tensor[0][0] +
                    y * y * tensor[1][1] +
                    z * z * tensor[2][2] +
@@ -396,63 +387,30 @@ class App3D {
             var z = Math.cos(v);
             var g = tensor_mult(x, y, z, scaling);
             if ( g <= 0 ) {
-                var col = new THREE.Color(0xff0000)
+                var col = new THREE.Color(parseInt(colors['neg'].replace(/^#/,''),16))
             } else {
-                var col = new THREE.Color(color);
+                var col = new THREE.Color(parseInt(colors['pos'].replace(/^#/,''),16));
             }
             x = g * Math.cos(u) * Math.sin(v) + atom_x;
             y = g * Math.sin(u) * Math.sin(v) + atom_y;
             z = g * Math.cos(v) + atom_z;
             return [new THREE.Vector3(x, y, z),col];
         };
-//        var func = function( ou , ov ) {
-//            var u = 2 * Math.PI * ou;
-//            var v = 2 * Math.PI * ov;
-//            var x = Math.cos(u) * Math.sin(v);
-//            var y = Math.sin(u) * Math.sin(v);
-//            var z = Math.cos(v);
-//            var g = tensor_mult(x, y, z, scaling);
-//            x = g * Math.cos(u) * Math.sin(v) + atom_x;
-//            y = g * Math.sin(u) * Math.sin(v) + atom_y;
-//            z = g * Math.cos(v) + atom_z;
-//            tensorsnuff.push(new THREE.Vector3(x, y, z) );
-//            return new THREE.Vector3(x, y, z);
-//        };
-//        // May want to consider THREE.ShapeUtils.triangulateShape
-//        // on the vectors directly returned from "func" to circumvent
-//        // needing the constraints of the parameterized geometry.
-//        var geom = new THREE.ParametricGeometry(func, 50, 50);
-////        for ( var i = 0 ; i < 1000 ; i++ ) {
-////            geom.faces[i].color = 0xff0000;
-////        }
-//        console.log(geom);
-//// https://stackoverflow.com/questions/17504531/change-material-or-color-in-mesh-face
-////        var pmat = new THREE.MeshLambertMaterial({color: color});
-//        var pmat = new THREE.MeshBasicMaterial({color:'white',shading: THREE.FlatShading,
-//                                                side: THREE.DoubleSide,
-//                                                vertexColors: THREE.FaceColors,
-//                                                needsUpdate: true});
-//        // var nmat = new THREE.MeshLambertMaterial({color: 'yellow', side: THREE.BackSide});
-//        var psurf = new THREE.Mesh(geom, pmat);
-//        // var nsurf = new THREE.Mesh(geom, nmat);
-//        psurf.name = label;
-////        console.log(tensorsnuff,atom_x,atom_y,atom_z);
-////        console.log(psurf);
-//        // nsurf.name = "Negative";
         var geometry = new THREE.Geometry();
         var slices = 50, stacks = 50;
         var sliceCount = slices+1
+        var cArray = new Array();
         for ( var i = 0 ; i <= slices ; i++ ) {
             var ov = i / slices; 
             for ( var j = 0 ; j <= stacks ; j++ ) {
                 var ou = j / stacks;
                 var p = func(ou, ov);
                 geometry.vertices.push(p[0]);
-                geometry.colors.push(p[1]);
+                cArray.push(p[1]);
             }
         }
         var a,b,c,d;
-//        var vertex = new THREE.VertexColor(0xffffff);
+        var mix,red,green,blue;
         for ( var i = 0 ; i < slices ; i++ ) {
             for ( var j = 0 ; j < stacks ; j++ ) {
                 a = i * sliceCount + j;
