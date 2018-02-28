@@ -397,13 +397,31 @@ class UniverseWidget(ExatomicBox):
 
     def _filter_labels(self,scn=0):
         labels = []
-        filtered = self.scenes[scn].atom_l.strip('[[')
+        filtered = self.active()[scn].atom_l.strip('[[')
         filtered = filtered.strip(']]')
         lbls = filtered.split(',')
         for i in range(len(lbls)):
             if lbls[i] != "":
                 labels.append(lbls[i].strip('"'))
         return labels
+
+    def _filter_coords(self,scn=0):
+        coords = []
+        filtered = [self.active()[scn].atom_x.strip('[['),
+                    self.active()[scn].atom_y.strip('[['),
+                    self.active()[scn].atom_z.strip('[[')]
+        filtered = [filtered[0].strip(']]'),
+                    filtered[1].strip(']]'),
+                    filtered[2].strip(']]')]
+        lbls = [filtered[0].split(','),
+                filtered[1].split(','),
+                filtered[2].split(',')]
+        for rows in lbls:
+            coords.append([])
+            for cols in rows:
+                if cols != "":
+                    coords[-1].append(float(cols))
+        return coords
 
     def _tensor_folder(self):
         alo = Layout(width='70px')
@@ -418,16 +436,23 @@ class UniverseWidget(ExatomicBox):
         zs = [Text(layout=alo,disabled=True),
               Text(layout=alo,disabled=True),
               Text(layout=alo,disabled=True)]
+        cs = [Text(layout=alo,disabled=True),
+              Text(layout=alo,disabled=True),
+              Text(layout=alo,disabled=True)]
+        cidx = HBox([Text(disabled=True,description='Atom Index',layout=rlo)])
         xbox = HBox(xs, layout=rlo)
         ybox = HBox(ys, layout=rlo)
         zbox = HBox(zs, layout=rlo)
+        cbox = HBox(cs, layout=rlo)
         tens = Button(description=' Tensor', icon='bank')
         tensor_cont = VBox([xbox,ybox,zbox])
         tensorIndex = Dropdown(options=[0],value=0,description='Tensor')
-        sceneIndex = Dropdown(options=[0],values=0,description='Scene')
+#        sceneIndex = Dropdown(options=[0],value=0,description='Scene')
         ten_label = Label(value="Change selected tensor:")
-        sel_label = Label(value="Selected tensor in Blue")
+        sel_label = Label(value="Selected tensor in gray frame")
+        cod_label = Label(value="Center of selected tensor: (x,y,z)")
         tensor = []
+        self.coords = []
 
         def _changeTensor(tensor, tdx):
             carts = ['x','y','z']
@@ -437,11 +462,17 @@ class UniverseWidget(ExatomicBox):
                     tensor_cont.children[i].children[j].value = \
                                             str(tensor[0][tdx][bra+ket])
                     tensor_cont.children[i].children[j].disabled=True
-            
+            adx = tensor[0][tdx]['atom']
+            cidx.children[0].value = str(adx)
+            cbox.children[0].value = str(self.coords[0][int(adx)])
+            cbox.children[1].value = str(self.coords[1][int(adx)])
+            cbox.children[2].value = str(self.coords[2][int(adx)])
+
         def _tens(c):
             for scn in self.active(): scn.tens = not scn.tens
-            sceneIndex.options = [x for x in range(len(self.active()))]
-            sceneIndex.value = sceneIndex.options[0]
+            self.coords = self._filter_coords()
+#            sceneIndex.options = [x for x in range(len(self.active()))]
+#            sceneIndex.value = sceneIndex.options[0]
             tensor = self.active()[0].tensor_d
             tensorIndex.options = [x for x in range(len(tensor[0]))]
             tensorIndex.value = tensorIndex.options[0]
@@ -457,25 +488,27 @@ class UniverseWidget(ExatomicBox):
             tdx = c.new
             _changeTensor(tensor, tdx)
 
-        def _sdx(c):
-            
-            tensor = self.active()[sceneIndex.value].tensor_d
-            tensorIndex.options = [x for x in range(len(tensor[0]))]
-            tensorIndex.value = tensorIndex.options[0]
-            tdx = tensorIndex.value
-            _changeTensor(tensor, tdx)
+#        def _sdx(c):
+#            tensor = self.active()[sceneIndex.value].tensor_d
+#            tensorIndex.options = [x for x in range(len(tensor[0]))]
+#            tensorIndex.value = tensorIndex.options[0]
+#            tdx = tensorIndex.value
+#            _changeTensor(tensor, tdx)
             
         tens.on_click(_tens)
         scale.observe(_scale, names='value')
         tensorIndex.observe(_idx, names='value')
-        sceneIndex.observe(_sdx, names='value')
+#        sceneIndex.observe(_sdx, names='value')
         content = _ListDict([
                 ('scale', scale),
                 ('ten', ten_label),
-                ('sdx', sceneIndex),
+#               ('sdx', sceneIndex),
                 ('tdx', tensorIndex),
                 ('tensor', tensor_cont),
-                ('sel', sel_label)])
+                ('sel', sel_label),
+                ('cidx', cidx),
+                ('center', cod_label),
+                ('coord', cbox)])
         return Folder(tens, content)
         
 
