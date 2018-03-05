@@ -196,7 +196,28 @@ var UniverseSceneView = base.ExatomicSceneView.extend({
         } 
     },
 
+//    scale_tensor: function() {
+//        var scaling = this.model.get("scale");
+//        var fdx = this.model.get("frame_idx");
+//        console.log("Inside scale_tensor");
+//        var tdx = this.model.get("tidx");
+//        var adx = this.tensor_d[fdx][tdx]["atom"];
+//        this.app3d.clear_meshes("tensor"+tdx);
+//        this.app3d.meshes["tensor"+tdx] = 
+//                                this.app3d.add_tensor_surface( 
+//                                    this.get_tensor(fdx, tdx),
+//                                    this.colors(),
+//                                    this.atom_x[fdx][adx],
+//                                    this.atom_y[fdx][adx],
+//                                    this.atom_z[fdx][adx],
+//                                    scaling,
+//                                    this.tensor_d[fdx][tdx]["label"]);
+//        this.app3d.add_meshes("tensor"+tdx);
+//        this.color_tensor();
+//    },
+
     add_tensor: function() {
+//        var scaling;
         var scaling = this.model.get("scale");
         var fdx = this.model.get("frame_idx");
         for ( var property in this.tensor_d[fdx] ) {
@@ -204,6 +225,7 @@ var UniverseSceneView = base.ExatomicSceneView.extend({
                 this.app3d.clear_meshes("tensor"+property);
                 var adx = this.tensor_d[fdx][property]["atom"];
                 if ( this.model.get("tens") ) {
+//                    scaling = this.tensor_d[fdx][property]["scale"];
                     this.app3d.meshes["tensor"+property] =
                                 this.app3d.add_tensor_surface( 
                                     this.get_tensor(fdx, property),
@@ -235,6 +257,7 @@ var UniverseSceneView = base.ExatomicSceneView.extend({
         this.listenTo(this.model, "change:atom_3d", this.add_axis);
         this.listenTo(this.model, "change:axis", this.add_axis);
         this.listenTo(this.model, "change:tens", this.add_tensor);
+//        this.listenTo(this.model, "change:scale", this.scale_tensor);
         this.listenTo(this.model, "change:scale", this.add_tensor);
         this.listenTo(this.model, "change:tidx", this.color_tensor);
     }

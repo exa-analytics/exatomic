@@ -167,7 +167,7 @@ class TensorScene(ExatomicScene):
     tzy = Float(0.).tag(sync=True)
     tzz = Float(1.).tag(sync=True)
     scale = Float(1.).tag(sync=True)
-    tensorAtom = Int(0).tag(sync=True)
+    tdx = Int(0).tag(sync=True)
     tens = Bool(False).tag(sync=True)
 
 

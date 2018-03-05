@@ -76,11 +76,16 @@ class Tensor(DataFrame):
         df = pd.DataFrame(df.groupby('grp').apply(lambda x: 
                      x.unstack().values[:-3]).values.tolist(),
                      columns=['xx','xy','xz','yx','yy','yz','zx','zy','zz'])
+#        scale = []
+#        for i in df.index.values:
+#            scale.append(5./abs(df.loc[i,:]).max().astype(np.float64))
         meta.reset_index(drop=True, inplace=True)
         meta.rename(columns={0: 'frame', 1: 'label', 2: 'atom'}, inplace=True)
         df = pd.concat([meta, df], axis=1)
         df['atom'] = df['atom'].astype(np.int64)
         df['frame'] = df['frame'].astype(np.int64)
+#        df['scale'] = scale
+#        print(df)
         return cls(df)
 
 def add_tensor(uni, fp):

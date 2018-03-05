@@ -104,7 +104,7 @@ class TensorContainer(ExatomicBox):
         mainopts = super(TensorContainer, self)._init_gui(**kwargs)
         scn = self.scenes[0]
         alo = Layout(width='74px')
-        rlo = Layout(width='240px')
+        rlo = Layout(width='235px')
         xs = [FloatText(value=scn.txx, layout=alo),
               FloatText(value=scn.txy, layout=alo),
               FloatText(value=scn.txz, layout=alo)]
@@ -115,10 +115,12 @@ class TensorContainer(ExatomicBox):
               FloatText(value=scn.tzy, layout=alo),
               FloatText(value=scn.tzz, layout=alo)]
         scale =  FloatSlider(max=10.0, step=0.01, readout=True, value=1.0)
-        tensorIndex = Dropdown(options=[0],value=0)
+        tensorIndex = Dropdown(options=[0],value=0, layout=rlo)
         fileTensor = Text(value=self.file, layout=Layout(width='154px'))
         tens = Button(description="Open",layout=alo)
         filebox = HBox([fileTensor,tens],layout=rlo)
+        filelabel = Label(value='Enter filepath in box:')
+        tdxlabel = Label(value='Select the tensor index:')
         def _x0(c):
             for scn in self.active(): scn.txx = c.new
         def _x1(c):
@@ -151,39 +153,60 @@ class TensorContainer(ExatomicBox):
         ybox = HBox(ys, layout=rlo)
         zbox = HBox(zs, layout=rlo)
         geom = Button(icon='cubes', description=' Geometry', layout=_wlo)
+        self.tensor = []
+        def _change_tensor(tdx):
+            tdx*=4
+            for i in range(tdx,tdx+4):
+                if i == tdx:
+                    continue
+                for j in range(len(self.tensor[i])):
+                    if i == 1+tdx:
+                        xs[j].value = self.tensor[i][j]
+                    elif i == 2+tdx:
+                        ys[j].value = self.tensor[i][j]
+                    elif i == 3+tdx:
+                        zs[j].value = self.tensor[i][j]
+                    else:
+                        break
+
         def _geom(b):
             for scn in self.active(): scn.geom = not scn.geom
         def _tens(c):
-            for scn in self.active(): scn.tens = not scn.tens
-            tensor = self._open_file(fileTensor.value)
-            for i in range(len(tensor)):
-                if i == 0:
-                    continue
-                for j in range(len(tensor[i])):
-                    if i == 1:
-                        xs[j].value = tensor[i][j]
-                    elif i == 2:
-                        ys[j].value = tensor[i][j]
-                    elif i == 3:
-                        zs[j].value = tensor[i][j]
-                    else:
-                        break
+            if fileTensor.value != "" and \
+               fileTensor.value != "Please input file":
+                for scn in self.active(): scn.tens = not scn.tens
+                self.tensor = self._open_file(fileTensor.value)
+                tensorIndex.options = [x for x in range(int(len(self.tensor)/4))]
+                tensorIndex.value = 0
+                _change_tensor(tensorIndex.value)
+            else:
+                fileTensor.value = "Please input file"
+        def _tdx(c):
+            for scn in self.active(): scn.tdx = c.new
+            _change_tensor(c.new)
                         
         tens.on_click(_tens)
         geom.on_click(_geom)
+        tensorIndex.observe(_tdx, names="value")
         
         mainopts.update([('geom', geom),
+                         ('flbl', filelabel),
                          ('file', filebox),
+                         ('tlbl', tdxlabel),
+                         ('tidx', tensorIndex),
                          ('xbox', xbox),
                          ('ybox', ybox),
                          ('zbox', zbox)])
         return mainopts
 
 
-    def __init__(self, *args, fp=None, **kwargs):
+    def __init__(self, *args, **kwargs):
         self.file = ""
-        if fp != None:
-            self.file = fp
+#        if fp != None:
+#            self.file = None
+#        for uni in args:
+#            unargs, fileds, tens = uni_traits(uni)
+#            print(unargs)
         super(TensorContainer, self).__init__(*args,
                                               uni=False,
                                               test=False,
@@ -426,7 +449,7 @@ class UniverseWidget(ExatomicBox):
     def _tensor_folder(self):
         alo = Layout(width='70px')
         rlo = Layout(width='220px')
-        scale =  FloatSlider(max=10.0, step=0.01, readout=True, value=1.0)
+        scale =  FloatSlider(max=10.0, step=0.001, readout=True, value=1.0)
         xs = [Text(layout=alo,disabled=True),
               Text(layout=alo,disabled=True),
               Text(layout=alo,disabled=True)]
@@ -467,6 +490,7 @@ class UniverseWidget(ExatomicBox):
             cbox.children[0].value = str(self.coords[0][int(adx)])
             cbox.children[1].value = str(self.coords[1][int(adx)])
             cbox.children[2].value = str(self.coords[2][int(adx)])
+#            scale.value = tensor[0][tdx]['scale']
 
         def _tens(c):
             for scn in self.active(): scn.tens = not scn.tens
@@ -481,6 +505,9 @@ class UniverseWidget(ExatomicBox):
 
         def _scale(c):
             for scn in self.active(): scn.scale = c.new
+#            tdx = tensorIndex.value
+#            tensor = self.active()[0].tensor_d
+#            tensor[0][tdx]['scale'] = c.new
 
         def _idx(c):
             for scn in self.active(): scn.tidx = c.new
