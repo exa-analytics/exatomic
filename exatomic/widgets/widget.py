@@ -15,7 +15,7 @@ from .widget_base import (ExatomicScene, UniverseScene,
                           TensorScene, ExatomicBox)
 from .widget_utils import _wlo, _ListDict, Folder
 from .traits import uni_traits
-
+from exatomic.core.tensor import Tensor
 
 
 class DemoContainer(ExatomicBox):
@@ -61,7 +61,10 @@ class DemoContainer(ExatomicBox):
 
 @register
 class TensorContainer(ExatomicBox):
-    """A simple container to implement cartesian tensor visualization."""
+    """A simple container to implement cartesian tensor visualization.
+    Args:
+        file_path (string): Takes a file path name to pass through the 
+                            Tensor.from_file function. Default to None."""
     _model_name = Unicode('TensorContainerModel').tag(sync=True)
     _view_name = Unicode('TensorContainerView').tag(sync=True)
 
@@ -82,44 +85,35 @@ class TensorContainer(ExatomicBox):
         for tij, val in cache.items():
             for scn in scns[1:]:
                 setattr(scn, tij, val)
-
-    def _tensor_widgets(self):
-        pass
-
-    def _open_file(self, fp):
-        fn = open(fp)
-        data = []
-        for i in fn.readlines():
-            if i == "":
-                continue
-            data.append([])
-            d = i.split()
-            for j in d:
-                data[-1].append(j)
-        return data
-
-
+    
     def _init_gui(self, **kwargs):
         """Initialize generic GUI controls and observe callbacks."""
         mainopts = super(TensorContainer, self)._init_gui(**kwargs)
         scn = self.scenes[0]
         alo = Layout(width='74px')
         rlo = Layout(width='235px')
-        xs = [FloatText(value=scn.txx, layout=alo),
-              FloatText(value=scn.txy, layout=alo),
-              FloatText(value=scn.txz, layout=alo)]
-        ys = [FloatText(value=scn.tyx, layout=alo),
-              FloatText(value=scn.tyy, layout=alo),
-              FloatText(value=scn.tyz, layout=alo)]
-        zs = [FloatText(value=scn.tzx, layout=alo),
-              FloatText(value=scn.tzy, layout=alo),
-              FloatText(value=scn.tzz, layout=alo)]
+        if self._df is not None:
+            scn.txx = self._df.loc[0,'xx']
+            scn.txy = self._df.loc[0,'xy']
+            scn.txz = self._df.loc[0,'xz']
+            scn.tyx = self._df.loc[0,'yx']
+            scn.tyy = self._df.loc[0,'yy']
+            scn.tyz = self._df.loc[0,'yz']
+            scn.tzx = self._df.loc[0,'zx']
+            scn.tzy = self._df.loc[0,'zy']
+            scn.tzz = self._df.loc[0,'zz'] 
+        xs = [FloatText(value=scn.txx , layout=alo),
+              FloatText(value=scn.txy , layout=alo),
+              FloatText(value=scn.txz , layout=alo)]
+        ys = [FloatText(value=scn.tyx , layout=alo),
+              FloatText(value=scn.tyy , layout=alo),
+              FloatText(value=scn.tyz , layout=alo)]
+        zs = [FloatText(value=scn.tzx , layout=alo),
+              FloatText(value=scn.tzy , layout=alo),
+              FloatText(value=scn.tzz , layout=alo)]
         scale =  FloatSlider(max=10.0, step=0.01, readout=True, value=1.0)
-        tensorIndex = Dropdown(options=[0],value=0, layout=rlo)
-        fileTensor = Text(value=self.file, layout=Layout(width='154px'))
-        tens = Button(description="Open",layout=alo)
-        filebox = HBox([fileTensor,tens],layout=rlo)
-        filelabel = Label(value='Enter filepath in box:')
+        opt = [0] if self._df is None else [int(x) for x in self._df.index.values]
+        tensorIndex = Dropdown(options=opt, value=opt[0], layout=rlo)
         tdxlabel = Label(value='Select the tensor index:')
         def _x0(c):
             for scn in self.active(): scn.txx = c.new
@@ -153,45 +147,28 @@ class TensorContainer(ExatomicBox):
         ybox = HBox(ys, layout=rlo)
         zbox = HBox(zs, layout=rlo)
         geom = Button(icon='cubes', description=' Geometry', layout=_wlo)
-        self.tensor = []
-        def _change_tensor(tdx):
-            tdx*=4
-            for i in range(tdx,tdx+4):
-                if i == tdx:
-                    continue
-                for j in range(len(self.tensor[i])):
-                    if i == 1+tdx:
-                        xs[j].value = self.tensor[i][j]
-                    elif i == 2+tdx:
-                        ys[j].value = self.tensor[i][j]
-                    elif i == 3+tdx:
-                        zs[j].value = self.tensor[i][j]
-                    else:
-                        break
-
+        
+        def _change_tensor(tdx=0):
+            carts = ['x','y','z']
+            for i, bra in enumerate(carts):
+                for j, ket in enumerate(carts):
+                    if i == 0:
+                        xs[j].value = self._df.loc[tdx,bra+ket]
+                    elif i == 1:
+                        ys[j].value = self._df.loc[tdx,bra+ket]
+                    elif i == 2:
+                        zs[j].value = self._df.loc[tdx,bra+ket]
+            
         def _geom(b):
             for scn in self.active(): scn.geom = not scn.geom
-        def _tens(c):
-            if fileTensor.value != "" and \
-               fileTensor.value != "Please input file":
-                for scn in self.active(): scn.tens = not scn.tens
-                self.tensor = self._open_file(fileTensor.value)
-                tensorIndex.options = [x for x in range(int(len(self.tensor)/4))]
-                tensorIndex.value = 0
-                _change_tensor(tensorIndex.value)
-            else:
-                fileTensor.value = "Please input file"
+
         def _tdx(c):
             for scn in self.active(): scn.tdx = c.new
             _change_tensor(c.new)
                         
-        tens.on_click(_tens)
         geom.on_click(_geom)
         tensorIndex.observe(_tdx, names="value")
-        
         mainopts.update([('geom', geom),
-                         ('flbl', filelabel),
-                         ('file', filebox),
                          ('tlbl', tdxlabel),
                          ('tidx', tensorIndex),
                          ('xbox', xbox),
@@ -200,13 +177,11 @@ class TensorContainer(ExatomicBox):
         return mainopts
 
 
-    def __init__(self, *args, **kwargs):
-        self.file = ""
-#        if fp != None:
-#            self.file = None
-#        for uni in args:
-#            unargs, fileds, tens = uni_traits(uni)
-#            print(unargs)
+    def __init__(self, *args, file_path=None, **kwargs):
+        if file_path is not None:
+            self._df = Tensor.from_file(file_path)
+        else:
+            self._df = None
         super(TensorContainer, self).__init__(*args,
                                               uni=False,
                                               test=False,

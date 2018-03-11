@@ -396,16 +396,20 @@ class App3D {
             z = g * Math.cos(v) + atom_z;
             return [new THREE.Vector3(x, y, z),col];
         };
+        var t0 = performance.now();
         var geometry = new THREE.Geometry();
+        var geo = new THREE.Geometry();
         var slices = 50, stacks = 50;
         var sliceCount = slices+1
         var cArray = new Array();
+        var ou, ov, p;
         for ( var i = 0 ; i <= slices ; i++ ) {
-            var ov = i / slices; 
+            ov = i / slices; 
             for ( var j = 0 ; j <= stacks ; j++ ) {
-                var ou = j / stacks;
-                var p = func(ou, ov);
+                ou = j / stacks;
+                p = func(ou, ov);
                 geometry.vertices.push(p[0]);
+                geo.vertices.push(p[0]);
                 cArray.push(p[1]);
             }
         }
@@ -417,8 +421,9 @@ class App3D {
                 b = i * sliceCount + j + 1;
                 c = ( i + 1 ) * sliceCount + j + 1;
                 d = ( i + 1 ) * sliceCount + j;
-                geometry.faces.push(new THREE.Face3( a,b,d ));
-                geometry.faces.push(new THREE.Face3( b,c,d ));
+                geometry.faces.push( new THREE.Face3( a,b,d ) );
+                geometry.faces.push( new THREE.Face3( b,c,d ) );
+                geo.faces.push( new THREE.Face3( a,b,d ) );
 
                 var sub_face = geometry.faces.slice(-2);
                 red = ((cArray[a].r+cArray[b].r+cArray[d].r)/3)*256;
@@ -433,6 +438,8 @@ class App3D {
                 sub_face[1].color = new THREE.Color(mix);
             }
         }
+        geometry.mergeVertices();
+        geometry.computeFaceNormals();
         geometry.computeVertexNormals();
         var pmat = new THREE.MeshPhongMaterial({color:'white',
                                                 shading: THREE.FlatShading,
@@ -443,16 +450,17 @@ class App3D {
                                                 });
 
         var psurf = new THREE.Mesh(geometry, pmat);
-
-        var geo = new THREE.EdgesGeometry( psurf.geometry );
-        var mat = new THREE.LineBasicMaterial( {color: 0x000000, linewidth: 1} );
-        var wireframe = new THREE.LineSegments( geo,mat );
-
-        psurf.add( wireframe );
-        //var coord = " ("+atom_x.toFixed(3)+","+atom_y.toFixed(3)+","+atom_z.toFixed(3)+")";
+        var mat = new THREE.LineBasicMaterial( {color: 0x000000} );
+        geo.computeVertexNormals();
+        console.log(geo);
+        var edges = new THREE.EdgesGeometry(geo);
+        var nsurf = new THREE.LineSegments( edges,mat );
+        psurf.add( nsurf );
         psurf.name = label;
-        console.log(psurf);
-        return [psurf]; //, nsurf];
+        console.log(nsurf);
+        var t1 = performance.now()
+        console.log("Tensor plot took "+(t1-t0)+" milliseconds");
+        return [psurf];
     };
 
     add_unit_axis(fill) {
@@ -1183,20 +1191,21 @@ class App3D {
         return meshes;
     };
 
-    add_wireframe(vertices, color) {
+    add_wireframe(vertices, color, opac) {
         /*"""
         add_wireframe
         -----------------
         Create a wireframe object
         */
         color = color || 0x808080;
+        opac = opac || 0.2;
         var geometry = new THREE.Geometry();
         for (var v of vertices) {
             geometry.vertices.push(new THREE.Vector3(v[0], v[1], v[2]));
         };
         var material = new THREE.MeshBasicMaterial({
             transparent: true,
-            opacity: 0.2,
+            opacity: opac,
             wireframeLinewidth: 8,
             wireframe: true
         });

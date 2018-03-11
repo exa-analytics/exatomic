@@ -70,7 +70,6 @@ var TensorSceneView = base.ExatomicSceneView.extend({
         this.listenTo(this.model, "change:tzx", this.generate_tensor);
         this.listenTo(this.model, "change:tzy", this.generate_tensor);
         this.listenTo(this.model, "change:tzz", this.generate_tensor);
-        this.listenTo(this.modle, "change:tens", this.generate_tensor);
         this.listenTo(this.modle, "change:tdx", this.generate_tensor);
     },
 
