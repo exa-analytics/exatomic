@@ -84,7 +84,10 @@ def parse_evp(path, symbols, columns=None, **kwargs):
         opener = open
     if columns is None:
         with opener(path) as f:
-            first = f.readline().decode("utf-8")
+            try:
+                first = f.readline().decode("utf-8")
+            except:
+                first = f.readline()
         if first.strip().startswith("#"):
             columns = first.split()[1:]
             skiprows = [0]

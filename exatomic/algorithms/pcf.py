@@ -11,7 +11,7 @@ from exa.util.units import Length
 
 
 def radial_pair_correlation(universe, a, b, dr=0.05, start=1.0, stop=13.0,
-                            length="A", window=1):
+                            length="Angstrom", window=1):
     """
     Compute the angularly independent pair correlation function.
 
@@ -66,7 +66,7 @@ def radial_pair_correlation(universe, a, b, dr=0.05, start=1.0, stop=13.0,
     symbol1 = universe.atom_two["atom1"].map(symbol)
     symbols = symbol0 + symbol1
     indexes = symbols[symbols.isin([a + b, b + a])].index # Distances of interest or those that
-    distances = universe.atom_two.ix[indexes, "distance"] # match symbol pairs
+    distances = universe.atom_two.ix[indexes, "dr"]       # match symbol pairs
     hist, bins = np.histogram(distances, bins)            # Compute histogram
     nn = hist.sum()                                       # Number of observations
     bmax = bins.max()                                     # Note that bins is unchanged by np.hist..
