@@ -452,14 +452,12 @@ class App3D {
         var psurf = new THREE.Mesh(geometry, pmat);
         var mat = new THREE.LineBasicMaterial( {color: 0x000000} );
         geo.computeVertexNormals();
-        console.log(geo);
         var edges = new THREE.EdgesGeometry(geo);
         var nsurf = new THREE.LineSegments( edges,mat );
         psurf.add( nsurf );
         psurf.name = label;
-        console.log(nsurf);
         var t1 = performance.now()
-        console.log("Tensor plot took "+(t1-t0)+" milliseconds");
+//      console.log("Tensor plot took "+(t1-t0)+" milliseconds");
         return [psurf];
     };
 
