@@ -26,7 +26,6 @@ from .orbital import Orbital, Excitation, MOMatrix, DensityMatrix
 from .basis import Overlap, BasisSet, BasisSetOrder
 from exatomic.algorithms.orbital import add_molecular_orbitals
 from exatomic.algorithms.basis import Basis
-from exatomic.algorithms.numerical import AShell
 
 
 
@@ -147,72 +146,26 @@ class Universe(six.with_metaclass(Meta, Container)):
 
     def compute_basis_dims(self):
         """Compute basis dimensions."""
+        bset = self.basis_set
         mapr = self.atom.set.map
         self.basis_dims = {
-            'npc': mapr(self.basis_set.primitives(False)
-                                      .groupby('set').sum()).sum(),
-            'nps': mapr(self.basis_set.primitives(True)
-                                      .groupby('set').sum()).sum(),
-            'ncc': mapr(self.basis_set.functions(False)
-                                      .groupby('set').sum()).sum(),
-            'ncs': mapr(self.basis_set.functions(True)
-                                      .groupby('set').sum()).sum(),
-            'sets': self.basis_set.functions_by_shell()}
+            'npc': mapr(bset.primitives(False).groupby('set').sum()).sum(),
+            'nps': mapr(bset.primitives(True).groupby('set').sum()).sum(),
+            'ncc': mapr(bset.functions(False).groupby('set').sum()).sum(),
+            'ncs': mapr(bset.functions(True).groupby('set').sum()).sum(),
+            'sets': bset.functions_by_shell()}
 
     def compute_basis_functions(self, **kwargs):
         self.basis_functions = Basis(self)
 
     def enumerate_shells(self, frame=0):
-        col = ('alpha', 'shell', 'd')
         atom = self.atom[self.atom.frame == frame]
-        sets = atom['set'].astype(np.int64).values
-        grps = self.basis_set.groupby(['set', 'L'])
-        lmax = self.basis_set.lmax
-        shls = []
-        for i, seht in enumerate(sets):
-            x, y, z = atom['x'][i], atom['y'][i], atom['z'][i]
-            for L in range(lmax + 1):
-                try: grp = grps.get_group((seht, L))
-                except KeyError: continue
-                #spherical = self.basis_set.spherical if L > 1 else False
-                alphas = grp.alpha.unique()
-                piv = grp.pivot(*col).loc[alphas].fillna(0.)
-                if not self.basis_set.gaussian:
-                    shls.append(AShell(i, x, y, z, piv.values.flatten(),
-                                       alphas, *piv.shape, L,
-                                       #spherical,
-                                       self.basis_set.spherical,
-                                       grp.r.values, grp.n.values))
-                else:
-                    shls.append(AShell(i, x, y, z, piv.values.flatten(),
-                                       alphas, *piv.shape, L,
-                                       #spherical,
-                                       self.basis_set.spherical,
-                                       None, None))
-        return shls
-
-    # def compute_density(self, mocoefs=None, orbocc=None):
-    #     """Compute density from momatrix and occupation vector."""
-    #     if not hasattr(self, 'momatrix'):
-    #         raise Exception('Universe must have momatrix')
-    #     if not hasattr(self, 'orbital'):
-    #         raise Exception('Universe must have orbital')
-    #     if mocoefs is None and orbocc is None:
-    #         mocoefs = 'coef'
-    #         orbocc = 'occupation'
-    #     elif mocoefs is not None and orbocc is None:
-    #         orbocc = mocoefs
-    #     elif orbocc is not None and mocoefs is None:
-    #         mocoefs = orbocc
-    #     if mocoefs not in self.momatrix.columns:
-    #         raise Exception('{} must be in uni.momatrix.columns'.format(mocoefs))
-    #     if orbocc not in self.orbital.columns:
-    #         raise Exception('{} must be in uni.orbital.columns'.format(orbocc))
-    #     d = DensityMatrix.from_universe(self, mocoefs, orbocc)
-    #     if hasattr(self, 'density'):
-    #         self.density[mocoefs+'-'+orbocc] = d['coef']
-    #     else:
-    #         self.density = d
+        shls = self.basis_set.shells()
+        grps = shls.groupby('set')
+        # Pointers into (xyzs, shls) arrays
+        ptrs = np.array([(c, idx) for c, seht in enumerate(atom.set)
+                                  for idx in grps.get_group(seht).index])
+        return ptrs, atom[['x', 'y', 'z']].values, shls[0].values
 
     def add_field(self, field):
         """Adds a field object to the universe."""

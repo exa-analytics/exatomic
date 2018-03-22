@@ -195,29 +195,23 @@ class Output(six.with_metaclass(OutMeta, Editor)):
 
 
     def parse_excitation(self):
+        # Excitation
+        _re_exc_00 = '(sum=1) transition dipole moment'
+        _re_exc_01 = ' no.     E/a.u.        E/eV      f           Symmetry'
         found = self.find_next(_re_exc_00, keys_only=True)
         if not found: return
         # First table of interest here
         start = found + 4
         stop = self.find_next(_re_exc_01, keys_only=True) - 3
-        # adf = self.pandas_dataframe(start, stop, 9)
-        # adf.drop(3, axis=1, inplace=True)
-        # adf[0] = adf[0].str[:-1].astype(np.int64) - 1
-        # adf[1] = adf[1].map({'Alph': 0, 'Beta': 1})
-        # adf[[2, 'occsym']] = adf[2].str.extract('([0-9]*)(.*)', expand=True)
-        # adf[[4, 'virtsym']] = adf[4].str.extract('([0-9]*)(.*)', expand=True)
-        # adf[2] = adf[2].astype(np.int64)
-        # adf[4] = adf[4].astype(np.int64)
-        # adf.rename(columns={0: 'excitation', 1: 'spin', 2: 'occ', 4: 'virt',
-        #                     5: 'weight', 6: 'TDMx', 7: 'TDMy', 8: 'TDMz'},
-        #                     inplace=True)
         os = len(self[start].split()) == 9
+        todrop = ['occ:', 'virt:']
         cols = ['excitation', 'occ', 'drop', 'virt', 'weight', 'TDMx', 'TDMy', 'TDMz']
         if os: cols.insert(1, 'spin')
+        if os: todrop = ['occ', 'virt']
         adf = self.pandas_dataframe(start, stop, cols)
         adf.drop('drop', axis=1, inplace=True)
-        s1 = set(adf['occ'][adf['occ'] == 'NTO'].index)
-        s2 = set(adf['excitation'][adf['excitation'].isin(['occ:', 'virt:'])].index)
+        s1 = set(adf[cols[1]][adf[cols[1]] == 'NTO'].index)
+        s2 = set(adf['excitation'][adf['excitation'].isin(todrop)].index)
         adf.drop(s1 | s2, axis=0, inplace=True)
         adf['excitation'] = adf['excitation'].str[:-1].astype(np.int64) - 1
         if os: adf['spin'] = adf['spin'].map({'Alph': 0, 'Beta': 1})
@@ -285,9 +279,6 @@ _re_orb_00 = 'Orbital Energies, both Spins'
 _re_orb_01 = 'Orbital Energies, per Irrep and Spin'
 # Contribution
 _re_con_00 = 'E(eV)  Occ       MO           %     SFO (first member)   E(eV)  Occ   Fragment'
-# Excitation
-_re_exc_00 = '(sum=1) transition dipole moment'
-_re_exc_01 = ' no.     E/a.u.        E/eV      f           Symmetry'
 # MOMatrix
 _re_mo_00 = 'Eigenvectors .* in BAS representation'
 _re_mo_01 = 'row '

@@ -33,10 +33,10 @@ class TestFchk(TestCase):
 
     def test_parse_basis_set(self):
         self.mam1.parse_basis_set()
-        self.assertEqual(self.mam1.basis_set.shape, (32, 8))
+        self.assertEqual(self.mam1.basis_set.shape, (32, 6))
         self.assertTrue(np.all(pd.notnull(self.mam1.basis_set)))
         self.mam2.parse_basis_set()
-        self.assertEqual(self.mam2.basis_set.shape, (53, 8))
+        self.assertEqual(self.mam2.basis_set.shape, (53, 6))
         self.assertTrue(np.all(pd.notnull(self.mam2.basis_set)))
 
     def test_parse_orbital(self):
@@ -110,10 +110,10 @@ class TestOutput(TestCase):
 
     def test_parse_basis_set(self):
         self.uo2.parse_basis_set()
-        self.assertEqual(self.uo2.basis_set.shape, (49, 8))
+        self.assertEqual(self.uo2.basis_set.shape, (49, 6))
         self.assertTrue(np.all(pd.notnull(self.uo2.basis_set)))
         self.mam.parse_basis_set()
-        self.assertEqual(self.mam.basis_set.shape, (32, 8))
+        self.assertEqual(self.mam.basis_set.shape, (32, 6))
         self.assertTrue(np.all(pd.notnull(self.mam.basis_set)))
 
     def test_parse_orbital(self):

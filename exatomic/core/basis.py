@@ -21,7 +21,7 @@ from io import StringIO
 from exa import DataFrame
 from exatomic.algorithms.basis import cart_lml_count, spher_lml_count
 from exatomic.algorithms.numerical import (#_vec_sphr_norm, _vec_sto_norm,
-                                           _tri_indices, _square)#, Shell)
+                                           _tri_indices, _square, Shell)
 
 
 class BasisSet(DataFrame):
@@ -72,32 +72,37 @@ class BasisSet(DataFrame):
     _columns = ['alpha', 'd', 'shell', 'L', 'set']
     _cardinal = ('frame', np.int64)
     _index = 'function'
-    _categories = {'L': np.int64, 'set': np.int64, 'frame': np.int64}
+    _categories = {'L': np.int64, 'set': np.int64, 'frame': np.int64, 'norm': str}
 
     @property
     def lmax(self):
         return self['L'].cat.as_ordered().max()
 
-    # def shells(self):
-    #     def _shell_gau(df):
-    #         piv = ('alpha', 'shell', 'd')
-    #         alphas = df.alpha.unique()
-    #         piv = df.pivot(*piv).loc[alphas].fillna(0.)
-    #         return Shell(piv.values.flatten(),
-    #                      alphas, piv.columns.values,
-    #                      *piv.shape, df.L.values[0],
-    #                      self.spherical, None, None, None)
-    #     def _shell_sto(df):
-    #         piv = ('alpha', 'shell', 'd')
-    #         alphas = df.alpha.unique()
-    #         piv = df.pivot(*piv).loc[alphas].fillna(0.)
-    #         return Shell(piv.values.flatten(),
-    #                      alphas, piv.columns.values,
-    #                      *piv.shape, df.L.values[0],
-    #                      self.spherical, None, df.r.values, df.n.values)
-    #     if self.gaussian:
-    #         return self.groupby(['set', 'L']).apply(_shell_gau).reset_index()
-    #     return self.groupby(['set', 'L']).apply(_shell_sto).reset_index()
+    def shells(self):
+        def _shell_gau(df):
+            piv = ('alpha', 'shell', 'd')
+            alphas = df.alpha.unique()
+            piv = df.pivot(*piv).loc[alphas].fillna(0.)
+            return Shell(piv.values.flatten(), alphas, *piv.shape, df.L.values[0],
+                         #self.spherical, self.gaussian, None, None)
+                         df.norm.values[0], self.gaussian, None, None)
+        def _shell_sto(df):
+            piv = ('alpha', 'shell', 'd')
+            alphas = df.alpha.unique()
+            piv = df.pivot(*piv).loc[alphas].fillna(0.)
+            return Shell(piv.values.flatten(), alphas, *piv.shape, df.L.values[0],
+                         #self.spherical, self.gaussian, df.r.values, df.n.values)
+                        self.spherical, self.gaussian, df.r.values, df.n.values)
+        if self.gaussian:
+            if 'norm' not in self.columns: self.spherical_by_shell()
+            return self.groupby(['set', 'L']).apply(_shell_gau).reset_index()
+        return self.groupby(['set', 'L']).apply(_shell_sto).reset_index()
+
+    def spherical_by_shell(self):
+        """Pre-alpha."""
+        self['L'] = self['L'].astype(np.int64)
+        self['norm'] = self['L'].apply(lambda L: L > 1)
+        self['L'] = self['L'].astype('category')
 
     def functions_by_shell(self):
         """Return a series of n functions per (set, L).

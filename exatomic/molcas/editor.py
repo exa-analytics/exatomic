@@ -9,13 +9,14 @@ from exatomic import Editor as AtomicEditor
 
 
 class Editor(AtomicEditor):
+
     _to_universe = AtomicEditor.to_universe
 
     def to_universe(self, *args, **kws):
         kwargs = {}
         for attr in ['momatrix', 'orbital', 'overlap']:
             kwargs[attr] = getattr(self, attr, None)
-        kws['kwargs'] = kwargs
+        kws.update(kwargs)
         return self._to_universe(self, *args, **kws)
 
     def __init__(self, *args, **kwargs):

@@ -242,33 +242,33 @@ def _determine_fps(uni, fps, nvec):
     return make_fps(nrfps=nvec, **fps)
 
 
-def _check_column(uni, df, key): # mocoefs, orbocc, rcoefs, icoefs):
+def _check_column(uni, df, key):
     """Repetitive checking of columns in a universe."""
     if key is None:
-        if df == 'momatrix':
-            key = 'coef'
-        elif df == 'orbital':
-            key = 'occupation'
+        if df == 'momatrix': key = 'coef'
+        elif df == 'orbital': key = 'occupation'
+        else: raise Exception("{} not supported".format(df))
     err = '"{}" not in uni.{}.columns'.format
     if key not in getattr(uni, df).columns:
         raise Exception(err(key, df))
     return key
 
 
-@jit(nopython=True, nogil=True, parallel=True)
-def _compute_orbitals(bvs, vecs, cmat):
+#@jit(nopython=True, nogil=True, parallel=True)
+def _compute_orbitals(npts, bvs, vecs, cmat):
     """Compute orbitals from numerical basis functions."""
-    ovs = np.empty((len(vecs), bvs.shape[1]), dtype=np.float64)
+    ovs = np.empty((len(vecs), npts), dtype=np.float64)
+    print(ovs.shape)
     for i, vec in enumerate(vecs):
         ovs[i] = np.dot(cmat[:, vec], bvs)
     return ovs
 
-def _compute_orbitals_nojit(bvs, vecs, cmat):
-    """Compute orbitals from numerical basis functions."""
-    ovs = np.empty((len(vecs), bvs.shape[1]), dtype=np.float64)
-    for i, vec in enumerate(vecs):
-        ovs[i] = np.dot(cmat[:, vec], bvs)
-    return ovs
+# def _compute_orbitals_nojit(bvs, vecs, cmat):
+#     """Compute orbitals from numerical basis functions."""
+#     ovs = np.empty((len(vecs), bvs.shape[1]), dtype=np.float64)
+#     for i, vec in enumerate(vecs):
+#         ovs[i] = np.dot(cmat[:, vec], bvs)
+#     return ovs
 
 
 @jit(nopython=True, nogil=True, parallel=True)

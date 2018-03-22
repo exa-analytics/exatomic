@@ -17,10 +17,11 @@ from exa import TypedMeta
 from .editor import Editor
 
 from exatomic import Atom
+from exatomic.algorithms.numerical import _flat_square_to_triangle
 from exatomic.algorithms.basis import lmap, spher_lml_count
 from exatomic.core.basis import Overlap, BasisSet, BasisSetOrder
 from exatomic.core.orbital import DensityMatrix, MOMatrix, Orbital
-from exatomic.base import sym2z
+from exatomic.base import sym2z, z2sym
 
 class OrbMeta(TypedMeta):
     momatrix = MOMatrix
@@ -120,6 +121,8 @@ class Output(six.with_metaclass(OutMeta, Editor)):
 
     def add_orb(self, path, mocoefs='coef', orbocc='occupation'):
         orb = Orb(path)
+        if mocoefs != 'coef' and orbocc == 'occupation':
+            orbocc = mocoefs
         for attr, col, de in [['momatrix', mocoefs, 'coef'],
                               ['orbital', orbocc, 'occupation']]:
             df = getattr(self, attr, None)
@@ -138,36 +141,22 @@ class Output(six.with_metaclass(OutMeta, Editor)):
         """Parses the atom list generated in SEWARD."""
         _re_atom = 'Label   Cartesian Coordinates'
         starts = [i + 2 for i in self.find(_re_atom, keys_only=True)]
-        lns = []
-        for start in starts:
-            stop = start
-            while len(self[stop].strip().split()) > 1:
-                lns.append(stop)
-                stop += 1
-                if not self[stop].strip():
-                    break
-        cols = ['tag', 'x', 'y', 'z']
-        atom = pd.read_csv(StringIO('\n'.join([self._lines[i] for i in lns])),
-                           delim_whitespace=True, names=cols)
-        atom['symbol'] = atom['tag'].str.extract('([A-z]{1,})([0-9]*)',
-                                                 expand=False)[0].str.lower().str.title()
+        stops = starts.copy()
+        for i in range(len(stops)):
+            while len(self[stops[i]].strip().split()) > 3:
+                stops[i] += 1
+                if not self[stops[i]].strip(): break
+            stops[i] -= 1
+        lns = StringIO('\n'.join([self._lines[i] for j in (range(i, j + 1)
+                                 for i, j in zip(starts, stops)) for i in j]))
+        atom = pd.read_csv(lns, delim_whitespace=True,
+                           names=['tag', 'x', 'y', 'z'])
+        atom['symbol'] = atom['tag'].str.extract(
+            '([A-z]{1,})([0-9]*)', expand=False)[0].str.lower().str.title()
         atom['Z'] = atom['symbol'].map(sym2z).astype(np.int64)
         atom['label'] = range(atom.shape[0])
         atom['frame'] = 0
         self.atom = atom
-        # _re_atom = 'Molecular structure info'
-        # start = stop = self.find(_re_atom, keys_only=True)[0] + 8
-        # while self[stop].split(): stop += 1
-        # # Sometimes prints an '--' after the atoms..
-        # if self[stop - 1].strip() == '--': stop -= 1
-        # columns = ['label', 'tag', 'x', 'y', 'z', 5, 6, 7]
-        # atom = self.pandas_dataframe(start, stop, columns).drop([5, 6, 7], axis=1)
-        # atom['symbol'] = atom['tag'].str.extract('([A-z]{1,})([0-9]*)',
-        #                                          expand=False)[0].str.lower().str.title()
-        # atom['Z'] = atom['symbol'].map(sym2z).astype(np.int64)
-        # atom['label'] -= 1
-        # atom['frame'] = 0
-        # self.atom = atom
 
     def parse_basis_set_order(self):
         """
@@ -280,6 +269,79 @@ class Output(six.with_metaclass(OutMeta, Editor)):
     def __init__(self, *args, **kwargs):
         super(Output, self).__init__(*args, **kwargs)
 
+class HDFMeta(TypedMeta):
+    atom = Atom
+    overlap = Overlap
+    orbital = Orbital
+    momatrix = MOMatrix
+    basis_set_order = BasisSetOrder
+
+
+class HDF(six.with_metaclass(HDFMeta, object)):
+
+    _getter_prefix = 'parse'
+    _to_universe = Editor._to_universe
+
+    def to_universe(self):
+        return self._to_universe()
+    #     kws = {}
+    #     for attr in ['atom', 'orbital', 'momatrix', 'basis_set_order']:
+    #         try:
+    #             kws[attr] = self['parse_{}'.format(attr)]()
+
+    def parse_atom(self):
+        Z = pd.Series(self._hdf['CENTER_CHARGES']).astype(np.int64)
+        xyzs = np.array(self._hdf['CENTER_COORDINATES'])
+        labs = pd.Series(self._hdf['CENTER_LABELS']).apply(
+                         lambda s: s.decode('utf-8').strip())
+        self.atom = pd.DataFrame.from_dict({
+            'x': xyzs[:, 0], 'y': xyzs[:,1], 'z': xyzs[:,2],
+            'symbol': Z.map(z2sym), 'label': labs, 'Z': Z, 'frame': 0})
+
+    def parse_basis_set_order(self):
+        bso = np.array(self._hdf['BASIS_FUNCTION_IDS'])
+        df = {'center': bso[:, 0], 'shell': bso[:, 1],
+              'L': bso[:, 2], 'frame': 0}
+        if bso.shape[1] == 4:
+            df['ml'] = bso[:, 3]
+        else:
+            df['l'] = bso[:, 3]
+            df['m'] = bso[:, 4]
+            df['n'] = bso[:, 5]
+        self.basis_set_order = pd.DataFrame.from_dict(df)
+
+    def parse_orbital(self):
+        ens = np.array(self._hdf['MO_ENERGIES'])
+        self.orbital = pd.DataFrame.from_dict({
+            'energy': ens, 'vector': range(len(ens)),
+            'occupation': np.array(self._hdf['MO_OCCUPATIONS']),
+            'label': pd.Series(self._hdf['MO_TYPEINDICES']).apply(
+                               lambda s: s.decode('utf-8')),
+            'frame': 0, 'group': 0, 'spin': 0})
+
+    def parse_overlap(self):
+        self.overlap = Overlap.from_column(
+            _flat_square_to_triangle(np.array(self._hdf['AO_OVERLAP_MATRIX'])))
+
+    def parse_momatrix(self):
+        coefs = np.array(self._hdf['MO_VECTORS'])
+        dim = np.int64(np.sqrt(coefs.shape[0]))
+        self.momatrix = pd.DataFrame.from_dict({
+            'orbital': np.repeat(range(dim), dim), 'frame': 0,
+            'chi': np.tile(range(dim), dim), 'coef': coefs})
+
+    def __getitem__(self, key):
+        if isinstance(key, str):
+            return getattr(self, key)
+        raise KeyError()
+
+    def __init__(self, *args, **kwargs):
+        try:
+            import h5py
+        except ImportError:
+            print("You must install h5py for access to HDF5 utilities.")
+            return
+        self._hdf = h5py.File(args[0], 'r')
 
 
 

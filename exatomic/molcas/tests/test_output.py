@@ -44,13 +44,13 @@ class TestOutput(TestCase):
     def test_parse_basis_set(self):
         """Test the gaussian basis set table parser."""
         self.uo2sp.parse_basis_set()
-        self.assertEqual(self.uo2sp.basis_set.shape, (451, 8))
+        self.assertEqual(self.uo2sp.basis_set.shape, (451, 6))
         self.assertTrue(np.all(pd.notnull(self.uo2sp.basis_set)))
         self.mamcart.parse_basis_set()
-        self.assertEqual(self.mamcart.basis_set.shape, (84, 8))
+        self.assertEqual(self.mamcart.basis_set.shape, (84, 6))
         self.assertTrue(np.all(pd.notnull(self.mamcart.basis_set)))
         self.mamsphr.parse_basis_set()
-        self.assertEqual(self.mamsphr.basis_set.shape, (148, 8))
+        self.assertEqual(self.mamsphr.basis_set.shape, (148, 6))
         self.assertTrue(np.all(pd.notnull(self.mamsphr.basis_set)))
 
     def test_to_universe(self):
