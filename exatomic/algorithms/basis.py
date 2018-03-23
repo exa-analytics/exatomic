@@ -10,10 +10,8 @@ generated programmatically with the right numerical function.
 This is preferred to an explicit parsing and storage of a given
 basis set ordering scheme.
 """
-import re
 from operator import mul
 from functools import reduce
-from abc import ABC, abstractmethod
 from collections import OrderedDict, Counter
 from itertools import combinations_with_replacement as cwr
 
@@ -22,11 +20,9 @@ import pandas as pd
 from numexpr import evaluate
 
 from symengine import var, exp, cos, sin, Add, Mul, Integer
-from symengine.lib.symengine_wrapper import factorial as _factorial
 
-from .overlap import _cartesian_shell_pairs, _iter_atom_shells
-from .numerical import (fac,
-                        _tri_indices, _square, _triangle)
+from exatomic.algorithms.overlap import _cartesian_shell_pairs, _iter_atom_shells
+from exatomic.algorithms.numerical import fac, _tri_indices, _triangle
 
 _x, _y, _z = var("_x _y _z")
 _r = (_x ** 2 + _y ** 2 + _z ** 2) ** 0.5
@@ -149,10 +145,6 @@ def car2sph(sh, cart, orderedp=True):
     return c2s
 
 
-_sh = solid_harmonics(6)
-_cartouche = car2sph(_sh, enum_cartesian)
-
-
 class Symbolic(object):
 
     def diff(self, cart='x', order=1):
@@ -189,8 +181,21 @@ class Symbolic(object):
 
 
 class Basis(object):
+    """Composition wrapper class that leverages symbolic expressions using
+    symengine and numexpr, using values extracted from the numerical Shell
+    jitclasses, to evaluate basis functions on a numerical grid.
+
+    Args
+        uni (exatomic.core.universe.Universe): a universe with basis set
+        frame (int): frame corresponding to basis set (default=0)
+        cartp (bool): forces p function ordering as (x, y, z) not (-1, 0, 1)"""
+
+    # Unscaled solid harmonics
+    _sh = solid_harmonics(6)
+
 
     def integrals(self):
+        """Compute the overlap matrix using primitive cartesian integrals."""
         from exatomic.core.basis import Overlap
         ovl = _cartesian_shell_pairs(len(self), self._ptrs,
                                      self._xyzs, *self._shells)
@@ -199,12 +204,30 @@ class Basis(object):
         return Overlap.from_dict({'chi0': chi0, 'chi1': chi1,
                                   'frame': 0, 'coef': ovl})
 
+
     def enum_shell(self, shl):
+        """Return a generator over angular momentum degrees of freedom."""
         if shl.spherical:
             return shl.enum_spherical()
         return shl.enum_cartesian()
 
+
+    def evaluate(self, xs, ys, zs):
+        """Evaluate basis functions on a numerical grid."""
+        if not self._gaussian:
+            return self._evaluate_sto(xs, ys, zs)
+        return self._evaluate_gau(xs, ys, zs)
+
+
+    def evaluate_diff(self, xs, ys, zs, cart='x'):
+        """Evaluate basis function derivatives on a numerical grid."""
+        if not self._gaussian:
+            return self._evaluate_diff_sto(xs, ys, zs, cart)
+        return self._evaluate_diff_gau(xs, ys, zs, cart)
+
+
     def _radial(self, x, y, z, alphas, cs, rs=None, pre=None):
+        """Generates the symbolic radial portion of a basis function."""
         if not self._gaussian:
             return Symbolic(
                 sum((pre * self._expnt ** r * c * exp(-a * self._expnt)
@@ -216,24 +239,31 @@ class Basis(object):
                 ).subs({_x: _x - x, _y: _y - y, _z: _z - z}))
 
 
-    def _angular(self, x, y, z, *ang):
+    def _angular(self, shl, x, y, z, *ang):
+        """Generates the symbolic angular portion of a basis function."""
         if len(ang) == 3:
             sym = _x ** ang[0] * _y ** ang[1] * _z ** ang[2]
-        elif ang[0] == 1 and self._cartp:
-            mp = {-1: 1, 0: -1, 1: 0}
-            sym = _sh[ang[0]][mp[ang[1]]]
         else:
-            sym = _sh[ang[0]][ang[1]]
+            # Many codes order p functions (x, y, z), not (-1, 0, 1)
+            if ang[0] == 1 and self._cartp:
+                mp = {-1: 1, 0: -1, 1: 0}
+                sym = Basis._sh[ang[0]][mp[ang[1]]]
+            else:
+                sym = Basis._sh[ang[0]][ang[1]]
+            # Scaled solid harmonics as in the overlap code
+            if shl.spherical and self._program == 'molcas':
+                sym /= (2 * np.pi ** 0.5)
         return Symbolic(sym.subs({_x: _x - x, _y: _y - y, _z: _z - z}))
 
 
     def _evaluate_sto(self, xs, ys, zs):
+        """Evaluates a full STO basis set and returns a numpy array."""
         cnt, flds = 0, np.empty((len(self), len(xs)))
         for i, ax, ay, az, ishl in \
             _iter_atom_shells(self._ptrs, self._xyzs, *self._shells):
             norm = ishl.norm_contract()
             for mag in self.enum_shell(ishl):
-                a = self._angular(ax, ay, az, *mag).evaluate(xs, ys, zs)
+                a = self._angular(ishl, ax, ay, az, *mag).evaluate(xs, ys, zs)
                 for c in range(ishl.ncont):
                     pre = 1 if np.isclose(self._pre[cnt], 0) else self._pre[cnt]
                     r = self._radial(ax, ay, az, ishl.alphas, norm[:, c],
@@ -242,27 +272,35 @@ class Basis(object):
                     cnt += 1
         return flds
 
+
+    def _evaluate_diff_sto(self, xs, ys, zs, cart):
+        raise NotImplementedError("Verify symbolic differentiation of STOs.")
+
+
     def _evaluate_gau(self, xs, ys, zs):
+        """Evaluates a full Gaussian basis set and returns a numpy array."""
         cnt, flds = 0, np.empty((len(self), len(xs)))
         for i, ax, ay, az, ishl in \
             _iter_atom_shells(self._ptrs, self._xyzs, *self._shells):
             norm = ishl.norm_contract()
             for mag in self.enum_shell(ishl):
-                a = self._angular(ax, ay, az, *mag).evaluate(xs, ys, zs)
+                a = self._angular(ishl, ax, ay, az, *mag).evaluate(xs, ys, zs)
                 for c in range(ishl.ncont):
-                    r = self._radial(ax, ay, az, ishl.alphas, norm[:, c])
+                    r = self._radial(ax, ay, az, ishl.alphas, norm[:,c])
                     flds[cnt] = r.evaluate(xs, ys, zs, arr=a)
                     cnt += 1
         return flds
 
 
     def _evaluate_diff_gau(self, xs, ys, zs, cart):
+        """Evaluates the derivatives of a full Gaussian basis
+        set and returns a numpy array."""
         cnt, flds = 0, np.empty((len(self), len(xs)))
-        for i, ax, ay, az, ishl in _iter_atom_shells(self._ptrs, self._xyzs,
-                                                     *self._shells):
+        for i, ax, ay, az, ishl in \
+            _iter_atom_shells(self._ptrs, self._xyzs, *self._shells):
             norm = ishl.norm_contract()
             for mag in self.enum_shell(ishl):
-                a = self._angular(ax, ay, az, *mag)
+                a = self._angular(ishl, ax, ay, az, *mag)
                 da = a.diff(cart=cart).evaluate(xs, ys, zs)
                 a = a.evaluate(xs, ys, zs)
                 for c in range(ishl.ncont):
@@ -273,29 +311,15 @@ class Basis(object):
                     cnt += 1
         return flds
 
-
-    def _evaluate_diff_sto(self, xs, ys, zs, cart):
-        raise NotImplementedError("Verify symbolic differentiation of STOs.")
-
-
-    def evaluate(self, xs, ys, zs):
-        if not self._gaussian:
-            return self._evaluate_sto(xs, ys, zs)
-        return self._evaluate_gau(xs, ys, zs)
-
-
-    def evaluate_diff(self, xs, ys, zs, cart='x'):
-        if not self._gaussian:
-            return self._evaluate_diff_sto(xs, ys, zs, cart)
-        return self._evaluate_diff_gau(xs, ys, zs, cart)
-
     def __len__(self):
         return self._ncs if self._spherical else self._ncc
 
     def __repr__(self):
-        if self._spherical:
-            return 'Basis({},spherical)'.format(len(self))
-        return 'Basis({},cartesian)'.format(len(self))
+        chk = (i.spherical for i in self._shells)
+        repr = 'Basis({},{{}})'.format(len(self)).format
+        if all(chk): return repr('spherical')
+        if not any(chk): return repr('cartesian')
+        return repr('mixed')
 
     def __init__(self, uni, frame=0, cartp=True):
         self._program = uni.meta['program']
@@ -314,10 +338,3 @@ class Basis(object):
         if not uni.basis_set.gaussian:
             self._expnt = _r
             self._pre = uni.basis_set_order['prefac']
-        # self._itr = _iter_atoms_shells_sphr
-        # self._nrm = Shell.new_sphr_norm_contract
-        # if not uni.basis_set.spherical:
-        #     self._itr = _iter_atoms_shells_cart
-        #     self._nrm = Shell.new_cart_norm_contract
-        #     self._nrm = Shell.sto_norm_contract
-

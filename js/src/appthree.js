@@ -71,12 +71,12 @@ class App3D {
 
     init_scene() {
         var scene = new THREE.Scene();
-        var amlight = new THREE.AmbientLight(0x808080, 0.5);
-        var dlight0 = new THREE.DirectionalLight(0xa0a0a0, 0.3);
-        var dlight1 = new THREE.DirectionalLight(0xa0a0a0, 0.3);
+        var amlight = new THREE.AmbientLight(0xdddddd, 0.5);
+        var dlight0 = new THREE.DirectionalLight(0xdddddd, 0.3);
+        //var dlight1 = new THREE.DirectionalLight(0xffffff, 0.3);
         dlight0.position.set(-1000, -1000, -1000);
-        // dlight1.position.set(1000, 1000, 1000);
-        var sunlight = new THREE.SpotLight(0xffffff, 0.3, 0, Math.PI/2);
+        //dlight1.position.set(1000, 1000, 1000);
+        var sunlight = new THREE.SpotLight(0xdddddd, 0.3, 0, Math.PI/2);
         sunlight.position.set(1000, 1000, 1000);
         sunlight.castShadow = true;
         sunlight.shadow = new THREE.LightShadow(
@@ -85,7 +85,7 @@ class App3D {
         scene.add(amlight);
         scene.add(dlight0);
         scene.add(sunlight);
-        // scene.add(dlight1);
+        //scene.add(dlight1);
         return Promise.resolve(scene);
     };
 
@@ -714,7 +714,7 @@ class App3D {
                 shininess: 15,
                 transparent:true,
                 opacity: opac,
-                reflectivity: 0.8
+                //reflectivity: 0.8
             }));
         var nmesh = new THREE.Mesh(ngeom,
             new THREE.MeshPhongMaterial({
@@ -724,7 +724,7 @@ class App3D {
                 shininess: 15,
                 transparent: true,
                 opacity: opac,
-                reflectivity: 0.8
+                //reflectivity: 0.8
             }));
         pmesh.name =  iso;
         nmesh.name = -iso;

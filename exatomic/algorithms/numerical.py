@@ -44,6 +44,7 @@ def _vec_dfac21(n): return dfac21(n)
 # Matrix packing and reshaping #
 ################################
 
+
 @jit(nopython=True, cache=True)
 def _tri_indices(vals):
     nel = vals.shape[0]
@@ -91,6 +92,71 @@ def _flat_square_to_triangle(flat):
             tri[cnt] = flat[i * ndim + j]
             cnt += 1
     return tri
+
+
+#####################################################################
+# Numba vectorized operations for Orbital, MOMatrix, Density tables #
+# These probably belong here but should be made more consistent     #
+# with the functions above for matrix manipulation.                 #
+#####################################################################
+
+
+@jit(nopython=True, nogil=True, parallel=True)
+def _square_indices(n):
+    m = n**2
+    x = np.empty((m, ), dtype=np.int64)
+    y = x.copy()
+    k = 0
+    # Order matters so don't us nb.prange
+    for i in range(n):
+        for j in range(n):
+            x[k] = i
+            y[k] = j
+            k += 1
+    return x, y
+
+
+@jit(nopython=True, nogil=True, parallel=True)
+def density_from_momatrix(cmat, occvec):
+    nbas = len(occvec)
+    arlen = nbas * (nbas + 1) // 2
+    dens = np.empty(arlen, dtype=np.float64)
+    chi0 = np.empty(arlen, dtype=np.int64)
+    chi1 = np.empty(arlen, dtype=np.int64)
+    frame = np.zeros(arlen, dtype=np.int64)
+    cnt = 0
+    for i in range(nbas):
+        for j in range(i + 1):
+            dens[cnt] = (cmat[i,:] * cmat[j,:] * occvec).sum()
+            chi0[cnt] = i
+            chi1[cnt] = j
+            cnt += 1
+    return chi0, chi1, dens, frame
+
+
+@jit(nopython=True, nogil=True, parallel=True)
+def density_as_square(denvec):
+    nbas = int((-1 + np.sqrt(1 - 4 * -2 * len(denvec))) / 2)
+    square = np.empty((nbas, nbas), dtype=np.float64)
+    cnt = 0
+    for i in range(nbas):
+        for j in range(i + 1):
+            square[i, j] = denvec[cnt]
+            square[j, i] = denvec[cnt]
+            cnt += 1
+    return square
+
+
+@jit(nopython=True, nogil=True, parallel=True)
+def momatrix_as_square(movec):
+    nbas = np.int64(len(movec) ** (1/2))
+    square = np.empty((nbas, nbas), dtype=np.float64)
+    cnt = 0
+    for i in range(nbas):
+        for j in range(nbas):
+            square[j, i] = movec[cnt]
+            cnt += 1
+    return square
 
 
 #######################
@@ -152,6 +218,20 @@ class Shell(object):
                 rect[i, j] = self._coef[x]
                 x += 1
         return rect
+
+    def _prim_sphr_norm(self):
+        Ns = np.empty(len(self.alphas), dtype=np.float64)
+        for i, a in enumerate(self.alphas):
+            prefac = (2 / np.pi) ** (0.75)
+            numer = 2 ** self.L * a ** ((self.L + 1.5) / 2)
+            denom = dfac21(self.L) ** 0.5
+            Ns[i] = prefac * numer / denom
+        return Ns
+
+    def norm_plot(self):
+        P = self._prim_sphr_norm()
+        N = np.ones(1, dtype=np.float64)
+        return np.outer(P, N) * self.contract()
 
     def norm_contract(self):
         if not self.gaussian:

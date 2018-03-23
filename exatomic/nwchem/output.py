@@ -14,7 +14,7 @@ from io import StringIO
 from exa import TypedMeta
 from exa.util.units import Length
 from exatomic.core.frame import compute_frame_from_atom
-from exatomic.algorithms.orbital import build_pair_index
+from exatomic.algorithms.numerical import _square_indices
 from exatomic.algorithms.basis import lmap
 from exatomic.core.frame import Frame
 from exatomic.core.atom import Atom
@@ -147,7 +147,7 @@ class Output(six.with_metaclass(OutMeta, Editor)):
                 coefs.append(c.iloc[i*nbas:(i+1)*nbas, :].astype(float).dropna(axis=1).values.ravel("F"))
             c = np.concatenate(coefs)
             del coefs
-            orbital, chi = build_pair_index(len(self.basis_set_order))
+            orbital, chi = _square_indices(len(self.basis_set_order))
             self.momatrix = MOMatrix.from_dict({'coef': c, 'chi': chi, 'orbital': orbital, 'frame': 0})
             # momatrix = pd.DataFrame.from_dict({'coef': c, 'chi': chi, 'orbital': orbital})
             # momatrix['frame'] = 0

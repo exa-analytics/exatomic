@@ -60,7 +60,7 @@ def make_fps(rmin=None, rmax=None, nr=None, nrfps=1,
              ox=None, fx=None, dxi=None, dxj=None, dxk=None,
              oy=None, fy=None, dyi=None, dyj=None, dyk=None,
              oz=None, fz=None, dzi=None, dzj=None, dzk=None,
-             fps=None):
+             fps=None, dv=None):
     """
     Generate the necessary field parameters of a numerical grid field
     as an exatomic.field.AtomicField.
