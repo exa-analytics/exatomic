@@ -12,6 +12,7 @@ simulations), step number (e.g. geometry optimization), or an arbitrary index
 (e.g. density functional theory exchange correlation functional).
 """
 import six
+import numpy as np
 import pandas as pd
 from exa import DataFrame, Container, TypedMeta
 from .frame import Frame, compute_frame_from_atom

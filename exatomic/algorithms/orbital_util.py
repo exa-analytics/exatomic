@@ -247,6 +247,13 @@ def _compute_orbitals(npts, bvs, vecs, cmat):
     return ovs
 
 
+def _compute_orbitals_nojit(npts, bvs, vecs, cmat):
+    """Compute orbitals from numerical basis functions."""
+    ovs = np.empty((len(vecs), npts), dtype=np.float64)
+    for i, vec in enumerate(vecs):
+        ovs[i] = np.dot(cmat[:, vec], bvs)
+    return ovs
+
 @jit(nopython=True, nogil=True, parallel=True)
 def _compute_density(ovs, occvec):
     """Sum orbitals multiplied by their occupations."""

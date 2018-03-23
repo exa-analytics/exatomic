@@ -20,7 +20,6 @@ class TestCartesianToSpherical(TestCase):
     def setUp(self):
         self.L = 6
         self.sh = solid_harmonics(6)
-        # self.nsh = new_solid_harmonics(6)
 
     def test_solid_harmonics(self):
         for L in range(self.L):
@@ -29,7 +28,7 @@ class TestCartesianToSpherical(TestCase):
 
 
     def test_car2sph(self):
-        c2s = car2sph(self.nsh, enum_cartesian)
+        c2s = car2sph(self.sh, enum_cartesian)
         for L in range(self.L):
             c = cart_lml_count[L]
             s = spher_lml_count[L] if L else 3

@@ -14,9 +14,10 @@ from datetime import datetime
 from exatomic.base import sym2z
 from exatomic.core.field import AtomicField
 from .orbital_util import (
-    numerical_grid_from_field_params, _determine_fps, 
+    numerical_grid_from_field_params, _determine_fps,
     _determine_vector, _compute_orb_ang_mom, _compute_current_density,
-    _compute_orbitals, _compute_density, _check_column, _make_field,)
+    _compute_orbitals, _compute_density, _check_column, _make_field,
+    _compute_orbitals_nojit)
 
 
 #####################################################################
@@ -121,7 +122,8 @@ def add_molecular_orbitals(uni, field_params=None, mocoefs=None,
     orbs = uni.momatrix.groupby('orbital')
     bvs = bfns.evaluate(x, y, z)
     cmat = uni.momatrix.square(column=mocoefs).values
-    ovs = _compute_orbitals(len(x), bvs, vector, cmat)
+    try: ovs = _compute_orbitals(len(x), bvs, vector, cmat)
+    except: ovs = _compute_orbitals_nojit(len(x), bvs, vector, cmat)
     field = _make_field(ovs, fps)
     t2 = datetime.now()
     if verbose:
@@ -158,7 +160,8 @@ def add_density(uni, field_params=None, mocoefs=None, orbocc=None,
     x, y, z = numerical_grid_from_field_params(fps)
     bvs = bfns.evaluate(x, y, z)
     cmat = uni.momatrix.square(column=mocoefs).values
-    ovs = _compute_orbitals(len(x), bvs, vector, cmat)
+    try: ovs = _compute_orbitals(len(x), bvs, vector, cmat)
+    except: ovs = _compute_orbitals_nojit(len(x), bvs, vector, cmat)
     dens = _compute_density(ovs, uni.orbital[orbocc].values)
     t2 = datetime.now()
     if verbose:
@@ -221,4 +224,3 @@ def add_orb_ang_mom(uni, field_params=None, rcoefs=None, icoefs=None,
     ang_mom = _compute_orb_ang_mom(x, y, z, curx, cury, curz, maxes)
     if not inplace: return _make_field(ang_mom, fps)
     uni.add_field(_make_field(ang_mom, fps))
-
