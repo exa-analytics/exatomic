@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# Copyright (c) 2015-2017, Exa Analytics Development Team
+# Copyright (c) 2015-2018, Exa Analytics Development Team
 # Distributed under the terms of the Apache License 2.0
 """
 exnbo Input Generator and Parser
@@ -61,9 +61,7 @@ $END"""
 
 def _nbo_labels():
     """Generate dataframes of NBO label, L, and ml or l, m, n."""
-    #sph = pd.DataFrame([(L, m) for m in range(-L, L + 1) for L in range(6)],
     sph = pd.DataFrame([(L, m) for L in range(7) for m in range(-L, L + 1)],
-                       #list(solid_harmonics(6).keys()),
                        columns=('L', 'ml'))
 
     # See the NBO 6.0 manual for more details

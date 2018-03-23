@@ -1,6 +1,5 @@
-
 # -*- coding: utf-8 -*-
-# Copyright (c) 2015-2017, Exa Analytics Development Team
+# Copyright (c) 2015-2018, Exa Analytics Development Team
 # Distributed under the terms of the Apache License 2.0
 """
 Universe trait functions
@@ -129,8 +128,6 @@ def frame_traits(uni):
     if not hasattr(uni, 'frame'): return {}
     # TODO :: Implement me!!
     return {}
-
-
 
 
 def uni_traits(uni, atomcolors=None, atomradii=None):

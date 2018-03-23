@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# Copyright (c) 2015-2017, Exa Analytics Development Team
+# Copyright (c) 2015-2018, Exa Analytics Development Team
 # Distributed under the terms of the Apache License 2.0
 """
 Basis Function Manipulation
@@ -276,40 +276,8 @@ class Basis(object):
 
     def _evaluate_diff_sto(self, xs, ys, zs, cart):
         raise NotImplementedError("Verify symbolic differentiation of STOs.")
-    # def _evaluate_diff_cart(self, xs, ys, zs, cart):
-    #     flds, itr, i = self._prep_eval(len(xs))
-    #     for center, x, y, z, shell, ii, jj, *ang in itr:
-    #         norm = self._nrm(shell, *ang)
-    #         a = self._angular(x, y, z, *ang)
-    #         da = a.diff(cart=cart).evaluate(xs, ys, zs)
-    #         a = a.evaluate(xs, ys, zs)
-    #         for j in range(jj):
-    #             r = self._radial(x, y, z, shell.alphas, norm[:, j])
-    #             dr = r.diff(cart=cart).evaluate(xs, ys, zs)
-    #             r = r.evaluate(xs, ys, zs)
-    #             flds[i] = evaluate('da * r + a * dr')
-    #             i += 1
-    #     return flds
-    #
-    # def integrals(self):
-    #     from exatomic.core.basis import Overlap
-    #     if self._program != 'molcas':
-    #         raise NotImplementedError('Must test for codes != molcas')
-    #     p2c, *prims = self._primitives()
-    #     povl = _square(_primitive_overlap(*prims))
-    #     covl = np.dot(p2c.T, np.dot(povl, p2c))
-    #     # pkin = _square(_primitive_kinetic(*prims))
-    #     # ckin = np.dot(p2c.T, np.dot(pkin, p2c))
-    #     if self._spherical:
-    #         c2s = self._cart_to_sphr(True)
-    #         covl = np.dot(c2s.T, np.dot(covl, c2s))
-    #         # ckin = np.dot(c2s.T, np.dot(ckin, c2s))
-    #     covl = _triangle(covl)
-    #     # ckin = _triangle(ckin)
-    #     chi0, chi1 = _tri_indices(covl)
-    #     return Overlap.from_dict({'chi0': chi0, 'chi1': chi1,
-    #                               'frame': 0, 'coef': covl})
-    #
+
+
     def evaluate(self, xs, ys, zs):
         if not self._gaussian:
             return self._evaluate_sto(xs, ys, zs)
@@ -331,10 +299,6 @@ class Basis(object):
 
     def __init__(self, uni, frame=0, cartp=True):
         self._program = uni.meta['program']
-        #self._shls = uni.enumerate_shells()
-        #self._atom = uni.atom
-        #self._basis_set = uni.basis_set
-        #self._basis_set_order = uni.basis_set_order
         ptrs, xyzs, shells = uni.enumerate_shells()
         self._ptrs = ptrs
         self._xyzs = xyzs
@@ -356,3 +320,4 @@ class Basis(object):
         #     self._itr = _iter_atoms_shells_cart
         #     self._nrm = Shell.new_cart_norm_contract
         #     self._nrm = Shell.sto_norm_contract
+

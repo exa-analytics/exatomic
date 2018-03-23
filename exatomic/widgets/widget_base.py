@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# Copyright (c) 2015-2017, Exa Analytics Development Team
+# Copyright (c) 2015-2018, Exa Analytics Development Team
 # Distributed under the terms of the Apache License 2.0
 """
 Universe Notebook Widget
@@ -9,20 +9,16 @@ import os
 import numpy as np
 from base64 import b64decode
 from traitlets import (Bool, Int, Float, Unicode,
-                       List, Any, Dict, Instance, link)
-                       # Unused == Any, Instance
-
+                       List, Any, Dict, link) 
 from ipywidgets import (
-    Box, VBox, HBox, FloatSlider, IntSlider, Play, Text,
-    IntRangeSlider, DOMWidget, Layout, Button, Dropdown,
-    register, jslink, ToggleButton
-    # currently unused --
-    # FloatSlider, Play, IntRangeSlider, Dropdown, jslink
-)
+    Box, VBox, HBox, IntSlider, Text, ToggleButton,
+    DOMWidget, Layout, Button, Dropdown, register,)
+
 from exatomic import Universe, __js_version__
 from .traits import uni_traits
-from .widget_utils import (_glo, _flo, _wlo, _hboxlo, _vboxlo, _bboxlo,
-                           _ListDict, Folder, GUIBox, gui_field_widgets)
+from .widget_utils import (_glo, _flo, _wlo, _hboxlo, 
+                           _vboxlo, _bboxlo, _ListDict, 
+                           Folder, GUIBox, gui_field_widgets)
 
 
 
@@ -142,8 +138,8 @@ class ExatomicScene(DOMWidget):
             min_height = kwargs.pop('min_height', '400px')
             min_width = kwargs.pop('min_width', '300px')
             flex = kwargs.pop('flex', '1 1 auto')
-        lo = Layout(height=height, min_height=min_height,
-                    flex=flex, min_width=min_width)
+            lo = Layout(height=height, min_height=min_height,
+                        flex=flex, min_width=min_width)
         super(DOMWidget, self).__init__(
             *args, layout=lo, **kwargs)
 
@@ -258,7 +254,7 @@ class ExatomicBox(Box):
         opts = _ListDict([
             (str(i), ToggleButton(description=str(i), value=True))
             for i, scn in enumerate(self.scenes)])
-        for key, obj in opts.items():
+        for obj in opts.values():
             obj.observe(self._update_active, names='value')
 
         return Folder(active, opts)
@@ -404,10 +400,10 @@ class ExatomicBox(Box):
                                         test=test,
                                         uni=uni)
 
-        for key, obj in self._controls.items():
+        for _, obj in self._controls.items():
             if not hasattr(obj, 'active'): obj.active = True
 
-        lo = kwargs.pop('layout', None)
+        _ = kwargs.pop('layout', None)
         gui = GUIBox(self._get())
         children = [gui, scenes] if self.scenes else [gui]
 
@@ -433,9 +429,6 @@ def _scene_grid(objs, mh, mw, test, uni, typ, scenekwargs):
     else: mod = 3
     kwargs = {'min_height': mh, 'min_width': mw, 'uni': uni}
     kwargs.update(scenekwargs)
-
-    # print(scenekwargs)
-    # print(kwargs)
 
     flatscns, scenes = [], []
     for i in range(n):

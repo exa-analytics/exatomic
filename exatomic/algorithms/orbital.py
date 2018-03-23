@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# Copyright (c) 2015-2017, Exa Analytics Development Team
+# Copyright (c) 2015-2018, Exa Analytics Development Team
 # Distributed under the terms of the Apache License 2.0
 """
 Numerical Orbital Functions
@@ -14,16 +14,15 @@ from datetime import datetime
 from exatomic.base import sym2z
 from exatomic.core.field import AtomicField
 from .orbital_util import (
-    numerical_grid_from_field_params,
-    _determine_fps, _determine_vector, #_determine_bfns,
-    _compute_orb_ang_mom, _compute_current_density,
-    _compute_orbitals, _compute_density, _check_column,
-    _make_field,)# _compute_orbitals_nojit)
+    numerical_grid_from_field_params, _determine_fps,
+    _determine_vector, _compute_orb_ang_mom, _compute_current_density,
+    _compute_orbitals, _compute_density, _check_column, _make_field,
+    _compute_orbitals_nojit)
 
 
 #####################################################################
 # Numba vectorized operations for Orbital, MOMatrix, Density tables #
-# These will eventually be fully moved to matrices.py               #
+# These will eventually be fully moved to ... somewhere.. else.     #
 #####################################################################
 
 
@@ -87,8 +86,7 @@ def momatrix_as_square(movec):
 
 def add_molecular_orbitals(uni, field_params=None, mocoefs=None,
                            vector=None, frame=0, inplace=True,
-                           replace=False, norm='Nd', forcecart=False,
-                           verbose=True):
+                           replace=True, verbose=True):
     """A universe must contain basis_set, basis_set_order, and
     momatrix attributes to use this function.  Evaluate molecular
     orbitals on a numerical grid.  Attempts to generate reasonable
@@ -113,7 +111,6 @@ def add_molecular_orbitals(uni, field_params=None, mocoefs=None,
               ' Consider adding tests.')
     t1 = datetime.now()
     vector = _determine_vector(uni, vector)
-    # bfns = _determine_bfns(uni, frame, norm, forcecart=forcecart)
     bfns = uni.basis_functions
     fps = _determine_fps(uni, field_params, len(vector))
     mocoefs = _check_column(uni, 'momatrix', mocoefs)
@@ -125,19 +122,16 @@ def add_molecular_orbitals(uni, field_params=None, mocoefs=None,
     orbs = uni.momatrix.groupby('orbital')
     bvs = bfns.evaluate(x, y, z)
     cmat = uni.momatrix.square(column=mocoefs).values
-    #try:
-    ovs = _compute_orbitals(len(x), bvs, vector, cmat)
-    #except (IndexError, AssertionError):
-    #    ovs = _compute_orbitals_nojit(bvs, vector, cmat)
+    try: ovs = _compute_orbitals(len(x), bvs, vector, cmat)
+    except: ovs = _compute_orbitals_nojit(len(x), bvs, vector, cmat)
     field = _make_field(ovs, fps)
     t2 = datetime.now()
     if verbose:
         p2 = 'Timing: compute orbitals - {:>8.2f}s.'
         print(p2.format((t2-t1).total_seconds()))
     if not inplace: return field
-    if replace:
-        if hasattr(uni, '_field'):
-            del uni.__dict__['_field']
+    if replace and hasattr(uni, '_field'):
+        del uni.__dict__['_field']
     uni.add_field(field)
 
 
@@ -158,7 +152,6 @@ def add_density(uni, field_params=None, mocoefs=None, orbocc=None,
     mocoefs = _check_column(uni, 'momatrix', mocoefs)
     orbocc = mocoefs if orbocc is None and mocoefs != 'coef' else orbocc
     orbocc = _check_column(uni, 'orbital', orbocc)
-    # bfns = _determine_bfns(uni, frame, norm)
     bfns = uni.basis_functions
     orbs = uni.momatrix.groupby('orbital')
     vector = np.array(range(uni.momatrix.orbital.max() + 1))
@@ -167,10 +160,8 @@ def add_density(uni, field_params=None, mocoefs=None, orbocc=None,
     x, y, z = numerical_grid_from_field_params(fps)
     bvs = bfns.evaluate(x, y, z)
     cmat = uni.momatrix.square(column=mocoefs).values
-    #try:
-    ovs = _compute_orbitals(len(x), bvs, vector, cmat)
-    #except IndexError:
-    #    ovs = _compute_orbitals_nojit(bvs, vector, cmat)
+    try: ovs = _compute_orbitals(len(x), bvs, vector, cmat)
+    except: ovs = _compute_orbitals_nojit(len(x), bvs, vector, cmat)
     dens = _compute_density(ovs, uni.orbital[orbocc].values)
     t2 = datetime.now()
     if verbose:

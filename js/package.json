@@ -23,8 +23,7 @@
   },
   "devDependencies": {
     "json-loader": "^0.5.4",
-    "webpack": "^1.12.14",
-    "jsdoc": "^3.4.3"
+    "webpack": "^1.12.14"
   },
   "dependencies": {
     "@jupyter-widgets/base": "^1.0.0",

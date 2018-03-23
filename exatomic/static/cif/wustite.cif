@@ -1,0 +1,48 @@
+data_global
+_chemical_name_mineral 'Wustite'
+loop_
+_publ_author_name
+'Fjellvag H'
+'Hauback B C'
+'Vogt T'
+'Stolen S'
+_journal_name_full 'American Mineralogist'
+_journal_volume 87 
+_journal_year 2002
+_journal_page_first 347
+_journal_page_last 349
+_publ_section_title
+;
+ Monoclinic nearly stoichiometric wustite at low temperatures
+ Sample: BNL, T = 10 K
+;
+_database_code_amcsd 0002758
+_chemical_formula_sum 'Fe.99 O'
+_cell_length_a 5.2615
+_cell_length_b 3.0334
+_cell_length_c 3.0602
+_cell_angle_alpha 90
+_cell_angle_beta 124.649
+_cell_angle_gamma 90
+_cell_volume 40.179
+_exptl_crystal_density_diffrn      5.892
+_symmetry_space_group_name_H-M 'C 1 2/m 1'
+loop_
+_space_group_symop_operation_xyz
+  'x,y,z'
+  '1/2+x,1/2+y,z'
+  'x,-y,z'
+  '1/2+x,1/2-y,z'
+  '-x,y,-z'
+  '1/2-x,1/2+y,-z'
+  '-x,-y,-z'
+  '1/2-x,1/2-y,-z'
+loop_
+_atom_site_label
+_atom_site_fract_x
+_atom_site_fract_y
+_atom_site_fract_z
+_atom_site_occupancy
+Fe   0.00000   0.00000   0.00000   0.99000
+O   0.00000   0.50000   0.50000   1.00000
+
