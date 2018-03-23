@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# Copyright (c) 2015-2017, Exa Analytics Development Team
+# Copyright (c) 2015-2018, Exa Analytics Development Team
 # Distributed under the terms of the Apache License 2.0
 
 from unittest import TestCase
@@ -62,7 +62,7 @@ class TestFolder(TestCase):
         fol = Folder(Button(), _ListDict([('a', Button()), ('b', Button())]))
         fol.pop('a')
         with self.assertRaises(KeyError):
-            a = fol['a']
+            fol['a']
 
     def test_get(self):
         fol = Folder(Button(), _ListDict([('a', Button()), ('b', Button())]))

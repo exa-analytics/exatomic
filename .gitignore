@@ -18,14 +18,13 @@ cache/
 .tox/
 .coverage/
 parts/
-win-32/
-win-64/
-linux-32/
-linux-64/
-osx-64/
+win-*/
+linux-*/
+osx-*/
 doc/build/
 target/
 .settings/
+exatomic/static/nbextension
 exatomic/static/js/
 package-lock.json
 

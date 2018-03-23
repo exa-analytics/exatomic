@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# Copyright (c) 2015-2017, Exa Analytics Development Team
+# Copyright (c) 2015-2018, Exa Analytics Development Team
 # Distributed under the terms of the Apache License 2.0
 """Tests for computing orbitals, densities and orbital angular momenta."""
 import os
@@ -12,10 +12,8 @@ from exatomic import molcas
 from exatomic.molcas import Output as MolOutput
 from exatomic.molcas import Orb
 from exatomic.core.basis import Overlap
-#from exatomic.algorithms.basis import gen_bfns
 from exatomic.interfaces.cube import Cube
 from exatomic.algorithms.orbital_util import compare_fields
-#from ..orbital_util import compare_fields
 from exatomic.algorithms.orbital import (
     add_molecular_orbitals, add_density, add_orb_ang_mom,
     build_pair_index, density_from_momatrix,
@@ -43,7 +41,6 @@ class TestMolcasOrbital(TestCase):
                 orb = Orb(f.read().decode('utf-8'))
                 uni.momatrix[col] = orb.momatrix['coef']
                 uni.orbital[col] = orb.orbital['occupation']
-        #uni.basis_functions = {0: gen_bfns(uni, forcecart=True)}
 
         flds, cubfmt = [], 'mol-carbon-dz-{}.cube.bz2'.format
         for i, c in enumerate(['1', '2', '3', '4', '5', 'dens',
@@ -69,6 +66,3 @@ class TestMolcasOrbital(TestCase):
         self.assertEquals(len(res), sum(res))
 
 
-#a = TestMolcasOrbital()
-#a.setUp()
-#a.test_compare_fields()

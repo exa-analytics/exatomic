@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# Copyright (c) 2015-2017, Exa Analytics Development Team
+# Copyright (c) 2015-2018, Exa Analytics Development Team
 # Distributed under the terms of the Apache License 2.0
 """
 exnbo Output Editor
@@ -36,7 +36,8 @@ class Output(Editor):
         dfs = []
         spins = [-1, 0, 1]
         nrcol = len(self[starts[0]].replace("( ", "(").split()) + 1
-        for (lno, col), start, stop, spin in zip(found[_re_nao_start], starts, stops, spins):
+        #for (lno, col), start, stop, spin in zip(found[_re_nao_start], starts, stops, spins):
+        for (_, col), start, stop, spin in zip(found[_re_nao_start], starts, stops, spins):
             columns = col.split()
             lines = [line.replace("( ", "(") for line in self[start:stop]]
             dfs.append(pd.read_csv(StringIO('\n'.join(lines)), names=columns, **csv_args))

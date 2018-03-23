@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# Copyright (c) 2015-2017, Exa Analytics Development Team
+# Copyright (c) 2015-2018, Exa Analytics Development Team
 # Distributed under the terms of the Apache License 2.0
 
 from unittest import TestCase
@@ -80,6 +80,3 @@ class TestUniverseWidget(TestCase):
         self.assertEqual(list(main.keys()),
                          ['close', 'clear', 'active', 'saves',
                           'camera', 'atom_3d', 'axis', 'frame'])
-
-
-    pass

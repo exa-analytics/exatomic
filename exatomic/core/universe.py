@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# Copyright (c) 2015-2017, Exa Analytics Development Team
+# Copyright (c) 2015-2018, Exa Analytics Development Team
 # Distributed under the terms of the Apache License 2.0
 """
 The Atomic Universe
@@ -12,7 +12,6 @@ simulations), step number (e.g. geometry optimization), or an arbitrary index
 (e.g. density functional theory exchange correlation functional).
 """
 import six
-import numpy as np
 import pandas as pd
 from exa import DataFrame, Container, TypedMeta
 from .frame import Frame, compute_frame_from_atom

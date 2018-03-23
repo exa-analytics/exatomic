@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# Copyright (c) 2015-2017, Exa Analytics Development Team
+# Copyright (c) 2015-2018, Exa Analytics Development Team
 # Distributed under the terms of the Apache License 2.0
 '''
 Molecular Orbital Utilities
@@ -16,7 +16,6 @@ from IPython.display import display
 from ipywidgets import FloatProgress, HBox
 
 from exatomic.core.field import AtomicField
-# from exatomic.algorithms.basis import gen_bfns
 
 
 def compare_fields(uni0, uni1, rtol=5e-5, atol=1e-12, signed=True, verbose=True):
@@ -180,21 +179,6 @@ def _compute_current_density(bvs, gvx, gvy, gvz, cmatr, cmati, occvec, verbose=T
     fp.close()
     return curx, cury, curz
 
-#
-# def _determine_bfns(uni, frame, norm, forcecart=False):
-#     """Cache and return symbolic basis functions if they don't exist."""
-#     if hasattr(uni, 'basis_functions'):
-#         if frame in uni.basis_functions:
-#             return uni.basis_functions[frame]
-#         else:
-#             uni.basis_functions[frame] = gen_bfns(uni, frame=frame,
-#                                                   forcecart=forcecart)
-#             return uni.basis_functions[frame]
-#     else:
-#         uni.basis_functions = {frame: gen_bfns(uni, frame=frame,
-#                                                forcecart=forcecart)}
-#         return uni.basis_functions[frame]
-#
 
 def _determine_vector(uni, vector):
     """Find some orbital indices in a universe."""
@@ -254,21 +238,13 @@ def _check_column(uni, df, key):
     return key
 
 
-#@jit(nopython=True, nogil=True, parallel=True)
+@jit(nopython=True, nogil=True, parallel=True)
 def _compute_orbitals(npts, bvs, vecs, cmat):
     """Compute orbitals from numerical basis functions."""
     ovs = np.empty((len(vecs), npts), dtype=np.float64)
-    print(ovs.shape)
     for i, vec in enumerate(vecs):
         ovs[i] = np.dot(cmat[:, vec], bvs)
     return ovs
-
-# def _compute_orbitals_nojit(bvs, vecs, cmat):
-#     """Compute orbitals from numerical basis functions."""
-#     ovs = np.empty((len(vecs), bvs.shape[1]), dtype=np.float64)
-#     for i, vec in enumerate(vecs):
-#         ovs[i] = np.dot(cmat[:, vec], bvs)
-#     return ovs
 
 
 @jit(nopython=True, nogil=True, parallel=True)

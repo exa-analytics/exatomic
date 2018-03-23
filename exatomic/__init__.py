@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# Copyright (c) 2015-2017, Exa Analytics Development Team
+# Copyright (c) 2015-2018, Exa Analytics Development Team
 # Distributed under the terms of the Apache License 2.0
 """
 A unified data anlaysis and visualization platform for computational and
@@ -52,4 +52,3 @@ from . import core
 from .core import Universe, Editor, Atom, AtomicField, Frame
 from .interfaces import XYZ, Cube
 from .widgets import DemoContainer, DemoUniverse, UniverseWidget, TensorContainer
-# from . import widgets

@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# Copyright (c) 2015-2017, Exa Analytics Development Team
+# Copyright (c) 2015-2018, Exa Analytics Development Team
 # Distributed under the terms of the Apache License 2.0
 '''
 Orbital DataFrame
@@ -310,11 +310,6 @@ class MOMatrix(DataFrame):
         representation.
         """
         if mocoefs is None: mocoefs = column
-        #movec = self[self['frame'] == frame][mocoefs].values
-        #square = pd.DataFrame(momatrix_as_square(movec))
-        #square.index.name = 'chi'
-        #square.columns.name = 'orbital'
-        #return square
         return self.pivot('chi', 'orbital', mocoefs)
 
 

@@ -117,7 +117,7 @@ def compute_molecule(universe):
     # generate molecule indices for the atom table
     mapper = {}
     i = 0
-    for k, v in g.degree().items():    # First handle single atom "molecules"
+    for k, v in g.degree():    # First handle single atom "molecules"
         if v == 0:
             mapper[k] = i
             i += 1

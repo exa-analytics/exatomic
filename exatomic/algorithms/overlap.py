@@ -233,3 +233,29 @@ def _obara_s_recurr(p, l, m, pa, pb, s):
             s0[i, j + 1] = pb * s0[i, j] + mul
             s0[i + 1, j + 1] = pa * s0[i, j + 1] + p2 * ((i + 1) * s0[i, j] + j * s0[i + 1, j])
     return s0[l, m]
+
+
+
+@jit(nopython=True, cache=True)
+def _nin(o1, o2, po1, po2, gamma, pg12):
+    """Helper function for gaussian overlap between 2 centers."""
+    otot = o1 + o2
+    if not otot: return pg12
+    if otot % 2: otot -= 1
+    oio = 0.
+    for i in range(otot // 2 + 1):
+        k = 2 * i
+        prod = pg12 * fac2(k - 1) / ((2 * gamma) ** i)
+        qlo = max(-k, (k - 2 * o2))
+        qhi = min( k, (2 * o1 - k)) + 1
+        fk = 0.
+        for q in range(qlo, qhi, 2):
+            xx = (k + q) // 2
+            zz = (k - q) // 2
+            newt1 = fac(o1) / fac(xx) / fac(o1 - xx)
+            newt2 = fac(o2) / fac(zz) / fac(o2 - zz)
+            fk += newt1 * newt2 * (po1 ** (o1 - xx)) * (po2 ** (o2 - zz))
+        oio += prod * fk
+    return oio
+
+

@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# Copyright (c) 2015-2017, Exa Analytics Development Team
+# Copyright (c) 2015-2018, Exa Analytics Development Team
 # Distributed under the terms of the Apache License 2.0
 """
 Molcas Output Parser
@@ -196,7 +196,8 @@ class Output(six.with_metaclass(OutMeta, Editor)):
             tot = 0
             lml_count = spher_lml_count
             for l, n in funcs[seht].items():
-                for i in range(lml_count[l]):
+                #for i in range(lml_count[l]):
+                for _ in range(lml_count[l]):
                     shells += list(range(tot, n + tot))
                 tot += n
         df['shell'] = shells
@@ -269,6 +270,7 @@ class Output(six.with_metaclass(OutMeta, Editor)):
     def __init__(self, *args, **kwargs):
         super(Output, self).__init__(*args, **kwargs)
 
+
 class HDFMeta(TypedMeta):
     atom = Atom
     overlap = Overlap
@@ -284,10 +286,6 @@ class HDF(six.with_metaclass(HDFMeta, object)):
 
     def to_universe(self):
         return self._to_universe()
-    #     kws = {}
-    #     for attr in ['atom', 'orbital', 'momatrix', 'basis_set_order']:
-    #         try:
-    #             kws[attr] = self['parse_{}'.format(attr)]()
 
     def parse_atom(self):
         Z = pd.Series(self._hdf['CENTER_CHARGES']).astype(np.int64)

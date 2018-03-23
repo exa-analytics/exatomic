@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# Copyright (c) 2015-2017, Exa Analytics Development Team
+# Copyright (c) 2015-2018, Exa Analytics Development Team
 # Distributed under the terms of the Apache License 2.0
 """
 Gaussian Output Editor
@@ -22,7 +22,7 @@ from exatomic.core.atom import Atom, Frequency
 from exatomic.core.basis import BasisSet, BasisSetOrder, Overlap
 from exatomic.core.orbital import Orbital, MOMatrix, Excitation
 from exatomic.algorithms.basis import lmap, lorder
-from numba import jit, int64
+from numba import jit
 
 
 @jit(nopython=True, nogil=True, cache=True)
@@ -166,7 +166,8 @@ class Output(six.with_metaclass(GauMeta, Editor)):
         nbas = int(found[_rebas01][0][1].split()[0])
         # Check if open shell
         os = any(('Beta' in ln for lno, ln in found[_reorb01]))
-        occ = 1 if os else 2
+        #UNUSED?
+        #occ = 1 if os else 2
         # Find number of electrons
         ae, x, x, be, x, x = found[_realphaelec][0][1].split()
         ae, be = int(ae), int(be)
@@ -292,7 +293,8 @@ class Output(six.with_metaclass(GauMeta, Editor)):
         # Try to get the electronic state but don't try too hard
         try:
             states = []
-            for lno, ln in found[_reelecstate]:
+            #for lno, ln in found[_reelecstate]:
+            for _, ln in found[_reelecstate]:
                 if 'initial' in ln: continue
                 states.append(ln.split()[4].replace('.', ''))
             self.frame['state'] = states

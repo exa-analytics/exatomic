@@ -27,30 +27,73 @@ class TestCartesianToSpherical(TestCase):
             for ml in range(-L, L + 1):
                 self.assertIn(ml, self.sh[L])
 
-    # def test_new_solid_harmonics(self):
-    #     for L in range(self.L):
-    #         self.assertIn(L, self.nsh)
-    #         for ml in range(-L, L + 1):
-    #             self.assertIn(ml, self.nsh[L])
-
-    # def test_symbolic(self):
-    #     for L in range(self.L):
-    #         for ml in range(-L, L + 1):
-    #             self.assertEquals(self.sh[(L, ml)], self.nsh[L][ml])
 
     def test_car2sph(self):
-        c2s = car2sph(self.sh, enum_cartesian)
+        c2s = car2sph(self.nsh, enum_cartesian)
         for L in range(self.L):
             c = cart_lml_count[L]
             s = spher_lml_count[L] if L else 3
             self.assertEqual(c2s[L].shape, (c, s))
 
-    # def test_new_car2sph(self):
-    #     c2s = new_car2sph(self.nsh, enum_cartesian)
-    #     for L in range(self.L):
-    #         c = cart_lml_count[L]
-    #         s = spher_lml_count[L] if L else 3
-    #         self.assertEqual(c2s[L].shape, (c, s))
 
-    # def test_transform_matrices(self):
-    #     for L in range(self.L):
+#class TestBasisFunctions(TestCase):
+#
+#    def setUp(self):
+#        self.bargs = (0, 0, 0, 0, [1.], [1.])
+#        self.cargs = (0, 0, 0, 0, [1.], [1.], 0, 0, 0)
+#        self.sargs = (0, 0, 0, 0, [1.], [1.], 0, 0)
+#        # Add gaussian{True/False}
+#
+#    def test_abstract(self):
+#        with self.assertRaises(TypeError) as ctx:
+#            BasisFunction(*self.bargs)
+#
+#    def test_cartesian(self):
+#        f = CartesianBasisFunction(*self.cargs)
+#        N = _prim_cart_norm(f.alphas, f.l, f.m, f.n)
+#        self.assertTrue(np.allclose(f.Ns, N))
+#
+#    def test_sto(self):
+#        f = CartesianBasisFunction(*self.cargs, gaussian=False)
+#        N = _prim_sto_norm(f.alphas, f.rpow)
+#        self.assertTrue(np.allclose(f.Ns, N))
+#
+#    def test_spherical(self):
+#        f = SphericalBasisFunction(*self.sargs)
+#        N = _prim_sphr_norm(f.alphas, f.L)
+#        self.assertTrue(np.allclose(f.Ns, N))
+#
+#
+#class TestNumerical(TestCase):
+#    def setUp(self):
+#        self.ns = range(-2, 10)
+#
+#    def test_fac(self):
+#        chk = np.array([0, 0, 1, 1, 2, 6, 24, 120,
+#                        720, 5040, 40320, 362880])
+#        for c, n in zip(chk, self.ns):
+#            self.assertEqual(fac(n), c)
+#
+#    def test_fac2(self):
+#        chk = np.array([0, 1, 1, 1, 2, 3, 8,
+#                        15, 48, 105, 384, 945])
+#        for c, n in zip(chk, self.ns):
+#            self.assertEqual(fac2(n), c)
+#
+#    def test_dfac21(self):
+#        for n in self.ns:
+#            self.assertEqual(fac2(2*n-1), dfac21(n))
+#
+#
+#class TestNormalization(TestCase):
+#    def setUp(self):
+#        self.alphas = []
+#
+#    def test_normalize(self):
+#        pass
+#
+#    def test_prim_normalize(self):
+#        pass
+#
+#    def test_sto_normalize(self):
+#        pass

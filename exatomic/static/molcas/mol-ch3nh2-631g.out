@@ -1,0 +1,726 @@
+   This copy of MOLCAS is licensed to  Jochen Autschbach
+
+    *************************************************************
+    ***    Warning! CPUS variable is defined! 
+    ***             it will be ignored as an obsolete 
+    ***             Use MOLCAS_CPUS instead! 
+    *************************************************************
+
+    *************************************************************
+    ***    Warning! MOLCASMEM variable is defined! 
+    ***             it will be ignored as an obsolete 
+    ***             Use MOLCAS_MEM instead! 
+    *************************************************************
+
+    *************************************************************
+    ***    Warning! MOLCASDISK variable is defined! 
+    ***             it will be ignored as an obsolete 
+    ***             Use MOLCAS_DISK instead! 
+    *************************************************************
+                                                                      
+                               MOL                                    
+                               MOL                                    
+                   MOL        CASMO                                   
+                  MOLCA       SM OL                                   
+                  MO LC      AS   MO                                  
+                  MO  LC     AS   MO                                  
+                 MO   L  CASM  O  LC                                  
+                 MO  L   CAS   MO LC                                  
+                 M  OLC   AS  MOL  CA                                 
+              MOL   CAS   M   OLC    AS                               
+          MOLCASM  OLCAS     MOLCA   SMOLCA                           
+       MOLCASMOL   CASMOLCASMOLCAS   MOLCASMOL                        
+      MOLCASMOLC   AS           MO   LCA    SMO                       
+      MOLCASMOLC       ASMOLCA        S     MOL                       
+      MOLCASMOLC    ASMOLCASMOLCA     S  M  OLC                       
+      MOLCASMOLC   ASMOLCASMOLCASM    O  L  CAS                       
+      MOLCASMOL   CASMOLCASMOLCASMO   L  C  ASM    OLCA    SM    OLCA 
+      MOLCASMOL   CASMOLCASMOLCASMO   L  C  ASM   OL  CA  SMOL  CA   S
+      MOLCASMOL   CASMOLCASMOLCASMO      L  CAS   M      OL  CA SM    
+      MOLCASMO     LCASMOLCASMOLCA       S  MOL   C      AS  MO  LCAS 
+      MOLCAS        MOLCASMOLCASM        O  LCA   S      MOLCAS     MO
+      MOL     CAS      MOLCASM     O     L   CA   SM  OL CA  SM O   LC
+            MOLCASMOL            CASM   OLC        ASMO  L    C  ASMO 
+       MOLCASMOLCASMOLCASMOLCASMOLCASMOLCASMOL                        
+          MOLCASMOLCASMOLCASMOLCASMOLCASMOL                           
+              MOLCASMOLCASMOLCASMOLCASM                               
+                 MOLCASMOLCASMOLCASM        version 8.1               
+                     MOLCASMOLCA                                      
+                         MOL                patch level 160610-1800-dirty           
+                                                                      
+                     Copyright, all rights, reserved:                 
+                   Permission is hereby granted to use                
+          but not to reproduce or distribute any part of this         
+       program. The use is restricted to research purposes only.      
+                      Lund University, Sweden, 2014.                  
+                                                                      
+            For the author list and the recommended citation,         
+             consult http://www.molcas.org/citations.html             
+
+configuration info
+------------------
+C Compiler ID: Intel
+C flags:  -D_INTEL_ -std=gnu99
+Fortran Compiler ID: Intel
+Fortran flags:  -D_INTEL_ -fpp -i8 -r8 -heap-arrays
+Definitions: _MOLCAS_;_I8_;EXT_INT;_LINUX_
+Parallel: OFF (GA=OFF)
+
+
+   -------------------------------------------------------------------
+  |                                                                   
+  |   Project         = ch3nh2-sm
+  |   Submitted from  = /projects/academic/jochena/tjduigna/gaussian/ch3nh2
+  |   Scratch area    = /user/tjduigna/projects/gaussian/ch3nh2/ch3nh2-sm
+  |   Save outputs to = /projects/academic/jochena/tjduigna/gaussian/ch3nh2
+  |   Molcas          = /projects/academic/jochena/tjduigna/codes/molcas-boss-bk/builds/modified
+  |                                                                   
+  |   Scratch area is NOT empty
+  |                                                                   
+  |       MOLCAS_TRAP = OFF                 
+  |      MOLCAS_print = 20                  
+  |     MOLCAS_MOLDEN = ON                  
+  |     MOLCAS_NPROCS = 1                   
+  |         MOLCASMEM = 3000                
+  |        MOLCASDISK = 2000                
+  |                                                                   
+   -------------------------------------------------------------------
+--- Start Module: auto at Fri Jan 20 22:25:24 2017 
+
+++ ---------   Input file   ---------
+
+  &SEWARD  &END
+    Title 
+    ch3nh2
+    HIGH cholesky
+    BSSHOW
+    Basis set
+    C.6-31G
+    C       0.745914       0.011106       0.000000 angstrom
+    End of basis
+    Basis set
+    N.6-31G
+    N      -0.721743      -0.071848       0.000000 angstrom
+    End of basis
+    Basis set
+    H.6-31G
+    H1      1.042059       1.060105       0.000000 angstrom
+    H2      1.129298      -0.483355       0.892539 angstrom
+    H3      1.129298      -0.483355      -0.892539 angstrom
+    H4     -1.076988       0.386322      -0.827032 angstrom
+    H5     -1.076988       0.386322       0.827032 angstrom
+    end of basis
+    Angmom
+      0.0 0.0 0.0
+  &SCF &END
+
+-- ----------------------------------
+
+*** 
+--- Start Module: seward at Fri Jan 20 22:25:25 2017 
+ 
+()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()
+
+                                              &SEWARD
+
+                                   only a single process is used
+                       available to each process: 2.0 GB of memory, 1 thread
+()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()
+ 
+ 
+ 
+ Basis Set     1 Label: C.6-31G
+ Basis set is read from library:basis_library 
+ Basis Set Reference(s):
+     W.J. Hehre, R. Ditchfield and J.A. Pople, J. Chem. Phys. 56, 2257 (1972).       
+     CARBON       (10s,4p) -> [3s,2p]                                                
+ 
+ 
+ 
+ 
+ Basis Set     2 Label: N.6-31G
+ Basis set is read from library:basis_library 
+ Basis Set Reference(s):
+     W.J. Hehre, R. Ditchfield and J.A. Pople, J. Chem. Phys. 56, 2257 (1972).       
+     NITROGEN     (10s,4p) -> [3s,2p]                                                
+ 
+ 
+ 
+ 
+ Basis Set     3 Label: H.6-31G
+ Basis set is read from library:basis_library 
+ Basis Set Reference(s):
+     W.J. Hehre, R. Ditchfield and J.A. Pople, J. Chem. Phys. 56, 2257 (1972).       
+     HYDROGEN     (4s) -> [2s]                                                       
+ 
+ 
+               SEWARD will generate:
+                  Multipole Moment integrals up to order  2
+                  Kinetic Energy integrals
+                  Nuclear Attraction integrals (point charge)
+                  One-Electron Hamiltonian integrals
+                  Velocity integrals
+                  Orbital angular momentum around ( 0.0000  0.0000  0.0000 )
+                  Cholesky decomposed two-electron repulsion integrals
+                   - CD Threshold:   0.10E-07
+ 
+               ****************************************************************************************
+               *                                                                                      *
+               *                                        ch3nh2                                        *
+               *                                                                                      *
+               ****************************************************************************************
+ 
+                   Integrals are discarded if absolute value <: 0.10E-39
+                   Integral cutoff threshold is set to       <: 0.10E-39
+ 
+++    Symmetry information:
+      ---------------------
+ 
+                    Character Table for C1 
+ 
+                             E  
+                    a        1  x, y, xy, Rz, z, xz, Ry, yz, Rx, I
+--
+ 
+ 
+++    Basis set information:
+      ----------------------
+ 
+ 
+      Basis set label: C.6-31G.........
+ 
+      Valence basis set:
+      ------------------
+      Associated Effective Charge  6.000000 au
+      Associated Actual Charge     6.000000 au
+      Nuclear Model: Point charge
+ 
+      Shell  nPrim  nBasis  Cartesian Spherical Contaminant
+         s      10       3        X                  
+         p       4       2        X                  
+ 
+       Label   Cartesian Coordinates / Bohr
+ 
+ C                  1.4095731731        0.0209872983        0.0000000000
+ 
+ 
+      Basis set label: N.6-31G.........
+ 
+      Valence basis set:
+      ------------------
+      Associated Effective Charge  7.000000 au
+      Associated Actual Charge     7.000000 au
+      Nuclear Model: Point charge
+ 
+      Shell  nPrim  nBasis  Cartesian Spherical Contaminant
+         s      10       3        X                  
+         p       4       2        X                  
+ 
+       Label   Cartesian Coordinates / Bohr
+ 
+ N                 -1.3638966030       -0.1357730427        0.0000000000
+ 
+ 
+      Basis set label: H.6-31G.........
+ 
+      Valence basis set:
+      ------------------
+      Associated Effective Charge  1.000000 au
+      Associated Actual Charge     1.000000 au
+      Nuclear Model: Point charge
+ 
+      Shell  nPrim  nBasis  Cartesian Spherical Contaminant
+         s       4       2        X                  
+ 
+       Label   Cartesian Coordinates / Bohr
+ 
+ H1                 1.9692061166        2.0033081142        0.0000000000
+ H2                 2.1340639340       -0.9134085714        1.6866542663
+ H3                 2.1340639340       -0.9134085714       -1.6866542663
+ H4                -2.0352123604        0.7300427762       -1.5628639770
+ H5                -2.0352123604        0.7300427762        1.5628639770
+--
+ 
+ 
+++    Molecular structure info:
+      -------------------------
+ 
+                    ************************************************ 
+                    **** Cartesian Coordinates / Bohr, Angstrom **** 
+                    ************************************************ 
+ 
+     Center  Label                x              y              z                     x              y              z
+        1      C                1.409573       0.020987       0.000000              0.745914       0.011106       0.000000
+        2      N               -1.363897      -0.135773       0.000000             -0.721743      -0.071848       0.000000
+        3      H1               1.969206       2.003308       0.000000              1.042059       1.060105       0.000000
+        4      H2               2.134064      -0.913409       1.686654              1.129298      -0.483355       0.892539
+        5      H3               2.134064      -0.913409      -1.686654              1.129298      -0.483355      -0.892539
+        6      H4              -2.035212       0.730043      -1.562864             -1.076988       0.386322      -0.827032
+        7      H5              -2.035212       0.730043       1.562864             -1.076988       0.386322       0.827032
+ 
+                    *************************************** 
+                    *    InterNuclear Distances / Bohr    * 
+                    *************************************** 
+ 
+               1 C             2 N             3 H1            4 H2            5 H3            6 H4    
+    1 C        0.000000
+    2 N        2.777896        0.000000
+    3 H1       2.059802        3.960460        0.000000
+    4 H2       2.059802        3.960461        3.373309        0.000000
+    5 H3       2.059802        3.960461        3.373309        3.373309        0.000000
+    6 H4       3.848617        1.908624        4.483204        5.535627        4.483204        0.000000
+    7 H5       3.848617        1.908624        4.483204        4.483204        5.535627        3.125728
+ 
+               7 H5    
+    7 H5       0.000000
+ 
+                    ******************************************* 
+                    *    InterNuclear Distances / Angstrom    * 
+                    ******************************************* 
+ 
+               1 C             2 N             3 H1            4 H2            5 H3            6 H4    
+    1 C        0.000000
+    2 N        1.469999        0.000000
+    3 H1       1.090000        2.095785        0.000000
+    4 H2       1.090000        2.095785        1.785079        0.000000
+    5 H3       1.090000        2.095785        1.785079        1.785078        0.000000
+    6 H4       2.036600        1.010000        2.372409        2.929328        2.372410        0.000000
+    7 H5       2.036600        1.010000        2.372409        2.372410        2.929328        1.654064
+ 
+               7 H5    
+    7 H5       0.000000
+ 
+                    ************************************** 
+                    *    Valence Bond Angles / Degree    * 
+                    ************************************** 
+                          Atom centers                 Phi
+                      2 N        1 C        3 H1       109.00
+                      2 N        1 C        4 H2       109.00
+                      2 N        1 C        5 H3       109.00
+                      3 H1       1 C        4 H2       109.94
+                      3 H1       1 C        5 H3       109.94
+                      4 H2       1 C        5 H3       109.94
+                      1 C        2 N        6 H4       109.00
+                      1 C        2 N        7 H5       109.00
+                      6 H4       2 N        7 H5       109.94
+ 
+           ***************************************************************
+           *              Valence Dihedral Angles / Degree               *
+           ***************************************************************
+                    Atom centers                       Phi1     Phi2     Theta 
+           3 H1       1 C        2 N        6 H4        109.00   109.00    60.00
+           3 H1       1 C        2 N        7 H5        109.00   109.00   -60.00
+           4 H2       1 C        2 N        6 H4        109.00   109.00  -180.00
+           4 H2       1 C        2 N        7 H5        109.00   109.00    60.00
+           5 H3       1 C        2 N        6 H4        109.00   109.00   -60.00
+           5 H3       1 C        2 N        7 H5        109.00   109.00   180.00
+--
+ 
+ 
+++    Primitive basis info:
+      ---------------------
+ 
+ 
+                    *****************************************************
+                    ******** Primitive Basis Functions (Valence) ********
+                    *****************************************************
+ 
+ 
+ Basis set:C.6-31G.........                                                                
+ 
+                  Type         
+                   s
+           No.      Exponent    Contraction Coefficients
+            1  0.304752490D+04   0.001835   0.000000   0.000000
+            2  0.457369510D+03   0.014037   0.000000   0.000000
+            3  0.103948690D+03   0.068843   0.000000   0.000000
+            4  0.292101550D+02   0.232184   0.000000   0.000000
+            5  0.928666300D+01   0.467941   0.000000   0.000000
+            6  0.786827240D+01   0.000000  -0.119332   0.000000
+            7  0.316392700D+01   0.362312   0.000000   0.000000
+            8  0.188128850D+01   0.000000  -0.160854   0.000000
+            9  0.544249300D+00   0.000000   1.143456   0.000000
+           10  0.168714400D+00   0.000000   0.000000   1.000000
+ 
+                  Type         
+                   p
+           No.      Exponent    Contraction Coefficients
+           11  0.786827240D+01   0.068999   0.000000
+           12  0.188128850D+01   0.316424   0.000000
+           13  0.544249300D+00   0.744308   0.000000
+           14  0.168714400D+00   0.000000   1.000000
+ 
+ 
+ Basis set:N.6-31G.........                                                                
+ 
+                  Type         
+                   s
+           No.      Exponent    Contraction Coefficients
+           15  0.417351100D+04   0.001835   0.000000   0.000000
+           16  0.627457900D+03   0.013995   0.000000   0.000000
+           17  0.142902100D+03   0.068587   0.000000   0.000000
+           18  0.402343300D+02   0.232241   0.000000   0.000000
+           19  0.128202100D+02   0.469070   0.000000   0.000000
+           20  0.116263580D+02   0.000000  -0.114961   0.000000
+           21  0.439043700D+01   0.360455   0.000000   0.000000
+           22  0.271628000D+01   0.000000  -0.169118   0.000000
+           23  0.772218000D+00   0.000000   1.145852   0.000000
+           24  0.212031300D+00   0.000000   0.000000   1.000000
+ 
+                  Type         
+                   p
+           No.      Exponent    Contraction Coefficients
+           25  0.116263580D+02   0.067580   0.000000
+           26  0.271628000D+01   0.323907   0.000000
+           27  0.772218000D+00   0.740895   0.000000
+           28  0.212031300D+00   0.000000   1.000000
+ 
+ 
+ Basis set:H.6-31G.........                                                                
+ 
+                  Type         
+                   s
+           No.      Exponent    Contraction Coefficients
+           29  0.187311370D+02   0.033495   0.000000
+           30  0.282539370D+01   0.234727   0.000000
+           31  0.640121700D+00   0.813757   0.000000
+           32  0.161277800D+00   0.000000   1.000000
+ 
+  Number of primitives                                    64
+  Number of basis functions                               28
+ 
+--
+ 
+ 
+++    SO/AO info:
+      -----------
+ 
+                    **************************************************
+                    ********** Petite list Basis Functions ***********
+                    **************************************************
+ 
+ 
+           Basis functions generated by E  
+ 
+ Basis Label        Type   Center
+   1   C            1s        1
+   2   C            2s        1
+   3   C            *s        1
+   4   C            2px       1
+   5   C            *px       1
+   6   C            2py       1
+   7   C            *py       1
+   8   C            2pz       1
+   9   C            *pz       1
+  10   N            1s        2
+  11   N            2s        2
+  12   N            *s        2
+  13   N            2px       2
+  14   N            *px       2
+  15   N            2py       2
+  16   N            *py       2
+  17   N            2pz       2
+  18   N            *pz       2
+  19   H1           1s        3
+  20   H1           *s        3
+  21   H2           1s        4
+  22   H2           *s        4
+  23   H3           1s        5
+  24   H3           *s        5
+  25   H4           1s        6
+  26   H4           *s        6
+  27   H5           1s        7
+  28   H5           *s        7
+ 
+      Basis set specifications :
+      Symmetry species        a  
+      Basis functions          28
+--
+ 
+ 
+            Nuclear Potential Energy             42.07637709 au
+ 
+ 
+      Basis set specifications :
+      Symmetry species         a  
+      Basis functions           28
+ 
+      Cholesky vectors         300
+ 
+ 
+ 
+  Input file to MOLDEN was generated!
+ 
+**************************************************
+MEMORY WARNING: use of FLUSH operation deprecated!
+please contact the developer of this module and
+ask him/her to fix this!
+**************************************************
+**************************************************
+MEMORY WARNING: use of FLUSH operation deprecated!
+please contact the developer of this module and
+ask him/her to fix this!
+**************************************************
+**************************************************
+MEMORY WARNING: use of FLUSH operation deprecated!
+please contact the developer of this module and
+ask him/her to fix this!
+**************************************************
+**************************************************
+MEMORY WARNING: use of FLUSH operation deprecated!
+please contact the developer of this module and
+ask him/her to fix this!
+**************************************************
+--- Stop Module:  seward at Fri Jan 20 22:25:29 2017 /rc=0 ---
+*** 
+--- Start Module: scf at Fri Jan 20 22:25:30 2017 
+ 
+()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()
+
+                                                &SCF
+
+                                   only a single process is used
+                       available to each process: 2.0 GB of memory, 1 thread
+()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()
+ 
+++    Input section:
+      --------------
+ 
+      Header of the integral files:
+                                       ch3nh2
+       Integrals generated by seward 4.2.0  , Fri Jan 20 22:25:26 2017
+ 
+ 
+      Cartesian coordinates in Angstrom:
+      -----------------------------------------------------
+      No.  Label        X            Y            Z        
+      -----------------------------------------------------
+       1   C          0.74591400   0.01110600   0.00000000
+       2   N         -0.72174300  -0.07184800   0.00000000
+       3   H1         1.04205900   1.06010500   0.00000000
+       4   H2         1.12929800  -0.48335500   0.89253900
+       5   H3         1.12929800  -0.48335500  -0.89253900
+       6   H4        -1.07698800   0.38632200  -0.82703200
+       7   H5        -1.07698800   0.38632200   0.82703200
+      -----------------------------------------------------
+      Nuclear repulsion energy =   42.07637709
+--
+ 
+++    Orbital specifications:
+      -----------------------
+ 
+      Symmetry species               1
+                                     a
+      Frozen orbitals                0
+      Occupied orbitals              9
+      Secondary orbitals            19
+      Deleted orbitals               0
+      Total number of orbitals      28
+      Number of basis functions     28
+--
+ 
+      Molecular charge                           0.000
+ 
+++    Optimization specifications:
+      ----------------------------
+ 
+      SCF Algorithm: LK-Cholesky
+      The actual AO density is used
+      Number of density matrices in core                9
+      Maximum number of NDDO SCF iterations           400
+      Maximum number of HF  SCF iterations            400
+      Threshold for SCF energy change            0.10E-08
+      Threshold for density matrix               0.10E-03
+      Threshold for Fock matrix                  0.15E-03
+      Threshold for linear dependence            0.10E-08
+      Threshold at which DIIS is turned on       0.15E+00
+      Threshold at which QNR/C2DIIS is turned on 0.15E+00
+      Threshold for Norm(delta) (QNR/C2DIIS)     0.20E-04
+      DIIS extrapolation of the SCF procedure
+      All orbitals punched on: SCFORB
+--
+ 
+      Input vectors read from INPORB
+      Orbital file label: *Guess orbitals
+ 
+ 
+ 
+++ Convergence information
+                                   SCF        iterations: Energy and convergence statistics
+ 
+Iter     Tot. SCF       One-electron     Two-electron   Energy   Max Dij or  Max Fij    DNorm      TNorm     AccCon    Time
+           Energy          Energy          Energy       Change   Delta Norm     
+                                      in Sec.
+   1    -94.94104097   -210.18021755     73.16279948  0.00E+00   0.22E+00*  0.13E+00*   0.44E+01   0.49E+02   NoneDa    0.
+   2    -95.14221675   -211.48760268     74.26900883 -0.20E+00*  0.73E-01*  0.40E-01*   0.45E+01   0.49E+02   Damp      0.
+   3    -95.16256165   -211.34818486     74.10924611 -0.20E-01*  0.45E-01*  0.40E-01*   0.46E+01   0.49E+02   QNRc2D    0.
+   4    -95.16640014   -211.32192487     74.07914764 -0.38E-02*  0.80E-02*  0.65E-02*   0.46E+01   0.49E+02   QNRc2D    0.
+   5    -95.16660626   -211.37093265     74.12794930 -0.21E-03*  0.41E-02*  0.73E-03*   0.46E+01   0.49E+02   QNRc2D    0.
+   6    -95.16662933   -211.34590743     74.10290100 -0.23E-04*  0.70E-03*  0.10E-02*   0.46E+01   0.49E+02   QNRc2D    0.
+   7    -95.16663098   -211.35364987     74.11064180 -0.17E-05*  0.47E-03*  0.87E-04    0.46E+01   0.49E+02   QNRc2D    0.
+   8    -95.16663120   -211.35351884     74.11051054 -0.22E-06*  0.62E-04*  0.76E-04    0.46E+01   0.49E+02   QNRc2D    0.
+   9    -95.16663121   -211.35349837     74.11049007 -0.37E-08*  0.74E-05   0.13E-04    0.46E+01   0.49E+02   QNRc2D    0.
+  10    -95.16663121   -211.35349600     74.11048770 -0.84E-10   0.23E-05   0.12E-05    0.46E+01   0.49E+02   QNRc2D    0.
+ 
+       Convergence after 10 Macro Iterations and  1 additional LS Iterations...
+--
+ 
+ *****************************************************************************************************************************
+ *                                                                                                                           *
+ *                                             SCF/KS-DFT Program, Final results                                             *
+ *                                                                                                                           *
+ *                                                                                                                           *
+ *                                                                                                                           *
+ *                                                       Final Results                                                       *
+ *                                                                                                                           *
+ *****************************************************************************************************************************
+ 
+::    Total SCF energy                                -95.1666312053
+      One-electron energy                            -211.3534959994
+      Two-electron energy                              74.1104877006
+      Nuclear repulsion energy                         42.0763770935
+      Kinetic energy (interpolated)                    95.2447677467
+      Virial theorem                                    0.9991796238
+      Total spin, S(S+1)                                0.0000000000
+      Total spin, S                                     0.0000000000
+      Max non-diagonal density matrix element           0.0000000000
+      Max non-diagonal Fock matrix element              0.0000011823
+ 
+ 
+      All orbitals with orbital energies smaller than  E(LUMO)+0.5 are printed
+ 
+++    Molecular orbitals:
+      -------------------
+ 
+      Title: SCF orbitals
+
+      Molecular orbitals for symmetry species 1: a  
+ 
+          Orbital        1         2         3         4         5         6         7         8         9        10
+          Energy      -15.5352  -11.2438   -1.1743   -0.8977   -0.6672   -0.5970   -0.5528   -0.5221   -0.3761    0.2214
+          Occ. No.      2.0000    2.0000    2.0000    2.0000    2.0000    2.0000    2.0000    2.0000    2.0000    0.0000
+ 
+        1 C     1s     -0.0000    0.9962    0.0976   -0.1698    0.0000    0.0032   -0.0019    0.0000   -0.0079    0.0590
+        2 C     2s      0.0005    0.0254   -0.1898    0.3276   -0.0000    0.0010    0.0106   -0.0000    0.0244   -0.0317
+        3 C     *s     -0.0047   -0.0167   -0.1007    0.3842   -0.0000   -0.0141   -0.0316   -0.0000   -0.0474   -1.1029
+        4 C     2px     0.0001   -0.0003    0.0919    0.0813    0.0000   -0.1375   -0.3588   -0.0000   -0.0621   -0.1404
+        5 C     *px     0.0022    0.0003   -0.0120    0.0114   -0.0000   -0.0434   -0.1432   -0.0000   -0.0009   -0.5459
+        6 C     2py    -0.0000    0.0001   -0.0032   -0.0022   -0.0000   -0.3727    0.1771    0.0000   -0.1673   -0.0392
+        7 C     *py    -0.0001   -0.0000   -0.0050    0.0153    0.0000   -0.1599    0.1091    0.0000   -0.0750   -0.0155
+        8 C     2pz    -0.0000   -0.0000    0.0000   -0.0000   -0.2300    0.0000    0.0000   -0.3854   -0.0000    0.0000
+        9 C     *pz    -0.0000    0.0000    0.0000    0.0000   -0.1224    0.0000   -0.0000   -0.2047    0.0000    0.0000
+       10 N     1s     -0.9961   -0.0001    0.1835    0.0802   -0.0000   -0.0306   -0.0049   -0.0000    0.0516    0.0919
+       11 N     2s     -0.0237   -0.0001   -0.3740   -0.1619    0.0000    0.0726    0.0036   -0.0000   -0.1313   -0.0950
+       12 N     *s      0.0129    0.0022   -0.4245   -0.2575   -0.0000    0.1020    0.0487    0.0000   -0.1704   -1.4474
+       13 N     2px    -0.0007   -0.0001   -0.0472    0.1504   -0.0000    0.1480    0.3902    0.0000    0.1491    0.0621
+       14 N     *px     0.0019    0.0015   -0.0320    0.0365   -0.0000    0.0772    0.2462    0.0000    0.1599    0.2099
+       15 N     2py    -0.0020    0.0000   -0.0800   -0.0668    0.0000   -0.2269   -0.0175   -0.0000    0.5105   -0.1230
+       16 N     *py     0.0021   -0.0002   -0.0485   -0.0380    0.0000   -0.1480   -0.0082   -0.0000    0.4789   -0.3987
+       17 N     2pz     0.0000    0.0000   -0.0000   -0.0000   -0.4024    0.0000   -0.0000    0.2460    0.0000   -0.0000
+       18 N     *pz    -0.0000    0.0000   -0.0000   -0.0000   -0.2045   -0.0000   -0.0000    0.1577   -0.0000   -0.0000
+       19 H1    1s      0.0003   -0.0000   -0.0454    0.1319   -0.0000   -0.2570    0.0481   -0.0000   -0.1614    0.0002
+       20 H1    *s      0.0002    0.0033   -0.0013    0.0292    0.0000   -0.2086    0.0286   -0.0000   -0.1924    0.6506
+       21 H2    1s      0.0002    0.0000   -0.0424    0.1371   -0.1063    0.0718   -0.1398   -0.2236    0.0675    0.0053
+       22 H2    *s      0.0002    0.0032   -0.0045    0.0407   -0.0531    0.0542   -0.1083   -0.1867    0.0759    0.5643
+       23 H3    1s      0.0002    0.0000   -0.0424    0.1371    0.1063    0.0718   -0.1398    0.2236    0.0675    0.0053
+       24 H3    *s      0.0002    0.0032   -0.0045    0.0407    0.0531    0.0542   -0.1083    0.1867    0.0759    0.5643
+       25 H4    1s     -0.0001    0.0000   -0.1190   -0.1035    0.2120   -0.0658   -0.1072   -0.1524    0.0542    0.0302
+       26 H4    *s     -0.0022    0.0005    0.0010   -0.0283    0.1105   -0.0385   -0.0799   -0.1107    0.0361    0.9503
+       27 H5    1s     -0.0001    0.0000   -0.1190   -0.1035   -0.2120   -0.0658   -0.1072    0.1524    0.0542    0.0302
+       28 H5    *s     -0.0022    0.0005    0.0010   -0.0283   -0.1105   -0.0385   -0.0799    0.1107    0.0361    0.9503
+ 
+          Orbital       11        12        13        14        15
+          Energy        0.2860    0.3038    0.3232    0.3320    0.4050
+          Occ. No.      0.0000    0.0000    0.0000    0.0000    0.0000
+ 
+        1 C     1s     -0.1391    0.0000    0.0048    0.0000   -0.0592
+        2 C     2s      0.0958   -0.0000    0.0148   -0.0000    0.0376
+        3 C     *s      2.5555   -0.0000   -0.1352   -0.0000    1.1296
+        4 C     2px     0.0493   -0.0000    0.0262   -0.0000   -0.2140
+        5 C     *px     0.0288    0.0000    0.2145   -0.0000   -1.8114
+        6 C     2py    -0.0093   -0.0000   -0.3468    0.0000   -0.0151
+        7 C     *py    -0.0176   -0.0000   -1.5471    0.0000   -0.2616
+        8 C     2pz    -0.0000   -0.2459   -0.0000   -0.2145   -0.0000
+        9 C     *pz    -0.0000   -0.8862   -0.0000   -1.3342   -0.0000
+       10 N     1s      0.0730   -0.0000   -0.0050   -0.0000    0.0443
+       11 N     2s     -0.0522    0.0000   -0.0100    0.0000   -0.0371
+       12 N     *s     -1.3109    0.0000    0.1679    0.0000   -0.8900
+       13 N     2px    -0.0185    0.0000    0.0350   -0.0000   -0.3420
+       14 N     *px    -0.2237    0.0000    0.0663    0.0000   -1.4301
+       15 N     2py    -0.0873    0.0000    0.0399   -0.0000    0.0768
+       16 N     *py    -0.2645    0.0000    0.2997   -0.0000    0.2373
+       17 N     2pz    -0.0000   -0.2355    0.0000    0.2308    0.0000
+       18 N     *pz    -0.0000   -0.7222    0.0000    0.9738    0.0000
+       19 H1    1s      0.0035    0.0000    0.0438   -0.0000    0.0739
+       20 H1    *s     -1.0133    0.0000    1.9414   -0.0000    0.3364
+       21 H2    1s     -0.0008    0.0346   -0.0235    0.0490    0.0734
+       22 H2    *s     -1.0934    1.0786   -0.9647    1.3018    0.1360
+       23 H3    1s     -0.0008   -0.0346   -0.0235   -0.0490    0.0734
+       24 H3    *s     -1.0934   -1.0786   -0.9647   -1.3018    0.1360
+       25 H4    1s      0.0302   -0.0401    0.0023    0.0041   -0.0233
+       26 H4    *s      0.6324   -1.1428   -0.0308    1.0233   -0.6543
+       27 H5    1s      0.0302    0.0401    0.0023   -0.0041   -0.0233
+       28 H5    *s      0.6324    1.1428   -0.0308   -1.0233   -0.6543
+--
+ 
+ 
+++    Molecular charges:
+      ------------------
+ 
+      Mulliken charges per centre and basis function type
+      ---------------------------------------------------
+ 
+             C       N       H1      H2      H3      H4      H5    
+      1s     1.9976  1.9977  0.5482  0.5394  0.5394  0.5314  0.5314
+      2s     0.6567  0.7598  0.0000  0.0000  0.0000  0.0000  0.0000
+      2px    0.6171  0.7335  0.0000  0.0000  0.0000  0.0000  0.0000
+      2pz    0.7223  0.7447  0.0000  0.0000  0.0000  0.0000  0.0000
+      2py    0.7101  0.9803  0.0000  0.0000  0.0000  0.0000  0.0000
+      *s     0.6650  0.9372  0.3235  0.2941  0.2941  0.1637  0.1637
+      *px    0.1509  0.4150  0.0000  0.0000  0.0000  0.0000  0.0000
+      *pz    0.4043  0.4240  0.0000  0.0000  0.0000  0.0000  0.0000
+      *py    0.3456  0.8092  0.0000  0.0000  0.0000  0.0000  0.0000
+      Total  6.2695  7.8014  0.8717  0.8336  0.8336  0.6951  0.6951
+ 
+      N-E   -0.2695 -0.8014  0.1283  0.1664  0.1664  0.3049  0.3049
+ 
+      Total electronic charge=   18.000000
+ 
+      Total            charge=   -0.000000
+--
+ 
+ 
+++    Molecular properties:
+      ---------------------
+ 
+      Charge (e):
+                      =   -0.0000
+      Dipole Moment (Debye):
+      Origin of the operator (Ang)=    0.0000    0.0000    0.0000
+                     X=    0.5792               Y=    1.7939               Z=    0.0000           Total=    1.8851
+      Quadrupole Moment (Debye*Ang):
+      Origin of the operator (Ang)=   -0.0000   -0.0000    0.0000
+                    XX=  -14.3195              XY=   -2.4623              XZ=    0.0000              YY=  -15.2539
+                    YZ=   -0.0000              ZZ=  -12.4104
+      In traceless form (Debye*Ang)
+                    XX=   -0.4874              XY=   -3.6935              XZ=    0.0000              YY=   -1.8890
+                    YZ=   -0.0000              ZZ=    2.3763
+--
+ 
+ 
+  Input file to MOLDEN was generated!
+ 
+ 
+ ###############################################################################
+ ###############################################################################
+ ###                                                                         ###
+ ###                                                                         ###
+ ###    RunFile label nBas                                                   ###
+ ###    was used       73 times                                              ###
+ ###                                                                         ###
+ ###                                                                         ###
+ ###############################################################################
+ ###############################################################################
+--- Stop Module:  scf at Fri Jan 20 22:25:34 2017 /rc=0 ---
+--- Stop Module:  auto at Fri Jan 20 22:25:35 2017 /rc=0 ---
+--- Module auto spent 11 seconds 

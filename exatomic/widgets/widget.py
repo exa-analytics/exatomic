@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# Copyright (c) 2015-2017, Exa Analytics Development Team
+# Copyright (c) 2015-2018, Exa Analytics Development Team
 # Distributed under the terms of the Apache License 2.0
 """
 Universe Notebook Widget
@@ -34,7 +34,6 @@ class DemoContainer(ExatomicBox):
         folder.insert(1, 'options', fopts)
         return folder
 
-
     def _init_gui(self, **kwargs):
         """Initialize generic GUI controls and observe callbacks."""
         mainopts = super(DemoContainer, self)._init_gui()
@@ -47,15 +46,12 @@ class DemoContainer(ExatomicBox):
                          ('field', self._field_folder(**kwargs))])
         return mainopts
 
-
     def __init__(self, *scenes, **kwargs):
         super(DemoContainer, self).__init__(*scenes,
                                             uni=False,
                                             test=True,
                                             typ=ExatomicScene,
                                             **kwargs)
-
-
 
 
 

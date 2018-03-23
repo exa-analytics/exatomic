@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# Copyright (c) 2015-2017, Exa Analytics Development Team
+# Copyright (c) 2015-2018, Exa Analytics Development Team
 # Distributed under the terms of the Apache License 2.0
 """
 Basis Set Representations
@@ -20,8 +20,7 @@ from io import StringIO
 
 from exa import DataFrame
 from exatomic.algorithms.basis import cart_lml_count, spher_lml_count
-from exatomic.algorithms.numerical import (#_vec_sphr_norm, _vec_sto_norm,
-                                           _tri_indices, _square, Shell)
+from exatomic.algorithms.numerical import _tri_indices, _square, Shell
 
 
 class BasisSet(DataFrame):
@@ -140,10 +139,6 @@ class BasisSet(DataFrame):
         super(BasisSet, self).__init__(*args, **kwargs)
         self.spherical = spherical
         self.gaussian = gaussian
-        #norm = _vec_sphr_norm if gaussian else _vec_sto_norm
-        #colm = 'L' if gaussian else 'n'
-        #self['N'] = norm(self['alpha'].values, self[colm].values)
-        #self['Nd'] = self['d'] * self['N']
 
 
 class BasisSetOrder(DataFrame):
