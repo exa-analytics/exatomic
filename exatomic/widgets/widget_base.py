@@ -162,6 +162,9 @@ class TensorScene(ExatomicScene):
     tzx = Float(0.).tag(sync=True)
     tzy = Float(0.).tag(sync=True)
     tzz = Float(1.).tag(sync=True)
+    scale = Float(1.).tag(sync=True)
+    tdx = Int(0).tag(sync=True)
+    tens = Bool(False).tag(sync=True)
 
 
 
@@ -202,6 +205,12 @@ class UniverseScene(ExatomicScene):
     # Tensor traits
     tensor_d = Dict().tag(sync=True)
     # Frame traits
+
+    # Tensor traits
+    tens = Bool(False).tag(sync=True)
+    tensor_d = Dict().tag(sync=True)
+    scale = Float(1.).tag(sync=True)
+    tidx = Int(0).tag(sync=True)
 
 
 
@@ -391,12 +400,15 @@ class ExatomicBox(Box):
         mw = kwargs.pop('min_width', None)
         nframes = kwargs.pop('nframes', None)
         fields = kwargs.pop('fields', None)
+        tensors = kwargs.pop('tensors', None)
+
 
         self.scenes, scenes = _scene_grid(objs, mh, mw, test,
                                           uni, typ, scenekwargs)
 
         self._controls = self._init_gui(nframes=nframes,
                                         fields=fields,
+                                        tensors=tensors,
                                         test=test,
                                         uni=uni)
 
