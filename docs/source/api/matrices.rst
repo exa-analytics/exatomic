@@ -2,7 +2,7 @@
 .. Distributed under the terms of the Apache License 2.0
 
 #####################################
-Description of Nuclear Coordinates
+Matrices
 #####################################
-.. automodule:: exatomic.core.atom
+.. automodule:: exatomic.core.matrices
     :members:

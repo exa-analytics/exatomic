@@ -27,7 +27,20 @@ can be found at :ref:`examples-label` or via help::
     :maxdepth: 4
     :caption: Usage
 
-    api/universe.rst
+    universe.rst
+    editor.rst
+    atom.rst
+    two.rst
+    orbital.rst
+    basis.rst
+    frame.rst
+    molecule.rst
+
+
+.. toctree::
+    :maxdepth: 2
+    :caption: Examples
+
     notebooks/nwchem.ipynb
     notebooks/qe.ipynb
 
@@ -35,6 +48,26 @@ can be found at :ref:`examples-label` or via help::
     :maxdepth: 2
     :caption: Extended API 
 
-    atom.rst
-    basis.rst
-    orbital.rst
+    matrices.rst
+    algorithms/angles.rst
+    algorithms/basis.rst
+
+      angles.py*
+      basis.py*
+      car2sph.py*
+      delocalization.py*
+      diffusion.py*
+      displacement.py*
+      distance.py*
+      geometry.py*
+      harmonics.py*
+      indexing.py*
+      interpolation.py*
+      neighbors.py*
+      numerical.py*
+      orbital.py*
+      orbital_util.py*
+      overlap.py*
+      packing.py*
+      pcf.py*
+      slicing.py*

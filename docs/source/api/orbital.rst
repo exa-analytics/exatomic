@@ -2,8 +2,7 @@
 .. Distributed under the terms of the Apache License 2.0
 
 #####################################
-Description of Basis Sets
+Orbitals
 #####################################
-.. automodule:: exatomic.core.basis
+.. automodule:: exatomic.core.orbital
     :members:
-
