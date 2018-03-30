@@ -7,7 +7,10 @@ Pair Correlation Functions
 """
 import numpy as np
 import pandas as pd
+from IPython.display import display
+from ipywidgets import FloatProgress
 from exa.util.units import Length
+from exatomic.core.universe import Universe
 
 
 def radial_pair_correlation(universe, a, b, dr=0.05, start=1.0, stop=13.0,
@@ -42,8 +45,8 @@ def radial_pair_correlation(universe, a, b, dr=0.05, start=1.0, stop=13.0,
 
     Args:
         universe (:class:`~exatomic.Universe`): The universe (with two body data)
-        a (str): First atom type
-        b (str): Second atom type
+        a (str, list, array): First atom type (see Note)
+        b (str, list, array): Second atom type (see Note)
         dr (float): Radial step size
         start (float): Starting radial point
         stop (float): Stopping radial point
@@ -54,6 +57,12 @@ def radial_pair_correlation(universe, a, b, dr=0.05, start=1.0, stop=13.0,
         pcf (:class:`~pandas.DataFrame`): Pair correlation distribution and count
 
     Note:
+        If a, b are strings pairs are determined using atomic symbols. If integers
+        or lists/tuples are passed pairs are determined by atomic labels (see
+        :func:`~exatomic.core.atom.Atom.get_atom_labels`). Arrays are assumed to
+        be index values directly.
+
+    Tip:
         Depending on the type of two body computation (or data) used, the volume
         may not be the cell volume; the normalization factor (the prefactor) is
         the volume sampled during computation of two body properties divided by
@@ -61,12 +70,32 @@ def radial_pair_correlation(universe, a, b, dr=0.05, start=1.0, stop=13.0,
         above, divided by the normalization for the radial distance outward).
     """
     bins = np.arange(start, stop, dr)                     # Discrete values of r for histogram
+    if isinstance(a, str):
+        a_idx = universe.atom[universe.atom['symbol'] == a].index.values
+    elif isinstance(a, (int, list, tuple, np.int64, np.in32)):
+        a_idx = universe.atom[universe.atom['label'].isin(a)].index.values
+    else:
+        a_idx = a
+    if isinstance(b, str):
+        b_idx = universe.atom[universe.atom['symbol'] == b].index.values
+    elif isinstance(a, (int, list, tuple, np.int64, np.in32)):
+        b_idx = universe.atom[universe.atom['label'].isin(b)].index.values
+    else:
+        b_idx = b
+    if "distance" in universe.atom_two.columns:
+        c = "distance"
+    else:
+        c = "dr"
+    distances = universe.atom_two.loc[(universe.atom_two['atom0'].isin(a_idx) &
+                                       universe.atom_two['atom1'].isin(b_idx)) |
+                                      (universe.atom_two['atom0'].isin(b_idx) &
+                                       universe.atom_two['atom1'].isin(a_idx)), c]
     symbol = universe.atom["symbol"].astype(str)          # To select distances, map to symbols
     symbol0 = universe.atom_two["atom0"].map(symbol)
     symbol1 = universe.atom_two["atom1"].map(symbol)
     symbols = symbol0 + symbol1
     indexes = symbols[symbols.isin([a + b, b + a])].index # Distances of interest or those that
-    distances = universe.atom_two.ix[indexes, "dr"]       # match symbol pairs
+    distances = universe.atom_two.loc[indexes, "dr"]       # match symbol pairs
     hist, bins = np.histogram(distances, bins)            # Compute histogram
     nn = hist.sum()                                       # Number of observations
     bmax = bins.max()                                     # Note that bins is unchanged by np.hist..
@@ -82,7 +111,7 @@ def radial_pair_correlation(universe, a, b, dr=0.05, start=1.0, stop=13.0,
     n = hist.cumsum()/nn*na*nb*4/3*np.pi*bmax**3/v_cell
     r = (bins[1:] + bins[:-1])/2*Length["au", length]
     unit = "au"
-    if length in ["A", "angstrom", "ang"]:
+    if length in ["A", "angstrom", "ang", "Angstrom"]:
         unit = r"\AA"
     rlabel = r"$r\ \mathrm{(" + unit + ")}$"
     glabel = r"$g_\mathrm{" + a + b + r"}(r)$"
@@ -93,3 +122,59 @@ def radial_pair_correlation(universe, a, b, dr=0.05, start=1.0, stop=13.0,
         df = df.iloc[window:]
     df.set_index(rlabel, inplace=True)
     return df
+
+
+def radial_pcf_out_of_core(hdftwo, hdfout, u, pairs, **kwargs):
+    """
+    Out of core radial pair correlation calculation.
+
+    Atomic two body data is expected to have been computed (see 
+    :func:`~exatomic.core.two.compute_atom_two_out_of_core`)
+    An example is given below. Note the importance of the definition
+    of pairs and the presence of additional arguments.
+
+    .. code:: Python
+
+        radial_pcf_out_of_core("in.hdf", "out.hdf", uni, {"O_H": ([0], "H")},
+                               length="Angstrom", dr=0.01)
+
+    Args:
+        hdftwo (str): HDF filepath containing atomic two body data
+        hdfout (str): HDF filepath to which radial PCF data will be written (see Note)
+        u (:class:`~exatomic.core.universe.Universe`): Universe
+        pairs (dict): Dictionary of string name keys, values of ``a``, ``b`` arguments (see Note)
+        kwargs: Additional keyword arguments to be passed (see Note)
+
+    Note:
+        Results will be stored in the hdfout HDF file. Keys are of the form
+        ``radial_pcf_key``. The keys of ``pairs`` are used to store the output
+        while the values are used to perform the pair correlation itself.
+    """
+    f = u.atom['frame'].unique()
+    n = len(f)
+    fp = FloatProgress(description="Computing:")
+    display(fp)
+    fdx = f[0]
+    twokey = "frame_" + str(fdx) + "/atom_two"
+    atom = u.atom[u.atom['frame'] == fdx].copy()
+    uu = Universe(atom=atom, frame=u.frame.loc[[fdx]],
+    atom_two = pd.read_hdf(name, twokey))
+    pcfs = {}
+    for key, ab in pairs.items():
+        pcf[key] = radial_pair_correlation(uu, ab[0], ab[1], **kwargs).reset_index()
+    fp.value = 1/n*100
+    for i, fdx in enumerate(f[1:]):
+        twokey = "frame_" + str(fdx) + "/atom_two"
+        atom = u.atom[u.atom['frame'] == fdx].copy()
+        uu = Universe(atom=atom, frame=u.frame.loc[[fdx]],
+        atom_two = pd.read_hdf(name, twokey))
+        for key, ab in pairs.items():
+            pcf[key] += radial_pair_correlation(uu, ab[0], ab[1], **kwargs).reset_index()
+        fp.value = (i+1)/n*100
+    print("Saving...")
+    store = pd.HDFStore(hdfout)
+    for key in pairs.keys():
+        pcf[key] /= n
+        store.put("radial_pcf_"+key, pcfs[key])
+    store.close()
+    fp.close()
