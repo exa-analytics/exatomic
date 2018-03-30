@@ -69,5 +69,5 @@ install:
 
 build: false
 
-#test_script:
-#  - cmd: nosetests
+test_script:
+  - cmd: pytest --cov

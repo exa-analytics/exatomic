@@ -11,9 +11,9 @@ from platform import system
 
 # For numba compiled functions
 sysname= system().lower()
-nbpll = True if "linux" in sysname else False
+nbpll = "linux" in sysname
 nbtgt = "parallel" if nbpll else "cpu"
-nbche = False if nbtgt else True
+nbche = not nbtgt
 
 isotopedf = isotopes.as_df()
 sym2z = isotopedf.drop_duplicates("symbol").set_index("symbol")["Z"].to_dict()

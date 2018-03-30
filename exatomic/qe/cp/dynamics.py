@@ -581,4 +581,3 @@ def parse_xyz(path, symbols, columns=("x", "y", "z"), **kwargs):
 ###    factor = Time['ps', 'au']
 ###    df['time'] *= factor
 ###    return Frame(df)
-###>>>>>>> 1c37655b6be3dca60b2adbeee8ca3767e5477943

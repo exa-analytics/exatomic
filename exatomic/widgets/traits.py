@@ -1,4 +1,3 @@
-
 # -*- coding: utf-8 -*-
 # Copyright (c) 2015-2018, Exa Analytics Development Team
 # Distributed under the terms of the Apache License 2.0
@@ -130,16 +129,29 @@ def frame_traits(uni):
     # TODO :: Implement me!!
     return {}
 
+def tensor_traits(uni):
+    grps = uni.tensor.groupby('frame')
+    try: idxs = list(map(list, grps.groups.values()))
+    except: idxs = [list(grp.index) for i, grp in grps]
+    return {'tensor_d': grps.apply(lambda x: x.T.to_dict()).to_dict(), 'tensor_i': idxs}
+
 
 def uni_traits(uni, atomcolors=None, atomradii=None):
     """Get Universe traits."""
     unargs = {}
-    fields = []
+    fields, tensors = [], None
     if hasattr(uni, 'atom'):
+        #print('atom')
         unargs.update(atom_traits(uni.atom, atomcolors, atomradii))
     if hasattr(uni, 'atom_two'):
+        #print('atom_two')
         unargs.update(two_traits(uni))
     if hasattr(uni, 'field'):
         unargs.update(field_traits(uni.field))
         fields = ['null'] + unargs['field_i'][0]
-    return unargs, fields
+    if hasattr(uni, 'tensor'):
+        #unargs.update({'tensor_d': uni.tensor.groupby('frame').apply(
+        #    lambda x: x.T.to_dict()).to_dict()})
+        unargs.update(tensor_traits(uni))
+        tensors = unargs['tensor_i'][0]
+    return unargs, fields, tensors

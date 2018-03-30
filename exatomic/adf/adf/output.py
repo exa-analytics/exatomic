@@ -11,7 +11,13 @@ terms of these sections. Each module within this directory provides a single
 parser, specific to a given piece of data.
 """
 import re
-from exa import Parser, Typed
+try:
+    from exa import Parser, Typed
+except ImportError:
+    from exa import TypedMeta as Typed
+    from exa import Editor as Parser
+
+
 
 
 class Output(Parser):

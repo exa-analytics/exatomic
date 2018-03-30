@@ -31,7 +31,7 @@ method to get started with visualization is through the `Jupyter notebook`_.
     notebooks/qe.ipynb
 
 .. toctree::
-    :maxdepth: 2
+    :maxdepth: 3
     :caption: Software
 
     software/adf/index.rst

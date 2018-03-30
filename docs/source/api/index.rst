@@ -27,7 +27,9 @@ can be found at :ref:`examples-label` or via help::
     :maxdepth: 4
     :caption: Usage
 
-    universe.rst
+    api/universe.rst
+    notebooks/nwchem.ipynb
+    notebooks/qe.ipynb
 
 .. toctree::
     :maxdepth: 2

@@ -13,9 +13,8 @@ import pandas as pd
 from numba import jit
 from numexpr import evaluate
 from IPython.display import display
-from ipywidgets import FloatProgress
+from ipywidgets import FloatProgress, HBox
 from exatomic.core.field import AtomicField
-from exatomic.algorithms.basis import gen_bfns
 
 
 def compare_fields(uni0, uni1, rtol=5e-5, atol=1e-12, signed=True, verbose=True):
@@ -25,13 +24,12 @@ def compare_fields(uni0, uni1, rtol=5e-5, atol=1e-12, signed=True, verbose=True)
     for i, (f0, f1) in enumerate(zip(uni0.field.field_values,
                                      uni1.field.field_values)):
         n = np.isclose(f0, f1, **kws).sum()
-        if not signed:
-            n = max(n, np.isclose(f0, -f1, **kwargs).sum())
+        if not signed: n = max(n, np.isclose(f0, -f1, **kws).sum())
         fracs.append(n / f0.shape[0])
     if verbose:
-        fmt = '{:<12}:{:>18}'
+        fmt = '{{:<{}}}:{{:>9}}'.format(len(str(len(fracs))) + 1)
         print(fmt.format(len(fracs), 'Fraction'))
-        fmt = fmt.replace('18', '18.12f')
+        fmt = fmt.replace('9', '9.5f')
         for i, f in enumerate(fracs):
             print(fmt.format(i, f))
     else:
@@ -61,7 +59,7 @@ def make_fps(rmin=None, rmax=None, nr=None, nrfps=1,
              ox=None, fx=None, dxi=None, dxj=None, dxk=None,
              oy=None, fy=None, dyi=None, dyj=None, dyk=None,
              oz=None, fz=None, dzi=None, dzj=None, dzk=None,
-             fps=None):
+             fps=None, dv=None):
     """
     Generate the necessary field parameters of a numerical grid field
     as an exatomic.field.AtomicField.
@@ -181,21 +179,6 @@ def _compute_current_density(bvs, gvx, gvy, gvz, cmatr, cmati, occvec, verbose=T
     return curx, cury, curz
 
 
-def _determine_bfns(uni, frame, norm, forcecart=False):
-    """Cache and return symbolic basis functions if they don't exist."""
-    if hasattr(uni, 'basis_functions'):
-        if frame in uni.basis_functions:
-            return uni.basis_functions[frame]
-        else:
-            uni.basis_functions[frame] = gen_bfns(uni, frame=frame,
-                                                  forcecart=forcecart)
-            return uni.basis_functions[frame]
-    else:
-        uni.basis_functions = {frame: gen_bfns(uni, frame=frame,
-                                               forcecart=forcecart)}
-        return uni.basis_functions[frame]
-
-
 def _determine_vector(uni, vector):
     """Find some orbital indices in a universe."""
     if isinstance(vector, int): return np.array([vector])
@@ -242,13 +225,12 @@ def _determine_fps(uni, fps, nvec):
     return make_fps(nrfps=nvec, **fps)
 
 
-def _check_column(uni, df, key): # mocoefs, orbocc, rcoefs, icoefs):
+def _check_column(uni, df, key):
     """Repetitive checking of columns in a universe."""
     if key is None:
-        if df == 'momatrix':
-            key = 'coef'
-        elif df == 'orbital':
-            key = 'occupation'
+        if df == 'momatrix': key = 'coef'
+        elif df == 'orbital': key = 'occupation'
+        else: raise Exception("{} not supported".format(df))
     err = '"{}" not in uni.{}.columns'.format
     if key not in getattr(uni, df).columns:
         raise Exception(err(key, df))
@@ -256,20 +238,20 @@ def _check_column(uni, df, key): # mocoefs, orbocc, rcoefs, icoefs):
 
 
 @jit(nopython=True, nogil=True, parallel=True)
-def _compute_orbitals(bvs, vecs, cmat):
+def _compute_orbitals(npts, bvs, vecs, cmat):
     """Compute orbitals from numerical basis functions."""
-    ovs = np.empty((len(vecs), bvs.shape[1]), dtype=np.float64)
+    ovs = np.empty((len(vecs), npts), dtype=np.float64)
     for i, vec in enumerate(vecs):
         ovs[i] = np.dot(cmat[:, vec], bvs)
     return ovs
 
-def _compute_orbitals_nojit(bvs, vecs, cmat):
+
+def _compute_orbitals_nojit(npts, bvs, vecs, cmat):
     """Compute orbitals from numerical basis functions."""
-    ovs = np.empty((len(vecs), bvs.shape[1]), dtype=np.float64)
+    ovs = np.empty((len(vecs), npts), dtype=np.float64)
     for i, vec in enumerate(vecs):
         ovs[i] = np.dot(cmat[:, vec], bvs)
     return ovs
-
 
 @jit(nopython=True, nogil=True, parallel=True)
 def _compute_density(ovs, occvec):

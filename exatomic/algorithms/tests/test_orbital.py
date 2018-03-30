@@ -9,20 +9,19 @@ from unittest import TestCase
 
 import exatomic
 from exatomic import molcas
+from exatomic.base import staticdir
 from exatomic.molcas import Output as MolOutput
 from exatomic.molcas import Orb
 from exatomic.core.basis import Overlap
-from exatomic.algorithms.basis import gen_bfns
 from exatomic.interfaces.cube import Cube
-from ..orbital_util import compare_fields
-from ..orbital import (add_molecular_orbitals, add_density, add_orb_ang_mom,
-                       build_pair_index, density_from_momatrix,
-                       density_as_square, momatrix_as_square)
+from exatomic.algorithms.orbital_util import compare_fields
+from exatomic.algorithms.orbital import (add_molecular_orbitals,
+                                         add_orb_ang_mom, add_density)
+
 
 class TestMolcasOrbital(TestCase):
     def setUp(self):
-        adir = os.path.abspath(os.path.join(os.path.abspath(exatomic.__file__),
-                                            '..', 'static', 'molcas'))
+        adir = os.sep.join([staticdir(), 'molcas'])
         with bz2.open(os.path.join(adir, 'mol-carbon-dz.out.bz2')) as f:
             uni = MolOutput(f.read().decode('utf-8')).to_universe()
         with bz2.open(os.path.join(adir, 'mol-carbon-dz.overlap.bz2')) as f:
@@ -40,7 +39,6 @@ class TestMolcasOrbital(TestCase):
                 orb = Orb(f.read().decode('utf-8'))
                 uni.momatrix[col] = orb.momatrix['coef']
                 uni.orbital[col] = orb.orbital['occupation']
-        uni.basis_functions = {0: gen_bfns(uni, forcecart=True)}
 
         flds, cubfmt = [], 'mol-carbon-dz-{}.cube.bz2'.format
         for i, c in enumerate(['1', '2', '3', '4', '5', 'dens',

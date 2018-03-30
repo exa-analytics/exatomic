@@ -12,6 +12,7 @@ simulations), step number (e.g. geometry optimization), or an arbitrary index
 (e.g. density functional theory exchange correlation functional).
 """
 import six
+import numpy as np
 import pandas as pd
 from exa import DataFrame, Container, TypedMeta
 from .frame import Frame, compute_frame_from_atom
@@ -24,7 +25,8 @@ from .field import AtomicField
 from .orbital import Orbital, Excitation, MOMatrix, DensityMatrix
 from .basis import Overlap, BasisSet, BasisSetOrder
 from exatomic.algorithms.orbital import add_molecular_orbitals
-
+from exatomic.algorithms.basis import Basis
+from .tensor import Tensor
 
 class Meta(TypedMeta):
     atom = Atom
@@ -38,14 +40,17 @@ class Meta(TypedMeta):
     molecule_two = MoleculeTwo
     field = AtomicField
     orbital = Orbital
-    overlap = Overlap
-    multipole = DataFrame
     momatrix = MOMatrix
     excitation = Excitation
+    overlap = Overlap
     density = DensityMatrix
-    contribution = DataFrame
     basis_set_order = BasisSetOrder
     basis_set = BasisSet
+    basis_dims = dict
+    basis_functions = Basis
+    contribution = DataFrame
+    multipole = DataFrame
+    tensor = Tensor
 
 
 class Universe(six.with_metaclass(Meta, Container)):
@@ -82,9 +87,7 @@ class Universe(six.with_metaclass(Meta, Container)):
     # Note that compute_* function may be called automatically by typed
     # properties defined in UniverseMeta
     def compute_frame(self):
-        """
-        Compute a minmal frame table.
-        """
+        """Compute a minmal frame table."""
         self.frame = compute_frame_from_atom(self.atom)
 
     def compute_unit_atom(self):
@@ -139,28 +142,31 @@ class Universe(six.with_metaclass(Meta, Container)):
         """Compute number of molecules per frame."""
         self.frame['molecule_count'] = compute_molecule_count(self)
 
-    # def compute_density(self, mocoefs=None, orbocc=None):
-    #     """Compute density from momatrix and occupation vector."""
-    #     if not hasattr(self, 'momatrix'):
-    #         raise Exception('Universe must have momatrix')
-    #     if not hasattr(self, 'orbital'):
-    #         raise Exception('Universe must have orbital')
-    #     if mocoefs is None and orbocc is None:
-    #         mocoefs = 'coef'
-    #         orbocc = 'occupation'
-    #     elif mocoefs is not None and orbocc is None:
-    #         orbocc = mocoefs
-    #     elif orbocc is not None and mocoefs is None:
-    #         mocoefs = orbocc
-    #     if mocoefs not in self.momatrix.columns:
-    #         raise Exception('{} must be in uni.momatrix.columns'.format(mocoefs))
-    #     if orbocc not in self.orbital.columns:
-    #         raise Exception('{} must be in uni.orbital.columns'.format(orbocc))
-    #     d = DensityMatrix.from_universe(self, mocoefs, orbocc)
-    #     if hasattr(self, 'density'):
-    #         self.density[mocoefs+'-'+orbocc] = d['coef']
-    #     else:
-    #         self.density = d
+    def compute_basis_dims(self):
+        """Compute basis dimensions."""
+        bset = self.basis_set
+        mapr = self.atom.set.map
+        self.basis_dims = {
+            'npc': mapr(bset.primitives(False).groupby('set').sum()).sum(),
+            'nps': mapr(bset.primitives(True).groupby('set').sum()).sum(),
+            'ncc': mapr(bset.functions(False).groupby('set').sum()).sum(),
+            'ncs': mapr(bset.functions(True).groupby('set').sum()).sum(),
+            'sets': bset.functions_by_shell()}
+
+    def compute_basis_functions(self, **kwargs):
+        self.basis_functions = Basis(self)
+
+    def enumerate_shells(self, frame=0):
+        atom = self.atom.groupby('frame').get_group(frame)
+        if self.meta['program'] != 'molcas':
+            print('Warning: Check spherical shell parameter for {} '
+                  'molecular orbital generation'.format(self.meta['program']))
+        shls = self.basis_set.shells()
+        grps = shls.groupby('set')
+        # Pointers into (xyzs, shls) arrays
+        ptrs = np.array([(c, idx) for c, seht in enumerate(atom.set)
+                                  for idx in grps.get_group(seht).index])
+        return ptrs, atom[['x', 'y', 'z']].values, shls[0].values
 
     def add_field(self, field):
         """Adds a field object to the universe."""
@@ -192,7 +198,7 @@ class Universe(six.with_metaclass(Meta, Container)):
             raise TypeError('field must be an instance of exatomic.field.AtomicField or a list of them')
 
     def add_molecular_orbitals(self, field_params=None, mocoefs=None,
-                               vector=None, frame=None, replace=True):
+                               vector=None, frame=0, replace=True):
         """Add molecular orbitals to universe.
 
         Args
@@ -202,10 +208,9 @@ class Universe(six.with_metaclass(Meta, Container)):
             frame (int): frame of atomic positions for the orbitals
             replace (bool): if False, do not remove previous fields
         """
-        attrs = ['momatrix', 'basis_set', 'basis_set_order']
-        for attr in attrs:
-            if not hasattr(self, attr):
-                raise AttributeError("universe must have {} attribute.".format(attr))
+        assert hasattr(self, 'momatrix')
+        assert hasattr(self, 'basis_set')
+        assert hasattr(self, 'basis_set_order')
         add_molecular_orbitals(self, field_params=field_params,
                                mocoefs=mocoefs, vector=vector,
                                frame=frame, replace=replace)

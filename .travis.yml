@@ -43,7 +43,7 @@ install:
     - pip install travis-sphinx codacy-coverage
     - git clone https://github.com/exa-analytics/exa.git
     - cd exa
-    - git checkout 0.3.9
+    - git checkout master 
     - pip install .
     - cd ../
     - rm -rf exa
