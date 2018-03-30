@@ -162,8 +162,8 @@ class Output(six.with_metaclass(GauMeta, Editor)):
         found = self.regex(_reorb01, _reorb02, _rebas01, _realphaelec)
         # If no orbital energies, quit
         if not found[_reorb01]: return
-        # Basis dimension
-        nbas = int(found[_rebas01][0][1].split()[0])
+        # Basis dimension- UNUSED
+        #nbas = int(found[_rebas01][0][1].split()[0])
         # Check if open shell
         os = any(('Beta' in ln for lno, ln in found[_reorb01]))
         #UNUSED?
@@ -506,8 +506,8 @@ class Fchk(six.with_metaclass(GauMeta, Editor)):
         found = self.find(_rebasdim, _reshelltype, _reprimpershell,
                           _reshelltoatom, _reprimexp, _recontcoef,
                           _repcontcoef, keys_only=True)
-        # Number of basis functions
-        nbas = self._intme(found[_rebasdim])
+        # Number of basis functions - UNUSED
+        #nbas = self._intme(found[_rebasdim])
         # Number of 'shell to atom' mappings
         dim1 = self._intme(found[_reshelltype])
         # Number of primitive exponents

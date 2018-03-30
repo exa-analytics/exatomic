@@ -117,7 +117,7 @@ class Atom(DataFrame):
         stargs = {'columns': columns, 'header': False,
                   'index': False, 'formatters': formatter}
         t = 0
-        for f, grp in grps:
+        for _, grp in grps:
             if not len(grp): continue
             tru = (header or comments[t] or len(frame) > 1)
             hdr = '\n'.join([str(len(grp)), comments[t], '']) if tru else ''

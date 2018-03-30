@@ -165,7 +165,7 @@ def compute_molecule_com(universe):
     xm = xyz['x'].mul(mass)
     ym = xyz['y'].mul(mass)
     zm = xyz['z'].mul(mass)
-    rm = xm.add(ym).add(zm)
+    #rm = xm.add(ym).add(zm)
     df = pd.DataFrame.from_dict({'xm': xm, 'ym': ym, 'zm': zm, 'mass': mass,
                                  'molecule': universe.atom['molecule']})
     groups = df.groupby('molecule')
