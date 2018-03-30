@@ -71,12 +71,12 @@ class App3D {
 
     init_scene() {
         var scene = new THREE.Scene();
-        var amlight = new THREE.AmbientLight(0x808080, 0.5);
-        var dlight0 = new THREE.DirectionalLight(0xa0a0a0, 0.3);
-        var dlight1 = new THREE.DirectionalLight(0xa0a0a0, 0.3);
+        var amlight = new THREE.AmbientLight(0xdddddd, 0.5);
+        var dlight0 = new THREE.DirectionalLight(0xdddddd, 0.3);
+        //var dlight1 = new THREE.DirectionalLight(0xffffff, 0.3);
         dlight0.position.set(-1000, -1000, -1000);
-        // dlight1.position.set(1000, 1000, 1000);
-        var sunlight = new THREE.SpotLight(0xffffff, 0.3, 0, Math.PI/2);
+        //dlight1.position.set(1000, 1000, 1000);
+        var sunlight = new THREE.SpotLight(0xdddddd, 0.3, 0, Math.PI/2);
         sunlight.position.set(1000, 1000, 1000);
         sunlight.castShadow = true;
         sunlight.shadow = new THREE.LightShadow(
@@ -85,7 +85,7 @@ class App3D {
         scene.add(amlight);
         scene.add(dlight0);
         scene.add(sunlight);
-        // scene.add(dlight1);
+        //scene.add(dlight1);
         return Promise.resolve(scene);
     };
 
@@ -369,22 +369,15 @@ class App3D {
         return [psurf, nsurf];
     };
 
-    add_tensor_surface( tensor ) {
+    add_tensor_surface( tensor , colors , atom_x = 0 , atom_y = 0 , atom_z = 0 , 
+                        scaling = 1 , label = 'tensor') {
         var tensor_mult = function( x , y , z , scaling ) {
-            /*
-            var tensor = [[100.472 , 91.193 , -4.279],
-                          [91.193 , 67.572 , -1.544],
-                          [-4.279 , -1.544 , -2.329]];
-            /*
-            var tensor = [[-9.788 , 20.694 , -108.299],
-                          [20.694 , 2.741 , -63.712],
-                          [-108.299 , -63.712 , 93.601]]*/
-            return x * x * tensor[0][0] +
+            return (x * x * tensor[0][0] +
                    y * y * tensor[1][1] +
                    z * z * tensor[2][2] +
                    x * y * (tensor[1][0] + tensor[0][1]) +
                    x * z * (tensor[2][0] + tensor[0][2]) +
-                   y * z * (tensor[1][2] + tensor[2][1]) * scaling;
+                   y * z * (tensor[1][2] + tensor[2][1]) ) * scaling;
         };
         var func = function( ou , ov ) {
             var u = 2 * Math.PI * ou;
@@ -392,24 +385,80 @@ class App3D {
             var x = Math.cos(u) * Math.sin(v);
             var y = Math.sin(u) * Math.sin(v);
             var z = Math.cos(v);
-            var scaling = 1.
             var g = tensor_mult(x, y, z, scaling);
-            x = g * Math.cos(u) * Math.sin(v);
-            y = g * Math.sin(u) * Math.sin(v);
-            z = g * Math.cos(v)
-            return new THREE.Vector3(x, y, z);
+            if ( g <= 0 ) {
+                var col = new THREE.Color(parseInt(colors['neg'].replace(/^#/,''),16))
+            } else {
+                var col = new THREE.Color(parseInt(colors['pos'].replace(/^#/,''),16));
+            }
+            x = g * Math.cos(u) * Math.sin(v) + atom_x;
+            y = g * Math.sin(u) * Math.sin(v) + atom_y;
+            z = g * Math.cos(v) + atom_z;
+            return [new THREE.Vector3(x, y, z),col];
         };
-        // May want to consider THREE.ShapeUtils.triangulateShape
-        // on the vectors directly returned from "func" to circumvent
-        // needing the constraints of the parameterized geometry.
-        var geom = new THREE.ParametricGeometry(func, 50, 50);
-        var pmat = new THREE.MeshLambertMaterial({color: 'green', side: THREE.FrontSide});
-        // var nmat = new THREE.MeshLambertMaterial({color: 'yellow', side: THREE.BackSide});
-        var psurf = new THREE.Mesh(geom, pmat);
-        // var nsurf = new THREE.Mesh(geom, nmat);
-        psurf.name = "Positive";
-        // nsurf.name = "Negative";
-        return [psurf]; //, nsurf];
+        var t0 = performance.now();
+        var geometry = new THREE.Geometry();
+        var geo = new THREE.Geometry();
+        var slices = 50, stacks = 50;
+        var sliceCount = slices+1
+        var cArray = new Array();
+        var ou, ov, p;
+        for ( var i = 0 ; i <= slices ; i++ ) {
+            ov = i / slices; 
+            for ( var j = 0 ; j <= stacks ; j++ ) {
+                ou = j / stacks;
+                p = func(ou, ov);
+                geometry.vertices.push(p[0]);
+                geo.vertices.push(p[0]);
+                cArray.push(p[1]);
+            }
+        }
+        var a,b,c,d;
+        var mix,red,green,blue;
+        for ( var i = 0 ; i < slices ; i++ ) {
+            for ( var j = 0 ; j < stacks ; j++ ) {
+                a = i * sliceCount + j;
+                b = i * sliceCount + j + 1;
+                c = ( i + 1 ) * sliceCount + j + 1;
+                d = ( i + 1 ) * sliceCount + j;
+                geometry.faces.push( new THREE.Face3( a,b,d ) );
+                geometry.faces.push( new THREE.Face3( b,c,d ) );
+                geo.faces.push( new THREE.Face3( a,b,d ) );
+
+                var sub_face = geometry.faces.slice(-2);
+                red = ((cArray[a].r+cArray[b].r+cArray[d].r)/3)*256;
+                green = ((cArray[a].g+cArray[b].g+cArray[d].g)/3)*256;
+                blue = ((cArray[a].b+cArray[b].b+cArray[d].b)/3)*256;
+                mix = 'rgb('+parseInt(red)+', '+parseInt(green)+', '+parseInt(blue)+')'
+                sub_face[0].color = new THREE.Color(mix);
+                red = ((cArray[b].r+cArray[c].r+cArray[d].r)/3)*256;
+                green = ((cArray[b].g+cArray[c].g+cArray[d].g)/3)*256;
+                blue = ((cArray[b].b+cArray[c].b+cArray[d].b)/3)*256;
+                mix = 'rgb('+parseInt(red)+', '+parseInt(green)+', '+parseInt(blue)+')'
+                sub_face[1].color = new THREE.Color(mix);
+            }
+        }
+        geometry.mergeVertices();
+        geometry.computeFaceNormals();
+        geometry.computeVertexNormals();
+        var pmat = new THREE.MeshPhongMaterial({color:'white',
+                                                shading: THREE.FlatShading,
+                                                side: THREE.DoubleSide,
+                                                vertexColors: THREE.FaceColors,
+                                                reflectivity: 0.8,
+                                                needsUpdate: true
+                                                });
+
+        var psurf = new THREE.Mesh(geometry, pmat);
+        var mat = new THREE.LineBasicMaterial( {color: 0x000000} );
+        geo.computeVertexNormals();
+        var edges = new THREE.EdgesGeometry(geo);
+        var nsurf = new THREE.LineSegments( edges,mat );
+        psurf.add( nsurf );
+        psurf.name = label;
+        var t1 = performance.now()
+//      console.log("Tensor plot took "+(t1-t0)+" milliseconds");
+        return [psurf];
     };
 
     add_unit_axis(fill) {
@@ -714,7 +763,7 @@ class App3D {
                 shininess: 15,
                 transparent:true,
                 opacity: opac,
-                reflectivity: 0.8
+                //reflectivity: 0.8
             }));
         var nmesh = new THREE.Mesh(ngeom,
             new THREE.MeshPhongMaterial({
@@ -724,7 +773,7 @@ class App3D {
                 shininess: 15,
                 transparent: true,
                 opacity: opac,
-                reflectivity: 0.8
+                //reflectivity: 0.8
             }));
         pmesh.name =  iso;
         nmesh.name = -iso;
@@ -1140,20 +1189,21 @@ class App3D {
         return meshes;
     };
 
-    add_wireframe(vertices, color) {
+    add_wireframe(vertices, color, opac) {
         /*"""
         add_wireframe
         -----------------
         Create a wireframe object
         */
         color = color || 0x808080;
+        opac = opac || 0.2;
         var geometry = new THREE.Geometry();
         for (var v of vertices) {
             geometry.vertices.push(new THREE.Vector3(v[0], v[1], v[2]));
         };
         var material = new THREE.MeshBasicMaterial({
             transparent: true,
-            opacity: 0.2,
+            opacity: opac,
             wireframeLinewidth: 8,
             wireframe: true
         });

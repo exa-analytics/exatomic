@@ -12,83 +12,17 @@ from numba import jit
 from datetime import datetime
 
 from exatomic.base import sym2z
-#from exatomic.core.field import AtomicField
+from exatomic.core.field import AtomicField
 from .orbital_util import (
-    numerical_grid_from_field_params,
-    _determine_fps, _determine_vector, _determine_bfns,
-    _compute_orb_ang_mom, _compute_current_density,
-    _compute_orbitals, _compute_density, _check_column,
-    _make_field, _compute_orbitals_nojit)
-
-
-#####################################################################
-# Numba vectorized operations for Orbital, MOMatrix, Density tables #
-# These will eventually be fully moved to matrices.py               #
-#####################################################################
-
-
-@jit(nopython=True, nogil=True, parallel=True)
-def build_pair_index(n):
-    m = n**2
-    x = np.empty((m, ), dtype=np.int64)
-    y = x.copy()
-    k = 0
-    # Order matters so don't us nb.prange
-    for i in range(n):
-        for j in range(n):
-            x[k] = i
-            y[k] = j
-            k += 1
-    return x, y
-
-
-@jit(nopython=True, nogil=True, parallel=True)
-def density_from_momatrix(cmat, occvec):
-    nbas = len(occvec)
-    arlen = nbas * (nbas + 1) // 2
-    dens = np.empty(arlen, dtype=np.float64)
-    chi0 = np.empty(arlen, dtype=np.int64)
-    chi1 = np.empty(arlen, dtype=np.int64)
-    frame = np.zeros(arlen, dtype=np.int64)
-    cnt = 0
-    for i in range(nbas):
-        for j in range(i + 1):
-            dens[cnt] = (cmat[i,:] * cmat[j,:] * occvec).sum()
-            chi0[cnt] = i
-            chi1[cnt] = j
-            cnt += 1
-    return chi0, chi1, dens, frame
-
-
-@jit(nopython=True, nogil=True, parallel=True)
-def density_as_square(denvec):
-    nbas = int((-1 + np.sqrt(1 - 4 * -2 * len(denvec))) / 2)
-    square = np.empty((nbas, nbas), dtype=np.float64)
-    cnt = 0
-    for i in range(nbas):
-        for j in range(i + 1):
-            square[i, j] = denvec[cnt]
-            square[j, i] = denvec[cnt]
-            cnt += 1
-    return square
-
-
-@jit(nopython=True, nogil=True, parallel=True)
-def momatrix_as_square(movec):
-    nbas = np.int64(len(movec) ** (1/2))
-    square = np.empty((nbas, nbas), dtype=np.float64)
-    cnt = 0
-    for i in range(nbas):
-        for j in range(nbas):
-            square[j, i] = movec[cnt]
-            cnt += 1
-    return square
+    numerical_grid_from_field_params, _determine_fps,
+    _determine_vector, _compute_orb_ang_mom, _compute_current_density,
+    _compute_orbitals, _compute_density, _check_column, _make_field,
+    _compute_orbitals_nojit)
 
 
 def add_molecular_orbitals(uni, field_params=None, mocoefs=None,
                            vector=None, frame=0, inplace=True,
-                           replace=True, norm='Nd', forcecart=False,
-                           verbose=True):
+                           replace=False, verbose=True):
     """A universe must contain basis_set, basis_set_order, and
     momatrix attributes to use this function.  Evaluate molecular
     orbitals on a numerical grid.  Attempts to generate reasonable
@@ -113,7 +47,7 @@ def add_molecular_orbitals(uni, field_params=None, mocoefs=None,
               ' Consider adding tests.')
     t1 = datetime.now()
     vector = _determine_vector(uni, vector)
-    bfns = _determine_bfns(uni, frame, norm, forcecart=forcecart)
+    bfns = uni.basis_functions
     fps = _determine_fps(uni, field_params, len(vector))
     mocoefs = _check_column(uni, 'momatrix', mocoefs)
     if verbose:
@@ -124,19 +58,16 @@ def add_molecular_orbitals(uni, field_params=None, mocoefs=None,
     orbs = uni.momatrix.groupby('orbital')
     bvs = bfns.evaluate(x, y, z)
     cmat = uni.momatrix.square(column=mocoefs).values
-    try:
-        ovs = _compute_orbitals(bvs, vector, cmat)
-    except IndexError:
-        ovs = _compute_orbitals_nojit(bvs, vector, cmat)
+    try: ovs = _compute_orbitals(len(x), bvs, vector, cmat)
+    except: ovs = _compute_orbitals_nojit(len(x), bvs, vector, cmat)
     field = _make_field(ovs, fps)
     t2 = datetime.now()
     if verbose:
         p2 = 'Timing: compute orbitals - {:>8.2f}s.'
         print(p2.format((t2-t1).total_seconds()))
     if not inplace: return field
-    if replace:
-        if hasattr(uni, '_field'):
-            del uni.__dict__['_field']
+    if replace and hasattr(uni, '_field'):
+        del uni.__dict__['_field']
     uni.add_field(field)
 
 
@@ -157,7 +88,7 @@ def add_density(uni, field_params=None, mocoefs=None, orbocc=None,
     mocoefs = _check_column(uni, 'momatrix', mocoefs)
     orbocc = mocoefs if orbocc is None and mocoefs != 'coef' else orbocc
     orbocc = _check_column(uni, 'orbital', orbocc)
-    bfns = _determine_bfns(uni, frame, norm)
+    bfns = uni.basis_functions
     orbs = uni.momatrix.groupby('orbital')
     vector = np.array(range(uni.momatrix.orbital.max() + 1))
     fps = _determine_fps(uni, field_params, len(vector))
@@ -165,14 +96,12 @@ def add_density(uni, field_params=None, mocoefs=None, orbocc=None,
     x, y, z = numerical_grid_from_field_params(fps)
     bvs = bfns.evaluate(x, y, z)
     cmat = uni.momatrix.square(column=mocoefs).values
-    try:
-        ovs = _compute_orbitals(bvs, vector, cmat)
-    except IndexError:
-        ovs = _compute_orbitals_nojit(bvs, vector, cmat)
+    try: ovs = _compute_orbitals(len(x), bvs, vector, cmat)
+    except: ovs = _compute_orbitals_nojit(len(x), bvs, vector, cmat)
     dens = _compute_density(ovs, uni.orbital[orbocc].values)
     t2 = datetime.now()
     if verbose:
-        p1 = 'Timing: compute density     - {:.2f}s'
+        p1 = 'Timing: compute density  - {:>8.2f}s.'
         print(p1.format((t2-t1).total_seconds()))
     if not inplace: return _make_field(dens, fps.loc[0])
     uni.add_field(_make_field(dens, fps.loc[0]))
@@ -206,7 +135,7 @@ def add_orb_ang_mom(uni, field_params=None, rcoefs=None, icoefs=None,
                   "matrix, specify maxes.")
         maxes = np.eye(3)
     t1 = datetime.now()
-    bfns = _determine_bfns(uni, frame, norm)
+    bfns = uni.basis_functions
     fps = _determine_fps(uni, field_params, 4)
 
     x, y, z = numerical_grid_from_field_params(fps)
@@ -217,7 +146,7 @@ def add_orb_ang_mom(uni, field_params=None, rcoefs=None, icoefs=None,
     grz = bfns.evaluate_diff(x, y, z, cart='z')
     t2 = datetime.now()
     if verbose:
-        p1 = 'Timing: grid evaluation     - {:.2f}s'
+        p1 = 'Timing: grid evaluation  - {:>8.2f}s.'
         print(p1.format((t2-t1).total_seconds()))
 
     cmatr = uni.momatrix.square(column=rcoefs).values
@@ -226,7 +155,7 @@ def add_orb_ang_mom(uni, field_params=None, rcoefs=None, icoefs=None,
         bvs, grx, gry, grz, cmatr, cmati, occvec, verbose=verbose)
     t3 = datetime.now()
     if verbose:
-        p2 = 'Timing: current density 1D  - {:.2f}s'
+        p2 = 'Timing: current density  - {:>8.2f}s.'
         print(p2.format((t3-t2).total_seconds()))
     ang_mom = _compute_orb_ang_mom(x, y, z, curx, cury, curz, maxes)
     if not inplace: return _make_field(ang_mom, fps)

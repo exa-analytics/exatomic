@@ -8,112 +8,232 @@ Utilities for computing the overlap between gaussian type functions.
 """
 
 import numpy as np
-from numba import jit
+from numba import njit, jit, prange
+from .numerical import fac, fac2, dfac21, sdist, choose
+from .car2sph import car2sph_scaled
 
-from ..core.basis import Overlap
-from .basis import (gen_bfns, new_solid_harmonics,
-                    new_car2sph, new_enum_cartesian,
-                    fac, fac2, cart_lml_count)
-
-
-
-def _overlap(bfns, p2c, c, x, y, z, l, m, n, a):
-    """Build arrays for numbafied overlap."""
-    ix, pf = 0, bfns[0]
-    for j, f in enumerate(bfns):
-        ii = f.ps
-        if pf.l != f.l or pf.m != f.m or pf.n != f.n or not j:
-            if j: ix += pf.ps
-            c[ix : ix + ii] = f.center
-            x[ix : ix + ii] = f.xa
-            y[ix : ix + ii] = f.ya
-            z[ix : ix + ii] = f.za
-            l[ix : ix + ii] = f.l
-            m[ix : ix + ii] = f.m
-            n[ix : ix + ii] = f.n
-            a[ix : ix + ii] = f.alphas
-        p2c[ix : ix + ii, j] = f.cs
-        pf = f
-    # return c, x, y, z, l, m, n, a
-    chi0, chi1, ovl = _wrap_overlap(c, x, y, z, l, m, n, a)
-    return p2c, Overlap.from_dict({'chi0': chi0, 'chi1': chi1,
-                                   'coef': ovl, 'frame': 0})
-
-
-_cartouche = new_car2sph(new_solid_harmonics(6),
-                         new_enum_cartesian)
-
-def _cart_to_sphr(shls, sets, ncc, ncs):
-    """Generate cartesian to spherical transform matrix."""
-    c2s = np.zeros((ncc, ncs), dtype=np.float64)
-    cx, sx = 0, 0
-    for seht in sets:
-        shl = shls[seht]
-        for L, n in shl.items():
-            exp = np.kron(_cartouche[L], np.eye(n)) if L else np.eye(n)
-            ci, si = exp.shape
-            c2s[cx : cx + ci, sx : sx + si] = exp
-            cx += ci
-            sx += si
-    return c2s
-
-def cart_to_sphr(uni):
-    """Compute the cartesian to spherical contraction matrix."""
-    ncc = uni.atom.set.map(uni.basis_set.functions(False)
-                           .groupby('set').sum()).sum()
-    ncs = uni.atom.set.map(uni.basis_set.functions(True)
-                           .groupby('set').sum()).sum()
-    shls = uni.basis_set.functions_by_shell()
-    return _cart_to_sphr(shls, uni.atom.set, ncc, ncs)
-
-def prim_cart_overlap(uni):
-    """Compute the primitive overlap and contraction matrices from a universe."""
-    # Generate the basis functions
-    if hasattr(uni, 'basis_functions'):
-        bfns = uni.basis_functions[0]
-    else:
-        uni.basis_functions = {0: gen_bfns(uni, forcecart=True)}
-        bfns = uni.basis_functions[0]
-    # Number of functions per shell
-    shls = uni.basis_set.functions_by_shell()
-    # Number of primitive cartesians
-    npc = uni.atom.set.map(uni.basis_set.primitives(False)
-                           .groupby('set').sum()).sum()
-    # Number of contracted cartesians
-    ncc = uni.atom.set.map(uni.basis_set.functions(False)
-                           .groupby('set').sum()).sum()
-    # Number of contracted sphericals
-    ncs = uni.atom.set.map(uni.basis_set.functions(True)
-                           .groupby('set').sum()).sum()
-    # Cartesian to spherical transformation matrix
-    c2s = np.zeros((ncc, ncs), dtype=np.float64)
-    c2s = _cart_to_sphr(shls, uni.atom.set, ncc, ncs)
-    # Allocate arrays to feed to numba
-    p2c = np.zeros((npc, ncc), dtype=np.float64)
-    c = np.empty(npc, dtype=np.int64)
-    x = np.empty(npc, dtype=np.float64)
-    y = np.empty(npc, dtype=np.float64)
-    z = np.empty(npc, dtype=np.float64)
-    l = np.empty(npc, dtype=np.int64)
-    m = np.empty(npc, dtype=np.int64)
-    n = np.empty(npc, dtype=np.int64)
-    a = np.empty(npc, dtype=np.float64)
-    p2c, ovl = _overlap(bfns, p2c, c, x, y, z, l, m, n, a)
-    return p2c, c2s, ovl
-
-
+#################################
+# Primitive cartesian integrals #
+#################################
 
 @jit(nopython=True, cache=True)
-def _overlap_1c(alp1, alp2, l1, m1, n1, l2, m2, n2):
-    """Compute overlap between gaussian functions on the same center."""
-    ll = l1 + l2
-    mm = m1 + m2
-    nn = n1 + n2
-    if ll % 2 or mm % 2 or nn % 2: return 0
-    ltot = ll // 2 + mm // 2 + nn // 2
-    numer = np.pi ** (1.5) * fac2(ll - 1) * fac2(mm - 1) * fac2(nn - 1)
-    denom = (2 ** ltot) * (alp1 + alp2) ** (ltot + 1.5)
-    return numer / denom
+def _fj(j, l, m, a, b):
+    """From Handbook of Computational Quantum Chemistry by David B. Cook
+    in chapter 7.7.1 -- Essentially a FOILing of the pre-exponential
+    cartesian power dependence in one dimension."""
+    tot, i, f = 0., max(0, j - m), min(j, l) + 1
+    for k in prange(i, f):
+        tot += (choose(l, k) *
+                choose(m, int(j - k)) *
+                a ** (l - k) *
+                b ** (m + k - j))
+    return tot
+
+@jit(nopython=True, cache=True)
+def _nin(l, m, pa, pb, p, N):
+    """From Handbook of Computational Quantum Chemistry by David B. Cook
+    in chapter 7.7.1 -- Sums the result of _fj over the total angular momentum
+    in one dimension."""
+    ltot = l + m
+    if not ltot: return N
+    tot = 0.
+    for j in prange(int(ltot // 2 + 1)):
+        tot += (_fj(2 * j, l, m, pa, pb) *
+                dfac21(j) / (2 * p) ** j)
+    return tot * N
+
+@jit(nopython=True, cache=True)
+def _gaussian_product(a, b, ax, ay, az, bx, by, bz):
+    """From Molecular Electronic-Structure Theory by Trygve Helgaker et al.
+    Computes a product gaussian following 9.2.3."""
+    p = a + b
+    mu = a * b / p
+    px = (a * ax + b * bx) / p
+    py = (a * ay + b * by) / p
+    pz = (a * az + b * bz) / p
+    #pax = px - ax
+    #pay = py - ay
+    #paz = pz - az
+    #pbx = px - bx
+    #pby = py - by
+    #pbz = pz - bz
+    ab2 = sdist(ax, ay, az, bx, by, bz)
+    return (np.sqrt(np.pi / p), p, mu, ab2,
+            px - ax, py - ay, pz - az,
+            px - bx, py - by, pz - bz)
+    #pax, pay, paz, pbx, pby, pbz
+
+@jit(nopython=True, cache=True)
+def _primitive_overlap_product(N, p, mu, ab2, pax, pay, paz, pbx, pby, pbz,
+                               l1, m1, n1, l2, m2, n2):
+    """Compute primitive cartesian overlap integral in terms of a gaussian product."""
+    return (np.exp(-mu * ab2) * _nin(l1, l2, pax, pbx, p, N)
+                              * _nin(m1, m2, pay, pby, p, N)
+                              * _nin(n1, n2, paz, pbz, p, N))
+
+@jit(nopython=True, cache=True)
+def _primitive_overlap(a1, a2, ax, ay, az, bx, by, bz, l1, m1, n1, l2, m2, n2):
+    """Compute a primitive cartesian overlap integral."""
+    product = _gaussian_product(a1, a2, ax, ay, az, bx, by, bz)
+    return _primitive_overlap_product(*product, l1, m1, n1, l2, m2, n2)
+                                      #N, p, mu, ab2,
+                                      #pax, pay, paz, pbx, pby, pbz,
+
+@jit(nopython=True, cache=True)
+def _primitive_kinetic(a1, a2, ax, ay, az, bx, by, bz, l1, m1, n1, l2, m2, n2):
+    """Compute the kinetic energy as a linear combination of overlap terms."""
+    prod = _gaussian_product(a1, a2, ax, ay, az, bx, by, bz)
+    t =  4 * a1 * a2 * _primitive_overlap_product(*prod, a1, a2,
+                                                  l1 - 1, m1, n1,
+                                                  l2 - 1, m2, n2)
+    t += 4 * a1 * a2 * _primitive_overlap_product(*prod, a1, a2,
+                                                  l1, m1 - 1, n1,
+                                                  l2, m2 - 2, n2)
+    t += 4 * a1 * a2 * _primitive_overlap_product(*prod, a1, a2,
+                                                  l1, m1, n1 - 1,
+                                                  l2, m2, n2 - 1)
+    if l1 and l2:
+        t += l1 * l2 * _primitive_overlap_product(*args, a1, a2,
+                                                  l1 - 1, m1, n1,
+                                                  l2 - 1, m2, n2)
+    if m1 and m2:
+        t += l1 * l2 * _primitive_overlap_product(*args, a1, a2,
+                                                   l1, m1 - 1, n1,
+                                                   l2, m2 - 1, n2)
+    if n1 and n2:
+        t += l1 * l2 * _primitive_overlap_product(*args, a1, a2,
+                                                  l1, m1, n1 - 1,
+                                                  l2, m2, n2 - 1)
+    if l1: t -=  2 * a2 * l1 * _primitive_overlap_product(*args, a1, a2,
+                                                          l1 - 1, m1, n1,
+                                                          l2 + 1, m2, n2)
+    if l2: t -=  2 * a1 * l2 * _primitive_overlap_product(*args, a1, a2,
+                                                          l1 + 1, m1, n1,
+                                                          l2 - 1, m2, n2)
+    if m1: t -=  2 * a2 * m1 * _primitive_overlap_product(*args, a1, a2,
+                                                          l1, m1 - 1, n1,
+                                                          l2, m2 + 1, n2)
+    if m2: t -=  2 * a1 * m2 * _primitive_overlap_product(*args, a1, a2,
+                                                          l1, m1 + 1, n1,
+                                                          l2, m2 - 1, n2)
+    if n1: t -=  2 * a2 * n1 * _primitive_overlap_product(*args, a1, a2,
+                                                          l1, m1, n1 - 1,
+                                                          l2, m2, n2 + 1)
+    if n2: t -=  2 * a1 * n2 * _primitive_overlap_product(*args, a1, a2,
+                                                          l1, m1, n1 + 1,
+                                                          l2, m2, n2 - 1)
+    return t / 2
+
+######################################
+# Generators over shells/shell-pairs #
+######################################
+
+@njit
+def _iter_atom_shells(ptrs, xyzs, *shls):
+    """Generator yielding indices, atomic coordinates and basis set shells."""
+    nshl = len(ptrs)
+    for i in range(nshl):
+        pa, pi = ptrs[i]
+        yield (i, xyzs[pa][0], xyzs[pa][1], xyzs[pa][2], shls[pi])
+
+@njit
+def _iter_atom_shell_pairs(ptrs, xyzs, *shls):
+    """Generator yielding indices, atomic coordinates and basis set
+    shells in block-pair order."""
+    nshl = len(ptrs)
+    for i in range(nshl):
+        for j in range(i + 1):
+            pa, pi = ptrs[i]
+            pb, pj = ptrs[j]
+            yield (i, j, xyzs[pa][0], xyzs[pa][1], xyzs[pa][2],
+                         xyzs[pb][0], xyzs[pb][1], xyzs[pb][2],
+                         shls[pi], shls[pj])
+
+############################################
+# Integral processing for of Shell objects #
+############################################
+
+@jit(nopython=True, cache=True)
+def _cartesian_overlap_shell(xa, ya, za, xb, yb, zb,
+                             li, mi, ni, lj, mj, nj,
+                             ialpha, jalpha):
+    """Compute pairwise cartesian integrals exponents in a block-pair."""
+    pints = np.empty((len(ialpha), len(jalpha)))
+    for i, ia in enumerate(ialpha):
+        for j, ja in enumerate(jalpha):
+            pints[i, j] = _primitive_overlap(ia, ja,
+                                             xa, ya, za, xb, yb, zb,
+                                             li, mi, ni, lj, mj, nj)
+    return pints
+
+@njit
+def _cartesian_shell_pair(ax, ay, az, bx, by, bz, ishl, jshl):
+    """Compute fully contracted block-pair integrals including
+    expansion of angular momentum dependence."""
+    inrm = ishl.norm_contract()
+    jnrm = jshl.norm_contract()
+    ideg = (ishl.L + 1) * (ishl.L + 2) // 2
+    jdeg = (jshl.L + 1) * (jshl.L + 2) // 2
+    pint = np.empty((ideg * ishl.nprim, jdeg * jshl.nprim))
+    for magi, (li, mi, ni) in enumerate(ishl.enum_cartesian()):
+        for magj, (lj, mj, nj) in enumerate(jshl.enum_cartesian()):
+            ianc = magi * ishl.nprim
+            janc = magj * jshl.nprim
+            pint[ianc : ianc + ishl.nprim,
+                 janc : janc + jshl.nprim] = \
+                    _cartesian_overlap_shell(ax, ay, az, bx, by, bz,
+                                             li, mi, ni, lj, mj, nj,
+                                             ishl.alphas, jshl.alphas)
+    if ishl.L:
+        inrm = np.kron(np.eye(ideg), inrm)
+        if ishl.spherical:
+            inrm = np.dot(inrm, np.kron(car2sph_scaled(ishl.L),
+                                        np.eye(ishl.ncont)))
+    if jshl.L:
+        jnrm = np.kron(np.eye(jdeg), jnrm)
+        if jshl.spherical:
+            jnrm = np.dot(jnrm, np.kron(car2sph_scaled(jshl.L),
+                                        np.eye(jshl.ncont)))
+    return np.dot(inrm.T, np.dot(pint, jnrm))
+
+@njit
+def _cartesian_shell_pairs(ndim, ptrs, xyzs, *shls):
+    """Construct a full square (overlap) integral matrix."""
+    cart = np.zeros((ndim, ndim))
+    ii = 0
+    for i, j, ax, ay, az, bx, by, bz, ishl, jshl \
+        in _iter_atom_shell_pairs(ptrs, xyzs, *shls):
+        if not j: jj = 0
+        cint = _cartesian_shell_pair(ax, ay, az, bx, by, bz, ishl, jshl)
+        iblk, jblk = cint.shape
+        cart[ii : ii + iblk, jj : jj + jblk] = cint
+        if i != j: cart[jj : jj + jblk, ii : ii + iblk] = cint.T
+        else: ii += iblk
+        jj += jblk
+    return cart
+
+##################################
+# Obara-Saika recursion relation #
+##################################
+
+@jit(nopython=True, cache=True)
+def _obara_s_recurr(p, l, m, pa, pb, s):
+    """There is a bug in this function. Do not use."""
+    if not l + m: return s
+    p2 = 1 / (2 * p)
+    s0 = np.zeros((l + 1, m + 1))
+    s0[0, 0] = s
+    if l: s0[1, 0] = pa * s
+    if m: s0[0, 1] = pb * s
+    if l and m: s0[1, 1] = pb * s0[1, 0] + p2 * s
+    for i in range(1, l):
+        for j in range(1, m):
+            mul = p2 * (i * s0[i - 1, j] + j * s0[i, j - 1])
+            s0[i + 1, j] = pa * s0[i, j] + mul
+            s0[i, j + 1] = pb * s0[i, j] + mul
+            s0[i + 1, j + 1] = pa * s0[i, j + 1] + p2 * ((i + 1) * s0[i, j] + j * s0[i + 1, j])
+    return s0[l, m]
+
 
 
 @jit(nopython=True, cache=True)
@@ -139,47 +259,3 @@ def _nin(o1, o2, po1, po2, gamma, pg12):
     return oio
 
 
-@jit(nopython=True, cache=True)
-def _overlap_2c(ab2, pax, pay, paz, pbx, pby, pbz,
-                gamma, alp1, alp2, l1, m1, n1, l2, m2, n2):
-    """Compute the overlap between two gaussian functions on different centers."""
-    pg12 = np.sqrt(np.pi / gamma)
-    xix = _nin(l1, l2, pax, pbx, gamma, pg12)
-    yiy = _nin(m1, m2, pay, pby, gamma, pg12)
-    ziz = _nin(n1, n2, paz, pbz, gamma, pg12)
-    exp = alp1 * alp2 * ab2 / gamma
-    return np.exp(-exp) * xix * yiy * ziz
-
-
-@jit(nopython=True, cache=True)
-def _wrap_overlap(c, x, y, z, l, m, n, a):
-    """Compute a triangular portion of the primitive overlap matrix."""
-    nprim, cnt = len(x), 0
-    arlen = nprim * (nprim + 1) // 2
-    chi0 = np.empty(arlen, dtype=np.int64)
-    chi1 = np.empty(arlen, dtype=np.int64)
-    ovl = np.empty(arlen, dtype=np.float64)
-    for i in range(nprim):
-        for j in range(i + 1):
-            chi0[cnt] = i
-            chi1[cnt] = j
-            if c[i] == c[j]:
-                ovl[cnt] = _overlap_1c(
-                    a[i], a[j], l[i], m[i], n[i], l[j], m[j], n[j])
-            else:
-                gamma = a[i] + a[j]
-                xp = (a[i] * x[i] + a[j] * x[j]) / gamma
-                yp = (a[i] * y[i] + a[j] * y[j]) / gamma
-                zp = (a[i] * z[i] + a[j] * z[j]) / gamma
-                pix = xp - x[i]
-                piy = yp - y[i]
-                piz = zp - z[i]
-                pjx = xp - x[j]
-                pjy = yp - y[j]
-                pjz = zp - z[j]
-                ovl[cnt] = _overlap_2c(
-                    (x[i] - x[j]) ** 2 + (y[i] - y[j]) ** 2 + (z[i] - z[j]) ** 2,
-                    pix, piy, piz, pjx, pjy, pjz, gamma,
-                    a[i], a[j], l[i], m[i], n[i], l[j], m[j], n[j])
-            cnt += 1
-    return chi0, chi1, ovl

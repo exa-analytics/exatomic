@@ -6,9 +6,8 @@ import numpy as np
 from unittest import TestCase
 
 from exatomic import XYZ
-from ..traits import (atom_traits,# field_traits,
-                      two_traits, frame_traits,
-                      uni_traits)
+from ..traits import (atom_traits, two_traits, 
+                      frame_traits, uni_traits)
 
 h2 = '''2
 

@@ -23,9 +23,9 @@ class TestExatomicScene(TestCase):
 
     def test_save_image(self):
         # A simple tiny red dot in base64
-        cont = "data:image/png;base64, iVBORw0KGgoAAAANSUhEUgA"\
-               "AAAUAAAAFCAYAAACNbyblAAAAHElEQVQI12P4//8/w38GI"\
-               "AXDIBKE0DHxgljNBAAO9TXL0Y4OHwAAAABJRU5ErkJggg=="
+        cont = ("data:image/png;base64, iVBORw0KGgoAAAANSUhEUgA"
+                "AAAUAAAAFCAYAAACNbyblAAAAHElEQVQI12P4//8/w38GI"
+                "AXDIBKE0DHxgljNBAAO9TXL0Y4OHwAAAABJRU5ErkJggg==")
         self.scn._save_image(cont)
         self.scn.imgname = 'myimg.png'
         self.scn._save_image(cont)

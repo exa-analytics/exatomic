@@ -26,6 +26,7 @@ target/
 .settings/
 exatomic/static/nbextension
 exatomic/static/js/
+exatomic/static/*js
 package-lock.json
 
 # Compiled

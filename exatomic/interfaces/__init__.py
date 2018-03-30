@@ -10,3 +10,4 @@ external file types.
 from .cclib import universe_from_cclib
 from .xyz import XYZ
 from .cube import Cube
+from .tens import RTensor

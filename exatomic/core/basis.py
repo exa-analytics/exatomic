@@ -19,9 +19,8 @@ import pandas as pd
 from io import StringIO
 
 from exa import DataFrame
-from exatomic.algorithms.basis import (cart_lml_count, spher_lml_count,
-                                       lorder, _ovl_indices, _square,
-                                       _vec_sphr_norm, _vec_sto_norm)
+from exatomic.algorithms.basis import cart_lml_count, spher_lml_count
+from exatomic.algorithms.numerical import _tri_indices, _square, Shell
 
 
 class BasisSet(DataFrame):
@@ -72,19 +71,37 @@ class BasisSet(DataFrame):
     _columns = ['alpha', 'd', 'shell', 'L', 'set']
     _cardinal = ('frame', np.int64)
     _index = 'function'
-    _categories = {'L': np.int64, 'set': np.int64, 'frame': np.int64}
+    _categories = {'L': np.int64, 'set': np.int64, 'frame': np.int64, 'norm': str}
 
     @property
     def lmax(self):
         return self['L'].cat.as_ordered().max()
 
-    @property
     def shells(self):
-        return [lorder[l] for l in self.L.unique()]
+        def _shell_gau(df):
+            piv = ('alpha', 'shell', 'd')
+            alphas = df.alpha.unique()
+            piv = df.pivot(*piv).loc[alphas].fillna(0.)
+            return Shell(piv.values.flatten(), alphas, *piv.shape, df.L.values[0],
+                         #self.spherical, self.gaussian, None, None)
+                         df.norm.values[0], self.gaussian, None, None)
+        def _shell_sto(df):
+            piv = ('alpha', 'shell', 'd')
+            alphas = df.alpha.unique()
+            piv = df.pivot(*piv).loc[alphas].fillna(0.)
+            return Shell(piv.values.flatten(), alphas, *piv.shape, df.L.values[0],
+                         #self.spherical, self.gaussian, df.r.values, df.n.values)
+                        self.spherical, self.gaussian, df.r.values, df.n.values)
+        if self.gaussian:
+            if 'norm' not in self.columns: self.spherical_by_shell()
+            return self.groupby(['set', 'L']).apply(_shell_gau).reset_index()
+        return self.groupby(['set', 'L']).apply(_shell_sto).reset_index()
 
-    @property
-    def nshells(self):
-        return len(self.shells)
+    def spherical_by_shell(self):
+        """Pre-alpha."""
+        self['L'] = self['L'].astype(np.int64)
+        self['norm'] = self['L'].apply(lambda L: L > 1)
+        self['L'] = self['L'].astype('category')
 
     def functions_by_shell(self):
         """Return a series of n functions per (set, L).
@@ -122,10 +139,6 @@ class BasisSet(DataFrame):
         super(BasisSet, self).__init__(*args, **kwargs)
         self.spherical = spherical
         self.gaussian = gaussian
-        norm = _vec_sphr_norm if gaussian else _vec_sto_norm
-        colm = 'L' if gaussian else 'n'
-        self['N'] = norm(self['alpha'].values, self[colm].values)
-        self['Nd'] = self['d'] * self['N']
 
 
 class BasisSetOrder(DataFrame):
@@ -209,7 +222,7 @@ class Overlap(DataFrame):
             else:
             # except FileNotFoundError:
                 vals = pd.read_csv(StringIO(source), header=None).values.flatten()
-        chi0, chi1 = _ovl_indices(vals)
+        chi0, chi1 = _tri_indices(vals)
         return cls(pd.DataFrame.from_dict({'chi0': chi0,
                                            'chi1': chi1,
                                            'coef': vals,

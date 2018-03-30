@@ -9,18 +9,16 @@ import os
 import numpy as np
 from base64 import b64decode
 from traitlets import (Bool, Int, Float, Unicode,
-                       List, Any, Dict, link) #Instance, link)
+                       List, Any, Dict, link) 
 from ipywidgets import (
-    Box, VBox, HBox, FloatSlider, IntSlider, Play, Text,
-    IntRangeSlider, DOMWidget, Layout, Button, Dropdown,
-    register, jslink, ToggleButton
-    # currently unused --
-    # FloatSlider, Play, IntRangeSlider, Dropdown, jslink
-)
+    Box, VBox, HBox, IntSlider, Text, ToggleButton,
+    DOMWidget, Layout, Button, Dropdown, register,)
+
 from exatomic import Universe, __js_version__
 from .traits import uni_traits
-from .widget_utils import (_glo, _flo, _wlo, _hboxlo, _vboxlo, _bboxlo,
-                           _ListDict, Folder, GUIBox, gui_field_widgets)
+from .widget_utils import (_glo, _flo, _wlo, _hboxlo, 
+                           _vboxlo, _bboxlo, _ListDict, 
+                           Folder, GUIBox, gui_field_widgets)
 
 
 
@@ -164,6 +162,9 @@ class TensorScene(ExatomicScene):
     tzx = Float(0.).tag(sync=True)
     tzy = Float(0.).tag(sync=True)
     tzz = Float(1.).tag(sync=True)
+    scale = Float(1.).tag(sync=True)
+    tdx = Int(0).tag(sync=True)
+    tens = Bool(False).tag(sync=True)
 
 
 
@@ -201,7 +202,15 @@ class UniverseScene(ExatomicScene):
     cont_num = Int(10).tag(sync=True)
     cont_lim = List([-8, -1]).tag(sync=True)
     cont_val = Float(0.0).tag(sync=True)
+    # Tensor traits
+    tensor_d = Dict().tag(sync=True)
     # Frame traits
+
+    # Tensor traits
+    tens = Bool(False).tag(sync=True)
+    tensor_d = Dict().tag(sync=True)
+    scale = Float(1.).tag(sync=True)
+    tidx = Int(0).tag(sync=True)
 
 
 
@@ -254,8 +263,7 @@ class ExatomicBox(Box):
         opts = _ListDict([
             (str(i), ToggleButton(description=str(i), value=True))
             for i, scn in enumerate(self.scenes)])
-        #for key, obj in opts.items():
-        for _, obj in opts.items():
+        for obj in opts.values():
             obj.observe(self._update_active, names='value')
 
         return Folder(active, opts)
@@ -392,20 +400,21 @@ class ExatomicBox(Box):
         mw = kwargs.pop('min_width', None)
         nframes = kwargs.pop('nframes', None)
         fields = kwargs.pop('fields', None)
+        tensors = kwargs.pop('tensors', None)
+
 
         self.scenes, scenes = _scene_grid(objs, mh, mw, test,
                                           uni, typ, scenekwargs)
 
         self._controls = self._init_gui(nframes=nframes,
                                         fields=fields,
+                                        tensors=tensors,
                                         test=test,
                                         uni=uni)
 
-        #for key, obj in self._controls.items():
         for _, obj in self._controls.items():
             if not hasattr(obj, 'active'): obj.active = True
 
-        #lo = kwargs.pop('layout', None)
         _ = kwargs.pop('layout', None)
         gui = GUIBox(self._get())
         children = [gui, scenes] if self.scenes else [gui]

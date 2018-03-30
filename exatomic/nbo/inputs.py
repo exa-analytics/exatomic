@@ -5,15 +5,24 @@
 exnbo Input Generator and Parser
 ###################################
 """
+import six
 import numpy as np
 import pandas as pd
+from exa import TypedMeta
 from exatomic import __version__
+from exatomic.base import z2sym
 from .editor import Editor
-from exatomic.core.orbital import DensityMatrix
-from exatomic.algorithms.basis import (solid_harmonics, lorder,
-                                       cart_lml_count, spher_lml_count)
+from exatomic.core.atom import Atom
+from exatomic.core.frame import Frame
+from exatomic.core.basis import BasisSetOrder, Overlap
+from exatomic.core.orbital import DensityMatrix, MOMatrix
+from exatomic.algorithms.basis import lorder, cart_lml_count, spher_lml_count
 from exatomic.algorithms.orbital_util import _check_column
 from itertools import combinations_with_replacement as cwr
+
+
+from exatomic.algorithms.numerical import _flat_square_to_triangle, _tri_indices
+
 
 
 _exaver = 'exatomic.v' + __version__
@@ -52,8 +61,9 @@ $END"""
 
 def _nbo_labels():
     """Generate dataframes of NBO label, L, and ml or l, m, n."""
-    sph = pd.DataFrame(list(solid_harmonics(6).keys()),
+    sph = pd.DataFrame([(L, m) for L in range(7) for m in range(-L, L + 1)],
                        columns=('L', 'ml'))
+
     # See the NBO 6.0 manual for more details
     # This is the basis function labeling scheme
     # In order of increasing ml from most negative
@@ -192,77 +202,84 @@ def _obtain_arrays(uni):
 
 
 
-    # kwargs = {}
-    # # Get number of functions by shell
-    # shells = uni.basis_set.functions_by_shell()
-    # # This is how many times each L value shows up
-    # shlcnt = shells.index.get_level_values(0)
-    # # Add subshells for each time L shows up
-    # shells = shells.groupby(shlcnt).apply(lambda x: x.sum())
-    # # Map it onto the atoms with each basis set
-    # nshell = uni.atom['set'].map(shells).sum()
-    # kwargs['nshell'] = nshell
-    # # Group our basis sets, will be used later
-    # bases = uni.basis_set[np.abs(uni.basis_set['d']) > 0].groupby('set')
-    # # Exponents per basis set
-    # expnts = bases.apply(lambda x: x.shape[0])
-    # # mapped onto the atoms with each basis set
-    # nexpnt = uni.atom['set'].map(expnts).sum()
-    # kwargs['nexpnt'] = nexpnt
-    # # Grab already correct arrays from basis_set_order
-    # kwargs['center'] = uni.basis_set_order['center'].values.copy()
-    # kwargs['L'] = uni.basis_set_order['L'].values
-    # if uni.basis_set.spherical:
-    #     # Spherical basis set
-    #     kwargs['ml'] = uni.basis_set_order['ml'].values
-    #     lml_count = spher_lml_count
-    # else:
-    #     # Cartesian basis set
-    #     kwargs['l'] = uni.basis_set_order['l'].values
-    #     kwargs['m'] = uni.basis_set_order['m'].values
-    #     kwargs['n'] = uni.basis_set_order['n'].values
-    #     lml_count = cart_lml_count
-    # # For the NBO specicific arrays
-    # lmax = uni.basis_set['L'].cat.as_ordered().max()
-    # # ---- There are 3 that are length nshell
-    # # The number of components per basis function (l degeneracy)
-    # ncomps = np.empty(nshell, dtype=np.int64)
-    # # The number of primitive functions per basis function
-    # nprims = np.empty(nshell, dtype=np.int64)
-    # # The pointers in the arrays above for each basis funciton
-    # npntrs = np.empty(nshell, dtype=np.int64)
-    # # ---- And 2 that are length nexpnt
-    # # The total number of exponents in the basis set
-    # expnts = np.empty(nexpnt, dtype=np.float64)
-    # # The contraction coefficients within the basis set
-    # ds = np.empty((lmax + 1, nexpnt), dtype=np.float64)
-    # # The following algorithm must be generalized
-    # # and simplified by either some bound methods
-    # # on basis_set attributes
-    # cnt, ptr, xpc = 0, 1, 0
-    # for seht in uni.atom['set']:
-    #     b = bases.get_group(seht)
-    #     for sh, grp in b.groupby('shell'):
-    #         if len(grp) == 0: continue
-    #         ncomps[cnt] = lml_count[grp['L'].values[0]]
-    #         nprims[cnt] = grp.shape[0]
-    #         npntrs[cnt] = ptr
-    #         ptr += nprims[cnt]
-    #         cnt += 1
-    #     for l, d, exp in zip(b['L'], b['d'], b['alpha']):
-    #         expnts[xpc] = exp
-    #         for i, ang in enumerate(ds):
-    #             ds[i][xpc] = d if i == l else 0
-    #         xpc += 1
-    # kwargs['nprims'] = nprims
-    # kwargs['ncomps'] = ncomps
-    # kwargs['npntrs'] = npntrs
-    # kwargs['expnts'] = expnts
-    # kwargs['coeffs'] = ds
-    # return kwargs
 
+class InpMeta(TypedMeta):
+    atom = Atom
+    basis_set_order = BasisSetOrder
+    momatrix = MOMatrix
+    frame = Frame
+    overlap = Overlap
 
-class Input(Editor):
+class Input(six.with_metaclass(InpMeta, Editor)):
+
+    def parse_atom(self):
+        start = 0
+        while True:
+            try:
+                ln = self[start].split()
+                int(ln[0]), float(ln[2])
+                break
+            except:
+                start += 1
+        stop = self.find_next("$END", start=start, keys_only=True)
+        cols = ('Z', 'Zeff', 'x', 'y', 'z')
+        atom = self.pandas_dataframe(start, stop, cols)
+        atom['frame'] = 0
+        atom['symbol'] = atom['Z'].map(z2sym)
+        self.atom = atom
+
+    def parse_basis_set_order(self):
+        start = self.find_next("$BASIS", keys_only=True) + 1
+        stop = self.find_next("$END", start=start, keys_only=True)
+        arr = ' '.join([' '.join(ln.strip().split()) for ln in self[start:stop]])
+        arr = np.fromstring(arr.replace('CENTER=', '').replace('LABEL=', ''),
+                            sep=' ', dtype=np.int64)
+        nbas = arr.shape[0] // 2
+        bso = pd.DataFrame.from_dict({'center': arr[:nbas] - 1,
+                                      'label': arr[nbas:],
+                                      'frame': 0, 'shell': 0})
+        tmp = spher.set_index('label')
+        bso['L'] = bso['label'].map(tmp['L'].to_dict())
+        bso['ml'] = bso['label'].map(tmp['ml'].to_dict())
+        self.basis_set_order = bso
+
+    def parse_overlap(self):
+        start = self.find_next("$OVERLAP", keys_only=True) + 1
+        stop = self.find_next("$END", start=start, keys_only=True)
+        ovl = self.pandas_dataframe(start, stop, range(len(self[start].split())))
+        ovl = _flat_square_to_triangle(ovl.stack().values)
+        chi0, chi1 = _tri_indices(ovl)
+        self.overlap = Overlap.from_dict({'coef': ovl, 'chi0': chi0,
+                                          'chi1': chi1, 'frame': 0})
+
+    def parse_momatrix(self):
+        arrs = {}
+        kws = ['$FOCK', '$KINETIC', '$DIPOLE', '$DENSITY', '$LCAOMO']
+        found = self.find(*kws, keys_only=True)
+        nbas = None
+        for find, start in found.items():
+            start = start[0] + 1
+            stop = self.find_next('$END', start=start, keys_only=True)
+            arr = self.pandas_dataframe(start, stop, range(len(self[start].split())))
+            arrs[find] = arr.stack().values
+            if nbas is None: nbas = np.int64(np.sqrt(arrs[find].shape[0]))
+        nbas = np.int64(np.sqrt(min((arr.shape[0] for arr in arrs.values()))))
+        nbas2 = nbas ** 2
+        for key in kws:
+            arr = arrs[key]
+            nkey = key.strip('$').lower()
+            if arr.shape[0] == nbas2:
+                    arrs[nkey] = arr
+            else:
+                rpt = arr.shape[0] // (nbas2)
+                for i in range(rpt):
+                    arrs[nkey + str(i)] = arr[i * nbas2 : i * nbas2 + nbas2]
+            del arrs[key]
+        arrs['chi'] = np.tile(range(nbas), nbas)
+        arrs['orbital'] = np.repeat(range(nbas), nbas)
+        arrs['frame'] = 0
+        self.momatrix = MOMatrix.from_dict(arrs)
+
 
     @classmethod
     def from_universe(cls, uni, mocoefs=None, orbocc=None, name=''):

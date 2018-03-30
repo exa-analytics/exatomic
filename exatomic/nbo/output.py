@@ -77,19 +77,27 @@ class MOMatrix(Editor):
     def to_universe(self):
         raise NotImplementedError('This editor has no parse_atom method.')
 
-    def parse_momatrix(self, nbas, column=None, os=False):
+    def parse_momatrix(self, nbas, nmo=None, column=None, os=False,
+                       nbo6=False):
         """
         Requires the number of basis functions in this matrix.
         """
         column = 'coef' if column is None else column
-        start = 3 if not os else 4
+        nmo = nbas if nmo is None else nmo
+        start = 0
+        while True:
+            try:
+                float(self[start].split()[0])
+                break
+            except:
+                start += 1
         ncol = len(self[start].split())
         if nbas <= ncol:
             nrows = ncol
             occrows = ncol
         else:
             add = 1 if nbas % ncol else 0
-            nrows = nbas * (nbas // ncol + add)
+            nrows = nbas * (nmo // ncol + add)
             occrows = nbas // ncol + add
         # This code is repetitive with the beta spin parsing below
         # generalize for i in rnage(2): etc. etc.
@@ -100,14 +108,16 @@ class MOMatrix(Editor):
                                      ).stack().reset_index(drop=True)
         occvec = self.pandas_dataframe(occstart, occstop, range(ncol)
                                        ).stack().reset_index(drop=True)
-        orbital = np.repeat(range(nbas), nbas)
-        chi = np.tile(range(nbas), nbas)
+        orbital = np.repeat(range(nbas), nmo)
+        chi = np.tile(range(nbas), nmo)
         self.momatrix = pd.DataFrame.from_dict({'orbital': orbital, 'chi': chi,
                                                 column: coef, 'frame': 0})
         self.orbital = Orbital.from_occupation_vector(occvec)
         self.occupation_vector = {column: occvec}
         if os:
-            start = self.find_next('BETA  SPIN', start=stop, keys_only=True) + 1
+            start = self.regex('BETA  SPIN', start=stop, keys_only=True,
+                               flags=re.IGNORECASE)[0] + 1
+            start = start + stop
             stop = start + nrows
             occstart = stop
             occstop = occstart + occrows
