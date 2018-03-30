@@ -10,33 +10,34 @@ import numpy as np
 import pandas as pd
 from numba import (jit, njit, jitclass, vectorize, prange,
                    deferred_type, optional, int64, float64, boolean)
+from exatomic.base import nbche, nbpll, nbtgt
 
 #################
 # Miscellaneous #
 #################
 
-@jit(nopython=True, cache=True)
+@jit(nopython=True, nogil=True, cache=nbche)
 def _fac(n,v): return _fac(n-1, n*v) if n else v
-@jit(nopython=True, cache=True)
+@jit(nopython=True, nogil=True, cache=nbche)
 def _fac2(n,v): return _fac2(n-2, n*v) if n > 0 else v
 
-@jit(nopython=True, cache=True)
+@jit(nopython=True, nogil=True, cache=nbche)
 def fac(n): return _fac(n, 1) if n > -1 else 0
-@jit(nopython=True, cache=True)
+@jit(nopython=True, nogil=True, cache=nbche)
 def fac2(n): return _fac2(n, 1) if n > 1 else 1 if n > -2 else 0
-@jit(nopython=True, cache=True)
+@jit(nopython=True, nogil=True, cache=nbche)
 def dfac21(n): return fac2(2 * n - 1)
-@jit(nopython=True, cache=True)
+@jit(nopython=True, nogil=True, cache=nbche)
 def choose(n, k): return fac(n) // (fac(k) * fac(n - k))
-@jit(nopython=True, cache=True)
+@jit(nopython=True, nogil=True, cache=nbche)
 def sdist(ax, ay, az, bx, by, bz):
     return (ax - bx) ** 2 + (ay - by) ** 2 + (az - bz) ** 2
 
-@vectorize(['int64(int64)'])
+@vectorize(['int64(int64)'], target=nbtgt)
 def _vec_fac(n): return fac(n)
-@vectorize(['int64(int64)'])
+@vectorize(['int64(int64)'], target=nbtgt)
 def _vec_fac2(n): return fac2(n)
-@vectorize(['int64(int64)'])
+@vectorize(['int64(int64)'], target=nbtgt)
 def _vec_dfac21(n): return dfac21(n)
 
 
@@ -45,7 +46,7 @@ def _vec_dfac21(n): return dfac21(n)
 ################################
 
 
-@jit(nopython=True, cache=True)
+@jit(nopython=True, nogil=True, cache=nbche)
 def _tri_indices(vals):
     nel = vals.shape[0]
     nbas = int(np.round(np.roots(np.array([1, 1, -2 * vals.shape[0]]))[1]))
@@ -59,7 +60,7 @@ def _tri_indices(vals):
             cnt += 1
     return chi0, chi1
 
-@jit(nopython=True, cache=True)
+@jit(nopython=True, nogil=True, cache=nbche)
 def _triangle(vals):
     nbas = vals.shape[0]
     ndim = nbas * (nbas + 1) // 2
@@ -71,7 +72,7 @@ def _triangle(vals):
             cnt += 1
     return tri
 
-@jit(nopython=True, cache=True)
+@jit(nopython=True, nogil=True, cache=nbche)
 def _square(vals):
     nbas = int(np.round(np.roots(np.array([1, 1, -2 * vals.shape[0]]))[1]))
     square = np.empty((nbas, nbas), dtype=np.float64)
@@ -83,7 +84,7 @@ def _square(vals):
             cnt += 1
     return square
 
-@jit(nopython=True, cache=True)
+@jit(nopython=True, nogil=True, cache=nbche)
 def _flat_square_to_triangle(flat):
     cnt, ndim = 0, np.int64(np.sqrt(flat.shape[0]))
     tri = np.empty(ndim * (ndim + 1) // 2)
@@ -101,7 +102,7 @@ def _flat_square_to_triangle(flat):
 #####################################################################
 
 
-@jit(nopython=True, nogil=True, parallel=True)
+@jit(nopython=True, nogil=True, cache=nbche)
 def _square_indices(n):
     m = n**2
     x = np.empty((m, ), dtype=np.int64)
@@ -116,7 +117,7 @@ def _square_indices(n):
     return x, y
 
 
-@jit(nopython=True, nogil=True, parallel=True)
+@jit(nopython=True, nogil=True, cache=nbche)
 def density_from_momatrix(cmat, occvec):
     nbas = len(occvec)
     arlen = nbas * (nbas + 1) // 2
@@ -134,7 +135,7 @@ def density_from_momatrix(cmat, occvec):
     return chi0, chi1, dens, frame
 
 
-@jit(nopython=True, nogil=True, parallel=True)
+@jit(nopython=True, nogil=True, cache=nbche)
 def density_as_square(denvec):
     nbas = int((-1 + np.sqrt(1 - 4 * -2 * len(denvec))) / 2)
     square = np.empty((nbas, nbas), dtype=np.float64)
@@ -147,7 +148,7 @@ def density_as_square(denvec):
     return square
 
 
-@jit(nopython=True, nogil=True, parallel=True)
+@jit(nopython=True, nogil=True, cache=nbche)
 def momatrix_as_square(movec):
     nbas = np.int64(len(movec) ** (1/2))
     square = np.empty((nbas, nbas), dtype=np.float64)
