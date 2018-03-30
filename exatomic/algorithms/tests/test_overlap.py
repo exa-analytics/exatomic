@@ -44,5 +44,4 @@ class TestMolcasOverlap(TestCase):
             n = np.isclose(ovls, uni.overlap.square().values,
                            rtol=5e-5, atol=1e-12).sum() \
                 / (ovls.shape[0] * ovls.shape[1])
-            print(n)
             self.assertTrue(n > 0.999)
