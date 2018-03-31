@@ -267,7 +267,7 @@ def _compute_bond_count(atom, atom_two):
     atom['bond_count'] = bonded.value_counts().sort_index()
 
 
-def compute_atom_two_out_of_core(hdfname, uni, a):
+def compute_atom_two_out_of_core(hdfname, uni, a, **kwargs):
     """
     Perform an out of core periodic two body calculation for a simple cubic
     unit cell with dimension a.
@@ -279,11 +279,19 @@ def compute_atom_two_out_of_core(hdfname, uni, a):
         hdfname (str): HDF file name
         uni (:class:`~exatomic.core.universe.Universe`): Universe
         a (float): Simple cubic unit cell dimension
+        kwargs: Keyword arguments for bond computation (i.e. covalent radii)
+
+    See Also:
+        :func:`~exatomic.core.two._compute_bonds`
     """
     store = pd.HDFStore(hdfname, mode="a")
-    grps = uni.groupby("frame")
+    unit_atom = uni.atom[['symbol', 'x', 'y', 'z', 'frame']].copy()
+    unit_atom['symbol'] = unit_atom['symbol'].astype(str)
+    unit_atom['frame'] = unit_atom['frame'].astype(int)
+    unit_atom.update(uni.unit_atom)
+    grps = unit_atom.groupby("frame")
     n = len(grps)
-    fp = FloatProgress(description="Computing:")
+    fp = FloatProgress(description="AtomTwo to HDF:")
     display(fp)
     for i, (fdx, atom) in enumerate(grps):
         v = pdist_ortho(atom['x'].values, atom['y'].values,
@@ -292,7 +300,7 @@ def compute_atom_two_out_of_core(hdfname, uni, a):
         tdf = pd.DataFrame.from_dict({'frame': np.array([fdx]*len(v[0]), dtype=int),
                                       'dx': v[0], 'dy': v[1], 'dz': v[2], 'dr': v[3],
                                        'atom0': v[4], 'atom1': v[5], 'projection': v[6]})
-        _compute_bonds(u.atom[u.atom['frame'] == fdx], tdf, Tl=2.9, Pt=2.4)
+        _compute_bonds(uni.atom[uni.atom['frame'] == fdx], tdf, **kwargs)
         store.put("frame_"+str(fdx) + "/atom_two", tdf)
         fp.value = i/n*100
     store.close()
