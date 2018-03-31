@@ -52,18 +52,14 @@ install:
 
   - cmd: conda config --set show_channel_urls true
   - cmd: conda config --set always_yes yes --set changeps1 no
+  - cmd: conda update -n base conda
   - cmd: conda update -q -y --all
+  - cmd: conda install -q -c conda-forge numpy scipy matplotlib networkx pandas
+  - cmd: conda install -q -c conda-forge numba six pytest pytables
+  - cmd: conda install -q -c conda-forge symengine python-symengine
+  - cmd: conda install -q -c conda-forge psutil numexpr nodejs ipywidgets
   - cmd: git clone https://github.com/exa-analytics/exa.git
   - cmd: cd exa
-  - cmd: git fetch origin
-  - cmd: git checkout 0.3.9
-  - cmd: conda install -q -y -c conda-forge numpy scipy matplotlib seaborn networkx pandas nose numba pytables six
-  - cmd: conda install -q -c conda-forge pytables python-coveralls ply pandoc pypandoc nbsphinx sympy
-  - cmd: conda install -q -c conda-forge symengine python-symengine
-  - conda install -q -c conda-forge psutil numexpr nodejs ipywidgets
-# - cmd: conda install -q -c symengine symengine python-symengine
-# - cmd: conda install -q -c conda-forge 'icu=56.*'
-  - cmd: pip install travis-sphinx codacy-coverage coverage
   - cmd: pip install .
   - cmd: cd ../
   - cmd: pip install .
@@ -71,4 +67,4 @@ install:
 build: false
 
 test_script:
-  - cmd: pytest --cov
+  - cmd: pytest

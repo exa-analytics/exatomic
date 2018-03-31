@@ -1,3 +1,7 @@
+numpy
+pandas
+numba
+pytest
 ipywidgets
 symengine
 numexpr
