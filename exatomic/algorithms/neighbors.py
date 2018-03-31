@@ -17,6 +17,8 @@ import numpy as np
 import pandas as pd
 import numba as nb
 from collections import defaultdict
+from IPython.display import display
+from ipywidgets import FloatProgress
 from exatomic.base import nbtgt, nbpll
 from exatomic.core.atom import Atom
 from exatomic.core.universe import Universe
@@ -52,7 +54,7 @@ def _worker(idx, x, y, z, a):
                     pz[m] = z[l] + k*a
                     prj[m] = p
                     m += 1
-                    p += 1
+                p += 1
     return idxs, px, py, pz, prj
 
 
@@ -102,7 +104,7 @@ def _create_super_universe(u, a):
 def periodic_nearest_neighbors_by_atom(uni, source, a, sizes, **kwargs):
     """
     Determine nearest neighbor molecules to a given source (or sources) and
-    return the data as a dataframe. 
+    return the data as a dataframe.
 
     Args:
         uni (:class:`~exatomic.core.universe.Universe`): Universe
@@ -127,46 +129,47 @@ def periodic_nearest_neighbors_by_atom(uni, source, a, sizes, **kwargs):
 
     dct = defaultdict(list)
     grps = uni.atom.groupby("frame")
-    n = len(grps)
+    ntot = len(grps)
     fp = FloatProgress(description="Slicing:")
     display(fp)
     for i, (fdx, atom) in enumerate(grps):
-        uu = _create_super_universe(Universe(atom=atom), a)
-        uu.compute_atom_two(**kwargs)
-        uu.compute_molecule()
-        if isinstance(source, (int, np.int32, np.int64)):
-            source_atom_idxs = uu.atom[(uu.atom['label'] == source) &
-                                       (uu.atom['prj'] == 13)].index.values
-        else:
-            source_atom_idxs = uu.atom[(uu.atom['symbol'] == source) &
-                                       (uu.atom['prj'] == 13)].index.values
-        source_molecule_idxs = uu.atom.loc[source_atom_idxs, 'molecule'].unique()
-        uu.atom_two['frame'] = uu.atom_two['atom0'].map(uu.atom['frame'])
-        nearest_atoms = uu.atom_two[(uu.atom_two['atom0'].isin(source_atom_idxs)) |
-                                    (uu.atom_two['atom1'].isin(source_atom_idxs))].sort_values("dr")[['frame', 'atom0', 'atom1']]
-        nearest = nearest_atoms.groupby("frame").apply(sorter, source_atom_idxs=source_atom_idxs)
-        del nearest['level_1']
-        nearest.index.names = ['frame', 'idx']
-        nearest.columns = ['two', 'atom']
-        nearest['molecule'] = nearest['atom'].map(uu.atom['molecule'])
-        nearest = nearest[~nearest['molecule'].isin(source_molecule_idxs)]
-        nearest = nearest.drop_duplicates('molecule', keep='first')
-        nearest.reset_index(inplace=True)
-        nearest['frame'] = nearest['frame'].astype(int)
-        nearest['molecule'] = nearest['molecule'].astype(int)
-        dct['nearest'].append(nearest)
-        for nn in sizes:
-            atm = []
-            for i, fdx in enumerate(nearest['frame'].unique()):
-                mdxs = nearest.loc[nearest['frame'] == fdx, 'molecule'].tolist()[:nn]
-                mdxs.append(source_molecule_idxs[i])
-                atm.append(uu.atom[uu.atom['molecule'].isin(mdxs)][['symbol', 'x', 'y', 'z', 'frame']].copy())
-            dct[nn].append(pd.concat(atm, ignore_index), ignore_index=True)
-        fp.value = i/n*100
-    fp.close()
+        if len(atom) > 0:
+            uu = _create_super_universe(Universe(atom=atom.copy()), a)
+            uu.compute_atom_two(**kwargs)
+            uu.compute_molecule()
+            if isinstance(source, (int, np.int32, np.int64)):
+                source_atom_idxs = uu.atom[(uu.atom['label'] == source) &
+                                           (uu.atom['prj'] == 13)].index.values
+            else:
+                source_atom_idxs = uu.atom[(uu.atom['symbol'] == source) &
+                                           (uu.atom['prj'] == 13)].index.values
+            source_molecule_idxs = uu.atom.loc[source_atom_idxs, 'molecule'].unique()
+            uu.atom_two['frame'] = uu.atom_two['atom0'].map(uu.atom['frame'])
+            nearest_atoms = uu.atom_two[(uu.atom_two['atom0'].isin(source_atom_idxs)) |
+                                        (uu.atom_two['atom1'].isin(source_atom_idxs))].sort_values("dr")[['frame', 'atom0', 'atom1']]
+            nearest = nearest_atoms.groupby("frame").apply(sorter, source_atom_idxs=source_atom_idxs)
+            del nearest['level_1']
+            nearest.index.names = ['frame', 'idx']
+            nearest.columns = ['two', 'atom']
+            nearest['molecule'] = nearest['atom'].map(uu.atom['molecule'])
+            nearest = nearest[~nearest['molecule'].isin(source_molecule_idxs)]
+            nearest = nearest.drop_duplicates('molecule', keep='first')
+            nearest.reset_index(inplace=True)
+            nearest['frame'] = nearest['frame'].astype(int)
+            nearest['molecule'] = nearest['molecule'].astype(int)
+            dct['nearest'].append(nearest)
+            for nn in sizes:
+                atm = []
+                for j, fdx in enumerate(nearest['frame'].unique()):
+                    mdxs = nearest.loc[nearest['frame'] == fdx, 'molecule'].tolist()[:nn]
+                    mdxs.append(source_molecule_idxs[j])
+                    atm.append(uu.atom[uu.atom['molecule'].isin(mdxs)][['symbol', 'x', 'y', 'z', 'frame']].copy())
+                dct[nn].append(pd.concat(atm, ignore_index=True))
+        fp.value = i/ntot*100
     dct['nearest'] = pd.concat(dct['nearest'], ignore_index=True)
     for nn in sizes:
         dct[nn] = Universe(atom=pd.concat(dct[nn], ignore_index=True))
+    fp.close()
     return dct
 
 
