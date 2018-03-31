@@ -10,10 +10,10 @@ matrix:
           python: 3.5
           env: PYTHONVER=3.5
 
-        - os: linux
-          language: python
-          python: 3.6
-          env: PYTHONVER=3.6
+#       - os: linux
+#         language: python
+#         python: 3.6
+#         env: PYTHONVER=3.6
 
 #        - os: osx
 #          language: generic
@@ -52,7 +52,6 @@ install:
 script:
     - export PYTHONDONTWRITEBYTECODE=1
     - if [[ $TRAVIS_OS_NAME == "linux" ]]; then
-          find . -name "__pycache__" -type d -exec rm -r {} \;;
           pytest --cov;
           coverage xml;
       else
