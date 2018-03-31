@@ -28,7 +28,7 @@ install:
       fi;
       echo "DONE"
     - bash miniconda.sh -b -p $HOME/miniconda
-    - export NUMBA_DISABLE_JIT=1    # For coverage report
+#    - export NUMBA_DISABLE_JIT=1    # For coverage report
     - export PATH="$HOME/miniconda/bin:$PATH"
     - conda config --set always_yes yes --set changeps1 no
     - conda update -q --all
