@@ -40,6 +40,10 @@ class Frame(DataFrame):
     _index = 'frame'
     _columns = ['atom_count']
 
+    @property
+    def _constructor(self):
+        return Frame
+
     def is_periodic(self, how='all'):
         """
         Check if any/all frames are periodic.

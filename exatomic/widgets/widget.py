@@ -310,15 +310,9 @@ class DemoUniverse(ExatomicBox):
                                            typ=ExatomicScene, **kwargs)
 
 
-
-
-
-
 @register
 class UniverseWidget(ExatomicBox):
     """:class:`~exatomic.container.Universe` viewing widget."""
-
-
     def _frame_folder(self, nframes):
         playable = bool(nframes <= 1)
         flims = dict(min=0, max=nframes-1, step=1, value=0)
@@ -507,7 +501,6 @@ class UniverseWidget(ExatomicBox):
                 ('center', cod_label),
                 ('coord', cbox)])
         return Folder(tens, content)
-        
 
     def _init_gui(self, nframes=1, fields=None, tensors=None, **kwargs):
         mainopts = super(UniverseWidget, self)._init_gui(**kwargs)
@@ -536,7 +529,6 @@ class UniverseWidget(ExatomicBox):
             mainopts.update([('tensor', self._tensor_folder())])
 
         return mainopts
-
 
     def __init__(self, *unis, **kwargs):
         scenekwargs = kwargs.pop('scenekwargs', {})

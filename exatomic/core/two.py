@@ -46,12 +46,18 @@ class AtomTwo(DataFrame):
     _categories = {'symbols': str, 'atom0': np.int64, 'atom1': np.int64}
 
     @property
+    def _constructor(self):
+        return AtomTwo
+
+    @property
     def bonded(self):
         return self[self['bond'] == True]
 
 
 class MoleculeTwo(DataFrame):
-    pass
+    @property
+    def _constructor(self):
+        return MoleculeTwo
 
 
 def compute_atom_two(universe, dmax=8.0, vector=False, bonds=True, **kwargs):

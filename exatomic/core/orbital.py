@@ -28,6 +28,9 @@ from exatomic.core.field import AtomicField
 
 
 class _Convolve(DataFrame):
+    @property
+    def _constructor(self):
+        return _Convolve
 
     @staticmethod
     def _gauss(sigma, en, en0):
@@ -132,6 +135,9 @@ class Orbital(_Convolve):
     _cardinal = ('frame', np.int64)
     _categories = {'spin': np.int64, 'frame': np.int64, 'group': np.int64}
 
+    @property
+    def _constructor(self):
+        return Orbital
 
     def get_orbital(self, orb=-1, spin=0, index=None, group=None, frame=None):
         """
@@ -233,6 +239,10 @@ class Excitation(_Convolve):
     _cardinal = ('frame', np.int64)
     _categories = {'frame': np.int64, 'group': np.int64}
 
+    @property
+    def _constructor(self):
+        return Excitation
+
     @classmethod
     def from_universe(cls, uni, initial=None, final=None, spin=0):
         """
@@ -292,6 +302,10 @@ class MOMatrix(DataFrame):
     _cardinal = ('frame', np.int64)
     _index = 'index'
 
+    @property
+    def _constructor(self):
+        return MOMatrix
+
     def contributions(self, orbital, mocoefs='coef', tol=0.01, frame=0):
         """
         Returns a slice containing all non-negligible basis function
@@ -334,6 +348,10 @@ class DensityMatrix(DataFrame):
     _columns = ['chi0', 'chi1', 'coef']
     _cardinal = ('frame', np.int64)
     _index = 'index'
+
+    @property
+    def _constructor(self):
+        return DensityMatrix
 
     def square(self, frame=0):
         """Returns a square dataframe of the density matrix."""

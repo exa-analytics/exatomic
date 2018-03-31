@@ -74,6 +74,10 @@ class BasisSet(DataFrame):
     _categories = {'L': np.int64, 'set': np.int64, 'frame': np.int64, 'norm': str}
 
     @property
+    def _constructor(self):
+        return BasisSet
+
+    @property
     def lmax(self):
         return self['L'].cat.as_ordered().max()
 
@@ -176,6 +180,10 @@ class BasisSetOrder(DataFrame):
     _cardinal = ('frame', np.int64)
     _categories = {'L': np.int64}
 
+    @property
+    def _constructor(self):
+        return BasisSetOrder
+
 
 class Overlap(DataFrame):
     """
@@ -201,6 +209,10 @@ class Overlap(DataFrame):
     """
     _columns = ['chi0', 'chi1', 'coef', 'frame']
     _index = 'index'
+
+    @property
+    def _constructor(self):
+        return Overlap
 
     def square(self, frame=0, column='coef'):
         """Return a 'square' matrix DataFrame of the Overlap."""

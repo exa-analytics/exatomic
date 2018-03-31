@@ -40,8 +40,12 @@ class Tensor(DataFrame):
     """
     _index = 'tensor'
     _columns = ['xx','xy','xz','yx','yy','yz','zx','zy','zz',
-                                                    'frame','atom','label']
+                'frame','atom','label']
     _categories = {'frame': np.int64, 'label': str}
+
+    @property
+    def _constructor(self):
+        return Tensor
 
     @classmethod
     def from_file(cls, filename):

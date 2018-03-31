@@ -22,6 +22,10 @@ class Molecule(DataFrame):
     _index = 'molecule'
     _categories = {'frame': np.int64, 'formula': str, 'classification': object}
 
+    @property
+    def _constructor(self):
+        return Molecule
+
     def classify(self, *classifiers):
         """
         Classify molecules into arbitrary categories.

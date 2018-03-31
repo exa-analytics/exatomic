@@ -257,5 +257,3 @@ def _nin(o1, o2, po1, po2, gamma, pg12):
             fk += newt1 * newt2 * (po1 ** (o1 - xx)) * (po2 ** (o2 - zz))
         oio += prod * fk
     return oio
-
-

@@ -13,17 +13,13 @@ from sympy.parsing.sympy_parser import parse_expr
 from sympy.physics.secondquant import KroneckerDelta as kr
 
 
-class SolidHarmonic:
-    """
-    Representation of a solid harmonic function.
-    """
-
-
 class SolidHarmonics:
     """
     Store a collection of solid harmonic functions.
     """
-
+    @property
+    def _constructor(self):
+        return SolidHarmonics
 
 
 def solid_harmonics(l, return_all=False, vectorize=False, standard_symbols=True):

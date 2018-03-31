@@ -146,6 +146,9 @@ def car2sph(sh, cart, orderedp=True):
 
 
 class Symbolic(object):
+    @property
+    def _constructor(self):
+        return Symbolic
 
     def diff(self, cart='x', order=1):
         """Compute the nth order derivative symbolically with respect to cart.
@@ -188,11 +191,14 @@ class Basis(object):
     Args
         uni (exatomic.core.universe.Universe): a universe with basis set
         frame (int): frame corresponding to basis set (default=0)
-        cartp (bool): forces p function ordering as (x, y, z) not (-1, 0, 1)"""
-
+        cartp (bool): forces p function ordering as (x, y, z) not (-1, 0, 1)
+    """
     # Unscaled solid harmonics
     _sh = solid_harmonics(6)
 
+    @property
+    def _constructor(self):
+        return Basis
 
     def integrals(self):
         """Compute the overlap matrix using primitive cartesian integrals."""
@@ -204,13 +210,11 @@ class Basis(object):
         return Overlap.from_dict({'chi0': chi0, 'chi1': chi1,
                                   'frame': 0, 'coef': ovl})
 
-
     def enum_shell(self, shl):
         """Return a generator over angular momentum degrees of freedom."""
         if shl.spherical:
             return shl.enum_spherical()
         return shl.enum_cartesian()
-
 
     def evaluate(self, xs, ys, zs):
         """Evaluate basis functions on a numerical grid."""
@@ -218,13 +222,11 @@ class Basis(object):
             return self._evaluate_sto(xs, ys, zs)
         return self._evaluate_gau(xs, ys, zs)
 
-
     def evaluate_diff(self, xs, ys, zs, cart='x'):
         """Evaluate basis function derivatives on a numerical grid."""
         if not self._gaussian:
             return self._evaluate_diff_sto(xs, ys, zs, cart)
         return self._evaluate_diff_gau(xs, ys, zs, cart)
-
 
     def _radial(self, x, y, z, alphas, cs, rs=None, pre=None):
         """Generates the symbolic radial portion of a basis function."""
@@ -237,7 +239,6 @@ class Basis(object):
             sum((c * exp(-a * self._expnt)
                 for c, a in zip(cs, alphas))
                 ).subs({_x: _x - x, _y: _y - y, _z: _z - z}))
-
 
     def _angular(self, shl, x, y, z, *ang):
         """Generates the symbolic angular portion of a basis function."""
@@ -255,7 +256,6 @@ class Basis(object):
                 sym /= (2 * np.pi ** 0.5)
         return Symbolic(sym.subs({_x: _x - x, _y: _y - y, _z: _z - z}))
 
-
     def _evaluate_sto(self, xs, ys, zs):
         """Evaluates a full STO basis set and returns a numpy array."""
         cnt, flds = 0, np.empty((len(self), len(xs)))
@@ -272,10 +272,8 @@ class Basis(object):
                     cnt += 1
         return flds
 
-
     def _evaluate_diff_sto(self, xs, ys, zs, cart):
         raise NotImplementedError("Verify symbolic differentiation of STOs.")
-
 
     def _evaluate_gau(self, xs, ys, zs):
         """Evaluates a full Gaussian basis set and returns a numpy array."""
@@ -290,7 +288,6 @@ class Basis(object):
                     flds[cnt] = r.evaluate(xs, ys, zs, arr=a)
                     cnt += 1
         return flds
-
 
     def _evaluate_diff_gau(self, xs, ys, zs, cart):
         """Evaluates the derivatives of a full Gaussian basis
