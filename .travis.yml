@@ -10,10 +10,10 @@ matrix:
           python: 3.5
           env: PYTHONVER=3.5
 
-#       - os: linux
-#         language: python
-#         python: 3.6
-#         env: PYTHONVER=3.6
+       - os: linux
+         language: python
+         python: 3.6
+         env: PYTHONVER=3.6
 
 #        - os: osx
 #          language: generic
@@ -48,6 +48,7 @@ install:
     - rm -rf exa
     - conda install -q -c conda-forge numexpr nodejs ipywidgets
     - pip install .
+    - conda list | grep numba
 
 script:
     - export PYTHONDONTWRITEBYTECODE=1
