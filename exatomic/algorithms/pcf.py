@@ -72,13 +72,15 @@ def radial_pair_correlation(universe, a, b, dr=0.05, start=1.0, stop=13.0,
     bins = np.arange(start, stop, dr)                     # Discrete values of r for histogram
     if isinstance(a, str):
         a_idx = universe.atom[universe.atom['symbol'] == a].index.values
-    elif isinstance(a, (int, list, tuple, np.int64, np.in32)):
+    elif isinstance(a, (int, list, tuple, np.int64, np.int32)):
+        a = [a] if not isinstance(a, (list, tuple)) else a
         a_idx = universe.atom[universe.atom['label'].isin(a)].index.values
     else:
         a_idx = a
     if isinstance(b, str):
         b_idx = universe.atom[universe.atom['symbol'] == b].index.values
-    elif isinstance(a, (int, list, tuple, np.int64, np.in32)):
+    elif isinstance(a, (int, list, tuple, np.int64, np.int32)):
+        b = [b] if not isinstance(b, (list, tuple)) else b
         b_idx = universe.atom[universe.atom['label'].isin(b)].index.values
     else:
         b_idx = b
@@ -90,12 +92,6 @@ def radial_pair_correlation(universe, a, b, dr=0.05, start=1.0, stop=13.0,
                                        universe.atom_two['atom1'].isin(b_idx)) |
                                       (universe.atom_two['atom0'].isin(b_idx) &
                                        universe.atom_two['atom1'].isin(a_idx)), c]
-    symbol = universe.atom["symbol"].astype(str)          # To select distances, map to symbols
-    symbol0 = universe.atom_two["atom0"].map(symbol)
-    symbol1 = universe.atom_two["atom1"].map(symbol)
-    symbols = symbol0 + symbol1
-    indexes = symbols[symbols.isin([a + b, b + a])].index # Distances of interest or those that
-    distances = universe.atom_two.loc[indexes, "dr"]       # match symbol pairs
     hist, bins = np.histogram(distances, bins)            # Compute histogram
     nn = hist.sum()                                       # Number of observations
     bmax = bins.max()                                     # Note that bins is unchanged by np.hist..
@@ -112,18 +108,16 @@ def radial_pair_correlation(universe, a, b, dr=0.05, start=1.0, stop=13.0,
     else:
         v_cell = universe.frame["rx"].max()**3
     g = hist*v_cell*ratio/(v_shell*nn)                    # Compute pair correlation
-    na = universe.atom[universe.atom["symbol"] == a].groupby("frame").size().mean()
-    nb = universe.atom[universe.atom["symbol"] == b].groupby("frame").size().mean()
-    if a == b:
-        nb -= 1
-    n = hist.cumsum()/nn*na*nb*4/3*np.pi*bmax**3/v_cell
+    numa = len(a_idx)/len(universe)
+    numb = len(b_idx)/len(universe)
+    n = hist.cumsum()/nn*numa*numb*4/3*np.pi*bmax**3/v_cell
     r = (bins[1:] + bins[:-1])/2*Length["au", length]
     unit = "au"
     if length in ["A", "angstrom", "ang", "Angstrom"]:
         unit = r"\AA"
     rlabel = r"$r\ \mathrm{(" + unit + ")}$"
-    glabel = r"$g_\mathrm{" + a + b + r"}(r)$"
-    nlabel = r"$n_\mathrm{" + a + b + r"}(r)$"
+    glabel = r"$g(r)$"
+    nlabel = r"$n(r)$"
     df = pd.DataFrame.from_dict({rlabel: r, glabel: g, nlabel: n})
     if window > 1:
         df = df.rolling(window=window).mean()
@@ -179,7 +173,6 @@ def radial_pcf_out_of_core(hdftwo, hdfout, u, pairs, **kwargs):
         for key, ab in pairs.items():
             pcfs[key] += radial_pair_correlation(uu, ab[0], ab[1], **kwargs).reset_index()
         fp.value = (i+1)/n*100
-    print("Saving...")
     store = pd.HDFStore(hdfout)
     for key in pairs.keys():
         pcfs[key] /= n
