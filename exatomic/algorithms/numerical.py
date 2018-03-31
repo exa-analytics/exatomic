@@ -33,11 +33,11 @@ def choose(n, k): return fac(n) // (fac(k) * fac(n - k))
 def sdist(ax, ay, az, bx, by, bz):
     return (ax - bx) ** 2 + (ay - by) ** 2 + (az - bz) ** 2
 
-@vectorize(['int64(int64)'], target=nbtgt)
+#@vectorize(['int64(int64)'])
 def _vec_fac(n): return fac(n)
-@vectorize(['int64(int64)'], target=nbtgt)
+#@vectorize(['int64(int64)'])
 def _vec_fac2(n): return fac2(n)
-@vectorize(['int64(int64)'], target=nbtgt)
+#@vectorize(['int64(int64)'])
 def _vec_dfac21(n): return dfac21(n)
 
 
