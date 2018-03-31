@@ -28,6 +28,7 @@ guide for the types of data found in two body tables provided by this module
 +-------------------+----------+---------------------------------------------+
 """
 import numpy as np
+import pandas as pd
 from IPython.display import display
 from ipywidgets import FloatProgress
 from exa import DataFrame
