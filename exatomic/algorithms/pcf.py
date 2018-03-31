@@ -102,7 +102,15 @@ def radial_pair_correlation(universe, a, b, dr=0.05, start=1.0, stop=13.0,
     rx, ry, rz = universe.frame[["rx", "ry", "rz"]].mean().values
     ratio = (((bmax/rx + bmax/ry + bmax/rz)/3)**3).mean() # Variable actual vol and bin vol
     v_shell = bins[1:]**3 - bins[:-1]**3                  # Volume of each bin shell
-    v_cell = universe.frame["cell_volume"].mean()         # Actual volume
+    if 'cell_volume' in universe.frame.columns:
+        v_cell = universe.frame["cell_volume"].mean()         # Actual volume
+    elif 'Volume' in universe.frame.columns:
+        v_cell = universe.frame["Volume"].mean()         # Actual volume
+        c = 'Volume'
+    elif 'volume' in universe.frame.columns:
+        v_cell = universe.frame["volume"].mean()         # Actual volume
+    else:
+        v_cell = universe.frame["rx"].max()**3
     g = hist*v_cell*ratio/(v_shell*nn)                    # Compute pair correlation
     na = universe.atom[universe.atom["symbol"] == a].groupby("frame").size().mean()
     nb = universe.atom[universe.atom["symbol"] == b].groupby("frame").size().mean()
@@ -128,7 +136,7 @@ def radial_pcf_out_of_core(hdftwo, hdfout, u, pairs, **kwargs):
     """
     Out of core radial pair correlation calculation.
 
-    Atomic two body data is expected to have been computed (see 
+    Atomic two body data is expected to have been computed (see
     :func:`~exatomic.core.two.compute_atom_two_out_of_core`)
     An example is given below. Note the importance of the definition
     of pairs and the presence of additional arguments.
@@ -158,23 +166,23 @@ def radial_pcf_out_of_core(hdftwo, hdfout, u, pairs, **kwargs):
     twokey = "frame_" + str(fdx) + "/atom_two"
     atom = u.atom[u.atom['frame'] == fdx].copy()
     uu = Universe(atom=atom, frame=u.frame.loc[[fdx]],
-    atom_two = pd.read_hdf(name, twokey))
+    atom_two = pd.read_hdf(hdftwo, twokey))
     pcfs = {}
     for key, ab in pairs.items():
-        pcf[key] = radial_pair_correlation(uu, ab[0], ab[1], **kwargs).reset_index()
+        pcfs[key] = radial_pair_correlation(uu, ab[0], ab[1], **kwargs).reset_index()
     fp.value = 1/n*100
     for i, fdx in enumerate(f[1:]):
         twokey = "frame_" + str(fdx) + "/atom_two"
         atom = u.atom[u.atom['frame'] == fdx].copy()
         uu = Universe(atom=atom, frame=u.frame.loc[[fdx]],
-        atom_two = pd.read_hdf(name, twokey))
+        atom_two = pd.read_hdf(hdftwo, twokey))
         for key, ab in pairs.items():
-            pcf[key] += radial_pair_correlation(uu, ab[0], ab[1], **kwargs).reset_index()
+            pcfs[key] += radial_pair_correlation(uu, ab[0], ab[1], **kwargs).reset_index()
         fp.value = (i+1)/n*100
     print("Saving...")
     store = pd.HDFStore(hdfout)
     for key in pairs.keys():
-        pcf[key] /= n
+        pcfs[key] /= n
         store.put("radial_pcf_"+key, pcfs[key])
     store.close()
     fp.close()
