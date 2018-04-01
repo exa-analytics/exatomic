@@ -35,7 +35,6 @@ install:
     - conda create -n test python=$PYTHONVER
     - source activate test
     - conda update -q -y --all
-    - conda install -q -c symengine symengine python-symengine
     - conda install -q -c conda-forge six numpy pandas pytables numba sympy
     - conda install -q -c conda-forge sphinx sphinx_rtd_theme ply 
     - conda install -c conda-forge pandoc pypandoc nbsphinx ipython
@@ -49,7 +48,6 @@ install:
     - rm -rf exa
     - conda install -q -c conda-forge numexpr nodejs ipywidgets
     - pip install -e .
-    - conda list | grep numba
 
 script:
     - export PYTHONDONTWRITEBYTECODE=1
