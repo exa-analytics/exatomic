@@ -40,7 +40,7 @@ class TestMolcasOverlap(TestCase):
 
     def test_overlap(self):
         for uni in self.unis:
-            ovls = uni.basis_functions.integrals().square().values
+            ovls = uni.basis_functions.integrals().square().values.astype(np.float64)
             n = np.isclose(ovls, uni.overlap.square().values,
                            rtol=5e-5, atol=1e-12).sum() \
                 / (ovls.shape[0] * ovls.shape[1])

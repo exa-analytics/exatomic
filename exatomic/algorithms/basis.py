@@ -14,19 +14,17 @@ from operator import mul
 from functools import reduce
 from collections import OrderedDict, Counter
 from itertools import combinations_with_replacement as cwr
-
 import numpy as np
 import pandas as pd
 from numexpr import evaluate
-
 try:
     from symengine import var, exp, cos, sin, Add, Mul, Integer
 except ImportError:
     from sympy import symbols as var
     from sympy import exp, cos, sin, Add, Mul, Integer
-
 from exatomic.algorithms.overlap import _cartesian_shell_pairs, _iter_atom_shells
 from exatomic.algorithms.numerical import fac, _tri_indices, _triangle
+from exatomic import core
 
 _x, _y, _z = var("_x _y _z")
 _r = (_x ** 2 + _y ** 2 + _z ** 2) ** 0.5
@@ -206,13 +204,12 @@ class Basis(object):
 
     def integrals(self):
         """Compute the overlap matrix using primitive cartesian integrals."""
-        from exatomic.core.basis import Overlap
         ovl = _cartesian_shell_pairs(len(self), self._ptrs,
                                      self._xyzs, *self._shells)
         ovl = _triangle(ovl)
         chi0, chi1 = _tri_indices(ovl)
-        return Overlap.from_dict({'chi0': chi0, 'chi1': chi1,
-                                  'frame': 0, 'coef': ovl})
+        return core.basis.Overlap.from_dict({'chi0': chi0, 'chi1': chi1,
+                                             'frame': 0, 'coef': ovl})
 
     def enum_shell(self, shl):
         """Return a generator over angular momentum degrees of freedom."""

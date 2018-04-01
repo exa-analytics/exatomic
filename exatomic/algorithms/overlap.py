@@ -8,7 +8,7 @@ Utilities for computing the overlap between gaussian type functions.
 """
 
 import numpy as np
-from numba import njit, jit, prange
+from numba import jit, prange
 from .numerical import fac, fac2, dfac21, sdist, choose
 from .car2sph import car2sph_scaled
 from exatomic.base import nbche
@@ -129,7 +129,7 @@ def _primitive_kinetic(a1, a2, ax, ay, az, bx, by, bz, l1, m1, n1, l2, m2, n2):
 # Generators over shells/shell-pairs #
 ######################################
 
-@njit
+@jit(nopython=True, nogil=True, cache=nbche)
 def _iter_atom_shells(ptrs, xyzs, *shls):
     """Generator yielding indices, atomic coordinates and basis set shells."""
     nshl = len(ptrs)
@@ -137,7 +137,7 @@ def _iter_atom_shells(ptrs, xyzs, *shls):
         pa, pi = ptrs[i]
         yield (i, xyzs[pa][0], xyzs[pa][1], xyzs[pa][2], shls[pi])
 
-@njit
+@jit(nopython=True, nogil=True, cache=nbche)
 def _iter_atom_shell_pairs(ptrs, xyzs, *shls):
     """Generator yielding indices, atomic coordinates and basis set
     shells in block-pair order."""
@@ -167,7 +167,7 @@ def _cartesian_overlap_shell(xa, ya, za, xb, yb, zb,
                                              li, mi, ni, lj, mj, nj)
     return pints
 
-@njit
+@jit(nopython=True, nogil=True, cache=nbche)
 def _cartesian_shell_pair(ax, ay, az, bx, by, bz, ishl, jshl):
     """Compute fully contracted block-pair integrals including
     expansion of angular momentum dependence."""
@@ -197,7 +197,7 @@ def _cartesian_shell_pair(ax, ay, az, bx, by, bz, ishl, jshl):
                                         np.eye(jshl.ncont)))
     return np.dot(inrm.T, np.dot(pint, jnrm))
 
-@njit
+@jit(nopython=True, nogil=True, cache=nbche)
 def _cartesian_shell_pairs(ndim, ptrs, xyzs, *shls):
     """Construct a full square (overlap) integral matrix."""
     cart = np.zeros((ndim, ndim))
@@ -234,7 +234,6 @@ def _obara_s_recurr(p, l, m, pa, pb, s):
             s0[i, j + 1] = pb * s0[i, j] + mul
             s0[i + 1, j + 1] = pa * s0[i, j + 1] + p2 * ((i + 1) * s0[i, j] + j * s0[i + 1, j])
     return s0[l, m]
-
 
 
 @jit(nopython=True, nogil=True, cache=nbche)

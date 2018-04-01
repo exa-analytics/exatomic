@@ -8,7 +8,7 @@ Everything in this module is implemented in numba.
 """
 import numpy as np
 import pandas as pd
-from numba import (jit, njit, jitclass, vectorize, prange,
+from numba import (jit, jitclass, vectorize, prange,
                    deferred_type, optional, int64, float64, boolean)
 from exatomic.base import nbche, nbpll, nbtgt
 
@@ -46,50 +46,50 @@ def _vec_dfac21(n): return dfac21(n)
 ################################
 
 
-@jit(nopython=True, nogil=True, cache=nbche)
+@jit(nopython=True, nogil=True, cache=nbche, parallel=False)
 def _tri_indices(vals):
     nel = vals.shape[0]
-    nbas = int(np.round(np.roots(np.array([1, 1, -2 * vals.shape[0]]))[1]))
+    nbas = int64(np.round(np.roots(np.array([1, 1, -2 * vals.shape[0]]))[1]))
     chi0 = np.empty(nel, dtype=np.int64)
     chi1 = np.empty(nel, dtype=np.int64)
     cnt = 0
-    for i in prange(nbas):
-        for j in prange(i + 1):
+    for i in range(nbas):
+        for j in range(i + 1):
             chi0[cnt] = i
             chi1[cnt] = j
             cnt += 1
     return chi0, chi1
 
-@jit(nopython=True, nogil=True, cache=nbche)
+@jit(nopython=True, nogil=True, cache=nbche, parallel=False)
 def _triangle(vals):
     nbas = vals.shape[0]
     ndim = nbas * (nbas + 1) // 2
     tri = np.empty(ndim, dtype=np.float64)
     cnt = 0
-    for i in prange(nbas):
-        for j in prange(i + 1):
+    for i in range(nbas):
+        for j in range(i + 1):
             tri[cnt] = vals[i, j]
             cnt += 1
     return tri
 
-@jit(nopython=True, nogil=True, cache=nbche)
+@jit(nopython=True, nogil=True, cache=nbche, parallel=False)
 def _square(vals):
-    nbas = int(np.round(np.roots(np.array([1, 1, -2 * vals.shape[0]]))[1]))
+    nbas = int64(np.round(np.roots(np.array([1, 1, -2 * vals.shape[0]]))[1]))
     square = np.empty((nbas, nbas), dtype=np.float64)
     cnt = 0
-    for i in prange(nbas):
-        for j in prange(i + 1):
+    for i in range(nbas):
+        for j in range(i + 1):
             square[i, j] = vals[cnt]
             square[j, i] = vals[cnt]
             cnt += 1
     return square
 
-@jit(nopython=True, nogil=True, cache=nbche)
+@jit(nopython=True, nogil=True, cache=nbche, parallel=False)
 def _flat_square_to_triangle(flat):
     cnt, ndim = 0, np.int64(np.sqrt(flat.shape[0]))
     tri = np.empty(ndim * (ndim + 1) // 2)
-    for i in prange(ndim):
-        for j in prange(i + 1):
+    for i in range(ndim):
+        for j in range(i + 1):
             tri[cnt] = flat[i * ndim + j]
             cnt += 1
     return tri
@@ -164,7 +164,7 @@ def momatrix_as_square(movec):
 # Basis set expansion #
 #######################
 
-@njit
+@jit(nopython=True, nogil=True, cache=nbche)
 def _enum_cartesian(L):
     # Gen1Int ordering
     # for z in range(L + 1):
@@ -181,7 +181,7 @@ def _enum_cartesian(L):
         for z in range(L + 1 - x):
             yield (x, L - x - z, z)
 
-@njit
+@jit(nopython=True, nogil=True, cache=nbche)
 def _enum_spherical(L, increasing=True):
     if increasing:
         for m in range(-L, L + 1):
@@ -293,5 +293,4 @@ class Shell(object):
         self.rs = rs
         self.ns = ns
 
-print(dir(Shell))
 shell_type.define(Shell.class_type.instance_type)
