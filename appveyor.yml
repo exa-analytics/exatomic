@@ -14,19 +14,19 @@ environment:
 #     CONDA_PY: "27"
 #     PY_CONDITION: "python >=2.7,<3"
     - TARGET_ARCH: "x86"
-      CONDA_PY: "35"
+      CONDA_PY: "3.5"
       PY_CONDITION: "python >=3.5,<3.6"
     - TARGET_ARCH: "x86"
-      CONDA_PY: "36"
+      CONDA_PY: "3.6"
       PY_CONDITION: "python >=3.6"
 #   - TARGET_ARCH: "x64"
-#     CONDA_PY: "27"
+#     CONDA_PY: "2.7"
 #     PY_CONDITION: "python >=2.7,<3"
     - TARGET_ARCH: "x64"
-      CONDA_PY: "35"
+      CONDA_PY: "3.5"
       PY_CONDITION: "python >=3.5,<3.6"
     - TARGET_ARCH: "x64"
-      CONDA_PY: "36"
+      CONDA_PY: "3.6"
       PY_CONDITION: "python >=3.6"
 
 platform:
@@ -53,8 +53,8 @@ install:
   - cmd: conda config --set show_channel_urls true
   - cmd: conda config --set always_yes yes --set changeps1 no
   - cmd: conda update -n base conda
-  - cmd: conda create -n test python=$PYTHONVER
-  - cmd: conda activate test
+  - cmd: conda create -n test python=%CONDA_PY%
+  - cmd: activate test
   - cmd: conda update -q -y --all
   - cmd: conda install -q -c conda-forge numpy scipy matplotlib networkx pandas
   - cmd: conda install -q -c conda-forge numba six pytest pytables

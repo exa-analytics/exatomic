@@ -33,7 +33,7 @@ install:
     - conda config --set always_yes yes --set changeps1 no
     - conda update -q --all
     - conda create -n test python=$PYTHONVER
-    - conda activate test
+    - source activate test
     - conda update -q -y --all
     - conda install -q -c symengine symengine python-symengine
     - conda install -q -c conda-forge six numpy pandas pytables numba sympy
