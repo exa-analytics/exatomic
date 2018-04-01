@@ -61,7 +61,7 @@ class Atom(DataFrame):
     @property
     def nframes(self):
         """Return the total number of frames in the atom table."""
-        return self.frame.cat.as_ordered().max() + 1
+        return np.int64(self.frame.cat.as_ordered().max() + 1)
 
     @property
     def last_frame(self):
