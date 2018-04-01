@@ -259,13 +259,13 @@ class Shell(object):
     def _norm_cont_kernel(self, pre):
         coef = self.contract()
         ltot = self.L + 1.5
-        lhaf = ltot / 2
+        lhaf = ltot / 2.
         prim, cont = coef.shape
         for c in range(cont):
             norm = 0.
             for pi in range(prim):
                 for pj in range(prim):
-                    ovl = (2 * (np.sqrt(self.alphas[pi] * self.alphas[pj])
+                    ovl = (2. * (np.sqrt(self.alphas[pi] * self.alphas[pj])
                                      / (self.alphas[pi] + self.alphas[pj]))) ** ltot
                     norm += coef[pi, c] * coef[pj, c] * ovl
             norm = pre / np.sqrt(norm)

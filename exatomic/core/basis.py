@@ -93,7 +93,11 @@ class BasisSet(DataFrame):
             piv = ('alpha', 'shell', 'd')
             alphas = df.alpha.unique()
             piv = df.pivot(*piv).loc[alphas].fillna(0.)
-            return Shell(piv.values.flatten(), alphas, *piv.shape, df.L.values[0],
+            nprim, ncont = *piv.shape
+            nprim = nprim.astype(np.int64)
+            ncont = ncont.astype(np.int64)
+            #return Shell(piv.values.flatten(), alphas, *piv.shape, df.L.values[0],
+            return Shell(piv.values.flatten(), alphas, nprim, ncont, df.L.values[0],
                          #self.spherical, self.gaussian, df.r.values, df.n.values)
                         self.spherical, self.gaussian, df.r.values, df.n.values)
         if self.gaussian:
