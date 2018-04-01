@@ -52,7 +52,7 @@ class TestMolcasOrbital(TestCase):
         kws = {'field_params': chk.field.loc[0], 'verbose': False}
         # DEBUG
         aa, bb, cc = uni.enumerate_shells()
-        for i in len(cc):
+        for i in range(len(cc)):
             print({k: type(getattr(cc[i], k)) for k in dir(cc[i])})
         #return uni, kws
         # /DEBUG
