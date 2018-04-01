@@ -45,9 +45,9 @@ class AtomTwo(DataFrame):
     _columns = ["atom0", "atom1", "dr"]
     _categories = {'symbols': str, 'atom0': np.int64, 'atom1': np.int64}
 
-    @property
-    def _constructor(self):
-        return AtomTwo
+#    @property
+#    def _constructor(self):
+#        return AtomTwo
 
     @property
     def bonded(self):

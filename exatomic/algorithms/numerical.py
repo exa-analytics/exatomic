@@ -293,5 +293,7 @@ class Shell(object):
         self.rs = rs
         self.ns = ns
 
-
-shell_type.define(Shell.class_type.instance_type)
+try:
+    shell_type.define(Shell.class_type.instance_type)
+except:
+    pass

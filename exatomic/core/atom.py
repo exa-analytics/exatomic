@@ -54,9 +54,9 @@ class Atom(DataFrame):
                    'label': np.int64}
     _columns = ['x', 'y', 'z', 'symbol']
 
-    @property
-    def _constructor(self):
-        return Atom
+    #@property
+    #def _constructor(self):
+    #    return Atom
 
     @property
     def nframes(self):

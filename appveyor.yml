@@ -53,6 +53,8 @@ install:
   - cmd: conda config --set show_channel_urls true
   - cmd: conda config --set always_yes yes --set changeps1 no
   - cmd: conda update -n base conda
+  - cmd: conda create -n test python=$PYTHONVER
+  - cmd: conda activate test
   - cmd: conda update -q -y --all
   - cmd: conda install -q -c conda-forge numpy scipy matplotlib networkx pandas
   - cmd: conda install -q -c conda-forge numba six pytest pytables
