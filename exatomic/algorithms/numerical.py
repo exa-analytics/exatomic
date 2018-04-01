@@ -207,13 +207,12 @@ shell_type = deferred_type()
            ('alphas', float64[:]), ('_coef', float64[:]),
            ('rs', optional(int64[:])), ('ns', optional(int64[:]))])
 class Shell(object):
-
     def dims(self):
         return self.nprim, self.ncont
 
     def contract(self):
         x = 0
-        rect = np.empty((self.nprim, self.ncont))
+        rect = np.empty((int64(self.nprim), int64(self.ncont)))
         for i in range(self.nprim):
             for j in range(self.ncont):
                 rect[i, j] = self._coef[x]
@@ -275,11 +274,10 @@ class Shell(object):
 
     def _sto_norm_contract(self):
         # Assumes no contractions
-        return np.array(self._sto_norm()) * self.contract()
+        return np.array(self._sto_norm())*self.contract()
 
     def _sto_norm(self):
-        return [((2 * a) ** n * ((2 * a) / fac(2 * n)) ** 0.5,)
-                for a, n in zip(self.alphas, self.ns)]
+        return [((2*a)**n*((2*a)/fac(2*n))**0.5,) for a, n in zip(self.alphas, self.ns)]
 
     def __init__(self, coef, alphas, nprim, ncont, L,
                  spherical, gaussian, rs=None, ns=None):

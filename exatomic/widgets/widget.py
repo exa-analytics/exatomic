@@ -17,7 +17,6 @@ from traitlets import Unicode, link
 from ipywidgets import (Button, Dropdown, jslink, register, VBox, HBox,
                         IntSlider, IntRangeSlider, FloatSlider, Play,
                         FloatText, Layout, Text, Label)
-
 from .widget_base import (ExatomicScene, UniverseScene,
                           TensorScene, ExatomicBox)
 from .widget_utils import _wlo, _ListDict, Folder
@@ -27,7 +26,6 @@ from exatomic.core.tensor import Tensor
 
 class DemoContainer(ExatomicBox):
     """A proof-of-concept mixing GUI controls with a three.js scene."""
-
     def _field_folder(self, **kwargs):
         """Folder that houses field GUI controls."""
         folder = super(DemoContainer, self)._field_folder(**kwargs)
@@ -59,8 +57,6 @@ class DemoContainer(ExatomicBox):
                                             test=True,
                                             typ=ExatomicScene,
                                             **kwargs)
-
-
 
 @register
 class TensorContainer(ExatomicBox):
@@ -183,8 +179,8 @@ class TensorContainer(ExatomicBox):
                          ('zbox', zbox)])
         return mainopts
 
-
-    def __init__(self, *args, file_path=None, **kwargs):
+    def __init__(self, *args, **kwargs):
+        file_path = kwargs.pop("file_path", None)
         if file_path is not None:
             self._df = Tensor.from_file(file_path)
         else:
@@ -231,7 +227,6 @@ class DemoUniverse(ExatomicBox):
             folder.deactivate(*ofks)
         folder._set_gui()
 
-
     def _field_folder(self, **kwargs):
         """Folder that houses field GUI controls."""
         folder = super(DemoUniverse, self)._field_folder(**kwargs)
@@ -253,6 +248,7 @@ class DemoUniverse(ExatomicBox):
         fopts = list(uni_field_lists.keys())
         folder.update(kind_widgets, relayout=True)
         folder.update(ml_widgets, relayout=True)
+
         def _field(c):
             fk = uni_field_lists[c.new][0]
             for scn in self.active():
@@ -269,6 +265,7 @@ class DemoUniverse(ExatomicBox):
                 if aml:
                     folder.deactivate(*aml)
             folder._set_gui()
+
         def _field_kind(c):
             for scn in self.active():
                 scn.field_kind = c.new
@@ -284,8 +281,10 @@ class DemoUniverse(ExatomicBox):
                     if aml:
                         folder.deactivate(*aml)
             folder._set_gui()
+
         def _field_ml(c):
             for scn in self.active(): scn.field_ml = c.new
+
         for key, obj in kind_widgets.items():
             folder.deactivate(key)
             obj.observe(_field_kind, names='value')
@@ -330,8 +329,10 @@ class UniverseWidget(ExatomicBox):
         content = _ListDict([
             ('playing', Play(disabled=playable, **flims)),
             ('scn_frame', IntSlider(description='Frame', **flims))])
+
         def _scn_frame(c):
             for scn in self.active(): scn.frame_idx = c.new
+
         content['scn_frame'].observe(_scn_frame, names='value')
         content['playing'].active = False
         jslink((content['playing'], 'value'),
@@ -512,14 +513,20 @@ class UniverseWidget(ExatomicBox):
                 ('coord', cbox)])
         return Folder(tens, content)
 
-    def _init_gui(self, nframes=1, fields=None, tensors=None, **kwargs):
+    def _init_gui(self, **kwargs):
+        nframes = kwargs.pop("nframes", 1)
+        fields = kwargs.pop("fields", None)
+        tensors = kwargs.pop("tensors", None)
         mainopts = super(UniverseWidget, self)._init_gui(**kwargs)
         atoms = Button(description=' Fill', icon='adjust', layout=_wlo)
         axis = Button(description=' Axis', icon='arrows-alt', layout=_wlo)
+
         def _atom_3d(b):
             for scn in self.active(): scn.atom_3d = not scn.atom_3d
+
         def _axis(b):
             for scn in self.active(): scn.axis = scn.axis
+
         atoms.on_click(_atom_3d)
         axis.on_click(_axis)
         atoms.active = True

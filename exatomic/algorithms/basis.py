@@ -25,6 +25,7 @@ except ImportError:
 from exatomic.algorithms.overlap import _cartesian_shell_pairs, _iter_atom_shells
 from exatomic.algorithms.numerical import fac, _tri_indices, _triangle
 
+
 _x, _y, _z = var("_x _y _z")
 _r = (_x ** 2 + _y ** 2 + _z ** 2) ** 0.5
 
@@ -204,7 +205,7 @@ class Basis(object):
     def integrals(self):
         """Compute the overlap matrix using primitive cartesian integrals."""
         from exatomic.core.basis import Overlap
-        ovl = _cartesian_shell_pairs(len(self), self._ptrs,
+        ovl = _cartesian_shell_pairs(len(self), self._ptrs.astype(np.int64),
                                      self._xyzs, *self._shells)
         ovl = _triangle(ovl)
         chi0, chi1 = _tri_indices(ovl)
