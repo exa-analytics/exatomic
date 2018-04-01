@@ -2,16 +2,13 @@
 .. Distributed under the terms of the Apache License 2.0
 
 #####################################
-Basis Algorithms
+Core Tests
 #####################################
-.. automodule:: exatomic.algorithms.basis
+.. automodule:: exatomic.core.tests.test_atom
     :members:
 
-.. automodule:: exatomic.algorithms.harmonics
+.. automodule:: exatomic.core.tests.test_basis
     :members:
 
-.. automodule:: exatomic.algorithms.car2sph
-    :members:
-
-.. automodule:: exatomic.algorithms.numerical
+.. automodule:: exatomic.core.tests.test_matrices
     :members:

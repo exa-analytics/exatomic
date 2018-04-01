@@ -1,25 +1,28 @@
 # -*- coding: utf-8 -*-
 # Copyright (c) 2015-2017, Exa Analytics Development Team
 # Distributed under the terms of the Apache License 2.0
-"""
+r"""
 Cartesian to spherical transforms, obtained symbolically, numbafied.
-Generated using the following code:
+Generated using the following code.
 
-from exatomic.algorithms.basis import solid_harmonics, enum_cartesian, car2sph
-f = '''\
-def _car2sph_raw(L):
-'''
-fmt = '{: 20.16f},'
-c2s = car2sph(sh, enum_cartesian)
-for L in range(11):
-    if not L:
-        f += '    if not L: return np.array([1.])\n'
-        continue
-    tmt = (fmt * 4 + '\n') * (c2s[L].size // 4) + fmt * (c2s[L].size % 4)
-    cdim, sdim = c2s[L].shape
-    scaled = c2s[L] / (2 * np.pi ** 0.5)
-    vals = tmt.format(*scaled.flatten())
-    f += '    if L == {}:\n        return np.array([\n{}])\n'.format(L, vals)
+.. code-block:: Python
+
+    from exatomic.algorithms.basis import enum_cartesian, car2sph
+
+    def _car2sph_raw(L):
+        fmt = '{: 20.16f},'
+        c2s = car2sph(sh, enum_cartesian)
+        for L in range(11):
+            if not L:
+                f += '    if not L: return np.array([1.])\n'
+                continue
+            tmt = (fmt * 4 + '\n') * (c2s[L].size // 4) + fmt * (c2s[L].size % 4)
+            cdim, sdim = c2s[L].shape
+            scaled = c2s[L] / (2 * np.pi ** 0.5)
+            vals = tmt.format(*scaled.flatten())
+            f += '    if L == {}:\n        return np.array([\n{}])\n'.format(L, vals)
+        return f
+
 """
 import numpy as np
 from numba import jit

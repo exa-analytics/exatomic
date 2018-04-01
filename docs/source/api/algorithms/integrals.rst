@@ -2,8 +2,7 @@
 .. Distributed under the terms of the Apache License 2.0
 
 #######################################
-Cartesian to Spherical Transformations
+Common Orbital Integrals
 #######################################
-.. automodule:: exatomic.algorithms.car2sph
+.. automodule:: exatomic.algorithms.overlap
     :members:
-

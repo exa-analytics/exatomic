@@ -7,7 +7,8 @@ Atomic Positions Parser
 """
 import re
 import pandas as pd
-from exa import Parser, Typed
+from exa import Parser
+from exa.typed import Typed
 from exatomic.core.atom import Atom
 
 

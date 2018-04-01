@@ -2,16 +2,19 @@
 .. Distributed under the terms of the Apache License 2.0
 
 #####################################
-Basis Algorithms
+External Interfaces
 #####################################
-.. automodule:: exatomic.algorithms.basis
+.. automodule:: exatomic.interfaces.cclib
     :members:
 
-.. automodule:: exatomic.algorithms.harmonics
+.. automodule:: exatomic.interfaces.cube
     :members:
 
-.. automodule:: exatomic.algorithms.car2sph
+.. automodule:: exatomic.interfaces.pdb
     :members:
 
-.. automodule:: exatomic.algorithms.numerical
+.. automodule:: exatomic.interfaces.tens
+    :members:
+
+.. automodule:: exatomic.interfaces.xyz
     :members:

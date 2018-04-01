@@ -24,50 +24,42 @@ can be found at :ref:`examples-label` or via help::
     :members:
 
 .. toctree::
-    :maxdepth: 4
-    :caption: Usage
+    :maxdepth: 2
+    :caption: Core Usage
 
     universe.rst
     editor.rst
+    widgets.rst
+    interfaces.rst
     atom.rst
     two.rst
     orbital.rst
     basis.rst
+    tensor.rst
     frame.rst
     molecule.rst
-
-
-.. toctree::
-    :maxdepth: 2
-    :caption: Examples
-
-    notebooks/nwchem.ipynb
-    notebooks/qe.ipynb
 
 .. toctree::
     :maxdepth: 2
     :caption: Extended API 
 
+    field.rst
     matrices.rst
-    algorithms/angles.rst
     algorithms/basis.rst
+    algorithms/orbital.rst
+    algorithms/integrals.rst
+    algorithms/structural.rst
+    algorithms/builders.rst
+    algorithms/delocalization.rst
+    algorithms/interpolation.rst
+    algorithms/neighbors.rst
 
-      angles.py*
-      basis.py*
-      car2sph.py*
-      delocalization.py*
-      diffusion.py*
-      displacement.py*
-      distance.py*
-      geometry.py*
-      harmonics.py*
-      indexing.py*
-      interpolation.py*
-      neighbors.py*
-      numerical.py*
-      orbital.py*
-      orbital_util.py*
-      overlap.py*
-      packing.py*
-      pcf.py*
-      slicing.py*
+.. toctree::
+    :maxdepth: 2
+    :caption: Misc
+
+    error.rst
+    algorithms/indexing.rst
+    tests/base_tests.rst
+    tests/core_tests.rst
+    tests/algorithms_tests.rst

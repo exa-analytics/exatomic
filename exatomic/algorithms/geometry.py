@@ -19,8 +19,8 @@ def make_small_molecule(center=None, ligand=None, distance=None, geometry=None,
                         offset=None, plane=None, axis=None, domains=None, unit='Angstrom'):
     """
     A minimal molecule builder for simple one-center, homogeneous ligand
-    molecules of various general chemistry molecular geometries. If `domains'
-    is not specified and geometry is ambiguous (like `bent'),
+    molecules of various general chemistry molecular geometries. If 'domains'
+    is not specified and geometry is ambiguous (like 'bent'),
     it just guesses the simplest geometry (smallest number of domains).
 
     Args
