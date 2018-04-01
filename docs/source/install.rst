@@ -40,3 +40,9 @@ What's Next?
 - Users should check out the :ref:`started-label`
 - Contributors should check out the :ref:`dev-label`
 - The :ref:`api-label` contains usage and extension examples, and developer notes
+
+
+Note
+########
+Although an effort has been made to fully support legacy Python 2.7.x, some (optional) dependencies
+may conflict on Windows environments.
