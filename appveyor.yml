@@ -61,7 +61,7 @@ install:
   - cmd: conda install -q -c conda-forge psutil numexpr nodejs ipywidgets
   - cmd: git clone https://github.com/exa-analytics/exa.git
   - cmd: cd exa
-  - cmd: pip install -e .
+  - cmd: pip install .
   - cmd: cd ../
   - cmd: pip install -e .
 

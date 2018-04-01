@@ -39,14 +39,12 @@ install:
     - conda install -q -c conda-forge sphinx sphinx_rtd_theme ply
     - conda install -c conda-forge pandoc pypandoc nbsphinx ipython
     - conda install -q -c conda-forge python-coveralls coverage pytest pytest-cov
+    - conda install -q -c conda-forge numexpr nodejs ipywidgets
     - pip install travis-sphinx codacy-coverage
     - git clone https://github.com/exa-analytics/exa.git
     - cd exa
-    - git checkout master 
-    - pip install -e .
+    - pip install .
     - cd ../
-    - rm -rf exa
-    - conda install -q -c conda-forge numexpr nodejs ipywidgets
     - pip install -e .
 
 script:

@@ -93,7 +93,7 @@ class BasisSet(DataFrame):
             piv = ('alpha', 'shell', 'd')
             alphas = df.alpha.unique()
             piv = df.pivot(*piv).loc[alphas].fillna(0.)
-            nprim, ncont = *piv.shape
+            nprim, ncont = piv.shape
             nprim = nprim.astype(np.int64)
             ncont = ncont.astype(np.int64)
             #return Shell(piv.values.flatten(), alphas, *piv.shape, df.L.values[0],
