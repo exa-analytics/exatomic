@@ -15,6 +15,7 @@ from numexpr import evaluate
 from IPython.display import display
 from ipywidgets import FloatProgress, HBox
 from exatomic.core.field import AtomicField
+from exatomic.base import nbpll
 
 
 def compare_fields(uni0, uni1, rtol=5e-5, atol=1e-12, signed=True, verbose=True):
@@ -237,7 +238,7 @@ def _check_column(uni, df, key):
     return key
 
 
-@jit(nopython=True, nogil=True, parallel=True)
+@jit(nopython=True, nogil=True, parallel=nbpll)
 def _compute_orbitals(npts, bvs, vecs, cmat):
     """Compute orbitals from numerical basis functions."""
     ovs = np.empty((len(vecs), npts), dtype=np.float64)
@@ -253,7 +254,7 @@ def _compute_orbitals_nojit(npts, bvs, vecs, cmat):
         ovs[i] = np.dot(cmat[:, vec], bvs)
     return ovs
 
-@jit(nopython=True, nogil=True, parallel=True)
+@jit(nopython=True, nogil=True, parallel=nbpll)
 def _compute_density(ovs, occvec):
     """Sum orbitals multiplied by their occupations."""
     norb, npts = ovs.shape
@@ -264,7 +265,7 @@ def _compute_density(ovs, occvec):
     return dens
 
 
-@jit(nopython=True, nogil=True, parallel=True)
+@jit(nopython=True, nogil=True, parallel=nbpll)
 def _compute_orb_ang_mom(rx, ry, rz, jx, jy, jz, mxs):
     """Compute the orbital angular momentum in each direction and the sum."""
     npts = rx.shape[0]
@@ -279,7 +280,7 @@ def _compute_orb_ang_mom(rx, ry, rz, jx, jy, jz, mxs):
     return ang_mom
 
 
-@jit(nopython=True, nogil=True, parallel=True)
+@jit(nopython=True, nogil=True, parallel=nbpll)
 def _meshgrid3d(x, y, z):
     tot = len(x) * len(y) * len(z)
     xs = np.empty(tot, dtype=np.float64)

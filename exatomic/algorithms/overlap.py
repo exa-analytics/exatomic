@@ -11,12 +11,13 @@ import numpy as np
 from numba import njit, jit, prange
 from .numerical import fac, fac2, dfac21, sdist, choose
 from .car2sph import car2sph_scaled
+from exatomic.base import nbche
 
 #################################
 # Primitive cartesian integrals #
 #################################
 
-@jit(nopython=True, cache=True)
+@jit(nopython=True, nogil=True, cache=nbche)
 def _fj(j, l, m, a, b):
     """From Handbook of Computational Quantum Chemistry by David B. Cook
     in chapter 7.7.1 -- Essentially a FOILing of the pre-exponential
@@ -29,7 +30,7 @@ def _fj(j, l, m, a, b):
                 b ** (m + k - j))
     return tot
 
-@jit(nopython=True, cache=True)
+@jit(nopython=True,nogil=True, cache=nbche)
 def _nin(l, m, pa, pb, p, N):
     """From Handbook of Computational Quantum Chemistry by David B. Cook
     in chapter 7.7.1 -- Sums the result of _fj over the total angular momentum
@@ -42,7 +43,7 @@ def _nin(l, m, pa, pb, p, N):
                 dfac21(j) / (2 * p) ** j)
     return tot * N
 
-@jit(nopython=True, cache=True)
+@jit(nopython=True, nogil=True, cache=nbche)
 def _gaussian_product(a, b, ax, ay, az, bx, by, bz):
     """From Molecular Electronic-Structure Theory by Trygve Helgaker et al.
     Computes a product gaussian following 9.2.3."""
@@ -63,7 +64,7 @@ def _gaussian_product(a, b, ax, ay, az, bx, by, bz):
             px - bx, py - by, pz - bz)
     #pax, pay, paz, pbx, pby, pbz
 
-@jit(nopython=True, cache=True)
+@jit(nopython=True, nogil=True, cache=nbche)
 def _primitive_overlap_product(N, p, mu, ab2, pax, pay, paz, pbx, pby, pbz,
                                l1, m1, n1, l2, m2, n2):
     """Compute primitive cartesian overlap integral in terms of a gaussian product."""
@@ -71,7 +72,7 @@ def _primitive_overlap_product(N, p, mu, ab2, pax, pay, paz, pbx, pby, pbz,
                               * _nin(m1, m2, pay, pby, p, N)
                               * _nin(n1, n2, paz, pbz, p, N))
 
-@jit(nopython=True, cache=True)
+@jit(nopython=True, nogil=True, cache=nbche)
 def _primitive_overlap(a1, a2, ax, ay, az, bx, by, bz, l1, m1, n1, l2, m2, n2):
     """Compute a primitive cartesian overlap integral."""
     product = _gaussian_product(a1, a2, ax, ay, az, bx, by, bz)
@@ -79,7 +80,7 @@ def _primitive_overlap(a1, a2, ax, ay, az, bx, by, bz, l1, m1, n1, l2, m2, n2):
                                       #N, p, mu, ab2,
                                       #pax, pay, paz, pbx, pby, pbz,
 
-@jit(nopython=True, cache=True)
+@jit(nopython=True, nogil=True, cache=nbche)
 def _primitive_kinetic(a1, a2, ax, ay, az, bx, by, bz, l1, m1, n1, l2, m2, n2):
     """Compute the kinetic energy as a linear combination of overlap terms."""
     prod = _gaussian_product(a1, a2, ax, ay, az, bx, by, bz)
@@ -153,7 +154,7 @@ def _iter_atom_shell_pairs(ptrs, xyzs, *shls):
 # Integral processing for of Shell objects #
 ############################################
 
-@jit(nopython=True, cache=True)
+@jit(nopython=True, nogil=True, cache=nbche)
 def _cartesian_overlap_shell(xa, ya, za, xb, yb, zb,
                              li, mi, ni, lj, mj, nj,
                              ialpha, jalpha):
@@ -216,7 +217,7 @@ def _cartesian_shell_pairs(ndim, ptrs, xyzs, *shls):
 # Obara-Saika recursion relation #
 ##################################
 
-@jit(nopython=True, cache=True)
+@jit(nopython=True, nogil=True, cache=nbche)
 def _obara_s_recurr(p, l, m, pa, pb, s):
     """There is a bug in this function. Do not use."""
     if not l + m: return s
@@ -236,7 +237,7 @@ def _obara_s_recurr(p, l, m, pa, pb, s):
 
 
 
-@jit(nopython=True, cache=True)
+@jit(nopython=True, nogil=True, cache=nbche)
 def _nin(o1, o2, po1, po2, gamma, pg12):
     """Helper function for gaussian overlap between 2 centers."""
     otot = o1 + o2

@@ -8,9 +8,8 @@ Building discrete molecular orbitals (for visualization) requires a complex
 set of operations that are provided by this module and wrapped into a clean API.
 """
 import numpy as np
-from numba import jit
+#from numba import jit
 from datetime import datetime
-
 from exatomic.base import sym2z
 from exatomic.core.field import AtomicField
 from .orbital_util import (

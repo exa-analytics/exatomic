@@ -44,11 +44,11 @@ install:
     - git clone https://github.com/exa-analytics/exa.git
     - cd exa
     - git checkout master 
-    - pip install .
+    - pip install -e .
     - cd ../
     - rm -rf exa
     - conda install -q -c conda-forge numexpr nodejs ipywidgets
-    - pip install .
+    - pip install -e .
     - conda list | grep numba
 
 script:
