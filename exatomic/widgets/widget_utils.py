@@ -2,8 +2,9 @@
 # Copyright (c) 2015-2018, Exa Analytics Development Team
 # Distributed under the terms of the Apache License 2.0
 """
-Universe Notebook Widget
+Widget Utilities
 #########################
+Widget layout and structure.
 """
 from collections import OrderedDict
 from ipywidgets import VBox, Layout, FloatSlider, IntSlider

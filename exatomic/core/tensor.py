@@ -67,7 +67,7 @@ class Tensor(DataFrame):
             filename (str): file pathname
         
         Returns:
-            exatomic.tensor.Tensor: Tensor table with the tensor attributes
+            tens (:class:`~exatomic.tensor.Tensor`): Tensor table with the tensor attributes
         """
         df = pd.read_csv(filename, delim_whitespace=True, header=None,
                          skip_blank_lines=False)

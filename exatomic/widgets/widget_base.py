@@ -2,8 +2,9 @@
 # Copyright (c) 2015-2018, Exa Analytics Development Team
 # Distributed under the terms of the Apache License 2.0
 """
-Universe Notebook Widget
+Lower Level Widgets
 #########################
+Lower level support widgets framework.
 """
 import os
 import numpy as np
@@ -19,8 +20,6 @@ from .traits import uni_traits
 from .widget_utils import (_glo, _flo, _wlo, _hboxlo, 
                            _vboxlo, _bboxlo, _ListDict, 
                            Folder, GUIBox, gui_field_widgets)
-
-
 
 
 @register
@@ -64,7 +63,6 @@ class ExatomicScene(DOMWidget):
     field_fz = Float(3.0).tag(sync=True)
     geom = Bool(True).tag(sync=True)
 
-
     def _handle_custom_msg(self, msg, callback):
         """Custom message handler."""
 
@@ -77,11 +75,9 @@ class ExatomicScene(DOMWidget):
                     'msg         : {}'.format(msg['type'],
                                               msg['content']))
 
-
     def _save_camera(self, content):
         """Cache a save state of the current camera."""
         self.cameras.append(content)
-
 
     def _save_image(self, content):
         """Save a PNG of the scene."""
@@ -115,7 +111,6 @@ class ExatomicScene(DOMWidget):
         with open(os.sep.join([savedir, fname]), 'wb') as f:
             f.write(b64decode(content.replace(repl, '')))
 
-
     def _set_camera(self, c):
         """Ship the camera to JS to set a cached camera."""
         if c.new == -1: return
@@ -124,12 +119,10 @@ class ExatomicScene(DOMWidget):
         except IndexError:
             pass
 
-
     def _close(self):
         """Close the three.js objects and then close."""
         self.send({'type': 'close'})
         self.close()
-
 
     def __init__(self, *args, **kwargs):
         lo = kwargs.pop('layout', None)
@@ -142,7 +135,6 @@ class ExatomicScene(DOMWidget):
                         flex=flex, min_width=min_width)
         super(DOMWidget, self).__init__(
             *args, layout=lo, **kwargs)
-
 
 
 @register
@@ -167,12 +159,9 @@ class TensorScene(ExatomicScene):
     tens = Bool(False).tag(sync=True)
 
 
-
-
 @register
 class UniverseScene(ExatomicScene):
     """A scene for viewing quantum systems."""
-
     _model_name = Unicode('UniverseSceneModel').tag(sync=True)
     _view_name = Unicode('UniverseSceneView').tag(sync=True)
     # Top level index
@@ -213,11 +202,9 @@ class UniverseScene(ExatomicScene):
     tidx = Int(0).tag(sync=True)
 
 
-
 @register
 class ExatomicBox(Box):
     """Base class for containers of a GUI and scene."""
-
     _model_module_version = Unicode(__js_version__).tag(sync=True)
     _view_module_version = Unicode(__js_version__).tag(sync=True)
     _model_module = Unicode('exatomic').tag(sync=True)
@@ -227,19 +214,14 @@ class ExatomicBox(Box):
     active_scene_indices = List().tag(sync=True)
     linked = Bool(False).tag(sync=True)
 
-
     def _update_active(self, b):
         """Control which scenes are controlled by the GUI."""
-
         items = list(self._controls['active']._controls.items())[1:]
-
         self.active_scene_indices = [i for i, (key, obj) in enumerate(items)
                                      if obj.value]
 
-
     def _close(self, b):
         """Shut down all active widgets within the container."""
-
         for widget in self._controls.values():
             try: widget._close()
             except: widget.close()
@@ -248,52 +230,40 @@ class ExatomicBox(Box):
             except: widget.close()
         self.close()
 
-
     def _get(self, active=True, keys=False):
         """Get all the active GUI objects."""
-
         mit = self._controls.values()
         return [obj for obj in mit if obj.active]
 
-
     def _active_folder(self):
         """Folder that houses the controls for active scenes."""
-
         active = Button(icon='bars', description=' Active Scenes')
         opts = _ListDict([
             (str(i), ToggleButton(description=str(i), value=True))
             for i, scn in enumerate(self.scenes)])
         for obj in opts.values():
             obj.observe(self._update_active, names='value')
-
         return Folder(active, opts)
-
 
     def _save_folder(self):
         """Folder that houses the controls to save images."""
-
         saves = Button(icon='save', description=' Image')
         saveopts = _ListDict([
             ('dir', Text(value=os.getcwd())),
             ('name', Text(value='name')),
             ('save', Button(icon='download', description=' Save'))
         ])
-
         for scn in self.scenes:
             link((saveopts['dir'], 'value'), (scn, 'savedir'))
             link((saveopts['name'], 'value'), (scn, 'imgname'))
         def _saves(b):
             for scn in self.active():
                 scn.save = not scn.save
-
         saveopts['save'].on_click(_saves)
-
         return Folder(saves, saveopts)
-
 
     def _camera_folder(self):
         """Folder that houses controls for caching and setting cameras."""
-
         ncams = max((len(scn.cameras) for scn
                     in self.scenes)) if self.scenes else 0
         camera = Button(icon='camera', description=' Camera')
@@ -309,10 +279,8 @@ class ExatomicBox(Box):
                 btn.max = len(scn.cameras)
 
         camopts['get'].on_click(_save_cam)
-
         for scn in self.scenes:
             camopts['set'].observe(scn._set_camera, names='value')
-
         if len(self.scenes) > 1:
             camopts.insert(0, 'link', Button(icon='link', description=' Link'))
             def _link(b):
@@ -325,13 +293,10 @@ class ExatomicBox(Box):
                     btn.icon = 'link'
                     btn.description = ' Link'
             camopts['link'].on_click(_link)
-
         return Folder(camera, camopts)
-
 
     def _field_folder(self, **kwargs):
         """Folder that houses controls for viewing scalar fields."""
-
         uni = kwargs.pop('uni', False)
         test = kwargs.pop('test', True)
         fdict = gui_field_widgets(uni, test)
@@ -357,16 +322,12 @@ class ExatomicBox(Box):
         fdict['nx'].observe(_nx, names='value')
         fdict['ny'].observe(_ny, names='value')
         fdict['nz'].observe(_nz, names='value')
-
         field = Button(description=' Fields', icon='cube')
         folder = Folder(field, fdict)
-
         return folder
-
 
     def _init_gui(self, **kwargs):
         """Initialize generic GUI controls and observe callbacks."""
-
         mainopts = _ListDict([
             ('close', Button(icon='trash', description=' Close', layout=_wlo)),
             ('clear', Button(icon='bomb', description=' Clear', layout=_wlo))])
@@ -378,19 +339,15 @@ class ExatomicBox(Box):
                     scn.clear = not scn.clear
             mainopts['close'].on_click(self._close)
             mainopts['clear'].on_click(_clear)
-
         mainopts.update([('active', self._active_folder()),
                          ('saves', self._save_folder()),
                          ('camera', self._camera_folder())])
-
         return mainopts
 
     def active(self):
         return [self.scenes[idx] for idx in self.active_scene_indices]
 
-
     def __init__(self, *objs, **kwargs):
-
         objs = (1,) if not objs else objs
         scenekwargs = kwargs.pop('scenekwargs', {})
         test = kwargs.pop('test', False)
@@ -401,34 +358,26 @@ class ExatomicBox(Box):
         nframes = kwargs.pop('nframes', None)
         fields = kwargs.pop('fields', None)
         tensors = kwargs.pop('tensors', None)
-
-
         self.scenes, scenes = _scene_grid(objs, mh, mw, test,
                                           uni, typ, scenekwargs)
-
         self._controls = self._init_gui(nframes=nframes,
                                         fields=fields,
                                         tensors=tensors,
                                         test=test,
                                         uni=uni)
-
         for _, obj in self._controls.items():
             if not hasattr(obj, 'active'): obj.active = True
-
         _ = kwargs.pop('layout', None)
         gui = GUIBox(self._get())
         children = [gui, scenes] if self.scenes else [gui]
-
         super(ExatomicBox, self).__init__(
                 children, layout=_bboxlo,
                 active_scene_indices=list(range(len(self.scenes))),
                 **kwargs)
 
 
-
 def _scene_grid(objs, mh, mw, test, uni, typ, scenekwargs):
     """Auxiliary function to lay out multiple scenes."""
-
     n = objs[0] if isinstance(objs[0], int) else len(objs)
     if n > 9: raise NotImplementedError('Too many scenes')
     if mh is None:
@@ -441,7 +390,6 @@ def _scene_grid(objs, mh, mw, test, uni, typ, scenekwargs):
     else: mod = 3
     kwargs = {'min_height': mh, 'min_width': mw, 'uni': uni}
     kwargs.update(scenekwargs)
-
     flatscns, scenes = [], []
     for i in range(n):
         kwargs['index'] = i
@@ -458,6 +406,5 @@ def _scene_grid(objs, mh, mw, test, uni, typ, scenekwargs):
             obj = typ(**kwargs)
         scenes[-1].append(obj)
         flatscns.append(obj)
-
     return flatscns, VBox([HBox(scns, layout=_hboxlo)
                            for scns in scenes], layout=_vboxlo)

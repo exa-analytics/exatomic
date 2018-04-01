@@ -4,6 +4,13 @@
 """
 Universe Notebook Widget
 #########################
+To visualize a universe containing atoms, molecules, orbitals, etc., do
+the following in a Jupyter notebook environment.
+
+.. code-block:: Python
+
+    exatomic.UniverseWidget(u)    # type(u) is exatomic.core.universe.Universe
+
 """
 
 from traitlets import Unicode, link
@@ -57,18 +64,22 @@ class DemoContainer(ExatomicBox):
 
 @register
 class TensorContainer(ExatomicBox):
-    """A simple container to implement cartesian tensor visualization.
+    """
+    A simple container to implement cartesian tensor visualization.
+
     Args:
-        file_path (string): Takes a file path name to pass through the 
-                            Tensor.from_file function. Default to None."""
+        file_path (string): Takes a file path name to pass through the Tensor.from_file function. Default to None.
+    """
     _model_name = Unicode('TensorContainerModel').tag(sync=True)
     _view_name = Unicode('TensorContainerView').tag(sync=True)
 
-
     def _update_active(self, b):
-        """Control which scenes are controlled by the GUI.
+        """
+        Control which scenes are controlled by the GUI.
+
         Additionally align traits with active scenes so that
-        the GUI reflects that correct values of active scenes."""
+        the GUI reflects that correct values of active scenes.
+        """
         super(TensorContainer, self)._update_active(b)
         scns = self.active()
         if not scns or len(scns) == 1: return
@@ -185,16 +196,15 @@ class TensorContainer(ExatomicBox):
                                               **kwargs)
 
 
-
-
 class DemoUniverse(ExatomicBox):
     """A showcase of functional forms used in quantum chemistry."""
-
-
     def _update_active(self, b):
-        """Control which scenes are controlled by the GUI.
+        """
+        Control which scenes are controlled by the GUI.
+
         Additionally align traits with active scenes so that
-        the GUI reflects that correct values of active scenes."""
+        the GUI reflects that correct values of active scenes.
+        """
         super(DemoUniverse, self)._update_active(b)
         scns = self.active()
         if not scns: return
