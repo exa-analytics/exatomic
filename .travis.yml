@@ -36,7 +36,7 @@ install:
     - source activate test
     - conda update -q -y --all
     - conda install -q -c conda-forge six numpy pandas pytables numba sympy
-    - conda install -q -c conda-forge sphinx sphinx_rtd_theme ply 
+    - conda install -q -c conda-forge sphinx sphinx_rtd_theme ply
     - conda install -c conda-forge pandoc pypandoc nbsphinx ipython
     - conda install -q -c conda-forge python-coveralls coverage pytest pytest-cov
     - pip install travis-sphinx codacy-coverage
