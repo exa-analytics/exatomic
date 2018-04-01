@@ -41,7 +41,8 @@ install:
     - conda install -q -c conda-forge python-coveralls coverage pytest pytest-cov
     - conda install -q -c conda-forge numexpr nodejs ipywidgets
     - pip install travis-sphinx codacy-coverage
-    - git clone https://github.com/exa-analytics/exa.git
+#   - git clone https://github.com/exa-analytics/exa.git
+    - git clone https://github.com/avmarchenko/exa.git
     - cd exa
     - pip install .
     - cd ../
