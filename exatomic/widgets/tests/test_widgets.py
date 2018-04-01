@@ -13,7 +13,8 @@ from ..widget import DemoContainer, DemoUniverse, UniverseWidget
 h2 = '''2
 
 H 0.0 0.0 -0.35
-H 0.0 0.0  0.35'''
+H 0.0 0.0  0.35
+'''
 
 class TestDemoContainer(TestCase):
 

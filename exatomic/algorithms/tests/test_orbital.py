@@ -50,12 +50,6 @@ class TestMolcasOrbital(TestCase):
         chk.add_field(flds)
 
         kws = {'field_params': chk.field.loc[0], 'verbose': False}
-        # DEBUG
-        aa, bb, cc = uni.enumerate_shells()
-        for i in range(len(cc)):
-            print({k: type(getattr(cc[i], k)) for k in dir(cc[i])})
-        #return uni, kws
-        # /DEBUG
         add_molecular_orbitals(uni, vector=range(5), **kws)
         add_density(uni, mocoefs='coef', **kws)
         add_orb_ang_mom(uni, rcoefs='lreal', icoefs='limag', **kws)
