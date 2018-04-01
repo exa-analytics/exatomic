@@ -36,6 +36,9 @@ below.
 .. _NWChem: http://www.nwchem-sw.org/index.php/Main_Page
 .. _Quantum ESPRESSO: http://www.quantum-espresso.org/
 """
+from __future__ import absolute_import
+__js_version__ = "^0.4.7"
+
 def _jupyter_nbextension_paths():
     """Jupyter notebook extension directory paths."""
     return [{
@@ -46,7 +49,6 @@ def _jupyter_nbextension_paths():
     }]
 
 
-__js_version__ = "^0.4.7"
 from ._version import __version__
 from . import core
 from .core import Universe, Editor, Atom, AtomicField, Frame, Tensor, add_tensor
