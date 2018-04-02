@@ -25,76 +25,9 @@ _bboxlo = Layout(flex='1 1 auto', width='auto', height='auto')
 # Box layouts above are separate so it is easier to restyle
 
 
-#class _ListDict(OrderedDict):
-#    """An OrderedDict with string keys that slices and indexes as a list."""
-#    def pop(self, key):
-#        """Pop as a dict or list."""
-##        try:
-##            return super(_ListDict, self).pop(key)
-##        except KeyError:
-##            key = list(self.keys())[key]
-##            return super(_ListDict, self).pop(key)
-#        if isinstance(key, six.string_types):
-#            return super(_ListDict, self).pop(key)
-#        return super(_ListDict, self).pop(list(self.keys())[key])
-#
-#    def insert(self, idx, key, obj):
-#        """
-#        Insert value at position idx with string key.
-#        """
-##        key = str(key)
-##        keys = list(self.keys())
-##        self[key] = obj
-##        keys.insert(idx, key)
-##        try:
-##            # Only python >= 3.2
-##            for k in keys[idx:]:
-##                self.move_to_end(k, last=True)
-##        except AttributeError:
-##            # Manually reorder
-##            old = list(self.items())
-##            for key in self.keys():
-##                self.pop(key)
-##            for key, obj in old:
-##                self[key] = obj
-#        if not isinstance(key, six.string_types):
-#            raise TypeError("Key must be type str")
-#        keys = list(self.keys())
-#        items = list(self.items())
-#        items.insert(idx, (key, obj))
-#        for k in keys:
-#            del self[k]
-#        for k, v in items:
-#            super(_ListDict, self).__setitem__(k, v)
-#
-#    def __setitem__(self, key, obj):
-#        if not isinstance(key, six.string_types):
-#            raise TypeError('Must set _ListDict key must be type str.')
-#        keys = list(self.keys())
-#        if key in keys:
-#            super(_ListDict, self).__setitem__(key, obj)
-#        else:
-#            items = list(self.items())
-#            items.append((key, obj))
-#            for k in keys:
-#                del self[k]
-#            for k, v in items:
-#                super(_ListDict, self).__setitem__(k, v)
-#
-#    def __getitem__(self, key):
-#        if isinstance(key, six.string_types):
-#            return super(_ListDict, self).__getitem__(key)
-#        if isinstance(key, (int, slice)):
-#            return list(self.values())[key]
-#        raise TypeError('_ListDict slice must be of type str/int/slice.')
-#
-#    def __init__(self, *args, **kwargs):
-#        super(_ListDict, self).__init__(*args, **kwargs)
-#        if not all((isinstance(key, six.string_types) for key in self.keys())):
-#            raise TypeError('_ListDict keys must be of type str.')
 class _ListDict(object):
     """
-    Thin wrapper around OrderedDict that allows slicing by position (like list)
+    Thin wrapper around OrderedDict that allows slicing by position (like list).
 
     Requires string keys.
     """
@@ -177,7 +110,6 @@ class Folder(VBox):
         if update:
             self._set_gui()
 
-
     def deactivate(self, *keys, **kwargs):
         """Deactivate (hide) widgets."""
         active = kwargs.pop('active', False)
@@ -190,7 +122,6 @@ class Folder(VBox):
         if update:
             self._set_gui()
 
-
     def insert(self, idx, key, obj, active=True, update=False):
         """Insert widget into Folder, behaves as list.insert ."""
         obj.layout.width = str(98 - (self.level + 1) * self.indent) + '%'
@@ -200,13 +131,11 @@ class Folder(VBox):
         if update:
             self._set_gui()
 
-
     def update(self, objs, relayout=False):
         """Update the Folder widgets, behaves as dict.update."""
         if relayout:
             self._relayout(objs)
         self._controls.update(objs)
-
 
     def move_to_end(self, *keys):
         """Move widget(s) to the end of the folder."""
@@ -218,19 +147,15 @@ class Folder(VBox):
             for key, obj in zip(keys, objs):
                 self[key] = obj
 
-
-
     def pop(self, key):
         """Pop a widget from the folder."""
         return self._controls.pop(key)
-
 
     def _close(self):
         """Close all widgets in the folder, then the folder."""
         for widget in self._get():
             widget.close()
         self.close()
-
 
     def _get(self, active=True, keys=False):
         """Get the widgets in the folder."""
@@ -245,7 +170,6 @@ class Folder(VBox):
                 return [obj for obj in mit if obj.active]
             return [obj for obj in mit if not obj.active]
 
-
     def _set_gui(self):
         """Update the 'view' of the folder."""
         if self.show:
@@ -255,12 +179,10 @@ class Folder(VBox):
             self.children = [self._controls['main']]
         self.on_displayed(VBox._fire_children_displayed)
 
-
     def _relayout(self, objs):
         """Set layout for widgets in the folder."""
         for obj in objs.values():
             obj.layout = self._slo
-
 
     def _init(self, control, content):
         """Set initial layout of primary button and widgets."""
@@ -268,6 +190,7 @@ class Folder(VBox):
         def _b(b):
             self.show = not self.show
             self._set_gui()
+
         control.on_click(_b)
         control.active = True
         control.disabled = False
@@ -294,6 +217,7 @@ class Folder(VBox):
         return self._controls.__getitem__(key)
 
     def __init__(self, control, content, **kwargs):
+        print(content)
         self.show = kwargs.pop('show', False)
         self.indent = 5
         self.level = kwargs.pop('level', 0)
@@ -301,12 +225,14 @@ class Folder(VBox):
         self._slo = Layout(width=str(pw - self.indent) + '%')
         self._plo = Layout(width=str(pw) + '%')
         self._init(control, content)
+        print(content)
         lo = kwargs.pop('layout', None)
         lo = Layout(width='100%', align_items='flex-end')
         super(Folder, self).__init__(
             children=self._get(), layout=lo, **kwargs)
         self.active = True
         self.disabled = False
+        print(content)
 
 
 class GUIBox(VBox):
@@ -319,7 +245,6 @@ class GUIBox(VBox):
 
 def gui_field_widgets(uni=False, test=False):
     """Return new widgets for field GUI functionality."""
-
     flims = {'min': 30, 'max': 60,
              'value': 30, 'step': 1,
              'continuous_update': False}
