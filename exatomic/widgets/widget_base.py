@@ -300,7 +300,6 @@ class ExatomicBox(Box):
         uni = kwargs.pop('uni', False)
         test = kwargs.pop('test', True)
         fdict = gui_field_widgets(uni, test)
-        print(fdict)
 
         def _iso(c):
             for scn in self.active():
@@ -323,10 +322,8 @@ class ExatomicBox(Box):
         fdict['nx'].observe(_nx, names='value')
         fdict['ny'].observe(_ny, names='value')
         fdict['nz'].observe(_nz, names='value')
-        print(fdict)
         field = Button(description=' Fields', icon='cube')
         folder = Folder(field, fdict)
-        print(fdict)
         return folder
 
     def _init_gui(self, **kwargs):

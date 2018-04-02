@@ -217,7 +217,6 @@ class Folder(VBox):
         return self._controls.__getitem__(key)
 
     def __init__(self, control, content, **kwargs):
-        print(content)
         self.show = kwargs.pop('show', False)
         self.indent = 5
         self.level = kwargs.pop('level', 0)
@@ -225,14 +224,12 @@ class Folder(VBox):
         self._slo = Layout(width=str(pw - self.indent) + '%')
         self._plo = Layout(width=str(pw) + '%')
         self._init(control, content)
-        print(content)
         lo = kwargs.pop('layout', None)
         lo = Layout(width='100%', align_items='flex-end')
         super(Folder, self).__init__(
             children=self._get(), layout=lo, **kwargs)
         self.active = True
         self.disabled = False
-        print(content)
 
 
 class GUIBox(VBox):
@@ -260,8 +257,8 @@ def gui_field_widgets(uni=False, test=False):
         iso_lims['value'] = 0.03
     alims = {'min': 0.01, 'max': 1.0,
              'value': 1.0, 'step': 0.01}
-    return _ListDict(alpha=FloatSlider(description='Opacity', **alims),
-                     iso=FloatSlider(**iso_lims),
-                     nx=IntSlider(description='Nx', **flims),
-                     ny=IntSlider(description='Ny', **flims),
-                     nz=IntSlider(description='Nz', **flims))
+    return _ListDict([('alpha', FloatSlider(description='Opacity', **alims)),
+                      ('iso', FloatSlider(**iso_lims)),
+                      ('nx', IntSlider(description='Nx', **flims)),
+                      ('ny', IntSlider(description='Ny', **flims)),
+                      ('nz', IntSlider(description='Nz', **flims))])
