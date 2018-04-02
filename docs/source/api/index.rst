@@ -10,7 +10,7 @@ The following sections describe syntax and usage of the functions and classes
 provided by the Exa package. Documentation is organized for the typical use case;
 a collection of structure text files need to be parsed into Pythonic data objects
 and then organized into a container to facilitate visualization. Useful examples 
-can be found at :ref:`examples-label` or via help::
+and syntax can be found in the Examples section (Jupyte notebooks) and via help::
 
     help(exatomic)             # Package help
     help(exatomic.isotopes)    # Module help
