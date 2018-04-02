@@ -22,14 +22,13 @@ class TestDemoContainer(TestCase):
 
     def test_field_folder(self):
         fol = self.box._field_folder()
-        self.assertListEqual(sorted(fol._controls.keys()),
-                             sorted(['main', 'options', 'alpha', 'iso', 'nx', 'ny', 'nz']))
+        self.assertListEqual(list(fol._controls.keys()),
+                             ['main', 'options', 'alpha', 'iso', 'nx', 'ny', 'nz'])
 
     def test_init_gui(self):
         main = self.box._init_gui()
-        self.assertListEqual(sorted(main.keys()),
-                             sorted(['close', 'clear', 'active', 'saves',
-                                     'camera', 'geom', 'field']))
+        self.assertListEqual(list(main.keys()),
+                             ['close', 'clear', 'active', 'saves', 'camera', 'geom', 'field'])
 
 
 class TestDemoUniverse(TestCase):
@@ -38,16 +37,15 @@ class TestDemoUniverse(TestCase):
 
     def test_field_folder(self):
         fol = self.box._field_folder()
-        self.assertListEqual(sorted(fol._get(keys=True)),
-                             sorted(['main', 'fopts', 'Hydrogenic']))
+        self.assertListEqual(fol._get(keys=True),
+                             ['main', 'fopts', 'Hydrogenic'])
                           #'alpha', 'iso', 'nx', 'ny', 'nz'])
                           # these aren't active if folder isn't open
 
     def test_init_gui(self):
         main = self.box._init_gui()
-        self.assertListEqual(sorted(main.keys()),
-                             sorted(['close', 'clear', 'active', 'saves',
-                                     'camera', 'field']))
+        self.assertListEqual(list(main.keys()),
+                             ['close', 'clear', 'active', 'saves', 'camera', 'field'])
 
 
 class TestUniverseWidget(TestCase):
@@ -59,11 +57,11 @@ class TestUniverseWidget(TestCase):
 
     def test_frame_folder(self):
         fol = self.box._frame_folder(self.uni.atom.nframes)
-        self.assertListEqual(sorted(fol._controls.keys()),
-                             sorted(['main', 'playing', 'scn_frame']))
+        self.assertListEqual(list(fol._controls.keys()),
+                             ['main', 'playing', 'scn_frame'])
 
     def test_init_gui(self):
         main = self.box._init_gui()
-        self.assertListEqual(sorted(main.keys()),
-                             sorted(['close', 'clear', 'active', 'saves',
-                                     'camera', 'atom_3d', 'axis', 'frame']))
+        self.assertListEqual(list(main.keys()),
+                             ['close', 'clear', 'active', 'saves', 
+                              'camera', 'atom_3d', 'axis', 'frame'])

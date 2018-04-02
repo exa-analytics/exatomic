@@ -77,27 +77,27 @@ class TestExatomicBox(TestCase):
 
     def test_active_folder(self):
         fol = self.box._active_folder()
-        self.assertListEqual(sorted(fol._controls.keys()), sorted(['main', '0', '1']))
+        self.assertListEqual(list(fol._controls.keys()), ['main', '0', '1'])
 
     def test_save_folder(self):
         fol = self.box._save_folder()
-        self.assertListEqual(sorted(fol._controls.keys()),
-                             sorted(['main', 'dir', 'name', 'save']))
+        self.assertListEqual(list(fol._controls.keys()),
+                             ['main', 'dir', 'name', 'save'])
 
     def test_camera_folder(self):
         fol = self.box._camera_folder()
-        self.assertEqual(sorted(fol._controls.keys()),
-                         sorted(['main', 'link', 'get', 'set']))
+        self.assertEqual(list(fol._controls.keys()),
+                         ['main', 'link', 'get', 'set'])
 
     def test_field_folder(self):
         fol = self.box._field_folder()
-        self.assertListEqual(sorted(fol._controls.keys()),
-                             sorted(['main', 'alpha', 'iso', 'nx', 'ny', 'nz']))
+        self.assertListEqual(list(fol._controls.keys()),
+                             ['main', 'alpha', 'iso', 'nx', 'ny', 'nz'])
 
     def test_init_gui(self):
         main = self.box._init_gui()
-        self.assertListEqual(sorted(main.keys()),
-                             sorted(['close', 'clear', 'active', 'saves', 'camera']))
+        self.assertListEqual(list(main.keys()),
+                             ['close', 'clear', 'active', 'saves', 'camera'])
 
     def test_active(self):
         self.assertEqual(self.box.scenes, self.box.active())

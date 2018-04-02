@@ -1,10 +1,11 @@
 # -*- coding: utf-8 -*-
 # Copyright (c) 2015-2018, Exa Analytics Development Team
 # Distributed under the terms of the Apache License 2.0
-
+from __future__ import absolute_import
+from __future__ import print_function
+from __future__ import division
 import numpy as np
 from unittest import TestCase
-
 from exatomic import XYZ
 from ..traits import (atom_traits, two_traits, 
                       frame_traits, uni_traits)
@@ -17,7 +18,6 @@ C 0. 0.  0.35'''
 # TODO : need a simple universe with field
 
 class TestTraits(TestCase):
-
     def setUp(self):
         xyz = XYZ(h2)
         xyz.parse_atom()

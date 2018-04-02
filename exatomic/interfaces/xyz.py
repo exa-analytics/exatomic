@@ -45,7 +45,7 @@ class XYZ(six.with_metaclass(Meta, Editor)):
         Args:
             unit (str): Default xyz unit of length is the Angstrom
         """
-        df = pd.read_csv(six.StringIO(six.u(self)), delim_whitespace=True,
+        df = pd.read_csv(six.StringIO(six.u(str(self))), delim_whitespace=True,
                                       names=names, header=None,
                                       skip_blank_lines=False)
         # The following algorithm works for both trajectory files and single xyz files
