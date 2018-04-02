@@ -19,7 +19,9 @@ C 0. 0.  0.35'''
 class TestTraits(TestCase):
 
     def setUp(self):
-        self.uni = XYZ(h2).to_universe()
+        xyz = XYZ(h2)
+        xyz.parse_atom()
+        self.uni = xyz.to_universe()
 
     def test_atom_traits(self):
         atom = atom_traits(self.uni.atom)
@@ -37,9 +39,6 @@ class TestTraits(TestCase):
         self.assertEqual(atom['atom_c'][1], '#000000')
         self.assertTrue(np.isclose(atom['atom_r'][1], 0.5))
 
-    def test_field_traits(self):
-        pass
-
     def test_two_traits(self):
         two = two_traits(self.uni)
         self.assertEqual(two['two_b0'], '[[0]]')
@@ -50,7 +49,7 @@ class TestTraits(TestCase):
         self.assertEqual(frame, {})
 
     def test_uni_traits(self):
-        unargs, flds, tens = uni_traits(self.uni)
+        unargs, flds, _ = uni_traits(self.uni)
         for at in ['x', 'y', 'z', 's', 'r', 'c']:
             self.assertTrue('atom_' + at in unargs)
         for b in ['b0', 'b1']:

@@ -613,7 +613,7 @@ class Fchk(six.with_metaclass(GauMeta, Editor)):
 
 
     def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+        super(Fchk, self).__init__(*args, **kwargs)
 
 
 def _dedup(sets, sp=False):

@@ -11,17 +11,15 @@ import six
 import pandas as pd
 import numpy as np
 from io import StringIO
-
 from exa import TypedMeta
-
 from .editor import Editor
-
 from exatomic import Atom
 from exatomic.algorithms.numerical import _flat_square_to_triangle
 from exatomic.algorithms.basis import lmap, spher_lml_count
 from exatomic.core.basis import Overlap, BasisSet, BasisSetOrder
 from exatomic.core.orbital import DensityMatrix, MOMatrix, Orbital
 from exatomic.base import sym2z, z2sym
+
 
 class OrbMeta(TypedMeta):
     momatrix = MOMatrix

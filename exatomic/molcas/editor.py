@@ -9,7 +9,6 @@ from exatomic import Editor as AtomicEditor
 
 
 class Editor(AtomicEditor):
-
     _to_universe = AtomicEditor.to_universe
 
     def to_universe(self, *args, **kws):
