@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# Copyright (c) 2015-2017, Exa Analytics Development Team
+# Copyright (c) 2015-2018, Exa Analytics Development Team
 # Distributed under the terms of the Apache License 2.0
 """
 Input Generator and Parser
@@ -25,11 +25,14 @@ NWChem and values corresponding to the parameters in a calculation.
 # formatting is to what NWChem expects, the less likely it is that you
 # will obtain syntax errors in the written input file.
 # """
-import pandas as pd
-import numpy as np
+from __future__ import absolute_import
+from __future__ import print_function
+from __future__ import division
+#import pandas as pd
+#import numpy as np
 from .editor import Editor
-from exa.util.units import Length as L
-from exatomic import Atom, Universe
+#from exa.util.units import Length as L
+#from exatomic import Universe
 
 
 _template = """echo
@@ -213,7 +216,7 @@ def tuning_inputs(uni, name, mult, charge, basis, gammas, alphas,
     fls = []
     for gam in gammas:
         for alp in alphas:
-            bet = 1 - alp
+            #bet = 1 - alp
             for chgnm, chg, mult in zip(chgnms, chgs, mults):
                 fnc = fnstr(gam=gam, alp=alp, bet=1-alp)
                 jnm = jbnm(gam=gam, alp=alp, bet=1-alp, chg=chgnm)

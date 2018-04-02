@@ -1,17 +1,17 @@
 # -*- coding: utf-8 -*-
 # Copyright (c) 2015-2018, Exa Analytics Development Team
 # Distributed under the terms of the Apache License 2.0
-
+from __future__ import absolute_import
+from __future__ import print_function
+from __future__ import division
 import os
-from os.path import isfile, isdir, join, abspath
+from os.path import isfile, join, abspath
 import exatomic
 from unittest import TestCase
-
 from ..widget_base import ExatomicScene, UniverseScene, ExatomicBox, _scene_grid
 
 
 class TestExatomicScene(TestCase):
-
     def setUp(self):
         self.scn = ExatomicScene()
         self.scn.savedir = abspath(join(abspath(exatomic.__file__),
@@ -19,7 +19,7 @@ class TestExatomicScene(TestCase):
 
     def test_save_camera(self):
         self.scn._save_camera({'key': 'value'})
-        self.assertEqual(self.scn.cameras[0], {'key': 'value'})
+        self.assertDictEqual(self.scn.cameras[0], {'key': 'value'})
 
     def test_save_image(self):
         # A simple tiny red dot in base64
@@ -57,50 +57,47 @@ class TestExatomicScene(TestCase):
 
 
 class TestUniverseScene(TestCase):
-
     def test_traits(self):
         scn = UniverseScene(atom_x='[[0.0,0.0]]')
         self.assertEqual(scn.atom_x, '[[0.0,0.0]]')
 
 
 class TestExatomicBox(TestCase):
-
     def setUp(self):
         self.box = ExatomicBox(2)
 
     def test_update_active(self):
-        self.assertEqual(self.box.active_scene_indices, [0, 1])
+        self.assertListEqual(self.box.active_scene_indices, [0, 1])
         self.box._controls['active']._controls['0'].value = False
         self.box._update_active(None)
-        self.assertEqual(self.box.active_scene_indices, [1])
+        self.assertListEqual(self.box.active_scene_indices, [1])
         self.box._controls['active']._controls['0'].value = True
         self.box._update_active(None)
-        self.assertEqual(self.box.active_scene_indices, [0, 1])
+        self.assertListEqual(self.box.active_scene_indices, [0, 1])
 
     def test_active_folder(self):
         fol = self.box._active_folder()
-        self.assertEqual(list(fol._controls.keys()), ['main', '0', '1'])
+        self.assertListEqual(list(fol._controls.keys()), ['main', '0', '1'])
 
     def test_save_folder(self):
         fol = self.box._save_folder()
-        self.assertEqual(list(fol._controls.keys()),
-                         ['main', 'dir', 'name', 'save'])
+        self.assertListEqual(list(fol._controls.keys()),
+                             ['main', 'dir', 'name', 'save'])
 
     def test_camera_folder(self):
         fol = self.box._camera_folder()
-        self.assertEqual(list(fol._controls.keys()),
-                         ['main', 'link', 'get', 'set'])
-
+        self.assertListEqual(list(fol._controls.keys()),
+                             ['main', 'link', 'get', 'set'])
 
     def test_field_folder(self):
         fol = self.box._field_folder()
-        self.assertEqual(list(fol._controls.keys()),
-                         ['main', 'alpha', 'iso', 'nx', 'ny', 'nz'])
+        self.assertListEqual(list(fol._controls.keys()),
+                             ['main', 'alpha', 'iso', 'nx', 'ny', 'nz'])
 
     def test_init_gui(self):
         main = self.box._init_gui()
-        self.assertEqual(list(main.keys()),
-                         ['close', 'clear', 'active', 'saves', 'camera'])
+        self.assertListEqual(list(main.keys()),
+                             ['close', 'clear', 'active', 'saves', 'camera'])
 
     def test_active(self):
         self.assertEqual(self.box.scenes, self.box.active())
@@ -112,10 +109,7 @@ class TestExatomicBox(TestCase):
         ExatomicBox()
 
 
-
-
 class TestSceneGrid(TestCase):
-
     def test_scene_grid(self):
         # 3 cases -- from least specific to most specific
         # 1. a number of scenes

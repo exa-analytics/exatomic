@@ -33,7 +33,7 @@ def modv(x, y):
     return np.mod(x, y)
 
 
-@nb.jit(nopython=True, nogil=True, parallel=True)
+@nb.jit(nopython=True, nogil=True, parallel=nbpll)
 def pdist_ortho(ux, uy, uz, a, b, c, index, dmax=8.0):
     """
     Pairwise two body calculation for bodies in an orthorhombic periodic cell.
@@ -123,7 +123,7 @@ def pdist_ortho(ux, uy, uz, a, b, c, index, dmax=8.0):
     return dx, dy, dz, dr, ii, jj, projection
 
 
-@nb.jit(nopython=True, nogil=True, parallel=True)
+@nb.jit(nopython=True, nogil=True, parallel=nbpll)
 def pdist_ortho_nv(ux, uy, uz, a, b, c, index, dmax=8.0):
     """
     Pairwise two body calculation for bodies in an orthorhombic periodic cell.
@@ -204,7 +204,7 @@ def pdist_ortho_nv(ux, uy, uz, a, b, c, index, dmax=8.0):
     return dr, ii, jj, projection
 
 
-@nb.jit(nopython=True, nogil=True, parallel=True)
+@nb.jit(nopython=True, nogil=True, parallel=nbpll)
 def pdist(x, y, z, index, dmax=8.0):
     """
     Pairwise distance computation for points in cartesian space.
@@ -247,7 +247,7 @@ def pdist(x, y, z, index, dmax=8.0):
     return dx, dy, dz, dr, atom0, atom1
 
 
-@nb.jit(nopython=True, nogil=True, parallel=True)
+@nb.jit(nopython=True, nogil=True, parallel=nbpll)
 def pdist_nv(x, y, z, index, dmax=8.0):
     """
     Pairwise distance computation for points in cartesian space.

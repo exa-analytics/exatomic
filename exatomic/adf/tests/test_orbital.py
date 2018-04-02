@@ -4,15 +4,15 @@
 #import os
 #import numpy as np
 #from glob import glob
-from unittest import TestCase
+#from unittest import TestCase
 #from exatomic.adf.output import Output
 #from exatomic import Cube
 
 
-class TestOrbital(TestCase):
-    """Tests that orbitals are generated correctly for ADF."""
-    def setUp(self):
-        pass
+#class TestOrbital(TestCase):
+#    """Tests that orbitals are generated correctly for ADF."""
+#    def setUp(self):
+#        pass
 #        cd = os.path.abspath(__file__).split(os.sep)[:-1]
 #        self.uni = Output(os.sep.join(cd + ['kr.out'])).to_universe()
 #        cubs = sorted(glob(os.sep.join(cd + ["*cube"])))
@@ -22,8 +22,8 @@ class TestOrbital(TestCase):
 #                              field_params=self.cub.field.ix[0])
 
 
-    def test_field_values(self):
-        pass
+#    def test_field_values(self):
+#        pass
 #        target = len(self.uni.field.field_values[0]) - 5
 #        for fld, cub in zip(self.uni.field.field_values,
 #                            self.cub.field.field_values):

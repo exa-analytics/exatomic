@@ -8,11 +8,10 @@ Building discrete molecular orbitals (for visualization) requires a complex
 set of operations that are provided by this module and wrapped into a clean API.
 """
 import numpy as np
-from numba import jit
+#from numba import jit
 from datetime import datetime
-
 from exatomic.base import sym2z
-from exatomic.core.field import AtomicField
+#from exatomic.core.field import AtomicField
 from .orbital_util import (
     numerical_grid_from_field_params, _determine_fps,
     _determine_vector, _compute_orb_ang_mom, _compute_current_density,
@@ -55,7 +54,7 @@ def add_molecular_orbitals(uni, field_params=None, mocoefs=None,
         print(p1.format(len(uni.basis_set_order.index)))
 
     x, y, z = numerical_grid_from_field_params(fps)
-    orbs = uni.momatrix.groupby('orbital')
+    #orbs = uni.momatrix.groupby('orbital')
     bvs = bfns.evaluate(x, y, z)
     cmat = uni.momatrix.square(column=mocoefs).values
     try: ovs = _compute_orbitals(len(x), bvs, vector, cmat)

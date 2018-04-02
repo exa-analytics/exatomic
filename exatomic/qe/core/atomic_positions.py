@@ -7,7 +7,8 @@ Atomic Positions Parser
 """
 import re
 import pandas as pd
-from exa import Parser, Typed
+from exa import Parser
+from exa.typed import Typed
 from exatomic.core.atom import Atom
 
 
@@ -36,7 +37,7 @@ class AtomicPositions(Parser):
         atom = pd.read_csv(self[slce].to_stream(), delim_whitespace=True,
                            names=self._cols)
         self.atom = Atom.from_xyz(atom, unit=length)
-    
+
     def _parse_end(self, starts):
         """Find the next blank line."""
         return [self.next_blank_line(cursor=i[0]) for i in starts]

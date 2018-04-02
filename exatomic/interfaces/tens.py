@@ -1,18 +1,24 @@
+# -*- coding: utf-8 -*-
+# Copyright (c) 2015-2018, Exa Analytics Development Team
+# Distributed under the terms of the Apache License 2.0
 import six
-import numpy as np
+#import numpy as np
 import pandas as pd
 from io import StringIO
-from exa import Series, TypedMeta
+#from exa import Series, TypedMeta
+from exa import TypedMeta
 from exatomic.core import Editor, Tensor
+
 
 class Meta(TypedMeta):
     tensor = Tensor
+
 
 class RTensor(six.with_metaclass(Meta, Editor)):
     """
     This is a simple script to read a rank-2 tensor file with frame, label and atom index
     labels. The format for such a file is,
-    
+
     0: f=** l=** a=**
     1: xx   xy   xz
     2: yx   yy   yz
@@ -21,17 +27,17 @@ class RTensor(six.with_metaclass(Meta, Editor)):
     5: Same as above for a second tensor
     
     """
-## Must make this into a class that looks like the XYZ and Cube 
+## Must make this into a class that looks like the XYZ and Cube
 #           classes. Must have something like parse_tensor.
-#           Then on the Tensor class there should be something that can 
-#           be activated to find the eigenvalues and eigenvectors of the 
+#           Then on the Tensor class there should be something that can
+#           be activated to find the eigenvalues and eigenvectors of the
 #           matrix to plot the basis vectors.
-#           Look at untitled1.ipynb for more info
+#           Look at untitled1.ipynb for more info.
 
     def parse_tensor(self):
         df = pd.read_csv(StringIO(str(self)), delim_whitespace=True, header=None, 
                             skip_blank_lines=False)
-        print(df)
+        #print(df)
         try:
             i=0
             data = ''
@@ -63,6 +69,6 @@ class RTensor(six.with_metaclass(Meta, Editor)):
             print('---------------')
         self.tensor = data
 
-    @classmethod
-    def from_universe(cls):
-        pass
+#    @classmethod
+#    def from_universe(cls):
+#        pass

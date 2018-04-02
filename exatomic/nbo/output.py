@@ -10,7 +10,7 @@ import numpy as np
 import pandas as pd
 from io import StringIO
 from .editor import Editor
-from exa.util.units import Length
+#from exa.util.units import Length
 from exatomic.core.orbital import Orbital
 
 
@@ -35,7 +35,7 @@ class Output(Editor):
             stops = [keys[0]] + keys[2::2]
         dfs = []
         spins = [-1, 0, 1]
-        nrcol = len(self[starts[0]].replace("( ", "(").split()) + 1
+        #nrcol = len(self[starts[0]].replace("( ", "(").split()) + 1
         #for (lno, col), start, stop, spin in zip(found[_re_nao_start], starts, stops, spins):
         for (_, col), start, stop, spin in zip(found[_re_nao_start], starts, stops, spins):
             columns = col.split()

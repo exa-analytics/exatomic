@@ -14,15 +14,17 @@ from operator import mul
 from functools import reduce
 from collections import OrderedDict, Counter
 from itertools import combinations_with_replacement as cwr
-
 import numpy as np
 import pandas as pd
 from numexpr import evaluate
-
-from symengine import var, exp, cos, sin, Add, Mul, Integer
-
+try:
+    from symengine import var, exp, cos, sin, Mul, Integer
+except ImportError:
+    from sympy import symbols as var
+    from sympy import exp, cos, sin, Mul, Integer
 from exatomic.algorithms.overlap import _cartesian_shell_pairs, _iter_atom_shells
 from exatomic.algorithms.numerical import fac, _tri_indices, _triangle
+
 
 _x, _y, _z = var("_x _y _z")
 _r = (_x ** 2 + _y ** 2 + _z ** 2) ** 0.5
@@ -138,7 +140,8 @@ def car2sph(sh, cart, orderedp=True):
         for ml, sym in mls.items():
             mli = ml + L
             coefs = sym.expand().as_coefficients_dict()
-            for crt, coef in coefs.items():
+            #for crt, coef in coefs.items():
+            for crt, _ in coefs.items():
                 if isinstance(crt, Integer): continue
                 idx = cdxs.index(crt)
                 c2s[L][idx, mli] = coefs[cdxs[idx]]
@@ -146,6 +149,9 @@ def car2sph(sh, cart, orderedp=True):
 
 
 class Symbolic(object):
+    @property
+    def _constructor(self):
+        return Symbolic
 
     def diff(self, cart='x', order=1):
         """Compute the nth order derivative symbolically with respect to cart.
@@ -160,7 +166,7 @@ class Symbolic(object):
         assert cart in ['x', 'y', 'z']
         assert isinstance(order, int) and order > 0
         expr = self._expr
-        for i in range(order):
+        for _ in range(order):
             expr = expr.diff('_'+cart)
         return Symbolic(expr)
 
@@ -188,22 +194,24 @@ class Basis(object):
     Args
         uni (exatomic.core.universe.Universe): a universe with basis set
         frame (int): frame corresponding to basis set (default=0)
-        cartp (bool): forces p function ordering as (x, y, z) not (-1, 0, 1)"""
-
+        cartp (bool): forces p function ordering as (x, y, z) not (-1, 0, 1)
+    """
     # Unscaled solid harmonics
     _sh = solid_harmonics(6)
 
+    @property
+    def _constructor(self):
+        return Basis
 
     def integrals(self):
         """Compute the overlap matrix using primitive cartesian integrals."""
         from exatomic.core.basis import Overlap
-        ovl = _cartesian_shell_pairs(len(self), self._ptrs,
+        ovl = _cartesian_shell_pairs(len(self), self._ptrs.astype(np.int64),
                                      self._xyzs, *self._shells)
         ovl = _triangle(ovl)
         chi0, chi1 = _tri_indices(ovl)
         return Overlap.from_dict({'chi0': chi0, 'chi1': chi1,
                                   'frame': 0, 'coef': ovl})
-
 
     def enum_shell(self, shl):
         """Return a generator over angular momentum degrees of freedom."""
@@ -211,20 +219,17 @@ class Basis(object):
             return shl.enum_spherical()
         return shl.enum_cartesian()
 
-
     def evaluate(self, xs, ys, zs):
         """Evaluate basis functions on a numerical grid."""
         if not self._gaussian:
             return self._evaluate_sto(xs, ys, zs)
         return self._evaluate_gau(xs, ys, zs)
 
-
     def evaluate_diff(self, xs, ys, zs, cart='x'):
         """Evaluate basis function derivatives on a numerical grid."""
         if not self._gaussian:
             return self._evaluate_diff_sto(xs, ys, zs, cart)
         return self._evaluate_diff_gau(xs, ys, zs, cart)
-
 
     def _radial(self, x, y, z, alphas, cs, rs=None, pre=None):
         """Generates the symbolic radial portion of a basis function."""
@@ -237,7 +242,6 @@ class Basis(object):
             sum((c * exp(-a * self._expnt)
                 for c, a in zip(cs, alphas))
                 ).subs({_x: _x - x, _y: _y - y, _z: _z - z}))
-
 
     def _angular(self, shl, x, y, z, *ang):
         """Generates the symbolic angular portion of a basis function."""
@@ -255,12 +259,11 @@ class Basis(object):
                 sym /= (2 * np.pi ** 0.5)
         return Symbolic(sym.subs({_x: _x - x, _y: _y - y, _z: _z - z}))
 
-
     def _evaluate_sto(self, xs, ys, zs):
         """Evaluates a full STO basis set and returns a numpy array."""
         cnt, flds = 0, np.empty((len(self), len(xs)))
-        for i, ax, ay, az, ishl in \
-            _iter_atom_shells(self._ptrs, self._xyzs, *self._shells):
+        #for i, ax, ay, az, ishl in _iter_atom_shells(self._ptrs, self._xyzs, *self._shells):
+        for _, ax, ay, az, ishl in _iter_atom_shells(self._ptrs, self._xyzs, *self._shells):
             norm = ishl.norm_contract()
             for mag in self.enum_shell(ishl):
                 a = self._angular(ishl, ax, ay, az, *mag).evaluate(xs, ys, zs)
@@ -272,16 +275,13 @@ class Basis(object):
                     cnt += 1
         return flds
 
-
     def _evaluate_diff_sto(self, xs, ys, zs, cart):
         raise NotImplementedError("Verify symbolic differentiation of STOs.")
-
 
     def _evaluate_gau(self, xs, ys, zs):
         """Evaluates a full Gaussian basis set and returns a numpy array."""
         cnt, flds = 0, np.empty((len(self), len(xs)))
-        for i, ax, ay, az, ishl in \
-            _iter_atom_shells(self._ptrs, self._xyzs, *self._shells):
+        for _, ax, ay, az, ishl in _iter_atom_shells(self._ptrs, self._xyzs, *self._shells):
             norm = ishl.norm_contract()
             for mag in self.enum_shell(ishl):
                 a = self._angular(ishl, ax, ay, az, *mag).evaluate(xs, ys, zs)
@@ -291,13 +291,12 @@ class Basis(object):
                     cnt += 1
         return flds
 
-
     def _evaluate_diff_gau(self, xs, ys, zs, cart):
         """Evaluates the derivatives of a full Gaussian basis
         set and returns a numpy array."""
         cnt, flds = 0, np.empty((len(self), len(xs)))
-        for i, ax, ay, az, ishl in \
-            _iter_atom_shells(self._ptrs, self._xyzs, *self._shells):
+        #for i, ax, ay, az, ishl in _iter_atom_shells(self._ptrs, self._xyzs, *self._shells):
+        for _, ax, ay, az, ishl in _iter_atom_shells(self._ptrs, self._xyzs, *self._shells):
             norm = ishl.norm_contract()
             for mag in self.enum_shell(ishl):
                 a = self._angular(ishl, ax, ay, az, *mag)
@@ -316,10 +315,10 @@ class Basis(object):
 
     def __repr__(self):
         chk = (i.spherical for i in self._shells)
-        repr = 'Basis({},{{}})'.format(len(self)).format
-        if all(chk): return repr('spherical')
-        if not any(chk): return repr('cartesian')
-        return repr('mixed')
+        _repr = 'Basis({},{{}})'.format(len(self)).format
+        if all(chk): return _repr('spherical')
+        if not any(chk): return _repr('cartesian')
+        return _repr('mixed')
 
     def __init__(self, uni, frame=0, cartp=True):
         self._program = uni.meta['program']

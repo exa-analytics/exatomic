@@ -2,9 +2,11 @@
 # Copyright (c) 2015-2018, Exa Analytics Development Team
 # Distributed under the terms of the Apache License 2.0
 """
-Universe Notebook Widget
+Widget Utilities
 #########################
+Widget layout and structure.
 """
+import six
 from collections import OrderedDict
 from ipywidgets import VBox, Layout, FloatSlider, IntSlider
 
@@ -23,52 +25,67 @@ _bboxlo = Layout(flex='1 1 auto', width='auto', height='auto')
 # Box layouts above are separate so it is easier to restyle
 
 
-class _ListDict(OrderedDict):
-    """An OrderedDict that also slices and indexes as a list."""
+class _ListDict(object):
+    """
+    Thin wrapper around OrderedDict that allows slicing by position (like list).
+
+    Requires string keys.
+    """
+    def values(self):
+        return self.od.values()
+
+    def keys(self):
+        return self.od.keys()
+
+    def items(self):
+        return self.od.items()
 
     def pop(self, key):
-        """Pop as a dict or list."""
-        try:
-            return super(_ListDict, self).pop(key)
-        except KeyError:
-            key = list(self.keys())[key]
-            return super(_ListDict, self).pop(key)
+        """Pop value."""
+        if isinstance(key, six.string_types):
+            return self.od.pop(key)
+        return self.od.pop(list(self.od.keys())[key])
 
     def insert(self, idx, key, obj):
-        """Insert as a list."""
-        key = str(key)
-        keys = list(self.keys())
-        self[key] = obj
-        keys.insert(idx, key)
-        try:
-            # Only python >= 3.2
-            for k in keys[idx:]:
-                self.move_to_end(k, last=True)
-        except AttributeError:
-            # Manually reorder
-            old = list(self.items())
-            for key in self.keys():
-                self.pop(key)
-            for key, obj in old:
-                self[key] = obj
+        """Insert value at position idx with string key."""
+        if not isinstance(key, six.string_types):
+            raise TypeError("Key must be type str")
+        items = list(self.od.items())
+        items.insert(idx, (key, obj))
+        self.od = OrderedDict(items)
 
+    def update(self, *args, **kwargs):
+        """Update OrderedDict"""
+        self.od.update(OrderedDict(*args, **kwargs))
 
-    def __setitem__(self, key, obj):
-        if not isinstance(key, str):
-            raise TypeError('Must set _ListDict value with key of type str.')
-        super(_ListDict, self).__setitem__(key, obj)
+    def __setitem__(self, key, value):
+        if not isinstance(key, six.string_types):
+            raise TypeError('Must set _ListDict key must be type str.')
+        keys = list(self.od.keys())
+        if key in keys:
+            self.od[key] = value
+        else:
+            items = list(self.od.items())
+            items.append((key, value))
+            self.od = OrderedDict(items)
 
     def __getitem__(self, key):
-        if isinstance(key, str):
-            return super(_ListDict, self).__getitem__(key)
-        if isinstance(key, (int, slice)):
-            return list(self.values())[key]
-        raise TypeError('_ListDict slice must be of type str/int/slice.')
+        if not isinstance(key, (six.string_types, int, slice)):
+            raise TypeError('_ListDict slice must be of type str/int/slice.')
+        if isinstance(key, six.string_types):
+            return self.od[key]
+        return list(self.values())[key]
 
     def __init__(self, *args, **kwargs):
-        super(_ListDict, self).__init__(*args, **kwargs)
-        if not all((isinstance(key, str) for key in self.keys())):
+        self.od = OrderedDict(*args, **kwargs)
+        if not all((isinstance(key, six.string_types) for key in self.od.keys())):
             raise TypeError('_ListDict keys must be of type str.')
+
+    def __len__(self):
+        return len(self.od)
+
+    def __repr__(self):
+        return repr(self.od)
 
 
 class Folder(VBox):
@@ -93,7 +110,6 @@ class Folder(VBox):
         if update:
             self._set_gui()
 
-
     def deactivate(self, *keys, **kwargs):
         """Deactivate (hide) widgets."""
         active = kwargs.pop('active', False)
@@ -106,7 +122,6 @@ class Folder(VBox):
         if update:
             self._set_gui()
 
-
     def insert(self, idx, key, obj, active=True, update=False):
         """Insert widget into Folder, behaves as list.insert ."""
         obj.layout.width = str(98 - (self.level + 1) * self.indent) + '%'
@@ -116,13 +131,11 @@ class Folder(VBox):
         if update:
             self._set_gui()
 
-
     def update(self, objs, relayout=False):
         """Update the Folder widgets, behaves as dict.update."""
         if relayout:
             self._relayout(objs)
         self._controls.update(objs)
-
 
     def move_to_end(self, *keys):
         """Move widget(s) to the end of the folder."""
@@ -134,19 +147,15 @@ class Folder(VBox):
             for key, obj in zip(keys, objs):
                 self[key] = obj
 
-
-
     def pop(self, key):
         """Pop a widget from the folder."""
         return self._controls.pop(key)
-
 
     def _close(self):
         """Close all widgets in the folder, then the folder."""
         for widget in self._get():
             widget.close()
         self.close()
-
 
     def _get(self, active=True, keys=False):
         """Get the widgets in the folder."""
@@ -161,7 +170,6 @@ class Folder(VBox):
                 return [obj for obj in mit if obj.active]
             return [obj for obj in mit if not obj.active]
 
-
     def _set_gui(self):
         """Update the 'view' of the folder."""
         if self.show:
@@ -171,12 +179,10 @@ class Folder(VBox):
             self.children = [self._controls['main']]
         self.on_displayed(VBox._fire_children_displayed)
 
-
     def _relayout(self, objs):
         """Set layout for widgets in the folder."""
         for obj in objs.values():
             obj.layout = self._slo
-
 
     def _init(self, control, content):
         """Set initial layout of primary button and widgets."""
@@ -184,6 +190,7 @@ class Folder(VBox):
         def _b(b):
             self.show = not self.show
             self._set_gui()
+
         control.on_click(_b)
         control.active = True
         control.disabled = False
@@ -203,14 +210,11 @@ class Folder(VBox):
                     obj.disabled = False
             self._controls.update(content)
 
-
     def __setitem__(self, key, obj):
         return self._controls.__setitem__(key, obj)
 
-
     def __getitem__(self, key):
         return self._controls.__getitem__(key)
-
 
     def __init__(self, control, content, **kwargs):
         self.show = kwargs.pop('show', False)
@@ -231,14 +235,14 @@ class Folder(VBox):
 class GUIBox(VBox):
 
     def __init__(self, *args, **kwargs):
-        lo = kwargs.pop('layout', None)
-        super(GUIBox, self).__init__(*args, layout=_glo, **kwargs)
+        #lo = kwargs.pop('layout', None)
+        kwargs['layout'] = _glo    # Force global layout
+        super(GUIBox, self).__init__(*args, **kwargs)
 
 
 
 def gui_field_widgets(uni=False, test=False):
     """Return new widgets for field GUI functionality."""
-
     flims = {'min': 30, 'max': 60,
              'value': 30, 'step': 1,
              'continuous_update': False}
@@ -254,8 +258,8 @@ def gui_field_widgets(uni=False, test=False):
         iso_lims['value'] = 0.03
     alims = {'min': 0.01, 'max': 1.0,
              'value': 1.0, 'step': 0.01}
-    return _ListDict(alpha=FloatSlider(description='Opacity', **alims),
-                     iso=FloatSlider(**iso_lims),
-                     nx=IntSlider(description='Nx', **flims),
-                     ny=IntSlider(description='Ny', **flims),
-                     nz=IntSlider(description='Nz', **flims))
+    return _ListDict([('alpha', FloatSlider(description='Opacity', **alims)),
+                      ('iso', FloatSlider(**iso_lims)),
+                      ('nx', IntSlider(description='Nx', **flims)),
+                      ('ny', IntSlider(description='Ny', **flims)),
+                      ('nz', IntSlider(description='Nz', **flims))])

@@ -3,7 +3,8 @@
 # Distributed under the terms of the Apache License 2.0
 import pandas as pd
 from unittest import TestCase
-from exatomic.core.basis import (BasisSet, BasisSetOrder, Overlap,
+#from exatomic.core.basis import (BasisSet, BasisSetOrder, Overlap,
+from exatomic.core.basis import (BasisSet, Overlap,
                                 spher_lml_count, cart_lml_count)
 
 class TestBasisSet(TestCase):
@@ -39,7 +40,7 @@ class TestBasisSet(TestCase):
         self.assertEquals(self.bs.lmax, 0)
         self.assertEquals(self.mbs.lmax, 1)
         self.assertEquals(self.lbs.lmax, 2)
-    # 
+
     # def test_shells(self):
     #     self.assertEquals(self.bs.shells, ['s'])
     #     self.assertEquals(self.mbs.shells, ['s', 'p'])

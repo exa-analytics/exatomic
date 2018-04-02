@@ -1,7 +1,9 @@
 [![exatomic logo](docs/source/static/logo.png)](https://exa-analytics.github.io)
+
 *A unified platform for computational chemists*
 
-![](https://i.imgur.com/g9X3gPa.gif)
+![](docs/source/static/demo.gif)
+![](docs/source/static/water-demo.gif)
 
 
 # Installation
@@ -33,7 +35,8 @@ On Windows:
 
 
 # Contributing
-[![travis](https://travis-ci.org/exa-analytics/exatomic.svg?branch=master)](https://travis-ci.org/exa-analytics/exatomic)  
+[![Travis-CI](https://travis-ci.org/exa-analytics/exatomic.svg?branch=master)](https://travis-ci.org/exa-analytics/exatomic)  
+[![AppVeyor](https://ci.appveyor.com/api/projects/status/5palls4vcdipkv00?svg=true)](https://ci.appveyor.com/project/avmarchenko/exatomic)
 [![Coverage](https://coveralls.io/repos/github/exa-analytics/exatomic/badge.svg?branch=master)](https://coveralls.io/github/exa-analytics/exatomic?branch=master)  
 [![Codacy](https://api.codacy.com/project/badge/Grade/221e700665c74c85b8255e5b399490d4)](https://www.codacy.com/app/alexvmarch/exatomic?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=exa-analytics/exatomic&amp;utm_campaign=Badge_Grade)  
 
@@ -56,5 +59,5 @@ need to reinstall the package.
 
 # Legal
 [![Apache License 2.0](http://img.shields.io/:license-apache-blue.svg?style=flat-square)](http://www.apache.org/licenses/LICENSE-2.0)  
-Copyright (c) 2015-2016, Exa Analytics Development Team  
+Copyright (c) 2015-2018, Exa Analytics Development Team  
 Distributed under the terms of the Apache License 2.0  

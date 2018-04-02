@@ -4,41 +4,26 @@
 """
 Tests for :mod:`~exatomic.xyz`
 ################################
-
 """
-#from io import StringIO
-#from exa.test import UnitTester
-#from exatomic.xyz import read_xyz
-#from exatomic import _np as np
-#
-#
-#xyzfl = """3
-#1 comment
-#H 0.0  0.0 0.0
-#H 0.0  0.7 0.0
-#H 0.0 -0.7 0.0
-#2
-#comments 2
-#H 0.0  0.0 0.0
-#H 0.0 -0.7 0.0
-#"""
-#
-#
-#class TestXYZ(UnitTester):
-#    """
-#    """
-#    def test_read_xyz(self):
-#        """
-#        """
-#        pass
-#
-#
-#
-#    def setUp(self):
-#        self.raw = xyz._rawdf(StringIO(xyzfl))
-#        self.idx = xyz._index(self.raw)
-#
-#    def test_read_xyz(self):
-#        to = xyz._parse_xyz(self.raw, 'A', self.idx)
-#        self.assertTrue(np.all(np.array(to.index.levels[0]) == np.array([0, 1])))
-#        self.assertTrue(np.all(np.array(to.index.levels[1]) == np.array([0, 1, 2])))
+from unittest import TestCase
+from exatomic.base import resource
+from exatomic import XYZ
+
+
+check = {'H2O.xyz': 3, 'H2.xyz': 2, 'O2.xyz': 2, 'UCl6.xyz': 7,
+         'UO2.xyz': 3, 'ZnPorphyrin.xyz': 77, 'ZrO2.xyz': 3,
+         'H2O.traj.xyz': 225600, 'benzene.xyz': 12, 'CH3NH2.xyz': 7,
+         'methyl_134_triazole.xyz': 11, 'kaolinite.xyz': 26,
+         'magnesite.xyz': 60, 'zabuyelite.xyz': 24}
+
+
+class TestXYZ(TestCase):
+    """
+    Test that the parser opens a wide range of files and correctly parses the
+    atom table.
+    """
+    def test_sizes(self):
+        for name, size in check.items():
+            xyz = XYZ(resource(name))
+            xyz.parse_atom()
+            self.assertEqual(xyz.atom.shape[0], size)

@@ -6,4 +6,3 @@ Description of Nuclear Coordinates
 #####################################
 .. automodule:: exatomic.core.atom
     :members:
-

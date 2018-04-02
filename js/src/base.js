@@ -4,29 +4,29 @@
 =================
 base.js
 =================
-JavaScript "frontend" complement of exatomic's Universe
+JavaScript "frontend" complement of exatomic"s Universe
 for use within the Jupyter notebook interface.
 */
 
-'use strict';
-var widgets = require('@jupyter-widgets/base');
-var control = require('@jupyter-widgets/controls');
-var _ = require('underscore');
-var three = require('./appthree');
-var utils = require('./utils');
-var semver = '^' + require('../package.json').version;
-
+"use strict";
+var widgets = require("@jupyter-widgets/base");
+var control = require("@jupyter-widgets/controls");
+var _ = require("underscore");
+var three = require("./appthree");
+var utils = require("./utils");
+var semver = "^" + require("../package.json").version;
+console.log("exatomic JS version: " + require("../package.json").version);
 
 
 var ExatomicBoxModel = control.BoxModel.extend({
 
     defaults: _.extend({}, control.BoxModel.prototype.defaults, {
-            _model_name: 'ExatomicBoxModel',
-            _view_name: 'ExatomicBoxView',
+            _model_name: "ExatomicBoxModel",
+            _view_name: "ExatomicBoxView",
             _model_module_version: semver,
             _view_module_version: semver,
-            _model_module: 'exatomic',
-            _view_module: 'exatomic',
+            _model_module: "exatomic",
+            _view_module: "exatomic",
             linked: false
     })
 
@@ -73,15 +73,15 @@ var ExatomicBoxView = control.BoxView.extend({
         //      :: e.g. -- camera[i].rotation.copy(camera[0])
         var that = this;
         this.scene_ps.then(function(views) {
-            if (that.model.get('linked')) {
-                var idxs = that.model.get('active_scene_indices');
+            if (that.model.get("linked")) {
+                var idxs = that.model.get("active_scene_indices");
                 var controls = views[idxs[0]].app3d.controls;
                 var camera = views[idxs[0]].app3d.camera;
                 for (var i = 1; i < idxs.length; i++) {
                     var a = views[idxs[i]].app3d;
                     a.camera = camera;
                     a.controls = a.init_controls();
-                    a.controls.addEventListener('change', a.render.bind(a));
+                    a.controls.addEventListener("change", a.render.bind(a));
                 };
             } else {
                 // var camera = views[0].app3d.camera;
@@ -90,14 +90,14 @@ var ExatomicBoxView = control.BoxView.extend({
                     // var camera = a.camera;
                     a.camera = a.camera.clone();
                     a.controls = a.init_controls();
-                    a.controls.addEventListener('change', a.render.bind(a));
+                    a.controls.addEventListener("change", a.render.bind(a));
                 };
             };
         });
     },
 
     init_listeners: function() {
-        this.listenTo(this.model, 'change:linked', this.link_controls);
+        this.listenTo(this.model, "change:linked", this.link_controls);
     }
 
 });
@@ -106,12 +106,12 @@ var ExatomicBoxView = control.BoxView.extend({
 var ExatomicSceneModel = widgets.DOMWidgetModel.extend({
 
     defaults: _.extend({}, widgets.DOMWidgetModel.prototype.defaults, {
-        _model_name: 'ExatomicSceneModel',
-        _view_name: 'ExatomicSceneView',
+        _model_name: "ExatomicSceneModel",
+        _view_name: "ExatomicSceneView",
         _model_module_version: semver,
         _view_module_version: semver,
-        _model_module: 'exatomic',
-        _view_module: 'exatomic'
+        _model_module: "exatomic",
+        _view_module: "exatomic"
     })
 
 });
@@ -127,10 +127,10 @@ var ExatomicSceneView = widgets.DOMWidgetView.extend({
 
     init: function() {
         var func;
-        window.addEventListener('resize', this.resize.bind(this));
+        window.addEventListener("resize", this.resize.bind(this));
         this.app3d = new three.App3D(this);
         this.three_promises = this.app3d.init_promise();
-        if (this.model.get('uni')) {
+        if (this.model.get("uni")) {
             func = this.add_field;
         } else {
             func = this.add_geometry;
@@ -143,9 +143,9 @@ var ExatomicSceneView = widgets.DOMWidgetView.extend({
         // sometimes during window resize these are 0
         var w = this.el.offsetWidth || 200;
         var h = this.el.offsetHeight || 200;
-        this.model.set('w', w);
+        this.model.set("w", w);
         // threejs canvas is 5 smaller than div
-        this.model.set('h', h - 5);
+        this.model.set("h", h - 5);
     },
 
     render: function() {
@@ -153,76 +153,76 @@ var ExatomicSceneView = widgets.DOMWidgetView.extend({
     },
 
     add_geometry: function(color) {
-        this.app3d.clear_meshes('generic');
-        if (this.model.get('geom')) {
-            this.app3d.meshes['generic'] = this.app3d.test_mesh();
-            this.app3d.add_meshes('generic');
+        this.app3d.clear_meshes("generic");
+        if (this.model.get("geom")) {
+            this.app3d.meshes["generic"] = this.app3d.test_mesh();
+            this.app3d.add_meshes("generic");
         };
     },
 
     colors: function() {
-        return {'pos': this.model.get('field_pos'),
-                'neg': this.model.get('field_neg')};
+        return {"pos": this.model.get("field_pos"),
+                "neg": this.model.get("field_neg")};
     },
 
     add_field: function() {
-        this.app3d.clear_meshes('field');
-        if (this.model.get('uni')) {
-            var field = this.model.get('field');
-            var kind = this.model.get('field_kind');
+        this.app3d.clear_meshes("field");
+        if (this.model.get("uni")) {
+            var field = this.model.get("field");
+            var kind = this.model.get("field_kind");
             var ars = utils.gen_field_arrays(this.get_fps());
             var func = utils[field];
-            if (field === 'SolidHarmonic') {
-                var fml = this.model.get('field_ml');
+            if (field === "SolidHarmonic") {
+                var fml = this.model.get("field_ml");
                 var tf = func(ars, kind, fml);
-                var name = 'Sol.Har.,' + kind + ',' + fml;
+                var name = "Sol.Har.," + kind + "," + fml;
             } else {
                 var tf = func(ars, kind);
-                var name = field + ',' + kind;
+                var name = field + "," + kind;
             };
-            this.app3d.meshes['field'] = this.app3d.add_scalar_field(
-                tf, this.model.get('field_iso'),
-                this.model.get('field_o'), 2,
+            this.app3d.meshes["field"] = this.app3d.add_scalar_field(
+                tf, this.model.get("field_iso"),
+                this.model.get("field_o"), 2,
                 this.colors());
-            for (var i = 0; i < this.app3d.meshes['field'].length; i++) {
-                this.app3d.meshes['field'][i].name = name;
+            for (var i = 0; i < this.app3d.meshes["field"].length; i++) {
+                this.app3d.meshes["field"][i].name = name;
             };
         } else {
-            this.app3d.meshes['field'] = this.app3d.add_scalar_field(
+            this.app3d.meshes["field"] = this.app3d.add_scalar_field(
                 utils.scalar_field(
                     utils.gen_field_arrays(this.get_fps()),
-                    utils[this.model.get('field')]
+                    utils[this.model.get("field")]
                 ),
-                this.model.get('field_iso'),
-                this.model.get('field_o')
+                this.model.get("field_iso"),
+                this.model.get("field_o")
             );
-            this.app3d.meshes['field'][0].name = this.model.get('field');
+            this.app3d.meshes["field"][0].name = this.model.get("field");
         };
-        this.app3d.add_meshes('field');
+        this.app3d.add_meshes("field");
     },
 
     update_field: function() {
-        var meshes = this.app3d.meshes['field'];
+        var meshes = this.app3d.meshes["field"];
         for (var i = 0; i < meshes.length; i++) {
             meshes[i].material.transparent = true;
-            meshes[i].material.opacity = this.model.get('field_o');
+            meshes[i].material.opacity = this.model.get("field_o");
             meshes[i].material.needsUpdate = true;
         };
     },
 
     get_fps: function() {
-        var fps = {ox: this.model.get('field_ox'),
-                   oy: this.model.get('field_oy'),
-                   oz: this.model.get('field_oz'),
-                   nx: this.model.get('field_nx'),
-                   ny: this.model.get('field_ny'),
-                   nz: this.model.get('field_nz'),
-                   fx: this.model.get('field_fx'),
-                   fy: this.model.get('field_fy'),
-                   fz: this.model.get('field_fz')};
-        fps['dx'] = (fps['fx'] - fps['ox']) / (fps['nx'] - 1);
-        fps['dy'] = (fps['fy'] - fps['oy']) / (fps['ny'] - 1);
-        fps['dz'] = (fps['fz'] - fps['oz']) / (fps['nz'] - 1);
+        var fps = {ox: this.model.get("field_ox"),
+                   oy: this.model.get("field_oy"),
+                   oz: this.model.get("field_oz"),
+                   nx: this.model.get("field_nx"),
+                   ny: this.model.get("field_ny"),
+                   nz: this.model.get("field_nz"),
+                   fx: this.model.get("field_fx"),
+                   fy: this.model.get("field_fy"),
+                   fz: this.model.get("field_fz")};
+        fps["dx"] = (fps["fx"] - fps["ox"]) / (fps["nx"] - 1);
+        fps["dy"] = (fps["fy"] - fps["oy"]) / (fps["ny"] - 1);
+        fps["dz"] = (fps["fz"] - fps["oz"]) / (fps["nz"] - 1);
         return fps;
     },
 
@@ -231,38 +231,38 @@ var ExatomicSceneView = widgets.DOMWidgetView.extend({
     },
 
     save: function() {
-        this.send({'type': 'image', 'content': this.app3d.save()});
+        this.send({"type": "image", "content": this.app3d.save()});
     },
 
     save_camera: function() {
-        this.send({'type': 'camera', 'content': this.app3d.camera.toJSON()});
+        this.send({"type": "camera", "content": this.app3d.camera.toJSON()});
     },
 
     _handle_custom_msg: function(msg, clbk) {
-        if (msg['type'] === 'close') { this.app3d.close() };
-        if (msg['type'] === 'camera') {
-            this.app3d.set_camera_from_camera(msg['content']);
+        if (msg["type"] === "close") { this.app3d.close() };
+        if (msg["type"] === "camera") {
+            this.app3d.set_camera_from_camera(msg["content"]);
         };
     },
 
     init_listeners: function() {
         // The basics
-        this.listenTo(this.model, 'change:clear', this.clear_meshes);
-        this.listenTo(this.model, 'change:save', this.save);
-        this.listenTo(this.model, 'change:save_cam', this.save_camera);
-        this.listenTo(this.model, 'msg:custom', this._handle_custom_msg);
-        this.listenTo(this.model, 'change:geom', this.add_geometry);
+        this.listenTo(this.model, "change:clear", this.clear_meshes);
+        this.listenTo(this.model, "change:save", this.save);
+        this.listenTo(this.model, "change:save_cam", this.save_camera);
+        this.listenTo(this.model, "msg:custom", this._handle_custom_msg);
+        this.listenTo(this.model, "change:geom", this.add_geometry);
         // Field stuff
-        if (!this.model.get('uni')) {
-            this.listenTo(this.model, 'change:field', this.add_field);
+        if (!this.model.get("uni")) {
+            this.listenTo(this.model, "change:field", this.add_field);
         };
-        this.listenTo(this.model, 'change:field_kind', this.add_field);
-        this.listenTo(this.model, 'change:field_ml', this.add_field);
-        this.listenTo(this.model, 'change:field_o', this.update_field);
-        this.listenTo(this.model, 'change:field_nx', this.add_field);
-        this.listenTo(this.model, 'change:field_ny', this.add_field);
-        this.listenTo(this.model, 'change:field_nz', this.add_field);
-        this.listenTo(this.model, 'change:field_iso', this.add_field);
+        this.listenTo(this.model, "change:field_kind", this.add_field);
+        this.listenTo(this.model, "change:field_ml", this.add_field);
+        this.listenTo(this.model, "change:field_o", this.update_field);
+        this.listenTo(this.model, "change:field_nx", this.add_field);
+        this.listenTo(this.model, "change:field_ny", this.add_field);
+        this.listenTo(this.model, "change:field_nz", this.add_field);
+        this.listenTo(this.model, "change:field_iso", this.add_field);
     },
 
 });

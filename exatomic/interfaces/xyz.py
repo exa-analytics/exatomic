@@ -5,11 +5,13 @@
 XYZ File Editor
 ##################
 """
+from __future__ import absolute_import
+from __future__ import print_function
+from __future__ import division
 import six
 import csv
 import numpy as np
 import pandas as pd
-from io import StringIO
 from exa import TypedMeta
 from exa.util.units import Length
 from exa.util.utility import mkp
@@ -43,9 +45,9 @@ class XYZ(six.with_metaclass(Meta, Editor)):
         Args:
             unit (str): Default xyz unit of length is the Angstrom
         """
-        df = pd.read_csv(StringIO(str(self)), delim_whitespace=True,
-                                  names=names, header=None,
-                                  skip_blank_lines=False)
+        df = pd.read_csv(six.StringIO(six.u(str(self))), delim_whitespace=True,
+                                      names=names, header=None,
+                                      skip_blank_lines=False)
         # The following algorithm works for both trajectory files and single xyz files
         nats = pd.Series(df[df[['y', 'z']].isnull().all(axis=1)].index)
         nats = nats[nats.diff() != 1].values
@@ -54,7 +56,7 @@ class XYZ(six.with_metaclass(Meta, Editor)):
         comments = df.ix[comments, :].dropna(how='all').index
         initials = nats.index.values.astype(np.int64) + 2
         counts = nats.values.astype(np.int64)
-        frame, label, indices = starts_counts(initials, counts)
+        frame, _, indices = starts_counts(initials, counts)
         df = df[df.index.isin(indices)]
         df[['x', 'y', 'z']] = df[['x', 'y', 'z']].astype(np.float64)
         df['symbol'] = df['symbol'].astype('category')
@@ -84,7 +86,7 @@ class XYZ(six.with_metaclass(Meta, Editor)):
         """
         if trajectory:
             with open(path, 'w') as f:
-                f.write(str(self))
+                f.write(six.u(self))
         else:
             grps = self.atom.cardinal_groupby()
             n = len(str(self.frame.index.max()))

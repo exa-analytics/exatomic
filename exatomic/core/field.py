@@ -13,14 +13,18 @@ import numpy as np
 import pandas as pd
 from exa import DataFrame, Field, Series
 
+
 class AField(DataFrame):
     _columns = ['nx', 'ny', 'nz', 'ox', 'oy', 'oz', 'dxi', 'dxj', 'dxk',
                 'dyi', 'dyj', 'dyk', 'dzi', 'dzj', 'dzk', 'frame']
+    @property
+    def _constructor(self):
+        return AField
 
     def copy(self, *args, **kwargs):
         """Make a copy of this object."""
         cls = self.__class__
-        df = pd.DataFrame(self).copy(*args, **kwargs)
+        #df = pd.DataFrame(self).copy(*args, **kwargs)
         data = self.data.copy()
         return cls(data, data=data)
 
@@ -39,8 +43,6 @@ class AField(DataFrame):
         self.data = data
 
 
-
-
 class AtomicField(Field):
     """
     Class for storing exatomic cube data (scalar field of 3D space). Note that
@@ -55,6 +57,10 @@ class AtomicField(Field):
     _categories = {'label': str, 'field_type': str}
     _columns = ['nx', 'ny', 'nz', 'ox', 'oy', 'oz', 'dxi', 'dxj', 'dxk',
                 'dyi', 'dyj', 'dyk', 'dzi', 'dzj', 'dzk', 'frame']
+
+    @property
+    def _constructor(self):
+        return AtomicField
 
     @property
     def nfields(self):

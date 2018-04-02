@@ -11,11 +11,11 @@
 module.exports = {};
 
 var loaded = [
-    require('./base'),
-    require('./utils'),
-    require('./appthree'),
-    require('./widgets'),
-    require('./tensor')
+    require("./base"),
+    require("./utils"),
+    require("./appthree"),
+    require("./widgets"),
+    require("./tensor")
 ];
 
 for (var m in loaded) {

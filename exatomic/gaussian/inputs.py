@@ -145,7 +145,8 @@ IOP(3/76={b}{a})"""
     ecp = False
     for bas in basis:
         try:
-            atom, bas = bas
+            #atom, bas = bas
+            _, bas = bas
             ecp = 'ecp' in bas.lower()
         except ValueError:
             ecp = 'ecp' in bas.lower()

@@ -45,8 +45,8 @@ class TestFolder(TestCase):
     def test_insert(self):
         fol = Folder(Button(), _ListDict([('a', Button()), ('b', Button())]))
         fol.insert(1, 'c', Button(), active=True)
-        self.assertEqual(list(fol._controls.keys()),
-                         ['main', 'c', 'a', 'b'])
+        self.assertListEqual(list(fol._controls.keys()),
+                             ['main', 'c', 'a', 'b'])
 
     def test_update(self):
         fol = Folder(Button(), _ListDict([('a', Button()), ('b', Button())]))
@@ -56,19 +56,19 @@ class TestFolder(TestCase):
     def move_to_end(self):
         fol = Folder(Button(), _ListDict([('a', Button()), ('b', Button())]))
         fol.move_to_end('a')
-        self.assertEqual(list(fol._controls.keys()[-1]), 'a')
+        self.assertEqual(list(fol._controls.keys())[-1], 'a')
 
     def test_pop(self):
         fol = Folder(Button(), _ListDict([('a', Button()), ('b', Button())]))
         fol.pop('a')
         with self.assertRaises(KeyError):
-            fol['a']
+            _ = fol['a']
 
     def test_get(self):
         fol = Folder(Button(), _ListDict([('a', Button()), ('b', Button())]))
-        self.assertEqual(fol._get(keys=True), ['main'])
+        self.assertListEqual(fol._get(keys=True), ['main'])
         fol.activate()
-        self.assertEqual(fol._get(keys=True), ['main', 'a', 'b'])
+        self.assertListEqual(fol._get(keys=True), ['main', 'a', 'b'])
 
 
 
@@ -76,7 +76,7 @@ class TestListDict(TestCase):
 
     def test_init(self):
         with self.assertRaises(TypeError):
-            ld = _ListDict([('a', 1), (2, [1, 2])])
+            _ = _ListDict([('a', 1), (2, [1, 2])])
 
     def pop_as_dict(self):
         ld = _ListDict([('a', 1), ('b', [1, 2])])
@@ -95,9 +95,9 @@ class TestListDict(TestCase):
     def test_insert(self):
         ld = _ListDict([('a', 1), ('b', [1, 2])])
         ld.insert(0, 'c', 3)
-        self.assertEqual(list(ld.keys()), ['c', 'a', 'b'])
+        self.assertListEqual(list(ld.keys()), ['c', 'a', 'b'])
         ld.insert(2, 'd', 5)
-        self.assertEqual(list(ld.keys()), ['c', 'a', 'd', 'b'])
+        self.assertListEqual(list(ld.keys()), ['c', 'a', 'd', 'b'])
 
     def test_set(self):
         ld = _ListDict([('a', 1), ('b', [1, 2])])
@@ -115,7 +115,7 @@ class TestListDict(TestCase):
         self.assertEqual(ld[:1], [1])
         self.assertEqual(ld[:2], [1, [1, 2]])
         with self.assertRaises(TypeError):
-            a = ld['a', 'b']
+            _ = ld['a', 'b']
 
 
 class TestGUIBox(TestCase):

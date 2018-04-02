@@ -2,16 +2,16 @@
 ## Copyright (c) 2015-2018, Exa Analytics Development Team
 ## Distributed under the terms of the Apache License 2.0
 """
-Tests for :mod:`~exatomic.filetypes.cube`
-#################################
+Tests for :mod:`~exatomic.interfaces.cube`
+#############################################
 """
 from unittest import TestCase
-import os
-from exatomic import Universe
-from exatomic.core.atom import Atom
-from exatomic.core.field import AtomicField
-from exatomic.interfaces.cube import Cube
-from exatomic.gaussian import Output
+#import os
+#from exatomic import Universe
+#from exatomic.core.atom import Atom
+#from exatomic.core.field import AtomicField
+#from exatomic.interfaces.cube import Cube
+#from exatomic.gaussian import Output
 
 
 class TestCube(TestCase):

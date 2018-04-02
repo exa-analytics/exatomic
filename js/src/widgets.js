@@ -21,7 +21,7 @@ var UniverseSceneModel = base.ExatomicSceneModel.extend({
         return _.extend({}, base.ExatomicSceneModel.prototype.defaults, {
             _model_name: "UniverseSceneModel",
             _view_name: "UniverseSceneView"
-        })
+        });
     }
 
 });
@@ -99,7 +99,7 @@ var UniverseSceneView = base.ExatomicSceneView.extend({
         if (fps === undefined) { return };
         var idx = this.field_i[fdx][fldx];
         var that = this;
-        if (typeof this.field_v[idx] === 'string') {
+        if (typeof this.field_v[idx] === "string") {
             utils.jsonparse(this.field_v[idx])
                 .then(function(values) {
                     that.field_v[idx] = values;
@@ -175,9 +175,9 @@ var UniverseSceneView = base.ExatomicSceneView.extend({
 
     get_tensor: function(fdx, tdx) {
         return [
-[this.tensor_d[fdx][tdx]['xx'], this.tensor_d[fdx][tdx]['xy'], this.tensor_d[fdx][tdx]['xz']],
-[this.tensor_d[fdx][tdx]['yx'], this.tensor_d[fdx][tdx]['yy'], this.tensor_d[fdx][tdx]['yz']],
-[this.tensor_d[fdx][tdx]['zx'], this.tensor_d[fdx][tdx]['zy'], this.tensor_d[fdx][tdx]['zz']]
+[this.tensor_d[fdx][tdx]["xx"], this.tensor_d[fdx][tdx]["xy"], this.tensor_d[fdx][tdx]["xz"]],
+[this.tensor_d[fdx][tdx]["yx"], this.tensor_d[fdx][tdx]["yy"], this.tensor_d[fdx][tdx]["yz"]],
+[this.tensor_d[fdx][tdx]["zx"], this.tensor_d[fdx][tdx]["zy"], this.tensor_d[fdx][tdx]["zz"]]
     ];
     },
 
@@ -187,7 +187,7 @@ var UniverseSceneView = base.ExatomicSceneView.extend({
         var color;
         for ( var property in this.tensor_d[fdx] ) {
             if ( this.tensor_d[fdx].hasOwnProperty( property ) ) {
-                if ( property == tdx ) { color = 0xafafaf; }
+                if ( property === tdx ) { color = 0xafafaf; }
                 else { color = 0x000000; }
                 if ( this.model.get("tens") ) {
                     this.app3d.meshes["tensor"+property][0].children[0].material.color.setHex(color);

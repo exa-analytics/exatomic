@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# Copyright (c) 2015-2017, Exa Analytics Development Team
+# Copyright (c) 2015-2018, Exa Analytics Development Team
 # Distributed under the terms of the Apache License 2.0
 """
 Overlap computation
@@ -8,15 +8,16 @@ Utilities for computing the overlap between gaussian type functions.
 """
 
 import numpy as np
-from numba import njit, jit, prange
+from numba import jit, prange
 from .numerical import fac, fac2, dfac21, sdist, choose
 from .car2sph import car2sph_scaled
+from exatomic.base import nbche
 
 #################################
 # Primitive cartesian integrals #
 #################################
 
-@jit(nopython=True, cache=True)
+@jit(nopython=True, nogil=True, cache=nbche)
 def _fj(j, l, m, a, b):
     """From Handbook of Computational Quantum Chemistry by David B. Cook
     in chapter 7.7.1 -- Essentially a FOILing of the pre-exponential
@@ -29,7 +30,7 @@ def _fj(j, l, m, a, b):
                 b ** (m + k - j))
     return tot
 
-@jit(nopython=True, cache=True)
+@jit(nopython=True,nogil=True, cache=nbche)
 def _nin(l, m, pa, pb, p, N):
     """From Handbook of Computational Quantum Chemistry by David B. Cook
     in chapter 7.7.1 -- Sums the result of _fj over the total angular momentum
@@ -42,10 +43,13 @@ def _nin(l, m, pa, pb, p, N):
                 dfac21(j) / (2 * p) ** j)
     return tot * N
 
-@jit(nopython=True, cache=True)
+@jit(nopython=True, nogil=True, cache=nbche)
 def _gaussian_product(a, b, ax, ay, az, bx, by, bz):
-    """From Molecular Electronic-Structure Theory by Trygve Helgaker et al.
-    Computes a product gaussian following 9.2.3."""
+    """
+    From Molecular Electronic-Structure Theory by Trygve Helgaker et al.
+    Computes a product gaussian following section 9.2.3; see equations 
+    9.2.10 through 9.2.15.
+    """
     p = a + b
     mu = a * b / p
     px = (a * ax + b * bx) / p
@@ -63,7 +67,7 @@ def _gaussian_product(a, b, ax, ay, az, bx, by, bz):
             px - bx, py - by, pz - bz)
     #pax, pay, paz, pbx, pby, pbz
 
-@jit(nopython=True, cache=True)
+@jit(nopython=True, nogil=True, cache=nbche)
 def _primitive_overlap_product(N, p, mu, ab2, pax, pay, paz, pbx, pby, pbz,
                                l1, m1, n1, l2, m2, n2):
     """Compute primitive cartesian overlap integral in terms of a gaussian product."""
@@ -71,55 +75,71 @@ def _primitive_overlap_product(N, p, mu, ab2, pax, pay, paz, pbx, pby, pbz,
                               * _nin(m1, m2, pay, pby, p, N)
                               * _nin(n1, n2, paz, pbz, p, N))
 
-@jit(nopython=True, cache=True)
+@jit(nopython=True, nogil=True, cache=nbche)
 def _primitive_overlap(a1, a2, ax, ay, az, bx, by, bz, l1, m1, n1, l2, m2, n2):
     """Compute a primitive cartesian overlap integral."""
-    product = _gaussian_product(a1, a2, ax, ay, az, bx, by, bz)
-    return _primitive_overlap_product(*product, l1, m1, n1, l2, m2, n2)
+    p = _gaussian_product(a1, a2, ax, ay, az, bx, by, bz)
+    return _primitive_overlap_product(p[0], p[1], p[2], p[3], p[4], p[5], p[6], p[7],
+                                      p[8], p[9], l1, m1, n1, l2, m2, n2)
                                       #N, p, mu, ab2,
                                       #pax, pay, paz, pbx, pby, pbz,
 
-@jit(nopython=True, cache=True)
+@jit(nopython=True, nogil=True, cache=nbche)
 def _primitive_kinetic(a1, a2, ax, ay, az, bx, by, bz, l1, m1, n1, l2, m2, n2):
     """Compute the kinetic energy as a linear combination of overlap terms."""
-    prod = _gaussian_product(a1, a2, ax, ay, az, bx, by, bz)
-    t =  4 * a1 * a2 * _primitive_overlap_product(*prod, a1, a2,
+    N, p, mu, ab2, pax, pay, paz, pbx, pby, pbz = _gaussian_product(a1, a2, ax, ay, az, bx, by, bz)
+    t =  4 * a1 * a2 * _primitive_overlap_product(N, p, mu, ab2, pax, pay,
+                                                  paz, pbx, pby, pbz,
                                                   l1 - 1, m1, n1,
                                                   l2 - 1, m2, n2)
-    t += 4 * a1 * a2 * _primitive_overlap_product(*prod, a1, a2,
+    t += 4 * a1 * a2 * _primitive_overlap_product(N, p, mu, ab2, pax, pay,
+                                                  paz, pbx, pby, pbz,
                                                   l1, m1 - 1, n1,
                                                   l2, m2 - 2, n2)
-    t += 4 * a1 * a2 * _primitive_overlap_product(*prod, a1, a2,
+    t += 4 * a1 * a2 * _primitive_overlap_product(N, p, mu, ab2, pax, pay,
+                                                  paz, pbx, pby, pbz,
                                                   l1, m1, n1 - 1,
                                                   l2, m2, n2 - 1)
+    # Should args be prod here? Changed *args to *prod to explicit N...N as above
+    # See commented example of what was below..
     if l1 and l2:
-        t += l1 * l2 * _primitive_overlap_product(*args, a1, a2,
+        #t += l1 * l2 * _primitive_overlap_product(*args, a1, a2,
+        t += l1 * l2 * _primitive_overlap_product(N, p, mu, ab2, pax, pay,
+                                                  paz, pbx, pby, pbz,
                                                   l1 - 1, m1, n1,
                                                   l2 - 1, m2, n2)
     if m1 and m2:
-        t += l1 * l2 * _primitive_overlap_product(*args, a1, a2,
-                                                   l1, m1 - 1, n1,
-                                                   l2, m2 - 1, n2)
+        t += l1 * l2 * _primitive_overlap_product(N, p, mu, ab2, pax, pay,
+                                                  paz, pbx, pby, pbz,
+                                                  l1, m1 - 1, n1,
+                                                  l2, m2 - 1, n2)
     if n1 and n2:
-        t += l1 * l2 * _primitive_overlap_product(*args, a1, a2,
+        t += l1 * l2 * _primitive_overlap_product(N, p, mu, ab2, pax, pay,
+                                                  paz, pbx, pby, pbz,
                                                   l1, m1, n1 - 1,
                                                   l2, m2, n2 - 1)
-    if l1: t -=  2 * a2 * l1 * _primitive_overlap_product(*args, a1, a2,
+    if l1: t -=  2 * a2 * l1 * _primitive_overlap_product(N, p, mu, ab2, pax, pay,
+                                                          paz, pbx, pby, pbz,
                                                           l1 - 1, m1, n1,
                                                           l2 + 1, m2, n2)
-    if l2: t -=  2 * a1 * l2 * _primitive_overlap_product(*args, a1, a2,
+    if l2: t -=  2 * a1 * l2 * _primitive_overlap_product(N, p, mu, ab2, pax, pay,
+                                                          paz, pbx, pby, pbz,
                                                           l1 + 1, m1, n1,
                                                           l2 - 1, m2, n2)
-    if m1: t -=  2 * a2 * m1 * _primitive_overlap_product(*args, a1, a2,
+    if m1: t -=  2 * a2 * m1 * _primitive_overlap_product(N, p, mu, ab2, pax, pay,
+                                                          paz, pbx, pby, pbz,
                                                           l1, m1 - 1, n1,
                                                           l2, m2 + 1, n2)
-    if m2: t -=  2 * a1 * m2 * _primitive_overlap_product(*args, a1, a2,
+    if m2: t -=  2 * a1 * m2 * _primitive_overlap_product(N, p, mu, ab2, pax, pay,
+                                                          paz, pbx, pby, pbz,
                                                           l1, m1 + 1, n1,
                                                           l2, m2 - 1, n2)
-    if n1: t -=  2 * a2 * n1 * _primitive_overlap_product(*args, a1, a2,
+    if n1: t -=  2 * a2 * n1 * _primitive_overlap_product(N, p, mu, ab2, pax, pay,
+                                                          paz, pbx, pby, pbz,
                                                           l1, m1, n1 - 1,
                                                           l2, m2, n2 + 1)
-    if n2: t -=  2 * a1 * n2 * _primitive_overlap_product(*args, a1, a2,
+    if n2: t -=  2 * a1 * n2 * _primitive_overlap_product(N, p, mu, ab2, pax, pay,
+                                                          paz, pbx, pby, pbz,
                                                           l1, m1, n1 + 1,
                                                           l2, m2, n2 - 1)
     return t / 2
@@ -128,7 +148,7 @@ def _primitive_kinetic(a1, a2, ax, ay, az, bx, by, bz, l1, m1, n1, l2, m2, n2):
 # Generators over shells/shell-pairs #
 ######################################
 
-@njit
+@jit(nopython=True, nogil=True, cache=False)
 def _iter_atom_shells(ptrs, xyzs, *shls):
     """Generator yielding indices, atomic coordinates and basis set shells."""
     nshl = len(ptrs)
@@ -136,7 +156,7 @@ def _iter_atom_shells(ptrs, xyzs, *shls):
         pa, pi = ptrs[i]
         yield (i, xyzs[pa][0], xyzs[pa][1], xyzs[pa][2], shls[pi])
 
-@njit
+@jit(nopython=True, nogil=True, cache=False)
 def _iter_atom_shell_pairs(ptrs, xyzs, *shls):
     """Generator yielding indices, atomic coordinates and basis set
     shells in block-pair order."""
@@ -153,7 +173,7 @@ def _iter_atom_shell_pairs(ptrs, xyzs, *shls):
 # Integral processing for of Shell objects #
 ############################################
 
-@jit(nopython=True, cache=True)
+@jit(nopython=True, nogil=True, cache=nbche)
 def _cartesian_overlap_shell(xa, ya, za, xb, yb, zb,
                              li, mi, ni, lj, mj, nj,
                              ialpha, jalpha):
@@ -166,7 +186,7 @@ def _cartesian_overlap_shell(xa, ya, za, xb, yb, zb,
                                              li, mi, ni, lj, mj, nj)
     return pints
 
-@njit
+@jit(nopython=True, nogil=True, cache=nbche)
 def _cartesian_shell_pair(ax, ay, az, bx, by, bz, ishl, jshl):
     """Compute fully contracted block-pair integrals including
     expansion of angular momentum dependence."""
@@ -196,7 +216,7 @@ def _cartesian_shell_pair(ax, ay, az, bx, by, bz, ishl, jshl):
                                         np.eye(jshl.ncont)))
     return np.dot(inrm.T, np.dot(pint, jnrm))
 
-@njit
+@jit(nopython=True, nogil=True, cache=False)
 def _cartesian_shell_pairs(ndim, ptrs, xyzs, *shls):
     """Construct a full square (overlap) integral matrix."""
     cart = np.zeros((ndim, ndim))
@@ -216,7 +236,7 @@ def _cartesian_shell_pairs(ndim, ptrs, xyzs, *shls):
 # Obara-Saika recursion relation #
 ##################################
 
-@jit(nopython=True, cache=True)
+@jit(nopython=True, nogil=True, cache=nbche)
 def _obara_s_recurr(p, l, m, pa, pb, s):
     """There is a bug in this function. Do not use."""
     if not l + m: return s
@@ -235,8 +255,7 @@ def _obara_s_recurr(p, l, m, pa, pb, s):
     return s0[l, m]
 
 
-
-@jit(nopython=True, cache=True)
+@jit(nopython=True, nogil=True, cache=nbche)
 def _nin(o1, o2, po1, po2, gamma, pg12):
     """Helper function for gaussian overlap between 2 centers."""
     otot = o1 + o2
@@ -257,5 +276,3 @@ def _nin(o1, o2, po1, po2, gamma, pg12):
             fk += newt1 * newt2 * (po1 ** (o1 - xx)) * (po2 ** (o2 - zz))
         oio += prod * fk
     return oio
-
-

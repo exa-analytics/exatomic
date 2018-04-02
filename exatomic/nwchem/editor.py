@@ -1,15 +1,14 @@
 # -*- coding: utf-8 -*-
-# Copyright (c) 2015-2017, Exa Analytics Development Team
+# Copyright (c) 2015-2018, Exa Analytics Development Team
 # Distributed under the terms of the Apache License 2.0
 """
 NWChem Editor
 ##################
 """
-import pandas as pd
-from exatomic import Editor
+from exatomic import Editor as _Editor
 
-class Editor(Editor):
 
+class Editor(_Editor):
     def __init__(self, *args, **kwargs):
         super(Editor, self).__init__(*args, **kwargs)
         if self.meta is not None:

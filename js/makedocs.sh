@@ -1,3 +1,4 @@
+#!/usr/bin/env bash
 #rm -rf node_modules/jsdoc-sphinx
 #git clone http://github.com/HumanBrainProject/jsdoc-sphinx node_modules/jsdoc-sphinx
 rm -rf ../docs/source/js

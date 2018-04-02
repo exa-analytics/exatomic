@@ -46,7 +46,7 @@ var TensorSceneView = base.ExatomicSceneView.extend({
         if (this.model.get("geom")) {
             this.app3d.meshes["generic"] =
                    this.app3d.add_tensor_surface(this.get_tensor(), this.colors());
-        };
+        }
         this.app3d.add_meshes("generic");
     },
 

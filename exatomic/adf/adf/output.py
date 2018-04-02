@@ -10,19 +10,22 @@ as 'COMPUTATION', 'RESULTS', etc. the specific parsers are not organized in
 terms of these sections. Each module within this directory provides a single
 parser, specific to a given piece of data.
 """
-import re
-try:
-    from exa import Parser, Typed
-except ImportError:
-    from exa import TypedMeta as Typed
-    from exa import Editor as Parser
-
-
-
-
-class Output(Parser):
-    """
-    Parser for the 'A D F' calculation(s) of an ADF output file.
-    """
-    _start = re.compile(r"^\s*\*\s*\|\s*A D F\s*\|\s*\*")
-    _end = re.compile(r"^\s*A D F   E X I T")
+#from __future__ import absolute_import
+#from __future__ import print_function
+#from __future__ import division
+#import re
+#try:
+#    from exa import Parser, Typed
+#except ImportError:
+#    from exa import TypedMeta as Typed
+#    from exa import Editor as Parser
+#
+#
+#
+#
+#class Output(Parser):
+#    """
+#    Parser for the 'A D F' calculation(s) of an ADF output file.
+#    """
+#    _start = re.compile(r"^\s*\*\s*\|\s*A D F\s*\|\s*\*")
+#    _end = re.compile(r"^\s*A D F   E X I T")
