@@ -13,7 +13,6 @@ import re
 import six
 import numpy as np
 import pandas as pd
-from io import StringIO
 from exa import TypedMeta
 from exa.util.units import Length, Energy
 from .editor import Editor
@@ -174,7 +173,7 @@ class Output(six.with_metaclass(GauMeta, Editor)):
         ae, be = int(ae), int(be)
         # Get orbital energies
         ens = '\n'.join([ln.split('-- ')[1] for i, ln in found[_reorb01]])
-        ens = pd.read_fwf(StringIO(ens), header=None,
+        ens = pd.read_fwf(six.StringIO(ens), header=None,
                           widths=np.repeat(10, 5)).stack().values
         # Other arrays
         orbital = Orbital.from_energies(ens, ae, be, os=os)
@@ -255,7 +254,7 @@ class Output(six.with_metaclass(GauMeta, Editor)):
                 block = _rebaspat.sub(lambda m: _basrep[m.group(0)], block)
                 # Enplacen the resultant unstacked values
                 coefs[stride:stride + nbas * ncol, c] = pd.read_fwf(
-                        StringIO(block), header=None,
+                        six.StringIO(block), header=None,
                         widths=np.repeat(10, 5)).unstack().dropna().values
                 stride += step
         # Index chi, phi
@@ -317,13 +316,13 @@ class Output(six.with_metaclass(GauMeta, Editor)):
                 maps.append(i)
                 lno += 1
         cols = [0, 1, 2, 'kind', 'eV', 3, 'nm', 4, 'osc', 's2']
-        summ = pd.read_csv(StringIO('\n'.join([ln for lno, ln in found])),
+        summ = pd.read_csv(six.StringIO('\n'.join([ln for lno, ln in found])),
                            delim_whitespace=True, header=None, names=cols,
                            usecols=[c for c in cols if type(c) == str])
         summ['s2'] = summ['s2'].str[7:].astype(np.float64)
         summ['osc'] = summ['osc'].str[2:].astype(np.float64)
         cols = ['occ', 0, 'virt', 'cont']
-        conts = pd.read_csv(StringIO('\n'.join([self[i] for i in keeps])),
+        conts = pd.read_csv(six.StringIO('\n'.join([self[i] for i in keeps])),
                             delim_whitespace=True, header=None, names=cols,
                             usecols=[c for c in cols if type(c) == str])
         conts['map'] = maps
@@ -402,7 +401,7 @@ def _basis_set_order(chunk, mapr, sets):
     # Gaussian only prints the atom center
     # and label once for all basis functions
     first = len(chunk[0]) - len(chunk[0].lstrip(' ')) + 1
-    df = pd.read_fwf(StringIO('\n'.join(chunk)),
+    df = pd.read_fwf(six.StringIO('\n'.join(chunk)),
                      widths=[first, 4, 3, 2, 4], header=None)
     df[1].fillna(method='ffill', inplace=True)
     df[1] = df[1].astype(np.int64) - 1

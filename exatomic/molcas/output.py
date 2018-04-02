@@ -139,7 +139,7 @@ class Output(six.with_metaclass(OutMeta, Editor)):
         """Parses the atom list generated in SEWARD."""
         _re_atom = 'Label   Cartesian Coordinates'
         starts = [i + 2 for i in self.find(_re_atom, keys_only=True)]
-        stops = starts.copy()
+        stops = starts[:]    # Copy the list
         for i in range(len(stops)):
             while len(self[stops[i]].strip().split()) > 3:
                 stops[i] += 1
