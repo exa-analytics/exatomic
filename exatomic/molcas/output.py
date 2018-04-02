@@ -75,6 +75,10 @@ class Orb(six.with_metaclass(OrbMeta, Editor)):
                 echnk = np.ceil(dim / len(self[ens[0] + 1].split())).astype(np.int64)
                 ens = self._one_el(ens, echnk, ncol)
         occs = self._one_el(occs, chnk, ncol)
+        # DEBUG
+        print(coefs.shape)
+        print(orbdx.shape)
+        # /DEBUG
         coefs['idx'] = orbdx
         coefs = coefs.groupby('idx').apply(pd.DataFrame.stack).drop(
                                            'idx', level=2).values
