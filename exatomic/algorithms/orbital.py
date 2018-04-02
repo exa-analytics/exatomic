@@ -54,7 +54,7 @@ def add_molecular_orbitals(uni, field_params=None, mocoefs=None,
         print(p1.format(len(uni.basis_set_order.index)))
 
     x, y, z = numerical_grid_from_field_params(fps)
-    orbs = uni.momatrix.groupby('orbital')
+    #orbs = uni.momatrix.groupby('orbital')
     bvs = bfns.evaluate(x, y, z)
     cmat = uni.momatrix.square(column=mocoefs).values
     try: ovs = _compute_orbitals(len(x), bvs, vector, cmat)

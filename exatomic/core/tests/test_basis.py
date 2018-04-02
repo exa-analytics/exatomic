@@ -3,7 +3,8 @@
 # Distributed under the terms of the Apache License 2.0
 import pandas as pd
 from unittest import TestCase
-from exatomic.core.basis import (BasisSet, BasisSetOrder, Overlap,
+#from exatomic.core.basis import (BasisSet, BasisSetOrder, Overlap,
+from exatomic.core.basis import (BasisSet, Overlap,
                                 spher_lml_count, cart_lml_count)
 
 class TestBasisSet(TestCase):

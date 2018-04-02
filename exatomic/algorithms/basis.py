@@ -261,8 +261,8 @@ class Basis(object):
     def _evaluate_sto(self, xs, ys, zs):
         """Evaluates a full STO basis set and returns a numpy array."""
         cnt, flds = 0, np.empty((len(self), len(xs)))
-        for i, ax, ay, az, ishl in \
-            _iter_atom_shells(self._ptrs, self._xyzs, *self._shells):
+        #for i, ax, ay, az, ishl in _iter_atom_shells(self._ptrs, self._xyzs, *self._shells):
+        for _, ax, ay, az, ishl in _iter_atom_shells(self._ptrs, self._xyzs, *self._shells):
             norm = ishl.norm_contract()
             for mag in self.enum_shell(ishl):
                 a = self._angular(ishl, ax, ay, az, *mag).evaluate(xs, ys, zs)

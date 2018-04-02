@@ -13,7 +13,7 @@ var repeat_float = function(value, n) {
     var array = new Float32Array(n);
     for (var i=0; i<n; i++) {
         array[i] = value;
-    };
+    }
     return array;
 };
 
@@ -51,7 +51,7 @@ var linspace = function(min, max, n) {
 var gen_field_arrays = function(fps) {
     return {x: linspace(fps.ox, fps.fx, fps.nx),
             y: linspace(fps.oy, fps.fy, fps.ny),
-            z: linspace(fps.oz, fps.fz, fps.nz)}
+            z: linspace(fps.oz, fps.fz, fps.nz)};
 };
 
 
@@ -90,7 +90,7 @@ var jsonparse = function(string) {
 };
 
 
-var logerror = function(e) {console.log(e.message)};
+var logerror = function(e) {console.log(e.message);};
 
 
 var fparse = function(obj, key) {
@@ -113,7 +113,7 @@ var mesolv = function(obj, key) {
 
 var Sphere = function(x, y, z) {
     return (x * x + y * y + z * z);
-}
+};
 
 
 var Ellipsoid = function(x, y, z, a, b, c) {
@@ -127,7 +127,7 @@ var Ellipsoid = function(x, y, z, a, b, c) {
 var Torus = function(x, y, z, c) {
     c = (c === undefined) ? 2.5 : c;
     return  2 * (Math.pow(c - Math.sqrt(x*x + y*y), 2) + z*z);
-}
+};
 
 
 var compute_field = function(xs, ys, zs, n, func) {
@@ -209,7 +209,7 @@ var Gaussian = function(dims, which) {
     var lmap = {"s": 0, "p": 1, "d": 2, "f": 3};
     var norm = normalize_gaussian(alpha, lmap[which[0]]);
     var xmap = {"x": 0, "y": 0, "z": 0};
-    if (lmap[which[0]] == 1) {
+    if (lmap[which[0]] === 1) {
         xmap[which[1]] = 1
     } else if (lmap[which[0]] > 1) {
         xmap["x"] = which[1];
@@ -317,16 +317,6 @@ var Hydrogenic = function(dims, which) {
 };
 
 
-var SolidHarmonic = function(dimensions, l, m) {
-    var sh = solid_harmonics[l][m];
-    var func = function(x, y, z) {
-        var r2 = x * x + y * y + z * z;
-        return sh(x, y, z) * Math.exp(-Math.sqrt(r2));
-    };
-    return scalar_field(dimensions, func);
-};
-
-
 // Some numerical constants for convenience in the formulas below
 var t2 = Math.sqrt(2);
 var t3 = Math.sqrt(3);
@@ -348,9 +338,9 @@ var t231 = Math.sqrt(231);
 var t429 = Math.sqrt(429);
 var t462 = Math.sqrt(462);
 var t6006 = Math.sqrt(6006);
-var r2 = function(r) { return Math.pow(r, 2) };
-var r4 = function(r) { return Math.pow(r, 4) };
-var r6 = function(r) { return Math.pow(r, 6) };
+var r2 = function(r) { return Math.pow(r, 2); };
+var r4 = function(r) { return Math.pow(r, 4); };
+var r6 = function(r) { return Math.pow(r, 6); };
 
 
 /*
@@ -462,6 +452,16 @@ var solid_harmonics = {
             return t6006/32*z*(r6(x) - 15*r4(x)*y*y + 15*x*x*r4(y) - r6(y))},
          "7": function(x, y, z) {
             return t429/32*x*(r6(x) - 21*r4(x)*y*y + 35*x*x*r4(y) -7*r6(y))}}};
+
+
+var SolidHarmonic = function(dimensions, l, m) {
+    var sh = solid_harmonics[l][m];
+    var func = function(x, y, z) {
+        var r2 = x * x + y * y + z * z;
+        return sh(x, y, z) * Math.exp(-Math.sqrt(r2));
+    };
+    return scalar_field(dimensions, func);
+};
 
 
 module.exports = {
