@@ -1,4 +1,5 @@
 [![exatomic logo](docs/source/static/logo.png)](https://exa-analytics.github.io)
+
 *A unified platform for computational chemists*
 
 ![](https://i.imgur.com/g9X3gPa.gif)
