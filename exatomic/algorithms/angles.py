@@ -10,7 +10,7 @@ import numba as nb
 import pandas as pd
 from IPython.display import display
 from ipywidgets import FloatProgress
-from exatomic.base import nbtgt, nbpll
+from exatomic.base import nbpll
 
 
 @nb.jit(nopython=True, nogil=True, parallel=nbpll)
@@ -38,7 +38,7 @@ def compute_angles_out_of_core(hdfname, uni, bond=True):
     """
     Given an HDF of atom two body properties, compute angles.
 
-    Atomic two body data is expected to have been computed (see 
+    Atomic two body data is expected to have been computed (see
     :func:`~exatomic.core.two.compute_atom_two_out_of_core`)
 
     Args:

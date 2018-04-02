@@ -29,7 +29,7 @@ import pandas as pd
 import numpy as np
 from .editor import Editor
 from exa.util.units import Length as L
-from exatomic import Atom, Universe
+from exatomic import Universe
 
 
 _template = """echo
@@ -213,7 +213,7 @@ def tuning_inputs(uni, name, mult, charge, basis, gammas, alphas,
     fls = []
     for gam in gammas:
         for alp in alphas:
-            bet = 1 - alp
+            #bet = 1 - alp
             for chgnm, chg, mult in zip(chgnms, chgs, mults):
                 fnc = fnstr(gam=gam, alp=alp, bet=1-alp)
                 jnm = jbnm(gam=gam, alp=alp, bet=1-alp, chg=chgnm)

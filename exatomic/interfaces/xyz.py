@@ -56,7 +56,7 @@ class XYZ(six.with_metaclass(Meta, Editor)):
         comments = df.ix[comments, :].dropna(how='all').index
         initials = nats.index.values.astype(np.int64) + 2
         counts = nats.values.astype(np.int64)
-        frame, label, indices = starts_counts(initials, counts)
+        frame, _, indices = starts_counts(initials, counts)
         df = df[df.index.isin(indices)]
         df[['x', 'y', 'z']] = df[['x', 'y', 'z']].astype(np.float64)
         df['symbol'] = df['symbol'].astype('category')

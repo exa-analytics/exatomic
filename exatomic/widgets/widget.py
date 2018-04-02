@@ -558,7 +558,7 @@ class UniverseWidget(ExatomicBox):
             unargs, flds, tens = uni_traits(uni,
                                       atomcolors=atomcolors,
                                       atomradii=atomradii)
-            tensors = tens 
+            tensors = tens
             fields = flds if len(flds) > len(fields) else fields
             unargs.update(scenekwargs)
             masterkwargs.append(unargs)

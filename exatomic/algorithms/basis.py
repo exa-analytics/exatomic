@@ -18,10 +18,10 @@ import numpy as np
 import pandas as pd
 from numexpr import evaluate
 try:
-    from symengine import var, exp, cos, sin, Add, Mul, Integer
+    from symengine import var, exp, cos, sin, Mul, Integer
 except ImportError:
     from sympy import symbols as var
-    from sympy import exp, cos, sin, Add, Mul, Integer
+    from sympy import exp, cos, sin, Mul, Integer
 from exatomic.algorithms.overlap import _cartesian_shell_pairs, _iter_atom_shells
 from exatomic.algorithms.numerical import fac, _tri_indices, _triangle
 
@@ -165,7 +165,7 @@ class Symbolic(object):
         assert cart in ['x', 'y', 'z']
         assert isinstance(order, int) and order > 0
         expr = self._expr
-        for i in range(order):
+        for _ in range(order):
             expr = expr.diff('_'+cart)
         return Symbolic(expr)
 
@@ -280,7 +280,7 @@ class Basis(object):
     def _evaluate_gau(self, xs, ys, zs):
         """Evaluates a full Gaussian basis set and returns a numpy array."""
         cnt, flds = 0, np.empty((len(self), len(xs)))
-        for i, ax, ay, az, ishl in _iter_atom_shells(self._ptrs, self._xyzs, *self._shells):
+        for _, ax, ay, az, ishl in _iter_atom_shells(self._ptrs, self._xyzs, *self._shells):
             norm = ishl.norm_contract()
             for mag in self.enum_shell(ishl):
                 a = self._angular(ishl, ax, ay, az, *mag).evaluate(xs, ys, zs)

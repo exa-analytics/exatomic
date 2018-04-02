@@ -4,11 +4,7 @@
 """Tests for computing orbitals, densities and orbital angular momenta."""
 import os
 import bz2
-import numpy as np
 from unittest import TestCase
-
-import exatomic
-from exatomic import molcas
 from exatomic.base import staticdir
 from exatomic.molcas import Output as MolOutput
 from exatomic.molcas import Orb

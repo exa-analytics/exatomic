@@ -12,7 +12,7 @@ class RTensor(six.with_metaclass(Meta, Editor)):
     """
     This is a simple script to read a rank-2 tensor file with frame, label and atom index
     labels. The format for such a file is,
-    
+
     0: f=** l=** a=**
     1: xx   xy   xz
     2: yx   yy   yz

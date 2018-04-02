@@ -285,7 +285,7 @@ class Output(six.with_metaclass(OutMeta, Editor)):
             else:
                 for shell, grp in bas:
                     l = grp['L'].values[0]
-                    for L, ll, m, n in cartesian_ordering_function(l):
+                    for _, ll, m, n in cartesian_ordering_function(l):
                         bso[cnt] = (center, shell, l, ll, m, n)
                         cnt += 1
         bso = pd.DataFrame(bso)

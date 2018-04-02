@@ -19,7 +19,7 @@ import numba as nb
 from collections import defaultdict
 from IPython.display import display
 from ipywidgets import FloatProgress
-from exatomic.base import nbtgt, nbpll
+from exatomic.base import nbpll
 from exatomic.core.atom import Atom
 from exatomic.core.universe import Universe
 
@@ -76,7 +76,7 @@ def _create_super_universe(u, a):
     prjs = []
     fdxs = []
     grps = u.atom.groupby("frame")
-    for i, (fdx, atom) in enumerate(grps):
+    for fdx, atom in grps:
         adx, x, y, z, prj = _worker(atom.index.values.astype(np.int64),
                                     atom['x'].values.astype(np.float64),
                                     atom['y'].values.astype(np.float64),

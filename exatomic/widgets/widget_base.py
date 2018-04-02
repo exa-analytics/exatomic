@@ -10,15 +10,15 @@ import os
 import numpy as np
 from base64 import b64decode
 from traitlets import (Bool, Int, Float, Unicode,
-                       List, Any, Dict, link) 
+                       List, Any, Dict, link)
 from ipywidgets import (
     Box, VBox, HBox, IntSlider, Text, ToggleButton,
-    DOMWidget, Layout, Button, Dropdown, register,)
+    DOMWidget, Layout, Button, Dropdown, register)
 
 from exatomic import Universe, __js_version__
 from .traits import uni_traits
 from .widget_utils import (_glo, _flo, _wlo, _hboxlo, 
-                           _vboxlo, _bboxlo, _ListDict, 
+                           _vboxlo, _bboxlo, _ListDict,
                            Folder, GUIBox, gui_field_widgets)
 
 

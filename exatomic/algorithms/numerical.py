@@ -8,9 +8,9 @@ Everything in this module is implemented in numba.
 """
 import numpy as np
 import pandas as pd
-from numba import (jit, jitclass, vectorize, prange,
-                   deferred_type, optional, int64, float64, boolean)
-from exatomic.base import nbche, nbpll, nbtgt
+from numba import (jit, jitclass, prange, deferred_type,
+                   optional, int64, float64, boolean)
+from exatomic.base import nbche, nbtgt
 
 #################
 # Miscellaneous #

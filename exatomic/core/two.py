@@ -107,7 +107,7 @@ def compute_pdist(universe, dmax=8.0):
     drs = []
     atom0s = []
     atom1s = []
-    for fdx, group in universe.atom.groupby("frame"):
+    for _, group in universe.atom.groupby("frame"):
         if len(group) > 0:
             values = pdist(group['x'].values.astype(float),
                            group['y'].values.astype(float),
