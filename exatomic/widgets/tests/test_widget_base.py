@@ -11,7 +11,6 @@ from ..widget_base import ExatomicScene, UniverseScene, ExatomicBox, _scene_grid
 
 
 class TestExatomicScene(TestCase):
-
     def setUp(self):
         self.scn = ExatomicScene()
         self.scn.savedir = abspath(join(abspath(exatomic.__file__),
@@ -86,8 +85,8 @@ class TestExatomicBox(TestCase):
 
     def test_camera_folder(self):
         fol = self.box._camera_folder()
-        self.assertEqual(list(fol._controls.keys()),
-                         ['main', 'link', 'get', 'set'])
+        self.assertListEqual(list(fol._controls.keys()),
+                             ['main', 'link', 'get', 'set'])
 
     def test_field_folder(self):
         fol = self.box._field_folder()

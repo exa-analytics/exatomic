@@ -6,6 +6,7 @@ Widget Utilities
 #########################
 Widget layout and structure.
 """
+import six
 from collections import OrderedDict
 from ipywidgets import VBox, Layout, FloatSlider, IntSlider
 
@@ -25,42 +26,54 @@ _bboxlo = Layout(flex='1 1 auto', width='auto', height='auto')
 
 
 class _ListDict(OrderedDict):
-    """An OrderedDict that also slices and indexes as a list."""
-
+    """An OrderedDict with string keys that slices and indexes as a list."""
     def pop(self, key):
         """Pop as a dict or list."""
-        try:
+#        try:
+#            return super(_ListDict, self).pop(key)
+#        except KeyError:
+#            key = list(self.keys())[key]
+#            return super(_ListDict, self).pop(key)
+        if isinstance(key, six.string_types):
             return super(_ListDict, self).pop(key)
-        except KeyError:
-            key = list(self.keys())[key]
-            return super(_ListDict, self).pop(key)
+        return super(_ListDict, self).pop(list(self.keys())[key])
 
     def insert(self, idx, key, obj):
-        """Insert as a list."""
-        key = str(key)
+        """
+        Insert value at position idx with string key.
+        """
+#        key = str(key)
+#        keys = list(self.keys())
+#        self[key] = obj
+#        keys.insert(idx, key)
+#        try:
+#            # Only python >= 3.2
+#            for k in keys[idx:]:
+#                self.move_to_end(k, last=True)
+#        except AttributeError:
+#            # Manually reorder
+#            old = list(self.items())
+#            for key in self.keys():
+#                self.pop(key)
+#            for key, obj in old:
+#                self[key] = obj
+        if not isinstance(key, six.string_types):
+            raise TypeError("Key must be type str")
         keys = list(self.keys())
-        self[key] = obj
-        keys.insert(idx, key)
-        try:
-            # Only python >= 3.2
-            for k in keys[idx:]:
-                self.move_to_end(k, last=True)
-        except AttributeError:
-            # Manually reorder
-            old = list(self.items())
-            for key in self.keys():
-                self.pop(key)
-            for key, obj in old:
-                self[key] = obj
-
+        items = list(self.items())
+        items.insert(idx, (key, obj))
+        for k in keys:
+            del self[k]
+        for k, v in items:
+            self[k] = v
 
     def __setitem__(self, key, obj):
-        if not isinstance(key, str):
-            raise TypeError('Must set _ListDict value with key of type str.')
+        if not isinstance(key, six.string_types):
+            raise TypeError('Must set _ListDict key must be type str.')
         super(_ListDict, self).__setitem__(key, obj)
 
     def __getitem__(self, key):
-        if isinstance(key, str):
+        if isinstance(key, six.string_types):
             return super(_ListDict, self).__getitem__(key)
         if isinstance(key, (int, slice)):
             return list(self.values())[key]
@@ -68,7 +81,7 @@ class _ListDict(OrderedDict):
 
     def __init__(self, *args, **kwargs):
         super(_ListDict, self).__init__(*args, **kwargs)
-        if not all((isinstance(key, str) for key in self.keys())):
+        if not all((isinstance(key, six.string_types) for key in self.keys())):
             raise TypeError('_ListDict keys must be of type str.')
 
 
