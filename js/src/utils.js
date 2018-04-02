@@ -6,85 +6,33 @@ utils.js
 ================
 Helper JS functions.
 */
-
 "use strict";
+
+
+var repeat_float = function(value, n) {
+    var array = new Float32Array(n);
+    for (var i=0; i<n; i++) {
+        array[i] = value;
+    };
+    return array;
+};
+
 
 var create_float_array_xyz = function(x, y, z) {
     var nx = x.length || 1;
     var ny = y.length || 1;
     var nz = z.length || 1;
     var n = Math.max(nx, ny, nz);
-    x = (nx == 1) ? repeat_float(x, n) : x;
-    y = (ny == 1) ? repeat_float(y, n) : y;
-    z = (nz == 1) ? repeat_float(z, n) : z;
-    var xyz = new Float32Array(n * 3)
+    x = (nx === 1) ? repeat_float(x, n) : x;
+    y = (ny === 1) ? repeat_float(y, n) : y;
+    z = (nz === 1) ? repeat_float(z, n) : z;
+    var xyz = new Float32Array(n * 3);
     for (var i=0, i3=0; i<n; i++, i3+=3) {
         xyz[i3] = x[i];
         xyz[i3+1] = y[i];
         xyz[i3+2] = z[i];
     };
     return xyz;
-};
-
-var gen_field_arrays = function(fps) {
-    return {x: linspace(fps.ox, fps.fx, fps.nx),
-            y: linspace(fps.oy, fps.fy, fps.ny),
-            z: linspace(fps.oz, fps.fz, fps.nz)}
-};
-
-//var xrange = function(orig, delta, num) {
-//    console.log(orig, delta, num);
-//    var end = orig + (num - 1) * delta;
-//    return linspace(orig, end, num);
-//};
-
-var repeat_float = function(value, n) {
-    var array = new Float32Array(n);
-    for (var i=0; i<n; i++) {
-        array[i] = value
-    };
-    return array;
-};
-
-var repeat_obj = function(value, n) {
-    var obj = [];
-    for (var i=0; i<n; i++) {
-        obj.push(value);
-    };
-    return obj;
-};
-
-var mapper = function(indices, map) {
-    var n = indices.length;
-    var mapped = [];
-    for (var i=0; i<n; i++) {
-        mapped.push(map[indices[i]])
-    };
-    return mapped;
-};
-
-var jsonparse = function(string) {
-    return new Promise(function(resolve, reject) {
-        try {resolve(JSON.parse(string))}
-        catch(e) {reject(e)}
-    });
-};
-
-var logerror = function(e) {console.log(e.message)};
-
-var fparse = function(obj, key) {
-    jsonparse(obj.model.get(key))
-    .then(function(p) {obj[key] = p}).catch(logerror)
-};
-
-var resolv = function(obj, key) {
-    return Promise.resolve(obj['init_' + key]())
-    .then(function(p) {obj[key] = p}).catch(logerror)
-};
-
-var mesolv = function(obj, key) {
-    return Promise.resolve(obj.model.get(key))
-    .then(function(p) {obj[key] = p}).catch(logerror)
 };
 
 
@@ -99,9 +47,74 @@ var linspace = function(min, max, n) {
     return new Float32Array(array);
 };
 
+
+var gen_field_arrays = function(fps) {
+    return {x: linspace(fps.ox, fps.fx, fps.nx),
+            y: linspace(fps.oy, fps.fy, fps.ny),
+            z: linspace(fps.oz, fps.fz, fps.nz)}
+};
+
+
+//var xrange = function(orig, delta, num) {
+//    console.log(orig, delta, num);
+//    var end = orig + (num - 1) * delta;
+//    return linspace(orig, end, num);
+//};
+//
+
+
+var repeat_obj = function(value, n) {
+    var obj = [];
+    for (var i=0; i<n; i++) {
+        obj.push(value);
+    };
+    return obj;
+};
+
+
+var mapper = function(indices, map) {
+    var n = indices.length;
+    var mapped = [];
+    for (var i=0; i<n; i++) {
+        mapped.push(map[indices[i]])
+    };
+    return mapped;
+};
+
+
+var jsonparse = function(string) {
+    return new Promise(function(resolve, reject) {
+        try {resolve(JSON.parse(string))}
+        catch(e) {reject(e)}
+    });
+};
+
+
+var logerror = function(e) {console.log(e.message)};
+
+
+var fparse = function(obj, key) {
+    jsonparse(obj.model.get(key))
+    .then(function(p) {obj[key] = p}).catch(logerror);
+};
+
+
+var resolv = function(obj, key) {
+    return Promise.resolve(obj['init_' + key]())
+    .then(function(p) {obj[key] = p}).catch(logerror);
+};
+
+
+var mesolv = function(obj, key) {
+    return Promise.resolve(obj.model.get(key))
+    .then(function(p) {obj[key] = p}).catch(logerror);
+};
+
+
 var Sphere = function(x, y, z) {
     return (x * x + y * y + z * z);
 }
+
 
 var Ellipsoid = function(x, y, z, a, b, c) {
     a = (a === undefined) ? 2.0 : a;
@@ -110,10 +123,12 @@ var Ellipsoid = function(x, y, z, a, b, c) {
     return 2 * ((x*x)/(a*a) + (y*y)/(b*b) + (z*z)/(c*c));
 };
 
+
 var Torus = function(x, y, z, c) {
     c = (c === undefined) ? 2.5 : c;
     return  2 * (Math.pow(c - Math.sqrt(x*x + y*y), 2) + z*z);
 }
+
 
 var compute_field = function(xs, ys, zs, n, func) {
     var i = 0;
@@ -129,9 +144,12 @@ var compute_field = function(xs, ys, zs, n, func) {
     return vals
 };
 
+
 var factorial2 = function(n) {
-    if (n < -1) { return 0;
-    } else if (n < 2) { return 1;
+    if (n < -1) {
+        return 0;
+    } else if (n < 2) {
+        return 1;
     } else {
         var prod = 1;
         while (n > 0) {
@@ -139,8 +157,9 @@ var factorial2 = function(n) {
             n -= 2;
         };
         return prod;
-    };
+    }
 };
+
 
 var normalize_gaussian = function(alpha, L) {
     var prefac = Math.pow((2 / Math.PI), 0.75);
@@ -181,7 +200,7 @@ var scalar_field = function(dims, funcvals) {
     };
     return { "x": x,   "y": y,   "z": z,
             "nx": nx, "ny": ny, "nz": nz,
-            "values": values}
+            "values": values};
 };
 
 
@@ -306,6 +325,7 @@ var SolidHarmonic = function(dimensions, l, m) {
     };
     return scalar_field(dimensions, func);
 };
+
 
 // Some numerical constants for convenience in the formulas below
 var t2 = Math.sqrt(2);

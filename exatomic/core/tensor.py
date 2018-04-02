@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# Copyright (c) 2015-2017, Exa Analytics Development Team
+# Copyright (c) 2015-2018, Exa Analytics Development Team
 # Distributed under the terms of the Apache License 2.0
 
 from exa import DataFrame
@@ -60,8 +60,7 @@ class Tensor(DataFrame):
         zx zy zz
 
         For multiple tensors just append the same format as above without 
-        whitespace unless leaving the frame, label, atom attributes as 
-        empty.
+        whitespace unless leaving the frame, label, atom attributes as empty.
         
         Args:
             filename (str): file pathname

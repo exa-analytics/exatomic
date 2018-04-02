@@ -6,7 +6,6 @@ These functions generate and manipulate spherical and solid harmonics. For solid
 module provides numerical approaches for dealing with them.
 """
 import re
-import numpy as np
 import sympy as sy
 from numba import vectorize
 from sympy.parsing.sympy_parser import parse_expr

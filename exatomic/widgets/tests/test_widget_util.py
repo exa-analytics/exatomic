@@ -76,7 +76,7 @@ class TestListDict(TestCase):
 
     def test_init(self):
         with self.assertRaises(TypeError):
-            ld = _ListDict([('a', 1), (2, [1, 2])])
+            _ = _ListDict([('a', 1), (2, [1, 2])])
 
     def pop_as_dict(self):
         ld = _ListDict([('a', 1), ('b', [1, 2])])

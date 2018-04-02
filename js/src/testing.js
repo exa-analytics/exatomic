@@ -100,7 +100,7 @@ var SmallverseSceneView = base.ExatomicSceneView.extend({
     },
 
         // Smallverse
-    do_nothing: function() {console.log("I'm doing nothing.")},
+    do_nothing: function() {console.log("I'm doing nothing.");},
 
     init_listeners: function() {
         SmallverseSceneView.__super__.init_listeners.apply(this);

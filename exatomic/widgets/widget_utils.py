@@ -235,8 +235,9 @@ class Folder(VBox):
 class GUIBox(VBox):
 
     def __init__(self, *args, **kwargs):
-        lo = kwargs.pop('layout', None)
-        super(GUIBox, self).__init__(*args, layout=_glo, **kwargs)
+        #lo = kwargs.pop('layout', None)
+        kwargs['layout'] = _glo    # Force global layout
+        super(GUIBox, self).__init__(*args, **kwargs)
 
 
 

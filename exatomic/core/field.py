@@ -13,6 +13,7 @@ import numpy as np
 import pandas as pd
 from exa import DataFrame, Field, Series
 
+
 class AField(DataFrame):
     _columns = ['nx', 'ny', 'nz', 'ox', 'oy', 'oz', 'dxi', 'dxj', 'dxk',
                 'dyi', 'dyj', 'dyk', 'dzi', 'dzj', 'dzk', 'frame']
@@ -23,7 +24,7 @@ class AField(DataFrame):
     def copy(self, *args, **kwargs):
         """Make a copy of this object."""
         cls = self.__class__
-        df = pd.DataFrame(self).copy(*args, **kwargs)
+        #df = pd.DataFrame(self).copy(*args, **kwargs)
         data = self.data.copy()
         return cls(data, data=data)
 
@@ -40,8 +41,6 @@ class AField(DataFrame):
         if isinstance(args[0], pd.Series): args = (args[0].to_frame().T,)
         super(AField, self).__init__(*args, **kwargs)
         self.data = data
-
-
 
 
 class AtomicField(Field):

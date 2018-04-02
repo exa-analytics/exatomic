@@ -13,7 +13,7 @@ import pandas as pd
 from numba import jit
 from numexpr import evaluate
 from IPython.display import display
-from ipywidgets import FloatProgress, HBox
+from ipywidgets import FloatProgress
 from exatomic.core.field import AtomicField
 from exatomic.base import nbpll
 

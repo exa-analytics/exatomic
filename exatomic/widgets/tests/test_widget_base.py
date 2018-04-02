@@ -1,12 +1,13 @@
 # -*- coding: utf-8 -*-
 # Copyright (c) 2015-2018, Exa Analytics Development Team
 # Distributed under the terms of the Apache License 2.0
-
+from __future__ import absolute_import
+from __future__ import print_function
+from __future__ import division
 import os
-from os.path import isfile, isdir, join, abspath
+from os.path import isfile, join, abspath
 import exatomic
 from unittest import TestCase
-
 from ..widget_base import ExatomicScene, UniverseScene, ExatomicBox, _scene_grid
 
 
