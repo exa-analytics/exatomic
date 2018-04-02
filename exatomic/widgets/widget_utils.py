@@ -65,12 +65,21 @@ class _ListDict(OrderedDict):
         for k in keys:
             del self[k]
         for k, v in items:
-            self[k] = v
+            super(_ListDict, self).__setitem__(k, v)
 
     def __setitem__(self, key, obj):
         if not isinstance(key, six.string_types):
             raise TypeError('Must set _ListDict key must be type str.')
-        super(_ListDict, self).__setitem__(key, obj)
+        keys = list(self.keys())
+        if key in keys:
+            super(_ListDict, self).__setitem__(key, obj)
+        else:
+            items = list(self.items())
+            items.append((key, obj))
+            for k in keys:
+                del self[k]
+            for k, v in items:
+                super(_ListDict, self).__setitem__(k, v)
 
     def __getitem__(self, key):
         if isinstance(key, six.string_types):
@@ -217,14 +226,11 @@ class Folder(VBox):
                     obj.disabled = False
             self._controls.update(content)
 
-
     def __setitem__(self, key, obj):
         return self._controls.__setitem__(key, obj)
 
-
     def __getitem__(self, key):
         return self._controls.__getitem__(key)
-
 
     def __init__(self, control, content, **kwargs):
         self.show = kwargs.pop('show', False)

@@ -300,6 +300,7 @@ class ExatomicBox(Box):
         uni = kwargs.pop('uni', False)
         test = kwargs.pop('test', True)
         fdict = gui_field_widgets(uni, test)
+        print(fdict)
 
         def _iso(c):
             for scn in self.active():
