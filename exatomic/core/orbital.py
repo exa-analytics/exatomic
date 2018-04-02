@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 # Copyright (c) 2015-2018, Exa Analytics Development Team
 # Distributed under the terms of the Apache License 2.0
-'''
+"""
 Orbital DataFrame
 ####################
 Orbital information. All of the dataframe structures and functions associated
@@ -10,13 +10,17 @@ summarizes information such as centers and energies. The Excitation table
 collects information about orbital excitations from time-dependent calculations.
 The convolve() bound method can be used to generate photoelectron spectroscopy
 and absorbance spectra.
+
 The MOMatrix table contains a C matrix as it is presented in quantum textbooks,
 stored in a columnar format. The bound method square() returns the
 matrix as one would write it out. This table should have dimensions
 N_basis_functions * N_basis_functions. The DensityMatrix table stores
 a triangular matrix in columnar format and contains a similar square()
 method to return the matrix as we see it on a piece of paper.
-'''
+"""
+from __future__ import absolute_import
+from __future__ import print_function
+from __future__ import division
 import numpy as np
 import pandas as pd
 from exa import DataFrame

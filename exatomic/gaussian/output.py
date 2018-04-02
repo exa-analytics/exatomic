@@ -6,6 +6,9 @@ Gaussian Output Editor
 #########################
 Editor classes for various types of Gaussian output files
 """
+from __future__ import absolute_import
+from __future__ import print_function
+from __future__ import division
 import re
 import six
 import numpy as np
@@ -16,7 +19,6 @@ from exa.util.units import Length, Energy
 from .editor import Editor
 from exatomic.base import z2sym
 from exatomic.core.frame import compute_frame_from_atom
-
 from exatomic.core.frame import Frame
 from exatomic.core.atom import Atom, Frequency
 from exatomic.core.basis import BasisSet, BasisSetOrder, Overlap
@@ -52,7 +54,6 @@ class GauMeta(TypedMeta):
     overlap = Overlap
 
 class Output(six.with_metaclass(GauMeta, Editor)):
-
     def _parse_triangular_matrix(self, regex, column='coef', values_only=False):
         found = self.find_next(_rebas01, keys_only=True)
         nbas = int(self[found].split()[0])
@@ -495,6 +496,7 @@ class Fchk(six.with_metaclass(GauMeta, Editor)):
         # Z effective if ECPs are used
         zeffs = self._dfme(found[_rezeff], nat).astype(np.int64)
         # Atomic positions
+        print(found[_reposition])
         pos = self._dfme(found[_reposition], nat * 3).reshape(nat, 3)
         frame = np.zeros(len(symbols), dtype=np.int64)
         self.atom = pd.DataFrame.from_dict({'symbol': symbols, 'Zeff': zeffs,
@@ -595,6 +597,7 @@ class Fchk(six.with_metaclass(GauMeta, Editor)):
         chis = np.tile(range(nbas), ninp)
         orbitals = np.repeat(range(ninp), nbas)
         frame = np.zeros(ncoef, dtype=np.int64)
+        print(len(chis), len(orbitals), len(coefs), len(frame))
         self.momatrix = pd.DataFrame.from_dict({'chi': chis, 'orbital': orbitals,
                                                 'coef': coefs, 'frame': frame})
         if bcoefs is not None:

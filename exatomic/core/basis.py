@@ -13,7 +13,7 @@ also analytical and discrete manipulations of the basis set.
 See Also:
     For symbolic and discrete manipulations see :mod:`~exatomic.algorithms.basis`.
 """
-import os
+import os, six
 import numpy as np
 import pandas as pd
 from io import StringIO
@@ -228,12 +228,15 @@ class Overlap(DataFrame):
         # Assuming source is a file of triangular elements of the overlap matrix
         if isinstance(source, np.ndarray):
             vals = source
-        elif isinstance(source, str):
+        elif isinstance(source, six.string_types):
             if os.sep in source:
                 vals = pd.read_csv(source, header=None).values.flatten()
             else:
             # except FileNotFoundError:
                 vals = pd.read_csv(StringIO(source), header=None).values.flatten()
+        else:
+            # Without a catchall, _tri_indices may through UnboundLocalError
+            raise TypeError("Invalid type for source: {}".format(type(source)))
         chi0, chi1 = _tri_indices(vals)
         return cls(pd.DataFrame.from_dict({'chi0': chi0,
                                            'chi1': chi1,
