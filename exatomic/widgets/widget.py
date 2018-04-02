@@ -12,8 +12,11 @@ the following in a Jupyter notebook environment.
     exatomic.UniverseWidget(u)    # type(u) is exatomic.core.universe.Universe
 
 """
-
-from traitlets import Unicode, link
+from __future__ import absolute_import
+from __future__ import print_function
+from __future__ import division
+#from traitlets import Unicode, link
+from traitlets import Unicode
 from ipywidgets import (Button, Dropdown, jslink, register, VBox, HBox,
                         IntSlider, IntRangeSlider, FloatSlider, Play,
                         FloatText, Layout, Text, Label)

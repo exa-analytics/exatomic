@@ -10,7 +10,6 @@ optimization, different functional, etc. Each frame is distinguished from other
 frames by unique atomic coordinates, a different level of theory, etc.
 """
 import numpy as np
-from traitlets import Float
 from exa import DataFrame
 from exatomic.algorithms.distance import cartmag
 

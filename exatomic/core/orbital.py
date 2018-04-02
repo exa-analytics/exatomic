@@ -26,8 +26,8 @@ import pandas as pd
 from exa import DataFrame
 from exa.util.units import Energy
 from exatomic.algorithms.numerical import (density_from_momatrix,
-                                           density_as_square,
-                                           momatrix_as_square)
+                                           density_as_square)
+                                           #momatrix_as_square)
 from exatomic.core.field import AtomicField
 
 

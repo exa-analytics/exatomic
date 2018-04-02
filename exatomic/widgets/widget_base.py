@@ -6,8 +6,11 @@ Lower Level Widgets
 #########################
 Lower level support widgets framework.
 """
+from __future__ import absolute_import
+from __future__ import print_function
+from __future__ import division
 import os
-import numpy as np
+#import numpy as np
 from base64 import b64decode
 from traitlets import (Bool, Int, Float, Unicode,
                        List, Any, Dict, link)
@@ -16,7 +19,7 @@ from ipywidgets import (
     DOMWidget, Layout, Button, Dropdown, register)
 
 from exatomic import Universe, __js_version__
-from .traits import uni_traits
+#from .traits import uni_traits
 #from .widget_utils import (_glo, _flo, _wlo, _hboxlo, 
 from .widget_utils import (_flo, _wlo, _hboxlo,
                            _vboxlo, _bboxlo, _ListDict,

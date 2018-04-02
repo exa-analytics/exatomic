@@ -62,7 +62,7 @@ class TestFolder(TestCase):
         fol = Folder(Button(), _ListDict([('a', Button()), ('b', Button())]))
         fol.pop('a')
         with self.assertRaises(KeyError):
-            fol['a']
+            _ = fol['a']
 
     def test_get(self):
         fol = Folder(Button(), _ListDict([('a', Button()), ('b', Button())]))
@@ -115,7 +115,7 @@ class TestListDict(TestCase):
         self.assertEqual(ld[:1], [1])
         self.assertEqual(ld[:2], [1, [1, 2]])
         with self.assertRaises(TypeError):
-            a = ld['a', 'b']
+            _ = ld['a', 'b']
 
 
 class TestGUIBox(TestCase):

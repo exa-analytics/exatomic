@@ -6,20 +6,20 @@ Geometry Parser ('A D F' Calculations)
 #########################################
 """
 #import re
-import pandas as pd
-from exa import Parser, Typed
-from exatomic.core.atom import Atom
-
-
-class Geometry(Parser):
-    """
-    Parser for the data block labeled 'Coordinates (Cartesian)' in 'A D F' output sections.
-    """
-    _start = " Coordinates (Cartesian)"
-    atom = Typed(Atom, doc="Coordinates")
-
-    def _parse_end(self, starts):
-        return [self.find_next_blank_line(cursor=i[0]) for i in starts]
+#import pandas as pd
+#from exa import Parser, Typed
+#from exatomic.core.atom import Atom
+#
+#
+#class Geometry(Parser):
+#    """
+#    Parser for the data block labeled 'Coordinates (Cartesian)' in 'A D F' output sections.
+#    """
+#    _start = " Coordinates (Cartesian)"
+#    atom = Typed(Atom, doc="Coordinates")
+#
+#    def _parse_end(self, starts):
+#        return [self.find_next_blank_line(cursor=i[0]) for i in starts]
 
 
 
