@@ -25,73 +25,134 @@ _bboxlo = Layout(flex='1 1 auto', width='auto', height='auto')
 # Box layouts above are separate so it is easier to restyle
 
 
-class _ListDict(OrderedDict):
-    """An OrderedDict with string keys that slices and indexes as a list."""
+#class _ListDict(OrderedDict):
+#    """An OrderedDict with string keys that slices and indexes as a list."""
+#    def pop(self, key):
+#        """Pop as a dict or list."""
+##        try:
+##            return super(_ListDict, self).pop(key)
+##        except KeyError:
+##            key = list(self.keys())[key]
+##            return super(_ListDict, self).pop(key)
+#        if isinstance(key, six.string_types):
+#            return super(_ListDict, self).pop(key)
+#        return super(_ListDict, self).pop(list(self.keys())[key])
+#
+#    def insert(self, idx, key, obj):
+#        """
+#        Insert value at position idx with string key.
+#        """
+##        key = str(key)
+##        keys = list(self.keys())
+##        self[key] = obj
+##        keys.insert(idx, key)
+##        try:
+##            # Only python >= 3.2
+##            for k in keys[idx:]:
+##                self.move_to_end(k, last=True)
+##        except AttributeError:
+##            # Manually reorder
+##            old = list(self.items())
+##            for key in self.keys():
+##                self.pop(key)
+##            for key, obj in old:
+##                self[key] = obj
+#        if not isinstance(key, six.string_types):
+#            raise TypeError("Key must be type str")
+#        keys = list(self.keys())
+#        items = list(self.items())
+#        items.insert(idx, (key, obj))
+#        for k in keys:
+#            del self[k]
+#        for k, v in items:
+#            super(_ListDict, self).__setitem__(k, v)
+#
+#    def __setitem__(self, key, obj):
+#        if not isinstance(key, six.string_types):
+#            raise TypeError('Must set _ListDict key must be type str.')
+#        keys = list(self.keys())
+#        if key in keys:
+#            super(_ListDict, self).__setitem__(key, obj)
+#        else:
+#            items = list(self.items())
+#            items.append((key, obj))
+#            for k in keys:
+#                del self[k]
+#            for k, v in items:
+#                super(_ListDict, self).__setitem__(k, v)
+#
+#    def __getitem__(self, key):
+#        if isinstance(key, six.string_types):
+#            return super(_ListDict, self).__getitem__(key)
+#        if isinstance(key, (int, slice)):
+#            return list(self.values())[key]
+#        raise TypeError('_ListDict slice must be of type str/int/slice.')
+#
+#    def __init__(self, *args, **kwargs):
+#        super(_ListDict, self).__init__(*args, **kwargs)
+#        if not all((isinstance(key, six.string_types) for key in self.keys())):
+#            raise TypeError('_ListDict keys must be of type str.')
+class _ListDict(object):
+    """
+    Thin wrapper around OrderedDict that allows slicing by position (like list)
+
+    Requires string keys.
+    """
+    def values(self):
+        return self.od.values()
+
+    def keys(self):
+        return self.od.keys()
+
+    def items(self):
+        return self.od.items()
+
     def pop(self, key):
-        """Pop as a dict or list."""
-#        try:
-#            return super(_ListDict, self).pop(key)
-#        except KeyError:
-#            key = list(self.keys())[key]
-#            return super(_ListDict, self).pop(key)
+        """Pop value."""
         if isinstance(key, six.string_types):
-            return super(_ListDict, self).pop(key)
-        return super(_ListDict, self).pop(list(self.keys())[key])
+            return self.od.pop(key)
+        return self.od.pop(list(self.od.keys())[key])
 
     def insert(self, idx, key, obj):
-        """
-        Insert value at position idx with string key.
-        """
-#        key = str(key)
-#        keys = list(self.keys())
-#        self[key] = obj
-#        keys.insert(idx, key)
-#        try:
-#            # Only python >= 3.2
-#            for k in keys[idx:]:
-#                self.move_to_end(k, last=True)
-#        except AttributeError:
-#            # Manually reorder
-#            old = list(self.items())
-#            for key in self.keys():
-#                self.pop(key)
-#            for key, obj in old:
-#                self[key] = obj
+        """Insert value at position idx with string key."""
         if not isinstance(key, six.string_types):
             raise TypeError("Key must be type str")
-        keys = list(self.keys())
-        items = list(self.items())
+        items = list(self.od.items())
         items.insert(idx, (key, obj))
-        for k in keys:
-            del self[k]
-        for k, v in items:
-            super(_ListDict, self).__setitem__(k, v)
+        self.od = OrderedDict(items)
 
-    def __setitem__(self, key, obj):
+    def update(self, *args, **kwargs):
+        """Update OrderedDict"""
+        self.od.update(OrderedDict(*args, **kwargs))
+
+    def __setitem__(self, key, value):
         if not isinstance(key, six.string_types):
             raise TypeError('Must set _ListDict key must be type str.')
-        keys = list(self.keys())
+        keys = list(self.od.keys())
         if key in keys:
-            super(_ListDict, self).__setitem__(key, obj)
+            self.od[key] = value
         else:
-            items = list(self.items())
-            items.append((key, obj))
-            for k in keys:
-                del self[k]
-            for k, v in items:
-                super(_ListDict, self).__setitem__(k, v)
+            items = list(self.od.items())
+            items.append((key, value))
+            self.od = OrderedDict(items)
 
     def __getitem__(self, key):
+        if not isinstance(key, (six.string_types, int, slice)):
+            raise TypeError('_ListDict slice must be of type str/int/slice.')
         if isinstance(key, six.string_types):
-            return super(_ListDict, self).__getitem__(key)
-        if isinstance(key, (int, slice)):
-            return list(self.values())[key]
-        raise TypeError('_ListDict slice must be of type str/int/slice.')
+            return self.od[key]
+        return list(self.values())[key]
 
     def __init__(self, *args, **kwargs):
-        super(_ListDict, self).__init__(*args, **kwargs)
-        if not all((isinstance(key, six.string_types) for key in self.keys())):
+        self.od = OrderedDict(*args, **kwargs)
+        if not all((isinstance(key, six.string_types) for key in self.od.keys())):
             raise TypeError('_ListDict keys must be of type str.')
+
+    def __len__(self):
+        return len(self.od)
+
+    def __repr__(self):
+        return repr(self.od)
 
 
 class Folder(VBox):
