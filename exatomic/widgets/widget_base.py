@@ -17,7 +17,8 @@ from ipywidgets import (
 
 from exatomic import Universe, __js_version__
 from .traits import uni_traits
-from .widget_utils import (_glo, _flo, _wlo, _hboxlo, 
+#from .widget_utils import (_glo, _flo, _wlo, _hboxlo, 
+from .widget_utils import (_flo, _wlo, _hboxlo,
                            _vboxlo, _bboxlo, _ListDict,
                            Folder, GUIBox, gui_field_widgets)
 

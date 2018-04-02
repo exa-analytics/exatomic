@@ -140,7 +140,8 @@ def car2sph(sh, cart, orderedp=True):
         for ml, sym in mls.items():
             mli = ml + L
             coefs = sym.expand().as_coefficients_dict()
-            for crt, coef in coefs.items():
+            #for crt, coef in coefs.items():
+            for crt, _ in coefs.items():
                 if isinstance(crt, Integer): continue
                 idx = cdxs.index(crt)
                 c2s[L][idx, mli] = coefs[cdxs[idx]]
@@ -294,7 +295,8 @@ class Basis(object):
         """Evaluates the derivatives of a full Gaussian basis
         set and returns a numpy array."""
         cnt, flds = 0, np.empty((len(self), len(xs)))
-        for i, ax, ay, az, ishl in _iter_atom_shells(self._ptrs, self._xyzs, *self._shells):
+        #for i, ax, ay, az, ishl in _iter_atom_shells(self._ptrs, self._xyzs, *self._shells):
+        for _, ax, ay, az, ishl in _iter_atom_shells(self._ptrs, self._xyzs, *self._shells):
             norm = ishl.norm_contract()
             for mag in self.enum_shell(ishl):
                 a = self._angular(ishl, ax, ay, az, *mag)
@@ -313,10 +315,10 @@ class Basis(object):
 
     def __repr__(self):
         chk = (i.spherical for i in self._shells)
-        repr = 'Basis({},{{}})'.format(len(self)).format
-        if all(chk): return repr('spherical')
-        if not any(chk): return repr('cartesian')
-        return repr('mixed')
+        _repr = 'Basis({},{{}})'.format(len(self)).format
+        if all(chk): return _repr('spherical')
+        if not any(chk): return _repr('cartesian')
+        return _repr('mixed')
 
     def __init__(self, uni, frame=0, cartp=True):
         self._program = uni.meta['program']

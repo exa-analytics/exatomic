@@ -441,8 +441,9 @@ class Ecce(six.with_metaclass(OutMeta, Editor)):
                                  self._rebmooccs, self._reemooccs)
         self.parse_momatrix()
 
-
-    def __init__(self, kind=None, spin=None, *args, **kwargs):
+    def __init__(self, *args, **kwargs):
+        kind = kwargs.pop("kind", None)
+        spin = kwargs.pop("spin", None)
         super().__init__(*args, **kwargs)
         self._kind = kind
         self._spin = spin

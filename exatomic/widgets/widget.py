@@ -114,7 +114,7 @@ class TensorContainer(ExatomicBox):
         zs = [FloatText(value=scn.tzx , layout=alo),
               FloatText(value=scn.tzy , layout=alo),
               FloatText(value=scn.tzz , layout=alo)]
-        scale =  FloatSlider(max=10.0, step=0.01, readout=True, value=1.0)
+        #scale =  FloatSlider(max=10.0, step=0.01, readout=True, value=1.0)
         opt = [0] if self._df is None else [int(x) for x in self._df.index.values]
         tensorIndex = Dropdown(options=opt, value=opt[0], layout=rlo)
         tdxlabel = Label(value='Select the tensor index:')
@@ -150,7 +150,7 @@ class TensorContainer(ExatomicBox):
         ybox = HBox(ys, layout=rlo)
         zbox = HBox(zs, layout=rlo)
         geom = Button(icon='cubes', description=' Geometry', layout=_wlo)
-        
+
         def _change_tensor(tdx=0):
             carts = ['x','y','z']
             for i, bra in enumerate(carts):

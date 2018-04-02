@@ -11,7 +11,7 @@ import numpy as np
 #from numba import jit
 from datetime import datetime
 from exatomic.base import sym2z
-from exatomic.core.field import AtomicField
+#from exatomic.core.field import AtomicField
 from .orbital_util import (
     numerical_grid_from_field_params, _determine_fps,
     _determine_vector, _compute_orb_ang_mom, _compute_current_density,
