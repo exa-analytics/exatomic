@@ -15,7 +15,7 @@ var _ = require("underscore");
 var three = require("./appthree");
 var utils = require("./utils");
 var semver = "^" + require("../package.json").version;
-
+console.log("exatomic JS version: " + require("../package.json").version);
 
 
 var ExatomicBoxModel = control.BoxModel.extend({
