@@ -1,7 +1,7 @@
 numpy
 pandas
 numba
-pytest
+seaborn
 ipywidgets
-symengine
+sympy
 numexpr
