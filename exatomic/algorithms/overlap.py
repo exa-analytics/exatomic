@@ -87,59 +87,59 @@ def _primitive_overlap(a1, a2, ax, ay, az, bx, by, bz, l1, m1, n1, l2, m2, n2):
 @jit(nopython=True, nogil=True, cache=nbche)
 def _primitive_kinetic(a1, a2, ax, ay, az, bx, by, bz, l1, m1, n1, l2, m2, n2):
     """Compute the kinetic energy as a linear combination of overlap terms."""
-    p = _gaussian_product(a1, a2, ax, ay, az, bx, by, bz)
-    t =  4 * a1 * a2 * _primitive_overlap_product(p[0], p[1], p[2], p[3], p[4], p[5],
-                                                  p[6], p[7], p[8], p[9],
+    N, p, mu, ab2, pax, pay, paz, pbx, pby, pbz = _gaussian_product(a1, a2, ax, ay, az, bx, by, bz)
+    t =  4 * a1 * a2 * _primitive_overlap_product(N, p, mu, ab2, pax, pay,
+                                                  paz, pbx, pby, pbz,
                                                   l1 - 1, m1, n1,
                                                   l2 - 1, m2, n2)
-    t += 4 * a1 * a2 * _primitive_overlap_product(p[0], p[1], p[2], p[3], p[4], p[5],
-                                                  p[6], p[7], p[8], p[9],
+    t += 4 * a1 * a2 * _primitive_overlap_product(N, p, mu, ab2, pax, pay,
+                                                  paz, pbx, pby, pbz,
                                                   l1, m1 - 1, n1,
                                                   l2, m2 - 2, n2)
-    t += 4 * a1 * a2 * _primitive_overlap_product(p[0], p[1], p[2], p[3], p[4], p[5],
-                                                  p[6], p[7], p[8], p[9],
+    t += 4 * a1 * a2 * _primitive_overlap_product(N, p, mu, ab2, pax, pay,
+                                                  paz, pbx, pby, pbz,
                                                   l1, m1, n1 - 1,
                                                   l2, m2, n2 - 1)
-    # Should args be prod here? Changed *args to *prod to explicit p[0]...p[0] as above
+    # Should args be prod here? Changed *args to *prod to explicit N...N as above
     # See commented example of what was below..
     if l1 and l2:
         #t += l1 * l2 * _primitive_overlap_product(*args, a1, a2,
-        t += l1 * l2 * _primitive_overlap_product(p[0], p[1], p[2], p[3], p[4], p[5],
-                                                  p[6], p[7], p[8], p[9],
+        t += l1 * l2 * _primitive_overlap_product(N, p, mu, ab2, pax, pay,
+                                                  paz, pbx, pby, pbz,
                                                   l1 - 1, m1, n1,
                                                   l2 - 1, m2, n2)
     if m1 and m2:
-        t += l1 * l2 * _primitive_overlap_product(p[0], p[1], p[2], p[3], p[4], p[5],
-                                                  p[6], p[7], p[8], p[9],
+        t += l1 * l2 * _primitive_overlap_product(N, p, mu, ab2, pax, pay,
+                                                  paz, pbx, pby, pbz,
                                                   l1, m1 - 1, n1,
                                                   l2, m2 - 1, n2)
     if n1 and n2:
-        t += l1 * l2 * _primitive_overlap_product(p[0], p[1], p[2], p[3], p[4], p[5],
-                                                  p[6], p[7], p[8], p[9],
+        t += l1 * l2 * _primitive_overlap_product(N, p, mu, ab2, pax, pay,
+                                                  paz, pbx, pby, pbz,
                                                   l1, m1, n1 - 1,
                                                   l2, m2, n2 - 1)
-    if l1: t -=  2 * a2 * l1 * _primitive_overlap_product(p[0], p[1], p[2], p[3], p[4], p[5],
-                                                          p[6], p[7], p[8], p[9],
+    if l1: t -=  2 * a2 * l1 * _primitive_overlap_product(N, p, mu, ab2, pax, pay,
+                                                          paz, pbx, pby, pbz,
                                                           l1 - 1, m1, n1,
                                                           l2 + 1, m2, n2)
-    if l2: t -=  2 * a1 * l2 * _primitive_overlap_product(p[0], p[1], p[2], p[3], p[4], p[5],
-                                                          p[6], p[7], p[8], p[9],
+    if l2: t -=  2 * a1 * l2 * _primitive_overlap_product(N, p, mu, ab2, pax, pay,
+                                                          paz, pbx, pby, pbz,
                                                           l1 + 1, m1, n1,
                                                           l2 - 1, m2, n2)
-    if m1: t -=  2 * a2 * m1 * _primitive_overlap_product(p[0], p[1], p[2], p[3], p[4], p[5],
-                                                          p[6], p[7], p[8], p[9],
+    if m1: t -=  2 * a2 * m1 * _primitive_overlap_product(N, p, mu, ab2, pax, pay,
+                                                          paz, pbx, pby, pbz,
                                                           l1, m1 - 1, n1,
                                                           l2, m2 + 1, n2)
-    if m2: t -=  2 * a1 * m2 * _primitive_overlap_product(p[0], p[1], p[2], p[3], p[4], p[5],
-                                                          p[6], p[7], p[8], p[9],
+    if m2: t -=  2 * a1 * m2 * _primitive_overlap_product(N, p, mu, ab2, pax, pay,
+                                                          paz, pbx, pby, pbz,
                                                           l1, m1 + 1, n1,
                                                           l2, m2 - 1, n2)
-    if n1: t -=  2 * a2 * n1 * _primitive_overlap_product(p[0], p[1], p[2], p[3], p[4], p[5],
-                                                          p[6], p[7], p[8], p[9],
+    if n1: t -=  2 * a2 * n1 * _primitive_overlap_product(N, p, mu, ab2, pax, pay,
+                                                          paz, pbx, pby, pbz,
                                                           l1, m1, n1 - 1,
                                                           l2, m2, n2 + 1)
-    if n2: t -=  2 * a1 * n2 * _primitive_overlap_product(p[0], p[1], p[2], p[3], p[4], p[5],
-                                                          p[6], p[7], p[8], p[9],
+    if n2: t -=  2 * a1 * n2 * _primitive_overlap_product(N, p, mu, ab2, pax, pay,
+                                                          paz, pbx, pby, pbz,
                                                           l1, m1, n1 + 1,
                                                           l2, m2, n2 - 1)
     return t / 2

@@ -24,23 +24,33 @@ class Editor(six.with_metaclass(TypedMeta, _Editor)):
         below) should be names "parse_{data object name}".
 
     See Also:
-        For a list of typed attributes, see :class:`~exatomic.container.Universe`.
+        For a list of typed attributes, see :class:`~exatomic.core.universe.Universe`.
     """
     _getter_prefix = "parse"
 
     def parse_frame(self):
         """
         Create a minimal :class:`~exatomic.frame.Frame` from the (parsed)
-        :class:`~exatomic.atom.Atom` object.
+        :class:`~exatomic.core.atom.Atom` object.
         """
         self.frame = compute_frame_from_atom(self.atom)
 
+    def to_universe(self, **kws): 
+        """
+        Convert the editor to a :class:`~exatomic.core.universe.Universe` object.
 
-    def to_universe(self, name=None, description=None, meta=None, verbose=True,
-                    ignore=False, **kws):
+        Args:
+            name (str): Name
+            description (str): Description of parsed file
+            meta (dict): Optional dictionary of metadata
+            verbose (bool): Verbose information on failed parse methods
+            ignore (bool): Ignore failed parse methods
         """
-        Convert the editor to a :class:`~exatomic.container.Universe` object.
-        """
+        name = kws.pop("name", None)
+        description = kws.pop("description", None)
+        meta = kws.pop("meta", None)
+        verbose = kws.pop("verbose", True)
+        ignore = kws.pop("ignore", False)
         if hasattr(self, 'meta') and self.meta is not None:
             if meta is not None:
                 meta.update(self.meta)

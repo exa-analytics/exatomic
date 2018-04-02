@@ -118,6 +118,7 @@ class OutMeta(TypedMeta):
     basis_set = BasisSet
     basis_set_order = BasisSetOrder
 
+
 class Output(six.with_metaclass(OutMeta, Editor)):
 
     def add_orb(self, path, mocoefs='coef', orbocc='occupation'):
@@ -204,7 +205,6 @@ class Output(six.with_metaclass(OutMeta, Editor)):
         df['shell'] = shells
         df['frame'] = 0
         self.basis_set_order = df
-
 
     def parse_basis_set(self):
         """Parses the primitive exponents, coefficients and
