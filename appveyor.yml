@@ -41,6 +41,7 @@ install:
           {$root = "C:\Miniconda-x64"}
         $env:path="$root;$root\Scripts;$root\Library\bin;$($env:path)"
 
+  # numba JIT is not disable here
   - cmd: conda config --set show_channel_urls true
   - cmd: conda config --set always_yes yes --set changeps1 no
   - cmd: conda update -n base conda
@@ -50,8 +51,7 @@ install:
   - cmd: conda install -q -c conda-forge numpy scipy matplotlib networkx pandas
   - cmd: conda install -q -c conda-forge numba six pytest pytables sympy seaborn
   - cmd: conda install -q -c conda-forge psutil numexpr nodejs ipywidgets
-# - cmd: git clone https://github.com/exa-analytics/exa.git
-  - cmd: git clone https://github.com/avmarchenko/exa.git
+  - cmd: git clone https://github.com/exa-analytics/exa.git
   - cmd: cd exa
   - cmd: pip install .
   - cmd: cd ../
