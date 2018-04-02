@@ -20,7 +20,6 @@ method to get started with visualization is through the `Jupyter notebook`_.
 
     install.rst
     started.rst
-    examples.rst
 
 .. toctree::
     :maxdepth: 2
@@ -32,6 +31,7 @@ method to get started with visualization is through the `Jupyter notebook`_.
     :maxdepth: 2
     :caption: Examples
 
+    notebooks/water-demo.ipynb
     notebooks/nwchem.ipynb
     notebooks/qe.ipynb
 

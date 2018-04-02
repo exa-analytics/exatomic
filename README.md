@@ -2,7 +2,8 @@
 
 *A unified platform for computational chemists*
 
-![](https://i.imgur.com/g9X3gPa.gif)
+![](docs/source/static/demo.gif)
+![](docs/source/static/water-demo.gif)
 
 
 # Installation
