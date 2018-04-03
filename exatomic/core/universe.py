@@ -157,10 +157,10 @@ class Universe(six.with_metaclass(Meta, Container)):
         self.basis_functions = Basis(self)
 
     def enumerate_shells(self, frame=0):
-        atom = self.atom.gropuby('frame').get_group(frame)
-        if uni.meta['program'] != 'molcas':
+        atom = self.atom.groupby('frame').get_group(frame)
+        if self.meta['program'] != 'molcas':
             print('Warning: Check spherical shell parameter for {} '
-                  'molecular orbital generation'.format(uni.meta['program']))
+                  'molecular orbital generation'.format(self.meta['program']))
         shls = self.basis_set.shells()
         grps = shls.groupby('set')
         # Pointers into (xyzs, shls) arrays

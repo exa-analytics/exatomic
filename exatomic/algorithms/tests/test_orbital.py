@@ -4,11 +4,7 @@
 """Tests for computing orbitals, densities and orbital angular momenta."""
 import os
 import bz2
-import numpy as np
 from unittest import TestCase
-
-import exatomic
-from exatomic import molcas
 from exatomic.base import staticdir
 from exatomic.molcas import Output as MolOutput
 from exatomic.molcas import Orb
@@ -50,6 +46,7 @@ class TestMolcasOrbital(TestCase):
         chk.add_field(flds)
 
         kws = {'field_params': chk.field.loc[0], 'verbose': False}
+        print(chk.field.loc[0].dtypes)
         add_molecular_orbitals(uni, vector=range(5), **kws)
         add_density(uni, mocoefs='coef', **kws)
         add_orb_ang_mom(uni, rcoefs='lreal', icoefs='limag', **kws)

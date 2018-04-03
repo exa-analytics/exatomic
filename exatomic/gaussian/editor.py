@@ -6,15 +6,13 @@ Gaussian Editor
 #######################
 Base class on top of exatomic.Editor for Gaussian Editors
 """
-import pandas as pd
+#import pandas as pd
 from exatomic import Editor
 
 class Editor(Editor):
 
     def __init__(self, *args, **kwargs):
-
         super(Editor, self).__init__(*args, **kwargs)
-
         if self.meta is not None:
             self.meta.update({'program': 'gaussian'})
         else:

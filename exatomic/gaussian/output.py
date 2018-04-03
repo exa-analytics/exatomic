@@ -6,17 +6,18 @@ Gaussian Output Editor
 #########################
 Editor classes for various types of Gaussian output files
 """
+from __future__ import absolute_import
+from __future__ import print_function
+from __future__ import division
 import re
 import six
 import numpy as np
 import pandas as pd
-from io import StringIO
 from exa import TypedMeta
 from exa.util.units import Length, Energy
 from .editor import Editor
 from exatomic.base import z2sym
 from exatomic.core.frame import compute_frame_from_atom
-
 from exatomic.core.frame import Frame
 from exatomic.core.atom import Atom, Frequency
 from exatomic.core.basis import BasisSet, BasisSetOrder, Overlap
@@ -52,7 +53,6 @@ class GauMeta(TypedMeta):
     overlap = Overlap
 
 class Output(six.with_metaclass(GauMeta, Editor)):
-
     def _parse_triangular_matrix(self, regex, column='coef', values_only=False):
         found = self.find_next(_rebas01, keys_only=True)
         nbas = int(self[found].split()[0])
@@ -162,8 +162,8 @@ class Output(six.with_metaclass(GauMeta, Editor)):
         found = self.regex(_reorb01, _reorb02, _rebas01, _realphaelec)
         # If no orbital energies, quit
         if not found[_reorb01]: return
-        # Basis dimension
-        nbas = int(found[_rebas01][0][1].split()[0])
+        # Basis dimension- UNUSED
+        #nbas = int(found[_rebas01][0][1].split()[0])
         # Check if open shell
         os = any(('Beta' in ln for lno, ln in found[_reorb01]))
         #UNUSED?
@@ -173,7 +173,7 @@ class Output(six.with_metaclass(GauMeta, Editor)):
         ae, be = int(ae), int(be)
         # Get orbital energies
         ens = '\n'.join([ln.split('-- ')[1] for i, ln in found[_reorb01]])
-        ens = pd.read_fwf(StringIO(ens), header=None,
+        ens = pd.read_fwf(six.StringIO(ens), header=None,
                           widths=np.repeat(10, 5)).stack().values
         # Other arrays
         orbital = Orbital.from_energies(ens, ae, be, os=os)
@@ -254,7 +254,7 @@ class Output(six.with_metaclass(GauMeta, Editor)):
                 block = _rebaspat.sub(lambda m: _basrep[m.group(0)], block)
                 # Enplacen the resultant unstacked values
                 coefs[stride:stride + nbas * ncol, c] = pd.read_fwf(
-                        StringIO(block), header=None,
+                        six.StringIO(block), header=None,
                         widths=np.repeat(10, 5)).unstack().dropna().values
                 stride += step
         # Index chi, phi
@@ -316,13 +316,13 @@ class Output(six.with_metaclass(GauMeta, Editor)):
                 maps.append(i)
                 lno += 1
         cols = [0, 1, 2, 'kind', 'eV', 3, 'nm', 4, 'osc', 's2']
-        summ = pd.read_csv(StringIO('\n'.join([ln for lno, ln in found])),
+        summ = pd.read_csv(six.StringIO('\n'.join([ln for lno, ln in found])),
                            delim_whitespace=True, header=None, names=cols,
                            usecols=[c for c in cols if type(c) == str])
         summ['s2'] = summ['s2'].str[7:].astype(np.float64)
         summ['osc'] = summ['osc'].str[2:].astype(np.float64)
         cols = ['occ', 0, 'virt', 'cont']
-        conts = pd.read_csv(StringIO('\n'.join([self[i] for i in keeps])),
+        conts = pd.read_csv(six.StringIO('\n'.join([self[i] for i in keeps])),
                             delim_whitespace=True, header=None, names=cols,
                             usecols=[c for c in cols if type(c) == str])
         conts['map'] = maps
@@ -401,7 +401,7 @@ def _basis_set_order(chunk, mapr, sets):
     # Gaussian only prints the atom center
     # and label once for all basis functions
     first = len(chunk[0]) - len(chunk[0].lstrip(' ')) + 1
-    df = pd.read_fwf(StringIO('\n'.join(chunk)),
+    df = pd.read_fwf(six.StringIO('\n'.join(chunk)),
                      widths=[first, 4, 3, 2, 4], header=None)
     df[1].fillna(method='ffill', inplace=True)
     df[1] = df[1].astype(np.int64) - 1
@@ -495,6 +495,7 @@ class Fchk(six.with_metaclass(GauMeta, Editor)):
         # Z effective if ECPs are used
         zeffs = self._dfme(found[_rezeff], nat).astype(np.int64)
         # Atomic positions
+        print(found[_reposition])
         pos = self._dfme(found[_reposition], nat * 3).reshape(nat, 3)
         frame = np.zeros(len(symbols), dtype=np.int64)
         self.atom = pd.DataFrame.from_dict({'symbol': symbols, 'Zeff': zeffs,
@@ -506,8 +507,8 @@ class Fchk(six.with_metaclass(GauMeta, Editor)):
         found = self.find(_rebasdim, _reshelltype, _reprimpershell,
                           _reshelltoatom, _reprimexp, _recontcoef,
                           _repcontcoef, keys_only=True)
-        # Number of basis functions
-        nbas = self._intme(found[_rebasdim])
+        # Number of basis functions - UNUSED
+        #nbas = self._intme(found[_rebasdim])
         # Number of 'shell to atom' mappings
         dim1 = self._intme(found[_reshelltype])
         # Number of primitive exponents
@@ -595,6 +596,7 @@ class Fchk(six.with_metaclass(GauMeta, Editor)):
         chis = np.tile(range(nbas), ninp)
         orbitals = np.repeat(range(ninp), nbas)
         frame = np.zeros(ncoef, dtype=np.int64)
+        print(len(chis), len(orbitals), len(coefs), len(frame))
         self.momatrix = pd.DataFrame.from_dict({'chi': chis, 'orbital': orbitals,
                                                 'coef': coefs, 'frame': frame})
         if bcoefs is not None:
@@ -613,7 +615,7 @@ class Fchk(six.with_metaclass(GauMeta, Editor)):
 
 
     def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+        super(Fchk, self).__init__(*args, **kwargs)
 
 
 def _dedup(sets, sp=False):

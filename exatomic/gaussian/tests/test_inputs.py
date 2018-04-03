@@ -1,16 +1,16 @@
 # -*- coding: utf-8 -*-
 # Copyright (c) 2015-2018, Exa Analytics Development Team
 # Distributed under the terms of the Apache License 2.0
-import os
-from unittest import TestCase
-from exatomic import Universe
-from exatomic.gaussian import Output, Input
-from exatomic.gaussian.inputs import _handle_args
+#import os
+#from unittest import TestCase
+#from exatomic import Universe
+#from exatomic.gaussian import Output, Input
+#from exatomic.gaussian.inputs import _handle_args
 
 
-class TestInput(TestCase):
-    """Tests the input file generation functionality for Gaussian."""
-    pass
+#class TestInput(TestCase):
+#    """Tests the input file generation functionality for Gaussian."""
+#    pass
 #    def setUp(self):
 #        fl = Output(os.sep.join(__file__.split(os.sep)[:-1]
 #                                + ['gaussian-uo2.out']))

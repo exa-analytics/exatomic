@@ -1,3 +1,4 @@
+#!/usr/bin/env bash
 #rm -rf node_modules/jsdoc_sphinx
 npm install
 jupyter nbextension install exatomic --py --sys-prefix --overwrite

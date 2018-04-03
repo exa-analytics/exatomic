@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# Copyright (c) 2015-2017, Exa Analytics Development Team
+# Copyright (c) 2015-2018, Exa Analytics Development Team
 # Distributed under the terms of the Apache License 2.0
 
 from exa import DataFrame
@@ -40,8 +40,12 @@ class Tensor(DataFrame):
     """
     _index = 'tensor'
     _columns = ['xx','xy','xz','yx','yy','yz','zx','zy','zz',
-                                                    'frame','atom','label']
+                'frame','atom','label']
     _categories = {'frame': np.int64, 'label': str}
+
+    @property
+    def _constructor(self):
+        return Tensor
 
     @classmethod
     def from_file(cls, filename):
@@ -56,14 +60,13 @@ class Tensor(DataFrame):
         zx zy zz
 
         For multiple tensors just append the same format as above without 
-        whitespace unless leaving the frame, label, atom attributes as 
-        empty.
+        whitespace unless leaving the frame, label, atom attributes as empty.
         
         Args:
             filename (str): file pathname
         
         Returns:
-            exatomic.tensor.Tensor: Tensor table with the tensor attributes
+            tens (:class:`~exatomic.tensor.Tensor`): Tensor table with the tensor attributes
         """
         df = pd.read_csv(filename, delim_whitespace=True, header=None,
                          skip_blank_lines=False)

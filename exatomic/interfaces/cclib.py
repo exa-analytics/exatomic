@@ -2,6 +2,10 @@
 # Copyright (c) 2015-2018, Exa Analytics Development Team
 # Distributed under the terms of the Apache License 2.0
 """
+Interface to `cclib`_
+#######################
+
+.. _cclib: https://cclib.github.io/
 """
 from exa.util.units import Length, Energy
 from exatomic.algorithms.basis import lmap
@@ -105,7 +109,7 @@ def parse_ccobj_gaussian_basis_set(data, code='gaussian'):
     for center in data['gbasis']:
         for angmom, contracted in center:
             for alpha, d in contracted:
-                L = lmap[angmom.lower()]
+                #L = lmap[angmom.lower()]
                 for key in data.keys():
                     dat[key].append(eval(key))
             shell += 1

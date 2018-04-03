@@ -22,6 +22,10 @@ class Molecule(DataFrame):
     _index = 'molecule'
     _categories = {'frame': np.int64, 'formula': str, 'classification': object}
 
+    @property
+    def _constructor(self):
+        return Molecule
+
     def classify(self, *classifiers):
         """
         Classify molecules into arbitrary categories.
@@ -165,7 +169,7 @@ def compute_molecule_com(universe):
     xm = xyz['x'].mul(mass)
     ym = xyz['y'].mul(mass)
     zm = xyz['z'].mul(mass)
-    rm = xm.add(ym).add(zm)
+    #rm = xm.add(ym).add(zm)
     df = pd.DataFrame.from_dict({'xm': xm, 'ym': ym, 'zm': zm, 'mass': mass,
                                  'molecule': universe.atom['molecule']})
     groups = df.groupby('molecule')

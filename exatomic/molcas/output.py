@@ -6,22 +6,23 @@ Molcas Output Parser
 #####################
 Multiple frames are not currently supported
 """
+from __future__ import absolute_import
+from __future__ import print_function
+from __future__ import division
 import os
 import six
 import pandas as pd
 import numpy as np
 from io import StringIO
-
 from exa import TypedMeta
-
 from .editor import Editor
-
 from exatomic import Atom
 from exatomic.algorithms.numerical import _flat_square_to_triangle
 from exatomic.algorithms.basis import lmap, spher_lml_count
 from exatomic.core.basis import Overlap, BasisSet, BasisSetOrder
 from exatomic.core.orbital import DensityMatrix, MOMatrix, Orbital
 from exatomic.base import sym2z, z2sym
+
 
 class OrbMeta(TypedMeta):
     momatrix = MOMatrix
@@ -117,6 +118,7 @@ class OutMeta(TypedMeta):
     basis_set = BasisSet
     basis_set_order = BasisSetOrder
 
+
 class Output(six.with_metaclass(OutMeta, Editor)):
 
     def add_orb(self, path, mocoefs='coef', orbocc='occupation'):
@@ -141,7 +143,7 @@ class Output(six.with_metaclass(OutMeta, Editor)):
         """Parses the atom list generated in SEWARD."""
         _re_atom = 'Label   Cartesian Coordinates'
         starts = [i + 2 for i in self.find(_re_atom, keys_only=True)]
-        stops = starts.copy()
+        stops = starts[:]    # Copy the list
         for i in range(len(stops)):
             while len(self[stops[i]].strip().split()) > 3:
                 stops[i] += 1
@@ -203,7 +205,6 @@ class Output(six.with_metaclass(OutMeta, Editor)):
         df['shell'] = shells
         df['frame'] = 0
         self.basis_set_order = df
-
 
     def parse_basis_set(self):
         """Parses the primitive exponents, coefficients and

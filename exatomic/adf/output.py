@@ -6,21 +6,23 @@ ADF Composite Output
 #########################
 This module provides the primary (user facing) output parser.
 """
+from __future__ import absolute_import
+from __future__ import print_function
+from __future__ import division
 import re
 import six
 import numpy as np
 import pandas as pd
 from io import StringIO
-
 from exa.util.units import Length
 from exa import TypedMeta
-
 from exatomic.base import sym2z
 from exatomic.algorithms.basis import lmap, enum_cartesian
 from ..core.atom import Atom
 from exatomic.core.basis import BasisSet, BasisSetOrder
 from ..core.orbital import Orbital, Excitation, MOMatrix
 from .editor import Editor
+
 
 class OutMeta(TypedMeta):
     atom = Atom
@@ -124,12 +126,15 @@ class Output(six.with_metaclass(OutMeta, Editor)):
                 # Iterate over cartesians
                 for l, m, n in enum_cartesian[L]:
                     # Wonky normalization in ADF
+                    # prefac is unused???
                     prefac = 0
                     if L == 2: prefac = 0 if any(i == L for i in (l, m, n)) else np.sqrt(L + 1)
                     elif L == 3: prefac = np.sqrt(5 * sum((i == 1 for i in (l, m, n))))
                     # Pre-exponential factors (shell kind of pointless for STOs)
-                    for shell, r in zip(grp['shell'], grp['r']):
-                        for key in data.keys(): data[key].append(eval(key))
+                    #for shell, r in zip(grp['shell'], grp['r']):
+                    for r in grp['r']:
+                        for key in data.keys():
+                            data[key].append(eval(key))
         data['set'] = data.pop('seht')
         data['frame'] = 0
         self.basis_set_order = pd.DataFrame.from_dict(data)

@@ -4,13 +4,22 @@
 """
 Universe Notebook Widget
 #########################
-"""
+To visualize a universe containing atoms, molecules, orbitals, etc., do
+the following in a Jupyter notebook environment.
 
-from traitlets import Unicode, link
+.. code-block:: Python
+
+    exatomic.UniverseWidget(u)    # type(u) is exatomic.core.universe.Universe
+
+"""
+from __future__ import absolute_import
+from __future__ import print_function
+from __future__ import division
+#from traitlets import Unicode, link
+from traitlets import Unicode
 from ipywidgets import (Button, Dropdown, jslink, register, VBox, HBox,
                         IntSlider, IntRangeSlider, FloatSlider, Play,
                         FloatText, Layout, Text, Label)
-
 from .widget_base import (ExatomicScene, UniverseScene,
                           TensorScene, ExatomicBox)
 from .widget_utils import _wlo, _ListDict, Folder
@@ -20,7 +29,6 @@ from exatomic.core.tensor import Tensor
 
 class DemoContainer(ExatomicBox):
     """A proof-of-concept mixing GUI controls with a three.js scene."""
-
     def _field_folder(self, **kwargs):
         """Folder that houses field GUI controls."""
         folder = super(DemoContainer, self)._field_folder(**kwargs)
@@ -53,22 +61,24 @@ class DemoContainer(ExatomicBox):
                                             typ=ExatomicScene,
                                             **kwargs)
 
-
-
 @register
 class TensorContainer(ExatomicBox):
-    """A simple container to implement cartesian tensor visualization.
+    """
+    A simple container to implement cartesian tensor visualization.
+
     Args:
-        file_path (string): Takes a file path name to pass through the 
-                            Tensor.from_file function. Default to None."""
+        file_path (string): Takes a file path name to pass through the Tensor.from_file function. Default to None.
+    """
     _model_name = Unicode('TensorContainerModel').tag(sync=True)
     _view_name = Unicode('TensorContainerView').tag(sync=True)
 
-
     def _update_active(self, b):
-        """Control which scenes are controlled by the GUI.
+        """
+        Control which scenes are controlled by the GUI.
+
         Additionally align traits with active scenes so that
-        the GUI reflects that correct values of active scenes."""
+        the GUI reflects that correct values of active scenes.
+        """
         super(TensorContainer, self)._update_active(b)
         scns = self.active()
         if not scns or len(scns) == 1: return
@@ -107,7 +117,7 @@ class TensorContainer(ExatomicBox):
         zs = [FloatText(value=scn.tzx , layout=alo),
               FloatText(value=scn.tzy , layout=alo),
               FloatText(value=scn.tzz , layout=alo)]
-        scale =  FloatSlider(max=10.0, step=0.01, readout=True, value=1.0)
+        #scale =  FloatSlider(max=10.0, step=0.01, readout=True, value=1.0)
         opt = [0] if self._df is None else [int(x) for x in self._df.index.values]
         tensorIndex = Dropdown(options=opt, value=opt[0], layout=rlo)
         tdxlabel = Label(value='Select the tensor index:')
@@ -143,7 +153,7 @@ class TensorContainer(ExatomicBox):
         ybox = HBox(ys, layout=rlo)
         zbox = HBox(zs, layout=rlo)
         geom = Button(icon='cubes', description=' Geometry', layout=_wlo)
-        
+
         def _change_tensor(tdx=0):
             carts = ['x','y','z']
             for i, bra in enumerate(carts):
@@ -172,8 +182,8 @@ class TensorContainer(ExatomicBox):
                          ('zbox', zbox)])
         return mainopts
 
-
-    def __init__(self, *args, file_path=None, **kwargs):
+    def __init__(self, *args, **kwargs):
+        file_path = kwargs.pop("file_path", None)
         if file_path is not None:
             self._df = Tensor.from_file(file_path)
         else:
@@ -185,16 +195,15 @@ class TensorContainer(ExatomicBox):
                                               **kwargs)
 
 
-
-
 class DemoUniverse(ExatomicBox):
     """A showcase of functional forms used in quantum chemistry."""
-
-
     def _update_active(self, b):
-        """Control which scenes are controlled by the GUI.
+        """
+        Control which scenes are controlled by the GUI.
+
         Additionally align traits with active scenes so that
-        the GUI reflects that correct values of active scenes."""
+        the GUI reflects that correct values of active scenes.
+        """
         super(DemoUniverse, self)._update_active(b)
         scns = self.active()
         if not scns: return
@@ -221,7 +230,6 @@ class DemoUniverse(ExatomicBox):
             folder.deactivate(*ofks)
         folder._set_gui()
 
-
     def _field_folder(self, **kwargs):
         """Folder that houses field GUI controls."""
         folder = super(DemoUniverse, self)._field_folder(**kwargs)
@@ -243,6 +251,7 @@ class DemoUniverse(ExatomicBox):
         fopts = list(uni_field_lists.keys())
         folder.update(kind_widgets, relayout=True)
         folder.update(ml_widgets, relayout=True)
+
         def _field(c):
             fk = uni_field_lists[c.new][0]
             for scn in self.active():
@@ -259,6 +268,7 @@ class DemoUniverse(ExatomicBox):
                 if aml:
                     folder.deactivate(*aml)
             folder._set_gui()
+
         def _field_kind(c):
             for scn in self.active():
                 scn.field_kind = c.new
@@ -274,8 +284,10 @@ class DemoUniverse(ExatomicBox):
                     if aml:
                         folder.deactivate(*aml)
             folder._set_gui()
+
         def _field_ml(c):
             for scn in self.active(): scn.field_ml = c.new
+
         for key, obj in kind_widgets.items():
             folder.deactivate(key)
             obj.observe(_field_kind, names='value')
@@ -310,15 +322,9 @@ class DemoUniverse(ExatomicBox):
                                            typ=ExatomicScene, **kwargs)
 
 
-
-
-
-
 @register
 class UniverseWidget(ExatomicBox):
     """:class:`~exatomic.container.Universe` viewing widget."""
-
-
     def _frame_folder(self, nframes):
         playable = bool(nframes <= 1)
         flims = dict(min=0, max=nframes-1, step=1, value=0)
@@ -326,8 +332,10 @@ class UniverseWidget(ExatomicBox):
         content = _ListDict([
             ('playing', Play(disabled=playable, **flims)),
             ('scn_frame', IntSlider(description='Frame', **flims))])
+
         def _scn_frame(c):
             for scn in self.active(): scn.frame_idx = c.new
+
         content['scn_frame'].observe(_scn_frame, names='value')
         content['playing'].active = False
         jslink((content['playing'], 'value'),
@@ -345,20 +353,6 @@ class UniverseWidget(ExatomicBox):
         fopts.observe(_fopts, names='value')
         folder['fopts'] = fopts
         return folder
-
-<<<<<<< HEAD
-    def _tensor_folder(self, tensor):
-
-        tens = Button(description = ' Tensors', icon='bank')
-
-        content = _ListDict([
-            ('scale', FloatSlider(max=10.0, step=0.01))
-        ])
-
-        return folder(tens, content)
-
-=======
->>>>>>> 221c867ea31a1df133abe5a2466ca88666a21a00
 
     def _iso_folder(self, folder):
         isos = Button(description=' Isosurfaces', icon='cube')
@@ -521,16 +515,21 @@ class UniverseWidget(ExatomicBox):
                 ('center', cod_label),
                 ('coord', cbox)])
         return Folder(tens, content)
-        
 
-    def _init_gui(self, nframes=1, fields=None, tensors=None, **kwargs):
+    def _init_gui(self, **kwargs):
+        nframes = kwargs.pop("nframes", 1)
+        fields = kwargs.pop("fields", None)
+        tensors = kwargs.pop("tensors", None)
         mainopts = super(UniverseWidget, self)._init_gui(**kwargs)
         atoms = Button(description=' Fill', icon='adjust', layout=_wlo)
         axis = Button(description=' Axis', icon='arrows-alt', layout=_wlo)
+
         def _atom_3d(b):
             for scn in self.active(): scn.atom_3d = not scn.atom_3d
+
         def _axis(b):
             for scn in self.active(): scn.axis = scn.axis
+
         atoms.on_click(_atom_3d)
         axis.on_click(_axis)
         atoms.active = True
@@ -551,7 +550,6 @@ class UniverseWidget(ExatomicBox):
 
         return mainopts
 
-
     def __init__(self, *unis, **kwargs):
         scenekwargs = kwargs.pop('scenekwargs', {})
         scenekwargs.update({'uni': True, 'test': False})
@@ -563,7 +561,7 @@ class UniverseWidget(ExatomicBox):
             unargs, flds, tens = uni_traits(uni,
                                       atomcolors=atomcolors,
                                       atomradii=atomradii)
-            tensors = tens 
+            tensors = tens
             fields = flds if len(flds) > len(fields) else fields
             unargs.update(scenekwargs)
             masterkwargs.append(unargs)

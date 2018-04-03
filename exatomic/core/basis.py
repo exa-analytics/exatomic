@@ -13,7 +13,7 @@ also analytical and discrete manipulations of the basis set.
 See Also:
     For symbolic and discrete manipulations see :mod:`~exatomic.algorithms.basis`.
 """
-import os
+import os, six
 import numpy as np
 import pandas as pd
 from io import StringIO
@@ -74,6 +74,10 @@ class BasisSet(DataFrame):
     _categories = {'L': np.int64, 'set': np.int64, 'frame': np.int64, 'norm': str}
 
     @property
+    def _constructor(self):
+        return BasisSet
+
+    @property
     def lmax(self):
         return self['L'].cat.as_ordered().max()
 
@@ -82,15 +86,15 @@ class BasisSet(DataFrame):
             piv = ('alpha', 'shell', 'd')
             alphas = df.alpha.unique()
             piv = df.pivot(*piv).loc[alphas].fillna(0.)
-            return Shell(piv.values.flatten(), alphas, *piv.shape, df.L.values[0],
-                         #self.spherical, self.gaussian, None, None)
+            nprim, ncont = piv.shape
+            return Shell(piv.values.flatten(), alphas, nprim, ncont, df.L.values[0],
                          df.norm.values[0], self.gaussian, None, None)
         def _shell_sto(df):
             piv = ('alpha', 'shell', 'd')
             alphas = df.alpha.unique()
             piv = df.pivot(*piv).loc[alphas].fillna(0.)
-            return Shell(piv.values.flatten(), alphas, *piv.shape, df.L.values[0],
-                         #self.spherical, self.gaussian, df.r.values, df.n.values)
+            nprim, ncont = piv.shape
+            return Shell(piv.values.flatten(), alphas, nprim, ncont, df.L.values[0],
                         self.spherical, self.gaussian, df.r.values, df.n.values)
         if self.gaussian:
             if 'norm' not in self.columns: self.spherical_by_shell()
@@ -176,6 +180,10 @@ class BasisSetOrder(DataFrame):
     _cardinal = ('frame', np.int64)
     _categories = {'L': np.int64}
 
+    @property
+    def _constructor(self):
+        return BasisSetOrder
+
 
 class Overlap(DataFrame):
     """
@@ -202,6 +210,10 @@ class Overlap(DataFrame):
     _columns = ['chi0', 'chi1', 'coef', 'frame']
     _index = 'index'
 
+    @property
+    def _constructor(self):
+        return Overlap
+
     def square(self, frame=0, column='coef'):
         """Return a 'square' matrix DataFrame of the Overlap."""
         sq = pd.DataFrame(_square(self[column].values))
@@ -216,12 +228,15 @@ class Overlap(DataFrame):
         # Assuming source is a file of triangular elements of the overlap matrix
         if isinstance(source, np.ndarray):
             vals = source
-        elif isinstance(source, str):
+        elif isinstance(source, six.string_types):
             if os.sep in source:
                 vals = pd.read_csv(source, header=None).values.flatten()
             else:
             # except FileNotFoundError:
                 vals = pd.read_csv(StringIO(source), header=None).values.flatten()
+        else:
+            # Without a catchall, _tri_indices may through UnboundLocalError
+            raise TypeError("Invalid type for source: {}".format(type(source)))
         chi0, chi1 = _tri_indices(vals)
         return cls(pd.DataFrame.from_dict({'chi0': chi0,
                                            'chi1': chi1,

@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 # Copyright (c) 2015-2018, Exa Analytics Development Team
 # Distributed under the terms of the Apache License 2.0
-'''
+"""
 Orbital DataFrame
 ####################
 Orbital information. All of the dataframe structures and functions associated
@@ -10,24 +10,31 @@ summarizes information such as centers and energies. The Excitation table
 collects information about orbital excitations from time-dependent calculations.
 The convolve() bound method can be used to generate photoelectron spectroscopy
 and absorbance spectra.
+
 The MOMatrix table contains a C matrix as it is presented in quantum textbooks,
 stored in a columnar format. The bound method square() returns the
 matrix as one would write it out. This table should have dimensions
 N_basis_functions * N_basis_functions. The DensityMatrix table stores
 a triangular matrix in columnar format and contains a similar square()
 method to return the matrix as we see it on a piece of paper.
-'''
+"""
+from __future__ import absolute_import
+from __future__ import print_function
+from __future__ import division
 import numpy as np
 import pandas as pd
 from exa import DataFrame
 from exa.util.units import Energy
 from exatomic.algorithms.numerical import (density_from_momatrix,
-                                           density_as_square,
-                                           momatrix_as_square)
+                                           density_as_square)
+                                           #momatrix_as_square)
 from exatomic.core.field import AtomicField
 
 
 class _Convolve(DataFrame):
+    @property
+    def _constructor(self):
+        return _Convolve
 
     @staticmethod
     def _gauss(sigma, en, en0):
@@ -132,6 +139,9 @@ class Orbital(_Convolve):
     _cardinal = ('frame', np.int64)
     _categories = {'spin': np.int64, 'frame': np.int64, 'group': np.int64}
 
+    @property
+    def _constructor(self):
+        return Orbital
 
     def get_orbital(self, orb=-1, spin=0, index=None, group=None, frame=None):
         """
@@ -233,6 +243,10 @@ class Excitation(_Convolve):
     _cardinal = ('frame', np.int64)
     _categories = {'frame': np.int64, 'group': np.int64}
 
+    @property
+    def _constructor(self):
+        return Excitation
+
     @classmethod
     def from_universe(cls, uni, initial=None, final=None, spin=0):
         """
@@ -292,6 +306,10 @@ class MOMatrix(DataFrame):
     _cardinal = ('frame', np.int64)
     _index = 'index'
 
+    @property
+    def _constructor(self):
+        return MOMatrix
+
     def contributions(self, orbital, mocoefs='coef', tol=0.01, frame=0):
         """
         Returns a slice containing all non-negligible basis function
@@ -334,6 +352,10 @@ class DensityMatrix(DataFrame):
     _columns = ['chi0', 'chi1', 'coef']
     _cardinal = ('frame', np.int64)
     _index = 'index'
+
+    @property
+    def _constructor(self):
+        return DensityMatrix
 
     def square(self, frame=0):
         """Returns a square dataframe of the density matrix."""

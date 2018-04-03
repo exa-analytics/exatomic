@@ -8,9 +8,10 @@ Algorithms for generating indices.
 """
 import numpy as np
 from numba import jit
+from exatomic.base import nbche
 
 
-@jit(nopython=True, nogil=True, cache=True)
+@jit(nopython=True, nogil=True, cache=nbche)
 def starts_count(starts, count):
     """
     Generate sequential indices (for 2 dimensions) from starting values and
@@ -40,7 +41,7 @@ def starts_count(starts, count):
     return (outer, inner, index)
 
 
-@jit(nopython=True, nogil=True, cache=True)
+@jit(nopython=True, nogil=True, cache=nbche)
 def starts_counts(starts, counts):
     """
     Generate a pseudo-sequential array from initial values and counts.

@@ -54,10 +54,14 @@ class Atom(DataFrame):
                    'label': np.int64}
     _columns = ['x', 'y', 'z', 'symbol']
 
+    #@property
+    #def _constructor(self):
+    #    return Atom
+
     @property
     def nframes(self):
         """Return the total number of frames in the atom table."""
-        return self.frame.cat.as_ordered().max() + 1
+        return np.int64(self.frame.cat.as_ordered().max() + 1)
 
     @property
     def last_frame(self):
@@ -117,7 +121,7 @@ class Atom(DataFrame):
         stargs = {'columns': columns, 'header': False,
                   'index': False, 'formatters': formatter}
         t = 0
-        for f, grp in grps:
+        for _, grp in grps:
             if not len(grp): continue
             tru = (header or comments[t] or len(frame) > 1)
             hdr = '\n'.join([str(len(grp)), comments[t], '']) if tru else ''
@@ -176,6 +180,10 @@ class UnitAtom(SparseDataFrame):
     _index = 'atom'
     _columns = ['x', 'y', 'z']
 
+    @property
+    def _constructor(self):
+        return UnitAtom
+
     @classmethod
     def from_universe(cls, universe):
         if universe.periodic:
@@ -207,6 +215,10 @@ class ProjectedAtom(SparseDataFrame):
     _index = 'two'
     _columns = ['x', 'y', 'z']
 
+    @property
+    def _constructor(self):
+        return ProjectedAtom
+
 
 class VisualAtom(SparseDataFrame):
     """
@@ -230,6 +242,10 @@ class VisualAtom(SparseDataFrame):
             atom = atom[atom != universe.atom[['x', 'y', 'z']]].to_sparse()
             return cls(atom)
         raise PeriodicUniverseError()
+
+    @property
+    def _constructor(self):
+        return VisualAtom
 
 
 class Frequency(DataFrame):
@@ -256,8 +272,13 @@ class Frequency(DataFrame):
     | label             | int      | atomic identifier                         |
     +-------------------+----------+-------------------------------------------+
     """
+    @property
+    def _constructor(self):
+        return Frequency
+
     def displacement(self, freqdx):
         return self[self['freqdx'] == freqdx][['dx', 'dy', 'dz', 'symbol']]
+
 
 def add_vibrational_mode(uni, freqdx):
     displacements = uni.frequency.displacements(freqdx)

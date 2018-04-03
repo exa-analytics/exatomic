@@ -285,7 +285,7 @@ class Output(six.with_metaclass(OutMeta, Editor)):
             else:
                 for shell, grp in bas:
                     l = grp['L'].values[0]
-                    for L, ll, m, n in cartesian_ordering_function(l):
+                    for _, ll, m, n in cartesian_ordering_function(l):
                         bso[cnt] = (center, shell, l, ll, m, n)
                         cnt += 1
         bso = pd.DataFrame(bso)
@@ -441,8 +441,9 @@ class Ecce(six.with_metaclass(OutMeta, Editor)):
                                  self._rebmooccs, self._reemooccs)
         self.parse_momatrix()
 
-
-    def __init__(self, kind=None, spin=None, *args, **kwargs):
+    def __init__(self, *args, **kwargs):
+        kind = kwargs.pop("kind", None)
+        spin = kwargs.pop("spin", None)
         super().__init__(*args, **kwargs)
         self._kind = kind
         self._spin = spin

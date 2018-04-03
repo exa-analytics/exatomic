@@ -183,7 +183,8 @@ def _obtain_arrays(uni):
     cnt, ptr, xpc = 0, 1, 0
     for seht in uni.atom['set']:
         b = bases.get_group(seht)
-        for sh, grp in b.groupby('shell'):
+        #for sh, grp in b.groupby('shell'):
+        for _, grp in b.groupby('shell'):
             if len(grp) == 0: continue
             ncomps[cnt] = lml_count[grp['L'].values[0]]
             nprims[cnt] = grp.shape[0]
@@ -192,7 +193,8 @@ def _obtain_arrays(uni):
             cnt += 1
         for l, d, exp in zip(b['L'], b['d'], b['alpha']):
             expnts[xpc] = exp
-            for i, ang in enumerate(ds):
+            #   i, ang
+            for i, _ in enumerate(ds):
                 ds[i][xpc] = d if i == l else 0
             xpc += 1
     kwargs.update({'nprims': nprims, 'ncomps': ncomps,
@@ -217,7 +219,7 @@ class Input(six.with_metaclass(InpMeta, Editor)):
         while True:
             try:
                 ln = self[start].split()
-                int(ln[0]), float(ln[2])
+                _, _ = int(ln[0]), float(ln[2])
                 break
             except:
                 start += 1

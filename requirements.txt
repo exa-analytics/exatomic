@@ -1,3 +1,7 @@
+numpy
+pandas
+numba
+seaborn
 ipywidgets
-symengine
+sympy
 numexpr
