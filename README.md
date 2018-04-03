@@ -8,7 +8,9 @@
 
 # Installation
 [![conda Badge](https://anaconda.org/exaanalytics/exatomic/badges/installer/conda.svg)](https://conda.anaconda.org/exaanalytics)
+
 [![pypi badge](https://badge.fury.io/py/exatomic.svg)](https://badge.fury.io/py/exatomic)
+
 Exa is available through [anaconda](https://www.continuum.io/downloads)
 
     $ conda install -c exaanalytics exatomic
@@ -20,10 +22,11 @@ or [pypi](https://pypi.python.org/pypi).
 
 
 # Getting Started
-[![docs](https://readthedocs.org/projects/exatomic/badge/?version=latest)](https://exa-analytics.github.io/exatomic/)  
 [![gitter](https://badges.gitter.im/exa-analytics/exatomic.svg)](https://gitter.im/exa-analytics/exatomic)  
-Building the docs requires [sphinx](http://www.sphinx-doc.org/en/stable).
-On Linux or Mac OS:
+
+See [docs](https://exa-analytics.github.io/exatomic/) for usage. 
+
+Building the docs requires [sphinx](http://www.sphinx-doc.org/en/stable). On Linux or Mac:
 
     $ cd docs
     $ make html
@@ -36,8 +39,11 @@ On Windows:
 
 # Contributing
 [![Travis-CI](https://travis-ci.org/exa-analytics/exatomic.svg?branch=master)](https://travis-ci.org/exa-analytics/exatomic)  
+
 [![AppVeyor](https://ci.appveyor.com/api/projects/status/5palls4vcdipkv00?svg=true)](https://ci.appveyor.com/project/avmarchenko/exatomic)
+
 [![Coverage](https://coveralls.io/repos/github/exa-analytics/exatomic/badge.svg?branch=master)](https://coveralls.io/github/exa-analytics/exatomic?branch=master)  
+
 [![Codacy](https://api.codacy.com/project/badge/Grade/221e700665c74c85b8255e5b399490d4)](https://www.codacy.com/app/alexvmarch/exatomic?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=exa-analytics/exatomic&amp;utm_campaign=Badge_Grade)  
 
 For a development ready installation:
