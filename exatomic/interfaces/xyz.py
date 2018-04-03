@@ -86,7 +86,7 @@ class XYZ(six.with_metaclass(Meta, Editor)):
         """
         if trajectory:
             with open(path, 'w') as f:
-                f.write(six.u(self))
+                f.write(str(self))
         else:
             grps = self.atom.cardinal_groupby()
             n = len(str(self.frame.index.max()))

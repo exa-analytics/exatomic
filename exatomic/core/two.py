@@ -260,8 +260,7 @@ def _compute_bonds(atom, atom_two, bond_extra=0.45, **radii):
     radmap.update(radii)
     maxdr = (atom_two['atom0'].map(atom['symbol']).map(radmap) +
              atom_two['atom1'].map(atom['symbol']).map(radmap) + bond_extra)
-    atom_two['bond'] = False
-    atom_two.loc[atom_two['dr'] <= maxdr, 'bond'] = True
+    atom_two['bond'] = np.where(atom_two['dr'] <= maxdr, True, False)
 
 
 def _compute_bond_count(atom, atom_two):
