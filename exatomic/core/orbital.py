@@ -139,9 +139,9 @@ class Orbital(_Convolve):
     _cardinal = ('frame', np.int64)
     _categories = {'spin': np.int64, 'frame': np.int64, 'group': np.int64}
 
-    @property
-    def _constructor(self):
-        return Orbital
+    #@property
+    #def _constructor(self):
+    #    return Orbital
 
     def get_orbital(self, orb=-1, spin=0, index=None, group=None, frame=None):
         """
@@ -243,9 +243,9 @@ class Excitation(_Convolve):
     _cardinal = ('frame', np.int64)
     _categories = {'frame': np.int64, 'group': np.int64}
 
-    @property
-    def _constructor(self):
-        return Excitation
+    #@property
+    #def _constructor(self):
+    #    return Excitation
 
     @classmethod
     def from_universe(cls, uni, initial=None, final=None, spin=0):
@@ -306,9 +306,9 @@ class MOMatrix(DataFrame):
     _cardinal = ('frame', np.int64)
     _index = 'index'
 
-    @property
-    def _constructor(self):
-        return MOMatrix
+    #@property
+    #def _constructor(self):
+    #    return MOMatrix
 
     def contributions(self, orbital, mocoefs='coef', tol=0.01, frame=0):
         """
@@ -353,9 +353,9 @@ class DensityMatrix(DataFrame):
     _cardinal = ('frame', np.int64)
     _index = 'index'
 
-    @property
-    def _constructor(self):
-        return DensityMatrix
+    #@property
+    #def _constructor(self):
+    #    return DensityMatrix
 
     def square(self, frame=0):
         """Returns a square dataframe of the density matrix."""

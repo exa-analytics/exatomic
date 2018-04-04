@@ -74,9 +74,9 @@ class _Matrix(DataFrame):
     _index = 'index'
     _categories = {'frame': np.int64}
 
-    @property
-    def _constructor(self):
-        return _Matrix
+    #@property
+    #def _constructor(self):
+    #    return _Matrix
 
     @property
     def indices(self):
@@ -95,9 +95,9 @@ class _Matrix(DataFrame):
 
 class _Symmetric(_Matrix):
     """Base class for symmetric matrices."""
-    @property
-    def _constructor(self):
-        return _Symmetric
+    #@property
+    #def _constructor(self):
+    #    return _Symmetric
 
     def square(self, column=None):
         """Return a square DataFrame of the matrix."""
@@ -126,9 +126,9 @@ class _Symmetric(_Matrix):
 
 class _Square(_Matrix):
     """Base class for square matrices."""
-    @property
-    def _constructor(self):
-        return _Square
+    #@property
+    #def _constructor(self):
+    #    return _Square
 
     def square(self, column=None):
         """Return a square DataFrame of the square matrix."""
@@ -179,9 +179,9 @@ class Triangle(_Symmetric):
     """
     _columns = ['chi0', 'chi1']
 
-    @property
-    def _constructor(self):
-        return Triangle
+    #@property
+    #def _constructor(self):
+    #    return Triangle
 
     def merge(self, other, column=None):
         """
