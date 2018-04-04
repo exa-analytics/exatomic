@@ -180,9 +180,9 @@ class UnitAtom(SparseDataFrame):
     _index = 'atom'
     _columns = ['x', 'y', 'z']
 
-    @property
-    def _constructor(self):
-        return UnitAtom
+    #@property
+    #def _constructor(self):
+    #    return UnitAtom
 
     @classmethod
     def from_universe(cls, universe):
@@ -215,9 +215,9 @@ class ProjectedAtom(SparseDataFrame):
     _index = 'two'
     _columns = ['x', 'y', 'z']
 
-    @property
-    def _constructor(self):
-        return ProjectedAtom
+    #@property
+    #def _constructor(self):
+    #    return ProjectedAtom
 
 
 class VisualAtom(SparseDataFrame):
@@ -243,9 +243,9 @@ class VisualAtom(SparseDataFrame):
             return cls(atom)
         raise PeriodicUniverseError()
 
-    @property
-    def _constructor(self):
-        return VisualAtom
+    #@property
+    #def _constructor(self):
+    #    return VisualAtom
 
 
 class Frequency(DataFrame):
@@ -272,9 +272,9 @@ class Frequency(DataFrame):
     | label             | int      | atomic identifier                         |
     +-------------------+----------+-------------------------------------------+
     """
-    @property
-    def _constructor(self):
-        return Frequency
+    #@property
+    #def _constructor(self):
+    #    return Frequency
 
     def displacement(self, freqdx):
         return self[self['freqdx'] == freqdx][['dx', 'dy', 'dz', 'symbol']]

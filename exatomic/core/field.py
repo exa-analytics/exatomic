@@ -17,9 +17,9 @@ from exa import DataFrame, Field, Series
 class AField(DataFrame):
     _columns = ['nx', 'ny', 'nz', 'ox', 'oy', 'oz', 'dxi', 'dxj', 'dxk',
                 'dyi', 'dyj', 'dyk', 'dzi', 'dzj', 'dzk', 'frame']
-    @property
-    def _constructor(self):
-        return AField
+    #@property
+    #def _constructor(self):
+    #    return AField
 
     def copy(self, *args, **kwargs):
         """Make a copy of this object."""
@@ -58,9 +58,9 @@ class AtomicField(Field):
     _columns = ['nx', 'ny', 'nz', 'ox', 'oy', 'oz', 'dxi', 'dxj', 'dxk',
                 'dyi', 'dyj', 'dyk', 'dzi', 'dzj', 'dzk', 'frame']
 
-    @property
-    def _constructor(self):
-        return AtomicField
+    #@property
+    #def _constructor(self):
+    #    return AtomicField
 
     @property
     def nfields(self):

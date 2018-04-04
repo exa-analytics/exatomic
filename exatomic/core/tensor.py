@@ -43,9 +43,9 @@ class Tensor(DataFrame):
                 'frame','atom','label']
     _categories = {'frame': np.int64, 'label': str}
 
-    @property
-    def _constructor(self):
-        return Tensor
+    #@property
+    #def _constructor(self):
+    #    return Tensor
 
     @classmethod
     def from_file(cls, filename):
