@@ -24,17 +24,9 @@ for (var m in loaded) {
         for (var item in mod) {
             if (mod.hasOwnProperty(item)) {
                 module.exports[item] = mod[item];
-            };
-        };
-    };
-};
+            }
+        }
+    }
+}
 
-// var _ = require("underscore");
-//module.exports = _.extend({},
-//    require("./base.js"),
-//    require("./utils.js"),
-//    require("./appthree.js"),
-//    require("./widgets.js"),
-//    require("./tensor.js")
-//);
 module.exports["version"] = require("../package.json").version;

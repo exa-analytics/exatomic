@@ -247,7 +247,7 @@ class Overlap(DataFrame):
     def from_square(cls, df):
         ndim = df.shape[0]
         try: arr = df.values
-        except: arr = df
+        except AttributeError: arr = df
         arlen = ndim * (ndim + 1) // 2
         ret = np.empty((arlen,), dtype=[('chi0', 'i8'),
                                         ('chi1', 'i8'),

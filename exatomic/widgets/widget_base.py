@@ -20,7 +20,7 @@ from ipywidgets import (
 
 from exatomic import Universe, __js_version__
 #from .traits import uni_traits
-#from .widget_utils import (_glo, _flo, _wlo, _hboxlo, 
+#from .widget_utils import (_glo, _flo, _wlo, _hboxlo,
 from .widget_utils import (_flo, _wlo, _hboxlo,
                            _vboxlo, _bboxlo, _ListDict,
                            Folder, GUIBox, gui_field_widgets)
@@ -228,10 +228,10 @@ class ExatomicBox(Box):
         """Shut down all active widgets within the container."""
         for widget in self._controls.values():
             try: widget._close()
-            except: widget.close()
+            except AttributeError: widget.close()
         for widget in self.scenes:
             try: widget._close()
-            except: widget.close()
+            except AttributeError: widget.close()
         self.close()
 
     def _get(self, active=True, keys=False):

@@ -210,8 +210,10 @@ class Symbolic(object):
         Returns
             expr (symbolic): The symbolic derivative
         """
-        assert cart in ['x', 'y', 'z']
-        assert isinstance(order, int) and order > 0
+        if cart not in ['x', 'y', 'z']:
+            raise ValueError('cart must be in "xyz".')
+        if not isinstance(order, int) or order < 0:
+            raise ValueError('order must be non-negative integer.')
         expr = self._expr
         for _ in range(order):
             expr = expr.diff('_'+cart)

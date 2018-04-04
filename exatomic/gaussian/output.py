@@ -283,7 +283,7 @@ class Output(six.with_metaclass(GauMeta, Editor)):
         try:
             ens = ens if len(self.frame) == len(ens) else ens[-len(self.frame):]
             self.frame['E_tot'] = ens
-        except:
+        except ValueError:
             pass
         # We will assume number of electrons doesn't change per frame
         ae, x, x, be, x, x = found[_realphaelec][0][1].split()

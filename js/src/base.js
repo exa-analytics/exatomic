@@ -53,8 +53,8 @@ var ExatomicBoxView = control.BoxView.extend({
                         for (var j = 0; j < scns.length; j++) {
                             subpromises.push(scns[j]);
                         };
-                    };
-                    return Promise.all(subpromises).then(p => p);
+                    }
+                    return Promise.all(subpromises).then((p) => p);
                 });
                 return promises;
             });
@@ -71,26 +71,25 @@ var ExatomicBoxView = control.BoxView.extend({
         //      :: just set camera.rotation (and camera.zoom??) to
         //      :: copy original camera.
         //      :: e.g. -- camera[i].rotation.copy(camera[0])
+        var i, app;
         var that = this;
         this.scene_ps.then(function(views) {
             if (that.model.get("linked")) {
                 var idxs = that.model.get("active_scene_indices");
                 var controls = views[idxs[0]].app3d.controls;
                 var camera = views[idxs[0]].app3d.camera;
-                for (var i = 1; i < idxs.length; i++) {
-                    var a = views[idxs[i]].app3d;
-                    a.camera = camera;
-                    a.controls = a.init_controls();
-                    a.controls.addEventListener("change", a.render.bind(a));
+                for (i = 1; i < idxs.length; i++) {
+                    app = views[idxs[i]].app3d;
+                    app.camera = camera;
+                    app.controls = app.init_controls();
+                    app.controls.addEventListener("change", app.render.bind(app));
                 };
             } else {
-                // var camera = views[0].app3d.camera;
-                for (var i = 0; i < views.length; i++) {
-                    var a = views[i].app3d;
-                    // var camera = a.camera;
-                    a.camera = a.camera.clone();
-                    a.controls = a.init_controls();
-                    a.controls.addEventListener("change", a.render.bind(a));
+                for (i = 0; i < views.length; i++) {
+                    app = views[i].app3d;
+                    app.camera = app.camera.clone();
+                    app.controls = app.init_controls();
+                    app.controls.addEventListener("change", app.render.bind(app));
                 };
             };
         });
@@ -168,17 +167,18 @@ var ExatomicSceneView = widgets.DOMWidgetView.extend({
     add_field: function() {
         this.app3d.clear_meshes("field");
         if (this.model.get("uni")) {
+            var name, tf;
             var field = this.model.get("field");
             var kind = this.model.get("field_kind");
             var ars = utils.gen_field_arrays(this.get_fps());
             var func = utils[field];
             if (field === "SolidHarmonic") {
                 var fml = this.model.get("field_ml");
-                var tf = func(ars, kind, fml);
-                var name = "Sol.Har.," + kind + "," + fml;
+                tf = func(ars, kind, fml);
+                name = "Sol.Har.," + kind + "," + fml;
             } else {
-                var tf = func(ars, kind);
-                var name = field + "," + kind;
+                tf = func(ars, kind);
+                name = field + "," + kind;
             };
             this.app3d.meshes["field"] = this.app3d.add_scalar_field(
                 tf, this.model.get("field_iso"),
