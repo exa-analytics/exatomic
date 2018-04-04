@@ -221,8 +221,6 @@ class Shell(object):
         rs (np.ndarray): 1D-array of radial exponents (default None)
         ns (np.ndarray): additional normalization factors (default None)
     """
-    def __init__(self, coef, alphas, nprim, ncont, L,
-                 spherical, gaussian, rs=None, ns=None):
 
     def dims(self):
         """Mimics numpy.ndarray shape property but as a method."""
