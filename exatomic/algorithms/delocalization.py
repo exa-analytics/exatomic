@@ -86,12 +86,12 @@ def compute_curvature(*args, **kwargs):
     Computes the curvature of the energy of a system as a function
     of the number of electrons in the system E(N).
 
-    Args
-        args (exatomic.container.Universes): in ascending electron order
+    Args:
+        args (:class:`exatomic.core.universe.Universe`): unis in ascending electron order
         neut (int): index of args corresponding to the zero energy system
         extras (bool): if True, attach the raw data to df before returning
 
-    Returns
+    Returns:
         df (pd.DataFrame): The energy as a function of N
     """
     neut = kwargs.pop('neut', None)
@@ -216,14 +216,14 @@ def tuning_results(adir, code='gaussian', ip=False, ea=False,
     Given a directory containing output files with systematic file names,
     return a dataframe containing summary information about the calculations.
 
-    Args
+    Args:
         adir (str): path to the directory containing outputs
         ip (bool): if true only consider (N-1, N) systems
         ea (bool): if true only consider (N, N+1) systems
         deep (bool): if true must have (N-2, N-1, N, N+1, N+2) systems
         ext (str): output file extension
 
-    Returns
+    Returns:
         data (pd.DataFrame): summarized results
     """
     if ip and ea: raise Exception("Can't do just ip as well as just ea.")

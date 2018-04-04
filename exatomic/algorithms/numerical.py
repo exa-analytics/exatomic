@@ -7,7 +7,6 @@ Numerical methods and classes
 Everything in this module is implemented in numba.
 """
 import numpy as np
-#import pandas as pd
 from numba import (jit, jitclass, deferred_type,
                    optional, int64, float64, boolean)
 from exatomic.base import nbche
@@ -207,10 +206,30 @@ shell_type = deferred_type()
            ('alphas', float64[:]), ('_coef', float64[:]),
            ('rs', optional(int64[:])), ('ns', optional(int64[:]))])
 class Shell(object):
+    """The primary object used for all things basis set related.
+    Due to limitations in numba, contraction coefficients are stored
+    as a 1D-array and reshaped when calling contract methods.
+
+    Args:
+        coef (np.ndarray): 1D-array of contraction coefficients
+        alphas (np.ndarray): 1D-array of primitive exponents
+        nprim (int): number of primitives in the shell
+        ncont (int): number of contracted functions in the shell
+        L (int): angular momentum quantum number
+        spherical (bool): whether angular momentum is expanded in linearly independent set
+        gaussian (bool): whether exponential dependence is r or r2
+        rs (np.ndarray): 1D-array of radial exponents (default None)
+        ns (np.ndarray): additional normalization factors (default None)
+    """
+    def __init__(self, coef, alphas, nprim, ncont, L,
+                 spherical, gaussian, rs=None, ns=None):
+
     def dims(self):
+        """Mimics numpy.ndarray shape property but as a method."""
         return self.nprim, self.ncont
 
     def contract(self):
+        """Reshapes contraction coefficients into (nprim, ncont) array."""
         x = 0
         rect = np.empty((int64(self.nprim), int64(self.ncont)))
         for i in range(self.nprim):
@@ -220,6 +239,7 @@ class Shell(object):
         return rect
 
     def _prim_sphr_norm(self):
+        """Deprecated."""
         Ns = np.empty(len(self.alphas), dtype=np.float64)
         for i, a in enumerate(self.alphas):
             prefac = (2 / np.pi) ** (0.75)
@@ -228,12 +248,8 @@ class Shell(object):
             Ns[i] = prefac * numer / denom
         return Ns
 
-    def norm_plot(self):
-        P = self._prim_sphr_norm()
-        N = np.ones(1, dtype=np.float64)
-        return np.outer(P, N) * self.contract()
-
     def norm_contract(self):
+        """Determine the correct normalization procedure and contract."""
         if not self.gaussian:
             return self._sto_norm_contract()
         if self.spherical:
@@ -241,21 +257,26 @@ class Shell(object):
         return self._cart_norm_contract()
 
     def enum_cartesian(self):
+        """Iterate over cartesian powers in L."""
         return _enum_cartesian(self.L)
 
     def enum_spherical(self):
+        """Iterate over ml degeneracy in L."""
         return _enum_spherical(self.L)
 
     def _cart_norm_contract(self):
+        """Cartesian gaussian normalization."""
         # float is (2 * np.pi) ** -0.75
         return self._norm_cont_kernel(0.251979435538381)
 
     def _sphr_norm_contract(self):
+        """Spherical gaussian normalization."""
         # float is (2 / np.pi) ** 0.25
         prefact = 0.893243841738002 / np.sqrt(dfac21(self.L))
         return self._norm_cont_kernel(prefact)
 
     def _norm_cont_kernel(self, pre):
+        """Gaussian normalization."""
         coef = self.contract()
         ltot = self.L + 1.5
         lhaf = ltot / 2.
@@ -273,10 +294,12 @@ class Shell(object):
         return coef
 
     def _sto_norm_contract(self):
+        """Slater-type orbital normalization and reshaping."""
         # Assumes no contractions
         return np.array(self._sto_norm())*self.contract()
 
     def _sto_norm(self):
+        """Slater-type orbital normalization."""
         return [((2*a)**n*((2*a)/fac(2*n))**0.5,) for a, n in zip(self.alphas, self.ns)]
 
     def __init__(self, coef, alphas, nprim, ncont, L,

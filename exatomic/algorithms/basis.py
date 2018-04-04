@@ -56,6 +56,11 @@ gaussian_cartesian[2] = np.array([[2, 0, 0], [0, 2, 0], [0, 0, 2],
 
 
 def _hermite_gaussians(lmax):
+    """Symbolic hermite gaussians up to order lmax.
+
+    Args:
+        lmax (int): highest order angular momentum quantum number
+    """
     order = 2 * lmax + 1
     hgs = OrderedDict()
     der = exp(-_x ** 2)
@@ -66,13 +71,29 @@ def _hermite_gaussians(lmax):
 
 
 def gen_enum_cartesian(lmax):
+    """Cartesian powers in the order expected for overlap
+    computation up to order lmax.
+
+    Args:
+        lmax (int): highest order angular momentum quantum number
+    """
     return OrderedDict([(L, np.array([[l, L - l - n, n]
-                        for l in range(L, -1, -1)
-                        for n in range(L + 1 - l)]))
+                                      for l in range(L, -1, -1)
+                                      for n in range(L + 1 - l)]))
                         for L in range(lmax + 1)])
 
 
 def spherical_harmonics(lmax):
+    """Symbolic real spherical harmonics up to order lmax.
+
+    .. code-block:: python
+
+        sh = spherical_harmonics(6)  # Inclusive, so computes up to l = 6
+        sh[3][-3]                    # symbolic f-phi angular function
+
+    Args:
+        lmax (int): highest order angular momentum quantum number
+    """
     phase = {m: (-1) ** m for m in range(lmax + 1)}
     facts = {n: fac(n) for n in range(2 * lmax + 1)}
     sh = OrderedDict()
@@ -102,8 +123,16 @@ def spherical_harmonics(lmax):
 
 
 def solid_harmonics(lmax):
-    """Symbolic, recursive solid harmonics for the angular component
-    of a wave function."""
+    """Symbolic real solid harmonics up to order lmax.
+
+    .. code-block:: python
+
+        sh = solid_harmonics(6)  # Inclusive, so computes up to l = 6
+        sh[3][-3]                # symbolic f-phi angular function
+
+    Args:
+        lmax (int): highest order angular momentum quantum number
+    """
     def _top_sh(lp, kr, sp, sm):
         return ((2 ** kr * (2 * lp + 1) / (2 * lp + 2)) ** 0.5 *
                 (_x * sp - (1 - kr) * _y * sm))
@@ -130,6 +159,22 @@ def solid_harmonics(lmax):
 
 
 def car2sph(sh, cart, orderedp=True):
+    """Cartesian to spherical transform matrices.
+
+    .. code-block:: python
+
+        sh = solid_harmonics(8)        # symbolic solid harmonics
+        cart = gen_enum_cartesian(8)   # cartesian powers in a defined order
+        c2s = car2sph(sh, cart)        # dictionary of {l: transform_matrix}
+
+    Args:
+        sh (OrderedDict): symbolic solid harmonics
+        cart (OrderedDict): cartesian powers in a defined order
+        orderedp (bool): order l=1 as ['x', 'y', 'z'], not [-1, 0, 1] (default True)
+
+    Returns:
+        c2s (OrderedDict): cartesian to spherical transform matrices
+    """
     c2s = OrderedDict([(L, np.zeros(((L + 1) * (L + 2) // 2, 2 * L + 1)))
                       for L in range(max(sh.keys()) + 1)])
     for L, mls in sh.items():
@@ -149,9 +194,11 @@ def car2sph(sh, cart, orderedp=True):
 
 
 class Symbolic(object):
-    @property
-    def _constructor(self):
-        return Symbolic
+    """
+    A small wrapper around sympy or symengine symbolic expressions.
+    Allows for evaluation of symbolic derivatives and numerical evaluation
+    of expressions on a numerical grid.
+    """
 
     def diff(self, cart='x', order=1):
         """Compute the nth order derivative symbolically with respect to cart.
@@ -171,6 +218,19 @@ class Symbolic(object):
         return Symbolic(expr)
 
     def evaluate(self, xs, ys, zs, arr=None, alpha=None):
+        """Evaluate symbolic expression on a numerical grid.
+
+        Args:
+            xs (np.ndarray): 1D-array of x values
+            ys (np.ndarray): 1D-array of y values
+            zs (np.ndarray): 1D-array of z values
+            arr (np.ndarray): additional 1D-array to multiply expression by
+            alpha (float): multiply expression by gaussian with exponent alpha
+
+        Note:
+            See :meth:`exatomic.algorithms.orbital_util.numerical_grid_from_field_params`
+            for grid construction details.
+        """
         subs = {_x: 'xs', _y: 'ys', _z: 'zs'}
         if arr is not None:
             return evaluate('arr * ({})'.format(str(self._expr.subs(subs))))
@@ -191,17 +251,13 @@ class Basis(object):
     symengine and numexpr, using values extracted from the numerical Shell
     jitclasses, to evaluate basis functions on a numerical grid.
 
-    Args
-        uni (exatomic.core.universe.Universe): a universe with basis set
-        frame (int): frame corresponding to basis set (default=0)
+    Args:
+        uni (:class:`exatomic.core.universe.Universe`): a universe with basis set
+        frame (int): frame corresponding to basis set (default 0)
         cartp (bool): forces p function ordering as (x, y, z) not (-1, 0, 1)
     """
     # Unscaled solid harmonics
     _sh = solid_harmonics(6)
-
-    @property
-    def _constructor(self):
-        return Basis
 
     def integrals(self):
         """Compute the overlap matrix using primitive cartesian integrals."""
@@ -214,19 +270,44 @@ class Basis(object):
                                   'frame': 0, 'coef': ovl})
 
     def enum_shell(self, shl):
-        """Return a generator over angular momentum degrees of freedom."""
+        """Return a generator over angular momentum degrees of freedom.
+
+        Args:
+            shl (:class:`exatomic.algorithms.numerical.Shell`): basis set shell
+        """
         if shl.spherical:
             return shl.enum_spherical()
         return shl.enum_cartesian()
 
     def evaluate(self, xs, ys, zs):
-        """Evaluate basis functions on a numerical grid."""
+        """Evaluate basis functions on a numerical grid.
+
+        Args:
+            xs (np.ndarray): 1D-array of x values
+            ys (np.ndarray): 1D-array of y values
+            zs (np.ndarray): 1D-array of z values
+
+        Note:
+            See :meth:`exatomic.algorithms.orbital_util.numerical_grid_from_field_params`
+            for grid construction details.
+        """
         if not self._gaussian:
             return self._evaluate_sto(xs, ys, zs)
         return self._evaluate_gau(xs, ys, zs)
 
     def evaluate_diff(self, xs, ys, zs, cart='x'):
-        """Evaluate basis function derivatives on a numerical grid."""
+        """Evaluate basis function derivatives on a numerical grid.
+
+        Args:
+            xs (np.ndarray): 1D-array of x values
+            ys (np.ndarray): 1D-array of y values
+            zs (np.ndarray): 1D-array of z values
+            cart (str): derivative with respect to cart (in ['x', 'y', 'z'])
+
+        Note:
+            See :meth:`exatomic.algorithms.orbital_util.numerical_grid_from_field_params`
+            for grid construction details.
+        """
         if not self._gaussian:
             return self._evaluate_diff_sto(xs, ys, zs, cart)
         return self._evaluate_diff_gau(xs, ys, zs, cart)
@@ -262,7 +343,6 @@ class Basis(object):
     def _evaluate_sto(self, xs, ys, zs):
         """Evaluates a full STO basis set and returns a numpy array."""
         cnt, flds = 0, np.empty((len(self), len(xs)))
-        #for i, ax, ay, az, ishl in _iter_atom_shells(self._ptrs, self._xyzs, *self._shells):
         for _, ax, ay, az, ishl in _iter_atom_shells(self._ptrs, self._xyzs, *self._shells):
             norm = ishl.norm_contract()
             for mag in self.enum_shell(ishl):
@@ -295,7 +375,6 @@ class Basis(object):
         """Evaluates the derivatives of a full Gaussian basis
         set and returns a numpy array."""
         cnt, flds = 0, np.empty((len(self), len(xs)))
-        #for i, ax, ay, az, ishl in _iter_atom_shells(self._ptrs, self._xyzs, *self._shells):
         for _, ax, ay, az, ishl in _iter_atom_shells(self._ptrs, self._xyzs, *self._shells):
             norm = ishl.norm_contract()
             for mag in self.enum_shell(ishl):

@@ -16,7 +16,7 @@ from exatomic.base import sym2radius, sym2color
 
 
 
-def atom_traits(df, atomcolors=None, atomradii=None):
+def atom_traits(df, atomcolors=None, atomradii=None, atomlabels=None):
     """
     Get atom table traits. Atomic size (using the covalent radius) and atom
     colors (using the common `Jmol`_ color scheme) are packed as dicts and
@@ -26,7 +26,9 @@ def atom_traits(df, atomcolors=None, atomradii=None):
     """
     # Implement logic to automatically choose
     # whether or not to create labels
-    labels = True
+    if atomlabels is not None: labels = atomlabels
+    elif df.shape[0] > 1000: labels = False
+    else: labels = True
     atomcolors = pd.Series() if atomcolors is None else pd.Series(atomcolors)
     atomradii = pd.Series() if atomradii is None else pd.Series(atomradii)
     traits = {}
@@ -72,25 +74,16 @@ def field_traits(df):
     df['nx'] = df['nx'].astype(int)
     df['ny'] = df['ny'].astype(int)
     df['nz'] = df['nz'].astype(int)
-    if not all((col in df.columns for col in ['fx', 'fy', 'fz'])):
-        for d, l in [('x', 'i'), ('y', 'j'), ('z', 'k')]:
-            df['f'+d] = df['o'+d] + (df['n'+d] - 1) * df['d'+d+l]
     grps = df.groupby('frame')
     fps = grps.apply(lambda x: x[['ox', 'oy', 'oz',
                                   'nx', 'ny', 'nz',
                                   'fx', 'fy', 'fz']].T.to_dict()).to_dict()
     try: idxs = list(map(list, grps.groups.values()))
     except: idxs = [list(grp.index) for i, grp in grps]
-    #vals = [f.tolist() for f in df.field_values]
-    # shape0 = len(df.field_values)
-    # shape1 = len(df.field_values[0])
-    # vals = np.empty((shape0, shape1), dtype=np.float32)
-    # for i in range(shape0):
-    #     vals[i] = df.field_values[i].values
-    # '[' + ','.join(listcomp) + ']'
-    vals = [f.to_json(orient='values',
-                      double_precision=5) for f in df.field_values]
-    return {'field_v': vals, 'field_i': idxs, 'field_p': fps}
+    return {'field_v': [f.to_json(orient='values',
+                        double_precision=5) for f in df.field_values],
+            'field_i': idxs,
+            'field_p': fps}
 
 #def two_traits(df, lbls):
 def two_traits(uni):
@@ -136,22 +129,18 @@ def tensor_traits(uni):
     return {'tensor_d': grps.apply(lambda x: x.T.to_dict()).to_dict(), 'tensor_i': idxs}
 
 
-def uni_traits(uni, atomcolors=None, atomradii=None):
+def uni_traits(uni, atomcolors=None, atomradii=None, atomlabels=None):
     """Get Universe traits."""
     unargs = {}
     fields, tensors = [], None
     if hasattr(uni, 'atom'):
-        #print('atom')
-        unargs.update(atom_traits(uni.atom, atomcolors, atomradii))
+        unargs.update(atom_traits(uni.atom, atomcolors, atomradii, atomlabels))
     if hasattr(uni, 'atom_two'):
-        #print('atom_two')
         unargs.update(two_traits(uni))
     if hasattr(uni, 'field'):
         unargs.update(field_traits(uni.field))
         fields = ['null'] + unargs['field_i'][0]
     if hasattr(uni, 'tensor'):
-        #unargs.update({'tensor_d': uni.tensor.groupby('frame').apply(
-        #    lambda x: x.T.to_dict()).to_dict()})
         unargs.update(tensor_traits(uni))
         tensors = unargs['tensor_i'][0]
     return unargs, fields, tensors

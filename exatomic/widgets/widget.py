@@ -107,7 +107,7 @@ class TensorContainer(ExatomicBox):
             scn.tyz = self._df.loc[0,'yz']
             scn.tzx = self._df.loc[0,'zx']
             scn.tzy = self._df.loc[0,'zy']
-            scn.tzz = self._df.loc[0,'zz'] 
+            scn.tzz = self._df.loc[0,'zz']
         xs = [FloatText(value=scn.txx , layout=alo),
               FloatText(value=scn.txy , layout=alo),
               FloatText(value=scn.txz , layout=alo)]
@@ -164,14 +164,14 @@ class TensorContainer(ExatomicBox):
                         ys[j].value = self._df.loc[tdx,bra+ket]
                     elif i == 2:
                         zs[j].value = self._df.loc[tdx,bra+ket]
-            
+
         def _geom(b):
             for scn in self.active(): scn.geom = not scn.geom
 
         def _tdx(c):
             for scn in self.active(): scn.tdx = c.new
             _change_tensor(c.new)
-                        
+
         geom.on_click(_geom)
         tensorIndex.observe(_tdx, names="value")
         mainopts.update([('geom', geom),
@@ -499,7 +499,7 @@ class UniverseWidget(ExatomicBox):
 #            tensorIndex.value = tensorIndex.options[0]
 #            tdx = tensorIndex.value
 #            _changeTensor(tensor, tdx)
-            
+
         tens.on_click(_tens)
         scale.observe(_scale, names='value')
         tensorIndex.observe(_idx, names='value')
@@ -544,7 +544,7 @@ class UniverseWidget(ExatomicBox):
             self._contour_folder(folder)
             folder.pop('fopts')
             mainopts.update([('field', folder)])
-        
+
         if tensors is not None:
             mainopts.update([('tensor', self._tensor_folder())])
 
@@ -555,12 +555,14 @@ class UniverseWidget(ExatomicBox):
         scenekwargs.update({'uni': True, 'test': False})
         atomcolors = scenekwargs.get('atomcolors', None)
         atomradii = scenekwargs.get('atomradii', None)
+        atomlabels = scenekwargs.get('atomlabels', None)
         fields, masterkwargs = [], []
         tensors = []
         for uni in unis:
             unargs, flds, tens = uni_traits(uni,
-                                      atomcolors=atomcolors,
-                                      atomradii=atomradii)
+                                            atomcolors=atomcolors,
+                                            atomradii=atomradii,
+                                            atomlabels=atomlabels)
             tensors = tens
             fields = flds if len(flds) > len(fields) else fields
             unargs.update(scenekwargs)

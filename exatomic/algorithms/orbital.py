@@ -8,10 +8,8 @@ Building discrete molecular orbitals (for visualization) requires a complex
 set of operations that are provided by this module and wrapped into a clean API.
 """
 import numpy as np
-#from numba import jit
 from datetime import datetime
 from exatomic.base import sym2z
-#from exatomic.core.field import AtomicField
 from .orbital_util import (
     numerical_grid_from_field_params, _determine_fps,
     _determine_vector, _compute_orb_ang_mom, _compute_current_density,
@@ -30,16 +28,16 @@ def add_molecular_orbitals(uni, field_params=None, mocoefs=None,
     sum of Z (Zeff) of the atoms in the atom table divided by two;
     roughly (HOMO-5,LUMO+7).
 
-    Args
-        uni (:class:`~exatomic.container.Universe`): a universe
+    Args:
+        uni (:class:`~exatomic.core.universe.Universe`): a universe
         field_params (dict): See :func:`~exatomic.algorithms.orbital_util.make_fps`
         mocoefs (str): column in uni.momatrix (default 'coef')
-        vector (int, list, range, np.array): the MO vectors to evaluate
+        vector (int, list, range, np.ndarray): the MO vectors to evaluate
         inplace (bool): if False, return the field obj instead of modifying uni
         replace (bool): if False, do not delete any previous fields
 
     Warning:
-       If replace is True, removes any fields previously attached to the universe
+        If replace is True, removes any fields previously attached to the universe
     """
     if verbose:
         print('Warning: not extensively validated.' \
@@ -76,7 +74,7 @@ def add_density(uni, field_params=None, mocoefs=None, orbocc=None,
     momatrix attributes to use this function.  Compute a density
     with C matrix mocoefs and occupation vector orbocc.
 
-    Args
+    Args:
         uni (:class:`~exatomic.container.Universe`): a universe
         field_params (dict): See :func:`~exatomic.algorithms.orbital_util.make_fps`
         mocoefs (str): column in uni.momatrix (default 'coef')

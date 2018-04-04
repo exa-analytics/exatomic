@@ -157,6 +157,16 @@ class Universe(six.with_metaclass(Meta, Container)):
         self.basis_functions = Basis(self)
 
     def enumerate_shells(self, frame=0):
+        """Extract minimal information from the universe to be used in
+        numba-compiled numerical procedures.
+
+        .. code-block:: python
+
+            pointers, atoms, shells = uni.enumerate_shells()
+
+        Args:
+            frame (int): state of the universe (default 0)
+        """
         atom = self.atom.groupby('frame').get_group(frame)
         if self.meta['program'] != 'molcas':
             print('Warning: Check spherical shell parameter for {} '
@@ -169,7 +179,20 @@ class Universe(six.with_metaclass(Meta, Container)):
         return ptrs, atom[['x', 'y', 'z']].values, shls[0].values
 
     def add_field(self, field):
-        """Adds a field object to the universe."""
+        """Adds a field object to the universe.
+
+        .. code-block:: python
+
+            # Assuming field[n] is of type AtomicField
+            uni.add_field(field)
+            uni.add_field([field1, field2])
+
+        Args:
+            field (iter, :class:`exatomic.core.field.AtomicField`): field(s) to add
+
+        Warning:
+            Adding a large number of (high resolution) fields may impact performance.
+        """
         self._traits_need_update = True
         if isinstance(field, AtomicField):
             if not hasattr(self, 'field'):
@@ -198,15 +221,35 @@ class Universe(six.with_metaclass(Meta, Container)):
             raise TypeError('field must be an instance of exatomic.field.AtomicField or a list of them')
 
     def add_molecular_orbitals(self, field_params=None, mocoefs=None,
-                               vector=None, frame=0, replace=True):
+                               vector=None, frame=0, replace=False,
+                               inplace=True, verbose=True):
         """Add molecular orbitals to universe.
 
-        Args
-            field_params (dict, pd.Series): see `:meth:exatomic.algorithms.orbital_util.make_fps`
-            mocoefs (str): column in the :class:`~exatomic.core.orbital.MOMatrix`
+        .. code-block:: python
+
+            uni.add_molecular_orbitals()                  # Default around (HOMO-5, LUMO+7)
+            uni.add_molecular_orbitals(vector=range(5))   # Specifies the first 5 MOs
+            uni.add_molecular_orbitals(                   # Higher resolution fields
+                field_params={'rmin': -10, 'rmax': 10, 'nr': 100})  # 'rmin/rmax' in bohr
+            uni.field                                     # The field parameters
+            uni.field.field_values                        # The generated scalar fields
+
+        Args:
+            field_params (dict, pd.Series): see :meth:`exatomic.algorithms.orbital_util.make_fps`
+            mocoefs (str): column in :class:`~exatomic.core.orbital.MOMatrix`
             vector (iter): indices of orbitals to evaluate (0-based)
             frame (int): frame of atomic positions for the orbitals
-            replace (bool): if False, do not remove previous fields
+            replace (bool): remove previous fields (default True)
+            inplace (bool): add directly to uni or return :class:`~exatomic.core.field.AtomicField` (default True)
+            verbose (bool): print timing statistics (default True)
+
+        Warning:
+            Default behavior just continually adds fields in the universe.  This can
+            affect performance if adding many fields. `replace` modifies this behavior.
+
+        Warning:
+            Specifying very high resolution field parameters, e.g. 'nr' > 100
+            may slow things down and/or crash the kernel.  Use with caution.
         """
         assert hasattr(self, 'momatrix')
         assert hasattr(self, 'basis_set')
@@ -237,22 +280,27 @@ def basis_function_contributions(universe, mo, mocoefs='coef',
     return the major basis function contributions of a particular
     molecular orbital.
 
-    Args
-        universe (exatomic.container.Universe): a universe
+    .. code-block:: python
+
+        # display the 15th orbital coefficients > abs(0.15)
+        basis_function_contributions(uni, 15, tol=0.15)
+
+    Args:
+        universe (class:`exatomic.core.universe.Universe`): a universe
         mo (int): molecular orbital index
         mocoefs (str): column of interest in universe.momatrix
         tol (float): minimum value of coefficient by which to filter
         frame (int): frame of the universe (default is zero)
 
-    Returns
-        together (pd.DataFrame): a join of momatrix and basis_set_order
+    Returns:
+        joined (pd.DataFrame): a join of momatrix and basis_set_order
     """
     small = universe.momatrix.contributions(mo, tol=tol, mocoefs=mocoefs, frame=frame)
     chis = small['chi'].values
     coefs = small[mocoefs]
     coefs.index = chis
-    together = pd.concat([universe.basis_set_order.ix[chis], coefs], axis=1)
+    joined = pd.concat([universe.basis_set_order.ix[chis], coefs], axis=1)
     if ao is None:
-        return together
+        return joined
     else:
         raise NotImplementedError("not clever enough for that.")
