@@ -66,6 +66,11 @@ class AtomicField(Field):
     def nfields(self):
         return len(self.field_values)
 
+    def compute_final(self):
+        if not all((col in self.columns for col in ['fx', 'fy', 'fz'])):
+            for d, l in [('x', 'i'), ('y', 'j'), ('z', 'k')]:
+                self['f'+d] = self['o'+d] + (self['n'+d] - 1) * self['d'+d+l]
+
     def compute_dv(self):
         """
         Compute the volume element for each field.
@@ -139,3 +144,10 @@ class AtomicField(Field):
         field_params = pd.concat([field_params] * num)
         field_params.reset_index(drop=True, inplace=True)
         return AtomicField(field_params, field_values=posvals + negvals)
+
+    def __init__(self, *args, **kwargs):
+        super(AtomicField, self).__init__(*args, **kwargs)
+        self['nx'] = self['nx'].astype(np.int64)
+        self['ny'] = self['ny'].astype(np.int64)
+        self['nz'] = self['nz'].astype(np.int64)
+        self.compute_final()

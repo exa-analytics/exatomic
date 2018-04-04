@@ -19,8 +19,20 @@ from exatomic.base import nbpll
 
 
 def compare_fields(uni0, uni1, rtol=5e-5, atol=1e-12, signed=True, verbose=True):
-    """Compare field values of multiple universe.
-    It is expected that fields are in the same order."""
+    """Compare field values of differenct universes.
+    It is expected that fields are in the same order.
+
+    Args:
+        uni0 (:class:`exatomic.core.universe.Universe`): first universe
+        uni1 (:class:`exatomic.core.universe.Universe`): second universe
+        rtol (float): relative tolerance passed to numpy.isclose
+        atol (float): absolute tolerance passed to numpy.isclose
+        signed (bool): opposite signs are counted as different (default True)
+        verbose (bool): print how close the fields are to each other numerically (default True)
+
+    Returns:
+        fracs (list): list of fractions measuring closeness of fields
+    """
     fracs, kws = [], {'rtol': rtol, 'atol': atol}
     for i, (f0, f1) in enumerate(zip(uni0.field.field_values,
                                      uni1.field.field_values)):
@@ -33,12 +45,18 @@ def compare_fields(uni0, uni1, rtol=5e-5, atol=1e-12, signed=True, verbose=True)
         fmt = fmt.replace('9', '9.5f')
         for i, f in enumerate(fracs):
             print(fmt.format(i, f))
-    else:
-        return fracs
+    return fracs
 
 
 def numerical_grid_from_field_params(fps):
-    """Construct numerical grid arrays from field parameters."""
+    """Construct numerical grid arrays from field parameters.
+
+    Args:
+        fps (pd.Series): See :meth:`exatomic.algorithms.orbital_util.make_fps`
+
+    Returns:
+        grid (tup): (xs, ys, zs) 1D-arrays
+    """
     if isinstance(fps, pd.DataFrame):
         fps = fps.loc[0]
     ox, nx, dx = fps.ox, int(fps.nx), fps.dxi
@@ -65,7 +83,7 @@ def make_fps(rmin=None, rmax=None, nr=None, nrfps=1,
     Generate the necessary field parameters of a numerical grid field
     as an exatomic.field.AtomicField.
 
-    Args
+    Args:
         nrfps (int): number of field parameters with same dimensions
         rmin (float): minimum value in an arbitrary cartesian direction
         rmax (float): maximum value in an arbitrary cartesian direction
@@ -94,7 +112,7 @@ def make_fps(rmin=None, rmax=None, nr=None, nrfps=1,
         label (str): an identifier passed to the widget (optional)
         field_type (str): alternative identifier (optional)
 
-    Returns
+    Returns:
         fps (pd.Series): field parameters
     """
     if fps is not None: return pd.concat([fps.loc[0]] * nrfps, axis=1).T
@@ -282,6 +300,7 @@ def _compute_orb_ang_mom(rx, ry, rz, jx, jy, jz, mxs):
 
 @jit(nopython=True, nogil=True, parallel=nbpll)
 def _meshgrid3d(x, y, z):
+    """Compute extended mesh gridded 1D-arrays from 1D-arrays."""
     tot = len(x) * len(y) * len(z)
     xs = np.empty(tot, dtype=np.float64)
     ys = np.empty(tot, dtype=np.float64)
