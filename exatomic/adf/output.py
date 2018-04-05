@@ -131,10 +131,17 @@ class Output(six.with_metaclass(OutMeta, Editor)):
                     if L == 2: prefac = 0 if any(i == L for i in (l, m, n)) else np.sqrt(L + 1)
                     elif L == 3: prefac = np.sqrt(5 * sum((i == 1 for i in (l, m, n))))
                     # Pre-exponential factors (shell kind of pointless for STOs)
-                    #for shell, r in zip(grp['shell'], grp['r']):
-                    for r in grp['r']:
-                        for key in data.keys():
-                            data[key].append(eval(key))
+                    for shell, r in zip(grp['shell'], grp['r']):
+                        data['prefac'].append(prefac)
+                        data['center'].append(center)
+                        data['symbol'].append(symbol)
+                        data['shell'].append(shell)
+                        data['seht'].append(seht)
+                        data['L'].append(L)
+                        data['l'].append(l)
+                        data['m'].append(m)
+                        data['n'].append(n)
+                        data['r'].append(r)
         data['set'] = data.pop('seht')
         data['frame'] = 0
         self.basis_set_order = pd.DataFrame.from_dict(data)

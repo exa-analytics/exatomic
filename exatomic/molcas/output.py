@@ -30,6 +30,7 @@ class OrbMeta(TypedMeta):
 
 
 class Orb(six.with_metaclass(OrbMeta, Editor)):
+    
     def to_universe(self):
         raise NotImplementedError("This editor has no parse_atom method.")
 
