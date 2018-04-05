@@ -5,23 +5,6 @@ var base = require("./base.js");
 var utils = require("./utils.js");
 
 // Taken from another file -- check imports and package references
-//var ExatomicWidgetModel = widgets.WidgetModel.extend({
-//
-//    defaults: function() {
-//        return _.extend({}, widgets.WidgetModel.prototype.defaults, {
-//            _model_module: "exatomic",
-//            _view_module: "exatomic",
-//            _model_name: "ExatomicWidgetModel",
-//            _view_name: "ExatomicWidgetView"
-//        })
-//    }
-//
-//});
-//
-//var ExatomicWidgetView = widgets.WidgetView.extend({
-//
-//});
-
 
 
 var SmallverseSceneModel = base.ExatomicSceneModel.extend({
@@ -71,7 +54,7 @@ var SmallverseSceneView = base.ExatomicSceneView.extend({
         } else {
             var atom = this.app3d.add_points;
             var bond = this.app3d.add_lines;
-        };
+        }
         this.meshes["atom"] = atom(this.model.get("atom").attributes.x,
                                    this.model.get("atom").attributes.y,
                                    this.model.get("atom").attributes.z,
@@ -165,34 +148,6 @@ var TwoWidgetModel = base.ExatomicWidgetModel.extend({
 
 var TwoWidgetView = base.ExatomicWidgetView.extend({});
 
-//var AllAtomWidgetModel = base.ExatomicWidgetModel.extend({
-//    defaults: _.extend({}, base.ExatomicWidgetModel.prototype.defaults, {
-//        _model_name: "AllAtomWidgetModel",
-//        _view_name: "AllAtomWidgetView"
-//    })
-//});
-//
-//var AllAtomWidgetView = base.ExatomicWidgetView.extend({});
-//
-//
-//var AllFieldWidgetModel = base.ExatomicWidgetModel.extend({
-//    defaults: _.extend({}, base.ExatomicWidgetModel.prototype.defaults, {
-//        _model_name: "AllFieldWidgetModel",
-//        _view_name: "AllFieldWidgetView"
-//    })
-//});
-//
-//var AllFieldWidgetView = base.ExatomicWidgetView.extend({});
-//
-//
-//var AllTwoWidgetModel = base.ExatomicWidgetModel.extend({
-//    defaults: _.extend({}, base.ExatomicWidgetModel.prototype.defaults, {
-//        _model_name: "AllTwoWidgetModel",
-//        _view_name: "AllTwoWidgetView"
-//    })
-//});
-//
-//var AllTwoWidgetView = base.ExatomicWidgetView.extend({});
 
 module.exports = {
     SmallverseWidgetModel: SmallverseWidgetModel,
@@ -205,7 +160,4 @@ module.exports = {
     FieldWidgetView: FieldWidgetView,
     TwoWidgetModel: TwoWidgetModel,
     TwoWidgetView: TwoWidgetView
-    // All the All widgets...
-    //ExatomicWidgetModel: ExatomicWidgetModel,
-    //ExatomicWidgetView: ExatomicWidgetView,
 }

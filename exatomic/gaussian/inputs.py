@@ -91,7 +91,7 @@ def _handle_args(kwarg, args):
 
 
 def tuning_inputs(uni, name, mult, charge, basis, gammas, alphas,
-                  route=[('Pop', 'full')], link0=None, nproc=4, mem=4,
+                  route=None, link0=None, nproc=4, mem=4,
                   field=None, writedir=None, deep=False):
     """
     Provided a universe, generate input files for functional tuning.
@@ -99,7 +99,7 @@ def tuning_inputs(uni, name, mult, charge, basis, gammas, alphas,
     Assumes you will copy restart checkpoint files to have the same
     names as the input files.
 
-    Args
+    Args:
         uni (exatomic.container.Universe): molecular specification
         name (str): prefix for job names
         mult (int): spin multiplicity
@@ -113,16 +113,11 @@ def tuning_inputs(uni, name, mult, charge, basis, gammas, alphas,
         mem (int): memory (in GB)
         writedir (str): directory path to write input files
 
-    Returns
+    Returns:
         editors (list): input files as exa.Editors
     """
-    #inuni = set(uni.atom.unique_atoms)
-    #try:
-    #    inbas = set([atom for atom, bas in basis])
-    #    if inuni != inbas:
-    #        print("Warning: specific basis sets not the same as atom types")
-    #except:
-    #    print("Warning: did not validate basis sets against atoms in universe")
+    if route is None:
+        route = [('Pop', 'full')]
     rangedt = """
 IOP(3/107={w}00000)
 IOP(3/108={w}00000)
@@ -205,7 +200,7 @@ def functional_inputs(uni, name, mult, charge, basis,
     Assumes you will copy restart checkpoint files to have the same
     names as the input files.
 
-    Args
+    Args:
         uni (exatomic.container.Universe): molecular specification
         name (str): prefix for job names
         mult (int): spin multiplicity
@@ -219,9 +214,11 @@ def functional_inputs(uni, name, mult, charge, basis,
         mem (int): memory (in GB)
         writedir (str): directory path to write input files
 
-    Returns
+    Returns:
         editors (list): input files as exa.Editors
     """
+    if funcnames is None:
+        funcnames = {'pbe': 'PBEPBE'}
     editors = []
     link_opts = [('NProc', nproc), ('Mem', mem)]
     chgnms = ['cat', 'neut', 'an']

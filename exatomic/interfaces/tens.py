@@ -25,7 +25,7 @@ class RTensor(six.with_metaclass(Meta, Editor)):
     3: zx   zy   zz
     4:
     5: Same as above for a second tensor
-    
+
     """
 ## Must make this into a class that looks like the XYZ and Cube
 #           classes. Must have something like parse_tensor.
@@ -34,8 +34,11 @@ class RTensor(six.with_metaclass(Meta, Editor)):
 #           matrix to plot the basis vectors.
 #           Look at untitled1.ipynb for more info.
 
+    def to_universe(self):
+        raise NotImplementedError("Tensor file format has no atom table")
+
     def parse_tensor(self):
-        df = pd.read_csv(StringIO(str(self)), delim_whitespace=True, header=None, 
+        df = pd.read_csv(StringIO(str(self)), delim_whitespace=True, header=None,
                             skip_blank_lines=False)
         #print(df)
         try:

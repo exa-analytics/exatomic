@@ -205,7 +205,7 @@ def functional_results(adir, code='gaussian', ip=False,
         tag = labels[func] if labels is not None else ''
         try:
             curvs.append(compute_curvature(*outs, tag=tag))
-        except:
+        except Exception:
             print(comp, func, 'not computed')
     return curvs
 
