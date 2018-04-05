@@ -35,7 +35,7 @@ class Editor(six.with_metaclass(TypedMeta, _Editor)):
         """
         self.frame = compute_frame_from_atom(self.atom)
 
-    def to_universe(self, **kws): 
+    def to_universe(self, **kws):
         """
         Convert the editor to a :class:`~exatomic.core.universe.Universe` object.
 

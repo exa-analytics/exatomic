@@ -33,6 +33,7 @@ class RTensor(six.with_metaclass(Meta, Editor)):
 #           be activated to find the eigenvalues and eigenvectors of the
 #           matrix to plot the basis vectors.
 #           Look at untitled1.ipynb for more info.
+    _to_universe = Editor.to_universe
 
     def to_universe(self):
         raise NotImplementedError("Tensor file format has no atom table")
