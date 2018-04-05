@@ -92,16 +92,17 @@ class Atom(DataFrame):
         If multiple frames are specified, return an XYZ trajectory format. If
         frame is not specified, by default returns the last frame in the table.
 
-        Args
+        Args:
             tag (str): column name to use in place of 'symbol'
             header (bool): if True, return the first 2 lines of XYZ format
-            comment (str,list): comment(s) to put in the comment line
-            frame (int,iter): frame or frames to return
+            comment (str, list): comment(s) to put in the comment line
+            frame (int, iter): frame or frames to return
             units (str): units (default angstroms)
 
-        Returns
+        Returns:
             ret (str): XYZ formatted atomic data
         """
+        # TODO :: this is conceptually a duplicate of XYZ.from_universe
         columns = (tag, 'x', 'y', 'z') if columns is None else columns
         frame = self.nframes - 1 if frame is None else frame
         if isinstance(frame, Integral): frame = [frame]
@@ -117,7 +118,7 @@ class Atom(DataFrame):
         df['z'] *= Length['au', units]
         grps = df.groupby('frame')
         ret = ''
-        formatter = {tag: lambda x: '{:<5}'.format(x)}
+        formatter = {tag: '{:<5}'.format}
         stargs = {'columns': columns, 'header': False,
                   'index': False, 'formatters': formatter}
         t = 0
