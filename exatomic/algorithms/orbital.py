@@ -49,7 +49,7 @@ def add_molecular_orbitals(uni, field_params=None, mocoefs=None,
     mocoefs = _check_column(uni, 'momatrix', mocoefs)
     if verbose:
         p1 = 'Evaluating {} basis functions once.'
-        print(p1.format(len(uni.basis_set_order.index)))
+        print(p1.format(len(bfns)))
 
     x, y, z = numerical_grid_from_field_params(fps)
     #orbs = uni.momatrix.groupby('orbital')
