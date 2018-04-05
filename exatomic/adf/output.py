@@ -32,13 +32,11 @@ class OutMeta(TypedMeta):
     contribution = pd.DataFrame
     excitation = Excitation
     momatrix = MOMatrix
+    sphr_momatrix = MOMatrix
 
 
 class Output(six.with_metaclass(OutMeta, Editor)):
-    """
-    The ADF output parser.
-    """
-
+    """The ADF output parser."""
     def parse_atom(self):
         # TODO : only supports single frame, gets last atomic positions
         start = stop = self.find(_re_bso_00, keys_only=True)[0] + 2
@@ -283,6 +281,47 @@ class Output(six.with_metaclass(OutMeta, Editor)):
         else:
             print('Symmetrized calcs not supported yet.')
 
+    def parse_sphr_momatrix(self, verbose=False):
+        """
+        Parser localized momatrix (if present).
+
+        If the ``locorb`` keyword is used in ADF, an additional momatrix is 
+        printed after localization is performed. Parsing this table allows
+        for visualization of these orbitals.
+
+        Note:
+            The attr :attr:`~exatomic.adf.output._re_loc_mo` is used for parsing this
+            section.
+        """
+        found = self.find(*_re_loc_mo)
+        if len(found[_re_loc_mo[0]]) == 0:
+            if verbose:
+                print("No localization performed.")
+            return    # Nothing to parse
+        start = found[_re_loc_mo[0]][0][0] + 8
+        stop = found[_re_loc_mo[1]][0][0] - 4
+        # Parse the localized momatrix as a whole block of text
+        df = pd.read_fwf(StringIO("\n".join(self[start:stop])), 
+                         widths=(16, 9, 9, 9, 9, 9, 9, 9, 9), header=None)
+        del df[0]
+        # Identify the eigenvectors and (un)stack them correctly
+        n = df[df[1].isnull()].index[0]   # number of basis functions
+        m = np.ceil(df.shape[0]/n).astype(int)  # number of printed blocks of text
+        # idx - indexes of "lines" (rows) that don't contain coefficients
+        idx = [(n+5)*j + i - 5 for j in range(1, m) for i in range(0, 5)]
+        df = df[~df.index.isin(idx)]
+        coefs = []
+        for i in range(0, df.shape[0]//n+1):
+            d = df.iloc[n*(i-1):n*i, :]
+            coefs.append(d.unstack().dropna().values.astype(float))
+        coefs = np.concatenate(coefs)
+        m = coefs.shape[0]//n    # Number of localized MOs
+        momatrix = pd.DataFrame.from_dict({'coef': coefs, 
+                                           'orbital': [i for i in range(m) for _ in range(n)],
+                                           'chi': [j for _ in range(m) for j in range(n)]})
+        momatrix['frame'] = self.atom['frame'].unique()[-1]
+        self.sphr_momatrix = momatrix
+
 
 # Atom
 _re_bso_00 = 'Atoms in this Fragment     Cart. coord.s (Angstrom)'
@@ -295,3 +334,4 @@ _re_con_00 = 'E(eV)  Occ       MO           %     SFO (first member)   E(eV)  Oc
 _re_mo_00 = 'Eigenvectors .* in BAS representation'
 _re_mo_01 = 'row '
 _re_mo_02 = 'nosym'
+_re_loc_mo = ("Localized MOs expanded in CFs+SFOs", "SFO contributions (%) per Localized Orbital")
