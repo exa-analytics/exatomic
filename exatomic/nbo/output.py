@@ -18,6 +18,7 @@ csv_args = {'delim_whitespace': True}
 
 
 class Output(Editor):
+    """Parser for NBO output."""
     _to_universe = Editor.to_universe
 
     def to_universe(self):
