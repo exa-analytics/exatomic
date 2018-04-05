@@ -222,7 +222,7 @@ class Universe(six.with_metaclass(Meta, Container)):
 
     def add_molecular_orbitals(self, field_params=None, mocoefs=None,
                                vector=None, frame=0, replace=False,
-                               inplace=True, verbose=True):
+                               inplace=True, verbose=True, sphr_sto=False):
         """Add molecular orbitals to universe.
 
         .. code-block:: python
@@ -242,6 +242,7 @@ class Universe(six.with_metaclass(Meta, Container)):
             replace (bool): remove previous fields (default True)
             inplace (bool): add directly to uni or return :class:`~exatomic.core.field.AtomicField` (default True)
             verbose (bool): print timing statistics (default True)
+            sphr_sto (bool): momatrix contains spherical STO basis (rather than Cartesian)
 
         Warning:
             Default behavior just continually adds fields in the universe.  This can
@@ -256,7 +257,7 @@ class Universe(six.with_metaclass(Meta, Container)):
         assert hasattr(self, 'basis_set_order')
         add_molecular_orbitals(self, field_params=field_params,
                                mocoefs=mocoefs, vector=vector,
-                               frame=frame, replace=replace)
+                               frame=frame, replace=replace, sphr_sto=sphr_sto)
 
     def __len__(self):
         return len(self.frame)
