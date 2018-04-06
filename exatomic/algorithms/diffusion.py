@@ -10,7 +10,8 @@ from exa.util.units import Length, Time
 from exatomic.algorithms.displacement import absolute_squared_displacement
 
 
-def einstein_relation(universe, length='cm', time='s'):
+def einstein_relation(universe, input_time='ps', input_length='au',
+                      length='cm', time='s'):
     """
     Compute the (time dependent) diffusion coefficient using Einstein's relation.
 
@@ -22,18 +23,20 @@ def einstein_relation(universe, length='cm', time='s'):
         D = \\lim_{t\\to\\infty} D\\left(t\\right)
 
     Args:
-        universe (:class:`~exatomic.Universe`): The universe object
-        msd (:class:`~exa.DataFrame`): Mean squared displacement dataframe
+        universe (:class:`~exatomic.core.universe.Universe`): The universe object
+        input_time (str): String unit of 'time' column in frame table
+        input_length (str): String unit of xyz coordinates
+        length (str): String unit name of output length unit
+        time (str): Sting unit name of output time unit
 
     Returns:
-        D (:class:`~exa.DataFrame`): Diffussion coefficient as a function of time
+        d (:class:`~exa.core.numerical.DataFrame`): Diffussion coefficient as a function of time
 
     Note:
         The asymptotic value of the returned variable is the diffusion coefficient.
         The default units of the diffusion coefficient are :math:`\\frac{cm^{2}}{s}`.
     """
     msd = absolute_squared_displacement(universe).mean(axis=1)
-    t = universe.frame['time'].values
-    msd *= Length['au', length]**2
-    t /= Time['au', time]
-    return msd / (6 * t)
+    t = universe.frame['time'] / Time[input_time, time]
+    msd *= Length[input_length, length]**2
+    return msd/(6*t)
