@@ -172,11 +172,12 @@ def _compute_current_density(bvs, gvx, gvy, gvz, cmatr, cmati, occvec, verbose=T
     curx = np.zeros(npts, dtype=np.float64)
     cury = np.zeros(npts, dtype=np.float64)
     curz = np.zeros(npts, dtype=np.float64)
-    fp = FloatProgress(description='Computing:')
     if verbose:
+        fp = FloatProgress(description='Computing:')
         display(fp)
     for mu in range(nbas):
-        fp.value = mu / nbas * 100
+        if verbose:
+            fp.value = mu / nbas * 100
         crmu = cmatr[mu]
         cimu = cmati[mu]
         bvmu = bvs[mu]
@@ -194,7 +195,8 @@ def _compute_current_density(bvs, gvx, gvy, gvz, cmatr, cmati, occvec, verbose=T
             curx = evaluate('curx + cval * (bvmu * gvxnu - gvxmu * bvnu)')
             cury = evaluate('cury + cval * (bvmu * gvynu - gvymu * bvnu)')
             curz = evaluate('curz + cval * (bvmu * gvznu - gvzmu * bvnu)')
-    fp.close()
+    if verbose:
+        fp.close()
     return curx, cury, curz
 
 

@@ -40,6 +40,7 @@ class Meta(TypedMeta):
     molecule_two = MoleculeTwo
     field = AtomicField
     orbital = Orbital
+    momatrix = MOMatrix
     cart_momatrix = MOMatrix
     sphr_momatrix = MOMatrix
     excitation = Excitation
@@ -71,6 +72,20 @@ class Universe(six.with_metaclass(Meta, Container)):
     """
     _cardinal = "frame"
     _getter_prefix = "compute"
+
+    @property
+    def momatrix(self):
+        cart = hasattr(self, 'cart_momatrix')
+        sphr = hasattr(self, 'sphr_momatrix')
+        either = cart or sphr
+        if not either:
+            return self.momatrix
+        if self.basis_functions.spherical and sphr:
+            return self.sphr_momatrix
+        elif not self.basis_functions.spherical and cart:
+            return self.cart_momatrix
+        raise AttributeError('Not sure which momatrix is desired.')
+
 
     @property
     def periodic(self, *args, **kwargs):
@@ -253,12 +268,13 @@ class Universe(six.with_metaclass(Meta, Container)):
             Specifying very high resolution field parameters, e.g. 'nr' > 100
             may slow things down and/or crash the kernel.  Use with caution.
         """
-        assert hasattr(self, 'momatrix')
-        assert hasattr(self, 'basis_set')
-        assert hasattr(self, 'basis_set_order')
-        add_molecular_orbitals(self, field_params=field_params,
-                               mocoefs=mocoefs, vector=vector,
-                               frame=frame, replace=replace, sphr_sto=sphr_sto)
+        if not hasattr(self, 'momatrix'):
+            raise AttributeError('uni must have momatrix attribute.')
+        if not hasattr(self, 'basis_set'):
+            raise AttributeError('uni must have basis_set attribute.')
+        return add_molecular_orbitals(self, field_params=field_params,
+                                      mocoefs=mocoefs, vector=vector,
+                                      frame=frame, replace=replace, sphr_sto=sphr_sto)
 
     def __len__(self):
         return len(self.frame)

@@ -30,7 +30,7 @@ class OrbMeta(TypedMeta):
 
 
 class Orb(six.with_metaclass(OrbMeta, Editor)):
-    
+
     def to_universe(self):
         raise NotImplementedError("This editor has no parse_atom method.")
 
@@ -132,8 +132,8 @@ class Output(six.with_metaclass(OutMeta, Editor)):
             if df is None:
                 setattr(self, attr, getattr(orb, attr))
             elif col in df.columns:
-                 raise Exception('This action would replace '
-                                 '"{}" in uni.{}'.format(col, attr))
+                 raise ValueError('This action would replace '
+                                  '"{}" in uni.{}'.format(col, attr))
             else:
                 df[col] = getattr(orb, attr)[de]
 
@@ -184,10 +184,13 @@ class Output(six.with_metaclass(OutMeta, Editor)):
         try:
             df['l'] = df['ml'].copy()
             df['l'].update(df['l'].map({'': 0, 'x': 1, 'y': 0, 'z': 0}))
+            df['l'] = df['l'].astype(np.int64)
             df['m'] = df['ml'].copy()
             df['m'].update(df['m'].map({'': 0, 'y': 1, 'x': 0, 'z': 0}))
+            df['m'] = df['m'].astype(np.int64)
             df['n'] = df['ml'].copy()
             df['n'].update(df['n'].map({'': 0, 'z': 1, 'x': 0, 'y': 0}))
+            df['n'] = df['n'].astype(np.int64)
         except:
             pass
         df['ml'].update(df['ml'].map(mldict))

@@ -9,6 +9,7 @@ This module provides the primary (user facing) output parser.
 from __future__ import absolute_import
 from __future__ import print_function
 from __future__ import division
+from collections import defaultdict
 import re
 import six
 import numpy as np
@@ -18,6 +19,7 @@ from exa.util.units import Length
 from exa import TypedMeta
 from exatomic.base import sym2z
 from exatomic.algorithms.basis import lmap, enum_cartesian
+from exatomic.algorithms.numerical import dfac21
 from ..core.atom import Atom
 from exatomic.core.basis import BasisSet, BasisSetOrder
 from ..core.orbital import Orbital, Excitation, MOMatrix
@@ -64,17 +66,6 @@ class Output(six.with_metaclass(OutMeta, Editor)):
             while self[stop].strip():
                 lines.append(stop)
                 stop += 1
-        #_re_bas_01 = 'BAS: List of all Elementary Cartesian Basis Functions'
-        #_re_bas_02 = 'Frozen Core Shells'
-        #_re_bas_03 = 'Charge Fitting Sets'
-        #stopa = self.find_next(_re_bas_01, start=start, keys_only=True)
-        #stopb = self.find_next(_re_bas_02, start=start, keys_only=True)
-        #stopc = self.find_next(_re_bas_03, start=start, keys_only=True)
-        #try: stop = min(stopa, stopb, stopc)
-        #except TypeError: stop = stopa
-        # Grab everything
-        #print(start, stop)
-        #print(lines)
         df = pd.read_fwf(StringIO('\n'.join([self[i] for i in lines])),
                          widths=[4, 2, 12, 4],
                          names=['n', 'L', 'alpha', 'symbol'])
@@ -108,11 +99,9 @@ class Output(six.with_metaclass(OutMeta, Editor)):
 
     def parse_basis_set_order(self):
         # All the columns we need
-        data = {'center': [], 'symbol': [],
-                  'seht': [],  'shell': [],
-                     'L': [],      'l': [],
-                     'm': [],      'n': [],
-                     'r': [], 'prefac': []}
+        keys = ['center', 'symbol', 'seht', 'shell',
+                 'L', 'l', 'm', 'n', 'r', 'prefac']
+        data = defaultdict(list)
         sets = self.basis_set.groupby('set')
         # Iterate over atoms
         for center, symbol, seht in zip(self.atom.index,
@@ -123,14 +112,7 @@ class Output(six.with_metaclass(OutMeta, Editor)):
             for L, grp in bas:
                 # Iterate over cartesians
                 for l, m, n in enum_cartesian[L]:
-                    # Wonky normalization in ADF
-                    # prefac is unused???
-                    prefac = 0
-                    if L == 2: prefac = 0 if any(i == L for i in (l, m, n)) else np.sqrt(L + 1)
-                    elif L == 3: prefac = np.sqrt(5 * sum((i == 1 for i in (l, m, n))))
-                    # Pre-exponential factors (shell kind of pointless for STOs)
                     for shell, r in zip(grp['shell'], grp['r']):
-                        data['prefac'].append(prefac)
                         data['center'].append(center)
                         data['symbol'].append(symbol)
                         data['shell'].append(shell)
@@ -143,7 +125,11 @@ class Output(six.with_metaclass(OutMeta, Editor)):
         data['set'] = data.pop('seht')
         data['frame'] = 0
         self.basis_set_order = pd.DataFrame.from_dict(data)
-
+        self.basis_set_order['prefac'] = (self.basis_set_order['L'].apply(dfac21) /
+                                          (self.basis_set_order['l'].apply(dfac21) *
+                                           self.basis_set_order['m'].apply(dfac21) *
+                                           self.basis_set_order['n'].apply(dfac21))
+                                          ).apply(np.sqrt)
 
     def parse_orbital(self):
         found = self.find(_re_orb_00, _re_orb_01, keys_only=True)
@@ -285,7 +271,7 @@ class Output(six.with_metaclass(OutMeta, Editor)):
         """
         Parser localized momatrix (if present).
 
-        If the ``locorb`` keyword is used in ADF, an additional momatrix is 
+        If the ``locorb`` keyword is used in ADF, an additional momatrix is
         printed after localization is performed. Parsing this table allows
         for visualization of these orbitals.
 
@@ -301,7 +287,7 @@ class Output(six.with_metaclass(OutMeta, Editor)):
         start = found[_re_loc_mo[0]][0][0] + 8
         stop = found[_re_loc_mo[1]][0][0] - 4
         # Parse the localized momatrix as a whole block of text
-        df = pd.read_fwf(StringIO("\n".join(self[start:stop])), 
+        df = pd.read_fwf(StringIO("\n".join(self[start:stop])),
                          widths=(16, 9, 9, 9, 9, 9, 9, 9, 9), header=None)
         del df[0]
         # Identify the eigenvectors and (un)stack them correctly
@@ -316,7 +302,7 @@ class Output(six.with_metaclass(OutMeta, Editor)):
             coefs.append(d.unstack().dropna().values.astype(float))
         coefs = np.concatenate(coefs)
         m = coefs.shape[0]//n    # Number of localized MOs
-        momatrix = pd.DataFrame.from_dict({'coef': coefs, 
+        momatrix = pd.DataFrame.from_dict({'coef': coefs,
                                            'orbital': [i for i in range(m) for _ in range(n)],
                                            'chi': [j for _ in range(m) for j in range(n)]})
         momatrix['frame'] = self.atom['frame'].unique()[-1]

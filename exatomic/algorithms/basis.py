@@ -353,9 +353,8 @@ class BasisFunctions(object):
             for mag in self.enum_shell(ishl):
                 a = self._angular(ishl, ax, ay, az, *mag).evaluate(xs, ys, zs)
                 for c in range(ishl.ncont):
-                    pre = 1 if np.isclose(self._pre[cnt], 0) else self._pre[cnt]
                     r = self._radial(ax, ay, az, ishl.alphas, norm[:, c],
-                                     rs=ishl.rs, pre=pre)
+                                     rs=ishl.rs, pre=self._pre[cnt])
                     flds[cnt] = r.evaluate(xs, ys, zs, arr=a)
                     cnt += 1
         return flds
@@ -368,9 +367,8 @@ class BasisFunctions(object):
             for mag in ishl.enum_spherical():
                 a = self._angular(ishl, ax, ay, az, *mag).evaluate(xs, ys, zs)
                 for c in range(ishl.ncont):
-                    pre = 1 if np.isclose(self._pre[cnt], 0) else self._pre[cnt]
                     r = self._radial(ax, ay, az, ishl.alphas, norm[:, c],
-                                     rs=ishl.rs, pre=pre)
+                                     rs=ishl.rs, pre=self._pre[cnt])
                     flds[cnt] = r.evaluate(xs, ys, zs, arr=a)
                     cnt += 1
         return flds
@@ -410,7 +408,7 @@ class BasisFunctions(object):
         return flds
 
     def __len__(self):
-        return self._ncs if self._spherical else self._ncc
+        return self._ncs if self.spherical else self._ncc
 
     def __repr__(self):
         chk = (i.spherical for i in self._shells)
