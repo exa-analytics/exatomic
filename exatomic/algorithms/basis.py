@@ -281,13 +281,14 @@ class BasisFunctions(object):
             return shl.enum_spherical()
         return shl.enum_cartesian()
 
-    def evaluate(self, xs, ys, zs):
+    def evaluate(self, xs, ys, zs, sphr_sto=False):
         """Evaluate basis functions on a numerical grid.
 
         Args:
             xs (np.ndarray): 1D-array of x values
             ys (np.ndarray): 1D-array of y values
             zs (np.ndarray): 1D-array of z values
+            sphr_sto (bool): Spherical STO
 
         Note:
             See :meth:`exatomic.algorithms.orbital_util.numerical_grid_from_field_params`
@@ -295,6 +296,8 @@ class BasisFunctions(object):
         """
         if not self._gaussian:
             return self._evaluate_sto(xs, ys, zs)
+        elif sphr_sto:
+            return self._evaluate_sphr_sto(xs, ys, zs)
         return self._evaluate_gau(xs, ys, zs)
 
     def evaluate_diff(self, xs, ys, zs, cart='x'):
@@ -348,6 +351,21 @@ class BasisFunctions(object):
         for _, ax, ay, az, ishl in _iter_atom_shells(self._ptrs, self._xyzs, *self._shells):
             norm = ishl.norm_contract()
             for mag in self.enum_shell(ishl):
+                a = self._angular(ishl, ax, ay, az, *mag).evaluate(xs, ys, zs)
+                for c in range(ishl.ncont):
+                    pre = 1 if np.isclose(self._pre[cnt], 0) else self._pre[cnt]
+                    r = self._radial(ax, ay, az, ishl.alphas, norm[:, c],
+                                     rs=ishl.rs, pre=pre)
+                    flds[cnt] = r.evaluate(xs, ys, zs, arr=a)
+                    cnt += 1
+        return flds
+
+    def _evaluate_sphr_sto(self, xs, ys, zs):
+        """Evaluates a full spherical STO basis set and returns a numpy array."""
+        cnt, flds = 0, np.empty((len(self), len(xs)))
+        for _, ax, ay, az, ishl in _iter_atom_shells(self._ptrs, self._xyzs, *self._shells):
+            norm = ishl.norm_contract()
+            for mag in ishl.enum_spherical():
                 a = self._angular(ishl, ax, ay, az, *mag).evaluate(xs, ys, zs)
                 for c in range(ishl.ncont):
                     pre = 1 if np.isclose(self._pre[cnt], 0) else self._pre[cnt]
