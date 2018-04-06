@@ -203,11 +203,11 @@ class Symbolic(object):
     def diff(self, cart='x', order=1):
         """Compute the nth order derivative symbolically with respect to cart.
 
-        Args
+        Args:
             cart (str): 'x', 'y', or 'z'
             order (int): order of differentiation
 
-        Returns
+        Returns:
             expr (symbolic): The symbolic derivative
         """
         if cart not in ['x', 'y', 'z']:
@@ -248,7 +248,7 @@ class Symbolic(object):
         self._expr = expr
 
 
-class Basis(object):
+class BasisFunctions(object):
     """Composition wrapper class that leverages symbolic expressions using
     symengine and numexpr, using values extracted from the numerical Shell
     jitclasses, to evaluate basis functions on a numerical grid.
@@ -334,9 +334,9 @@ class Basis(object):
             # Many codes order p functions (x, y, z), not (-1, 0, 1)
             if ang[0] == 1 and self._cartp:
                 mp = {-1: 1, 0: -1, 1: 0}
-                sym = Basis._sh[ang[0]][mp[ang[1]]]
+                sym = BasisFunctions._sh[ang[0]][mp[ang[1]]]
             else:
-                sym = Basis._sh[ang[0]][ang[1]]
+                sym = BasisFunctions._sh[ang[0]][ang[1]]
             # Scaled solid harmonics as in the overlap code
             if shl.spherical and self._program == 'molcas':
                 sym /= (2 * np.pi ** 0.5)
@@ -396,7 +396,7 @@ class Basis(object):
 
     def __repr__(self):
         chk = (i.spherical for i in self._shells)
-        _repr = 'Basis({},{{}})'.format(len(self)).format
+        _repr = 'BasisFunctions({},{{}})'.format(len(self)).format
         if all(chk): return _repr('spherical')
         if not any(chk): return _repr('cartesian')
         return _repr('mixed')
@@ -407,7 +407,7 @@ class Basis(object):
         self._ptrs = ptrs
         self._xyzs = xyzs
         self._shells = shells
-        self._spherical = uni.basis_set.spherical
+        self.spherical = uni.basis_set.spherical
         self._gaussian = uni.basis_set.gaussian
         self._npc = uni.basis_dims['npc']
         self._ncc = uni.basis_dims['ncc']

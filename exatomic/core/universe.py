@@ -25,7 +25,7 @@ from .field import AtomicField
 from .orbital import Orbital, Excitation, MOMatrix, DensityMatrix
 from .basis import Overlap, BasisSet, BasisSetOrder
 from exatomic.algorithms.orbital import add_molecular_orbitals
-from exatomic.algorithms.basis import Basis
+from exatomic.algorithms.basis import BasisFunctions
 from .tensor import Tensor
 
 class Meta(TypedMeta):
@@ -40,14 +40,15 @@ class Meta(TypedMeta):
     molecule_two = MoleculeTwo
     field = AtomicField
     orbital = Orbital
-    momatrix = MOMatrix
+    cart_momatrix = MOMatrix
+    sphr_momatrix = MOMatrix
     excitation = Excitation
     overlap = Overlap
     density = DensityMatrix
     basis_set_order = BasisSetOrder
     basis_set = BasisSet
     basis_dims = dict
-    basis_functions = Basis
+    basis_functions = BasisFunctions
     contribution = DataFrame
     multipole = DataFrame
     tensor = Tensor
@@ -154,7 +155,7 @@ class Universe(six.with_metaclass(Meta, Container)):
             'sets': bset.functions_by_shell()}
 
     def compute_basis_functions(self, **kwargs):
-        self.basis_functions = Basis(self)
+        self.basis_functions = BasisFunctions(self)
 
     def enumerate_shells(self, frame=0):
         """Extract minimal information from the universe to be used in
