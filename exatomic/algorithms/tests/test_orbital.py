@@ -31,6 +31,7 @@ class TestMolcasOrbital(TestCase):
 
     def test_compare_fields(self):
         res = compare_fields(self.uni, self.chk, verbose=False)
+        print(res)
         self.assertTrue(np.isclose(len(res), sum(res)))
 
 
@@ -43,4 +44,5 @@ class TestADFOrbital(TestCase):
         uni.add_molecular_orbitals(vector=range(8, 60), verbose=False,
                                    field_params=chk.field.loc[0])
         res = compare_fields(chk, uni, signed=False, verbose=False)
+        print(res)
         self.assertTrue(np.isclose(len(res), sum(res), rtol=5e-4))

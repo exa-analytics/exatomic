@@ -176,10 +176,8 @@ class Output(six.with_metaclass(OutMeta, Editor)):
                                    names=names))
             dfs[-1]['spin'] = i
         dfs = pd.concat(dfs).reset_index(drop=True)
-        # Maybe a better way to do this
-        def _snan(x):
-            return np.nan if isinstance(x, str) and x.isspace() else x
-        dfs = dfs.applymap(_snan)
+        dfs = dfs.applymap(lambda x: np.nan if (isinstance(x, six.string_types)
+                                     and x.isspace()) else x)
         dfs.fillna(method='ffill', inplace=True)
         # Clean up
         dfs['symbol'] = dfs['symbol'].str.strip()
