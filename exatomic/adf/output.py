@@ -258,7 +258,7 @@ class Output(six.with_metaclass(OutMeta, Editor)):
             data = pd.DataFrame()
             for i, block in enumerate(blocks):
                 stop = block[-1] + nchi
-                skips = [i + j for i in list(block[1:] - block[0] - 3) for j in range(3)]
+                skips = [k + j for k in list(block[1:] - block[0] - 3) for j in range(3)]
                 name = 'coef' if not i else 'coef{}'.format(i)
                 col = self.pandas_dataframe(block[0], stop, ncol + 1,
                                             skiprows=skips).drop(0, axis=1,
@@ -319,6 +319,6 @@ class Output(six.with_metaclass(OutMeta, Editor)):
         momatrix['frame'] = self.atom['frame'].unique()[-1]
         self.sphr_momatrix = momatrix
 
-        
+
     def __init__(self, *args, **kwargs):
         super(Output, self).__init__(*args, **kwargs)

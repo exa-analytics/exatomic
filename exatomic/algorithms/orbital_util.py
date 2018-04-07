@@ -8,6 +8,7 @@ Molecular orbitals are constructed symbolically
 then evaluated on a numerical grid.
 These are their stories.
 '''
+from __future__ import division
 import numpy as np
 import pandas as pd
 from numba import jit
