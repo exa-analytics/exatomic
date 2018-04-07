@@ -13,7 +13,7 @@ import numpy as np
 import pandas as pd
 from glob import glob
 from exa import Series, TypedMeta
-from exatomic import __version__, Atom, Editor, AtomicField, Frame
+from exatomic import __version__, Atom, Editor, AtomicField, Frame, Universe
 from exatomic.base import z2sym, sym2z
 
 class Meta(TypedMeta):
@@ -168,7 +168,7 @@ def uni_from_cubes(adir, verbose=False, ncubes=None, ext='cube'):
         cubes = cubes[:ncubes]
     if verbose:
         for cub in cubes: print(cub)
-    uni = Cube(cubes[0]).to_universe()
-    flds = [Cube(cub).field for cub in cubes[1:]]
+    uni = Universe(atom=Cube(cubes[0]).atom)
+    flds = [Cube(cub).field for cub in cubes]
     uni.add_field(flds)
     return uni

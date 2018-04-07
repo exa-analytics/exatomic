@@ -184,10 +184,12 @@ class Universe(six.with_metaclass(Meta, Container)):
             frame (int): state of the universe (default 0)
         """
         atom = self.atom.groupby('frame').get_group(frame)
-        if self.meta['program'] != 'molcas':
+        if self.meta['program'] not in ['molcas', 'adf']:
             print('Warning: Check spherical shell parameter for {} '
                   'molecular orbital generation'.format(self.meta['program']))
-        shls = self.basis_set.shells()
+        shls = self.basis_set.shells(self.meta['program'],
+                                     self.meta['spherical'],
+                                     self.meta['gaussian'])
         grps = shls.groupby('set')
         # Pointers into (xyzs, shls) arrays
         ptrs = np.array([(c, idx) for c, seht in enumerate(atom.set)
@@ -238,7 +240,7 @@ class Universe(six.with_metaclass(Meta, Container)):
 
     def add_molecular_orbitals(self, field_params=None, mocoefs=None,
                                vector=None, frame=0, replace=False,
-                               inplace=True, verbose=True, sphr_sto=False):
+                               inplace=True, verbose=True):
         """Add molecular orbitals to universe.
 
         .. code-block:: python
@@ -258,7 +260,6 @@ class Universe(six.with_metaclass(Meta, Container)):
             replace (bool): remove previous fields (default True)
             inplace (bool): add directly to uni or return :class:`~exatomic.core.field.AtomicField` (default True)
             verbose (bool): print timing statistics (default True)
-            sphr_sto (bool): momatrix contains spherical STO basis (rather than Cartesian)
 
         Warning:
             Default behavior just continually adds fields in the universe.  This can
@@ -274,7 +275,8 @@ class Universe(six.with_metaclass(Meta, Container)):
             raise AttributeError('uni must have basis_set attribute.')
         return add_molecular_orbitals(self, field_params=field_params,
                                       mocoefs=mocoefs, vector=vector,
-                                      frame=frame, replace=replace, sphr_sto=sphr_sto)
+                                      frame=frame, replace=replace,
+                                      inplace=inplace, verbose=verbose)
 
     def __len__(self):
         return len(self.frame)

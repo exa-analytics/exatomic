@@ -6,34 +6,27 @@ import os
 import bz2
 import numpy as np
 from unittest import TestCase
-from exatomic.base import staticdir
+from exatomic.base import resource
 from exatomic.core.basis import Overlap
 from exatomic.molcas import Output as MolOutput
 
 
 class TestMolcasOverlap(TestCase):
     def setUp(self):
-        adir = os.sep.join([staticdir(), 'molcas'])
-        with bz2.open(os.path.join(adir, 'mol-carbon-dz.out.bz2')) as f:
-            dz = MolOutput(f.read().decode('utf-8')).to_universe()
-        with bz2.open(os.path.join(adir, 'mol-carbon-dz.overlap.bz2')) as f:
-            dz.overlap = Overlap.from_column(f.read().decode('utf-8'))
+        dz = MolOutput(resource('mol-carbon-dz.out'))
+        dz.add_overlap(resource('mol-carbon-dz.overlap'))
 
-        with bz2.open(os.path.join(adir, 'mol-li-ano.out.bz2')) as f:
-            li = MolOutput(f.read().decode('utf-8')).to_universe()
-        with bz2.open(os.path.join(adir, 'mol-li-ano.overlap.bz2')) as f:
-            li.overlap = Overlap.from_column(f.read().decode('utf-8'))
+        li = MolOutput(resource('mol-li-ano.out'))
+        li.add_overlap(resource('mol-li-ano.overlap'))
 
-        with bz2.open(os.path.join(adir, 'mol-zno2-dz.out.bz2')) as f:
-            zno2 = MolOutput(f.read().decode('utf-8')).to_universe()
-        with bz2.open(os.path.join(adir, 'mol-zno2-dz.overlap.bz2')) as f:
-            zno2.overlap = Overlap.from_column(f.read().decode('utf-8'))
+        zno2 = MolOutput(resource('mol-zno2-dz.out'))
+        zno2.add_overlap(resource('mol-zno2-dz.overlap'))
 
-        with bz2.open(os.path.join(adir, 'mol-npo2-ano.out.bz2')) as f:
-            npo2 = MolOutput(f.read().decode('utf-8')).to_universe()
-        with bz2.open(os.path.join(adir, 'mol-npo2-ano.overlap.bz2')) as f:
-            npo2.overlap = Overlap.from_column(f.read().decode('utf-8'))
-        self.unis = [dz, li, zno2, npo2]
+        npo2 = MolOutput(resource('mol-npo2-ano.out'))
+        npo2.add_overlap(resource('mol-npo2-ano.overlap'))
+
+        self.unis = [dz.to_universe(), li.to_universe(),
+                     zno2.to_universe(), npo2.to_universe()]
 
     def test_overlap(self):
         for uni in self.unis:

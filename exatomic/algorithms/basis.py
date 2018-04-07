@@ -200,6 +200,7 @@ class Symbolic(object):
     of expressions on a numerical grid.
     """
 
+
     def diff(self, cart='x', order=1):
         """Compute the nth order derivative symbolically with respect to cart.
 
@@ -218,6 +219,7 @@ class Symbolic(object):
         for _ in range(order):
             expr = expr.diff('_'+cart)
         return Symbolic(expr)
+
 
     def evaluate(self, xs, ys, zs, arr=None, alpha=None):
         """Evaluate symbolic expression on a numerical grid.
@@ -261,6 +263,7 @@ class BasisFunctions(object):
     # Unscaled solid harmonics
     _sh = solid_harmonics(6)
 
+
     def integrals(self):
         """Compute the overlap matrix using primitive cartesian integrals."""
         from exatomic.core.basis import Overlap
@@ -270,6 +273,7 @@ class BasisFunctions(object):
         chi0, chi1 = _tri_indices(ovl)
         return Overlap.from_dict({'chi0': chi0, 'chi1': chi1,
                                   'frame': 0, 'coef': ovl})
+
 
     def enum_shell(self, shl):
         """Return a generator over angular momentum degrees of freedom.
@@ -281,24 +285,25 @@ class BasisFunctions(object):
             return shl.enum_spherical()
         return shl.enum_cartesian()
 
-    def evaluate(self, xs, ys, zs, sphr_sto=False):
+
+    def evaluate(self, xs, ys, zs):
         """Evaluate basis functions on a numerical grid.
 
         Args:
             xs (np.ndarray): 1D-array of x values
             ys (np.ndarray): 1D-array of y values
             zs (np.ndarray): 1D-array of z values
-            sphr_sto (bool): Spherical STO
 
         Note:
             See :meth:`exatomic.algorithms.orbital_util.numerical_grid_from_field_params`
             for grid construction details.
         """
         if not self._gaussian:
+            if self.spherical:
+                return self._evaluate_sphr_sto(xs, ys, zs)
             return self._evaluate_sto(xs, ys, zs)
-        elif sphr_sto:
-            return self._evaluate_sphr_sto(xs, ys, zs)
         return self._evaluate_gau(xs, ys, zs)
+
 
     def evaluate_diff(self, xs, ys, zs, cart='x'):
         """Evaluate basis function derivatives on a numerical grid.
@@ -317,6 +322,7 @@ class BasisFunctions(object):
             return self._evaluate_diff_sto(xs, ys, zs, cart)
         return self._evaluate_diff_gau(xs, ys, zs, cart)
 
+
     def _radial(self, x, y, z, alphas, cs, rs=None, pre=None):
         """Generates the symbolic radial portion of a basis function."""
         if not self._gaussian:
@@ -328,6 +334,7 @@ class BasisFunctions(object):
             sum((c * exp(-a * self._expnt)
                 for c, a in zip(cs, alphas))
                 ).subs({_x: _x - x, _y: _y - y, _z: _z - z}))
+
 
     def _angular(self, shl, x, y, z, *ang):
         """Generates the symbolic angular portion of a basis function."""
@@ -345,6 +352,7 @@ class BasisFunctions(object):
                 sym /= (2 * np.pi ** 0.5)
         return Symbolic(sym.subs({_x: _x - x, _y: _y - y, _z: _z - z}))
 
+
     def _evaluate_sto(self, xs, ys, zs):
         """Evaluates a full STO basis set and returns a numpy array."""
         cnt, flds = 0, np.empty((len(self), len(xs)))
@@ -358,6 +366,7 @@ class BasisFunctions(object):
                     flds[cnt] = r.evaluate(xs, ys, zs, arr=a)
                     cnt += 1
         return flds
+
 
     def _evaluate_sphr_sto(self, xs, ys, zs):
         """Evaluates a full spherical STO basis set and returns a numpy array."""
@@ -373,8 +382,10 @@ class BasisFunctions(object):
                     cnt += 1
         return flds
 
+
     def _evaluate_diff_sto(self, xs, ys, zs, cart):
         raise NotImplementedError("Verify symbolic differentiation of STOs.")
+
 
     def _evaluate_gau(self, xs, ys, zs):
         """Evaluates a full Gaussian basis set and returns a numpy array."""
@@ -388,6 +399,7 @@ class BasisFunctions(object):
                     flds[cnt] = r.evaluate(xs, ys, zs, arr=a)
                     cnt += 1
         return flds
+
 
     def _evaluate_diff_gau(self, xs, ys, zs, cart):
         """Evaluates the derivatives of a full Gaussian basis
@@ -407,8 +419,10 @@ class BasisFunctions(object):
                     cnt += 1
         return flds
 
+
     def __len__(self):
         return self._ncs if self.spherical else self._ncc
+
 
     def __repr__(self):
         chk = (i.spherical for i in self._shells)
@@ -417,20 +431,23 @@ class BasisFunctions(object):
         if not any(chk): return _repr('cartesian')
         return _repr('mixed')
 
+
     def __init__(self, uni, frame=0, cartp=True):
         self._program = uni.meta['program']
-        ptrs, xyzs, shells = uni.enumerate_shells()
+        self.spherical = uni.meta['spherical']
+        self._gaussian = uni.meta['gaussian']
+        ptrs, xyzs, shells = uni.enumerate_shells()#self._program,
+                                                  #self.spherical,
+                                                  #self._gaussian)
         self._ptrs = ptrs
         self._xyzs = xyzs
         self._shells = shells
-        self.spherical = uni.basis_set.spherical
-        self._gaussian = uni.basis_set.gaussian
         self._npc = uni.basis_dims['npc']
         self._ncc = uni.basis_dims['ncc']
         self._nps = uni.basis_dims['nps']
         self._ncs = uni.basis_dims['ncs']
         self._cartp = cartp
         self._expnt = _r ** 2
-        if not uni.basis_set.gaussian:
+        if not uni.meta['gaussian']:
             self._expnt = _r
             self._pre = uni.basis_set_order['prefac']

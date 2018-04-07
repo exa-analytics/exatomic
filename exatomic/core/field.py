@@ -14,35 +14,6 @@ import pandas as pd
 from exa import DataFrame, Field, Series
 
 
-class AField(DataFrame):
-    _columns = ['nx', 'ny', 'nz', 'ox', 'oy', 'oz', 'dxi', 'dxj', 'dxk',
-                'dyi', 'dyj', 'dyk', 'dzi', 'dzj', 'dzk', 'frame']
-    #@property
-    #def _constructor(self):
-    #    return AField
-
-    def copy(self, *args, **kwargs):
-        """Make a copy of this object."""
-        cls = self.__class__
-        #df = pd.DataFrame(self).copy(*args, **kwargs)
-        data = self.data.copy()
-        return cls(data, data=data)
-
-    def memory_usage(self):
-        """Get the total memory usage."""
-        data = super(Field, self).memory_usage()
-        data['data'] = self.data.memory_usage()
-        return data
-
-    def __init__(self, *args, **kwargs):
-        data = kwargs.pop("data", np.array([]))
-        if not isinstance(data, np.ndarray):
-            raise TypeError("data must be an ndarray")
-        if isinstance(args[0], pd.Series): args = (args[0].to_frame().T,)
-        super(AField, self).__init__(*args, **kwargs)
-        self.data = data
-
-
 class AtomicField(Field):
     """
     Class for storing exatomic cube data (scalar field of 3D space). Note that
@@ -57,10 +28,6 @@ class AtomicField(Field):
     _categories = {'label': str, 'field_type': str}
     _columns = ['nx', 'ny', 'nz', 'ox', 'oy', 'oz', 'dxi', 'dxj', 'dxk',
                 'dyi', 'dyj', 'dyk', 'dzi', 'dzj', 'dzk', 'frame']
-
-    #@property
-    #def _constructor(self):
-    #    return AtomicField
 
     @property
     def nfields(self):
@@ -116,23 +83,23 @@ class AtomicField(Field):
 
         .. code-block:: Python
 
-            newfield = myfield.rotate(0, 1, np.pi / 2)
+            newfield = uni.field.rotate(0, 1, np.pi / 2)  # returns an :class:`~exatomic.core.field.AtomicField`
+            uni.add_field(newfield)                       # appends new fields to :class:`~exatomic.core.universe.Universe`
 
         Args:
             a (int): Index of first field
             b (int): Index of second field
-            angle (float or list of floats): angle(s) of rotation
+            angle (float or list of floats): angle(s) of rotation (in radians)
 
         Return:
             rotated (:class:`~exatomic.field.AtomicField`): positive then negative linear combinations
         """
-        field_params = self.ix[[a]]
+        field_params = self.loc[[a]]
         f0 = self.field_values[a]
         f1 = self.field_values[b]
         posvals, negvals = [], []
         try:
-            angle = float(angle)
-            angle = [angle]
+            angle = [float(angle)]
         except TypeError:
             pass
         for ang in angle:
@@ -146,6 +113,11 @@ class AtomicField(Field):
         return AtomicField(field_params, field_values=posvals + negvals)
 
     def __init__(self, *args, **kwargs):
+        if hasattr(args[0], 'field_values') and len(args[0].field_values):
+            if 'field_values' in kwargs:
+                raise Exception('field_values should not exist as an attached '
+                                'attribute and a kwarg at the same time.')
+            kwargs['field_values'] = args[0].field_values
         super(AtomicField, self).__init__(*args, **kwargs)
         self['nx'] = self['nx'].astype(np.int64)
         self['ny'] = self['ny'].astype(np.int64)

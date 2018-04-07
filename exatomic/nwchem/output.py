@@ -33,13 +33,14 @@ class OutMeta(TypedMeta):
     frame = Frame
 
 class Output(six.with_metaclass(OutMeta, Editor)):
-    """
-    Editor for NWChem calculation output file (stdout).
-    """
+    """Editor for NWChem calculation output file (stdout)."""
+
     def parse_atom(self):
-        """
-        Parse the atom dataframe.
-        """
+        """Parse the atom dataframe."""
+        _reatom01 = 'Geometry "'
+        _reatom02 = 'Atomic Mass'
+        _reatom03 = 'ECP       "ecp basis"'
+        _reatom04 = 'Output coordinates in'
         found = self.find(_reatom01, _reatom02,
                           _reatom03, _reatom04, keys_only=True)
         unit = self[found[_reatom04][0]].split()[3]
@@ -58,7 +59,6 @@ class Output(six.with_metaclass(OutMeta, Editor)):
         #n = len(atom)
         nf = atom.label.value_counts().max()
         nat = atom.label.max()
-        #basis_sets = np.empty((n, ), dtype=np.int64)
         atom['frame'] = [i for i in range(nf) for j in range(nat)]
         atom['label'] -= 1
         atom['x'] *= Length[unit, 'au']
@@ -72,10 +72,11 @@ class Output(six.with_metaclass(OutMeta, Editor)):
         self.atom = Atom(atom)
 
     def parse_orbital(self):
-        '''
-        Parse the :class:`~exatomic.orbital.Orbital` dataframe.
-        '''
+        """Parse the :class:`~exatomic.core.orbital.Orbital` dataframe."""
         orbital = None
+        _remo01 = 'Molecular Orbital Analysis'
+        _remo02 = 'alpha - beta orbital overlaps'
+        _remo03 = 'center of mass'
         check = self.find(_remo01)
         if any(['Alpha' in value for value in check]):
             alpha_starts = np.array([no for no, line in check if 'Alpha' in line], dtype=np.int64) + 2
@@ -97,35 +98,11 @@ class Output(six.with_metaclass(OutMeta, Editor)):
 
     def parse_momatrix(self):
         """
-        Parse the :class:`~exatomic.orbital.MOMatrix` dataframe.
+        Parse the :class:`~exatomic.core.orbital.MOMatrix` dataframe.
 
         Note:
-            Must supply 'print "final vectors" "final vectors analysis" for momatrix
+            Must supply 'print "final vectors" "final vectors analysis"' for momatrix
         """
-#        found = self.find(_reallmos)
-#        if found:
-#            nrcol = 6
-#            start = found[0][0] + 8
-#            #nfuncs = self.gaussian_basis_set.functions()
-#            nfuncs = self.basis_set.functions().groupby(level="set").sum()
-#            nbas = self.atom['set'].map(nfuncs).sum()
-#            chunk = nbas + 3
-#            nchunks = np.ceil(nbas/nrcol).astype(np.int64)
-#            leftover = nbas%nrcol
-#            idxs = [(start + chunk * i, start + nbas + chunk*i) for i in range(nchunks)]
-#            dfs = []
-#            for i, (start, stop) in enumerate(idxs):
-#                if i == len(idxs) - 1 and leftover:
-#                    dfs.append(self.pandas_dataframe(start, stop, leftover))
-#                else:
-#                    dfs.append(self.pandas_dataframe(start, stop, nrcol))
-#            coefs = pd.concat(dfs, axis=1).unstack().values
-#            chis = np.tile(range(nbas), nbas)
-#            orbitals = np.repeat(range(nbas), nbas)
-#            self.momatrix = pd.DataFrame.from_dict({'coef': coefs,
-#                                                    'orbital': orbitals,
-#                                                    'chi': chis,
-#                                                    'frame': [0] * nbas ** 2})
         key0 = "Final MO vectors"
         key1 = "center of mass"
         found = self.find(key0, key1)
@@ -164,10 +141,10 @@ class Output(six.with_metaclass(OutMeta, Editor)):
         '''
         joined = '\n'.join(['\n'.join(self[s:e]) for s, e in zip(starts, stops)])
         nvec = joined.count('Vector')
-        mapper = self.basis_set.functions().groupby(level="set").sum()
+        if 'spherical' not in self.meta:
+            self.parse_basis_set()
+        mapper = self.basis_set.functions(self.meta['spherical']).groupby(level="set").sum()
         nbas = self.atom['set'].map(mapper).sum()
-        #nbas = self.atom['symbol'].value_counts().values * self.basis_set_summary['func_per_atom'].astype(np.int64)
-        #nbas = nbas.sum()
         nbas *= nvec
         # Orbital dataframe -- alternatively one could parse the strings
         # into the DataFrame and then use the pd.Series.str methods to
@@ -204,35 +181,13 @@ class Output(six.with_metaclass(OutMeta, Editor)):
         """
         Parse the :class:`~exatomic.basis.BasisSet` dataframe.
         """
-# SAVING THE CODE BELOW FOR REFERENCE (MAY BE REMOVED in 0.4.0)
-#        found = self.find(_rebas01, _rebas02)
-#        spherical = True if 'spherical' in found[_rebas01][0][1] else False
-#        start = found[_rebas01][0][0]
-#        stop = found[_rebas02][0][0] - 1 if start < found[_rebas02][0][0] else found[_rebas02][1][0] - 1
-#        df = self.pandas_dataframe(start, stop, 4, **{'index_col': False})
-#        dtype = [('shell', 'i8'), ('L', 'i8'), ('alpha', 'f8'),
-#                 ('d', 'f8'), ('set', 'i8')]
-#        keep = np.empty((df.shape[0],), dtype=dtype)
-#        seht, cnt = -1, 0
-#        tags = {}
-#        self.df = df
-#        print(df[3])
-#        for i, (shell, l, alpha, d) in enumerate(zip(df[0], df[1], df[2], df[3])):
-#            if len(shell) == 8:
-#                seht += 1
-#                tags[df[0].values[i - 2]] = seht
-#            print(type(d))
-#            if not np.isnan(d):
-#                keep[cnt] = (shell, lmap[l.lower()], alpha, d, seht)
-#                cnt += 1
-#        gaussian_basis_set = pd.DataFrame(keep[:cnt])
-#        gaussian_basis_set['shell'] -= 1
-#        gaussian_basis_set['frame'] = 0
-#        self.gaussian_basis_set = gaussian_basis_set
-#        self.gaussian_basis_set.spherical = spherical
-#        self.atom['set'] = self.atom['tag'].map(tags)
         if not hasattr(self, "atom"):
             self.parse_atom()
+        _rebas01 = ' Basis "'
+        _rebas02 = ' Summary of "'
+        _rebas03 = [' s ', ' px ', ' py ', ' pz ',
+                    ' d ', ' f ', ' g ', ' h ', ' i ',
+                    ' j ', ' k ', ' l ', ' m ', ' p ']
         found = self.find(_rebas01, _rebas02)
         spherical = True if "spherical" in found[_rebas01][0][1] else False
         start = found[_rebas01][0][0] + 2
@@ -256,27 +211,26 @@ class Output(six.with_metaclass(OutMeta, Editor)):
         df['d'] = df['d'].astype(float)
         # NO SUPPORT FOR MULTIPLE FRAMES?
         df['frame'] = 0
-        self.basis_set = BasisSet(df, spherical=spherical)
+        self.basis_set = BasisSet(df)
+        self.meta['spherical'] = spherical
         self.atom['set'] = self.atom['tag'].map(mapper)
 
     def parse_basis_set_order(self):
         dtype = [('center', 'i8'), ('shell', 'i8'), ('L', 'i8')]
-        #if self.gaussian_basis_set.spherical:
-        if self.basis_set.spherical:
+        if 'spherical' not in self.meta:
+            self.parse_basis_set()
+        if self.meta['spherical']:
             dtype += [('ml', 'i8')]
         else:
             dtype += [('l', 'i8'), ('m', 'i8'), ('n', 'i8')]
-        #nbas = self.atom['set'].map(self.gaussian_basis_set.functions()).sum()
-        mapper = self.basis_set.functions().groupby(level="set").sum()
+        mapper = self.basis_set.functions(self.meta['spherical']).groupby(level="set").sum()
         nbas = self.atom['set'].map(mapper).sum()
         bso = np.empty((nbas,), dtype=dtype)
         cnt = 0
-        #bases = self.gaussian_basis_set.groupby('set')
         bases = self.basis_set.groupby('set')
         for seht, center in zip(self.atom['set'], self.atom.index):
             bas = bases.get_group(seht).groupby('shell')
-            #if self.gaussian_basis_set.spherical:
-            if self.basis_set.spherical:
+            if self.meta['spherical']:
                 for shell, grp in bas:
                     l = grp['L'].values[0]
                     for ml in spherical_ordering_function(l):
@@ -294,9 +248,11 @@ class Output(six.with_metaclass(OutMeta, Editor)):
 
     def parse_frame(self):
         """
-        Create a minimal :class:`~exatomic.frame.Frame` from the (parsed)
-        :class:`~exatomic.atom.Atom` object.
+        Create a minimal :class:`~exatomic.core.frame.Frame` from the (parsed)
+        :class:`~exatomic.core.atom.Atom` object.
         """
+        _rescfen = 'Total SCF energy'
+        _redften = 'Total DFT energy'
         self.frame = compute_frame_from_atom(self.atom)
         found = self.find(_rescfen, _redften)
         scfs = found[_rescfen]
@@ -316,23 +272,6 @@ class Output(six.with_metaclass(OutMeta, Editor)):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-# Some parsing strings for NWChem outputs
-_reatom01 = 'Geometry "'
-_reatom02 = 'Atomic Mass'
-_reatom03 = 'ECP       "ecp basis"'
-_reatom04 = 'Output coordinates in'
-_rebas01 = ' Basis "'
-_rebas02 = ' Summary of "'
-_rebas03 = [' s ', ' px ', ' py ', ' pz ', ' d ', ' f ', ' g ', ' h ', ' i ',
-            ' j ', ' k ', ' l ', ' m ', ' p ']
-_remo01 = 'Molecular Orbital Analysis'
-_remo02 = 'alpha - beta orbital overlaps'
-_remo03 = 'center of mass'
-#_reovl01 = ' Begin overlap 1-e integrals'
-#_reovl02 = ' End overlap 1-e integrals'
-_rescfen = 'Total SCF energy'
-_redften = 'Total DFT energy'
-_reallmos = 'Final MO vectors'
 
 
 class Ecce(six.with_metaclass(OutMeta, Editor)):
@@ -402,40 +341,14 @@ class Ecce(six.with_metaclass(OutMeta, Editor)):
                 self._rebmooccs = r'.*' + self._kind + '%begin%molecular orbital occupations'
                 self._reemooccs = r'.*' + self._kind + '%end%molecular orbital occupations'
         else:
-            #if self._spin is not None:
-            #    try:
-            #else:
                 try:
                     self._rebmovecs = r'.*%begin%molecular orbital vectors'
                     self._regex = self.regex(self._rebmovecs)
-                    #b = list(self._regex[self._rebmovecs].keys())[0]
                     self._reemovecs = r'.*%end%molecular orbital vectors'
                     self._rebmooccs = r'.*%begin%molecular orbital occupations'
                     self._reemooccs = r'.*%end%molecular orbital occupations'
                 except IndexError:
                     print('could not find which movecs to parse, try specifying kind and/or spin')
-        #if self._kind == 'scf':
-        #    if self._spin is None:
-        #        self._rebmovecs = r'.*scf%begin%molecular orbital vectors'
-        #        self._reemovecs = r'.*scf%end%molecular orbital vectors'
-        #        self._rebmooccs = r'.*scf%begin%molecular orbital occupations'
-        #        self._reemooccs = r'.*scf%end%molecular orbital occupations'
-        #    else:
-        #        self._rebmovecs = r'.*scf%begin%molecular orbital vectors UHF ' + self._spin
-        #        self._reemovecs = r'.*scf%end%molecular orbital vectors UHF ' + self._spin
-        #        self._rebmooccs = r'.*scf%begin%molecular orbital occupations UHF ' + self._spin
-        #        self._reemooccs = r'.*scf%end%molecular orbital occupations UHF ' + self._spin
-        #elif self._kind == 'dft':
-        #    if self._spin is None:
-        #        self._rebmovecs = r'.*dft%begin%molecular orbital vectors'
-        #        self._reemovecs = r'.*dft%end%molecular orbital vectors'
-        #        self._rebmooccs = r'.*dft%begin%molecular orbital occupations'
-        #        self._reemooccs = r'.*dft%end%molecular orbital occupations'
-        #    else:
-        #        self._rebmovecs = r'.*dft%begin%molecular orbital vectors dft ' + self._spin
-        #        self._reemovecs = r'.*dft%end%molecular orbital vectors dft ' + self._spin
-        #        self._rebmooccs = r'.*dft%begin%molecular orbital occupations dft ' + self._spin
-        #        self._reemooccs = r'.*dft%end%molecular orbital occupations dft ' + self._spin
 
         self._regex = self.regex(self._rebmovecs, self._reemovecs,
                                  self._rebmooccs, self._reemooccs)
@@ -457,11 +370,11 @@ def parse_nwchem(file_path, ecce=None, kind='scf'):
     the C matrix to be used in visualization of molecular orbitals. The kind
     parameter chooses the 'scf' or 'dft' C matrix in the ecce output.
 
-    Args
+    Args:
         file_path (str): file path to the output file
         ecce (str): name of the ecce output in the same directory
 
-    Returns
+    Returns:
         parsed (Editor): contains many attributes similar to the
                          exatomic Universe
     """

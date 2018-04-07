@@ -269,8 +269,9 @@ class Output(six.with_metaclass(OutMeta, Editor)):
         prims = pd.concat(prims).reset_index(drop=True)
         prims['frame'] = 0
         self.basis_set = prims
+        self.meta['spherical'] = True
         if self.basis_set.lmax < 2:
-            self.basis_set.spherical = False
+            self.meta['spherical'] = False
 
     def __init__(self, *args, **kwargs):
         super(Output, self).__init__(*args, **kwargs)
@@ -355,13 +356,13 @@ def parse_molcas(fp, momatrix=None, overlap=None, occvec=None, **kwargs):
     from specified Orb files or the AO overlap matrix and density matrix.
     If density keyword is specified, the momatrix keyword is ignored.
 
-    Args
+    Args:
         fp (str): Path to output file
         momatrix (str): file name of the C matrix of interest
         overlap (str): file name of the overlap matrix
         occvec (str): an occupation vector
 
-    Returns
+    Returns:
         parsed (Editor): contains many attributes similar to the
             exatomic universe
     """

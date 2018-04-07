@@ -19,7 +19,7 @@ from .orbital_util import (
 
 def add_molecular_orbitals(uni, field_params=None, mocoefs=None,
                            vector=None, frame=0, inplace=True,
-                           replace=False, verbose=True, sphr_sto=False):
+                           replace=False, verbose=True):
     """A universe must contain basis_set, basis_set_order, and
     momatrix attributes to use this function.  Evaluate molecular
     orbitals on a numerical grid.  Attempts to generate reasonable
@@ -39,9 +39,6 @@ def add_molecular_orbitals(uni, field_params=None, mocoefs=None,
     Warning:
         If replace is True, removes any fields previously attached to the universe
     """
-    if verbose:
-        print('Warning: not extensively validated.' \
-              ' Consider adding tests.')
     t1 = datetime.now()
     vector = _determine_vector(uni, vector)
     bfns = uni.basis_functions
@@ -52,8 +49,7 @@ def add_molecular_orbitals(uni, field_params=None, mocoefs=None,
         print(p1.format(len(bfns)))
 
     x, y, z = numerical_grid_from_field_params(fps)
-    #orbs = uni.momatrix.groupby('orbital')
-    bvs = bfns.evaluate(x, y, z, sphr_sto)
+    bvs = bfns.evaluate(x, y, z)
     cmat = uni.momatrix.square(column=mocoefs).values
     try: ovs = _compute_orbitals(len(x), bvs, vector, cmat)
     except: ovs = _compute_orbitals_nojit(len(x), bvs, vector, cmat)

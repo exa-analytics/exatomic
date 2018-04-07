@@ -41,7 +41,8 @@ class Output(six.with_metaclass(OutMeta, Editor)):
     """The ADF output parser."""
     def parse_atom(self):
         # TODO : only supports single frame, gets last atomic positions
-        start = stop = self.find(_re_bso_00, keys_only=True)[0] + 2
+        _re_atom_00 = 'Atoms in this Fragment     Cart. coord.s (Angstrom)'
+        start = stop = self.find(_re_atom_00, keys_only=True)[0] + 2
         while self[stop].strip(): stop += 1
         atom = self.pandas_dataframe(start, stop, 7)
         atom.drop([0, 2, 3], axis=1, inplace=True)
@@ -93,7 +94,8 @@ class Output(six.with_metaclass(OutMeta, Editor)):
         df['d'] = np.sqrt((2 * df['L'] + 1) / (4 * np.pi))
         df['r'] = df['n'] - (df['L'] + 1)
         df['frame'] = 0
-        self.basis_set = BasisSet(df, gaussian=False, spherical=False)
+        self.basis_set = BasisSet(df)
+        self.meta['spherical'] = False
         self.atom['set'] = self.atom['symbol'].map(basmap)
 
 
@@ -132,6 +134,8 @@ class Output(six.with_metaclass(OutMeta, Editor)):
                                           ).apply(np.sqrt)
 
     def parse_orbital(self):
+        _re_orb_00 = 'Orbital Energies, both Spins'
+        _re_orb_01 = 'Orbital Energies, per Irrep and Spin'
         found = self.find(_re_orb_00, _re_orb_01, keys_only=True)
         # Open shell vs. closed shell
         cols = {
@@ -154,6 +158,8 @@ class Output(six.with_metaclass(OutMeta, Editor)):
 
 
     def parse_contribution(self):
+        _re_con_00 = ('E(eV)  Occ       MO           %     '
+                      'SFO (first member)   E(eV)  Occ   Fragment')
         # MO contribution by percentage
         found = self.find(_re_con_00, keys_only=True)
         starts = [i + 3 for i in found]
@@ -230,6 +236,9 @@ class Output(six.with_metaclass(OutMeta, Editor)):
 
 
     def parse_momatrix(self):
+        _re_mo_00 = 'Eigenvectors .* in BAS representation'
+        _re_mo_01 = 'row '
+        _re_mo_02 = 'nosym'
         found = self.regex(_re_mo_00, _re_mo_01, _re_mo_02,
                            flags=re.IGNORECASE, keys_only=True)
         if not found[_re_mo_00] or not found[_re_mo_01]: return
@@ -279,6 +288,8 @@ class Output(six.with_metaclass(OutMeta, Editor)):
             The attr :attr:`~exatomic.adf.output._re_loc_mo` is used for parsing this
             section.
         """
+        _re_loc_mo = ("Localized MOs expanded in CFs+SFOs",
+                      "SFO contributions (%) per Localized Orbital")
         found = self.find(*_re_loc_mo)
         if len(found[_re_loc_mo[0]]) == 0:
             if verbose:
@@ -307,17 +318,3 @@ class Output(six.with_metaclass(OutMeta, Editor)):
                                            'chi': [j for _ in range(m) for j in range(n)]})
         momatrix['frame'] = self.atom['frame'].unique()[-1]
         self.sphr_momatrix = momatrix
-
-
-# Atom
-_re_bso_00 = 'Atoms in this Fragment     Cart. coord.s (Angstrom)'
-# Orbital
-_re_orb_00 = 'Orbital Energies, both Spins'
-_re_orb_01 = 'Orbital Energies, per Irrep and Spin'
-# Contribution
-_re_con_00 = 'E(eV)  Occ       MO           %     SFO (first member)   E(eV)  Occ   Fragment'
-# MOMatrix
-_re_mo_00 = 'Eigenvectors .* in BAS representation'
-_re_mo_01 = 'row '
-_re_mo_02 = 'nosym'
-_re_loc_mo = ("Localized MOs expanded in CFs+SFOs", "SFO contributions (%) per Localized Orbital")

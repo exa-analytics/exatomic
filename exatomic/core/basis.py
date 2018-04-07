@@ -73,38 +73,54 @@ class BasisSet(DataFrame):
     _index = 'function'
     _categories = {'L': np.int64, 'set': np.int64, 'frame': np.int64, 'norm': str}
 
-    #@property
-    #def _constructor(self):
-    #    return BasisSet
-
     @property
     def lmax(self):
         return self['L'].cat.as_ordered().max()
 
-    def shells(self):
+    def shells(self, program='', spherical=True, gaussian=True):
+        """
+        Generate unique :class:`~exatomic.algorithms.numerical.Shell`s
+        in the basis set.
+
+        Args:
+            program (str): which code the basis set comes from
+            spherical (bool): expand in ml or cartesian powers
+            gaussian (bool): exponential dependence of basis functions
+
+        Returns:
+            srs (pd.Series): multi-indexed by set and L
+        """
         def _shell_gau(df):
-            piv = ('alpha', 'shell', 'd')
+            col = ('alpha', 'shell', 'd')
             alphas = df.alpha.unique()
-            piv = df.pivot(*piv).loc[alphas].fillna(0.)
+            piv = df.pivot(*col).loc[alphas].fillna(0.)
             nprim, ncont = piv.shape
             return Shell(piv.values.flatten(), alphas, nprim, ncont, df.L.values[0],
-                         df.norm.values[0], self.gaussian, None, None)
+                         df.norm.values[0], gaussian, None, None)
         def _shell_sto(df):
-            piv = ('alpha', 'shell', 'd')
+            col = ('alpha', 'shell', 'd')
             alphas = df.alpha.unique()
-            piv = df.pivot(*piv).loc[alphas].fillna(0.)
+            piv = df.pivot(*col).loc[alphas].fillna(0.)
             nprim, ncont = piv.shape
             return Shell(piv.values.flatten(), alphas, nprim, ncont, df.L.values[0],
-                        self.spherical, self.gaussian, df.r.values, df.n.values)
-        if self.gaussian:
-            if 'norm' not in self.columns: self.spherical_by_shell()
+                         df.norm.values[0], gaussian, df.r.values, df.n.values)
+        self.spherical_by_shell(program, spherical)
+        if gaussian:
             return self.groupby(['set', 'L']).apply(_shell_gau).reset_index()
         return self.groupby(['set', 'L']).apply(_shell_sto).reset_index()
 
-    def spherical_by_shell(self):
-        """Pre-alpha."""
+    def spherical_by_shell(self, program, spherical=True):
+        """Allows for some flexibility in treating shells either as
+        cartesian functions or spherical functions (different normalizations).
+
+        Args:
+            program (str): which code the basis set comes from
+        """
         self['L'] = self['L'].astype(np.int64)
-        self['norm'] = self['L'].apply(lambda L: L > 1)
+        if program == 'molcas':
+            self['norm'] = self['L'].apply(lambda L: L > 1)
+        else:
+            self['norm'] = spherical
         self['L'] = self['L'].astype('category')
 
     def functions_by_shell(self):
@@ -137,12 +153,13 @@ class BasisSet(DataFrame):
         n = self.primitives_by_shell()
         return n * n.index.get_level_values('L').map(mapper)
 
-    def __init__(self, *args, **kwargs):
-        spherical = kwargs.pop("spherical", True)
-        gaussian = kwargs.pop("gaussian", True)
-        super(BasisSet, self).__init__(*args, **kwargs)
-        self.spherical = spherical
-        self.gaussian = gaussian
+    #def __init__(self, *args, **kwargs):
+        #spherical = kwargs.pop("spherical", True)
+        #gaussian = kwargs.pop("gaussian", True)
+        #super(BasisSet, self).__init__(*args, **kwargs)
+        #self._metadata = ['spherical', 'gaussian']
+        #self.spherical = spherical
+        #self.gaussian = gaussian
 
 
 class BasisSetOrder(DataFrame):

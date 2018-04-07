@@ -12,6 +12,8 @@ class Editor(_Editor):
     def __init__(self, *args, **kwargs):
         super(Editor, self).__init__(*args, **kwargs)
         if self.meta is not None:
-            self.meta.update({'program': 'nwchem'})
+            self.meta.update({'program': 'nwchem',
+                              'gaussian': True})
         else:
-            self.meta = {'program': 'nwchem'}
+            self.meta = {'program': 'nwchem',
+                         'gaussian': True}
