@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 # Copyright (c) 2015-2018, Exa Analytics Development Team
 # Distributed under the terms of the Apache License 2.0
-import os
 import numpy as np
 import pandas as pd
 from unittest import TestCase
@@ -13,7 +12,7 @@ from exatomic.molcas.output import Output, Orb
 class TestOutput(TestCase):
     """Test the Molcas output file editor."""
     def setUp(self):
-        #self.cdz = Output(resource('mol-carbon-dz.out'))
+        self.cdz = Output(resource('mol-carbon-dz.out'))
         self.uo2sp = Output(resource('mol-uo2-anomb.out'))
         self.mamcart = Output(resource('mol-ch3nh2-631g.out'))
         self.mamsphr = Output(resource('mol-ch3nh2-anovdzp.out'))
@@ -33,11 +32,17 @@ class TestOutput(TestCase):
                              mocoefs='diff', orbocc='diffocc')
         self.assertTrue('diff' in self.mamcart.momatrix.columns)
         self.assertTrue('diffocc' in self.mamcart.orbital.columns)
+        uni = self.mamcart.to_universe()
+        self.assertTrue(hasattr(uni, 'momatrix'))
+        self.assertTrue(hasattr(uni, 'orbital'))
 
 
     def test_add_overlap(self):
         """Test adding an overlap matrix."""
-        pass
+        self.cdz.add_overlap(resource('mol-carbon-dz.overlap'))
+        self.assertTrue(hasattr(self.cdz, 'overlap'))
+        uni = self.cdz.to_universe()
+        self.assertTrue(hasattr(uni, 'overlap'))
 
 
     def test_parse_atom(self):

@@ -2,8 +2,6 @@
 # Copyright (c) 2015-2018, Exa Analytics Development Team
 # Distributed under the terms of the Apache License 2.0
 """Tests for computing orbitals, densities and orbital angular momenta."""
-import os
-#import bz2
 import numpy as np
 from unittest import TestCase
 from exatomic import Universe

@@ -101,8 +101,6 @@ class Output(six.with_metaclass(OutMeta, Editor)):
 
     def parse_basis_set_order(self):
         # All the columns we need
-        keys = ['center', 'symbol', 'seht', 'shell',
-                 'L', 'l', 'm', 'n', 'r', 'prefac']
         data = defaultdict(list)
         sets = self.basis_set.groupby('set')
         # Iterate over atoms

@@ -298,7 +298,8 @@ class Shell(object):
 
     def _sto_norm(self):
         """Slater-type orbital normalization."""
-        return [((2*a)**n*((2*a)/fac(2*n))**0.5,) for a, n in zip(self.alphas, self.ns)]
+        return [((2 * a) ** n * ((2 * a) / fac(2 * n)) ** 0.5,)
+                for a, n in zip(self.alphas, self.ns)]
 
     def __init__(self, coef, alphas, nprim, ncont, L,
                  spherical, gaussian, rs=None, ns=None):

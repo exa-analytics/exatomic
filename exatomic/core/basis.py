@@ -79,8 +79,8 @@ class BasisSet(DataFrame):
 
     def shells(self, program='', spherical=True, gaussian=True):
         """
-        Generate unique :class:`~exatomic.algorithms.numerical.Shell`s
-        in the basis set.
+        Generate a multi-index series of :class:`~exatomic.algorithms.numerical.Shell`
+        in the basis set, indexed by set and L.
 
         Args:
             program (str): which code the basis set comes from

@@ -5,9 +5,7 @@
 Tests for :mod:`~exatomic.interfaces.cube`
 #############################################
 """
-import os
 import numpy as np
-import pandas as pd
 from unittest import TestCase
 from exatomic.base import resource, staticdir
 from exatomic.interfaces.cube import Cube, uni_from_cubes
@@ -53,5 +51,6 @@ class TestCube(TestCase):
         self.assertEquals(self.uni.field.shape[0], 2)
         self.assertEquals(len(self.uni.field.field_values), 2)
         rot = self.uni.field.rotate(0, 1, np.pi / 4)
+        self.assertEquals(rot.shape[0], 2)
         f = Cube.from_universe(self.uni, 1)
         self.assertEquals(len(f), 874)

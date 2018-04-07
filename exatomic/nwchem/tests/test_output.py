@@ -5,11 +5,10 @@
 Tests for :mod:`~exatomic.nwchem.output`
 #############################################
 """
-import os
-import numpy as np
-import pandas as pd
+#import numpy as np
+#import pandas as pd
 from unittest import TestCase
-from exatomic.base import resource, staticdir
+from exatomic.base import resource
 from exatomic.nwchem.output import Output
 
 

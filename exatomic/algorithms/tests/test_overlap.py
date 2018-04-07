@@ -2,8 +2,6 @@
 # Copyright (c) 2015-2018, Exa Analytics Development Team
 # Distributed under the terms of the Apache License 2.0
 """Tests for computing the overlap."""
-import os
-import bz2
 import numpy as np
 from unittest import TestCase
 from exatomic.base import resource
@@ -30,7 +28,9 @@ class TestMolcasOverlap(TestCase):
 
     def test_overlap(self):
         for uni in self.unis:
-            ovls = uni.basis_functions.integrals().square().values
+            ovls = uni.basis_functions.integrals()
+            self.assertTrue(isinstance(ovls, Overlap))
+            ovls = ovls.square().values
             n = np.isclose(ovls, uni.overlap.square().values,
                            rtol=5e-5, atol=1e-12).sum() \
                 / (ovls.shape[0] * ovls.shape[1])

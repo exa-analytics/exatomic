@@ -11,9 +11,7 @@ from exatomic import Editor as _Editor
 class Editor(_Editor):
     def __init__(self, *args, **kwargs):
         super(Editor, self).__init__(*args, **kwargs)
-        if self.meta is not None:
-            self.meta.update({'program': 'nwchem',
-                              'gaussian': True})
-        else:
-            self.meta = {'program': 'nwchem',
-                         'gaussian': True}
+        if self.meta is None: self.meta = {'program': 'nwchem',
+                                           'gaussian': True}
+        else: self.meta.update({'program': 'nwchem',
+                                'gaussian': True})

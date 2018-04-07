@@ -132,8 +132,8 @@ class Output(six.with_metaclass(OutMeta, Editor)):
             if df is None:
                 setattr(self, attr, getattr(orb, attr))
             elif col in df.columns:
-                 raise ValueError('This action would replace '
-                                  '"{}" in uni.{}'.format(col, attr))
+                raise ValueError('This action would replace '
+                                 '"{}" in uni.{}'.format(col, attr))
             else:
                 df[col] = getattr(orb, attr)[de]
 
