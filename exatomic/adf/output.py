@@ -318,3 +318,7 @@ class Output(six.with_metaclass(OutMeta, Editor)):
                                            'chi': [j for _ in range(m) for j in range(n)]})
         momatrix['frame'] = self.atom['frame'].unique()[-1]
         self.sphr_momatrix = momatrix
+
+        
+    def __init__(self, *args, **kwargs):
+        super(Output, self).__init__(*args, **kwargs)

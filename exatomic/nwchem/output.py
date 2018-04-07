@@ -270,7 +270,7 @@ class Output(six.with_metaclass(OutMeta, Editor)):
 
 
     def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+        super(Output, self).__init__(*args, **kwargs)
 
 
 
@@ -357,7 +357,7 @@ class Ecce(six.with_metaclass(OutMeta, Editor)):
     def __init__(self, *args, **kwargs):
         kind = kwargs.pop("kind", None)
         spin = kwargs.pop("spin", None)
-        super().__init__(*args, **kwargs)
+        super(Ecce, self).__init__(*args, **kwargs)
         self._kind = kind
         self._spin = spin
         self.parse()
