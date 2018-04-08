@@ -281,9 +281,7 @@ class BasisFunctions(object):
         Args:
             shl (:class:`exatomic.algorithms.numerical.Shell`): basis set shell
         """
-        if shl.spherical:
-            return shl.enum_spherical()
-        return shl.enum_cartesian()
+        return shl.enum_spherical() if shl.spherical else shl.enum_cartesian()
 
 
     def evaluate(self, xs, ys, zs):
@@ -298,11 +296,14 @@ class BasisFunctions(object):
             See :meth:`exatomic.algorithms.orbital_util.numerical_grid_from_field_params`
             for grid construction details.
         """
-        if not self._gaussian:
-            if self.spherical:
-                return self._evaluate_sphr_sto(xs, ys, zs)
-            return self._evaluate_sto(xs, ys, zs)
-        return self._evaluate_gau(xs, ys, zs)
+        if self._meta['gaussian']:
+            if self._meta['program'] in ['molcas']:
+                func = self._evaluate_gau_mag
+            elif self._meta['program'] in ['nwchem']:
+                func = self._evaluate_gau_bas
+        else:
+            func = self._evaluate_sto
+        return func(xs, ys, zs)
 
 
     def evaluate_diff(self, xs, ys, zs, cart='x'):
@@ -318,14 +319,14 @@ class BasisFunctions(object):
             See :meth:`exatomic.algorithms.orbital_util.numerical_grid_from_field_params`
             for grid construction details.
         """
-        if not self._gaussian:
+        if not self._meta['gaussian']:
             return self._evaluate_diff_sto(xs, ys, zs, cart)
         return self._evaluate_diff_gau(xs, ys, zs, cart)
 
 
     def _radial(self, x, y, z, alphas, cs, rs=None, pre=None):
         """Generates the symbolic radial portion of a basis function."""
-        if not self._gaussian:
+        if not self._meta['gaussian']:
             return Symbolic(
                 sum((pre * self._expnt ** r * c * exp(-a * self._expnt)
                     for c, a, r in zip(cs, alphas, rs))
@@ -348,8 +349,10 @@ class BasisFunctions(object):
             else:
                 sym = BasisFunctions._sh[ang[0]][ang[1]]
             # Scaled solid harmonics as in the overlap code
-            if shl.spherical and self._program == 'molcas':
+            if shl.spherical and self._meta['program'] in ['molcas']:
                 sym /= (2 * np.pi ** 0.5)
+            #elif self._meta['spherical'] and self._meta['program'] == 'adf':
+            #    sym /= (2 * np.pi ** 0.5)
         return Symbolic(sym.subs({_x: _x - x, _y: _y - y, _z: _z - z}))
 
 
@@ -358,22 +361,9 @@ class BasisFunctions(object):
         cnt, flds = 0, np.empty((len(self), len(xs)))
         for _, ax, ay, az, ishl in _iter_atom_shells(self._ptrs, self._xyzs, *self._shells):
             norm = ishl.norm_contract()
-            for mag in self.enum_shell(ishl):
-                a = self._angular(ishl, ax, ay, az, *mag).evaluate(xs, ys, zs)
-                for c in range(ishl.ncont):
-                    r = self._radial(ax, ay, az, ishl.alphas, norm[:, c],
-                                     rs=ishl.rs, pre=self._pre[cnt])
-                    flds[cnt] = r.evaluate(xs, ys, zs, arr=a)
-                    cnt += 1
-        return flds
-
-
-    def _evaluate_sphr_sto(self, xs, ys, zs):
-        """Evaluates a full spherical STO basis set and returns a numpy array."""
-        cnt, flds = 0, np.empty((len(self), len(xs)))
-        for _, ax, ay, az, ishl in _iter_atom_shells(self._ptrs, self._xyzs, *self._shells):
-            norm = ishl.norm_contract()
-            for mag in ishl.enum_spherical():
+            ang = ishl.enum_spherical() if self._meta['spherical'] \
+                                        else ishl.enum_cartesian()
+            for mag in ang:
                 a = self._angular(ishl, ax, ay, az, *mag).evaluate(xs, ys, zs)
                 for c in range(ishl.ncont):
                     r = self._radial(ax, ay, az, ishl.alphas, norm[:, c],
@@ -387,7 +377,7 @@ class BasisFunctions(object):
         raise NotImplementedError("Verify symbolic differentiation of STOs.")
 
 
-    def _evaluate_gau(self, xs, ys, zs):
+    def _evaluate_gau_mag(self, xs, ys, zs):
         """Evaluates a full Gaussian basis set and returns a numpy array."""
         cnt, flds = 0, np.empty((len(self), len(xs)))
         for _, ax, ay, az, ishl in _iter_atom_shells(self._ptrs, self._xyzs, *self._shells):
@@ -397,6 +387,20 @@ class BasisFunctions(object):
                 for c in range(ishl.ncont):
                     r = self._radial(ax, ay, az, ishl.alphas, norm[:,c])
                     flds[cnt] = r.evaluate(xs, ys, zs, arr=a)
+                    cnt += 1
+        return flds
+
+
+    def _evaluate_gau_bas(self, xs, ys, zs):
+        """Evaluates a full Gaussian basis set and returns a numpy array."""
+        cnt, flds = 0, np.empty((len(self), len(xs)))
+        for _, ax, ay, az, ishl in _iter_atom_shells(self._ptrs, self._xyzs, *self._shells):
+            norm = ishl.norm_contract()
+            for c in range(ishl.ncont):
+                r = self._radial(ax, ay, az, ishl.alphas, norm[:,c]).evaluate(xs, ys, zs)
+                for mag in self.enum_shell(ishl):
+                    a = self._angular(ishl, ax, ay, az, *mag)
+                    flds[cnt] = a.evaluate(xs, ys, zs, arr=r)
                     cnt += 1
         return flds
 
@@ -421,7 +425,7 @@ class BasisFunctions(object):
 
 
     def __len__(self):
-        return self._ncs if self.spherical else self._ncc
+        return self._ncs if self._meta['spherical'] else self._ncc
 
 
     def __repr__(self):
@@ -433,21 +437,15 @@ class BasisFunctions(object):
 
 
     def __init__(self, uni, frame=0, cartp=True):
-        self._program = uni.meta['program']
-        self.spherical = uni.meta['spherical']
-        self._gaussian = uni.meta['gaussian']
-        ptrs, xyzs, shells = uni.enumerate_shells()#self._program,
-                                                  #self.spherical,
-                                                  #self._gaussian)
+        self._meta = uni.meta
+        ptrs, xyzs, shells = uni.enumerate_shells()
         self._ptrs = ptrs
         self._xyzs = xyzs
         self._shells = shells
-        self._npc = uni.basis_dims['npc']
         self._ncc = uni.basis_dims['ncc']
-        self._nps = uni.basis_dims['nps']
         self._ncs = uni.basis_dims['ncs']
         self._cartp = cartp
         self._expnt = _r ** 2
-        if not uni.meta['gaussian']:
+        if not self._meta['gaussian']:
             self._expnt = _r
             self._pre = uni.basis_set_order['prefac']

@@ -31,7 +31,7 @@ def add_molecular_orbitals(uni, field_params=None, mocoefs=None,
     Args:
         uni (:class:`~exatomic.core.universe.Universe`): a universe
         field_params (dict): See :func:`~exatomic.algorithms.orbital_util.make_fps`
-        mocoefs (str): column in uni.momatrix (default 'coef')
+        mocoefs (str): column in uni.current_momatrix (default 'coef')
         vector (int, list, range, np.ndarray): the MO vectors to evaluate
         inplace (bool): if False, return the field obj instead of modifying uni
         replace (bool): if False, do not delete any previous fields
@@ -50,7 +50,7 @@ def add_molecular_orbitals(uni, field_params=None, mocoefs=None,
 
     x, y, z = numerical_grid_from_field_params(fps)
     bvs = bfns.evaluate(x, y, z)
-    cmat = uni.momatrix.square(column=mocoefs).values
+    cmat = uni.current_momatrix.square(column=mocoefs).values
     try: ovs = _compute_orbitals(len(x), bvs, vector, cmat)
     except: ovs = _compute_orbitals_nojit(len(x), bvs, vector, cmat)
     field = _make_field(ovs, fps)
@@ -73,7 +73,7 @@ def add_density(uni, field_params=None, mocoefs=None, orbocc=None,
     Args:
         uni (:class:`~exatomic.container.Universe`): a universe
         field_params (dict): See :func:`~exatomic.algorithms.orbital_util.make_fps`
-        mocoefs (str): column in uni.momatrix (default 'coef')
+        mocoefs (str): column in uni.current_momatrix (default 'coef')
         orbocc (str): column in uni.orbital (default 'occupation')
         inplace (bool): if False, return the field obj instead of modifying uni
     """
@@ -82,13 +82,13 @@ def add_density(uni, field_params=None, mocoefs=None, orbocc=None,
     orbocc = mocoefs if orbocc is None and mocoefs != 'coef' else orbocc
     orbocc = _check_column(uni, 'orbital', orbocc)
     bfns = uni.basis_functions
-    orbs = uni.momatrix.groupby('orbital')
-    vector = np.array(range(uni.momatrix.orbital.max() + 1))
+    orbs = uni.current_momatrix.groupby('orbital')
+    vector = np.array(range(uni.current_momatrix.orbital.max() + 1))
     fps = _determine_fps(uni, field_params, len(vector))
 
     x, y, z = numerical_grid_from_field_params(fps)
     bvs = bfns.evaluate(x, y, z)
-    cmat = uni.momatrix.square(column=mocoefs).values
+    cmat = uni.current_momatrix.square(column=mocoefs).values
     try: ovs = _compute_orbitals(len(x), bvs, vector, cmat)
     except: ovs = _compute_orbitals_nojit(len(x), bvs, vector, cmat)
     dens = _compute_density(ovs, uni.orbital[orbocc].values)
@@ -111,8 +111,8 @@ def add_orb_ang_mom(uni, field_params=None, rcoefs=None, icoefs=None,
     Args
         uni (:class:`~exatomic.container.Universe`): a universe
         field_params (dict): See :func:`~exatomic.algorithms.orbital_util.make_fps`
-        rcoefs (str): column in uni.momatrix (default 'lreal')
-        icoefs (str): column in uni.momatrix (default 'limag')
+        rcoefs (str): column in uni.current_momatrix (default 'lreal')
+        icoefs (str): column in uni.current_momatrix (default 'limag')
         orbocc (str): column in uni.orbital (default 'lreal')
         inplace (bool): if False, return the field obj instead of modifying uni
     """
@@ -142,8 +142,8 @@ def add_orb_ang_mom(uni, field_params=None, rcoefs=None, icoefs=None,
         p1 = 'Timing: grid evaluation  - {:>8.2f}s.'
         print(p1.format((t2-t1).total_seconds()))
 
-    cmatr = uni.momatrix.square(column=rcoefs).values
-    cmati = uni.momatrix.square(column=icoefs).values
+    cmatr = uni.current_momatrix.square(column=rcoefs).values
+    cmati = uni.current_momatrix.square(column=icoefs).values
     curx, cury, curz = _compute_current_density(
         bvs, grx, gry, grz, cmatr, cmati, occvec, verbose=verbose)
     t3 = datetime.now()

@@ -69,23 +69,23 @@ class Universe(six.with_metaclass(Meta, Container)):
         molecule (:class:`~exatomic.core.molecule.Molecule`): Molecule information
         orbital (:class:`~exatomic.core.orbital.Orbital`): Molecular orbital information
         momatrix (:class:`~exatomic.core.orbital.MOMatrix`): Molecular orbital coefficient matrix
+        frequency (:class:`~exatomic.core.atom.Frequency`): Vibrational modes and atom displacements
+        excitation (:class:`~exatomic.core.orbital.Excitation`): Electronic excitation information
+        basis_set (:class:`~exatomic.core.basis.BasisSet`): Basis set specification
+        overlap (:class:`~exatomic.core.basis.Overlap`): The overlap matrix
+        basis_functions (:class:`~exatomic.algorithms.basis.BasisFunctions`): Basis function evaluation
+        field (:class:`~exatomic.core.field.AtomicField`): Scalar fields (MOs, densities, etc.)
     """
     _cardinal = "frame"
     _getter_prefix = "compute"
 
     @property
-    def momatrix(self):
-        cart = hasattr(self, 'cart_momatrix')
-        sphr = hasattr(self, 'sphr_momatrix')
-        either = cart or sphr
-        if not either:
-            return self.momatrix
-        if self.basis_functions.spherical and sphr:
-            return self.sphr_momatrix
-        elif not self.basis_functions.spherical and cart:
-            return self.cart_momatrix
-        raise AttributeError('Not sure which momatrix is desired.')
-
+    def current_momatrix(self):
+        if self.meta['spherical']:
+            try: return self.sphr_momatrix
+            except AttributeError: return self.momatrix
+        try: return self.cart_momatrix
+        except AttributeError: return self.momatrix
 
     @property
     def periodic(self, *args, **kwargs):
@@ -170,7 +170,10 @@ class Universe(six.with_metaclass(Meta, Container)):
             'sets': bset.functions_by_shell()}
 
     def compute_basis_functions(self, **kwargs):
-        self.basis_functions = BasisFunctions(self)
+        if self.meta['program'] in ['adf', 'nwchem']:
+            self.basis_functions = BasisFunctions(self, cartp=False)
+        else:
+            self.basis_functions = BasisFunctions(self)
 
     def enumerate_shells(self, frame=0):
         """Extract minimal information from the universe to be used in

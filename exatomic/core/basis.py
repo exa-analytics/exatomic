@@ -117,7 +117,7 @@ class BasisSet(DataFrame):
             program (str): which code the basis set comes from
         """
         self['L'] = self['L'].astype(np.int64)
-        if program == 'molcas':
+        if program in ['molcas', 'nwchem']:
             self['norm'] = self['L'].apply(lambda L: L > 1)
         else:
             self['norm'] = spherical

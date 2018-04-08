@@ -11,7 +11,7 @@ loop going over the y dimension, and the inner loop going over the z dimension.
 """
 import numpy as np
 import pandas as pd
-from exa import DataFrame, Field, Series
+from exa import Field, Series
 
 
 class AtomicField(Field):
