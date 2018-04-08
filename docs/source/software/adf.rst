@@ -18,7 +18,7 @@
 .. automodule:: exatomic.adf.tests.test_editor
     :members:
 
-.. automodule:: exatomic.adf.tests.test_orbital
+.. automodule:: exatomic.adf.tests.test_output
     :members:
 
 .. _ADF: https://www.scm.com/
