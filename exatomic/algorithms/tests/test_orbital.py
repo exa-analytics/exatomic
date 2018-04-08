@@ -4,7 +4,7 @@
 """Tests for computing orbitals, densities and orbital angular momenta."""
 import numpy as np
 from unittest import TestCase
-from exatomic import Universe
+from exatomic import Universe, nwchem, molcas
 from exatomic.base import resource
 from exatomic.algorithms.orbital_util import compare_fields
 from exatomic.algorithms.orbital import (add_molecular_orbitals,
@@ -42,3 +42,16 @@ class TestADFOrbital(TestCase):
                                    field_params=chk.field.loc[0])
         res = compare_fields(chk, uni, signed=False, verbose=False)
         self.assertTrue(np.isclose(len(res), sum(res), rtol=5e-4))
+
+
+class TestNWChemOrbital(TestCase):
+
+    def test_compare_fields(self):
+        nw = nwchem.Output(resource('nw-ch3nh2-631g.out')).to_universe()
+        mo = molcas.Output(resource('mol-ch3nh2-631g.out'))
+        mo.add_orb(resource('mol-ch3nh2-631g.scforb'))
+        mo = mo.to_universe()
+        nw.add_molecular_orbitals(vector=range(3, 10), verbose=False)
+        mo.add_molecular_orbitals(vector=range(3, 10), verbose=False)
+        res = compare_fields(nw, mo, signed=False, rtol=5e-3)
+        self.assertTrue(np.isclose(sum(res), len(res), rtol=5e-3))

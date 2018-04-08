@@ -12,7 +12,7 @@ basis set ordering scheme.
 """
 from operator import mul
 from functools import reduce
-from collections import OrderedDict, Counter
+from collections import OrderedDict, Counter, defaultdict
 from itertools import combinations_with_replacement as cwr
 import numpy as np
 import pandas as pd
@@ -243,6 +243,9 @@ class Symbolic(object):
         expnt = exp(-alpha * _r ** 2)
         return evaluate(str((self._expr * expnt).subs(subs)))
 
+    def __mul__(self, other):
+        return self.__class__(self._expr * other._expr)
+
     def __repr__(self):
         return str(self._expr)
 
@@ -300,10 +303,25 @@ class BasisFunctions(object):
             if self._meta['program'] in ['molcas']:
                 func = self._evaluate_gau_mag
             elif self._meta['program'] in ['nwchem']:
-                func = self._evaluate_gau_bas
+                func = self._evaluate_gau_bso
         else:
             func = self._evaluate_sto
         return func(xs, ys, zs)
+
+    def list(self):
+        """Construct symbolic basis functions.
+
+        Returns:
+            bfns (list): symbolic basis functions
+        """
+        if self._meta['gaussian']:
+            if self._meta['program'] in ['molcas']:
+                func = self._evaluate_gau_mag
+            elif self._meta['program'] in ['nwchem']:
+                func = self._evaluate_gau_bso
+        else:
+            func = self._evaluate_sto
+        return func(None, None, None, eval=False)
 
 
     def evaluate_diff(self, xs, ys, zs, cart='x'):
@@ -319,6 +337,8 @@ class BasisFunctions(object):
             See :meth:`exatomic.algorithms.orbital_util.numerical_grid_from_field_params`
             for grid construction details.
         """
+        if self._meta['program'] in ['nwchem']:
+            raise NotImplementedError("Code up _evaluate_diff_gau_bso.")
         if not self._meta['gaussian']:
             return self._evaluate_diff_sto(xs, ys, zs, cart)
         return self._evaluate_diff_gau(xs, ys, zs, cart)
@@ -356,19 +376,23 @@ class BasisFunctions(object):
         return Symbolic(sym.subs({_x: _x - x, _y: _y - y, _z: _z - z}))
 
 
-    def _evaluate_sto(self, xs, ys, zs):
+    def _evaluate_sto(self, xs, ys, zs, eval=True):
         """Evaluates a full STO basis set and returns a numpy array."""
-        cnt, flds = 0, np.empty((len(self), len(xs)))
+        cnt = 0
+        if eval: flds = np.empty((len(self), len(xs)))
+        else: flds = [None for _ in range(len(self))]
         for _, ax, ay, az, ishl in _iter_atom_shells(self._ptrs, self._xyzs, *self._shells):
             norm = ishl.norm_contract()
             ang = ishl.enum_spherical() if self._meta['spherical'] \
                                         else ishl.enum_cartesian()
             for mag in ang:
-                a = self._angular(ishl, ax, ay, az, *mag).evaluate(xs, ys, zs)
+                a = self._angular(ishl, ax, ay, az, *mag)
+                if eval: a = a.evaluate(xs, ys, zs)
                 for c in range(ishl.ncont):
                     r = self._radial(ax, ay, az, ishl.alphas, norm[:, c],
                                      rs=ishl.rs, pre=self._pre[cnt])
-                    flds[cnt] = r.evaluate(xs, ys, zs, arr=a)
+                    if eval: flds[cnt] = r.evaluate(xs, ys, zs, arr=a)
+                    else: flds[cnt] = a * r
                     cnt += 1
         return flds
 
@@ -377,30 +401,45 @@ class BasisFunctions(object):
         raise NotImplementedError("Verify symbolic differentiation of STOs.")
 
 
-    def _evaluate_gau_mag(self, xs, ys, zs):
+    def _evaluate_gau_bso(self, xs, ys, zs, eval=True):
         """Evaluates a full Gaussian basis set and returns a numpy array."""
-        cnt, flds = 0, np.empty((len(self), len(xs)))
-        for _, ax, ay, az, ishl in _iter_atom_shells(self._ptrs, self._xyzs, *self._shells):
+        cnt = 0
+        if eval: flds = np.empty((len(self), len(xs)))
+        else: flds = [None for _ in range(len(self))]
+        cache = defaultdict(dict)
+        p = pd.DataFrame(self._ptrs, columns=('center', 'shelldx'))
+        p['L'] = [self._shells[i].L for i in p['shelldx']]
+        grps = p.groupby(['center', 'L'])
+        for cen, L, ml in zip(self._bso['center'],
+                              self._bso['L'], self._bso['ml']):
+            cache[cen].setdefault(L, defaultdict(int))
+            ax, ay, az = self._xyzs[cen]
+            p = grps.get_group((cen, L))['shelldx'].values[0]
+            ishl = self._shells[p]
             norm = ishl.norm_contract()
-            for mag in self.enum_shell(ishl):
-                a = self._angular(ishl, ax, ay, az, *mag).evaluate(xs, ys, zs)
-                for c in range(ishl.ncont):
-                    r = self._radial(ax, ay, az, ishl.alphas, norm[:,c])
-                    flds[cnt] = r.evaluate(xs, ys, zs, arr=a)
-                    cnt += 1
+            a = self._angular(ishl, ax, ay, az, L, ml)
+            r = self._radial(ax, ay, az, ishl.alphas, norm[:,cache[cen][L][ml]])
+            if eval: flds[cnt] = r.evaluate(xs, ys, zs, arr=a.evaluate(xs, ys, zs))
+            else: flds[cnt] = a * r
+            cache[cen][L][ml] += 1
+            cnt += 1
         return flds
 
 
-    def _evaluate_gau_bas(self, xs, ys, zs):
+    def _evaluate_gau_mag(self, xs, ys, zs, eval=True):
         """Evaluates a full Gaussian basis set and returns a numpy array."""
-        cnt, flds = 0, np.empty((len(self), len(xs)))
+        cnt = 0
+        if eval: flds = np.empty((len(self), len(xs)))
+        else: flds = [None for _ in range(len(self))]
         for _, ax, ay, az, ishl in _iter_atom_shells(self._ptrs, self._xyzs, *self._shells):
             norm = ishl.norm_contract()
-            for c in range(ishl.ncont):
-                r = self._radial(ax, ay, az, ishl.alphas, norm[:,c]).evaluate(xs, ys, zs)
-                for mag in self.enum_shell(ishl):
-                    a = self._angular(ishl, ax, ay, az, *mag)
-                    flds[cnt] = a.evaluate(xs, ys, zs, arr=r)
+            for mag in self.enum_shell(ishl):
+                a = self._angular(ishl, ax, ay, az, *mag)
+                if eval: a = a.evaluate(xs, ys, zs)
+                for c in range(ishl.ncont):
+                    r = self._radial(ax, ay, az, ishl.alphas, norm[:,c])
+                    if eval: flds[cnt] = r.evaluate(xs, ys, zs, arr=a)
+                    else: flds[cnt] = a * r
                     cnt += 1
         return flds
 
@@ -438,6 +477,7 @@ class BasisFunctions(object):
 
     def __init__(self, uni, frame=0, cartp=True):
         self._meta = uni.meta
+        self._bso = uni.basis_set_order
         ptrs, xyzs, shells = uni.enumerate_shells()
         self._ptrs = ptrs
         self._xyzs = xyzs
