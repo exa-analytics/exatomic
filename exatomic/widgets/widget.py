@@ -528,7 +528,7 @@ class UniverseWidget(ExatomicBox):
             for scn in self.active(): scn.atom_3d = not scn.atom_3d
 
         def _axis(b):
-            for scn in self.active(): scn.axis = scn.axis
+            for scn in self.active(): scn.axis = not scn.axis
 
         atoms.on_click(_atom_3d)
         axis.on_click(_axis)

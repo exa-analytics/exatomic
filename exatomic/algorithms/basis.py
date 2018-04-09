@@ -18,12 +18,12 @@ import numpy as np
 import pandas as pd
 from numexpr import evaluate
 try:
-    from symengine import var, exp, cos, sin, Mul, Integer
+    from symengine import var, exp, cos, sin, Mul, Integer, Float
 except ImportError:
     from sympy import symbols as var
-    from sympy import exp, cos, sin, Mul, Integer
+    from sympy import exp, cos, sin, Mul, Integer, Float
 from exatomic.algorithms.overlap import _cartesian_shell_pairs, _iter_atom_shells
-from exatomic.algorithms.numerical import fac, _tri_indices, _triangle
+from exatomic.algorithms.numerical import fac, _tri_indices, _triangle, _enum_spherical
 
 
 _x, _y, _z = var("_x _y _z")
@@ -122,7 +122,7 @@ def spherical_harmonics(lmax):
     return sh
 
 
-def solid_harmonics(lmax):
+def solid_harmonics(lmax, scaled=False):
     """Symbolic real solid harmonics up to order lmax.
 
     .. code-block:: python
@@ -132,6 +132,7 @@ def solid_harmonics(lmax):
 
     Args:
         lmax (int): highest order angular momentum quantum number
+        scaled (bool): if scaled, includes factor of 1 / (2 * np.pi ** 0.5)
     """
     def _top_sh(lp, kr, sp, sm):
         return ((2 ** kr * (2 * lp + 1) / (2 * lp + 2)) ** 0.5 *
@@ -144,7 +145,8 @@ def solid_harmonics(lmax):
         return ((2 ** kr * (2 * lp + 1) / (2 * lp + 2)) ** 0.5 *
                 (_y * sp + (1 - kr) * _x * sm))
     sh = OrderedDict([(l, OrderedDict([])) for l in range(lmax + 1)])
-    sh[0][0] = Integer(1)
+    if scaled: sh[0][0] = Float(1 / (2 * np.pi ** 0.5))
+    else: sh[0][0] = Integer(1)
     for l in range(1, lmax + 1):
         lp = l - 1
         kr = int(not lp)
@@ -155,6 +157,9 @@ def solid_harmonics(lmax):
             except KeyError: rec = sh[lp][ml]
             sh[l][ml] = _mid_sh(lp, ml, sh[lp][ml], rec)
         sh[l][mls[-1]] = _top_sh(lp, kr, sh[lp][lp], sh[lp][-lp])
+        if scaled:
+            for ml in mls:
+                sh[l][ml] /= 2 * np.pi ** 0.5
     return sh
 
 
@@ -187,7 +192,7 @@ def car2sph(sh, cart, orderedp=True):
             coefs = sym.expand().as_coefficients_dict()
             #for crt, coef in coefs.items():
             for crt, _ in coefs.items():
-                if isinstance(crt, Integer): continue
+                if isinstance(crt, (Integer, Float)): continue
                 idx = cdxs.index(crt)
                 c2s[L][idx, mli] = coefs[cdxs[idx]]
     return c2s
@@ -263,8 +268,6 @@ class BasisFunctions(object):
         frame (int): frame corresponding to basis set (default 0)
         cartp (bool): forces p function ordering as (x, y, z) not (-1, 0, 1)
     """
-    # Unscaled solid harmonics
-    _sh = solid_harmonics(6)
 
 
     def integrals(self):
@@ -304,8 +307,7 @@ class BasisFunctions(object):
                 func = self._evaluate_gau_mag
             elif self._meta['program'] in ['nwchem']:
                 func = self._evaluate_gau_bso
-        else:
-            func = self._evaluate_sto
+        else: func = self._evaluate_sto
         return func(xs, ys, zs)
 
     def list(self):
@@ -346,7 +348,7 @@ class BasisFunctions(object):
 
     def _radial(self, x, y, z, alphas, cs, rs=None, pre=None):
         """Generates the symbolic radial portion of a basis function."""
-        if not self._meta['gaussian']:
+        if pre is not None:
             return Symbolic(
                 sum((pre * self._expnt ** r * c * exp(-a * self._expnt)
                     for c, a, r in zip(cs, alphas, rs))
@@ -360,19 +362,11 @@ class BasisFunctions(object):
     def _angular(self, shl, x, y, z, *ang):
         """Generates the symbolic angular portion of a basis function."""
         if len(ang) == 3:
-            sym = _x ** ang[0] * _y ** ang[1] * _z ** ang[2]
+            l, m, n = ang
+            sym = _x ** l * _y ** m * _z ** n
         else:
-            # Many codes order p functions (x, y, z), not (-1, 0, 1)
-            if ang[0] == 1 and self._cartp:
-                mp = {-1: 1, 0: -1, 1: 0}
-                sym = BasisFunctions._sh[ang[0]][mp[ang[1]]]
-            else:
-                sym = BasisFunctions._sh[ang[0]][ang[1]]
-            # Scaled solid harmonics as in the overlap code
-            if shl.spherical and self._meta['program'] in ['molcas']:
-                sym /= (2 * np.pi ** 0.5)
-            #elif self._meta['spherical'] and self._meta['program'] == 'adf':
-            #    sym /= (2 * np.pi ** 0.5)
+            L, ml = ang
+            sym = self._sh[L][ml]
         return Symbolic(sym.subs({_x: _x - x, _y: _y - y, _z: _z - z}))
 
 
@@ -383,14 +377,15 @@ class BasisFunctions(object):
         else: flds = [None for _ in range(len(self))]
         for _, ax, ay, az, ishl in _iter_atom_shells(self._ptrs, self._xyzs, *self._shells):
             norm = ishl.norm_contract()
-            ang = ishl.enum_spherical() if self._meta['spherical'] \
-                                        else ishl.enum_cartesian()
+            if self._meta['spherical']: ang = ishl.enum_spherical()
+            else: ang = ishl.enum_cartesian()
             for mag in ang:
                 a = self._angular(ishl, ax, ay, az, *mag)
                 if eval: a = a.evaluate(xs, ys, zs)
                 for c in range(ishl.ncont):
+                    pre = 1 if self._meta['spherical'] else self._pre[cnt]
                     r = self._radial(ax, ay, az, ishl.alphas, norm[:, c],
-                                     rs=ishl.rs, pre=self._pre[cnt])
+                                     rs=ishl.rs, pre=pre)
                     if eval: flds[cnt] = r.evaluate(xs, ys, zs, arr=a)
                     else: flds[cnt] = a * r
                     cnt += 1
@@ -406,16 +401,14 @@ class BasisFunctions(object):
         cnt = 0
         if eval: flds = np.empty((len(self), len(xs)))
         else: flds = [None for _ in range(len(self))]
-        cache = defaultdict(dict)
+        cache = defaultdict(lambda: defaultdict(lambda: defaultdict(int)))
         p = pd.DataFrame(self._ptrs, columns=('center', 'shelldx'))
         p['L'] = [self._shells[i].L for i in p['shelldx']]
         grps = p.groupby(['center', 'L'])
         for cen, L, ml in zip(self._bso['center'],
                               self._bso['L'], self._bso['ml']):
-            cache[cen].setdefault(L, defaultdict(int))
             ax, ay, az = self._xyzs[cen]
-            p = grps.get_group((cen, L))['shelldx'].values[0]
-            ishl = self._shells[p]
+            ishl = self._shells[grps.get_group((cen, L))['shelldx'].values[0]]
             norm = ishl.norm_contract()
             a = self._angular(ishl, ax, ay, az, L, ml)
             r = self._radial(ax, ay, az, ishl.alphas, norm[:,cache[cen][L][ml]])
@@ -476,15 +469,30 @@ class BasisFunctions(object):
 
 
     def __init__(self, uni, frame=0, cartp=True):
+        # Attach relevant uni attributes
         self._meta = uni.meta
-        self._bso = uni.basis_set_order
+        if self._meta['program'] in ['nwchem']:
+            self._bso = uni.basis_set_order
         ptrs, xyzs, shells = uni.enumerate_shells()
         self._ptrs = ptrs
         self._xyzs = xyzs
         self._shells = shells
         self._ncc = uni.basis_dims['ncc']
         self._ncs = uni.basis_dims['ncs']
-        self._cartp = cartp
+        # Scaled or unscaled solid harmonics
+        lmax = uni.basis_set.lmax
+        sh = solid_harmonics(lmax)
+        scaled = self._meta['program'] in ['molcas']
+        if scaled and lmax > 2:
+            ssh = solid_harmonics(lmax, scaled=True)
+            for L in range(2, lmax + 1):
+                sh[L] = ssh[L]
+        # Re-order p functions as 'x', 'y', 'z' rather than -1, 0, 1
+        if cartp:
+            ptmp = sh[1].copy()
+            sh[1] = OrderedDict((ml, ptmp[ml]) for ml in (1, -1, 0))
+        self._sh = sh
+        # Exponential dependence
         self._expnt = _r ** 2
         if not self._meta['gaussian']:
             self._expnt = _r

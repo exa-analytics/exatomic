@@ -24,9 +24,9 @@ def add_molecular_orbitals(uni, field_params=None, mocoefs=None,
     momatrix attributes to use this function.  Evaluate molecular
     orbitals on a numerical grid.  Attempts to generate reasonable
     defaults if none are provided.  If vector is not provided,
-    attempts to calculate orbitals by the orbital table, or by the
+    attempts to calculate vector from the orbital table, or by the
     sum of Z (Zeff) of the atoms in the atom table divided by two;
-    roughly (HOMO-5,LUMO+7).
+    roughly (HOMO-5, LUMO+7).
 
     Args:
         uni (:class:`~exatomic.core.universe.Universe`): a universe
@@ -43,7 +43,7 @@ def add_molecular_orbitals(uni, field_params=None, mocoefs=None,
     vector = _determine_vector(uni, vector)
     bfns = uni.basis_functions
     fps = _determine_fps(uni, field_params, len(vector))
-    mocoefs = _check_column(uni, 'momatrix', mocoefs)
+    mocoefs = _check_column(uni, 'current_momatrix', mocoefs)
     if verbose:
         p1 = 'Evaluating {} basis functions once.'
         print(p1.format(len(bfns)))
@@ -78,7 +78,7 @@ def add_density(uni, field_params=None, mocoefs=None, orbocc=None,
         inplace (bool): if False, return the field obj instead of modifying uni
     """
     t1 = datetime.now()
-    mocoefs = _check_column(uni, 'momatrix', mocoefs)
+    mocoefs = _check_column(uni, 'current_momatrix', mocoefs)
     orbocc = mocoefs if orbocc is None and mocoefs != 'coef' else orbocc
     orbocc = _check_column(uni, 'orbital', orbocc)
     bfns = uni.basis_functions
@@ -120,8 +120,8 @@ def add_orb_ang_mom(uni, field_params=None, rcoefs=None, icoefs=None,
         raise Exception("Must specify rcoefs and icoefs")
     t0 = datetime.now()
     orbocc = rcoefs if orbocc is None else orbocc
-    rcoefs = _check_column(uni, 'momatrix', rcoefs)
-    icoefs = _check_column(uni, 'momatrix', icoefs)
+    rcoefs = _check_column(uni, 'current_momatrix', rcoefs)
+    icoefs = _check_column(uni, 'current_momatrix', icoefs)
     if maxes is None:
         if verbose:
             print("If magnetic axes are not an identity " \

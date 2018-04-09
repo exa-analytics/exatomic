@@ -15,54 +15,54 @@ from exa.util.units import Length
 columns = ['x', 'y', 'z', 'symbol', 'frame', 'label']
 
 
-def make_small_molecule(center=None, ligand=None, distance=None, geometry=None,
-                        offset=None, plane=None, axis=None, domains=None, unit='Angstrom'):
+def make_small_molecule(center, ligand, distance, geometry,
+                        offset=None, plane=None, axis=None,
+                        domains=None, unit='Angstrom',
+                        angle=None):
     """
     A minimal molecule builder for simple one-center, homogeneous ligand
     molecules of various general chemistry molecular geometries. If 'domains'
     is not specified and geometry is ambiguous (like 'bent'),
     it just guesses the simplest geometry (smallest number of domains).
 
-    Args
+    Args:
         center (str): atomic symbol of central atom
         ligand (str): atomic symbol of ligand atoms
-        distance (float): distance between central atom and any ligand
+        distance (float): distance between central atom and ligand
         geometry (str): molecular geometry
-        domains (int): number of electronic domains
         offset (np.array): 3-array of position of central atom
         plane (str): cartesian plane of molecule (eg. for 'square_planar')
         axis (str): cartesian axis of molecule (eg. for 'linear')
+        domains (int): number of electronic domains
+        unit (str): unit of distance (default 'Angstrom')
 
-    Returns
-        exatomic.atom.Atom: Atom table of small molecule
+    Returns:
+        df (:class:`~exatomic.core.atom.Atom`): Atom table of small molecule
     """
-    if center is None or ligand is None or distance is None or geometry is None:
-        raise NotImplementedError('must supply center, ligand, distance and geometry')
     distance *= Length[unit, 'au']
     funcs = {2: _2_domain, 3: _3_domain, 4: _4_domain, 5: _5_domain, 6: _6_domain}
     if domains is not None:
-        return funcs[domains](center, ligand, distance, geometry, offset, plane, axis)
+        return funcs[domains](center, ligand, distance, geometry, offset, plane, axis, angle)
     # 2 domains
     if geometry in ['linear', 'bent']:
-        return _2_domain(center, ligand, distance, geometry, offset, plane, axis)
+        return _2_domain(center, ligand, distance, geometry, offset, plane, axis, angle)
     # 3 domains
     if geometry in ['trigonal_planar', 'trigonal_pyramidal', 't_shaped']:
-        return _3_domain(center, ligand, distance, geometry, offset, plane, axis)
+        return _3_domain(center, ligand, distance, geometry, offset, plane, axis, angle)
     # 4 domains
     if geometry in ['tetrahedral', 'square_planar', 'seesaw']:
-        return _4_domain(center, ligand, distance, geometry, offset, plane, axis)
+        return _4_domain(center, ligand, distance, geometry, offset, plane, axis, angle)
     # 5 domains
     if geometry in ['trigonal_bipyramidal', 'square_pyramidal']:
-        return _5_domain(center, ligand, distance, geometry, offset, plane, axis)
+        return _5_domain(center, ligand, distance, geometry, offset, plane, axis, angle)
     # 6 domains
     if geometry in ['octahedral']:
-        return _6_domain(center, ligand, distance, geometry, offset, plane, axis)
+        return _6_domain(center, ligand, distance, geometry, offset, plane, axis, angle)
     raise NotImplementedError
 
 
-def _2_domain(center, ligand, distance, geometry, offset, plane, axis):
-    if axis is None:
-        axis = 'z'
+def _2_domain(center, ligand, distance, geometry, offset, plane, axis, angle):
+    if axis is None: axis = 'z'
     if geometry == 'linear':
         cart = ['x', 'y', 'z']
         arr = np.array([0, 0, 0])
@@ -80,7 +80,7 @@ def _2_domain(center, ligand, distance, geometry, offset, plane, axis):
     else:
         raise NotImplementedError
 
-def _3_domain(center, ligand, distance, geometry, offset, plane, axis):
+def _3_domain(center, ligand, distance, geometry, offset, plane, axis, angle):
     if geometry == 'trigonal_pyramidal':
         raise NotImplementedError('trigonal pyramidal not supported yet')
     if geometry == 'trigonal_planar':
@@ -97,7 +97,7 @@ def _3_domain(center, ligand, distance, geometry, offset, plane, axis):
             cnt += 1
         return pd.DataFrame(geom, columns=columns)
 
-def _4_domain(center, ligand, distance, geometry, offset, plane, axis):
+def _4_domain(center, ligand, distance, geometry, offset, plane, axis, angle):
     if geometry == 'bent':
         origin = np.array([0., 0., 0.])
         arr = np.array([distance, distance, 0.])
@@ -173,10 +173,10 @@ def _4_domain(center, ligand, distance, geometry, offset, plane, axis):
         return pd.DataFrame(geom, columns=columns)
 
 
-def _5_domain(center, ligand, distance, geometry, offset, plane, axis):
+def _5_domain(center, ligand, distance, geometry, offset, plane, axis, angle):
     raise NotImplementedError('5 coordinate complexes not implemented yet')
 
-def _6_domain(center, ligand, distance, geometry, offset, plane, axis):
+def _6_domain(center, ligand, distance, geometry, offset, plane, axis, angle):
     if geometry != 'octahedral':
         raise NotImplementedError('only octahedral geometry supported currently')
     origin = np.array([0., 0., 0.])

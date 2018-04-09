@@ -47,6 +47,8 @@ class Meta(TypedMeta):
     overlap = Overlap
     density = DensityMatrix
     basis_set_order = BasisSetOrder
+    cart_basis_set_order = BasisSetOrder
+    sphr_basis_set_order = BasisSetOrder
     basis_set = BasisSet
     basis_dims = dict
     basis_functions = BasisFunctions
@@ -86,6 +88,14 @@ class Universe(six.with_metaclass(Meta, Container)):
             except AttributeError: return self.momatrix
         try: return self.cart_momatrix
         except AttributeError: return self.momatrix
+
+    @property
+    def current_basis_set_order(self):
+        if self.meta['spherical']:
+            try: return self.sphr_basis_set_order
+            except AttributeError: return self.basis_set_order
+        try: return self.cart_basis_set_order
+        except AttributeError: return self.basis_set_order
 
     @property
     def periodic(self, *args, **kwargs):
@@ -170,7 +180,7 @@ class Universe(six.with_metaclass(Meta, Container)):
             'sets': bset.functions_by_shell()}
 
     def compute_basis_functions(self, **kwargs):
-        if self.meta['program'] in ['adf', 'nwchem']:
+        if self.meta['program'] in ['nwchem']:
             self.basis_functions = BasisFunctions(self, cartp=False)
         else:
             self.basis_functions = BasisFunctions(self)

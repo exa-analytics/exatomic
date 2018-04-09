@@ -248,10 +248,19 @@ def _determine_fps(uni, fps, nvec):
 
 
 def _check_column(uni, df, key):
-    """Repetitive checking of columns in a universe."""
+    """Sanity checking of columns in a given dataframe in the universe.
+
+    Args:
+        uni (:class:`~exatomic.core.universe.Universe`): a universe
+        df (str): name of dataframe attribute in the universe
+        key (str): column name in df
+
+    Returns:
+        key (str) if key in uni.df
+    """
     if key is None:
-        if df == 'momatrix': key = 'coef'
-        elif df == 'orbital': key = 'occupation'
+        if 'momatrix' in df: key = 'coef'
+        elif 'orbital' in df: key = 'occupation'
         else: raise Exception("{} not supported".format(df))
     err = '"{}" not in uni.{}.columns'.format
     if key not in getattr(uni, df).columns:
