@@ -25,6 +25,10 @@ class Output(Editor):
         raise NotImplementedError('This editor has no parse_atom method.')
 
     def parse_nao(self):
+        _re_nao_start = 'NAO Atom No lang   Type(AO)    Occupancy'
+        _re_nao_stop01 = ' Summary of Natural Population Analysis'
+        _re_nao_stop02 = 'low occupancy.*core orbitals found on'
+        _re_nao_stop03 = 'electrons found in the effective core potential'
         found = self.find(_re_nao_start, _re_nao_stop01)
         regex = self.regex(_re_nao_stop02, _re_nao_stop03, keys_only=True)
         starts = [i[0] + 2 for i in found[_re_nao_start]]
@@ -59,11 +63,6 @@ class Output(Editor):
         super(Output, self).__init__(*args, **kwargs)
 
 
-# Regex for NBO output file
-_re_nao_start = 'NAO Atom No lang   Type(AO)    Occupancy'
-_re_nao_stop01 = ' Summary of Natural Population Analysis'
-_re_nao_stop02 = 'low occupancy.*core orbitals found on'
-_re_nao_stop03 = 'electrons found in the effective core potential'
 
 
 class MOMatrix(Editor):

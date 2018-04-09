@@ -12,6 +12,8 @@ class Editor(AtomicEditor):
     def __init__(self, *args, **kwargs):
         super(Editor, self).__init__(*args, **kwargs)
         if self.meta is None:
-            self.meta = {'program': 'adf'}
+            self.meta = {'program': 'adf',
+                         'gaussian': False}
         else:
-            self.meta.update({'program': 'adf'})
+            self.meta.update({'program': 'adf',
+                              'gaussian': False})

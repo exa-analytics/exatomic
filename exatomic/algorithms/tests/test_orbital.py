@@ -2,51 +2,22 @@
 # Copyright (c) 2015-2018, Exa Analytics Development Team
 # Distributed under the terms of the Apache License 2.0
 """Tests for computing orbitals, densities and orbital angular momenta."""
-import os
-import bz2
+import numpy as np
 from unittest import TestCase
-from exatomic.base import staticdir
-from exatomic.molcas import Output as MolOutput
-from exatomic.molcas import Orb
-from exatomic.core.basis import Overlap
-from exatomic.interfaces.cube import Cube
+from exatomic import Universe, nwchem, molcas
+from exatomic.base import resource
 from exatomic.algorithms.orbital_util import compare_fields
 from exatomic.algorithms.orbital import (add_molecular_orbitals,
-                                         add_orb_ang_mom, add_density)
+                                         add_orb_ang_mom,
+                                         add_density)
 
 
 class TestMolcasOrbital(TestCase):
+
     def setUp(self):
-        adir = os.sep.join([staticdir(), 'molcas'])
-        with bz2.open(os.path.join(adir, 'mol-carbon-dz.out.bz2')) as f:
-            uni = MolOutput(f.read().decode('utf-8')).to_universe()
-        with bz2.open(os.path.join(adir, 'mol-carbon-dz.overlap.bz2')) as f:
-            uni.overlap = Overlap.from_column(f.read().decode('utf-8'))
-        with bz2.open(os.path.join(adir, 'mol-carbon-dz.scforb.bz2')) as f:
-            orb = Orb(f.read().decode('utf-8'))
-            uni.momatrix = orb.momatrix
-            uni.orbital = orb.orbital
-        fls = ['mol-carbon-dz-sodizl-r', 'mol-carbon-dz-sodizl-i',
-               'mol-carbon-dz-sodizs-x', 'mol-carbon-dz-sodizs-y',
-               'mol-carbon-dz-sodizs-z']
-        cols = ['lreal', 'limag', 'sx', 'sy', 'sz']
-        for fl, col in zip(fls, cols):
-            with bz2.open(os.path.join(adir, fl + '.bz2')) as f:
-                orb = Orb(f.read().decode('utf-8'))
-                uni.momatrix[col] = orb.momatrix['coef']
-                uni.orbital[col] = orb.orbital['occupation']
-
-        flds, cubfmt = [], 'mol-carbon-dz-{}.cube.bz2'.format
-        for i, c in enumerate(['1', '2', '3', '4', '5', 'dens',
-                               'orb-x', 'orb-y', 'orb-z', 'orb-zz',
-                               'spin-x', 'spin-y', 'spin-z']):
-            with bz2.open(os.path.join(adir, cubfmt(c))) as f:
-                if not i: chk = Cube(f.read().decode('utf-8')).to_universe()
-                else: flds.append(Cube(f.read().decode('utf-8')).field)
-        chk.add_field(flds)
-
-        kws = {'field_params': chk.field.loc[0], 'verbose': False}
-        print(chk.field.loc[0].dtypes)
+        self.chk = Universe.load(resource('mol-carbon-dz-valid.hdf5'))
+        kws = {'field_params': self.chk.field.loc[0], 'verbose': False}
+        uni = Universe.load(resource('mol-carbon-dz.hdf5'))
         add_molecular_orbitals(uni, vector=range(5), **kws)
         add_density(uni, mocoefs='coef', **kws)
         add_orb_ang_mom(uni, rcoefs='lreal', icoefs='limag', **kws)
@@ -54,8 +25,33 @@ class TestMolcasOrbital(TestCase):
         add_density(uni, mocoefs='sy', **kws)
         add_density(uni, mocoefs='sz', **kws)
         self.uni = uni
-        self.chk = chk
+
 
     def test_compare_fields(self):
         res = compare_fields(self.uni, self.chk, verbose=False)
-        self.assertEquals(len(res), sum(res))
+        self.assertTrue(np.isclose(len(res), sum(res)))
+
+
+
+class TestADFOrbital(TestCase):
+
+    def test_compare_fields(self):
+        chk = Universe.load(resource('adf-lu-valid.hdf5'))
+        uni = Universe.load(resource('adf-lu.hdf5'))
+        uni.add_molecular_orbitals(vector=range(8, 60), verbose=False,
+                                   field_params=chk.field.loc[0])
+        res = compare_fields(chk, uni, signed=False, verbose=False)
+        self.assertTrue(np.isclose(len(res), sum(res), rtol=5e-4))
+
+
+class TestNWChemOrbital(TestCase):
+
+    def test_compare_fields(self):
+        nw = nwchem.Output(resource('nw-ch3nh2-631g.out')).to_universe()
+        mo = molcas.Output(resource('mol-ch3nh2-631g.out'))
+        mo.add_orb(resource('mol-ch3nh2-631g.scforb'))
+        mo = mo.to_universe()
+        nw.add_molecular_orbitals(vector=range(3, 10), verbose=False)
+        mo.add_molecular_orbitals(vector=range(3, 10), verbose=False)
+        res = compare_fields(nw, mo, signed=False, rtol=5e-3)
+        self.assertTrue(np.isclose(sum(res), len(res), rtol=5e-3))

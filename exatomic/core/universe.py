@@ -25,7 +25,7 @@ from .field import AtomicField
 from .orbital import Orbital, Excitation, MOMatrix, DensityMatrix
 from .basis import Overlap, BasisSet, BasisSetOrder
 from exatomic.algorithms.orbital import add_molecular_orbitals
-from exatomic.algorithms.basis import Basis
+from exatomic.algorithms.basis import BasisFunctions
 from .tensor import Tensor
 
 class Meta(TypedMeta):
@@ -41,13 +41,17 @@ class Meta(TypedMeta):
     field = AtomicField
     orbital = Orbital
     momatrix = MOMatrix
+    cart_momatrix = MOMatrix
+    sphr_momatrix = MOMatrix
     excitation = Excitation
     overlap = Overlap
     density = DensityMatrix
     basis_set_order = BasisSetOrder
+    cart_basis_set_order = BasisSetOrder
+    sphr_basis_set_order = BasisSetOrder
     basis_set = BasisSet
     basis_dims = dict
-    basis_functions = Basis
+    basis_functions = BasisFunctions
     contribution = DataFrame
     multipole = DataFrame
     tensor = Tensor
@@ -67,9 +71,31 @@ class Universe(six.with_metaclass(Meta, Container)):
         molecule (:class:`~exatomic.core.molecule.Molecule`): Molecule information
         orbital (:class:`~exatomic.core.orbital.Orbital`): Molecular orbital information
         momatrix (:class:`~exatomic.core.orbital.MOMatrix`): Molecular orbital coefficient matrix
+        frequency (:class:`~exatomic.core.atom.Frequency`): Vibrational modes and atom displacements
+        excitation (:class:`~exatomic.core.orbital.Excitation`): Electronic excitation information
+        basis_set (:class:`~exatomic.core.basis.BasisSet`): Basis set specification
+        overlap (:class:`~exatomic.core.basis.Overlap`): The overlap matrix
+        basis_functions (:class:`~exatomic.algorithms.basis.BasisFunctions`): Basis function evaluation
+        field (:class:`~exatomic.core.field.AtomicField`): Scalar fields (MOs, densities, etc.)
     """
     _cardinal = "frame"
     _getter_prefix = "compute"
+
+    @property
+    def current_momatrix(self):
+        if self.meta['spherical']:
+            try: return self.sphr_momatrix
+            except AttributeError: return self.momatrix
+        try: return self.cart_momatrix
+        except AttributeError: return self.momatrix
+
+    @property
+    def current_basis_set_order(self):
+        if self.meta['spherical']:
+            try: return self.sphr_basis_set_order
+            except AttributeError: return self.basis_set_order
+        try: return self.cart_basis_set_order
+        except AttributeError: return self.basis_set_order
 
     @property
     def periodic(self, *args, **kwargs):
@@ -154,7 +180,10 @@ class Universe(six.with_metaclass(Meta, Container)):
             'sets': bset.functions_by_shell()}
 
     def compute_basis_functions(self, **kwargs):
-        self.basis_functions = Basis(self)
+        if self.meta['program'] in ['nwchem']:
+            self.basis_functions = BasisFunctions(self, cartp=False)
+        else:
+            self.basis_functions = BasisFunctions(self)
 
     def enumerate_shells(self, frame=0):
         """Extract minimal information from the universe to be used in
@@ -168,10 +197,12 @@ class Universe(six.with_metaclass(Meta, Container)):
             frame (int): state of the universe (default 0)
         """
         atom = self.atom.groupby('frame').get_group(frame)
-        if self.meta['program'] != 'molcas':
+        if self.meta['program'] not in ['molcas', 'adf']:
             print('Warning: Check spherical shell parameter for {} '
                   'molecular orbital generation'.format(self.meta['program']))
-        shls = self.basis_set.shells()
+        shls = self.basis_set.shells(self.meta['program'],
+                                     self.meta['spherical'],
+                                     self.meta['gaussian'])
         grps = shls.groupby('set')
         # Pointers into (xyzs, shls) arrays
         ptrs = np.array([(c, idx) for c, seht in enumerate(atom.set)
@@ -222,7 +253,7 @@ class Universe(six.with_metaclass(Meta, Container)):
 
     def add_molecular_orbitals(self, field_params=None, mocoefs=None,
                                vector=None, frame=0, replace=False,
-                               inplace=True, verbose=True, sphr_sto=False):
+                               inplace=True, verbose=True):
         """Add molecular orbitals to universe.
 
         .. code-block:: python
@@ -242,7 +273,6 @@ class Universe(six.with_metaclass(Meta, Container)):
             replace (bool): remove previous fields (default True)
             inplace (bool): add directly to uni or return :class:`~exatomic.core.field.AtomicField` (default True)
             verbose (bool): print timing statistics (default True)
-            sphr_sto (bool): momatrix contains spherical STO basis (rather than Cartesian)
 
         Warning:
             Default behavior just continually adds fields in the universe.  This can
@@ -252,12 +282,14 @@ class Universe(six.with_metaclass(Meta, Container)):
             Specifying very high resolution field parameters, e.g. 'nr' > 100
             may slow things down and/or crash the kernel.  Use with caution.
         """
-        assert hasattr(self, 'momatrix')
-        assert hasattr(self, 'basis_set')
-        assert hasattr(self, 'basis_set_order')
-        add_molecular_orbitals(self, field_params=field_params,
-                               mocoefs=mocoefs, vector=vector,
-                               frame=frame, replace=replace, sphr_sto=sphr_sto)
+        if not hasattr(self, 'momatrix'):
+            raise AttributeError('uni must have momatrix attribute.')
+        if not hasattr(self, 'basis_set'):
+            raise AttributeError('uni must have basis_set attribute.')
+        return add_molecular_orbitals(self, field_params=field_params,
+                                      mocoefs=mocoefs, vector=vector,
+                                      frame=frame, replace=replace,
+                                      inplace=inplace, verbose=verbose)
 
     def __len__(self):
         return len(self.frame)

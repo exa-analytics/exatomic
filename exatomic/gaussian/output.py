@@ -43,7 +43,6 @@ def _triangular_indices(ncol, nbas):
 class GauMeta(TypedMeta):
     atom = Atom
     basis_set = BasisSet
-    basis_set_order = BasisSetOrder
     orbital = Orbital
     momatrix = MOMatrix
     basis_set_order = BasisSetOrder
@@ -153,7 +152,8 @@ class Output(six.with_metaclass(GauMeta, Editor)):
         spherical = '5D' in self[found[_rebas03][0]]
         if df['L'].max() < 2:
             spherical = True
-        self.basis_set = BasisSet(df, spherical=spherical)
+        self.basis_set = BasisSet(df)
+        self.meta['spherical'] = spherical
         self.atom['set'] = self.atom['set'].map(setmap)
 
 

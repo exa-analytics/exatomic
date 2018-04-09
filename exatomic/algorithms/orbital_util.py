@@ -8,6 +8,7 @@ Molecular orbitals are constructed symbolically
 then evaluated on a numerical grid.
 These are their stories.
 '''
+from __future__ import division
 import numpy as np
 import pandas as pd
 from numba import jit
@@ -172,11 +173,12 @@ def _compute_current_density(bvs, gvx, gvy, gvz, cmatr, cmati, occvec, verbose=T
     curx = np.zeros(npts, dtype=np.float64)
     cury = np.zeros(npts, dtype=np.float64)
     curz = np.zeros(npts, dtype=np.float64)
-    fp = FloatProgress(description='Computing:')
     if verbose:
+        fp = FloatProgress(description='Computing:')
         display(fp)
     for mu in range(nbas):
-        fp.value = mu / nbas * 100
+        if verbose:
+            fp.value = mu / nbas * 100
         crmu = cmatr[mu]
         cimu = cmati[mu]
         bvmu = bvs[mu]
@@ -194,7 +196,8 @@ def _compute_current_density(bvs, gvx, gvy, gvz, cmatr, cmati, occvec, verbose=T
             curx = evaluate('curx + cval * (bvmu * gvxnu - gvxmu * bvnu)')
             cury = evaluate('cury + cval * (bvmu * gvynu - gvymu * bvnu)')
             curz = evaluate('curz + cval * (bvmu * gvznu - gvzmu * bvnu)')
-    fp.close()
+    if verbose:
+        fp.close()
     return curx, cury, curz
 
 
@@ -245,10 +248,19 @@ def _determine_fps(uni, fps, nvec):
 
 
 def _check_column(uni, df, key):
-    """Repetitive checking of columns in a universe."""
+    """Sanity checking of columns in a given dataframe in the universe.
+
+    Args:
+        uni (:class:`~exatomic.core.universe.Universe`): a universe
+        df (str): name of dataframe attribute in the universe
+        key (str): column name in df
+
+    Returns:
+        key (str) if key in uni.df
+    """
     if key is None:
-        if df == 'momatrix': key = 'coef'
-        elif df == 'orbital': key = 'occupation'
+        if 'momatrix' in df: key = 'coef'
+        elif 'orbital' in df: key = 'occupation'
         else: raise Exception("{} not supported".format(df))
     err = '"{}" not in uni.{}.columns'.format
     if key not in getattr(uni, df).columns:
