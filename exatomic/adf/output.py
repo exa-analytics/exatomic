@@ -9,6 +9,7 @@ This module provides the primary (user facing) output parser.
 from __future__ import absolute_import
 from __future__ import print_function
 from __future__ import division
+from collections import defaultdict
 import re
 import six
 import numpy as np
@@ -18,6 +19,7 @@ from exa.util.units import Length
 from exa import TypedMeta
 from exatomic.base import sym2z
 from exatomic.algorithms.basis import lmap, enum_cartesian
+from exatomic.algorithms.numerical import dfac21
 from ..core.atom import Atom
 from exatomic.core.basis import BasisSet, BasisSetOrder
 from ..core.orbital import Orbital, Excitation, MOMatrix
@@ -39,7 +41,8 @@ class Output(six.with_metaclass(OutMeta, Editor)):
     """The ADF output parser."""
     def parse_atom(self):
         # TODO : only supports single frame, gets last atomic positions
-        start = stop = self.find(_re_bso_00, keys_only=True)[0] + 2
+        _re_atom_00 = 'Atoms in this Fragment     Cart. coord.s (Angstrom)'
+        start = stop = self.find(_re_atom_00, keys_only=True)[0] + 2
         while self[stop].strip(): stop += 1
         atom = self.pandas_dataframe(start, stop, 7)
         atom.drop([0, 2, 3], axis=1, inplace=True)
@@ -64,17 +67,6 @@ class Output(six.with_metaclass(OutMeta, Editor)):
             while self[stop].strip():
                 lines.append(stop)
                 stop += 1
-        #_re_bas_01 = 'BAS: List of all Elementary Cartesian Basis Functions'
-        #_re_bas_02 = 'Frozen Core Shells'
-        #_re_bas_03 = 'Charge Fitting Sets'
-        #stopa = self.find_next(_re_bas_01, start=start, keys_only=True)
-        #stopb = self.find_next(_re_bas_02, start=start, keys_only=True)
-        #stopc = self.find_next(_re_bas_03, start=start, keys_only=True)
-        #try: stop = min(stopa, stopb, stopc)
-        #except TypeError: stop = stopa
-        # Grab everything
-        #print(start, stop)
-        #print(lines)
         df = pd.read_fwf(StringIO('\n'.join([self[i] for i in lines])),
                          widths=[4, 2, 12, 4],
                          names=['n', 'L', 'alpha', 'symbol'])
@@ -102,17 +94,14 @@ class Output(six.with_metaclass(OutMeta, Editor)):
         df['d'] = np.sqrt((2 * df['L'] + 1) / (4 * np.pi))
         df['r'] = df['n'] - (df['L'] + 1)
         df['frame'] = 0
-        self.basis_set = BasisSet(df, gaussian=False, spherical=False)
+        self.basis_set = BasisSet(df)
+        self.meta['spherical'] = False
         self.atom['set'] = self.atom['symbol'].map(basmap)
 
 
     def parse_basis_set_order(self):
         # All the columns we need
-        data = {'center': [], 'symbol': [],
-                  'seht': [],  'shell': [],
-                     'L': [],      'l': [],
-                     'm': [],      'n': [],
-                     'r': [], 'prefac': []}
+        data = defaultdict(list)
         sets = self.basis_set.groupby('set')
         # Iterate over atoms
         for center, symbol, seht in zip(self.atom.index,
@@ -123,14 +112,7 @@ class Output(six.with_metaclass(OutMeta, Editor)):
             for L, grp in bas:
                 # Iterate over cartesians
                 for l, m, n in enum_cartesian[L]:
-                    # Wonky normalization in ADF
-                    # prefac is unused???
-                    prefac = 0
-                    if L == 2: prefac = 0 if any(i == L for i in (l, m, n)) else np.sqrt(L + 1)
-                    elif L == 3: prefac = np.sqrt(5 * sum((i == 1 for i in (l, m, n))))
-                    # Pre-exponential factors (shell kind of pointless for STOs)
                     for shell, r in zip(grp['shell'], grp['r']):
-                        data['prefac'].append(prefac)
                         data['center'].append(center)
                         data['symbol'].append(symbol)
                         data['shell'].append(shell)
@@ -143,9 +125,15 @@ class Output(six.with_metaclass(OutMeta, Editor)):
         data['set'] = data.pop('seht')
         data['frame'] = 0
         self.basis_set_order = pd.DataFrame.from_dict(data)
-
+        self.basis_set_order['prefac'] = (self.basis_set_order['L'].apply(dfac21) /
+                                          (self.basis_set_order['l'].apply(dfac21) *
+                                           self.basis_set_order['m'].apply(dfac21) *
+                                           self.basis_set_order['n'].apply(dfac21))
+                                          ).apply(np.sqrt)
 
     def parse_orbital(self):
+        _re_orb_00 = 'Orbital Energies, both Spins'
+        _re_orb_01 = 'Orbital Energies, per Irrep and Spin'
         found = self.find(_re_orb_00, _re_orb_01, keys_only=True)
         # Open shell vs. closed shell
         cols = {
@@ -168,6 +156,8 @@ class Output(six.with_metaclass(OutMeta, Editor)):
 
 
     def parse_contribution(self):
+        _re_con_00 = ('E(eV)  Occ       MO           %     '
+                      'SFO (first member)   E(eV)  Occ   Fragment')
         # MO contribution by percentage
         found = self.find(_re_con_00, keys_only=True)
         starts = [i + 3 for i in found]
@@ -184,10 +174,8 @@ class Output(six.with_metaclass(OutMeta, Editor)):
                                    names=names))
             dfs[-1]['spin'] = i
         dfs = pd.concat(dfs).reset_index(drop=True)
-        # Maybe a better way to do this
-        def _snan(x):
-            return np.nan if isinstance(x, str) and x.isspace() else x
-        dfs = dfs.applymap(_snan)
+        dfs = dfs.applymap(lambda x: np.nan if (isinstance(x, six.string_types)
+                                     and x.isspace()) else x)
         dfs.fillna(method='ffill', inplace=True)
         # Clean up
         dfs['symbol'] = dfs['symbol'].str.strip()
@@ -244,6 +232,9 @@ class Output(six.with_metaclass(OutMeta, Editor)):
 
 
     def parse_momatrix(self):
+        _re_mo_00 = 'Eigenvectors .* in BAS representation'
+        _re_mo_01 = 'row '
+        _re_mo_02 = 'nosym'
         found = self.regex(_re_mo_00, _re_mo_01, _re_mo_02,
                            flags=re.IGNORECASE, keys_only=True)
         if not found[_re_mo_00] or not found[_re_mo_01]: return
@@ -263,7 +254,7 @@ class Output(six.with_metaclass(OutMeta, Editor)):
             data = pd.DataFrame()
             for i, block in enumerate(blocks):
                 stop = block[-1] + nchi
-                skips = [i + j for i in list(block[1:] - block[0] - 3) for j in range(3)]
+                skips = [k + j for k in list(block[1:] - block[0] - 3) for j in range(3)]
                 name = 'coef' if not i else 'coef{}'.format(i)
                 col = self.pandas_dataframe(block[0], stop, ncol + 1,
                                             skiprows=skips).drop(0, axis=1,
@@ -285,7 +276,7 @@ class Output(six.with_metaclass(OutMeta, Editor)):
         """
         Parser localized momatrix (if present).
 
-        If the ``locorb`` keyword is used in ADF, an additional momatrix is 
+        If the ``locorb`` keyword is used in ADF, an additional momatrix is
         printed after localization is performed. Parsing this table allows
         for visualization of these orbitals.
 
@@ -293,6 +284,8 @@ class Output(six.with_metaclass(OutMeta, Editor)):
             The attr :attr:`~exatomic.adf.output._re_loc_mo` is used for parsing this
             section.
         """
+        _re_loc_mo = ("Localized MOs expanded in CFs+SFOs",
+                      "SFO contributions (%) per Localized Orbital")
         found = self.find(*_re_loc_mo)
         if len(found[_re_loc_mo[0]]) == 0:
             if verbose:
@@ -301,7 +294,7 @@ class Output(six.with_metaclass(OutMeta, Editor)):
         start = found[_re_loc_mo[0]][0][0] + 8
         stop = found[_re_loc_mo[1]][0][0] - 4
         # Parse the localized momatrix as a whole block of text
-        df = pd.read_fwf(StringIO("\n".join(self[start:stop])), 
+        df = pd.read_fwf(StringIO("\n".join(self[start:stop])),
                          widths=(16, 9, 9, 9, 9, 9, 9, 9, 9), header=None)
         del df[0]
         # Identify the eigenvectors and (un)stack them correctly
@@ -316,22 +309,12 @@ class Output(six.with_metaclass(OutMeta, Editor)):
             coefs.append(d.unstack().dropna().values.astype(float))
         coefs = np.concatenate(coefs)
         m = coefs.shape[0]//n    # Number of localized MOs
-        momatrix = pd.DataFrame.from_dict({'coef': coefs, 
+        momatrix = pd.DataFrame.from_dict({'coef': coefs,
                                            'orbital': [i for i in range(m) for _ in range(n)],
                                            'chi': [j for _ in range(m) for j in range(n)]})
         momatrix['frame'] = self.atom['frame'].unique()[-1]
         self.sphr_momatrix = momatrix
 
 
-# Atom
-_re_bso_00 = 'Atoms in this Fragment     Cart. coord.s (Angstrom)'
-# Orbital
-_re_orb_00 = 'Orbital Energies, both Spins'
-_re_orb_01 = 'Orbital Energies, per Irrep and Spin'
-# Contribution
-_re_con_00 = 'E(eV)  Occ       MO           %     SFO (first member)   E(eV)  Occ   Fragment'
-# MOMatrix
-_re_mo_00 = 'Eigenvectors .* in BAS representation'
-_re_mo_01 = 'row '
-_re_mo_02 = 'nosym'
-_re_loc_mo = ("Localized MOs expanded in CFs+SFOs", "SFO contributions (%) per Localized Orbital")
+    def __init__(self, *args, **kwargs):
+        super(Output, self).__init__(*args, **kwargs)

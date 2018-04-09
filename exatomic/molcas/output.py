@@ -30,7 +30,7 @@ class OrbMeta(TypedMeta):
 
 
 class Orb(six.with_metaclass(OrbMeta, Editor)):
-    
+
     def to_universe(self):
         raise NotImplementedError("This editor has no parse_atom method.")
 
@@ -132,7 +132,7 @@ class Output(six.with_metaclass(OutMeta, Editor)):
             if df is None:
                 setattr(self, attr, getattr(orb, attr))
             elif col in df.columns:
-                 raise Exception('This action would replace '
+                raise ValueError('This action would replace '
                                  '"{}" in uni.{}'.format(col, attr))
             else:
                 df[col] = getattr(orb, attr)[de]
@@ -184,10 +184,13 @@ class Output(six.with_metaclass(OutMeta, Editor)):
         try:
             df['l'] = df['ml'].copy()
             df['l'].update(df['l'].map({'': 0, 'x': 1, 'y': 0, 'z': 0}))
+            df['l'] = df['l'].astype(np.int64)
             df['m'] = df['ml'].copy()
             df['m'].update(df['m'].map({'': 0, 'y': 1, 'x': 0, 'z': 0}))
+            df['m'] = df['m'].astype(np.int64)
             df['n'] = df['ml'].copy()
             df['n'].update(df['n'].map({'': 0, 'z': 1, 'x': 0, 'y': 0}))
+            df['n'] = df['n'].astype(np.int64)
         except:
             pass
         df['ml'].update(df['ml'].map(mldict))
@@ -266,8 +269,9 @@ class Output(six.with_metaclass(OutMeta, Editor)):
         prims = pd.concat(prims).reset_index(drop=True)
         prims['frame'] = 0
         self.basis_set = prims
+        self.meta['spherical'] = True
         if self.basis_set.lmax < 2:
-            self.basis_set.spherical = False
+            self.meta['spherical'] = False
 
     def __init__(self, *args, **kwargs):
         super(Output, self).__init__(*args, **kwargs)
@@ -352,13 +356,13 @@ def parse_molcas(fp, momatrix=None, overlap=None, occvec=None, **kwargs):
     from specified Orb files or the AO overlap matrix and density matrix.
     If density keyword is specified, the momatrix keyword is ignored.
 
-    Args
+    Args:
         fp (str): Path to output file
         momatrix (str): file name of the C matrix of interest
         overlap (str): file name of the overlap matrix
         occvec (str): an occupation vector
 
-    Returns
+    Returns:
         parsed (Editor): contains many attributes similar to the
             exatomic universe
     """

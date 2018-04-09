@@ -152,7 +152,7 @@ def _obtain_arrays(uni):
     nshell = kwargs['nshell']
     nexpnt = kwargs['nexpnt']
 
-    if uni.basis_set.spherical:
+    if uni.meta['spherical']:
         # Spherical basis set
         kwargs.update({'ml': uni.basis_set_order['ml'].values})
         lml_count = spher_lml_count

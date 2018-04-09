@@ -7,11 +7,13 @@ Cube File Support
 Cube files contain an atomic geometry and scalar field values corresponding to
 a physical quantity.
 """
+import os
 import six
 import numpy as np
 import pandas as pd
+from glob import glob
 from exa import Series, TypedMeta
-from exatomic import __version__, Atom, Editor, AtomicField, Frame
+from exatomic import __version__, Atom, Editor, AtomicField, Frame, Universe
 from exatomic.base import z2sym, sym2z
 
 class Meta(TypedMeta):
@@ -22,7 +24,8 @@ class Meta(TypedMeta):
 
 class Cube(six.with_metaclass(Meta, Editor)):
     """
-    An editor for handling cube files.
+    An editor for handling cube files. Assumes scalar field values are arranged
+    with the x axis as the outer loop and the z axis as the inner loop.
 
     .. code-block:: python
 
@@ -31,7 +34,7 @@ class Cube(six.with_metaclass(Meta, Editor)):
         cube.field               # Displays the field dataframe
         cube.field_values        # Displays the list of field values
         uni = cube.to_universe() # Converts the cube file editor to a universe
-        uni                      # Renders the cube file
+        UniverseWidget(uni)      # Renders the cube file
 
     Warning:
         Be sure your cube is in atomic units.
@@ -50,13 +53,14 @@ class Cube(six.with_metaclass(Meta, Editor)):
 
     def parse_field(self):
         """
-        parse the scalar field into a trait aware object.
+        Parse the scalar field into an :class:`~exatomic.core.field.AtomicField`.
 
-        note:
-            the :class:`~exatomic.field.atomicfield` object tracks both the
-            field data (i.e. information about the discretization and shape of
+        Note:
+            The :class:`~exatomic.core.field.AtomicField` tracks both the
+            field parameters (i.e. information about the discretization and shape of
             the field's spatial points) as well as the field values (at each of
-            those points in space).
+            those points in space). See :meth:`~exatomic.algorithms.orbital_util.make_fps`
+            for more details.
         """
         self.meta = {'comments': self[:2]}
         typs = [int, float, float, float]
@@ -89,12 +93,14 @@ class Cube(six.with_metaclass(Meta, Editor)):
     @classmethod
     def from_universe(cls, uni, idx, name=None, frame=None):
         """
-        Write a cube file format Editor from a given field in an
-        :class:`~exatomic.container.Universe`.
+        Make a cube file format Editor from a given field in a
+        :class:`~exatomic.core.universe.Universe`.
 
-        Args
-            uni (Universe): a universe
-            idx (int): field index
+        Args:
+            uni (:class:`~exatomic.core.universe.Universe`): a universe
+            idx (int): field index in :class:`~exatomic.core.field.AtomicField`
+            name (str): description for comment line
+            frame (int): frame index in :class:`~exatomic.core.atom.Atom`
         """
         name = '' if name is None else name
         frame = uni.atom.nframes - 1 if frame is None else frame
@@ -136,17 +142,33 @@ class Cube(six.with_metaclass(Meta, Editor)):
 
 
 
-def uni_from_cubes(adir, verbose=False, ncubes=None):
-    """Put a bunch of cubes into one universe."""
-    import os
-    from glob import glob
+def uni_from_cubes(adir, verbose=False, ncubes=None, ext='cube'):
+    """Put a bunch of cubes into a universe.
+
+    .. code-block:: python
+
+        uni = uni_from_cubes('/path/to/files/')       # Parse all cubes matching 'files/*cube'
+        uni = uni_from_cubes('files/', ext='cub')     # Parse all cubes matching 'files/*cub'
+        uni = uni_from_cubes('files/', verbose=True)  # Print file names when parsing
+        uni = uni_from_cubes('files/', ncubes=5)      # Only parse the first 5 cubes
+                                                      # sorted lexicographically by file name
+
+    Args:
+        verbose (bool): print file names when reading cubes
+        ncubes (int): get only the first ncubes
+        ext (str): file extension of cube files
+
+    Returns:
+        uni (:class:`exatomic.core.universe.Universe`)
+
+    """
     if not adir.endswith(os.sep): adir += os.sep
-    cubes = sorted(glob(adir + '*cube'))
+    cubes = sorted(glob(adir + '*' + ext))
     if ncubes is not None:
         cubes = cubes[:ncubes]
     if verbose:
         for cub in cubes: print(cub)
-    uni = Cube(cubes[0]).to_universe()
-    flds = [Cube(cub).field for cub in cubes[1:]]
+    uni = Universe(atom=Cube(cubes[0]).atom)
+    flds = [Cube(cub).field for cub in cubes]
     uni.add_field(flds)
     return uni
