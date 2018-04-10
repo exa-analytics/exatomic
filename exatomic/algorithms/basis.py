@@ -145,21 +145,21 @@ def solid_harmonics(lmax, scaled=False):
         return ((2 ** kr * (2 * lp + 1) / (2 * lp + 2)) ** 0.5 *
                 (_y * sp + (1 - kr) * _x * sm))
     sh = OrderedDict([(l, OrderedDict([])) for l in range(lmax + 1)])
-    if scaled: sh[0][0] = Float(1 / (2 * np.pi ** 0.5))
-    else: sh[0][0] = Integer(1)
-    for l in range(1, lmax + 1):
-        lp = l - 1
+    sh[0][0] = Integer(1)
+    for L in range(1, lmax + 1):
+        lp = L - 1
         kr = int(not lp)
-        mls = list(range(-l, l + 1))
-        sh[l][mls[0]] = _bot_sh(lp, kr, sh[lp][lp], sh[lp][-lp])
+        mls = list(range(-L, L + 1))
+        sh[L][mls[0]] = _bot_sh(lp, kr, sh[lp][lp], sh[lp][-lp])
         for ml in mls[1:-1]:
             try: rec = sh[lp - 1][ml]
             except KeyError: rec = sh[lp][ml]
-            sh[l][ml] = _mid_sh(lp, ml, sh[lp][ml], rec)
-        sh[l][mls[-1]] = _top_sh(lp, kr, sh[lp][lp], sh[lp][-lp])
-        if scaled:
-            for ml in mls:
-                sh[l][ml] /= 2 * np.pi ** 0.5
+            sh[L][ml] = _mid_sh(lp, ml, sh[lp][ml], rec)
+        sh[L][mls[-1]] = _top_sh(lp, kr, sh[lp][lp], sh[lp][-lp])
+    if scaled:
+        for L in range(lmax + 1):
+            for ml in range(-L, L + 1):
+                sh[L][ml] /= (2 * np.pi ** 0.5)
     return sh
 
 
