@@ -13,7 +13,7 @@ import os
 import six
 import pandas as pd
 import numpy as np
-from io import StringIO
+from six import StringIO
 from exa import TypedMeta
 from .editor import Editor
 from exatomic import Atom
@@ -30,84 +30,60 @@ class OrbMeta(TypedMeta):
 
 
 class Orb(six.with_metaclass(OrbMeta, Editor)):
-
+    """
+    Parser for molcas coefficient matrix dumps (e.g. RasOrb).
+    
+    Note:
+        This parser assumes the file contains data from a single
+        calculation (i.e. a single frame).
+    """
     def to_universe(self):
         raise NotImplementedError("This editor has no parse_atom method.")
 
-    def _one_el(self, starts, step, ncol):
-        func = pd.read_csv
-        kwargs = {'header': None}
-        if ncol == 1:
-            func = pd.read_fwf
-            kwargs['widths'] = [18] * 4
-        else:
-            kwargs['delim_whitespace'] = True
-        return [func(StringIO('\n'.join(self[start:start + step])),
-                     **kwargs).stack().values for start in starts]
-
     def parse_momatrix(self):
-        dim = int(self[5])
-        #ndim = dim * dim
-        _re_orb = 'ORBITAL'
-        _re_occ = 'OCCUPATION NUMBERS'
-        _re_ens = 'ONE ELECTRON ENERGIES'
-        found = self.find(_re_orb, _re_occ,
-                          _re_ens, keys_only=True)
-        skips = found[_re_orb]
-        start = skips[0]
-        occs = [i + 1 for i in found[_re_occ]]
-        ens = [i + 1 for i in found[_re_ens]]
-        if not found[_re_ens]: ens = False
-        ncol = len(self[start + 1].split())
-        cols = 4 if ncol == 1 else ncol
-        chnk = np.ceil(dim / cols).astype(np.int64)
-        orbdx = np.repeat(range(dim), chnk)
-        osh = False
-        if len(occs) == 2:
-            osh = True
-            skips.insert(dim, skips[dim] - 1)
-            orbdx = np.concatenate([orbdx, orbdx])
-        skips = [i - skips[0] for i in skips]
-        if ncol == 1:
-            coefs = pd.read_fwf(StringIO('\n'.join(self[start:occs[0]-2])),
-                                skiprows=skips, header=None, widths=[18]*4)
-            if ens: ens = self._one_el(ens, chnk, ncol)
-        else:
-            coefs = self.pandas_dataframe(start, occs[0]-2, ncol,
-                                          **{'skiprows': skips})
-            if ens:
-                echnk = np.ceil(dim / len(self[ens[0] + 1].split())).astype(np.int64)
-                ens = self._one_el(ens, echnk, ncol)
-        occs = self._one_el(occs, chnk, ncol)
-        coefs['idx'] = orbdx
-        coefs = coefs.groupby('idx').apply(pd.DataFrame.stack).drop(
-                                           'idx', level=2).values
-        mo = {'orbital': np.repeat(range(dim), dim), 'frame': 0,
-              'chi': np.tile(range(dim), dim)}
-        if ens:
-            orb = {'frame': 0, 'group': 0}
-        if len(occs) == 2:
-            mo['coef'] = coefs[:len(coefs)//2]
-            mo['coef1'] = coefs[len(coefs)//2:]
-            self.occupation_vector = {'coef': occs[0], 'coef1': occs[1]}
-            if ens:
-                orb['occupation'] = np.concatenate(occs)
-                orb['energy'] = np.concatenate(ens)
-                orb['vector'] = np.concatenate([range(dim), range(dim)])
-                orb['spin'] = np.concatenate([np.zeros(dim), np.ones(dim)])
-        else:
-            mo['coef'] = coefs
-            self.occupation_vector = occs[0]
-            if ens:
-                orb['occupation'] = occs[0]
-                orb['energy'] = ens[0]
-                orb['vector'] = range(dim)
-                orb['spin'] = np.zeros(dim)
-        self.momatrix = pd.DataFrame.from_dict(mo)
-        if ens:
-            self.orbital = pd.DataFrame.from_dict(orb)
-        else:
-            self.orbital = Orbital.from_occupation_vector(occs[0], os=osh)
+        """Wrapper for :func:`~exatomic.molcas.output.Orb.parse`."""
+        self.parse()
+    
+    def parse_orbital(self):
+        """Wrapper for :func:`~exatomic.molcas.output.Orb.parse`."""
+        self.parse()
+
+    def parse(self):
+        """Parse all information contained in the orbital/coefficient matrix dump."""
+        nmo = int(self[5])
+        mo_coef_segments = self.find(" ORBITAL ", " OCCUPATION NUMBERS", 
+                                     " ONE ELECTRON ENERGIES", "#INDEX", keys_only=True)
+        start = mo_coef_segments[' ORBITAL '][0]
+        stop = mo_coef_segments[' OCCUPATION NUMBERS'][0]
+        start1 = mo_coef_segments[" ONE ELECTRON ENERGIES"][0]
+        stop1 = mo_coef_segments["#INDEX"][0]
+        try:
+            end = mo_coef_segments[' OCCUPATION NUMBERS'][1]
+        except IndexError:
+            end = start1
+        df = pd.read_fwf(StringIO("\n".join(self[start:stop])), widths=[22]*5, names=range(5))
+        starting_points = df[df[0].str.contains(" ORBITAL")].index.values + 1
+        didx = starting_points[1] - 2
+        coef = []
+        for i in starting_points:
+            coef.append(df.iloc[i:i+didx].values.ravel()[:nmo])
+        coef = np.concatenate(coef).astype(float)
+        orb = [i for i in range(nmo) for _ in range(nmo)]
+        chi = [j for _ in range(nmo) for j in range(nmo)]
+        momatrix = pd.DataFrame.from_dict({'coef': coef, 'chi': chi, 'orbital': orb, 'chi': chi})
+        momatrix['frame'] = 0
+        occ = pd.read_fwf(StringIO("\n".join(self[stop+1:end-1])), widths=[22]*5, names=range(5)).values.ravel().astype(float)
+        occ = occ[~np.isnan(occ)]
+        nrg = pd.read_fwf(StringIO("\n".join(self[start1+1:stop1])), widths=[12]*10, names=range(10)).values.ravel().astype(float)
+        nrg = nrg[~np.isnan(nrg)]
+        orbital = pd.DataFrame.from_dict({'occupation': occ, 'energy': nrg})
+        orbital['frame'] = 0
+        orbital['spin'] = 0
+        orbital['group'] = 0
+        orbital['vector'] = range(nmo)
+        self.momatrix = momatrix
+        self.orbital = orbital
+        self.occupation_vector = occ
 
     def __init__(self, *args, **kwargs):
         super(Orb, self).__init__(*args, **kwargs)
