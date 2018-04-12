@@ -9,6 +9,7 @@ then evaluated on a numerical grid.
 These are their stories.
 '''
 from __future__ import division
+import six
 import numpy as np
 import pandas as pd
 from numba import jit
@@ -227,7 +228,7 @@ def _determine_vector(uni, vector, irrep=None):
                                   min(ihomo + 7, len(iorb.index))))
     # If specified, carry on
     if isinstance(vector, int): return np.array([vector])
-    typs = (list, tuple, range, np.ndarray)
+    typs = (list, tuple, six.moves.range, np.ndarray)
     if isinstance(vector, typs): return np.array(vector)
     # Try to find some reasonable default
     norb = len(uni.basis_set_order.index)

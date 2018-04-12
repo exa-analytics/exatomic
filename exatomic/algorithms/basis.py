@@ -382,10 +382,10 @@ class BasisFunctions(object):
         ocens = [(col, col.replace('ocen', 'sign'))
                  for col in bso.columns if col.startswith('ocen')]
         ocens = [c for t in ocens for c in t]
-        for cen, L, ml, irrep, *args in zip(bso['center'],
-                                            bso['L'], bso['ml'],
-                                            bso['irrep'],
-                                            *(bso[col] for col in ocens)):
+        for cen, L, ml, irrep, args in zip(bso['center'],
+                                           bso['L'], bso['ml'],
+                                           bso['irrep'],
+                                           *(bso[col] for col in ocens)):
             ax, ay, az = self._xyzs[cen]
             shldx = shls.get_group((cen, L)).shldx.values[0]
             ishl = self._shells[shldx]
