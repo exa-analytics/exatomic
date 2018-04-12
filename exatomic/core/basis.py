@@ -192,14 +192,10 @@ class BasisSetOrder(DataFrame):
     | prefac            | float    | prefactor (optional - for STOs)           |
     +-------------------+----------+-------------------------------------------+
     """
-    _columns = ['center', 'L', 'shell']
+    _columns = ['center', 'L']
     _index = 'chi'
     _cardinal = ('frame', np.int64)
     _categories = {'L': np.int64}
-
-    #@property
-    #def _constructor(self):
-    #    return BasisSetOrder
 
 
 class Overlap(DataFrame):
@@ -231,12 +227,18 @@ class Overlap(DataFrame):
     #def _constructor(self):
     #    return Overlap
 
-    def square(self, frame=0, column='coef'):
-        """Return a 'square' matrix DataFrame of the Overlap."""
-        sq = pd.DataFrame(_square(self[column].values))
-        sq.index.name = 'chi0'
-        sq.columns.name = 'chi1'
-        return sq
+    def square(self, frame=0, column='coef', mocoefs=None):
+        """Return a 'square' matrix DataFrame of the Overlap.
+
+        Args:
+            column (str): column of coefficients to reshape
+            mocoefs (str): alias for `column`
+            frame (int): default 0
+        """
+        if mocoefs is not None: column = mocoefs
+        sq = _square(self[column].values)
+        return pd.DataFrame(sq, index=pd.Index(range(sq.shape[0]), name='chi0'),
+                            columns=pd.Index(range(sq.shape[1]), name='chi1'))
 
     @classmethod
     def from_column(cls, source):
@@ -246,11 +248,8 @@ class Overlap(DataFrame):
         if isinstance(source, np.ndarray):
             vals = source
         elif isinstance(source, six.string_types):
-            if os.sep in source:
-                vals = pd.read_csv(source, header=None).values.flatten()
-            else:
-            # except FileNotFoundError:
-                vals = pd.read_csv(StringIO(source), header=None).values.flatten()
+            if os.sep not in source: source = StringIO(source)
+            vals = pd.read_csv(source, header=None).values.flatten()
         else:
             # Without a catchall, _tri_indices may through UnboundLocalError
             raise TypeError("Invalid type for source: {}".format(type(source)))

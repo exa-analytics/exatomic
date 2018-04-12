@@ -1,0 +1,316 @@
+   This copy of MOLCAS is licensed 
+
+                           Copyright, all rights, reserved:                                        
+                         Permission is hereby granted to use                                       
+                but not to reproduce or distribute any part of this                                
+             program. The use is restricted to research purposes only.                             
+                            Lund University Sweden, 2010.                                          
+                                                                                                   
+ For the author list and the recommended citation consult section 1.5 of the MOLCAS user's guide.  
+
+
+
+   -------------------------------------------------------------------
+  |                                                                   
+  |   Project         = standard__001
+  |   Submitted from  = /path
+  |   Scratch area    = /path
+  |   Save outputs to = /path
+  |   Molcas          = /path
+  |                                                                   
+  |   Scratch area is empty
+  |                                                                   
+  |       MOLCAS_TRAP = OFF                 
+  |      MOLCAS_PRINT = 100                 
+  |      MOLCAS_print = 100                 
+  |       MOLCAS_CPUS = 1                   
+  |        MOLCAS_MEM = 1000                
+  |     MOLCAS_MOLDEN = OFF                 
+  |       MOLCAS_DISK = 1000                
+  |                                                                   
+   -------------------------------------------------------------------
+--- Start Module: auto at Wed Apr 11 20:15:26 2018 
+
+++ ---------   Input file   ---------
+
+  &SEWARD &END
+    Title
+    c2h6
+    HIGH cholesky
+    Basis set
+    C.ANO-S-VDZ
+    C1  -0.2003259123   0.0000000000  -1.4269296645 angstrom
+    C2   0.2003259123   0.0000000000   1.4269296645 angstrom
+    End of basis
+    Basis Set
+    H.ANO-S-VDZ
+    H1  -2.2104549009   0.0000000000  -1.9008373239 angstrom
+    H2   2.2104549009   0.0000000000   1.9008373239 angstrom
+    H3   0.6485856097  -1.6668156152  -2.3021358629 angstrom
+    H4   0.6485856097   1.6668156152  -2.3021358629 angstrom
+    H5  -0.6485856097  -1.6668156152   2.3021358629 angstrom
+    H6  -0.6485856097   1.6668156152   2.3021358629 angstrom
+    End of basis
+    BSSHOW
+    Angmom
+      0.0 0.0 0.0
+  &SCF &END
+
+-- ----------------------------------
+
+--- Start Module: seward at Wed Apr 11 20:15:27 2018 
+
+
+()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()
+                                  MOLCAS executing module SEWARD with 1000 MB of memory
+                                              at 20:15:27 Wed Apr 11 2018
+()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()
+
+
+               SEWARD will generate:
+                  Multipole Moment integrals up to order  2
+                  Kinetic Energy integrals
+                  Nuclear Attraction integrals (point charge)
+                  One-Electron Hamiltonian integrals
+                  Orbital angular momentum around ( 0.0000  0.0000  0.0000 )
+                  Cholesky decomposed two-electron repulsion integrals
+                   - CD Threshold:   0.10E-07
+
+               ****************************************************************************************
+               *                                                                                      *
+               *                                         c2h6                                         *
+               *                                                                                      *
+               ****************************************************************************************
+
+                   Integrals are discarded if absolute value <: 0.10E-39
+                   Integral cutoff threshold is set to       <: 0.10E-39
+
+++    Symmetry information:
+      ---------------------
+
+                    Character Table for C1 
+
+                             E  
+                    a        1  x, y, xy, Rz, z, xz, Ry, yz, Rx, I
+--
+
+
+++    Basis set information:
+      ----------------------
+
+
+      Basis set label:C.ANO-S...3S2P. 
+
+      Valence basis set:
+      ------------------
+      Associated Effective Charge  6.000000 au
+      Associated Actual Charge     6.000000 au
+      Nuclear Model: Point charge
+
+      Shell  nPrim  nBasis  Cartesian Spherical Contaminant
+         s      10       3        X                  
+         p       6       2        X                  
+
+       Label   Cartesian Coordinates / Bohr
+
+ C1                -0.3785611099        0.0000000000       -2.6965062649
+ C2                 0.3785611099        0.0000000000        2.6965062649
+
+
+      Basis set label:H.ANO-S...2S. 
+
+      Valence basis set:
+      ------------------
+      Associated Effective Charge  1.000000 au
+      Associated Actual Charge     1.000000 au
+      Nuclear Model: Point charge
+
+      Shell  nPrim  nBasis  Cartesian Spherical Contaminant
+         s       7       2        X                  
+
+       Label   Cartesian Coordinates / Bohr
+
+ H1                -4.1771543734        0.0000000000       -3.5920619495
+ H2                 4.1771543734        0.0000000000        3.5920619495
+ H3                 1.2256491707       -3.1498250129       -4.3504062824
+ H4                 1.2256491707        3.1498250129       -4.3504062824
+ H5                -1.2256491707       -3.1498250129        4.3504062824
+ H6                -1.2256491707        3.1498250129        4.3504062824
+--
+
+
+++    Molecular structure info:
+      -------------------------
+
+                    ************************************************ 
+                    **** Cartesian Coordinates / Bohr, Angstrom **** 
+                    ************************************************ 
+
+     Center  Label                x              y              z                     x              y              z
+        1      C1              -0.378561       0.000000      -2.696506             -0.200326       0.000000      -1.426930
+        2      C2               0.378561       0.000000       2.696506              0.200326       0.000000       1.426930
+        3      H1              -4.177154       0.000000      -3.592062             -2.210455       0.000000      -1.900837
+        4      H2               4.177154       0.000000       3.592062              2.210455       0.000000       1.900837
+        5      H3               1.225649      -3.149825      -4.350406              0.648586      -1.666816      -2.302136
+        6      H4               1.225649       3.149825      -4.350406              0.648586       1.666816      -2.302136
+        7      H5              -1.225649      -3.149825       4.350406             -0.648586      -1.666816       2.302136
+        8      H6              -1.225649       3.149825       4.350406             -0.648586       1.666816       2.302136
+
+                    *************************************** 
+                    *    InterNuclear Distances / Bohr    * 
+                    *************************************** 
+
+               1 C1            2 C2            3 H1            4 H2            5 H3            6 H4    
+    1 C1       0.000000
+    2 C2       5.445899        0.000000
+    3 H1       3.902734        7.765348        0.000000
+    4 H2       7.765348        3.902734       11.018444        0.000000
+    5 H3       3.902598        7.765174        6.299744        9.039667        0.000000
+    6 H4       3.902598        7.765174        6.299744        9.039667        6.299650        0.000000
+    7 H5       7.765174        3.902598        9.039667        6.299744        9.039524       11.018103
+    8 H6       7.765174        3.902598        9.039667        6.299744       11.018103        9.039524
+
+               7 H5            8 H6    
+    7 H5       0.000000
+    8 H6       6.299650        0.000000
+
+                    ******************************************* 
+                    *    InterNuclear Distances / Angstrom    * 
+                    ******************************************* 
+
+               1 C1            2 C2            3 H1            4 H2            5 H3            6 H4    
+    1 C1       0.000000
+    2 C2       2.881846        0.000000
+    3 H1       2.065238        4.109245        0.000000
+    4 H2       4.109245        2.065238        5.830710        0.000000
+    5 H3       2.065166        4.109153        3.333681        4.783586        0.000000
+    6 H4       2.065166        4.109153        3.333681        4.783586        3.333631        0.000000
+    7 H5       4.109153        2.065166        4.783586        3.333681        4.783510        5.830529
+    8 H6       4.109153        2.065166        4.783586        3.333681        5.830529        4.783510
+
+               7 H5            8 H6    
+    7 H5       0.000000
+    8 H6       3.333631        0.000000
+--
+
+
+++    Primitive basis info:
+      ---------------------
+
+
+                    *****************************************************
+                    ******** Primitive Basis Functions (Valence) ********
+                    *****************************************************
+
+
+ Basis set:C.ANO-S...3S2P.                                                                 
+
+                  Type         
+                   s
+           No.      Exponent    Contraction Coefficients
+            1  0.5240635300D+04   0.0009370600  -0.0002014000   0.0001894800
+            2  0.7822047900D+03   0.0072286600  -0.0015913000   0.0015991700
+            3  0.1783508300D+03   0.0363437000  -0.0078579000   0.0071587100
+            4  0.5081594200D+02   0.1306288800  -0.0307856000   0.0325510200
+            5  0.1682356200D+02   0.3188985100  -0.0777605000   0.0667121500
+            6  0.6175776000D+01   0.4390794100  -0.1654798000   0.2107146700
+            7  0.2418049000D+01   0.2144773700  -0.0935316000   0.0160634100
+            8  0.5119000000D+00   0.0095291200   0.5910679100  -1.2060810000
+            9  0.1565900000D+00  -0.0024223000   0.5101798500   0.6235919000
+           10  0.5480600000D-01   0.0008592700   0.0360209500   0.6755537800
+
+                  Type         
+                   p
+           No.      Exponent    Contraction Coefficients
+           11  0.1884180000D+02   0.0136324800  -0.0127012000
+           12  0.4159240000D+01   0.0838105300  -0.0672664000
+           13  0.1206710000D+01   0.2857919500  -0.3404231000
+           14  0.3855400000D+00   0.4864162000  -0.3747775000
+           15  0.1219400000D+00   0.3147641700   0.4228405600
+           16  0.4267900000D-01   0.0909343700   0.6428391200
+
+
+ Basis set:H.ANO-S...2S.                                                                   
+
+                  Type         
+                   s
+           No.      Exponent    Contraction Coefficients
+           33  0.8263637400D+02   0.0025641300  -0.0046008000
+           34  0.1240955800D+02   0.0192126100  -0.0324447000
+           35  0.2823854000D+01   0.0950511800  -0.1710737000
+           36  0.7976700000D+00   0.3018678200  -0.5048672000
+           37  0.2580530000D+00   0.4874459200  -0.0948920000
+           38  0.8989100000D-01   0.2354794300   0.3708555100
+           39  0.3146200000D-01   0.0157777600   0.6556513400
+
+  Number of primitives                                   98
+  Number of basis functions                              30
+
+--
+
+
+++    SO/AO info:
+      -----------
+
+                    **************************************************
+                    ********** Petite list Basis Functions ***********
+                    **************************************************
+
+
+           Basis functions generated by E  
+
+ Basis Label        Type   Center
+   1   C1           1s        1
+   2   C1           2s        1
+   3   C1           3s        1
+   4   C1           2px       1
+   5   C1           3px       1
+   6   C1           2py       1
+   7   C1           3py       1
+   8   C1           2pz       1
+   9   C1           3pz       1
+  10   C2           1s        2
+  11   C2           2s        2
+  12   C2           3s        2
+  13   C2           2px       2
+  14   C2           3px       2
+  15   C2           2py       2
+  16   C2           3py       2
+  17   C2           2pz       2
+  18   C2           3pz       2
+  19   H1           1s        3
+  20   H1           2s        3
+  21   H2           1s        4
+  22   H2           2s        4
+  23   H3           1s        5
+  24   H3           2s        5
+  25   H4           1s        6
+  26   H4           2s        6
+  27   H5           1s        7
+  28   H5           2s        7
+  29   H6           1s        8
+  30   H6           2s        8
+
+      Basis set specifications :
+      Symmetry species        a  
+      Basis functions          30
+--
+
+
+            Nuclear Potential Energy             22.35949021 au
+
+
+      Basis set specifications :
+      Symmetry species         a  
+      Basis functions           30
+
+      Cholesky vectors         333
+
+
+
+  Input file to MOLDEN was generated!
+
+--- Stop Module:  seward at Wed Apr 11 20:15:33 2018 /rc=0 ---
+--- Module seward spent 6 seconds 
+*** 
+

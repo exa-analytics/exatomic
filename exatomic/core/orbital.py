@@ -147,17 +147,17 @@ class Orbital(_Convolve):
         """
         Returns a specific orbital.
 
-        Args
+        Args:
             orb (int): See note below (default HOMO)
             spin (int): 0, no spin or alpha (default); 1, beta
             index (int): Orbital dataframe index (default None)
             frame (int): The frame of the universe (default max(frame))
             group (int): The group of orbitals within a given frame
 
-        Returns
+        Returns:
             orbital (exatomic.orbital.Orbital): Orbital row
 
-        Note
+        Note:
             If the index is not known (usually), but a criterion
             such as (HOMO or LUMO) is desired, use the *orb* and
             *spin* criteria. Negative *orb* values are occupied,
@@ -180,6 +180,19 @@ class Orbital(_Convolve):
                             (self['spin'] == spin)].iloc[orb]
         else:
             return self.iloc[index]
+
+    def active_orbitals(self, maxocc=1.985, minocc=0.015):
+        """
+        Returns a slice of the orbital table containing so-called
+        active orbitals (defined here as orbitals with occupations
+        between minocc and maxocc).
+
+        Args:
+            maxocc (float): maximum occupation to be considered active
+            minocc (float): minimum occupation to be considered active
+        """
+        return self[(self.occupation < maxocc) & (self.occupation > minocc)]
+
 
     @classmethod
     def from_energies(cls, energies, alphae, betae, os=False):
@@ -322,12 +335,28 @@ class MOMatrix(DataFrame):
         return tmp[np.abs(tmp[mocoefs]) > tol]
 
 
-    def square(self, frame=0, column='coef', mocoefs=None):
+    def square(self, frame=0, column='coef', mocoefs=None, irrep=None):
         """
         Returns a square dataframe corresponding to the canonical C matrix
         representation.
         """
         if mocoefs is None: mocoefs = column
+        if 'irrep' in self.columns:
+            if irrep is None:
+                irreps, i, j = self.groupby('irrep'), 0, 0
+                norb = (irreps.orbital.max() + 1).sum()
+                nchi = (irreps.chi.max() + 1).sum()
+                cmat = np.zeros((nchi, norb))
+                for irrep, grp in irreps:
+                    piv = grp.pivot('chi', 'orbital', mocoefs)
+                    ii, jj = piv.shape
+                    cmat[i : i + ii, j : j + jj] = piv.values
+                    i += ii
+                    j += jj
+                return pd.DataFrame(cmat, index=pd.Index(range(nchi), name='chi'),
+                                    columns=pd.Index(range(norb), name='orbital'))
+            return self.groupby('irrep').get_group(irrep
+                        ).pivot('chi', 'orbital', mocoefs)
         return self.pivot('chi', 'orbital', mocoefs)
 
 

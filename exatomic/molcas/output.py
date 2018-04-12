@@ -17,7 +17,7 @@ from io import StringIO
 from exa import TypedMeta
 from .editor import Editor
 from exatomic import Atom
-from exatomic.algorithms.numerical import _flat_square_to_triangle
+from exatomic.algorithms.numerical import _flat_square_to_triangle, _square_indices
 from exatomic.algorithms.basis import lmap, spher_lml_count
 from exatomic.core.basis import Overlap, BasisSet, BasisSetOrder
 from exatomic.core.orbital import DensityMatrix, MOMatrix, Orbital
@@ -34,80 +34,95 @@ class Orb(six.with_metaclass(OrbMeta, Editor)):
     def to_universe(self):
         raise NotImplementedError("This editor has no parse_atom method.")
 
-    def _one_el(self, starts, step, ncol):
-        func = pd.read_csv
-        kwargs = {'header': None}
-        if ncol == 1:
-            func = pd.read_fwf
-            kwargs['widths'] = [18] * 4
-        else:
-            kwargs['delim_whitespace'] = True
-        return [func(StringIO('\n'.join(self[start:start + step])),
-                     **kwargs).stack().values for start in starts]
+    def _read_one(self, found, keys, start, stop, osh, old, ret, key):
+        if not old:
+            # In order for this not to break if someone decides
+            # to change the print width format, compute it here
+            ln = self[start]
+            width = ln[3:].index(' ') + 3
+            keys['widths'] = [width] * len(ln.split())
+            keys['names'] = range(len(keys['widths']))
+        df = pd.read_fwf(StringIO('\n'.join(self[start:stop])), **keys)
+        if not osh:
+            ret.update({key: df.stack().dropna().values})
+        else: # Clean for open shell calcs
+            rm = found[1] - found[0] - 1
+            df.drop([rm - 1, rm], inplace=True)
+            df[0] = df[0].astype(np.float64)
+            df = df.stack().dropna().astype(np.float64).values
+            ret.update({key: df[:len(df)//2],
+                        key+'1': df[len(df)//2:]})
+
 
     def parse_momatrix(self):
-        dim = int(self[5])
-        #ndim = dim * dim
         _re_orb = 'ORBITAL'
         _re_occ = 'OCCUPATION NUMBERS'
         _re_ens = 'ONE ELECTRON ENERGIES'
-        found = self.find(_re_orb, _re_occ,
-                          _re_ens, keys_only=True)
-        skips = found[_re_orb]
-        start = skips[0]
-        occs = [i + 1 for i in found[_re_occ]]
-        ens = [i + 1 for i in found[_re_ens]]
-        if not found[_re_ens]: ens = False
-        ncol = len(self[start + 1].split())
-        cols = 4 if ncol == 1 else ncol
-        chnk = np.ceil(dim / cols).astype(np.int64)
-        orbdx = np.repeat(range(dim), chnk)
-        osh = False
-        if len(occs) == 2:
-            osh = True
-            skips.insert(dim, skips[dim] - 1)
-            orbdx = np.concatenate([orbdx, orbdx])
-        skips = [i - skips[0] for i in skips]
-        if ncol == 1:
-            coefs = pd.read_fwf(StringIO('\n'.join(self[start:occs[0]-2])),
-                                skiprows=skips, header=None, widths=[18]*4)
-            if ens: ens = self._one_el(ens, chnk, ncol)
+        _re_osh = '#UORB'
+        _re_idx = '#INDEX'
+        _re_hmn = 'human'
+        found = self.find(_re_orb, _re_occ, _re_ens,
+                          _re_osh, _re_idx, keys_only=True)
+        found[_re_hmn] = [i for i in found[_re_occ]
+                          if _re_hmn in self[i].lower()]
+        # Dimensions per irrep
+        dims = list(map(int, self[5].split()))
+        ndim = sum(dims)
+        osh = len(found[_re_osh]) > 0
+        start = found[_re_orb][0] + 1
+        stop = min(*found[_re_occ], *found[_re_ens]) - 1
+        # Old file format
+        old = len(self[start].split()) == 1
+        # MOMatrix table
+        widths = [18] * 4 if old else [22] * 5
+        kws = {'widths': widths, 'names': range(len(widths))}
+        df = pd.read_fwf(StringIO('\n'.join(self[start:stop])),
+                         widths=widths, names=range(len(widths)))
+        df.drop(df[df[0].str.contains(_re_orb)].index, inplace=True)
+        # Orbital occupations
+        mo, orb = {}, {}
+        start = found[_re_occ][0] + 1
+        stop = min(*found[_re_hmn], *found[_re_ens], *found[_re_idx]) - 1
+        self._read_one(found[_re_occ], kws, start, stop,
+                       osh, old, orb, 'occupation')
+        # Orbital energies
+        if found[_re_ens]:
+            start = found[_re_ens][0] + 1
+            stop = found[_re_idx][0]
+            self._read_one(found[_re_ens], kws, start, stop,
+                           osh, old, orb, 'energy')
+
+        # Get all the groupby indices
+        if len(dims) > 1: # Symmetrized calc.
+            mo.update({
+                'irrep': [i for i, d in enumerate(dims) for _ in range(d * d)],
+                'orbital': [i for d in dims for i in range(d) for _ in range(d)],
+                'chi': [i for d in dims for _ in range(d) for i in range(d)]})
+            orb.update({'vector': [j for d in dims for j in range(d)],
+                        'irrep': [i for i, d in enumerate(dims) for _ in range(d)]})
         else:
-            coefs = self.pandas_dataframe(start, occs[0]-2, ncol,
-                                          **{'skiprows': skips})
-            if ens:
-                echnk = np.ceil(dim / len(self[ens[0] + 1].split())).astype(np.int64)
-                ens = self._one_el(ens, echnk, ncol)
-        occs = self._one_el(occs, chnk, ncol)
-        coefs['idx'] = orbdx
-        coefs = coefs.groupby('idx').apply(pd.DataFrame.stack).drop(
-                                           'idx', level=2).values
-        mo = {'orbital': np.repeat(range(dim), dim), 'frame': 0,
-              'chi': np.tile(range(dim), dim)}
-        if ens:
-            orb = {'frame': 0, 'group': 0}
-        if len(occs) == 2:
-            mo['coef'] = coefs[:len(coefs)//2]
-            mo['coef1'] = coefs[len(coefs)//2:]
-            self.occupation_vector = {'coef': occs[0], 'coef1': occs[1]}
-            if ens:
-                orb['occupation'] = np.concatenate(occs)
-                orb['energy'] = np.concatenate(ens)
-                orb['vector'] = np.concatenate([range(dim), range(dim)])
-                orb['spin'] = np.concatenate([np.zeros(dim), np.ones(dim)])
-        else:
-            mo['coef'] = coefs
-            self.occupation_vector = occs[0]
-            if ens:
-                orb['occupation'] = occs[0]
-                orb['energy'] = ens[0]
-                orb['vector'] = range(dim)
-                orb['spin'] = np.zeros(dim)
+            ordx, chidx = _square_indices(ndim)
+            mo.update({'orbital': ordx, 'chi': chidx})
+            orb.update({'vector': range(ndim)})
+
+        # Unused groupby indices
+        orb.update({'group': 0, 'spin': 0, 'frame': 0})
+        mo.update({'frame': 0})
+
+        if not osh:
+            df[0] = df[0].astype(np.float64)
+            mo.update({'coef': df.stack().dropna().values})
+        else: # Open shell calc.
+            off = found[_re_orb][0] + 1
+            df.drop(found[_re_osh][0] - off, inplace=True)
+            df[0] = df[0].astype(np.float64)
+            coef = df.stack().dropna().values
+            mo.update({'coef': coef[:len(coef)//2],
+                       'coef1': coef[len(coef)//2:]})
+
         self.momatrix = pd.DataFrame.from_dict(mo)
-        if ens:
-            self.orbital = pd.DataFrame.from_dict(orb)
-        else:
-            self.orbital = Orbital.from_occupation_vector(occs[0], os=osh)
+        self.orbital = pd.DataFrame.from_dict(orb)
+
 
     def __init__(self, *args, **kwargs):
         super(Orb, self).__init__(*args, **kwargs)
@@ -123,22 +138,61 @@ class OutMeta(TypedMeta):
 class Output(six.with_metaclass(OutMeta, Editor)):
 
     def add_orb(self, path, mocoefs='coef', orbocc='occupation'):
+        """
+        Add a MOMatrix and Orbital table to a molcas.Output.
+
+        Args:
+            mocoefs (str): rename coefficients
+            orbocc (str): rename occupations
+        """
         orb = Orb(path)
         if mocoefs != 'coef' and orbocc == 'occupation':
             orbocc = mocoefs
-        for attr, col, de in [['momatrix', mocoefs, 'coef'],
-                              ['orbital', orbocc, 'occupation']]:
-            df = getattr(self, attr, None)
-            if df is None:
-                setattr(self, attr, getattr(orb, attr))
-            elif col in df.columns:
-                raise ValueError('This action would replace '
-                                 '"{}" in uni.{}'.format(col, attr))
-            else:
-                df[col] = getattr(orb, attr)[de]
+        # MOMatrix
+        curmo = getattr(self, 'momatrix', None)
+        if curmo is None:
+            self.momatrix = orb.momatrix
+        else:
+            if mocoefs in self.momatrix.columns:
+                raise ValueError('This action would overwrite '
+                                 'coefficients. Specify mocoefs parameter.')
+            for i, default in enumerate(['coef', 'coef1']):
+                final = mocoefs + '1' if i else mocoefs
+                if default in orb.momatrix:
+                    self.momatrix[final] = orb.momatrix[default]
+        # Orbital
+        curorb = getattr(self, 'orbital', None)
+        if curorb is None:
+            self.orbital = orb.orbital
+        else:
+            if orbocc in self.orbital.columns:
+                raise ValueError('This action would overwrite '
+                                 'occupations. Specify orbocc parameter.')
+            for i, default in enumerate(['occupation', 'occupation1']):
+                final = orbocc + '1' if i else orbocc
+                if default in orb.orbital.columns:
+                    self.orbital[final] = orb.orbital[default]
+
 
     def add_overlap(self, path):
         self.overlap = Overlap.from_column(path)
+
+
+    def _check_atom_sym(self):
+        """Parses a less accurate atom list to check for symmetry."""
+        _re_sym = 'Cartesian Coordinates / Bohr, Angstrom'
+        start = self.find(_re_sym, keys_only=True)[0] + 4
+        cols = ['center', 'tag', 'x', 'y', 'z', 'd1', 'd2', 'd3']
+        stop = start
+        while len(self[stop].split()) == len(cols): stop += 1
+        atom = self.pandas_dataframe(start, stop, cols)
+        atom.drop(['d1', 'd2', 'd3'], axis=1, inplace=True)
+        atom['symbol'] = atom['tag'].str.extract(
+            '([A-z]{1,})([0-9]*)', expand=False)[0].str.lower().str.title()
+        atom['frame'] = 0
+        atom['center'] -= 1
+        return atom
+
 
     def parse_atom(self):
         """Parses the atom list generated in SEWARD."""
@@ -157,58 +211,85 @@ class Output(six.with_metaclass(OutMeta, Editor)):
         atom['symbol'] = atom['tag'].str.extract(
             '([A-z]{1,})([0-9]*)', expand=False)[0].str.lower().str.title()
         atom['Z'] = atom['symbol'].map(sym2z).astype(np.int64)
-        atom['label'] = range(atom.shape[0])
+        atom['center'] = range(atom.shape[0])
         atom['frame'] = 0
         self.atom = atom
+        # Work-around for symmetrized calcs?
+        allatom = self._check_atom_sym()
+        self.meta['symmetrized'] = False
+        if allatom.shape[0] > self.atom.shape[0]:
+            self.atom = allatom
+            self.meta['symmetrized'] = True
+            utags = []
+            for cen, tag in zip(self.atom['center'], self.atom['tag']):
+                utag = tag
+                while utag in utags:
+                    utag = ''.join(filter(str.isalpha, utag)) + \
+                    str(int(''.join(filter(str.isdigit, utag))) + 1)
+                utags.append(utag)
+            self.atom['utag'] = utags
+
 
     def parse_basis_set_order(self):
         """
         Parses the shell ordering scheme if BSSHOW specified in SEWARD.
         """
         _re_bas_order = 'Basis Label        Type   Center'
-        start = stop = self.find(_re_bas_order, keys_only=True)[0] + 1
-        while self[stop].strip(): stop += 1
-        df = self.pandas_dataframe(start, stop, ['idx', 'tag', 'type', 'center'])
-        df.drop(['idx', 'tag'], inplace=True, axis=1)
-        if 'set' not in self.atom.columns: self.parse_basis_set()
-        mldict = {'': 0, 'x': 1, 'y': -1, 'z': 0}
+        starts = [i + 1 for i in self.find(_re_bas_order, keys_only=True)]
+        lines, irreps, vecs, vec, nsym = [], [], [], 0, 0
+        for i, start in enumerate(starts):
+            stop = start
+            while self[stop].strip():
+                lines.append(stop)
+                irreps.append(i)
+                vecs.append(vec)
+                nsym = max(nsym, len(self[stop].split()))
+                stop += 1
+                vec += 1
+            lines.append(stop)
+            vec = 0
+        symcols = [('ocen{}'.format(i), 'sign{}'.format(i))
+                    for i in range((nsym - 5) // 2)]
+        if symcols: self.meta['symmetrized'] = True
+        cols = ['idx', 'tag', 'type', 'center', 'phase'] + \
+               [c for t in symcols for c in t]
+        df = pd.read_csv(StringIO('\n'.join(self[i] for i in lines)),
+                         delim_whitespace=True, names=cols)
+        # Symmetrized basis functions
+        for col in df.columns:
+            if col.startswith('ocen'):
+                df[col] = df[col].fillna(0.).astype(np.int64) - 1
+        # Extra info for symmetrized calcs
+        df['irrep'] = irreps
+        df['vector'] = vecs
+        df.drop(['idx'], inplace=True, axis=1)
+        df['frame'] = 0
+        # 0-based indexing
         df['center'] -= 1
-        df['n'] = df['type'].str[0]
-        df['n'].update(df['n'].map({'*': 0}))
-        df['n'] = df['n'].astype(np.int64)
-        fill = df['n'] + 1
-        fill.index += 1
-        df.loc[df[df['n'] == 0].index, 'n'] = fill
+        # Clean up (L, ml) values to ints
         df['L'] = df['type'].str[1].map(lmap)
         df['ml'] = df['type'].str[2:]
-        try:
-            df['l'] = df['ml'].copy()
-            df['l'].update(df['l'].map({'': 0, 'x': 1, 'y': 0, 'z': 0}))
-            df['l'] = df['l'].astype(np.int64)
-            df['m'] = df['ml'].copy()
-            df['m'].update(df['m'].map({'': 0, 'y': 1, 'x': 0, 'z': 0}))
-            df['m'] = df['m'].astype(np.int64)
-            df['n'] = df['ml'].copy()
-            df['n'].update(df['n'].map({'': 0, 'z': 1, 'x': 0, 'y': 0}))
-            df['n'] = df['n'].astype(np.int64)
-        except:
-            pass
-        df['ml'].update(df['ml'].map(mldict))
+        df['ml'].update(df['ml'].map({'': 0, 'x': 1, 'y': -1, 'z': 0}))
         df['ml'].update(df['ml'].str[::-1])
         df['ml'] = df['ml'].astype(np.int64)
-        funcs = self.basis_set.functions_by_shell()
-        shells = []
-        for seht in self.atom['set']:
-            tot = 0
-            lml_count = spher_lml_count
-            for l, n in funcs[seht].items():
-                #for i in range(lml_count[l]):
-                for _ in range(lml_count[l]):
-                    shells += list(range(tot, n + tot))
-                tot += n
-        df['shell'] = shells
-        df['frame'] = 0
+        # Seward and gateway may each print basis info.
+        # See if this happened and if so, keep only the first half.
+        try: # Apparently BSSHOW doesn't always print the basis set.
+            if 'set' not in self.atom.columns:
+                self.parse_basis_set()
+        except ValueError:
+            self.basis_set_order = df
+            return
+        bs = self.basis_set
+        sp = self.meta['spherical']
+        nbf = self.atom.set.map(bs.functions(sp).groupby('set').sum()).sum()
+        if df.shape[0] > nbf:
+            df = df.loc[:nbf - 1]
+            irreps = irreps[:nbf]
+            vecs = vecs[:nbf]
         self.basis_set_order = df
+
+
 
     def parse_basis_set(self):
         """Parses the primitive exponents, coefficients and
@@ -329,10 +410,15 @@ class HDF(six.with_metaclass(HDFMeta, object)):
 
     def parse_momatrix(self):
         coefs = np.array(self._hdf['MO_VECTORS'])
-        dim = np.int64(np.sqrt(coefs.shape[0]))
-        self.momatrix = pd.DataFrame.from_dict({
-            'orbital': np.repeat(range(dim), dim), 'frame': 0,
-            'chi': np.tile(range(dim), dim), 'coef': coefs})
+        try:
+            symm = np.array(self._hdf['DESYM_MATRIX'])
+            print('Symmetry not supported on HDF yet.')
+            return
+        except KeyError:
+            dim = np.int64(np.sqrt(coefs.shape[0]))
+            self.momatrix = pd.DataFrame.from_dict({
+                'orbital': np.repeat(range(dim), dim), 'frame': 0,
+                'chi': np.tile(range(dim), dim), 'coef': coefs})
 
     def __getitem__(self, key):
         if isinstance(key, str):
@@ -345,6 +431,8 @@ class HDF(six.with_metaclass(HDFMeta, object)):
         except ImportError:
             print("You must install h5py for access to HDF5 utilities.")
             return
+        if not os.path.isfile(args[0]):
+            print('Argument is likely incorrect file path.')
         self._hdf = h5py.File(args[0], 'r')
 
 
