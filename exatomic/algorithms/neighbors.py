@@ -106,18 +106,31 @@ def periodic_nearest_neighbors_by_atom(uni, source, a, sizes, **kwargs):
     Determine nearest neighbor molecules to a given source (or sources) and
     return the data as a dataframe.
 
+    For a simple cubic periodic system with unit cell dimension ``a``,
+    clusters can be generated as follows. In the example below, additional
+    keyword arguments have been included as they are almost always required
+    in order to correctly identify molecular units semi-empirically.
+
+    .. code-block:: python
+
+        periodic_nearest_neighbors_by_atom(u, [0], 40.0, [0, 5, 10, 50],
+                                           dmax=40.0, C=1.6, O=1.6)
+
+    Argument descriptions can be found below. The additional keyword arguments,
+    ``dmax``, ``C``, ``O``, are passed directly to the two body computation used
+    to determine (semi-empirically) molecular units. Note that although molecules
+    are computed, neighboring molecular units are determine by an atom to atom
+    criteria.
+
     Args:
         uni (:class:`~exatomic.core.universe.Universe`): Universe
         source (int, str, list): Integer label or string symbol of source atom
         a (float): Cubic unit cell dimension
         sizes (list): List of slices to create
-        kwargs: Additional keyword arguments to be passed to atom two body computation (such as covalent radii)
+        kwargs: Additional keyword arguments to be passed to atom two body calculation
 
     Returns:
         dct (dict): Dictionary of sliced universes and nearest neighbor table
-
-    Note:
-        This function expects cubic periodic unit cells.
 
     See Also:
         Sliced universe construction can be facilitated by
