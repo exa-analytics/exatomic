@@ -9,6 +9,7 @@ then evaluated on a numerical grid.
 These are their stories.
 '''
 from __future__ import division
+import six
 import numpy as np
 import pandas as pd
 from numba import jit
@@ -173,6 +174,7 @@ def _compute_current_density(bvs, gvx, gvy, gvz, cmatr, cmati, occvec, verbose=T
     curx = np.zeros(npts, dtype=np.float64)
     cury = np.zeros(npts, dtype=np.float64)
     curz = np.zeros(npts, dtype=np.float64)
+    cval = np.zeros(nbas, dtype=np.float64)
     if verbose:
         fp = FloatProgress(description='Computing:')
         display(fp)
@@ -192,20 +194,43 @@ def _compute_current_density(bvs, gvx, gvy, gvz, cmatr, cmati, occvec, verbose=T
             gvxnu = gvx[nu]
             gvynu = gvy[nu]
             gvznu = gvz[nu]
-            cval = evaluate('-0.5 * (occvec * (crmu * cinu - cimu * crnu))').sum()
-            curx = evaluate('curx + cval * (bvmu * gvxnu - gvxmu * bvnu)')
-            cury = evaluate('cury + cval * (bvmu * gvynu - gvymu * bvnu)')
-            curz = evaluate('curz + cval * (bvmu * gvznu - gvzmu * bvnu)')
+            cval = evaluate('-0.5 * (occvec * (crmu * cinu - cimu * crnu))', out=cval)
+            csum = cval.sum()
+            evaluate('curx + csum * (bvmu * gvxnu - gvxmu * bvnu)', out=curx)
+            evaluate('cury + csum * (bvmu * gvynu - gvymu * bvnu)', out=cury)
+            evaluate('curz + csum * (bvmu * gvznu - gvzmu * bvnu)', out=curz)
     if verbose:
         fp.close()
     return curx, cury, curz
 
 
-def _determine_vector(uni, vector):
+def _determine_vector(uni, vector, irrep=None):
     """Find some orbital indices in a universe."""
+    if irrep is not None: # Symmetry is fun
+        iorb = uni.orbital.groupby('irrep').get_group(irrep)
+        if vector is not None: # Check if vectors are in irrep
+            # Input vectors appropriately indexed by irrep
+            if all((i in iorb.vector.values for i in vector)):
+                return np.array(vector)
+            # Input vectors indexed in terms of total vectors
+            elif all((i in iorb.index.values for i in vector)):
+                return iorb.loc[vector]['vector'].values
+            else:
+                raise ValueError('One or more specified vectors '
+                                 'could not be found in uni.orbital.')
+        else:
+            ihomo = iorb[iorb['occupation'] < 1.98]
+            print(ihomo)
+            ihomo = ihomo.vector.values[0]
+            print(max(0, ihomo-5))
+            print(min(ihomo + 7, len(iorb.index)))
+            return np.array(range(max(0, ihomo-5),
+                                  min(ihomo + 7, len(iorb.index))))
+    # If specified, carry on
     if isinstance(vector, int): return np.array([vector])
-    typs = (list, tuple, range, np.ndarray)
+    typs = (list, tuple, six.moves.range, np.ndarray)
     if isinstance(vector, typs): return np.array(vector)
+    # Try to find some reasonable default
     norb = len(uni.basis_set_order.index)
     if vector is None:
         if norb < 10:

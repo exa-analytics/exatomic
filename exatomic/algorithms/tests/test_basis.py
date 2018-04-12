@@ -2,8 +2,8 @@
 # Copyright (c) 2015-2018, Exa Analytics Development Team
 # Distributed under the terms of the Apache License 2.0
 """
-Tests for symbolic basis functions
-######################################
+Tests for symbolic basis function utilities
+#############################################
 """
 from __future__ import absolute_import
 from __future__ import print_function
@@ -14,7 +14,7 @@ from unittest import TestCase
 from exatomic.base import resource
 from exatomic import nwchem, molcas
 from ..basis import (cart_lml_count, spher_lml_count, solid_harmonics,
-                     enum_cartesian, car2sph, Symbolic, BasisFunctions)
+                     enum_cartesian, car2sph, BasisFunctions)
 
 
 class TestCartesianToSpherical(TestCase):
@@ -45,11 +45,11 @@ class TestBasisFunctions(TestCase):
         self.mo = mo.to_universe()
 
     def test_basis_functions(self):
-        nwfns = self.nw.basis_functions.list()
-        mofns = self.mo.basis_functions.list()
-        nw = sorted(list(nwfns[0]._expr.expand().as_coefficients_dict().values()))
-        mo = sorted(list(mofns[0]._expr.expand().as_coefficients_dict().values()))
+        nwfns = self.nw.basis_functions.evaluate()
+        mofns = self.mo.basis_functions.evaluate()
+        nw = sorted(list(nwfns[0].expand().as_coefficients_dict().values()))
+        mo = sorted(list(mofns[0].expand().as_coefficients_dict().values()))
         for a, b in zip(nw, mo):
             self.assertTrue(np.isclose(np.float64(a), np.float64(b)))
-        self.assertFalse(len(nwfns[11]._expr.expand().as_coefficients_dict()) ==
-                         len(mofns[11]._expr.expand().as_coefficients_dict()))
+        self.assertFalse(len(nwfns[11].expand().as_coefficients_dict()) ==
+                         len(mofns[11].expand().as_coefficients_dict()))

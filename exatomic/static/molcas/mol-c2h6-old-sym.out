@@ -1,0 +1,406 @@
+   This copy of MOLCAS is licensed
+                                                                                                   
+                           Copyright, all rights, reserved:                                        
+                         Permission is hereby granted to use                                       
+                but not to reproduce or distribute any part of this                                
+             program. The use is restricted to research purposes only.                             
+                            Lund University Sweden, 2010.                                          
+                                                                                                   
+ For the author list and the recommended citation consult section 1.5 of the MOLCAS user's guide.  
+
+
+
+   -------------------------------------------------------------------
+  |                                                                   
+  |   Project         = standard__001
+  |   Submitted from  = /path
+  |   Scratch area    = /path
+  |   Save outputs to = /path
+  |   Molcas          = /path
+  |                                                                   
+  |   Scratch area is empty
+  |                                                                   
+  |       MOLCAS_TRAP = OFF                 
+  |      MOLCAS_PRINT = 6                   
+  |      MOLCAS_print = 100                 
+  |       MOLCAS_CPUS = 1                   
+  |        MOLCAS_MEM = 1000                
+  |     MOLCAS_MOLDEN = OFF                 
+  |       MOLCAS_DISK = 1000                
+  |                                                                   
+   -------------------------------------------------------------------
+--- Start Module: auto at Wed Apr 11 13:30:14 2018 
+
+++ ---------   Input file   ---------
+
+ >> COPY C2H6.xyz .
+  &GATEWAY
+    coord 
+    C2H6.xyz
+    basis
+    ANO-S-VDZ
+    group
+    y xz
+  &SEWARD
+    BSSHOW
+  &SCF
+
+-- ----------------------------------
+
+--- Start Module: gateway at Wed Apr 11 13:30:15 2018 
+
+
+()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()
+                                 MOLCAS executing module GATEWAY with 1000 MB of memory
+                                              at 13:30:15 Wed Apr 11 2018
+()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()
+
+
+
+      XYZ coordinates might move
+
+      To prevent changes in coordinates
+      use Group=C1 or small SymThreshold
+
+      Found SYMMETRY generators:  y xz           
+
+++    Symmetry information:
+      ---------------------
+
+                    --- Group Generators ---
+                    Reflection in the xz-plane  
+                    Rotation around the y-axis  
+
+                    Character Table for C2h
+
+                             E   s(xz) C2(y)   i  
+                    ag       1     1     1     1  xz, Ry
+                    au       1    -1     1    -1  y, I
+                    bu       1     1    -1    -1  x, z
+                    bg       1    -1    -1     1  xy, Rz, yz, Rx
+--
+
+
+++    Basis set information:
+      ----------------------
+
+
+      Basis set label:C.ANO-S...3S2P. 
+
+      Valence basis set:
+      ------------------
+      Associated Effective Charge  6.000000 au
+      Associated Actual Charge     6.000000 au
+      Nuclear Model: Point charge
+
+      Shell  nPrim  nBasis  Cartesian Spherical Contaminant
+         s      10       3        X                  
+         p       6       2        X                  
+
+
+      Basis set label:H.ANO-S...2S. 
+
+      Valence basis set:
+      ------------------
+      Associated Effective Charge  1.000000 au
+      Associated Actual Charge     1.000000 au
+      Nuclear Model: Point charge
+
+      Shell  nPrim  nBasis  Cartesian Spherical Contaminant
+         s       7       2        X                  
+--
+
+
+++    Molecular structure info:
+      -------------------------
+
+                    ************************************************ 
+                    **** Cartesian Coordinates / Bohr, Angstrom **** 
+                    ************************************************ 
+
+     Center  Label                x              y              z                     x              y              z
+        1      C1              -0.200326       0.000000      -1.426930             -0.106008       0.000000      -0.755099
+        2      C1               0.200326       0.000000       1.426930              0.106008       0.000000       0.755099
+        3      H2              -2.210455       0.000000      -1.900837             -1.169722       0.000000      -1.005880
+        4      H2               2.210455       0.000000       1.900837              1.169722       0.000000       1.005880
+        5      H3               0.648586      -1.666816      -2.302136              0.343217      -0.882041      -1.218238
+        6      H3               0.648586       1.666816      -2.302136              0.343217       0.882041      -1.218238
+        7      H3              -0.648586      -1.666816       2.302136             -0.343217      -0.882041       1.218238
+        8      H3              -0.648586       1.666816       2.302136             -0.343217       0.882041       1.218238
+
+                    *************************************** 
+                    *    InterNuclear Distances / Bohr    * 
+                    *************************************** 
+
+               1 C1            2 C1            3 H2            4 H2            5 H3            6 H3    
+    1 C1       0.000000
+    2 C1       2.881846        0.000000
+    3 H2       2.065238        4.109245        0.000000
+    4 H2       4.109245        2.065238        5.830710        0.000000
+    5 H3       2.065166        4.109153        3.333681        4.783586        0.000000
+    6 H3       2.065166        4.109153        3.333681        4.783586        3.333631        0.000000
+    7 H3       4.109153        2.065166        4.783586        3.333681        4.783510        5.830529
+    8 H3       4.109153        2.065166        4.783586        3.333681        5.830529        4.783510
+
+               7 H3            8 H3    
+    7 H3       0.000000
+    8 H3       3.333631        0.000000
+
+                    ******************************************* 
+                    *    InterNuclear Distances / Angstrom    * 
+                    ******************************************* 
+
+               1 C1            2 C1            3 H2            4 H2            5 H3            6 H3    
+    1 C1       0.000000
+    2 C1       1.525007        0.000000
+    3 H2       1.092877        2.174519        0.000000
+    4 H2       2.174519        1.092877        3.085479        0.000000
+    5 H3       1.092839        2.174470        1.764108        2.531365        0.000000
+    6 H3       1.092839        2.174470        1.764108        2.531365        1.764082        0.000000
+    7 H3       2.174470        1.092839        2.531365        1.764108        2.531325        3.085383
+    8 H3       2.174470        1.092839        2.531365        1.764108        3.085383        2.531325
+
+               7 H3            8 H3    
+    7 H3       0.000000
+    8 H3       1.764082        0.000000
+
+                    ************************************** 
+                    *    Valence Bond Angles / Degree    * 
+                    ************************************** 
+                          Atom centers                 Phi
+                      2 C1       1 C1       3 H2       111.26
+                      2 C1       1 C1       5 H3       111.26
+                      2 C1       1 C1       6 H3       111.26
+                      3 H2       1 C1       5 H3       107.63
+                      3 H2       1 C1       6 H3       107.63
+                      5 H3       1 C1       6 H3       107.63
+                      1 C1       2 C1       4 H2       111.26
+                      1 C1       2 C1       7 H3       111.26
+                      1 C1       2 C1       8 H3       111.26
+                      4 H2       2 C1       7 H3       107.63
+                      4 H2       2 C1       8 H3       107.63
+                      7 H3       2 C1       8 H3       107.63
+
+           ***************************************************************
+           *              Valence Dihedral Angles / Degree               *
+           ***************************************************************
+                    Atom centers                       Phi1     Phi2     Theta 
+           3 H2       1 C1       2 C1       4 H2        111.26   111.26  -180.00
+           3 H2       1 C1       2 C1       7 H3        111.26   111.26    60.00
+           3 H2       1 C1       2 C1       8 H3        111.26   111.26   -60.00
+           5 H3       1 C1       2 C1       7 H3        111.26   111.26   -60.00
+           5 H3       1 C1       2 C1       8 H3        111.26   111.26  -180.00
+           6 H3       1 C1       2 C1       7 H3        111.26   111.26  -180.00
+           6 H3       1 C1       2 C1       8 H3        111.26   111.26    60.00
+           4 H2       2 C1       1 C1       5 H3        111.26   111.26    60.00
+           4 H2       2 C1       1 C1       6 H3        111.26   111.26   -60.00
+--
+
+
+++    Rigid rotor info:
+      -----------------
+
+
+                    Total mass (a) :  30.04695
+
+                    Center of mass 
+                          X          Y          Z   
+                       0.00000    0.00000    0.00000
+
+                    Reference system based on center of mass
+                    Coordinates and Masses of Atoms, in au and A
+                          X          Y          Z        Mass
+                      -0.20033    0.00000   -1.42693   12.00000
+                       0.20033    0.00000    1.42693   12.00000
+                      -2.21045    0.00000   -1.90084    1.00782
+                       2.21045    0.00000    1.90084    1.00782
+                       0.64859   -1.66682   -2.30214    1.00782
+                       0.64859    1.66682   -2.30214    1.00782
+                      -0.64859   -1.66682    2.30214    1.00782
+                      -0.64859    1.66682    2.30214    1.00782
+
+                    The Moment of Inertia Tensor / au
+                                     X          Y        Z     
+                    X            0.1617E+06
+                    Y            0.0000E+00 0.1641E+06
+                    Z            -.1697E+05 0.0000E+00 0.4322E+05
+
+                    The Principal Axes and Moments of Inertia (au)
+                    Eigenvalues :0.1641E+06 0.1641E+06 0.4083E+05
+                                     X'         Y'       Z'    
+                    Eigenvectors:
+                    X            0.0000E+00 0.9903E+00 0.1390E+00
+                    Y            0.1000E+01 0.0000E+00 0.0000E+00
+                    Z            0.0000E+00 -.1390E+00 0.9903E+00
+
+                    The Rotational Constants
+                            (cm-1)            (GHz)
+                              0.669           20.048
+                              0.669           20.048
+                              2.687           80.567
+
+
+                    *******************************************
+                    *                                         *
+                    * R I G I D - R O T O R   A N A L Y S I S *
+                    *                                         *
+                    *******************************************
+
+                    j(Max):  5
+
+                    Rotor Type: Linear Rotor
+                    Asymmetry parameter: -1.000
+                    Prolate = -1
+                    Oblate  =  1
+
+
+                    Rotational energies / cm-1
+
+                    E(J= 0,kappa= 0) =        0.000
+
+                    E(J= 1,kappa=-1) =        1.337
+                    E(J= 1,kappa= 0) =        3.356
+                    E(J= 1,kappa= 1) =        3.356
+
+                    E(J= 2,kappa=-2) =        4.012
+                    E(J= 2,kappa=-1) =        6.031
+                    E(J= 2,kappa= 0) =        6.031
+                    E(J= 2,kappa= 1) =       12.087
+                    E(J= 2,kappa= 2) =       12.087
+
+                    E(J= 3,kappa=-3) =        8.025
+                    E(J= 3,kappa=-2) =       10.043
+                    E(J= 3,kappa=-1) =       10.043
+                    E(J= 3,kappa= 0) =       16.099
+                    E(J= 3,kappa= 1) =       16.099
+                    E(J= 3,kappa= 2) =       26.193
+                    E(J= 3,kappa= 3) =       26.193
+
+                    E(J= 4,kappa=-4) =       13.374
+                    E(J= 4,kappa=-3) =       15.393
+                    E(J= 4,kappa=-2) =       15.393
+                    E(J= 4,kappa=-1) =       21.449
+                    E(J= 4,kappa= 0) =       21.449
+                    E(J= 4,kappa= 1) =       31.543
+                    E(J= 4,kappa= 2) =       31.543
+                    E(J= 4,kappa= 3) =       45.674
+                    E(J= 4,kappa= 4) =       45.674
+
+                    E(J= 5,kappa=-5) =       20.062
+                    E(J= 5,kappa=-4) =       22.080
+                    E(J= 5,kappa=-3) =       22.080
+                    E(J= 5,kappa=-2) =       28.136
+                    E(J= 5,kappa=-1) =       28.136
+                    E(J= 5,kappa= 0) =       38.230
+                    E(J= 5,kappa= 1) =       38.230
+                    E(J= 5,kappa= 2) =       52.361
+                    E(J= 5,kappa= 3) =       52.361
+                    E(J= 5,kappa= 4) =       70.529
+                    E(J= 5,kappa= 5) =       70.529
+--
+
+
+            Nuclear Potential Energy             42.25331279 au
+
+--- Stop Module:  gateway at Wed Apr 11 13:30:17 2018 /rc=0 ---
+--- Start Module: seward at Wed Apr 11 13:30:18 2018 
+
+
+()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()
+                                  MOLCAS executing module SEWARD with 1000 MB of memory
+                                              at 13:30:18 Wed Apr 11 2018
+()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()
+
+
+               SEWARD will generate:
+                  Multipole Moment integrals up to order  2
+                  Kinetic Energy integrals
+                  Nuclear Attraction integrals (point charge)
+                  One-Electron Hamiltonian integrals
+                  Two-Electron Repulsion integrals
+
+                   Integrals are discarded if absolute value <: 0.10E-13
+                   Integral cutoff threshold is set to       <: 0.10E-15
+
+                    Unitary symmetry adaptation
+
+
+++    SO/AO info:
+      -----------
+
+                    **************************************************
+                    ******** Symmetry adapted Basis Functions ********
+                    **************************************************
+
+
+           Irreducible representation : ag 
+           Basis function(s) of irrep: xz, Ry                                                                          
+
+ Basis Label        Type   Center Phase
+   1   C1           1s        1     1      2     1
+   2   C1           2s        1     1      2     1
+   3   C1           3s        1     1      2     1
+   4   C1           2px       1     1      2    -1
+   5   C1           3px       1     1      2    -1
+   6   C1           2pz       1     1      2    -1
+   7   C1           3pz       1     1      2    -1
+   8   H2           1s        3     1      4     1
+   9   H2           2s        3     1      4     1
+  10   H3           1s        5     1      6     1      7     1      8     1
+  11   H3           2s        5     1      6     1      7     1      8     1
+
+           Irreducible representation : au 
+           Basis function(s) of irrep: y, I                                                                            
+
+ Basis Label        Type   Center Phase
+  12   C1           2py       1     1      2     1
+  13   C1           3py       1     1      2     1
+  14   H3           1s        5     1      6    -1      7     1      8    -1
+  15   H3           2s        5     1      6    -1      7     1      8    -1
+
+           Irreducible representation : bu 
+           Basis function(s) of irrep: x, z                                                                            
+
+ Basis Label        Type   Center Phase
+  16   C1           1s        1     1      2    -1
+  17   C1           2s        1     1      2    -1
+  18   C1           3s        1     1      2    -1
+  19   C1           2px       1     1      2     1
+  20   C1           3px       1     1      2     1
+  21   C1           2pz       1     1      2     1
+  22   C1           3pz       1     1      2     1
+  23   H2           1s        3     1      4    -1
+  24   H2           2s        3     1      4    -1
+  25   H3           1s        5     1      6     1      7    -1      8    -1
+  26   H3           2s        5     1      6     1      7    -1      8    -1
+
+           Irreducible representation : bg 
+           Basis function(s) of irrep: xy, Rz, yz, Rx                                                                  
+
+ Basis Label        Type   Center Phase
+  27   C1           2py       1     1      2    -1
+  28   C1           3py       1     1      2    -1
+  29   H3           1s        5     1      6    -1      7    -1      8     1
+  30   H3           2s        5     1      6    -1      7    -1      8     1
+
+      Basis set specifications :
+      Symmetry species        ag  au  bu  bg 
+      Basis functions          11   4  11   4
+--
+
+
+            Nuclear Potential Energy             42.25331279 au
+
+
+      Basis set specifications :
+      Symmetry species         ag   au   bu   bg 
+      Basis functions           11    4   11    4
+
+
+  Input file to MOLDEN was generated!
+
+--- Stop Module:  seward at Wed Apr 11 13:30:22 2018 /rc=0 ---
+*** 
+--- Start Module: scf at Wed Apr 11 13:30:22 2018 
+
+
