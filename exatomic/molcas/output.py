@@ -70,7 +70,8 @@ class Orb(six.with_metaclass(OrbMeta, Editor)):
         ndim = sum(dims)
         osh = len(found[_re_osh]) > 0
         start = found[_re_orb][0] + 1
-        stop = min(*found[_re_occ], *found[_re_ens]) - 1
+        stops = found[_re_occ] + found[_re_ens]
+        stop = min(stops) - 1
         # Old file format
         old = len(self[start].split()) == 1
         # MOMatrix table
@@ -82,7 +83,8 @@ class Orb(six.with_metaclass(OrbMeta, Editor)):
         # Orbital occupations
         mo, orb = {}, {}
         start = found[_re_occ][0] + 1
-        stop = min(*found[_re_hmn], *found[_re_ens], *found[_re_idx]) - 1
+        stops = found[_re_hmn] + found[_re_ens] + found[_re_idx]
+        stop = min(stops) - 1
         self._read_one(found[_re_occ], kws, start, stop,
                        osh, old, orb, 'occupation')
         # Orbital energies
