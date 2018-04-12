@@ -83,7 +83,7 @@ class Orb(six.with_metaclass(OrbMeta, Editor)):
         # Orbital occupations
         mo, orb = {}, {}
         start = found[_re_occ][0] + 1
-        stops = found[_re_hmn] + found[_re_ens] + found[_re_idx]
+        stops = found[_re_hmn] + found[_re_ens] + found[_re_idx] + [len(self) + 1]
         stop = min(stops) - 1
         self._read_one(found[_re_occ], kws, start, stop,
                        osh, old, orb, 'occupation')
@@ -93,6 +93,8 @@ class Orb(six.with_metaclass(OrbMeta, Editor)):
             stop = found[_re_idx][0]
             self._read_one(found[_re_ens], kws, start, stop,
                            osh, old, orb, 'energy')
+        else:
+            orb.update({'energy': 0})
 
         # Get all the groupby indices
         if len(dims) > 1: # Symmetrized calc.
