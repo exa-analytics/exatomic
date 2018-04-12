@@ -31,16 +31,14 @@ def absolute_squared_displacement(universe, ref_frame=None):
     else:
         frames = universe.frame.index.values
         ref_frame = np.where(frames == ref_frame)
-    coldata = universe.atom.ix[universe.atom['frame'] == ref_frame, ['label', 'symbol']]
-    coldata = (coldata['label'].astype(str) + '_' + coldata['symbol'].astype(str)).values
-    universe.atom['label'] = universe.atom.get_atom_labels()
+    if 'label' not in universe.atom.columns:
+        universe.atom['label'] = universe.atom.get_atom_labels()
     groups = universe.atom.groupby('label')
     msd = np.empty((groups.ngroups, ), dtype='O')
     for i, (_, group) in enumerate(groups):
         xyz = group[['x', 'y', 'z']].values
         msd[i] = ((xyz - xyz[0])**2).sum(axis=1)
-    del universe.atom['label']
     df = pd.DataFrame.from_records(msd).T
     df.index = universe.frame.index.copy()
-    df.columns = coldata
+    df.columns = universe.atom['label'].unique()
     return df

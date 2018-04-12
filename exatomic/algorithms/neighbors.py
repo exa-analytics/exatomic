@@ -106,18 +106,31 @@ def periodic_nearest_neighbors_by_atom(uni, source, a, sizes, **kwargs):
     Determine nearest neighbor molecules to a given source (or sources) and
     return the data as a dataframe.
 
+    For a simple cubic periodic system with unit cell dimension ``a``,
+    clusters can be generated as follows. In the example below, additional
+    keyword arguments have been included as they are almost always required
+    in order to correctly identify molecular units semi-empirically.
+
+    .. code-block:: python
+
+        periodic_nearest_neighbors_by_atom(u, [0], 40.0, [0, 5, 10, 50],
+                                           dmax=40.0, C=1.6, O=1.6)
+
+    Argument descriptions can be found below. The additional keyword arguments,
+    ``dmax``, ``C``, ``O``, are passed directly to the two body computation used
+    to determine (semi-empirically) molecular units. Note that although molecules
+    are computed, neighboring molecular units are determine by an atom to atom
+    criteria.
+
     Args:
         uni (:class:`~exatomic.core.universe.Universe`): Universe
-        source (int, str): Integer label or string symbol of source atom
+        source (int, str, list): Integer label or string symbol of source atom
         a (float): Cubic unit cell dimension
         sizes (list): List of slices to create
-        kwargs: Additional keyword arguments to be passed to atom two body computation (such as covalent radii)
+        kwargs: Additional keyword arguments to be passed to atom two body calculation
 
     Returns:
         dct (dict): Dictionary of sliced universes and nearest neighbor table
-
-    Note:
-        This function expects cubic periodic unit cells.
 
     See Also:
         Sliced universe construction can be facilitated by
@@ -137,13 +150,16 @@ def periodic_nearest_neighbors_by_atom(uni, source, a, sizes, **kwargs):
             uu = _create_super_universe(Universe(atom=atom.copy()), a)
             uu.compute_atom_two(**kwargs)
             uu.compute_molecule()
-            if isinstance(source, (int, np.int32, np.int64)):
+            if isinstance(source, (str, int, np.int32, np.int64)):
                 source_atom_idxs = uu.atom[(uu.atom['label'] == source) &
+                                           (uu.atom['prj'] == 13)].index.values
+            elif isinstance(source, (list, tuple)):
+                source_atom_idxs = uu.atom[uu.atom['label'].isin(source) &
                                            (uu.atom['prj'] == 13)].index.values
             else:
                 source_atom_idxs = uu.atom[(uu.atom['symbol'] == source) &
                                            (uu.atom['prj'] == 13)].index.values
-            source_molecule_idxs = uu.atom.loc[source_atom_idxs, 'molecule'].unique()
+            source_molecule_idxs = uu.atom.loc[source_atom_idxs, 'molecule'].unique().astype(int)
             uu.atom_two['frame'] = uu.atom_two['atom0'].map(uu.atom['frame'])
             nearest_atoms = uu.atom_two[(uu.atom_two['atom0'].isin(source_atom_idxs)) |
                                         (uu.atom_two['atom1'].isin(source_atom_idxs))].sort_values("dr")[['frame', 'atom0', 'atom1']]

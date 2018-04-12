@@ -13,7 +13,7 @@ import os
 import six
 import pandas as pd
 import numpy as np
-from io import StringIO
+from six import StringIO
 from exa import TypedMeta
 from .editor import Editor
 from exatomic import Atom
@@ -30,9 +30,16 @@ class OrbMeta(TypedMeta):
 
 
 class Orb(six.with_metaclass(OrbMeta, Editor)):
-
+    """
+    Parser for molcas coefficient matrix dumps (e.g. RasOrb).
+    
+    Note:
+        This parser assumes the file contains data from a single
+        calculation (i.e. a single frame).
+    """
     def to_universe(self):
         raise NotImplementedError("This editor has no parse_atom method.")
+
 
     def _read_one(self, found, keys, start, stop, osh, old, ret, key):
         if not old:
