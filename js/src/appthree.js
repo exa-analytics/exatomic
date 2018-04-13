@@ -518,6 +518,16 @@ class App3D {
                 meshes.push(mesh);
             };
         };
+        // Hack to also add unit cell if present
+        var a = this.view.model.get("frame__a");
+        if (a !== undefined) {
+            var _box = new THREE.BoxBufferGeometry(a, a, a);
+            var _edg = new THREE.EdgesGeometry(_box);
+            var _mat = new THREE.LineBasicMaterial({color: 0x808080});
+            var _lin = new THREE.LineSegments(_edg, _mat);
+            _lin.position.set(a/2, a/2, a/2);
+            meshes.push(_lin);
+        }
         return meshes;
     };
 

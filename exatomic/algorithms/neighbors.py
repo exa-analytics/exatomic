@@ -174,6 +174,7 @@ def periodic_nearest_neighbors_by_atom(uni, source, a, sizes, **kwargs):
             nearest['frame'] = nearest['frame'].astype(int)
             nearest['molecule'] = nearest['molecule'].astype(int)
             dct['nearest'].append(nearest)
+            return uu
             for nn in sizes:
                 atm = []
                 for j, fdx in enumerate(nearest['frame'].unique()):
