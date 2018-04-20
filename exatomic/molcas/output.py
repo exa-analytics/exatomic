@@ -32,7 +32,7 @@ class OrbMeta(TypedMeta):
 class Orb(six.with_metaclass(OrbMeta, Editor)):
     """
     Parser for molcas coefficient matrix dumps (e.g. RasOrb).
-    
+
     Note:
         This parser assumes the file contains data from a single
         calculation (i.e. a single frame).
@@ -207,18 +207,32 @@ class Output(six.with_metaclass(OutMeta, Editor)):
 
     def parse_atom(self):
         """Parses the atom list generated in SEWARD."""
-        _re_atom = 'Label   Cartesian Coordinates'
-        starts = [i + 2 for i in self.find(_re_atom, keys_only=True)]
+        _re_atom0 = 'Label   Cartesian Coordinates'
+        _re_atom1 = 'Center  Label'
+        found = self.find(_re_atom0, _re_atom1, keys_only=True)
+        if found[_re_atom0]:
+            accurate = True
+            starts = [i + 2 for i in found[_re_atom0]]
+        else:
+            accurate = False
+            starts = [i + 1 for i in found[_re_atom1]]
         stops = starts[:]    # Copy the list
         for i in range(len(stops)):
             while len(self[stops[i]].strip().split()) > 3:
                 stops[i] += 1
                 if not self[stops[i]].strip(): break
             stops[i] -= 1
-        lns = StringIO('\n'.join([self._lines[i] for j in (range(i, j + 1)
-                                 for i, j in zip(starts, stops)) for i in j]))
+        if accurate:
+            lns = StringIO('\n'.join([self._lines[i] for j in (range(i, j + 1)
+                                     for i, j in zip(starts, stops)) for i in j]))
+            cols = ['tag', 'x', 'y', 'z']
+        else:
+            lns = StringIO('\n'.join(self[starts[0]:stops[0] + 1]))
+            cols = ['center', 'tag', 'x', 'y', 'z', 'xa', 'ya', 'za']
         atom = pd.read_csv(lns, delim_whitespace=True,
-                           names=['tag', 'x', 'y', 'z'])
+                           names=cols)
+        if len(cols) == 8:
+            atom.drop(['xa', 'ya', 'za'], axis=1, inplace=True)
         atom['symbol'] = atom['tag'].str.extract(
             '([A-z]{1,})([0-9]*)', expand=False)[0].str.lower().str.title()
         atom['Z'] = atom['symbol'].map(sym2z).astype(np.int64)
@@ -299,6 +313,14 @@ class Output(six.with_metaclass(OutMeta, Editor)):
             irreps = irreps[:nbf]
             vecs = vecs[:nbf]
         self.basis_set_order = df
+        shls = []
+        grps = df.groupby(['center', 'L', 'ml'])
+        for (cen, L, ml), grp in grps:
+            shl = 0
+            for _ in grp.index:
+                shls.append(shl)
+                shl += 1
+        self.basis_set_order['shell'] = shls
 
 
 

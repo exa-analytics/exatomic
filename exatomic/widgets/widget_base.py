@@ -175,7 +175,7 @@ class UniverseScene(ExatomicScene):
     atom_x = Unicode().tag(sync=True)
     atom_y = Unicode().tag(sync=True)
     atom_z = Unicode().tag(sync=True)
-    atom_l = Unicode().tag(sync=True)
+    atom_l = Dict().tag(sync=True)
     atom_s = Unicode().tag(sync=True)
     atom_r = Dict().tag(sync=True)
     atom_c = Dict().tag(sync=True)
