@@ -36,7 +36,7 @@ var UniverseSceneView = base.ExatomicSceneView.extend({
         this.promises = Promise.all([utils.fparse(this, "atom_x"),
             utils.fparse(this, "atom_y"), utils.fparse(this, "atom_z"),
             utils.fparse(this, "atom_s"), utils.mesolv(this, "atom_r"),
-            utils.mesolv(this, "atom_c"), utils.fparse(this, "atom_l"),
+            utils.mesolv(this, "atom_c"), utils.mesolv(this, "atom_l"),
             utils.fparse(this, "two_b0"), utils.fparse(this, "two_b1"),
             utils.mesolv(this, "field_i"), utils.mesolv(this, "field_p"),
             utils.mesolv(this, "field_v"), utils.mesolv(this, "tensor_d")]);
@@ -57,6 +57,7 @@ var UniverseSceneView = base.ExatomicSceneView.extend({
         var syms = this.atom_s[fdx];
         var colrs = utils.mapper(syms, this.atom_c);
         var radii = utils.mapper(syms, this.atom_r);
+        var labels = utils.mapper(syms, this.atom_l);
         var atom, bond;
         if (this.model.get("atom_3d")) {
             atom = this.app3d.add_spheres;
@@ -65,7 +66,6 @@ var UniverseSceneView = base.ExatomicSceneView.extend({
             atom = this.app3d.add_points;
             bond = this.app3d.add_lines;
         }
-        var labels = (this.atom_l) ? this.atom_l[fdx] : "";
         this.app3d.meshes["atom"] = atom(
             this.atom_x[fdx], this.atom_y[fdx],
             this.atom_z[fdx], colrs, radii, labels);
