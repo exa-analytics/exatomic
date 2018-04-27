@@ -9,6 +9,8 @@
 var THREE = require("three");
 var TBC = require("three-trackballcontrols");
 var utils = require("./utils");
+var base = require("@jupyter-widgets/base");
+//var base = require("./base")
 
 
 
@@ -22,6 +24,7 @@ class App3D {
                           "atom": [],   "two": []};
         this.ACTIVE = null;
         this.set_dims();
+        //base.DOMWidgetView.prototype.initialize.apply(this, arguments);
     };
 
     save() {
@@ -48,6 +51,13 @@ class App3D {
         this.texture.dispose();
         this.renderer.forceContextLoss();
         this.renderer.dispose();
+    };
+
+    probe() {
+        if ((this.ACTIVE === null) ||
+            (this.ACTIVE.name === "") ||
+            (this.ACTIVE instanceof THREE.Points)) { return 'None'}
+        else { console.log(this.ACTIVE.label); return [this.ACTIVE.name, this.ACTIVE.label]; }
     };
 
     set_dims(w, h) {
@@ -369,9 +379,9 @@ class App3D {
         return [psurf, nsurf];
     };
 
-    add_tensor_surface( tensor , colors , atom_x = 0 , atom_y = 0 , atom_z = 0 , 
-                        scaling = 1 , label = 'tensor') {
-        var tensor_mult = function( x , y , z , scaling ) {
+    add_tensor_surface(tensor, colors, atom_x=0, atom_y=0, atom_z=0, scaling=1, label='tensor') {
+
+        var tensor_mult = function(x, y, z, scaling) {
             return (x * x * tensor[0][0] +
                    y * y * tensor[1][1] +
                    z * z * tensor[2][2] +
@@ -379,7 +389,8 @@ class App3D {
                    x * z * (tensor[2][0] + tensor[0][2]) +
                    y * z * (tensor[1][2] + tensor[2][1]) ) * scaling;
         };
-        var func = function( ou , ov ) {
+
+        var func = function(ou, ov) {
             var u = 2 * Math.PI * ou;
             var v = 2 * Math.PI * ov;
             var x = Math.cos(u) * Math.sin(v);
@@ -396,16 +407,16 @@ class App3D {
             z = g * Math.cos(v) + atom_z;
             return [new THREE.Vector3(x, y, z),col];
         };
-        var t0 = performance.now();
+
         var geometry = new THREE.Geometry();
         var geo = new THREE.Geometry();
         var slices = 50, stacks = 50;
         var sliceCount = slices+1
         var cArray = new Array();
         var ou, ov, p;
-        for ( var i = 0 ; i <= slices ; i++ ) {
+        for (var i = 0; i <= slices; i++) {
             ov = i / slices; 
-            for ( var j = 0 ; j <= stacks ; j++ ) {
+            for (var j = 0; j <= stacks; j++) {
                 ou = j / stacks;
                 p = func(ou, ov);
                 geometry.vertices.push(p[0]);
@@ -415,8 +426,8 @@ class App3D {
         }
         var a,b,c,d;
         var mix,red,green,blue;
-        for ( var i = 0 ; i < slices ; i++ ) {
-            for ( var j = 0 ; j < stacks ; j++ ) {
+        for (var i = 0; i < slices; i++) {
+            for (var j = 0; j < stacks; j++) {
                 a = i * sliceCount + j;
                 b = i * sliceCount + j + 1;
                 c = ( i + 1 ) * sliceCount + j + 1;
@@ -456,8 +467,7 @@ class App3D {
         var nsurf = new THREE.LineSegments( edges,mat );
         psurf.add( nsurf );
         psurf.name = label;
-        var t1 = performance.now()
-//      console.log("Tensor plot took "+(t1-t0)+" milliseconds");
+        psurf.label = "tensor";
         return [psurf];
     };
 
@@ -1128,6 +1138,7 @@ class App3D {
             });
             var mesh = new THREE.Mesh(geometries[color], material);
             if (l[i] != "") { mesh.name = l[i] };
+            mesh.label = "atom";
             mesh.position.set(xyz[i3], xyz[i3+1], xyz[i3+2]);
             meshes.push(mesh);
         };
@@ -1184,6 +1195,7 @@ class App3D {
             mesh.name = (length * 0.52918).toFixed(4) + "\u212B";
             mesh.position.set(center.x, center.y, center.z);
             mesh.lookAt(vector1);
+            mesh.label = "bond";
             meshes.push(mesh);
         };
         return meshes;

@@ -230,6 +230,7 @@ var ExatomicSceneView = widgets.DOMWidgetView.extend({
         this.app3d.clear_meshes();
     },
 
+
     save: function() {
         this.send({"type": "image", "content": this.app3d.save()});
     },
@@ -239,7 +240,7 @@ var ExatomicSceneView = widgets.DOMWidgetView.extend({
     },
 
     _handle_custom_msg: function(msg, clbk) {
-        if (msg["type"] === "close") { this.app3d.close() };
+        if (msg["type"] === "close") { this.app3d.close(); clearInterval(this.interv); };
         if (msg["type"] === "camera") {
             this.app3d.set_camera_from_camera(msg["content"]);
         };
@@ -268,11 +269,19 @@ var ExatomicSceneView = widgets.DOMWidgetView.extend({
 });
 
 
-
-
 module.exports = {
     ExatomicSceneModel: ExatomicSceneModel,
     ExatomicSceneView: ExatomicSceneView,
     ExatomicBoxModel: ExatomicBoxModel,
     ExatomicBoxView: ExatomicBoxView
 }
+
+ExatomicSceneView.prototype.send_obj = function() {
+    var _this = this;
+    _this.interv = setInterval(function() {
+        //_this.send({"type": "object", "content": _this.app3d.probe()});
+        var vals = _this.app3d.probe();
+        _this.model.set("obj", vals[0]);
+        console.log(vals);
+    }, 1000);
+};

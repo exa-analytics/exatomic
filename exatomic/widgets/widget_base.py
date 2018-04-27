@@ -13,7 +13,7 @@ import os
 #import numpy as np
 from base64 import b64decode
 from traitlets import (Bool, Int, Float, Unicode,
-                       List, Any, Dict, link)
+                       List, Any, Dict, link, observe)
 from ipywidgets import (
     Box, VBox, HBox, IntSlider, Text, ToggleButton,
     DOMWidget, Layout, Button, Dropdown, register)
@@ -66,6 +66,13 @@ class ExatomicScene(DOMWidget):
     field_fy = Float(3.0).tag(sync=True)
     field_fz = Float(3.0).tag(sync=True)
     geom = Bool(True).tag(sync=True)
+    obj = Unicode().tag(sync=True)
+    odx = Int(-1).tag(sync=True)
+    
+    @observe('obj')
+    def _observe_obj(self, change):
+        print(change['old'])
+        print(change['new'])
 
     def _handle_custom_msg(self, msg, callback):
         """Custom message handler."""
@@ -74,10 +81,16 @@ class ExatomicScene(DOMWidget):
             self._save_image(msg['content'])
         elif msg['type'] == 'camera':
             self._save_camera(msg['content'])
+        elif msg['type'] == 'object':
+            self._update_df(msg['content'])
         else: print('Custom msg not handled.\n'
                     'type of msg : {}\n'
                     'msg         : {}'.format(msg['type'],
                                               msg['content']))
+    def _update_df(self, content):
+        label = ''.join(filter(lambda x: x.isdigit(), content[0]))
+        if label is not '':
+            print("Index: {}\tContent: {}".format(label,content[1]))
 
     def _save_camera(self, content):
         """Cache a save state of the current camera."""
@@ -204,7 +217,6 @@ class UniverseScene(ExatomicScene):
     tensor_d = Dict().tag(sync=True)
     scale = Float(1.).tag(sync=True)
     tidx = Int(0).tag(sync=True)
-
 
 @register
 class ExatomicBox(Box):

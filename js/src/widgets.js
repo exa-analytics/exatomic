@@ -42,15 +42,16 @@ var UniverseSceneView = base.ExatomicSceneView.extend({
             utils.mesolv(this, "field_v"), utils.mesolv(this, "tensor_d")]);
         this.three_promises = this.app3d.finalize(this.three_promises)
             .then(this.add_atom.bind(this))
-            //.then(this.generate_tensor.bind(this))
             .then(this.app3d.set_camera_from_scene.bind(this.app3d));
     },
 
     render: function() {
         return Promise.all([this.three_promises, this.promises]);
     },
+    
 
     add_atom: function() {
+        this.send_obj();
         this.app3d.clear_meshes("atom");
         this.app3d.clear_meshes("two");
         var fdx = this.model.get("frame_idx");
@@ -59,6 +60,10 @@ var UniverseSceneView = base.ExatomicSceneView.extend({
         var radii = utils.mapper(syms, this.atom_r);
         var labels = utils.mapper(syms, this.atom_l);
         var atom, bond;
+        var entry = labels.entries();
+        var a = []
+        for ( let e of entry ) { a.push(e[1]+e[0].toString()); }
+        labels = a;
         if (this.model.get("atom_3d")) {
             atom = this.app3d.add_spheres;
             bond = this.app3d.add_cylinders;
@@ -184,28 +189,7 @@ var UniverseSceneView = base.ExatomicSceneView.extend({
         }
     },
 
-//    scale_tensor: function() {
-//        var scaling = this.model.get("scale");
-//        var fdx = this.model.get("frame_idx");
-//        console.log("Inside scale_tensor");
-//        var tdx = this.model.get("tidx");
-//        var adx = this.tensor_d[fdx][tdx]["atom"];
-//        this.app3d.clear_meshes("tensor"+tdx);
-//        this.app3d.meshes["tensor"+tdx] =
-//                                this.app3d.add_tensor_surface(
-//                                    this.get_tensor(fdx, tdx),
-//                                    this.colors(),
-//                                    this.atom_x[fdx][adx],
-//                                    this.atom_y[fdx][adx],
-//                                    this.atom_z[fdx][adx],
-//                                    scaling,
-//                                    this.tensor_d[fdx][tdx]["label"]);
-//        this.app3d.add_meshes("tensor"+tdx);
-//        this.color_tensor();
-//    },
-
     add_tensor: function() {
-//        var scaling;
         var scaling = this.model.get("scale");
         var fdx = this.model.get("frame_idx");
         for ( var property in this.tensor_d[fdx] ) {
@@ -213,7 +197,6 @@ var UniverseSceneView = base.ExatomicSceneView.extend({
                 this.app3d.clear_meshes("tensor"+property);
                 var adx = this.tensor_d[fdx][property]["atom"];
                 if ( this.model.get("tens") ) {
-//                    scaling = this.tensor_d[fdx][property]["scale"];
                     this.app3d.meshes["tensor"+property] =
                                 this.app3d.add_tensor_surface(
                                     this.get_tensor(fdx, property),
@@ -222,7 +205,7 @@ var UniverseSceneView = base.ExatomicSceneView.extend({
                                     this.atom_y[fdx][adx],
                                     this.atom_z[fdx][adx],
                                     scaling,
-                                    this.tensor_d[fdx][property]["label"]);
+                                    this.tensor_d[fdx][property]["label"]+property.toString());
                 }
                 this.app3d.add_meshes("tensor"+property);
             }
@@ -245,7 +228,6 @@ var UniverseSceneView = base.ExatomicSceneView.extend({
         this.listenTo(this.model, "change:atom_3d", this.add_axis);
         this.listenTo(this.model, "change:axis", this.add_axis);
         this.listenTo(this.model, "change:tens", this.add_tensor);
-//        this.listenTo(this.model, "change:scale", this.scale_tensor);
         this.listenTo(this.model, "change:scale", this.add_tensor);
         this.listenTo(this.model, "change:tidx", this.color_tensor);
     }
@@ -257,3 +239,4 @@ module.exports = {
     UniverseSceneModel: UniverseSceneModel,
     UniverseSceneView: UniverseSceneView
 }
+
