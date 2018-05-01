@@ -29,7 +29,7 @@ class TestMolcasOrbital(TestCase):
 
     def test_compare_fields(self):
         res = compare_fields(self.uni, self.chk, verbose=False)
-        self.assertTrue(np.isclose(len(res), sum(res)))
+        self.assertTrue(np.isclose(len(res), sum(res), rtol=5e-4))
 
 
 

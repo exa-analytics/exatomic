@@ -246,10 +246,13 @@ class Input(six.with_metaclass(InpMeta, Editor)):
         self.basis_set_order = bso
 
     def parse_overlap(self):
+        self._init()
         start = self.find_next("$OVERLAP", keys_only=True) + 1
         stop = self.find_next("$END", start=start, keys_only=True)
-        ovl = self.pandas_dataframe(start, stop, range(len(self[start].split())))
-        ovl = _flat_square_to_triangle(ovl.stack().values)
+        ovl = self.pandas_dataframe(start, stop,
+                                    range(len(self[start].split()))).stack().values
+        if ovl.shape[0] != self._nbas * (self._nbas + 1) // 2:
+            ovl = _flat_square_to_triangle(ovl.stack().values)
         chi0, chi1 = _tri_indices(ovl)
         self.overlap = Overlap.from_dict({'coef': ovl, 'chi0': chi0,
                                           'chi1': chi1, 'frame': 0})
@@ -266,6 +269,8 @@ class Input(six.with_metaclass(InpMeta, Editor)):
             arrs[find] = arr.stack().values
             if nbas is None: nbas = np.int64(np.sqrt(arrs[find].shape[0]))
         nbas = np.int64(np.sqrt(min((arr.shape[0] for arr in arrs.values()))))
+        if nbas != self._nbas:
+            print('Warning: matrices may be triangular or square.')
         nbas2 = nbas ** 2
         for key in kws:
             arr = arrs[key]
@@ -281,6 +286,10 @@ class Input(six.with_metaclass(InpMeta, Editor)):
         arrs['orbital'] = np.repeat(range(nbas), nbas)
         arrs['frame'] = 0
         self.momatrix = MOMatrix.from_dict(arrs)
+
+    def _init(self):
+        find = self.find_next('NBAS', keys_only=True)
+        self._nbas = int(self[find].split('NBAS=')[1].split()[0])
 
 
     @classmethod
@@ -346,22 +355,6 @@ class Input(six.with_metaclass(InpMeta, Editor)):
               '"{}" vector in uni.orbital may not correspond to "{}" matrix\n'
               'in uni.momatrix'.format(kwargs['check'], orbocc, mocoefs))
         return cls(_header.format(**kwargs) + _matrices.format(**matargs))
-        # Still no clean solution for an occupation vector yet
-        # d = None
-        # if hasattr(uni, '_density'):
-        #     d = uni.density
-        # elif hasattr(uni, 'occupation_vector'):
-        #     d = DensityMatrix.from_momatrix(uni.momatrix, uni.occupation_vector)
-        # elif orbocc is not None:
-        #     if mocoefs is None:
-        #         raise Exception("Must provide column name if providing orbocc.")
-        #     d = DensityMatrix.from_momatrix(uni.momatrix, orbocc, column=mocoefs)
-        # if d is not None:
-            # matargs['density'] = _clean_to_string(d['coef'].values, **margs)
-        # Compute tr[P*S] must be equal to number of electrons
-        # if matargs['density']:
-        #     kwargs['check'] = np.trace(np.dot(d.square(), uni.overlap.square()))
-        # return cls(_header.format(**kwargs) + _matrices.format(**matargs))
 
     def __init__(self, *args, **kwargs):
         super(Input, self).__init__(*args, **kwargs)

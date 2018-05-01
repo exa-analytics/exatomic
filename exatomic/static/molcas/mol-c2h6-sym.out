@@ -1,0 +1,320 @@
+   This run of MOLCAS is using the pymolcas driver
+
+ OpenMolcas is free software; you can redistribute it and/or modify it
+ under the terms of the GNU Lesser General Public License version 2.1.
+ OpenMolcas is distributed in the hope that it will be useful, but it
+ is provided "as is" and without any express or implied warranties.
+ For more details see the full text of the license in the file
+ LICENSE or in <http://www.gnu.org/licenses/>.
+
+                 Copyright (C) The OpenMolcas Authors
+           For the author list and the recommended citation,
+                   consult the file CONTRIBUTORS.md
+
+           *************************************************
+           * pymolcas version py1.10                       *
+           *   build 594768dd6c4097ed801c8ebaccf808b5      *
+           *   (after the EMIL interpreter by V. Veryazov) *
+           *************************************************
+
+configuration info
+------------------
+C Compiler ID: GNU
+C flags: -std=gnu99
+Fortran Compiler ID: GNU
+Fortran flags: -cpp -fno-aggressive-loop-optimizations -fdefault-integer-8
+Definitions: _MOLCAS_;_I8_;_LINUX_;_MKL_;_DMRG_;_GEN1INT_
+Parallel: OFF (GA=OFF)
+
+
+   -----------------------------------------------------------------------------------------------------------------
+  |
+  |           Project: standard__001
+  |    Submitted from: /path
+  |      Scratch area: /path
+  |   Save outputs to: /path
+  |            Molcas: /path
+  |
+  | Scratch area is NOT empty
+  |
+  |      MOLCAS_CPUS = 1
+  |    MOLCAS_DRIVER = /path
+  |    MOLCAS_MOLDEN = OFF
+  |    MOLCAS_NPROCS = 1
+  |     MOLCAS_PRINT = 6
+  |    MOLCAS_SOURCE = /path
+  | MOLCAS_STRUCTURE = 0
+  |      MOLCAS_TRAP = OFF
+  |
+   -----------------------------------------------------------------------------------------------------------------
+
+++ ---------   Input file   ---------
+
+>>> COPY C2H6.xyz .
+
+&GATEWAY
+coord
+C2H6.xyz
+basis
+ANO-S-VDZ
+group
+y xz
+
+&SEWARD
+BSSHOW
+
+&SCF
+
+-- ----------------------------------
+
+>>> COPY C2H6.xyz .
+
+*** symbolic link created: INPORB -> standard__001.ScfOrb
+--- Start Module: gateway at Wed Apr 11 13:28:08 2018 ---
+
+()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()
+
+                                              &GATEWAY
+
+                                   only a single process is used
+                       available to each process: 1.0 GB of memory, 1 thread
+()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()
+
+
+++    Symmetry information:
+      ---------------------
+
+                    --- Group Generators ---
+                    Reflection in the xz-plane  
+                    Rotation around the y-axis  
+
+                    Character Table for C2h
+
+                             E   s(xz) C2(y)   i  
+                    ag       1     1     1     1  xz, Ry
+                    au       1    -1     1    -1  y, I
+                    bu       1     1    -1    -1  x, z
+                    bg       1    -1    -1     1  xy, Rz, yz, Rx
+--
+
+
+++    Basis set information:
+      ----------------------
+
+
+      Basis set label: C.ANO-S...3S2P.
+
+      Electronic valence basis set:
+      ------------------
+      Associated Effective Charge  6.000000 au
+      Associated Actual Charge     6.000000 au
+      Nuclear Model: Point charge
+
+      Shell  nPrim  nBasis  Cartesian Spherical Contaminant
+         s      10       3        X                  
+         p       6       2        X                  
+
+
+      Basis set label: H.ANO-S...2S.
+
+      Electronic valence basis set:
+      ------------------
+      Associated Effective Charge  1.000000 au
+      Associated Actual Charge     1.000000 au
+      Nuclear Model: Point charge
+
+      Shell  nPrim  nBasis  Cartesian Spherical Contaminant
+         s       7       2        X                  
+--
+
+
+++    Molecular structure info:
+      -------------------------
+
+                    ************************************************ 
+                    **** Cartesian Coordinates / Bohr, Angstrom **** 
+                    ************************************************ 
+
+     Center  Label                x              y              z                     x              y              z
+        1      C1              -0.200326       0.000000      -1.426930             -0.106008       0.000000      -0.755099
+        2      C1               0.200326       0.000000       1.426930              0.106008       0.000000       0.755099
+        3      H2              -2.210455       0.000000      -1.900837             -1.169722       0.000000      -1.005880
+        4      H2               2.210455       0.000000       1.900837              1.169722       0.000000       1.005880
+        5      H3               0.648586      -1.666816      -2.302136              0.343217      -0.882041      -1.218238
+        6      H3               0.648586       1.666816      -2.302136              0.343217       0.882041      -1.218238
+        7      H3              -0.648586      -1.666816       2.302136             -0.343217      -0.882041       1.218238
+        8      H3              -0.648586       1.666816       2.302136             -0.343217       0.882041       1.218238
+
+                    *************************************** 
+                    *    InterNuclear Distances / Bohr    * 
+                    *************************************** 
+
+               1 C1            2 C1            3 H2            4 H2            5 H3            6 H3    
+    1 C1       0.000000
+    2 C1       2.881846        0.000000
+    3 H2       2.065238        4.109245        0.000000
+    4 H2       4.109245        2.065238        5.830710        0.000000
+    5 H3       2.065166        4.109153        3.333681        4.783586        0.000000
+    6 H3       2.065166        4.109153        3.333681        4.783586        3.333631        0.000000
+    7 H3       4.109153        2.065166        4.783586        3.333681        4.783510        5.830529
+    8 H3       4.109153        2.065166        4.783586        3.333681        5.830529        4.783510
+
+               7 H3            8 H3    
+    7 H3       0.000000
+    8 H3       3.333631        0.000000
+
+                    ******************************************* 
+                    *    InterNuclear Distances / Angstrom    * 
+                    ******************************************* 
+
+               1 C1            2 C1            3 H2            4 H2            5 H3            6 H3    
+    1 C1       0.000000
+    2 C1       1.525007        0.000000
+    3 H2       1.092877        2.174519        0.000000
+    4 H2       2.174519        1.092877        3.085479        0.000000
+    5 H3       1.092839        2.174470        1.764108        2.531365        0.000000
+    6 H3       1.092839        2.174470        1.764108        2.531365        1.764082        0.000000
+    7 H3       2.174470        1.092839        2.531365        1.764108        2.531325        3.085383
+    8 H3       2.174470        1.092839        2.531365        1.764108        3.085383        2.531325
+
+               7 H3            8 H3    
+    7 H3       0.000000
+    8 H3       1.764082        0.000000
+
+                    ************************************** 
+                    *    Valence Bond Angles / Degree    * 
+                    ************************************** 
+                          Atom centers                 Phi
+                      2 C1       1 C1       3 H2       111.26
+                      2 C1       1 C1       5 H3       111.26
+                      2 C1       1 C1       6 H3       111.26
+                      3 H2       1 C1       5 H3       107.63
+                      3 H2       1 C1       6 H3       107.63
+                      5 H3       1 C1       6 H3       107.63
+                      1 C1       2 C1       4 H2       111.26
+                      1 C1       2 C1       7 H3       111.26
+                      1 C1       2 C1       8 H3       111.26
+                      4 H2       2 C1       7 H3       107.63
+                      4 H2       2 C1       8 H3       107.63
+                      7 H3       2 C1       8 H3       107.63
+
+           ***************************************************************
+           *              Valence Dihedral Angles / Degree               *
+           ***************************************************************
+                    Atom centers                       Phi1     Phi2     Theta 
+           3 H2       1 C1       2 C1       4 H2        111.26   111.26  -180.00
+           3 H2       1 C1       2 C1       7 H3        111.26   111.26    60.00
+           3 H2       1 C1       2 C1       8 H3        111.26   111.26   -60.00
+           5 H3       1 C1       2 C1       7 H3        111.26   111.26   -60.00
+           5 H3       1 C1       2 C1       8 H3        111.26   111.26  -180.00
+           6 H3       1 C1       2 C1       7 H3        111.26   111.26  -180.00
+           6 H3       1 C1       2 C1       8 H3        111.26   111.26    60.00
+           4 H2       2 C1       1 C1       5 H3        111.26   111.26    60.00
+           4 H2       2 C1       1 C1       6 H3        111.26   111.26   -60.00
+--
+
+
+            Nuclear Potential Energy             42.25331278 au
+
+--- Stop Module: gateway at Wed Apr 11 13:28:09 2018 /rc=_RC_ALL_IS_WELL_ ---
+
+
+()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()
+
+                                              &SEWARD
+
+                                   only a single process is used
+                       available to each process: 1.0 GB of memory, 1 thread
+()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()
+
+               SEWARD will generate:
+                  Multipole Moment integrals up to order  2
+                  Kinetic Energy integrals
+                  Nuclear Attraction integrals (point charge)
+                  One-Electron Hamiltonian integrals
+                  Velocity integrals
+                  Two-Electron Repulsion integrals
+
+                   Integrals are discarded if absolute value <: 0.10E-13
+                   Integral cutoff threshold is set to       <: 0.10E-15
+
+                    Unitary symmetry adaptation
+
+
+++    SO/AO info:
+      -----------
+
+                    **************************************************
+                    ******** Symmetry adapted Basis Functions ********
+                    **************************************************
+
+
+           Irreducible representation : ag 
+           Basis function(s) of irrep: xz, Ry                                                                          
+
+ Basis Label        Type   Center Phase
+   1   C1           1s        1     1      2     1
+   2   C1           2s        1     1      2     1
+   3   C1           3s        1     1      2     1
+   4   C1           2px       1     1      2    -1
+   5   C1           3px       1     1      2    -1
+   6   C1           2pz       1     1      2    -1
+   7   C1           3pz       1     1      2    -1
+   8   H2           1s        3     1      4     1
+   9   H2           2s        3     1      4     1
+  10   H3           1s        5     1      6     1      7     1      8     1
+  11   H3           2s        5     1      6     1      7     1      8     1
+
+           Irreducible representation : au 
+           Basis function(s) of irrep: y, I                                                                            
+
+ Basis Label        Type   Center Phase
+  12   C1           2py       1     1      2     1
+  13   C1           3py       1     1      2     1
+  14   H3           1s        5     1      6    -1      7     1      8    -1
+  15   H3           2s        5     1      6    -1      7     1      8    -1
+
+           Irreducible representation : bu 
+           Basis function(s) of irrep: x, z                                                                            
+
+ Basis Label        Type   Center Phase
+  16   C1           1s        1     1      2    -1
+  17   C1           2s        1     1      2    -1
+  18   C1           3s        1     1      2    -1
+  19   C1           2px       1     1      2     1
+  20   C1           3px       1     1      2     1
+  21   C1           2pz       1     1      2     1
+  22   C1           3pz       1     1      2     1
+  23   H2           1s        3     1      4    -1
+  24   H2           2s        3     1      4    -1
+  25   H3           1s        5     1      6     1      7    -1      8    -1
+  26   H3           2s        5     1      6     1      7    -1      8    -1
+
+           Irreducible representation : bg 
+           Basis function(s) of irrep: xy, Rz, yz, Rx                                                                  
+
+ Basis Label        Type   Center Phase
+  27   C1           2py       1     1      2    -1
+  28   C1           3py       1     1      2    -1
+  29   H3           1s        5     1      6    -1      7    -1      8     1
+  30   H3           2s        5     1      6    -1      7    -1      8     1
+
+      Basis set specifications :
+      Symmetry species        ag  au  bu  bg 
+      Basis functions          11   4  11   4
+--
+
+
+            Nuclear Potential Energy             42.25331278 au
+
+
+      Basis set specifications :
+      Symmetry species         ag   au   bu   bg 
+      Basis functions           11    4   11    4
+
+
+  Molden files will not be produced
+
+--- Stop Module: seward at Wed Apr 11 13:28:10 2018 /rc=_RC_ALL_IS_WELL_ ---
+--- Module seward spent 1 second ---
+
