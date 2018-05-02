@@ -50,3 +50,22 @@ def resource(name):
     for path, _, files in os.walk(staticdir()):
         if name in files:
             return os.path.abspath(os.path.join(path, name))
+
+
+def list_resources():
+    """
+    Helper to return a list of all available resources (test input/output/etc)
+    files.
+
+    .. code-block:: python
+
+        list_resources()    # Displays a list of available input/output/etc files
+        path = resource("qe.inp")    # Get full path of an example file
+
+    Returns:
+        resources (list): List of file names
+    """
+    files = []
+    for path, _, files_ in os.walk(staticdir()):
+        files.extend(files_)
+    return files
