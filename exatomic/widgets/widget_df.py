@@ -6,9 +6,9 @@ A dataframe widget
 #########################
 A generic pandas dataframe widget.
 """
-
+import pandas as pd
 from ipywidgets import Box, Dropdown, IntRangeSlider, SelectMultiple, Button, Output, IntSlider
-from traitlets import Integer, List, Tuple
+from traitlets import Integer, List, Tuple, Int
 from IPython.display import display_html
 from exatomic.widgets.widget_utils import _glo, _flo, _wlo, _hboxlo, _vboxlo, _bboxlo, _ListDict, Folder, GUIBox
 
@@ -16,18 +16,18 @@ from exatomic.widgets.widget_utils import _glo, _flo, _wlo, _hboxlo, _vboxlo, _b
 class DFBox(Box):
     cur_frame = Integer(-1).tag(sync=True)
     columns = List([]).tag(sync=True)
-    indexes = Tuple(()).tag(sync=True)
+    indexes = List([]).tag(sync=True)
+    start = Int(0).tag(sync=True)
 
     def _update_output(self):
-        self._output.outputs = ()
+        self._output.clear_output()
         with self._output:
             df = self._df
             idxs = self.indexes
             if self.cur_frame >= 0:
                 df = self._df.groupby('frame').get_group(self.cur_frame)
-                idxs = (max(idxs[0], df.index[0]),
-                        min(idxs[1], df.index[-1]))
-            display_html(df[self.columns].loc[range(*idxs)].to_html(),
+            #idxs = [max(idxs[0], df.index[0]), min(idxs[1], df.index[-1])]
+            display_html(df[self.columns].loc[range(self.start, self.start + 50)].to_html(),
                          raw=True)
 
     def _init_gui(self):
@@ -41,8 +41,9 @@ class DFBox(Box):
                           value=-1, description='Frame', layout=_wlo)
 
         cbut = Button(description=' Columns', icon='barcode')
-        cols = SelectMultiple(options=self._df.columns.tolist(),
-                                value=self._df.columns.tolist())
+        cols = self._df.columns.tolist()
+        cols = SelectMultiple(options=cols, value=cols)
+
         def _cols(c):
             self.columns = c.new
             self._update_output()
@@ -50,11 +51,12 @@ class DFBox(Box):
         cfol = Folder(cbut, _ListDict([('cols', cols)]))
 
         rbut = Button(description=' Rows', icon='bars')
-        rows = IntRangeSlider(min=self._df.index[ 0],
-                              max=self._df.index[-1],
-                              continuous_update=False)
+        rows = IntRangeSlider(min=self.indexes[0],
+                              max=self.indexes[1],
+                              value=[0, 50])
         def _rows(c):
             self.indexes = c.new
+            print(self.indexes)
             self._update_output()
         rows.observe(_rows, names='value')
 
@@ -70,6 +72,7 @@ class DFBox(Box):
         self._df = df
         self.cur_frame = 0 if df.frame.astype(int).max() > 1 else -1
         self.indexes = (df.index[0], df.index[-1])
+        self.start = df.index[0]
         self.columns = df.columns.tolist()
 
         self._controls = self._init_gui()
@@ -79,9 +82,7 @@ class DFBox(Box):
         _ = kwargs.pop('layout', None)
 
         self._output = Output()
-        with self._output:
-            display_html(self._df.to_html(), raw=True)
-
         children = [gui, self._output]
+        self._update_output()
 
         super(DFBox, self).__init__(children, layout=_bboxlo, **kwargs)

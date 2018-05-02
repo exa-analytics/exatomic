@@ -362,6 +362,7 @@ class BasisFunctions(object):
         obtained from the Molcas basis set order format. It is possible that
         for other codes a different method would be preferred."""
         print("Warning: symmetrized basis set evaluation is pre-alpha.")
+        raise NotImplementedError("There is a bug in this code. Do not use it.")
         cnt = 0
         # Slice the basis set order if irrep is provided
         bso = self._bso if irrep is None else \
@@ -381,11 +382,12 @@ class BasisFunctions(object):
         norms = [shl.norm_contract() for shl in self._shells]
         ocens = [(col, col.replace('ocen', 'sign'))
                  for col in bso.columns if col.startswith('ocen')]
-        ocens = [c for t in ocens for c in t]
-        for cen, L, ml, irrep, args in zip(bso['center'],
+        ocens = [bso[c] for t in ocens for c in t]
+        for cen, L, ml, irrep, *args in zip(bso['center'],
                                            bso['L'], bso['ml'],
                                            bso['irrep'],
-                                           *(bso[col] for col in ocens)):
+                                           ocens):#*(bso[col] for col in ocens)):
+            #print(args)
             ax, ay, az = self._xyzs[cen]
             shldx = shls.get_group((cen, L)).shldx.values[0]
             ishl = self._shells[shldx]

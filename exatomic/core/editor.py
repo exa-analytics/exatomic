@@ -8,6 +8,7 @@ This module provides a text file editor that can be used to transform commonly
 found file formats directly into :class:`~exatomic.container.Universe` objects.
 """
 import six
+import pandas as pd
 from exa import Editor as _Editor
 from exa import TypedMeta
 from .universe import Universe
@@ -56,11 +57,14 @@ class Editor(six.with_metaclass(TypedMeta, _Editor)):
                 meta.update(self.meta)
             else:
                 meta = self.meta
-        kwargs = {'name': name, 'description': description,
-                  'meta': meta}
+        kwargs = {'name': name, 'meta': meta,
+                  'description': description}
         attrs = [attr.replace('parse_', '')
                  for attr in vars(self.__class__).keys()
                  if attr.startswith('parse_')]
+        extras = {key: val for key, val in vars(self).items()
+                  if isinstance(val, pd.DataFrame)
+                  and key[1:] not in attrs}
         for attr in attrs:
             result = None
             try:
@@ -72,4 +76,5 @@ class Editor(six.with_metaclass(TypedMeta, _Editor)):
             if result is not None:
                 kwargs[attr] = result
         kwargs.update(kws)
+        kwargs.update(extras)
         return Universe(**kwargs)
