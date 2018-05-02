@@ -140,6 +140,8 @@ def periodic_nearest_neighbors_by_atom(uni, source, a, sizes, **kwargs):
         s = group[['atom0', 'atom1']].stack()
         return s[~s.isin(source_atom_idxs)].reset_index()
 
+    if "label" not in uni.atom.columns:
+        uni.atom['label'] = uni.atom.get_atom_labels()
     dct = defaultdict(list)
     grps = uni.atom.groupby("frame")
     ntot = len(grps)

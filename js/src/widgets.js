@@ -154,6 +154,7 @@ var UniverseSceneView = base.ExatomicSceneView.extend({
     },
 
     add_axis: function() {
+        // Additionally adds the unit cell
         this.app3d.clear_meshes("generic");
         if (this.model.get("axis")) {
             this.app3d.meshes["generic"] = this.app3d.add_unit_axis(

@@ -198,7 +198,7 @@ class UniverseScene(ExatomicScene):
     # Tensor traits
     tensor_d = Dict().tag(sync=True)
     # Frame traits
-
+    frame__a = Float(0.0).tag(sync=True)
     # Tensor traits
     tens = Bool(False).tag(sync=True)
     tensor_d = Dict().tag(sync=True)
