@@ -68,6 +68,11 @@ def radial_pair_correlation(universe, a, b, dr=0.05, start=1.0, stop=13.0,
         the volume sampled during computation of two body properties divided by
         the number of properties used in the histogram (the triple summation
         above, divided by the normalization for the radial distance outward).
+
+    Warning:
+        Using a start and stop length different from 0 and simple cubic cell dimension
+        will cause the y axis magnitudes to be inaccurate. This can be remedied by
+        rescaling values appropriately.
     """
     bins = np.arange(start, stop, dr)                     # Discrete values of r for histogram
     if isinstance(a, str):
