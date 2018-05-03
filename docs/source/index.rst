@@ -31,7 +31,10 @@ method to get started with visualization is through the `Jupyter notebook`_.
     :maxdepth: 2
     :caption: Examples
 
-    notebooks/water-demo.ipynb
+    notebooks/00_index.ipynb
+    notebooks/01_basics.ipynb
+    notebooks/02_xyz.ipynb
+    notebooks/03_orbitals.ipynb
     notebooks/nwchem.ipynb
     notebooks/qe.ipynb
 
