@@ -26,9 +26,8 @@ rm -r dist/*
 Publish to `TestPyPI`_ (~/.pypirc required).
 This requires `wheel` and `twine` to be installed.
 ```bash
-python setup.py sdist
-python setup.py bdist_wheel
-twine upload --repository [which] dist/*
+python setup.py sdist    #python setup.py bdist_wheel
+twine upload dist/*
 ```
 The variable `which` refers to the alias for the testing or production
 repository listed in ~/.pypirc.
@@ -55,5 +54,5 @@ in the meta.yaml source change the url to `git_url: ./`.
 conda build .    # conda build . --output to see location
 # For other python version, conda build --python x.x
 conda convert -f --platform all /path/to/conda-bld/pltfrm/exa-...tar.bz2 -o /path/to/outputdir/
-conda upload /path/to/build/build.tar.bz2    # For each build
+anaconda upload /path/to/build/build.tar.bz2    # For each build
 ```
