@@ -25,7 +25,7 @@ from .field import AtomicField
 from .orbital import Orbital, Excitation, MOMatrix, DensityMatrix
 from .basis import Overlap, BasisSet, BasisSetOrder
 from exatomic.algorithms.orbital import add_molecular_orbitals
-from exatomic.algorithms.basis import BasisFunctions
+from exatomic.algorithms.basis import BasisFunctions, compute_uncontracted_basis_set_order
 from .tensor import Tensor
 
 class Meta(TypedMeta):
@@ -49,6 +49,7 @@ class Meta(TypedMeta):
     basis_set_order = BasisSetOrder
     cart_basis_set_order = BasisSetOrder
     sphr_basis_set_order = BasisSetOrder
+    uncontracted_basis_set_order = BasisSetOrder
     basis_set = BasisSet
     basis_dims = dict
     basis_functions = BasisFunctions
@@ -91,6 +92,8 @@ class Universe(six.with_metaclass(Meta, Container)):
 
     @property
     def current_basis_set_order(self):
+        if 'uncontracted' in self.meta:
+            return self.uncontracted_basis_set_order
         if self.meta['spherical']:
             try: return self.sphr_basis_set_order
             except AttributeError: return self.basis_set_order
@@ -184,6 +187,10 @@ class Universe(six.with_metaclass(Meta, Container)):
             self.basis_functions = BasisFunctions(self, cartp=False)
         else:
             self.basis_functions = BasisFunctions(self)
+
+    def compute_uncontracted_basis_set_order(self):
+        """Compute an uncontracted basis set order."""
+        self.uncontracted_basis_set_order = compute_uncontracted_basis_set_order(self)
 
     def enumerate_shells(self, frame=0):
         """Extract minimal information from the universe to be used in

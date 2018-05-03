@@ -544,3 +544,34 @@ class BasisFunctions(object):
         if not self._meta['gaussian']:
             self._expnt = _r
             self._pre = uni.current_basis_set_order['prefac']
+
+
+def compute_uncontracted_basis_set_order(uni):
+    bso = uni.basis_set_order
+    prims = uni.basis_set.primitives_by_shell()
+    df = []
+    pcen, pL, pml = -1, -1, -1
+    if uni.meta['program'] == 'molcas':
+        for cen, L, ml in zip(bso['center'], bso['L'], bso['ml']):
+            if not all(p == c for p, c in zip((pcen, pL, pml), (cen, L, ml))):
+                seht = uni.atom.loc[cen]['set']
+                nprim = prims.loc[(seht, L)]
+                for i in range(nprim):
+                    df.append((cen, L, ml, i, 0))
+            pcen = cen
+            pL = L
+            pml = ml
+    elif uni.meta['program'] == 'nwchem':
+        if not uni.meta['spherical']:
+            raise NotImplementedError('Sorry.')
+        from exatomic.nwchem.basis import spherical_ordering_function as func
+        prims = prims.groupby('set')
+        for i, seht in enumerate(uni.atom['set']):
+            shls = prims.get_group(seht)
+            for (seht, L), nprim in shls.items():
+                for j in range(nprim):
+                    for ml in func(L):
+                        df.append([i, L, ml, j, 0])
+    cols = ('center', 'L', 'ml', 'shell', 'frame')
+    uni.meta['uncontracted'] = True
+    return pd.DataFrame(df, columns=cols)
