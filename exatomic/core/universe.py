@@ -253,7 +253,7 @@ class Universe(six.with_metaclass(Meta, Container)):
 
     def add_molecular_orbitals(self, field_params=None, mocoefs=None,
                                vector=None, frame=0, replace=False,
-                               inplace=True, verbose=True):
+                               inplace=True, verbose=True, irrep=None):
         """Add molecular orbitals to universe.
 
         .. code-block:: python
@@ -275,6 +275,7 @@ class Universe(six.with_metaclass(Meta, Container)):
             replace (bool): remove previous fields (default False)
             inplace (bool): add directly to uni or return :class:`~exatomic.core.field.AtomicField` (default True)
             verbose (bool): print timing statistics (default True)
+            irrep (int): irreducible representation
 
         Warning:
             Default behavior just continually adds fields to the universe.  This can
@@ -291,7 +292,8 @@ class Universe(six.with_metaclass(Meta, Container)):
         return add_molecular_orbitals(self, field_params=field_params,
                                       mocoefs=mocoefs, vector=vector,
                                       frame=frame, replace=replace,
-                                      inplace=inplace, verbose=verbose)
+                                      inplace=inplace, verbose=verbose,
+                                      irrep=irrep)
 
     def __len__(self):
         return len(self.frame)

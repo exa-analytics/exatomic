@@ -7,6 +7,7 @@ Numerical methods and classes
 Everything in this module is implemented in numba.
 """
 import numpy as np
+import pandas as pd
 from numba import (jit, jitclass, deferred_type,
                    optional, int64, float64, boolean)
 from exatomic.base import nbche
@@ -159,6 +160,78 @@ def momatrix_as_square(movec):
     return square
 
 
+############################################
+# Reordering matrix elements can be useful #
+############################################
+
+@jit(nopython=True, nogil=True, cache=nbche)
+def _index_map(old, new):
+    """
+    Basis functions are uniquely defined by 4 indices;
+    atomic center, L value, ml value and so-called "shell" index.
+    shell is defined here as corresponding to a column index in an instance
+    of a :class:`~exatomic.algorithms.numerical.Shell`. This function
+    simply finds the mapping between the `old` basis set ordering scheme
+    and the new one.
+
+    Args:
+        old (np.ndarray): order [center, L, ml, shell]
+        new (np.ndarray): order [center, L, ml, shell]
+
+    Returns:
+        mappr (np.ndarray): old -> new indices
+    """
+    mappr = np.empty(len(new), dtype=np.int64)
+    for ni in range(len(new)):
+        for oi in range(len(old)):
+            if (new[ni] == old[oi]).all():
+                mappr[ni] = oi
+                break
+    return mappr
+
+@jit(nopython=True, nogil=True, cache=nbche)
+def _reorder_matrix(old, new, values):
+    """
+    Reorders matrix elements according to an old and new basis set order.
+
+    Args:
+        old (np.ndarray): order [center, L, ml, shell]
+        new (np.ndarray): order [center, L, ml, shell]
+
+    Returns:
+        nvals (np.ndarray): reordered matrix
+    """
+    nvals = np.empty(values.shape)
+    mappr = _index_map(old, new)
+    for ni, oi in enumerate(mappr):
+        for nj, oj in enumerate(mappr):
+            nvals[ni, nj] = values[oi, oj]
+    return nvals
+
+
+def reorder_matrix(uni_to_reorder, ordered_uni, attr='momatrix', mocoefs='coef'):
+    """
+    Reorders matrix elements in a uni_to_reorder by the basis set order
+    defined in ordered_uni.
+
+    Args:
+        uni_to_reorder (:class:`~exatomic.core.universe.Universe`): uni to reorder
+        ordered_uni (:class:`~exatomic.core.universe.Universe`): ordered uni
+        attr (str): specify if non-standard matrices (default "momatrix")
+        mocoefs (str): column name in gettattr(uni_to_reorder, attr)
+
+    Returns:
+        reordered (pd.DataFrame): reordered matrix with labeled columns and indices
+    """
+    cols = ['center', 'L', 'ml', 'shell']
+    old = uni_to_reorder.current_basis_set_order[cols].values.astype(np.int64)
+    new = ordered_uni.current_basis_set_order[cols].values.astype(np.int64)
+    val = getattr(uni_to_reorder, attr).square(column=mocoefs).values
+    cmat = _reorder_matrix(old, new, val)
+    idxs = pd.Index(range(val.shape[0]), name='chi')
+    cols = pd.Index(range(val.shape[0]), name='orbital')
+    return pd.DataFrame(cmat, columns=cols, index=idxs)
+
 #######################
 # Basis set expansion #
 #######################
@@ -169,12 +242,6 @@ def _enum_cartesian(L):
     # for z in range(L + 1):
     #     for y in range(L + 1 - z):
     #         yield (L - y - z, y, z)
-    # Naive combinations with replacements
-    # for i in range(L, -1, -1):
-    #     for j in range(L, -1, -1):
-    #         for k in range(L, -1, -1):
-    #             if i + j + k == L:
-    #                 yield (i, j, k)
     # Double loop CWR
     for x in range(L, -1, -1):
         for z in range(L + 1 - x):

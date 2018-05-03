@@ -347,12 +347,8 @@ class BasisFunctions(object):
     def _angular(self, shl, x, y, z, *ang):
         """Generates the symbolic angular portion of a basis function.
         Substitutes symbolic (_i) -> (_i - iA) for i in [x, y, z]."""
-        if len(ang) == 3:
-            l, m, n = ang
-            sym = _x ** l * _y ** m * _z ** n
-        else:
-            L, ml = ang
-            sym = self._sh[L][ml]
+        if len(ang) == 3: sym = _x ** ang[0] * _y ** ang[1] * _z ** ang[2]
+        else: sym = self._sh[ang[0]][ang[1]]
         return sym.subs({_x: _x - x, _y: _y - y, _z: _z - z})
 
 
@@ -362,7 +358,6 @@ class BasisFunctions(object):
         obtained from the Molcas basis set order format. It is possible that
         for other codes a different method would be preferred."""
         print("Warning: symmetrized basis set evaluation is pre-alpha.")
-        raise NotImplementedError("There is a bug in this code. Do not use it.")
         cnt = 0
         # Slice the basis set order if irrep is provided
         bso = self._bso if irrep is None else \
@@ -380,14 +375,11 @@ class BasisFunctions(object):
         p['L'] = [self._shells[i].L for i in p['shldx']]
         shls = p.groupby(['center', 'L'])
         norms = [shl.norm_contract() for shl in self._shells]
-        ocens = [(col, col.replace('ocen', 'sign'))
-                 for col in bso.columns if col.startswith('ocen')]
-        ocens = [bso[c] for t in ocens for c in t]
-        for cen, L, ml, irrep, *args in zip(bso['center'],
-                                           bso['L'], bso['ml'],
-                                           bso['irrep'],
-                                           ocens):#*(bso[col] for col in ocens)):
-            #print(args)
+        ocens = [c for col in bso.columns if col.startswith('ocen')
+                 for c in (col, col.replace('ocen', 'sign'))]
+        for i, (cen, L, ml, irrep) in enumerate(zip(bso['center'],
+                                                    bso['L'], bso['ml'],
+                                                    bso['irrep'])):
             ax, ay, az = self._xyzs[cen]
             shldx = shls.get_group((cen, L)).shldx.values[0]
             ishl = self._shells[shldx]
@@ -396,7 +388,9 @@ class BasisFunctions(object):
             r = self._radial(ax, ay, az, ishl.alphas,
                              norm[:,cache[irrep][cen][L][ml]])
             oterm = None
-            for ocen, sign in zip(args[::2], args[1::2]):
+            for oc, si in zip(ocens[::2], ocens[1::2]):
+                ocen = bso[oc].iloc[i]
+                sign = bso[si].iloc[i]
                 if ocen >= 0:
                     ox, oy, oz = self._xyzs[ocen]
                     ao = self._angular(ishl, ox, oy, oz, L, ml)
@@ -418,7 +412,7 @@ class BasisFunctions(object):
     def _evaluate_gau_bso(self, xs, ys, zs, irrep=None):
         """Evaluates a Gaussian basis set according to the order specified
         by the :class:`~exatomic.core.basis.BasisSetOrder` and returns a
-        numpy array."""
+        numpy array of numerical basis function values."""
         cnt = 0
         if xs is not None: flds = np.empty((len(self), len(xs)))
         else: flds = Series([None for _ in range(len(self))])
@@ -525,7 +519,7 @@ class BasisFunctions(object):
     def __init__(self, uni, frame=0, cartp=True):
         # Attach relevant uni attributes
         self._meta = uni.meta
-        self._bso = uni.basis_set_order
+        self._bso = uni.current_basis_set_order
         ptrs, xyzs, shells = uni.enumerate_shells()
         self._ptrs = ptrs
         self._xyzs = xyzs
@@ -549,4 +543,4 @@ class BasisFunctions(object):
         self._expnt = _r ** 2
         if not self._meta['gaussian']:
             self._expnt = _r
-            self._pre = uni.basis_set_order['prefac']
+            self._pre = uni.current_basis_set_order['prefac']

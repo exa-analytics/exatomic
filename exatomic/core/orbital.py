@@ -183,7 +183,8 @@ class Orbital(_Convolve):
         else:
             return self.iloc[index]
 
-    def active_orbitals(self, orbocc='occupation', maxocc=1.985, minocc=0.015):
+    def active_orbitals(self, orbocc='occupation', maxocc=1.985, minocc=0.015,
+                        irrep=None):
         """
         Returns a slice of the orbital table containing so-called
         active orbitals (defined here as orbitals with occupations
@@ -193,7 +194,14 @@ class Orbital(_Convolve):
             orbocc (str): column name of occupation numbers in uni.orbital
             maxocc (float): maximum occupation to be considered active
             minocc (float): minimum occupation to be considered active
+            irrep (int): irreducible representation
+
+        Returns:
+            slc (pd.DataFrame): active orbitals in the Orbital table
         """
+        if irrep is not None:
+            return self[(self[orbocc] < maxocc) & (self[orbocc] > minocc) &
+                        (self['irrep'] == irrep)]
         return self[(self[orbocc] < maxocc) & (self[orbocc] > minocc)]
 
 

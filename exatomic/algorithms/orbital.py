@@ -8,6 +8,7 @@ Building discrete molecular orbitals (for visualization) requires a complex
 set of operations that are provided by this module and wrapped into a clean API.
 """
 import numpy as np
+from numba import TypingError
 from datetime import datetime
 from exatomic.base import sym2z
 from .orbital_util import (
@@ -45,16 +46,13 @@ def _compute_orbital(verbose, npts, bvs, vector, cmat):
         ovs = _compute_orbitals_numpy(npts, bvs, vector, cmat)
     return ovs
 
-def _teardown_orbital(uni, verbose, field, t1, inplace, replace, dens=False):
+def _teardown_orbital(uni, verbose, field, t1, inplace, name='orbitals'):
     """Boilerplate for finishing the functions in this module."""
     if verbose:
         t2 = datetime.now()
-        kind = 'density ' if dens else 'orbitals'
-        p2 = 'Timing: compute {} - {:>8.2f}s.'
-        print(p2.format(kind, (t2-t1).total_seconds()))
+        p2 = 'Timing: compute {:<8} - {:>8.2f}s.'
+        print(p2.format(name, (t2-t1).total_seconds()))
     if not inplace: return field
-    if replace and hasattr(uni, '_field'):
-        del uni.__dict__['_field']
     uni.add_field(field)
 
 
@@ -82,11 +80,12 @@ def add_molecular_orbitals(uni, field_params=None, mocoefs=None,
     Warning:
         If replace is True, removes any fields previously attached to the universe
     """
+    if replace and hasattr(uni, '_field'): del uni.__dict__['_field']
     t1, vector, fps, x, y, z, bvs, mocoefs = \
         _setup_orbital(uni, verbose, vector, field_params, mocoefs, irrep=irrep)
     ovs = _compute_orbital(verbose, len(x), bvs, vector, mocoefs)
     field = _make_field(ovs, fps)
-    return _teardown_orbital(uni, verbose, field, t1, inplace, replace)
+    return _teardown_orbital(uni, verbose, field, t1, inplace)
 
 
 def add_density(uni, field_params=None, mocoefs=None, orbocc=None,
@@ -111,7 +110,7 @@ def add_density(uni, field_params=None, mocoefs=None, orbocc=None,
     orbocc = uni.orbital.loc[vector][orbocc].values
     ovs = _compute_orbital(verbose, len(x), bvs, vector, mocoefs)
     field = _make_field(_compute_density(ovs, orbocc), fps.loc[0])
-    return _teardown_orbital(uni, verbose, field, t1, inplace, False)
+    return _teardown_orbital(uni, verbose, field, t1, inplace, name='density')
 
 
 def add_orb_ang_mom(uni, field_params=None, rcoefs=None, icoefs=None,
@@ -157,4 +156,4 @@ def add_orb_ang_mom(uni, field_params=None, rcoefs=None, icoefs=None,
         print(p2.format((t3-t2).total_seconds()))
     field = _make_field(_compute_orb_ang_mom(
         x, y, z, curx, cury, curz, maxes), fps)
-    return _teardown_orbital(uni, False, field, t1, inplace, False)
+    return _teardown_orbital(uni, verbose, field, t1, inplace, name='angmom')
