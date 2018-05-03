@@ -10,7 +10,8 @@ import six
 from os import sep, path
 import numpy as np
 import pandas as pd
-from io import StringIO
+from six import StringIO
+from collections import defaultdict
 from exa import TypedMeta
 from exa.util.units import Length
 from exatomic.core.frame import compute_frame_from_atom
@@ -106,7 +107,7 @@ class Output(six.with_metaclass(OutMeta, Editor)):
         key0 = "Final MO vectors"
         key1 = "center of mass"
         found = self.find(key0, key1)
-        if key0 in found:
+        if found[key0]:
             start = found[key0][0][0] + 6
             end = found[key1][0][0] - 1
             c = pd.read_fwf(StringIO("\n".join(self[start:end])), widths=(6, 12, 12, 12, 12, 12, 12),
@@ -179,7 +180,7 @@ class Output(six.with_metaclass(OutMeta, Editor)):
 
     def parse_basis_set(self):
         """
-        Parse the :class:`~exatomic.basis.BasisSet` dataframe.
+        Parse the :class:`~exatomic.core.basis.BasisSet` dataframe.
         """
         if not hasattr(self, "atom"):
             self.parse_atom()
@@ -191,21 +192,22 @@ class Output(six.with_metaclass(OutMeta, Editor)):
         found = self.find(_rebas01, _rebas02)
         spherical = True if "spherical" in found[_rebas01][0][1] else False
         start = found[_rebas01][0][0] + 2
-        stop = found[_rebas02][1][0] - 1
+        idx = 1 if len(found[_rebas02]) > 1 else -1
+        stop = found[_rebas02][idx][0] - 1
         # Read in all of the extra lines that contain ---- and tag names
-        df = pd.read_fwf(StringIO("\n".join(self[start:stop])), widths=(3, 3, 16, 16),
+        df = pd.read_fwf(StringIO("\n".join(self[start:stop])),
+                         widths=(4, 2, 16, 16),
                          names=("shell", "L", "alpha", "d"))
-        df.loc[df['shell'] == "-", "shell"] = np.nan
+        df.loc[df['shell'] == "--", "shell"] = np.nan
         tags = df.loc[(df['shell'].str.isdigit() == False), "shell"]
         idxs = tags.index.tolist()
         idxs.append(len(df))
         df['set'] = ""
         for i, tag in enumerate(tags):
-            df.loc[idxs[i]:idxs[i+1], "set"] = tag
+            df.loc[idxs[i]:idxs[i + 1], "set"] = tag
         df = df.dropna().reset_index(drop=True)
         mapper = {v: k for k, v in dict(enumerate(df['set'].unique())).items()}
         df['set'] = df['set'].map(mapper)
-        df['shell'] = df['shell'].astype(int) - 1
         df['L'] = df['L'].str.strip().str.lower().map(lmap)
         df['alpha'] = df['alpha'].astype(float)
         df['d'] = df['d'].astype(float)
@@ -244,6 +246,15 @@ class Output(six.with_metaclass(OutMeta, Editor)):
                         cnt += 1
         bso = pd.DataFrame(bso)
         bso['frame'] = 0
+        # New shell definition consistent with basis internals
+        shls = []
+        grps = bso.groupby(['center', 'L'])
+        cache = defaultdict(lambda: defaultdict(lambda: defaultdict(int)))
+        for (cen, L), grp in grps:
+            for ml in grp['ml']:
+                shls.append(cache[cen][L][ml])
+                cache[cen][L][ml] += 1
+        bso['shell'] = shls
         self.basis_set_order = bso
 
     def parse_frame(self):

@@ -24,48 +24,33 @@ def atom_traits(df, atomcolors=None, atomradii=None, atomlabels=None):
 
     .. _Jmol: http://jmol.sourceforge.net/jscolors/
     """
-    # Implement logic to automatically choose
-    # whether or not to create labels
-    if atomlabels is not None: labels = atomlabels
-    elif df.shape[0] > 1000: labels = False
-    else: labels = True
+    atomlabels = pd.Series() if atomlabels is None else pd.Series(atomlabels)
     atomcolors = pd.Series() if atomcolors is None else pd.Series(atomcolors)
     atomradii = pd.Series() if atomradii is None else pd.Series(atomradii)
     traits = {}
     cols = ['x', 'y', 'z']
-    if labels:
-        cols.append('l')
-        if 'tag' in df.columns: df['l'] = df['tag']
-        else: df['l'] = df['symbol'] + df.index.astype(str)
     grps = df.groupby('frame')
     for col in cols:
         ncol = 'atom_' + col
-        if col == 'l':
-            labels = grps.apply(lambda y: y[col].to_json(orient='values')
-                ).to_json(orient="values")
-            repl = {r'\\': '', '"\[': '[', '\]"': ']'}
-            replpat = re.compile('|'.join(repl.keys()))
-            repl = {'\\': '', '"[': '[', ']"': ']'}
-            traits['atom_l'] = replpat.sub(lambda m: repl[m.group(0)],
-                                           labels)
-            del df['l']
-        else:
-            traits[ncol] = grps.apply(
-                lambda y: y[col].to_json(
-                orient='values', double_precision=3)
-                ).to_json(orient="values").replace('"', '')
+        traits[ncol] = grps.apply(
+            lambda y: y[col].to_json(
+            orient='values', double_precision=3)
+            ).to_json(orient="values").replace('"', '')
     syms = grps.apply(lambda g: g['symbol'].cat.codes.values)
     symmap = {i: v for i, v in enumerate(df['symbol'].cat.categories)
               if v in df.unique_atoms}
     unq = df['symbol'].astype(str).unique()
     radii = {k: sym2radius[k] for k in unq}
     colors = {k: sym2color[k] for k in unq}
+    labels = symmap
     colors.update(atomcolors)
     radii.update(atomradii)
+    labels.update(atomlabels)
     traits['atom_s'] = syms.to_json(orient='values')
     # TODO : This multiplication by 0.5 is in a bad place
     traits['atom_r'] = {i: 0.5 * radii[v] for i, v in symmap.items()}
     traits['atom_c'] = {i: colors[v] for i, v in symmap.items()}
+    traits['atom_l'] = labels
     return traits
 
 def field_traits(df):
