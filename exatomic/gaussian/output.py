@@ -13,6 +13,7 @@ import re
 import six
 import numpy as np
 import pandas as pd
+from collections import defaultdict
 from exa import TypedMeta
 from exa.util.units import Length, Energy
 from .editor import Editor
@@ -50,9 +51,11 @@ class GauMeta(TypedMeta):
     excitation = Excitation
     frequency = Frequency
     overlap = Overlap
+    multipole = pd.DataFrame
 
 class Output(six.with_metaclass(GauMeta, Editor)):
     def _parse_triangular_matrix(self, regex, column='coef', values_only=False):
+        _rebas01 = r'basis functions,'
         found = self.find_next(_rebas01, keys_only=True)
         nbas = int(self[found].split()[0])
         found = self.find_next(regex, keys_only=True)
@@ -76,6 +79,9 @@ class Output(six.with_metaclass(GauMeta, Editor)):
                                        column: matrix})
 
     def parse_atom(self):
+        # Atom flags
+        _regeom01 = 'Input orientation'
+        _regeom02 = 'Standard orientation'
         # Find our data
         found = self.find(_regeom01, _regeom02, keys_only=True)
         # Check if nosymm was specified
@@ -110,6 +116,12 @@ class Output(six.with_metaclass(GauMeta, Editor)):
         self.atom = atom
 
     def parse_basis_set(self):
+        # Basis flags
+        _rebas02 = 'AO basis set in the form of general basis input'
+        _rebas03 = ' (Standard|General) basis'
+        _basrep = {'D 0': 'D0 ', 'F 0': 'F0 ',
+                   'G 0': 'G0 ', 'H 0': 'H0 ', 'I 0': 'I0 '}
+        _rebaspat = re.compile('|'.join(_basrep.keys()))
         # Find the basis set
         found = self.regex(_rebas02, _rebas03, keys_only=True)
         if not found[_rebas02]: return
@@ -158,12 +170,21 @@ class Output(six.with_metaclass(GauMeta, Editor)):
 
 
     def parse_orbital(self):
+        _rebas01 = r'basis functions,'
+        # Orbital flags
+        _realphaelec = 'alpha electrons'
+        _reorb01 = '(?=Alpha|Beta).*(?=occ|virt)'
+        _reorb02 = 'Orbital symmetries'
+        _orbslice = [slice(10 * i, 10 * i + 9) for i in range(5)]
+        _symrep = {'Occupied': '', 'Virtual': '', 'Alpha Orbitals:': '',
+                   'Beta  Orbitals:': '', '\(': '', '\)': ''}
+        _resympat = re.compile('|'.join(_symrep.keys()))
+        _symrep['('] = ''
+        _symrep[')'] = ''
         # Find where our data is
         found = self.regex(_reorb01, _reorb02, _rebas01, _realphaelec)
         # If no orbital energies, quit
         if not found[_reorb01]: return
-        # Basis dimension- UNUSED
-        #nbas = int(found[_rebas01][0][1].split()[0])
         # Check if open shell
         os = any(('Beta' in ln for lno, ln in found[_reorb01]))
         #UNUSED?
@@ -207,6 +228,13 @@ class Output(six.with_metaclass(GauMeta, Editor)):
             Requires specification of pop(full) or pop(no) or the like.
         """
         if hasattr(self, '_momatrix'): return
+        _rebas01 = r'basis functions,'
+        # MOMatrix flags
+        _remomat01 = r'pop.*(?=full|no)'
+        _remomat02 = 'Orbital Coefficients'
+        _basrep = {'D 0': 'D0 ', 'F 0': 'F0 ',
+                   'G 0': 'G0 ', 'H 0': 'H0 ', 'I 0': 'I0 '}
+        _rebaspat = re.compile('|'.join(_basrep.keys()))
         # Check if a full MO matrix was specified in the input
         check = self.regex(_remomat01, stop=1000, flags=re.IGNORECASE)
         if not check: return
@@ -224,6 +252,7 @@ class Output(six.with_metaclass(GauMeta, Editor)):
         colnames = ['coef'] + ['coef' + str(i) for i in range(1, ndim)]
         # Iterate over where the data was found
         # c counts the column in the resulting momatrix table
+        _csv_args = {'delim_whitespace': True, 'header': None}
         for c, (lno, ln) in enumerate(found[_remomat02]):
             gap = 0
             while not 'eigenvalues' in self[lno + gap].lower(): gap += 1
@@ -273,6 +302,10 @@ class Output(six.with_metaclass(GauMeta, Editor)):
 
 
     def parse_frame(self):
+        # Frame flags
+        _retoten = 'SCF Done:'
+        _realphaelec = 'alpha electrons'
+        _reelecstate = 'The electronic state'
         # Get the default frame from the atom table
         self.frame = compute_frame_from_atom(self.atom)
         # Find our data
@@ -303,6 +336,9 @@ class Output(six.with_metaclass(GauMeta, Editor)):
 
 
     def parse_excitation(self):
+        # TDDFT flags
+        _retddft = 'TD'
+        _reexcst = 'Excited State'
         chk = self.find(_retddft, stop=1000, keys_only=True)
         if not chk: return
         # Find the data
@@ -334,6 +370,8 @@ class Output(six.with_metaclass(GauMeta, Editor)):
 
 
     def parse_frequency(self):
+        # Frequency flags
+        _refreq = 'Freq'
         found = self.regex(_refreq, stop=1000, flags=re.IGNORECASE)
         # Don't need the input deck or 2 from the summary at the end
         found = self.find(_refreq)[1:-2]
@@ -379,22 +417,254 @@ class Output(six.with_metaclass(GauMeta, Editor)):
         frequency['frame'] = 0
         self.frequency = frequency
 
+    # Below are triangular matrices -- One electron integrals
 
     def parse_overlap(self):
+        _reovl01 = '*** Overlap ***'
         overlap = self._parse_triangular_matrix(_reovl01, 'coef')
         if overlap is not None: self.overlap = overlap
 
     def parse_multipole(self):
+        _reixn = 'IX=    {}'
         mltpl = self._parse_triangular_matrix(_reixn.format(1), 'ix1')
         if mltpl is not None:
             mltpl['ix2'] = self._parse_triangular_matrix(_reixn.format(2), 'ix2', True)
             mltpl['ix3'] = self._parse_triangular_matrix(_reixn.format(3), 'ix3', True)
             self.multipole = mltpl
 
-
     def __init__(self, *args, **kwargs):
         super(Output, self).__init__(*args, **kwargs)
 
+
+class Fchk(six.with_metaclass(GauMeta, Editor)):
+
+    def _intme(self, fitem, idx=0):
+        """Helper gets an integer of interest."""
+        return int(self[fitem[idx]].split()[-1])
+
+    def _dfme(self, fitem, dim, idx=0):
+        """Helper gets an array of interest."""
+        start = fitem[idx] + 1
+        col = min(len(self[start].split()), dim)
+        stop = np.ceil(start + dim / col).astype(np.int64)
+        return self.pandas_dataframe(start, stop, col).stack().values
+
+    def parse_atom(self):
+        # Atom regex
+        _renat = 'Number of atoms'
+        _reznum = 'Atomic numbers'
+        _rezeff = 'Nuclear charges'
+        _reposition = 'Current cartesian coordinates'
+        # Find line numbers of interest
+        found = self.find(_renat, _reznum, _rezeff, _reposition,
+                          stop=100, keys_only=True)
+        # Number of atoms in current geometry
+        nat = self._intme(found[_renat])
+        # Atom identifiers
+        znums = self._dfme(found[_reznum], nat)
+        # Atomic symbols
+        symbols = list(map(lambda x: z2sym[x], znums))
+        # Z effective if ECPs are used
+        zeffs = self._dfme(found[_rezeff], nat).astype(np.int64)
+        # Atomic positions
+        pos = self._dfme(found[_reposition], nat * 3).reshape(nat, 3)
+        frame = np.zeros(len(symbols), dtype=np.int64)
+        self.atom = pd.DataFrame.from_dict({'symbol': symbols, 'Zeff': zeffs,
+                                            'frame': frame, 'x': pos[:,0],
+                                            'y': pos[:,1], 'z': pos[:,2],
+                                            'set': range(1, len(symbols) + 1)})
+
+    def parse_basis_set(self):
+        # Basis set regex
+        _rebasdim = 'Number of basis functions'
+        _recontdim = 'Number of contracted shells'
+        _reprimdim = 'Number of primitive shells'
+        _reshelltype = 'Shell types'
+        _reprimpershell = 'Number of primitives per shell'
+        _reshelltoatom = 'Shell to atom map'
+        _reprimexp = 'Primitive exponents'
+        _recontcoef = 'Contraction coefficients'
+        _repcontcoef = 'P(S=P) Contraction coefficients'
+        found = self.find(_rebasdim, _reshelltype, _reprimpershell,
+                          _reshelltoatom, _reprimexp, _recontcoef,
+                          _repcontcoef, keys_only=True)
+        # Number of basis functions - UNUSED
+        #nbas = self._intme(found[_rebasdim])
+        # Number of 'shell to atom' mappings
+        dim1 = self._intme(found[_reshelltype])
+        # Number of primitive exponents
+        dim2 = self._intme(found[_reprimexp])
+        # Handle cartesian vs. spherical here
+        # only spherical for now
+        shelltypes = self._dfme(found[_reshelltype], dim1).astype(np.int64)
+        primpershell = self._dfme(found[_reprimpershell], dim1).astype(np.int64)
+        shelltoatom = self._dfme(found[_reshelltoatom], dim1).astype(np.int64)
+        primexps = self._dfme(found[_reprimexp], dim2)
+        contcoefs = self._dfme(found[_recontcoef], dim2)
+        if found[_repcontcoef]: pcontcoefs = self._dfme(found[_repcontcoef], dim2)
+        # Keep track of some things
+        ptr, prevatom, shell, sp = 0, 0, 0, False
+        # Temporary storage of basis set data
+        shldx = defaultdict(int)
+        ddict = defaultdict(list)
+        for atom, nprim, shelltype in zip(shelltoatom, primpershell, shelltypes):
+            if atom != prevatom:
+                prevatom, shldx = atom, defaultdict(int)
+            # Collect the data for this basis set
+            if shelltype == -1:
+                shelltype, sp = 0, True
+            L = np.abs(shelltype)
+            step = ptr + nprim
+            ddict[1].extend(contcoefs[ptr:step].tolist())
+            ddict[0].extend(primexps[ptr:step].tolist())
+            ddict['center'].extend([atom] * nprim)
+            ddict['shell'].extend([shldx[L]] * nprim)
+            ddict['L'].extend([L] * nprim)
+            shldx[L] += 1
+            if sp:
+                shldx[1] = shldx[0] + 1
+                ddict[1].extend(pcontcoefs[ptr:step].tolist())
+                ddict[0].extend(primexps[ptr:step].tolist())
+                ddict['center'].extend([atom] * nprim)
+                ddict['shell'].extend([shldx[1]] * nprim)
+                ddict['L'].extend([1] * nprim)
+                shldx[1] += 1
+            ptr += nprim
+            sp = False
+        sets, setmap = _dedup(pd.DataFrame.from_dict(ddict))
+        self.basis_set = sets
+        self.meta['spherical'] = True
+        self.atom['set'] = self.atom['set'].map(setmap)
+
+    # cnts = {key: -1 for key in range(10)}
+    # pcen, pl, pn, shfns = 0, 0, 1, []
+    # for cen, n, l, seht in zip(df['center'], df['N'], df['L'],
+    #                            df['center'].map(sets)):
+    #     if not pcen == cen: cnts = {key: -1 for key in range(10)}
+    #     if (pl != l) or (pn != n) or (pcen != cen): cnts[l] += 1
+    #     shfns.append(mapr[(seht, l)][cnts[l]])
+    #     pcen, pl, pn = cen, l, n
+    # df['shell'] = shfns
+    def parse_basis_set_order(self):
+        # Unique basis sets
+        sets = self.basis_set.groupby('set')
+        data = []
+        # Gaussian orders basis functions strangely
+        # Will likely need an additional mapping for cartesian
+        lamp = {0: [0], 1: [1, -1, 0],
+                2: [0, 1, -1, 2, -2],
+                3: [0, 1, -1, 2, -2, 3, -3],
+                4: [0, 1, -1, 2, -2, 3, -3, 4, -4],
+                5: [0, 1, -1, 2, -2, 3, -3, 4, -4, 5, -5]}
+        # What was tag column for in basis set order?
+        key = 'tag' if 'tag' in self.atom.columns else 'symbol'
+        # Iterate over atoms
+        for cent, bset, tag in zip(self.atom.index.values,
+                                   self.atom['set'],
+                                   self.atom[key]):
+            seht = sets.get_group(bset)
+            # Iterate over basis set
+            pL, psh = -1, -1
+            for L, sh in zip(seht['L'], seht['shell']):
+                if (pL == L) and (psh == sh): continue
+                for ml in lamp[L]:
+                    data.append((tag, cent, L, ml, sh, 0))
+                pL = L
+                psh = sh
+        columns = ('tag', 'center', 'L', 'ml', 'shell', 'frame')
+        self.basis_set_order = pd.DataFrame(data, columns=columns)
+
+    def parse_momatrix(self):
+        # MOMatrix regex
+        _rebasdim = 'Number of basis functions'
+        _reindepdim = 'Number of independant functions'
+        _realphaen = 'Alpha Orbital Energies'
+        _reamomatrix = 'Alpha MO coefficients'
+        _rebmomatrix = 'Beta MO coefficients'
+        found = self.find(_rebasdim, _reindepdim, _reamomatrix, _rebmomatrix,
+                          keys_only=True)
+        # Again number of basis functions
+        nbas = self._intme(found[_rebasdim])
+        try:
+            ninp = self._intme(found[_reindepdim])
+        except IndexError:
+            ninp = nbas
+        ncoef = self._intme(found[_reamomatrix])
+        # Alpha or closed shell MO coefficients
+        coefs = self._dfme(found[_reamomatrix], ncoef)
+        # Beta MO coefficients if they exist
+        bcoefs = self._dfme(found[_rebmomatrix], ncoef) \
+                 if found[_rebmomatrix] else None
+        # Indexing
+        chis = np.tile(range(nbas), ninp)
+        orbitals = np.repeat(range(ninp), nbas)
+        frame = np.zeros(ncoef, dtype=np.int64)
+        self.momatrix = pd.DataFrame.from_dict({'chi': chis, 'orbital': orbitals,
+                                                'coef': coefs, 'frame': frame})
+        if bcoefs is not None:
+            self.momatrix['coef1'] = bcoefs
+
+
+    def parse_orbital(self):
+        # Orbital regex
+        _reorboc = 'Number of .*electrons'
+        _reorben = 'Orbital Energies'
+        found = self.regex(_reorben, _reorboc, keys_only=True)
+        ae = self._intme(found[_reorboc], idx=1)
+        be = self._intme(found[_reorboc], idx=2)
+        nbas = self._intme(found[_reorben])
+        ens = np.concatenate([self._dfme(found[_reorben], nbas, idx=i)
+                              for i, start in enumerate(found[_reorben])])
+        os = nbas != len(ens)
+        self.orbital = Orbital.from_energies(ens, ae, be, os=os)
+
+
+    def __init__(self, *args, **kwargs):
+        super(Fchk, self).__init__(*args, **kwargs)
+
+
+def _dedup(sets, sp=False):
+    unique, setmap, cnt = [], {}, 0
+    sets = sets.groupby('center')
+    chk = [0, 1]
+    for center, seht in sets:
+        for i, other in enumerate(unique):
+            if other.shape != seht.shape: continue
+            if np.allclose(other[chk], seht[chk]):
+                setmap[center] = i
+                break
+        else:
+            unique.append(seht)
+            setmap[center] = cnt
+            cnt += 1
+    if sp: unique = _expand_sp(unique)
+    sets = pd.concat(unique).reset_index(drop=True)
+    try: sets.drop([2, 3], axis=1, inplace=True)
+    except ValueError: pass
+    sets.rename(columns={'center': 'set', 0: 'alpha', 1: 'd'}, inplace=True)
+    sets['set'] = sets['set'].map(setmap)
+    sets['frame'] = 0
+    return sets, setmap
+
+
+def _expand_sp(unique):
+    expand = []
+    for seht in unique:
+        if np.isnan(seht[2]).sum() == seht.shape[0]:
+            expand.append(seht)
+            continue
+        sps = seht[2][~np.isnan(seht[2])].index
+        shls = len(seht.ix[sps]['shell'].unique())
+        dupl = seht.ix[sps[0]:sps[-1]].copy()
+        dupl[1] = dupl[2]
+        dupl['L'] = 1
+        dupl['shell'] += shls
+        last = seht.ix[sps[-1] + 1:].copy()
+        last['shell'] += shls
+        expand.append(pd.concat([seht.ix[:sps[0] - 1],
+                                 seht.ix[sps[0]:sps[-1]],
+                                 dupl, last]))
+    return expand
 
 
 def _basis_set_order(chunk, mapr, sets):
@@ -431,259 +701,3 @@ def _basis_set_order(chunk, mapr, sets):
     df.drop([0, 2, 'N', 'ang'], axis=1, inplace=True)
     df['frame'] = 0
     return df
-
-
-_csv_args = {'delim_whitespace': True, 'header': None}
-# Atom flags
-_regeom01 = 'Input orientation'
-_regeom02 = 'Standard orientation'
-# Orbital flags
-_reorb01 = '(?=Alpha|Beta).*(?=occ|virt)'
-_reorb02 = 'Orbital symmetries'
-_orbslice = [slice(10 * i, 10 * i + 9) for i in range(5)]
-_symrep = {'Occupied': '', 'Virtual': '', 'Alpha Orbitals:': '',
-           'Beta  Orbitals:': '', '\(': '', '\)': ''}
-_resympat = re.compile('|'.join(_symrep.keys()))
-_symrep['('] = ''
-_symrep[')'] = ''
-# MOMatrix flags
-_remomat01 = r'pop.*(?=full|no)'
-_remomat02 = 'Orbital Coefficients'
-# Basis flags
-_rebas01 = r'basis functions,'
-_rebas02 = 'AO basis set in the form of general basis input'
-_rebas03 = ' (Standard|General) basis'
-_basrep = {'D 0': 'D0 ', 'F 0': 'F0 ',
-           'G 0': 'G0 ', 'H 0': 'H0 ', 'I 0': 'I0 '}
-_rebaspat = re.compile('|'.join(_basrep.keys()))
-# Frame flags
-_retoten = 'SCF Done:'
-_realphaelec = 'alpha electrons'
-_reelecstate = 'The electronic state'
-# Frequency flags
-_refreq = 'Freq'
-# TDDFT flags
-_retddft = 'TD'
-_reexcst = 'Excited State'
-# Triangular matrices -- One electron integrals
-_reovl01 = '*** Overlap ***'
-_reixn = 'IX=    {}'
-
-class Fchk(six.with_metaclass(GauMeta, Editor)):
-
-    def _intme(self, fitem, idx=0):
-        """Helper gets an integer of interest."""
-        return int(self[fitem[idx]].split()[-1])
-
-    def _dfme(self, fitem, dim, idx=0):
-        """Helper gets an array of interest."""
-        start = fitem[idx] + 1
-        col = min(len(self[start].split()), dim)
-        stop = np.ceil(start + dim / col).astype(np.int64)
-        return self.pandas_dataframe(start, stop, col).stack().values
-
-    def parse_atom(self):
-        # Find line numbers of interest
-        found = self.find(_renat, _reznum, _rezeff, _reposition,
-                          stop=100, keys_only=True)
-        # Number of atoms in current geometry
-        nat = self._intme(found[_renat])
-        # Atom identifiers
-        znums = self._dfme(found[_reznum], nat)
-        # Atomic symbols
-        symbols = list(map(lambda x: z2sym[x], znums))
-        # Z effective if ECPs are used
-        zeffs = self._dfme(found[_rezeff], nat).astype(np.int64)
-        # Atomic positions
-        print(found[_reposition])
-        pos = self._dfme(found[_reposition], nat * 3).reshape(nat, 3)
-        frame = np.zeros(len(symbols), dtype=np.int64)
-        self.atom = pd.DataFrame.from_dict({'symbol': symbols, 'Zeff': zeffs,
-                                            'frame': frame, 'x': pos[:,0],
-                                            'y': pos[:,1], 'z': pos[:,2],
-                                            'set': range(1, len(symbols) + 1)})
-
-    def parse_basis_set(self):
-        found = self.find(_rebasdim, _reshelltype, _reprimpershell,
-                          _reshelltoatom, _reprimexp, _recontcoef,
-                          _repcontcoef, keys_only=True)
-        # Number of basis functions - UNUSED
-        #nbas = self._intme(found[_rebasdim])
-        # Number of 'shell to atom' mappings
-        dim1 = self._intme(found[_reshelltype])
-        # Number of primitive exponents
-        dim2 = self._intme(found[_reprimexp])
-        # Handle cartesian vs. spherical here
-        # only spherical for now
-        shelltypes = self._dfme(found[_reshelltype], dim1).astype(np.int64)
-        primpershell = self._dfme(found[_reprimpershell], dim1).astype(np.int64)
-        shelltoatom = self._dfme(found[_reshelltoatom], dim1).astype(np.int64)
-        primexps = self._dfme(found[_reprimexp], dim2)
-        contcoefs = self._dfme(found[_recontcoef], dim2)
-        if found[_repcontcoef]: pcontcoefs = self._dfme(found[_repcontcoef], dim2)
-        # Keep track of some things
-        ptr, prevatom, shell, sp = 0, 0, 0, False
-        # Temporary storage of basis set data
-        ddict = {1: [], 0: [], 'shell': [],
-                 'L': [], 'center': []}
-        for atom, nprim, shelltype in zip(shelltoatom, primpershell, shelltypes):
-            if atom != prevatom:
-                prevatom, shell = atom, 0
-            # Collect the data for this basis set
-            if shelltype == -1:
-                shelltype, sp = 0, True
-            step = ptr + nprim
-            ddict[1] += contcoefs[ptr:step].tolist()
-            ddict[0] += primexps[ptr:step].tolist()
-            ddict['center'] += [atom] * nprim
-            ddict['shell'] += [shell] * nprim
-            ddict['L'] += [np.abs(shelltype)] * nprim
-            if sp:
-                shell += 1
-                ddict[1] += pcontcoefs[ptr:step].tolist()
-                ddict[0] += primexps[ptr:step].tolist()
-                ddict['center'] += [atom] * nprim
-                ddict['shell'] += [shell] * nprim
-                ddict['L'] += [1] * nprim
-            ptr += nprim
-            shell += 1
-            sp = False
-        sets, setmap = _dedup(pd.DataFrame.from_dict(ddict))
-        self.basis_set = sets
-        self.atom['set'] = self.atom['set'].map(setmap)
-
-    def parse_basis_set_order(self):
-        # Unique basis sets
-        sets = self.basis_set.groupby('set')
-        data = []
-        # Gaussian orders basis functions strangely
-        # Will likely need an additional mapping for cartesian
-        lamp = {0: [0], 1: [1, -1, 0],
-                2: [0, 1, -1, 2, -2],
-                3: [0, 1, -1, 2, -2, 3, -3],
-                4: [0, 1, -1, 2, -2, 3, -3, 4, -4],
-                5: [0, 1, -1, 2, -2, 3, -3, 4, -4, 5, -5]}
-        # What was tag column for in basis set order?
-        key = 'tag' if 'tag' in self.atom.columns else 'symbol'
-        # Iterate over atoms
-        for cent, bset, tag in zip(self.atom.index.values, self.atom['set'], self.atom[key]):
-            seht = sets.get_group(bset).groupby('shell')
-            # Iterate over basis set
-            for shell, grp in seht:
-                L = grp['L'].values[0]
-                # Iterate over m_l values
-                for ml in lamp[L]:
-                    data.append([cent, tag, L, ml, shell, 0])
-        columns = ('center', 'tag', 'L', 'ml', 'shell', 'frame')
-        self.basis_set_order = pd.DataFrame(data, columns=columns)
-
-    def parse_momatrix(self):
-        found = self.find(_rebasdim, _reindepdim, _reamomatrix, _rebmomatrix,
-                          keys_only=True)
-        # Again number of basis functions
-        nbas = self._intme(found[_rebasdim])
-        try:
-            ninp = self._intme(found[_reindepdim])
-        except IndexError:
-            ninp = nbas
-        ncoef = self._intme(found[_reamomatrix])
-        # Alpha or closed shell MO coefficients
-        coefs = self._dfme(found[_reamomatrix], ncoef)
-        # Beta MO coefficients if they exist
-        bcoefs = self._dfme(found[_rebmomatrix], ncoef) \
-                 if found[_rebmomatrix] else None
-        # Indexing
-        chis = np.tile(range(nbas), ninp)
-        orbitals = np.repeat(range(ninp), nbas)
-        frame = np.zeros(ncoef, dtype=np.int64)
-        print(len(chis), len(orbitals), len(coefs), len(frame))
-        self.momatrix = pd.DataFrame.from_dict({'chi': chis, 'orbital': orbitals,
-                                                'coef': coefs, 'frame': frame})
-        if bcoefs is not None:
-            self.momatrix['coef1'] = bcoefs
-
-
-    def parse_orbital(self):
-        found = self.regex(_reorben, _reorboc, keys_only=True)
-        ae = self._intme(found[_reorboc], idx=0)
-        be = self._intme(found[_reorboc], idx=1)
-        nbas = self._intme(found[_reorben])
-        ens = np.concatenate([self._dfme(found[_reorben], nbas, idx=i)
-                              for i, start in enumerate(found[_reorben])])
-        os = nbas != len(ens)
-        self.orbital = Orbital.from_energies(ens, ae, be, os=os)
-
-
-    def __init__(self, *args, **kwargs):
-        super(Fchk, self).__init__(*args, **kwargs)
-
-
-def _dedup(sets, sp=False):
-    unique, setmap, cnt = [], {}, 0
-    sets = sets.groupby('center')
-    chk = [0, 1]
-    for center, seht in sets:
-        for i, other in enumerate(unique):
-            if other.shape != seht.shape: continue
-            if np.allclose(other[chk], seht[chk]):
-                setmap[center] = i
-                break
-        else:
-            unique.append(seht)
-            setmap[center] = cnt
-            cnt += 1
-    if sp: unique = _expand_sp(unique)
-    sets = pd.concat(unique).reset_index(drop=True)
-    try: sets.drop([2, 3], axis=1, inplace=True)
-    except ValueError: pass
-    sets.rename(columns={'center': 'set', 0: 'alpha', 1: 'd'}, inplace=True)
-    sets['set'] = sets['set'].map(setmap)
-    sets['frame'] = 0
-    return sets, setmap
-
-def _expand_sp(unique):
-    expand = []
-    for seht in unique:
-        if np.isnan(seht[2]).sum() == seht.shape[0]:
-            expand.append(seht)
-            continue
-        sps = seht[2][~np.isnan(seht[2])].index
-        shls = len(seht.ix[sps]['shell'].unique())
-        dupl = seht.ix[sps[0]:sps[-1]].copy()
-        dupl[1] = dupl[2]
-        dupl['L'] = 1
-        dupl['shell'] += shls
-        last = seht.ix[sps[-1] + 1:].copy()
-        last['shell'] += shls
-        expand.append(pd.concat([seht.ix[:sps[0] - 1],
-                                 seht.ix[sps[0]:sps[-1]],
-                                 dupl, last]))
-    return expand
-
-# Atom regex
-_renat = 'Number of atoms'
-_reznum = 'Atomic numbers'
-_rezeff = 'Nuclear charges'
-_reposition = 'Current cartesian coordinates'
-
-# Basis set regex
-_rebasdim = 'Number of basis functions'
-_recontdim = 'Number of contracted shells'
-_reprimdim = 'Number of primitive shells'
-_reshelltype = 'Shell types'
-_reprimpershell = 'Number of primitives per shell'
-_reshelltoatom = 'Shell to atom map'
-_reprimexp = 'Primitive exponents'
-_recontcoef = 'Contraction coefficients'
-_repcontcoef = 'P(S=P) Contraction coefficients'
-
-# MOMatrix regex
-# also uses _rebasdim
-_reindepdim = 'Number of independant functions'
-_realphaen = 'Alpha Orbital Energies'
-_reamomatrix = 'Alpha MO coefficients'
-_rebmomatrix = 'Beta MO coefficients'
-
-# Orbital regex
-_reorboc = 'Number of .*electrons'
-_reorben = 'Orbital Energies'

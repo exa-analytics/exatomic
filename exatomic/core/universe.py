@@ -204,7 +204,7 @@ class Universe(six.with_metaclass(Meta, Container)):
             frame (int): state of the universe (default 0)
         """
         atom = self.atom.groupby('frame').get_group(frame)
-        if self.meta['program'] not in ['molcas', 'adf', 'nwchem']:
+        if self.meta['program'] not in ['molcas', 'adf', 'nwchem', 'gaussian']:
             print('Warning: Check spherical shell parameter for {} '
                   'molecular orbital generation'.format(self.meta['program']))
         shls = self.basis_set.shells(self.meta['program'],
