@@ -40,12 +40,14 @@ install:
     - conda install -c conda-forge pandoc pypandoc nbsphinx ipython
     - conda install -q -c conda-forge python-coveralls coverage pytest pytest-cov
     - conda install -q -c conda-forge numexpr nodejs ipywidgets
+#   - conda install -q -c exaanalytics exa
+    - pip install exa
     - pip install travis-sphinx codacy-coverage
-    - git clone https://github.com/exa-analytics/exa.git
-    - cd exa
-    - pip install .
-    - cd ../
-    - pip install -e .
+#   - git clone https://github.com/exa-analytics/exa.git
+#   - cd exa
+#   - pip install .
+#   - cd ../
+#   - pip install -e .
 
 script:
     - export PYTHONDONTWRITEBYTECODE=1

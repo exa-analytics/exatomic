@@ -275,7 +275,7 @@ class Universe(six.with_metaclass(Meta, Container)):
             uni.field.field_values                        # The generated scalar fields
 
         Args:
-            field_params (dict, pd.Series): see :meth:`exatomic.algorithms.orbital_util.make_fps`
+            field_params (dict, pd.Series): see :func:`exatomic.algorithms.orbital_util.make_fps`
             mocoefs (str): column in :class:`~exatomic.core.orbital.MOMatrix`
             vector (iter): indices of orbitals to evaluate (0-based)
             frame (int): frame of atomic positions for the orbitals
