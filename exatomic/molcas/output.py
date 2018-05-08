@@ -12,6 +12,7 @@ from __future__ import division
 import os
 import six
 import pandas as pd
+from pandas.io.parsers import ParserError
 import numpy as np
 from six import StringIO
 from exa import TypedMeta
@@ -19,7 +20,8 @@ from .editor import Editor
 from exatomic import Atom
 from exatomic.algorithms.numerical import _flat_square_to_triangle, _square_indices
 from exatomic.algorithms.basis import lmap, spher_lml_count
-from exatomic.core.basis import Overlap, BasisSet, BasisSetOrder
+from exatomic.core.basis import (Overlap, BasisSet, BasisSetOrder,
+                                 deduplicate_basis_sets)
 from exatomic.core.orbital import DensityMatrix, MOMatrix, Orbital
 from exatomic.base import sym2z, z2sym
 
@@ -186,7 +188,24 @@ class Output(six.with_metaclass(OutMeta, Editor)):
 
 
     def add_overlap(self, path):
-        self.overlap = Overlap.from_column(path)
+        try: # If it's an ASCII text file
+            self.overlap = Overlap.from_column(path)
+        except ParserError: # If it's an HDF5 file
+            hdf = HDF(path)
+            if 'DESYM_CENTER_CHARGES' not in hdf._hdf:
+                self.overlap = hdf.overlap
+                return
+            if 'irrep' not in self.momatrix:
+                raise Exception("Trying to set symmetrized overlap with "
+                                "desymmetrized MOMatrix data.")
+                return
+            ovl = pd.DataFrame(np.array(hdf._hdf['AO_OVERLAP_MATRIX']),
+                               columns=('coef',))
+            ovl['irrep'] = self.momatrix['irrep']
+            ovl['chi0'] = self.momatrix['chi']
+            ovl['chi1'] = self.momatrix['orbital']
+            ovl['frame'] = 0
+            self.overlap = ovl
 
 
     def _check_atom_sym(self):
@@ -245,14 +264,7 @@ class Output(six.with_metaclass(OutMeta, Editor)):
         if allatom.shape[0] > self.atom.shape[0]:
             self.atom = allatom
             self.meta['symmetrized'] = True
-            utags = []
-            for cen, tag in zip(self.atom['center'], self.atom['tag']):
-                utag = tag
-                while utag in utags:
-                    utag = ''.join(filter(str.isalpha, utag)) + \
-                    str(int(''.join(filter(str.isdigit, utag))) + 1)
-                utags.append(utag)
-            self.atom['utag'] = utags
+            self.atom['utag'] = _add_unique_tags(self.atom)
 
 
     def parse_basis_set_order(self):
@@ -314,8 +326,8 @@ class Output(six.with_metaclass(OutMeta, Editor)):
             vecs = vecs[:nbf]
         self.basis_set_order = df
         shls = []
-        grps = df.groupby(['center', 'L', 'ml'])
-        for (cen, L, ml), grp in grps:
+        grps = df.groupby(['irrep', 'center', 'L', 'ml'])
+        for (irrep, cen, L, ml), grp in grps:
             shl = 0
             for _ in grp.index:
                 shls.append(shl)
@@ -396,6 +408,7 @@ class HDFMeta(TypedMeta):
     overlap = Overlap
     orbital = Orbital
     momatrix = MOMatrix
+    basis_set = BasisSet
     basis_set_order = BasisSetOrder
 
 
@@ -408,18 +421,50 @@ class HDF(six.with_metaclass(HDFMeta, object)):
         return self._to_universe()
 
     def parse_atom(self):
-        Z = pd.Series(self._hdf['CENTER_CHARGES']).astype(np.int64)
-        xyzs = np.array(self._hdf['CENTER_COORDINATES'])
-        labs = pd.Series(self._hdf['CENTER_LABELS']).apply(
+        ztag = 'CENTER_CHARGES'
+        xtag = 'CENTER_COORDINATES'
+        ltag = 'CENTER_LABELS'
+        self.meta['symmetrized'] = False
+        if 'DESYM_CENTER_CHARGES' in self._hdf:
+            self.meta['symmetrized'] = True
+            ztag = 'DESYM_' + ztag
+            xtag = 'DESYM_' + xtag
+            ltag = 'DESYM_' + ltag
+        Z = pd.Series(self._hdf[ztag]).astype(np.int64)
+        xyzs = np.array(self._hdf[xtag])
+        labs = pd.Series(self._hdf[ltag]).apply(
                          lambda s: s.decode('utf-8').strip())
-        self.atom = pd.DataFrame.from_dict({
-            'x': xyzs[:, 0], 'y': xyzs[:,1], 'z': xyzs[:,2],
-            'symbol': Z.map(z2sym), 'label': labs, 'Z': Z, 'frame': 0})
+        self.atom = pd.DataFrame.from_dict({'Z': Z,
+                                            'x': xyzs[:, 0],
+                                            'y': xyzs[:, 1],
+                                            'z': xyzs[:, 2],
+                                            'center': range(len(Z)),
+                                            'symbol': Z.map(z2sym),
+                                            'label': labs,
+                                            'frame': 0})
+        if self.meta['symmetrized']:
+            symops = {'E': np.array([ 1.,  1.,  1.]),
+                      'x': np.array([-1.,  0.,  0.]),
+                      'y': np.array([ 0., -1.,  0.]),
+                      'z': np.array([ 0.,  0., -1.]),
+                     'xy': np.array([-1., -1.,  0.]),
+                     'xz': np.array([-1.,  0., -1.]),
+                     'yz': np.array([ 0., -1., -1.]),
+                    'xyz': np.array([-1., -1., -1.])}
+            self.meta['symops'] = symops
+            self.atom[['tag', 'symop']] = self.atom['label'].str.extract('(.*):(.*)',
+                                                                         expand=True)
+            self.atom['tag'] = self.atom['tag'].str.strip()
+            self.atom['symop'] = self.atom['symop'].str.strip()
+            self.atom['utag'] = _add_unique_tags(self.atom)
+
 
     def parse_basis_set_order(self):
         bso = np.array(self._hdf['BASIS_FUNCTION_IDS'])
-        df = {'center': bso[:, 0], 'shell': bso[:, 1],
-              'L': bso[:, 2], 'frame': 0}
+        df = {'center': bso[:, 0] - 1,
+               'shell': bso[:, 1] - 1,
+                   'L': bso[:, 2],
+               'frame': 0}
         if bso.shape[1] == 4:
             df['ml'] = bso[:, 3]
         else:
@@ -438,10 +483,38 @@ class HDF(six.with_metaclass(HDFMeta, object)):
             'frame': 0, 'group': 0, 'spin': 0})
 
     def parse_overlap(self):
-        self.overlap = Overlap.from_column(
-            _flat_square_to_triangle(np.array(self._hdf['AO_OVERLAP_MATRIX'])))
+        if 'symmetrized' not in self.meta: self.parse_atom()
+        key = 'AO_OVERLAP_MATRIX'
+        if not self.meta['symmetrized']:
+            self.overlap = Overlap.from_column(
+                _flat_square_to_triangle(np.array(self._hdf[key])))
+        else:
+            print('Symmetrized overlap indices not set correctly.')
+            self.overlap = Overlap.from_dict({
+                'coef': np.array(self._hdf[key]),
+                'chi0': 0, 'chi1': 0, 'frame': 0
+            })
+
+    def parse_basis_set(self):
+        if 'symmetrized' not in self.meta: self.parse_atom()
+        bset = np.array(self._hdf['PRIMITIVES'])
+        idxs = np.array(self._hdf['PRIMITIVE_IDS'])
+        bset = pd.DataFrame.from_dict({
+            'alpha': bset[:, 0], 'd': bset[:, 1],
+            'center': idxs[:, 0] - 1, 'L': idxs[:, 1],
+            'shell': idxs[:, 2] - 1
+        })
+        self.no_dup = bset
+        if self.meta['symmetrized']:
+            self.basis_set, atommap = deduplicate_basis_sets(bset)
+            self.atom['set'] = self.atom['center'].map(atommap)
+        else:
+            self.basis_set = bset.rename(columns={'center': 'set'})
+
+
 
     def parse_momatrix(self):
+        if 'MO_VECTORS' not in self._hdf: return
         coefs = np.array(self._hdf['MO_VECTORS'])
         try:
             symm = np.array(self._hdf['DESYM_MATRIX'])
@@ -467,7 +540,19 @@ class HDF(six.with_metaclass(HDFMeta, object)):
         if not os.path.isfile(args[0]):
             print('Argument is likely incorrect file path.')
         self._hdf = h5py.File(args[0], 'r')
+        self.meta = {'gaussian': True, 'program': 'molcas'}
 
+
+def _add_unique_tags(atom):
+    """De-duplicates atom identifier in symmetrized calcs."""
+    utags = []
+    for cen, tag in zip(atom['center'], atom['tag']):
+        utag = tag
+        while utag in utags:
+            utag = ''.join(filter(str.isalpha, utag)) + \
+            str(int(''.join(filter(str.isdigit, utag))) + 1)
+        utags.append(utag)
+    return utags
 
 
 def parse_molcas(fp, momatrix=None, overlap=None, occvec=None, **kwargs):

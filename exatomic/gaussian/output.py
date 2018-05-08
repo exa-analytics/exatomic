@@ -21,7 +21,8 @@ from exatomic.base import z2sym
 from exatomic.core.frame import compute_frame_from_atom
 from exatomic.core.frame import Frame
 from exatomic.core.atom import Atom, Frequency
-from exatomic.core.basis import BasisSet, BasisSetOrder, Overlap
+from exatomic.core.basis import (BasisSet, BasisSetOrder, Overlap,
+                                 deduplicate_basis_sets)
 from exatomic.core.orbital import Orbital, MOMatrix, Excitation
 from exatomic.algorithms.basis import lmap, lorder
 from numba import jit
@@ -159,8 +160,11 @@ class Output(six.with_metaclass(GauMeta, Editor)):
         except TypeError:
             df[2] = df[2].str.replace('D', 'E').astype(np.float64)
             sp = True
+        df.rename(columns={0: 'alpha', 1: 'd'}, inplace=True)
         # Deduplicate basis sets and expand 'SP' shells if present
-        df, setmap = _dedup(df, sp=sp)
+        df, setmap = deduplicate_basis_sets(df, sp=sp)
+        try: df.drop([2, 3], axis=1, inplace=True)
+        except ValueError: pass
         spherical = '5D' in self[found[_rebas03][0]]
         if df['L'].max() < 2:
             spherical = True
@@ -531,7 +535,9 @@ class Fchk(six.with_metaclass(GauMeta, Editor)):
                 shldx[1] += 1
             ptr += nprim
             sp = False
-        sets, setmap = _dedup(pd.DataFrame.from_dict(ddict))
+        df = pd.DataFrame.from_dict(ddict)
+        df.rename(columns={0: 'alpha', 1: 'd'}, inplace=True)
+        sets, setmap = deduplicate_basis_sets(df)
         self.basis_set = sets
         self.meta['spherical'] = True
         self.atom['set'] = self.atom['set'].map(setmap)
@@ -623,48 +629,48 @@ class Fchk(six.with_metaclass(GauMeta, Editor)):
         super(Fchk, self).__init__(*args, **kwargs)
 
 
-def _dedup(sets, sp=False):
-    unique, setmap, cnt = [], {}, 0
-    sets = sets.groupby('center')
-    chk = [0, 1]
-    for center, seht in sets:
-        for i, other in enumerate(unique):
-            if other.shape != seht.shape: continue
-            if np.allclose(other[chk], seht[chk]):
-                setmap[center] = i
-                break
-        else:
-            unique.append(seht)
-            setmap[center] = cnt
-            cnt += 1
-    if sp: unique = _expand_sp(unique)
-    sets = pd.concat(unique).reset_index(drop=True)
-    try: sets.drop([2, 3], axis=1, inplace=True)
-    except ValueError: pass
-    sets.rename(columns={'center': 'set', 0: 'alpha', 1: 'd'}, inplace=True)
-    sets['set'] = sets['set'].map(setmap)
-    sets['frame'] = 0
-    return sets, setmap
-
-
-def _expand_sp(unique):
-    expand = []
-    for seht in unique:
-        if np.isnan(seht[2]).sum() == seht.shape[0]:
-            expand.append(seht)
-            continue
-        sps = seht[2][~np.isnan(seht[2])].index
-        shls = len(seht.ix[sps]['shell'].unique())
-        dupl = seht.ix[sps[0]:sps[-1]].copy()
-        dupl[1] = dupl[2]
-        dupl['L'] = 1
-        dupl['shell'] += shls
-        last = seht.ix[sps[-1] + 1:].copy()
-        last['shell'] += shls
-        expand.append(pd.concat([seht.ix[:sps[0] - 1],
-                                 seht.ix[sps[0]:sps[-1]],
-                                 dupl, last]))
-    return expand
+# def _dedup(sets, sp=False):
+#     unique, setmap, cnt = [], {}, 0
+#     sets = sets.groupby('center')
+#     chk = [0, 1]
+#     for center, seht in sets:
+#         for i, other in enumerate(unique):
+#             if other.shape != seht.shape: continue
+#             if np.allclose(other[chk], seht[chk]):
+#                 setmap[center] = i
+#                 break
+#         else:
+#             unique.append(seht)
+#             setmap[center] = cnt
+#             cnt += 1
+#     if sp: unique = _expand_sp(unique)
+#     sets = pd.concat(unique).reset_index(drop=True)
+#     try: sets.drop([2, 3], axis=1, inplace=True)
+#     except ValueError: pass
+#     sets.rename(columns={'center': 'set', 0: 'alpha', 1: 'd'}, inplace=True)
+#     sets['set'] = sets['set'].map(setmap)
+#     sets['frame'] = 0
+#     return sets, setmap
+#
+#
+# def _expand_sp(unique):
+#     expand = []
+#     for seht in unique:
+#         if np.isnan(seht[2]).sum() == seht.shape[0]:
+#             expand.append(seht)
+#             continue
+#         sps = seht[2][~np.isnan(seht[2])].index
+#         shls = len(seht.ix[sps]['shell'].unique())
+#         dupl = seht.ix[sps[0]:sps[-1]].copy()
+#         dupl[1] = dupl[2]
+#         dupl['L'] = 1
+#         dupl['shell'] += shls
+#         last = seht.ix[sps[-1] + 1:].copy()
+#         last['shell'] += shls
+#         expand.append(pd.concat([seht.ix[:sps[0] - 1],
+#                                  seht.ix[sps[0]:sps[-1]],
+#                                  dupl, last]))
+#     return expand
 
 
 def _basis_set_order(chunk, mapr, sets):
