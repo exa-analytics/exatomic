@@ -220,10 +220,7 @@ def _determine_vector(uni, vector, irrep=None):
                                  'could not be found in uni.orbital.')
         else:
             ihomo = iorb[iorb['occupation'] < 1.98]
-            print(ihomo)
             ihomo = ihomo.vector.values[0]
-            print(max(0, ihomo-5))
-            print(min(ihomo + 7, len(iorb.index)))
             return np.array(range(max(0, ihomo-5),
                                   min(ihomo + 7, len(iorb.index))))
     # If specified, carry on
@@ -294,15 +291,14 @@ def _check_column(uni, df, key):
 
 
 @jit(nopython=True, nogil=True, parallel=nbpll)
-def _compute_orbitals(npts, bvs, vecs, cmat):
+def _compute_orbitals_numba(npts, bvs, vecs, cmat):
     """Compute orbitals from numerical basis functions."""
     ovs = np.empty((len(vecs), npts), dtype=np.float64)
     for i, vec in enumerate(vecs):
         ovs[i] = np.dot(cmat[:, vec], bvs)
     return ovs
 
-
-def _compute_orbitals_nojit(npts, bvs, vecs, cmat):
+def _compute_orbitals_numpy(npts, bvs, vecs, cmat):
     """Compute orbitals from numerical basis functions."""
     ovs = np.empty((len(vecs), npts), dtype=np.float64)
     for i, vec in enumerate(vecs):

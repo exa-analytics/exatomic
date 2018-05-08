@@ -28,8 +28,14 @@ from .widget_utils import (_flo, _wlo, _hboxlo,
 
 @register
 class ExatomicScene(DOMWidget):
-    """A three.js sandbox for 3D visualization."""
+    """
+    A custom scene (three.js scene) used for visualization
+    of an atomic universe.
 
+    Custom parameters can be inspected using ``vars``. Parameters
+    include field dimensions, the universe itself, field colors,
+    widths, heights for the widget, etc.
+    """
     _model_module_version = Unicode(__js_version__).tag(sync=True)
     _view_module_version = Unicode(__js_version__).tag(sync=True)
     _view_module = Unicode('exatomic').tag(sync=True)
@@ -76,7 +82,6 @@ class ExatomicScene(DOMWidget):
 
     def _handle_custom_msg(self, msg, callback):
         """Custom message handler."""
-
         if msg['type'] == 'image':
             self._save_image(msg['content'])
         elif msg['type'] == 'camera':
@@ -211,7 +216,7 @@ class UniverseScene(ExatomicScene):
     # Tensor traits
     tensor_d = Dict().tag(sync=True)
     # Frame traits
-
+    frame__a = Float(0.0).tag(sync=True)
     # Tensor traits
     tens = Bool(False).tag(sync=True)
     tensor_d = Dict().tag(sync=True)

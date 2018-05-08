@@ -103,8 +103,9 @@ def two_traits(uni):
 
 def frame_traits(uni):
     """Get frame table traits."""
-    if not hasattr(uni, 'frame'): return {}
-    # TODO :: Implement me!!
+    # ASSUME SIMPLE CUBIC CELL this is a hack for now.
+    if 'xi' in uni.frame.columns:
+        return {'frame__a': uni.frame['xi'].max()}
     return {}
 
 def tensor_traits(uni):
@@ -118,6 +119,8 @@ def uni_traits(uni, atomcolors=None, atomradii=None, atomlabels=None):
     """Get Universe traits."""
     unargs = {}
     fields, tensors = [], None
+    if hasattr(uni, 'frame'):
+        unargs.update(frame_traits(uni))
     if hasattr(uni, 'atom'):
         unargs.update(atom_traits(uni.atom, atomcolors, atomradii, atomlabels))
     if hasattr(uni, 'atom_two'):

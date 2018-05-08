@@ -1,13 +1,12 @@
 {% set name = "exatomic" %}
-{% set version = "0.3.11" %}
+{% set version = "0.4.0" %}
 
 package:
   name: {{ name }}
   version: {{ version }}
 
 source:
-  fn: {{ name }}-{{ version }}.tar.gz
-  url: https://pypi.io/packages/source/{{ name[0] }}/{{ name }}/{{ name }}-{{ version }}.tar.gz
+  url: https://github.com/exa-analytics/{{ name }}/archive/v{{ version }}.tar.gz
 
 requirements:
   build:
@@ -15,22 +14,13 @@ requirements:
     - setuptools
 
   run:
-    - python
     - numpy
-    - scipy
-    - matplotlib
-    - seaborn
-    - networkx
     - pandas
-    - notebook
-    - nose
     - numba
-    - six
-    - pytables
-    - sphinx
-    - sphinx_rtd_theme
-    - pandoc
-    - nbsphinx
+    - seaborn
+    - ipywidgets
+    - sympy
+    - numexpr
     - exa
     - sympy
     - symengine
@@ -43,4 +33,4 @@ about:
     home: https://exa-analytics.github.io/{{ name }}
     license: Apache-2.0
     license_file: LICENSE
-    summary: A unified platform for theoretical and computational chemists.
+    summary: A unified platform for theoretical and computational chemists

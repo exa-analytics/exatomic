@@ -8,13 +8,14 @@ Building discrete molecular orbitals (for visualization) requires a complex
 set of operations that are provided by this module and wrapped into a clean API.
 """
 import numpy as np
+from numba import TypingError
 from datetime import datetime
 from exatomic.base import sym2z
 from .orbital_util import (
     numerical_grid_from_field_params, _determine_fps,
     _determine_vector, _compute_orb_ang_mom, _compute_current_density,
-    _compute_orbitals, _compute_density, _check_column, _make_field,
-    _compute_orbitals_nojit)
+    _compute_density, _check_column, _make_field,
+    _compute_orbitals_numba, _compute_orbitals_numpy)
 
 
 def _setup_orbital(uni, verbose, vector, fps, icoefs, jcoefs=None, irrep=None):
@@ -38,17 +39,20 @@ def _setup_orbital(uni, verbose, vector, fps, icoefs, jcoefs=None, irrep=None):
         return t1, vector, fps, x, y, z, bvs, icoefs, jcoefs
     return t1, vector, fps, x, y, z, bvs, icoefs
 
+def _compute_orbital(verbose, npts, bvs, vector, cmat):
+    try: ovs = _compute_orbitals_numba(npts, bvs, vector, cmat)
+    except (ValueError, IndexError, AssertionError, TypingError) as e:
+        if verbose: print('numba eval failed, falling back to numpy')
+        ovs = _compute_orbitals_numpy(npts, bvs, vector, cmat)
+    return ovs
 
-def _teardown_orbital(uni, verbose, field, t1, inplace, replace, dens=False):
+def _teardown_orbital(uni, verbose, field, t1, inplace, name='orbitals'):
     """Boilerplate for finishing the functions in this module."""
     if verbose:
         t2 = datetime.now()
-        kind = 'density ' if dens else 'orbitals'
-        p2 = 'Timing: compute {} - {:>8.2f}s.'
-        print(p2.format(kind, (t2-t1).total_seconds()))
+        p2 = 'Timing: compute {:<8} - {:>8.2f}s.'
+        print(p2.format(name, (t2-t1).total_seconds()))
     if not inplace: return field
-    if replace and hasattr(uni, '_field'):
-        del uni.__dict__['_field']
     uni.add_field(field)
 
 
@@ -76,14 +80,12 @@ def add_molecular_orbitals(uni, field_params=None, mocoefs=None,
     Warning:
         If replace is True, removes any fields previously attached to the universe
     """
+    if replace and hasattr(uni, '_field'): del uni.__dict__['_field']
     t1, vector, fps, x, y, z, bvs, mocoefs = \
         _setup_orbital(uni, verbose, vector, field_params, mocoefs, irrep=irrep)
-    try: ovs = _compute_orbitals(len(x), bvs, vector, mocoefs)
-    except (ValueError, IndexError, AssertionError) as e:
-        if verbose: print('Falling back to numpy orbital evaluation.')
-        ovs = _compute_orbitals_nojit(len(x), bvs, vector, mocoefs)
+    ovs = _compute_orbital(verbose, len(x), bvs, vector, mocoefs)
     field = _make_field(ovs, fps)
-    return _teardown_orbital(uni, verbose, field, t1, inplace, replace)
+    return _teardown_orbital(uni, verbose, field, t1, inplace)
 
 
 def add_density(uni, field_params=None, mocoefs=None, orbocc=None,
@@ -106,13 +108,9 @@ def add_density(uni, field_params=None, mocoefs=None, orbocc=None,
     orbocc = _check_column(uni, 'orbital', orbocc)
     vector = uni.orbital[~np.isclose(uni.orbital[orbocc], 0)].index.values
     orbocc = uni.orbital.loc[vector][orbocc].values
-    try: ovs = _compute_orbitals(len(x), bvs, vector, mocoefs)
-    except (ValueError, IndexError, AssertionError) as e:
-        #if verbose:
-        print('Falling back to numpy orbital evaluation.')
-        ovs = _compute_orbitals_nojit(len(x), bvs, vector, mocoefs)
+    ovs = _compute_orbital(verbose, len(x), bvs, vector, mocoefs)
     field = _make_field(_compute_density(ovs, orbocc), fps.loc[0])
-    return _teardown_orbital(uni, verbose, field, t1, inplace, False)
+    return _teardown_orbital(uni, verbose, field, t1, inplace, name='density')
 
 
 def add_orb_ang_mom(uni, field_params=None, rcoefs=None, icoefs=None,
@@ -150,8 +148,6 @@ def add_orb_ang_mom(uni, field_params=None, rcoefs=None, icoefs=None,
     if verbose:
         p1 = 'Timing: grid evaluation  - {:>8.2f}s.'
         print(p1.format((t2-t1).total_seconds()))
-    print(rcoefs.shape, rcoefs.dtype)
-    print(icoefs.shape, icoefs.dtype)
     curx, cury, curz = _compute_current_density(
         bvs, grx, gry, grz, rcoefs, icoefs, occvec, verbose=verbose)
     t3 = datetime.now()
@@ -160,4 +156,4 @@ def add_orb_ang_mom(uni, field_params=None, rcoefs=None, icoefs=None,
         print(p2.format((t3-t2).total_seconds()))
     field = _make_field(_compute_orb_ang_mom(
         x, y, z, curx, cury, curz, maxes), fps)
-    return _teardown_orbital(uni, False, field, t1, inplace, False)
+    return _teardown_orbital(uni, verbose, field, t1, inplace, name='angmom')

@@ -25,7 +25,7 @@ from .field import AtomicField
 from .orbital import Orbital, Excitation, MOMatrix, DensityMatrix
 from .basis import Overlap, BasisSet, BasisSetOrder
 from exatomic.algorithms.orbital import add_molecular_orbitals
-from exatomic.algorithms.basis import BasisFunctions
+from exatomic.algorithms.basis import BasisFunctions, compute_uncontracted_basis_set_order
 from .tensor import Tensor
 
 class Meta(TypedMeta):
@@ -49,6 +49,7 @@ class Meta(TypedMeta):
     basis_set_order = BasisSetOrder
     cart_basis_set_order = BasisSetOrder
     sphr_basis_set_order = BasisSetOrder
+    uncontracted_basis_set_order = BasisSetOrder
     basis_set = BasisSet
     basis_dims = dict
     basis_functions = BasisFunctions
@@ -91,6 +92,8 @@ class Universe(six.with_metaclass(Meta, Container)):
 
     @property
     def current_basis_set_order(self):
+        if 'uncontracted' in self.meta:
+            return self.uncontracted_basis_set_order
         if self.meta['spherical']:
             try: return self.sphr_basis_set_order
             except AttributeError: return self.basis_set_order
@@ -185,6 +188,10 @@ class Universe(six.with_metaclass(Meta, Container)):
         else:
             self.basis_functions = BasisFunctions(self)
 
+    def compute_uncontracted_basis_set_order(self):
+        """Compute an uncontracted basis set order."""
+        self.uncontracted_basis_set_order = compute_uncontracted_basis_set_order(self)
+
     def enumerate_shells(self, frame=0):
         """Extract minimal information from the universe to be used in
         numba-compiled numerical procedures.
@@ -197,7 +204,7 @@ class Universe(six.with_metaclass(Meta, Container)):
             frame (int): state of the universe (default 0)
         """
         atom = self.atom.groupby('frame').get_group(frame)
-        if self.meta['program'] not in ['molcas', 'adf']:
+        if self.meta['program'] not in ['molcas', 'adf', 'nwchem']:
             print('Warning: Check spherical shell parameter for {} '
                   'molecular orbital generation'.format(self.meta['program']))
         shls = self.basis_set.shells(self.meta['program'],
@@ -253,7 +260,7 @@ class Universe(six.with_metaclass(Meta, Container)):
 
     def add_molecular_orbitals(self, field_params=None, mocoefs=None,
                                vector=None, frame=0, replace=False,
-                               inplace=True, verbose=True):
+                               inplace=True, verbose=True, irrep=None):
         """Add molecular orbitals to universe.
 
         .. code-block:: python
@@ -261,21 +268,24 @@ class Universe(six.with_metaclass(Meta, Container)):
             uni.add_molecular_orbitals()                  # Default around (HOMO-5, LUMO+7)
             uni.add_molecular_orbitals(vector=range(5))   # Specifies the first 5 MOs
             uni.add_molecular_orbitals(                   # Higher resolution fields
-                field_params={'rmin': -10, 'rmax': 10, 'nr': 100})  # 'rmin/rmax' in bohr
+                field_params={'rmin': -10,                # smallest value in 'x', 'y', 'z'
+                              'rmax': 10,                 # largest value in 'x', 'y', 'z'
+                              'nr': 100})                 # number of points between rmin and rmax
             uni.field                                     # The field parameters
             uni.field.field_values                        # The generated scalar fields
 
         Args:
-            field_params (dict, pd.Series): see :meth:`exatomic.algorithms.orbital_util.make_fps`
+            field_params (dict, pd.Series): see :func:`exatomic.algorithms.orbital_util.make_fps`
             mocoefs (str): column in :class:`~exatomic.core.orbital.MOMatrix`
             vector (iter): indices of orbitals to evaluate (0-based)
             frame (int): frame of atomic positions for the orbitals
-            replace (bool): remove previous fields (default True)
+            replace (bool): remove previous fields (default False)
             inplace (bool): add directly to uni or return :class:`~exatomic.core.field.AtomicField` (default True)
             verbose (bool): print timing statistics (default True)
+            irrep (int): irreducible representation
 
         Warning:
-            Default behavior just continually adds fields in the universe.  This can
+            Default behavior just continually adds fields to the universe.  This can
             affect performance if adding many fields. `replace` modifies this behavior.
 
         Warning:
@@ -289,7 +299,8 @@ class Universe(six.with_metaclass(Meta, Container)):
         return add_molecular_orbitals(self, field_params=field_params,
                                       mocoefs=mocoefs, vector=vector,
                                       frame=frame, replace=replace,
-                                      inplace=inplace, verbose=verbose)
+                                      inplace=inplace, verbose=verbose,
+                                      irrep=irrep)
 
     def __len__(self):
         return len(self.frame)
@@ -315,8 +326,8 @@ def basis_function_contributions(universe, mo, mocoefs='coef',
 
     .. code-block:: python
 
-        # display the 15th orbital coefficients > abs(0.15)
-        basis_function_contributions(uni, 15, tol=0.15)
+        # display the 16th orbital coefficients > abs(0.15)
+        basis_function_contributions(uni, 15, tol=0.15) # 0-based indexing!
 
     Args:
         universe (class:`exatomic.core.universe.Universe`): a universe

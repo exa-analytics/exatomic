@@ -59,7 +59,7 @@ class _Convolve(DataFrame):
         """
         Compute a spectrum based on excitation energies and oscillator strengths.
 
-        Args
+        Args:
             func (str): either 'gauss' or 'lorentz'
             units (str): units of resulting spectrum
             ewin (iter): (emin, emax) in same units as units (default in eV)
@@ -68,7 +68,7 @@ class _Convolve(DataFrame):
             name (str): optional - name the column of returned data
             normalize (bool): set the largest value of signal equal to 1.0
 
-        Returns
+        Returns:
             df (pd.DataFrame): contains x and y values of a spectrum
                                (signal and energy)
         """
@@ -143,7 +143,8 @@ class Orbital(_Convolve):
     #def _constructor(self):
     #    return Orbital
 
-    def get_orbital(self, orb=-1, spin=0, index=None, group=None, frame=None):
+    def get_orbital(self, orb=-1, spin=0, orbocc='occupation',
+                    index=None, group=None, frame=None):
         """
         Returns a specific orbital.
 
@@ -153,9 +154,10 @@ class Orbital(_Convolve):
             index (int): Orbital dataframe index (default None)
             frame (int): The frame of the universe (default max(frame))
             group (int): The group of orbitals within a given frame
+            orbocc (str): column of occupations (default 'occupation')
 
         Returns:
-            orbital (exatomic.orbital.Orbital): Orbital row
+            slc (pd.Series): row of the Orbital table
 
         Note:
             If the index is not known (usually), but a criterion
@@ -171,33 +173,56 @@ class Orbital(_Convolve):
             if orb > -1:
                 return self[(self['frame'] == frame) &
                             (self['group'] == group) &
-                            (self['occupation'] == 0) &
+                            (self[orbocc] == 0) &
                             (self['spin'] == spin)].iloc[orb]
             else:
                 return self[(self['frame'] == frame) &
                             (self['group'] == group) &
-                            (self['occupation'] > 0) &
+                            (self[orbocc] > 0) &
                             (self['spin'] == spin)].iloc[orb]
         else:
             return self.iloc[index]
 
-    def active_orbitals(self, maxocc=1.985, minocc=0.015):
+    def active_orbitals(self, orbocc='occupation', maxocc=1.985, minocc=0.015,
+                        irrep=None):
         """
         Returns a slice of the orbital table containing so-called
         active orbitals (defined here as orbitals with occupations
         between minocc and maxocc).
 
         Args:
+            orbocc (str): column name of occupation numbers in uni.orbital
             maxocc (float): maximum occupation to be considered active
             minocc (float): minimum occupation to be considered active
+            irrep (int): irreducible representation
+
+        Returns:
+            slc (pd.DataFrame): active orbitals in the Orbital table
         """
-        return self[(self.occupation < maxocc) & (self.occupation > minocc)]
+        if irrep is not None:
+            return self[(self[orbocc] < maxocc) & (self[orbocc] > minocc) &
+                        (self['irrep'] == irrep)]
+        return self[(self[orbocc] < maxocc) & (self[orbocc] > minocc)]
 
 
     @classmethod
     def from_energies(cls, energies, alphae, betae, os=False):
+        """
+        Convenience method to generate the Orbital table from an array
+        of orbital energies and the number of alpha and beta electrons.
+
+        Args:
+            energies (np.ndarray): orbital energies
+            alphae (int): number of alpha electrons
+            betae (int): number of beta electrons
+            os (bool): open shell
+
+        Returns:
+            orb (~:class:`exatomic.core.orbital.Orbital`): the Orbital table
+        """
         try: ae, be = int(alphae), int(betae)
-        except: raise NotImplementedError('Only integer occupation')
+        except: raise NotImplementedError('Only integer occupation. '
+                                          'Low hanging fruit to implement.')
         nmos = energies.shape[0] if not os else energies.shape[0] // 2
         nmos = energies.shape[0] // 2
         if os:
@@ -220,6 +245,17 @@ class Orbital(_Convolve):
 
     @classmethod
     def from_occupation_vector(cls, occvec, os=False):
+        """
+        Convenience method to generate the Orbital table from an array
+        of occupation numbers.
+
+        Args:
+            energies (np.ndarray): orbital energies
+            os (bool): open shell
+
+        Returns:
+            orb (~:class:`exatomic.core.orbital.Orbital`): the Orbital table
+        """
         if not os: return cls.from_dict({'frame': 0, 'group': 0,
                                          'energy': 0, 'spin': 0,
                                          'occupation': occvec, 'vector': range(len(occvec))})
@@ -313,7 +349,7 @@ class MOMatrix(DataFrame):
     | frame             | category | non-unique integer (req.)                 |
     +-------------------+----------+-------------------------------------------+
     """
-    # TODO :: add spin as a column and make it the first groupby?
+    # TODO :: add an irrep column for groupby?
     #_traits = ['orbital']
     _columns = ['chi', 'orbital']
     _cardinal = ('frame', np.int64)

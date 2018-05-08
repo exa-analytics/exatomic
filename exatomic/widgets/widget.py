@@ -323,7 +323,22 @@ class DemoUniverse(ExatomicBox):
 
 @register
 class UniverseWidget(ExatomicBox):
-    """:class:`~exatomic.container.Universe` viewing widget."""
+    """
+    Visualize a :class:`~exatomic.core.universe.Universe`.
+
+    .. code-block:: python
+
+        u = exatomic.Universe.load(exatomic.base.resource("adf-lu-valid.hdf5"))
+        scenekwargs = dict(atomcolors=dict(Lu="black"))
+        exatomic.UniverseWidget(u, scenekwargs=scenekwargs)    # In Jupyter notebook
+
+        scenekwargs = dict(atomcolors=dict(Lu="#f442f1"), atomradii=dict(Lu=1.0))
+        exatomic.UniverseWidget(u, scenekwargs=scenekwargs)    # In Jupyter notebook
+
+    Args:
+        uni: The Universe object
+        scenekwargs (dict): Keyword args to be passed to :class:`~exatomic.widgets.widget_base.ExatomicScene`
+    """
     def _frame_folder(self, nframes):
         playable = bool(nframes <= 1)
         flims = dict(min=0, max=nframes-1, step=1, value=0)
