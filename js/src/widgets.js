@@ -180,7 +180,7 @@ var UniverseSceneView = base.ExatomicSceneView.extend({
         var color;
         for ( var property in this.tensor_d[fdx] ) {
             if ( this.tensor_d[fdx].hasOwnProperty( property ) ) {
-                if ( property === tdx ) { color = 0xafafaf; }
+                if ( parseInt(property) === tdx ) { color = 0xafafaf; }
                 else { color = 0x000000; }
                 if ( this.model.get("tens") ) {
                     this.app3d.meshes["tensor"+property][0].children[0].material.color.setHex(color);
@@ -210,7 +210,7 @@ var UniverseSceneView = base.ExatomicSceneView.extend({
                 this.app3d.add_meshes("tensor"+property);
             }
         }
-        this.color_tensor();
+        if (this.model.get("tens")) {this.color_tensor();}
     },
 
     init_listeners: function() {

@@ -136,6 +136,7 @@ var ExatomicSceneView = widgets.DOMWidgetView.extend({
         };
         this.three_promises.then(func.bind(this))
             .then(this.app3d.set_camera.bind(this.app3d));
+//          .then(this.send_obj.bind(this));
     },
 
     resize: function() {
@@ -279,9 +280,9 @@ module.exports = {
 ExatomicSceneView.prototype.send_obj = function() {
     var _this = this;
     _this.interv = setInterval(function() {
-        //_this.send({"type": "object", "content": _this.app3d.probe()});
-        var vals = _this.app3d.probe();
-        _this.model.set("obj", vals[0]);
-        console.log(vals);
+        _this.send({"type": "object", "content": _this.app3d.probe()});
+        //var vals = _this.app3d.probe();
+        //_this.model.set("obj", vals[0]);
+        //console.log(vals);
     }, 1000);
 };
