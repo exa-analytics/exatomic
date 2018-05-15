@@ -51,7 +51,9 @@ var UniverseSceneView = base.ExatomicSceneView.extend({
     
 
     add_atom: function() {
-        this.send_obj();
+        if (this.interv == null) { 
+            this.send_obj();
+        }
         this.app3d.clear_meshes("atom");
         this.app3d.clear_meshes("two");
         var fdx = this.model.get("frame_idx");

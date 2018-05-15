@@ -93,9 +93,18 @@ class ExatomicScene(DOMWidget):
                     'msg         : {}'.format(msg['type'],
                                               msg['content']))
     def _update_df(self, content):
-        label = ''.join(filter(lambda x: x.isdigit(), content[0]))
+        if content is None: return
+        idx = ''.join(filter(lambda x: x.isdigit(), content))
+        name = ''.join(filter(lambda x: not x.isdigit(), content))
+        if name[-1] == "\u212B":
+            label = "bond"
+        elif len(name) == 1 or len(name) == 2:
+            print(len(name))
+            label = "atom"
+        else:
+            label = "object"
         if label is not '':
-            print("Index: {}\tContent: {}".format(label,content[1]))
+            print("Index: {}\tLabel: {}\tName: {}".format(idx,label,name))
 
     def _save_camera(self, content):
         """Cache a save state of the current camera."""
@@ -213,8 +222,6 @@ class UniverseScene(ExatomicScene):
     cont_num = Int(10).tag(sync=True)
     cont_lim = List([-8, -1]).tag(sync=True)
     cont_val = Float(0.0).tag(sync=True)
-    # Tensor traits
-    tensor_d = Dict().tag(sync=True)
     # Frame traits
     frame__a = Float(0.0).tag(sync=True)
     # Tensor traits

@@ -9,7 +9,6 @@
 var THREE = require("three");
 var TBC = require("three-trackballcontrols");
 var utils = require("./utils");
-var base = require("@jupyter-widgets/base");
 //var base = require("./base")
 
 
@@ -56,8 +55,8 @@ class App3D {
     probe() {
         if ((this.ACTIVE === null) ||
             (this.ACTIVE.name === "") ||
-            (this.ACTIVE instanceof THREE.Points)) { return 'None'}
-        else { console.log(this.ACTIVE.label); return [this.ACTIVE.name, this.ACTIVE.label]; }
+            (this.ACTIVE instanceof THREE.Points)) { return null}
+        else { return this.ACTIVE.name/*[this.ACTIVE.name, this.ACTIVE.label]*/; }
     };
 
     set_dims(w, h) {
@@ -467,7 +466,7 @@ class App3D {
         var nsurf = new THREE.LineSegments( edges,mat );
         psurf.add( nsurf );
         psurf.name = label;
-        psurf.label = "tensor";
+        //psurf.label = "tensor";
         return [psurf];
     };
 
@@ -1148,10 +1147,11 @@ class App3D {
             });
             var mesh = new THREE.Mesh(geometries[color], material);
             if (l[i] != "") { mesh.name = l[i] };
-            mesh.label = "atom";
+            //mesh.label = "atom";
             mesh.position.set(xyz[i3], xyz[i3+1], xyz[i3+2]);
             meshes.push(mesh);
         };
+        console.log(meshes);
         return meshes;
     };
 
@@ -1205,7 +1205,7 @@ class App3D {
             mesh.name = (length * 0.52918).toFixed(4) + "\u212B";
             mesh.position.set(center.x, center.y, center.z);
             mesh.lookAt(vector1);
-            mesh.label = "bond";
+            ////mesh.label = "bond";
             meshes.push(mesh);
         };
         return meshes;

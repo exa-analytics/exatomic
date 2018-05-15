@@ -135,8 +135,9 @@ var ExatomicSceneView = widgets.DOMWidgetView.extend({
             func = this.add_geometry;
         };
         this.three_promises.then(func.bind(this))
-            .then(this.app3d.set_camera.bind(this.app3d));
-//          .then(this.send_obj.bind(this));
+            .then(this.app3d.set_camera.bind(this.app3d))
+            .then(this.send_obj.bind(this));
+        this.interv = null;
     },
 
     resize: function() {
@@ -231,6 +232,13 @@ var ExatomicSceneView = widgets.DOMWidgetView.extend({
         this.app3d.clear_meshes();
     },
 
+    send_obj: function() {
+        var _this = this
+        //console.log(_this.app3d.probe);
+        _this.interv = setInterval(function() {
+            _this.send({"type": "object", "content": _this.app3d.probe()})
+        }, 1000);
+    },
 
     save: function() {
         this.send({"type": "image", "content": this.app3d.save()});
@@ -277,12 +285,12 @@ module.exports = {
     ExatomicBoxView: ExatomicBoxView
 }
 
-ExatomicSceneView.prototype.send_obj = function() {
-    var _this = this;
-    _this.interv = setInterval(function() {
-        _this.send({"type": "object", "content": _this.app3d.probe()});
-        //var vals = _this.app3d.probe();
-        //_this.model.set("obj", vals[0]);
-        //console.log(vals);
-    }, 1000);
-};
+//ExatomicSceneView.prototype.send_obj = function() {
+//    var _this = this;
+//    _this.interv = setInterval(function() {
+//        _this.send({"type": "object", "content": _this.app3d.probe()});
+//        //var vals = _this.app3d.probe();
+//        //_this.model.set("obj", vals[0]);
+//        //console.log(vals);
+//    }, 1000);
+//};
