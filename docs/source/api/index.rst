@@ -45,6 +45,7 @@ and syntax can be found in the Examples section (Jupyte notebooks) and via help:
 
     field.rst
     matrices.rst
+    base.rst
     algorithms/basis.rst
     algorithms/orbital.rst
     algorithms/integrals.rst
