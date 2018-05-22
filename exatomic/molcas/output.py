@@ -16,6 +16,7 @@ from pandas.io.parsers import ParserError
 import numpy as np
 from six import StringIO
 from exa import TypedMeta
+import exatomic
 from .editor import Editor
 from exatomic import Atom
 from exatomic.algorithms.numerical import _flat_square_to_triangle, _square_indices
@@ -152,19 +153,25 @@ class Output(six.with_metaclass(OutMeta, Editor)):
 
     def add_orb(self, path, mocoefs='coef', orbocc='occupation'):
         """
-        Add a MOMatrix and Orbital table to a molcas.Output.
+        Add a MOMatrix and Orbital table to a molcas.Output. If path is
+        an Editor containing momatrix and orbital tables then adds them
+        directly, otherwise assumes it is a molcas.Orb file.
 
         Args:
+            path (str, Editor): path to file or Editor object
             mocoefs (str): rename coefficients
             orbocc (str): rename occupations
         """
-        orb = Orb(path)
+        if isinstance(path, exatomic.Editor): orb = path
+        else: orb = Orb(path)
         if mocoefs != 'coef' and orbocc == 'occupation':
             orbocc = mocoefs
         # MOMatrix
         curmo = getattr(self, 'momatrix', None)
         if curmo is None:
             self.momatrix = orb.momatrix
+            if mocoefs != 'coef':
+                self.momatrix.rename(columns={'coef': mocoefs}, inplace=True)
         else:
             if mocoefs in self.momatrix.columns:
                 raise ValueError('This action would overwrite '
@@ -177,6 +184,8 @@ class Output(six.with_metaclass(OutMeta, Editor)):
         curorb = getattr(self, 'orbital', None)
         if curorb is None:
             self.orbital = orb.orbital
+            if orbocc != 'occupation':
+                self.orbital.rename(columns={'occupation': orbocc}, inplace=True)
         else:
             if orbocc in self.orbital.columns:
                 raise ValueError('This action would overwrite '

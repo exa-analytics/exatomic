@@ -144,8 +144,8 @@ def _obtain_arrays(uni):
     # Exponents per basis set
     expnts = bases.apply(lambda x: x.shape[0])
     # mapped onto the atoms with each basis set
-    if 'irrep' in uni.basis_set_order:
-        raise Exception("Need basis desymmetrization figured out.")
+    if uni.basis_set_order.irrep.max():
+        raise Exception("Need to figure out basis desymmetrization.")
     else:
         center = uni.basis_set_order['center'].values.copy()
     kwargs = {'center': uni.basis_set_order['center'].values.copy(),
