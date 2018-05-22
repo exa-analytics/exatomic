@@ -152,8 +152,8 @@ def periodic_nearest_neighbors_by_atom(uni, source, a, sizes, **kwargs):
             uu = _create_super_universe(Universe(atom=atom.copy()), a)
             uu.compute_atom_two(**kwargs)
             uu.compute_molecule()
-            if isinstance(source, (str, int, np.int32, np.int64)):
-                source_atom_idxs = uu.atom[(uu.atom['label'] == source) &
+            if isinstance(source, (int, np.int32, np.int64)):
+                source_atom_idxs = uu.atom[(uu.atom.index.isin([source])) &
                                            (uu.atom['prj'] == 13)].index.values
             elif isinstance(source, (list, tuple)):
                 source_atom_idxs = uu.atom[uu.atom['label'].isin(source) &
