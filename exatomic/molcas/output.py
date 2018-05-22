@@ -158,7 +158,7 @@ class Output(six.with_metaclass(OutMeta, Editor)):
         directly, otherwise assumes it is a molcas.Orb file.
 
         Args:
-            path (str, Editor): path to file or Editor object
+            path (str, :class:`exatomic.core.editor.Editor`): path to file or Editor object
             mocoefs (str): rename coefficients
             orbocc (str): rename occupations
         """
