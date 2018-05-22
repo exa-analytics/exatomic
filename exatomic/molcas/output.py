@@ -207,7 +207,6 @@ class Output(six.with_metaclass(OutMeta, Editor)):
             if 'irrep' not in self.momatrix:
                 raise Exception("Trying to set symmetrized overlap with "
                                 "desymmetrized MOMatrix data.")
-                return
             ovl = pd.DataFrame(np.array(hdf._hdf['AO_OVERLAP_MATRIX']),
                                columns=('coef',))
             ovl['irrep'] = self.momatrix['irrep']
@@ -336,7 +335,7 @@ class Output(six.with_metaclass(OutMeta, Editor)):
         self.basis_set_order = df
         shls = []
         grps = df.groupby(['irrep', 'center', 'L', 'ml'])
-        for (irrep, cen, L, ml), grp in grps:
+        for (_, cen, L, ml), grp in grps:
             shl = 0
             for _ in grp.index:
                 shls.append(shl)
@@ -555,7 +554,7 @@ class HDF(six.with_metaclass(HDFMeta, object)):
 def _add_unique_tags(atom):
     """De-duplicates atom identifier in symmetrized calcs."""
     utags = []
-    for cen, tag in zip(atom['center'], atom['tag']):
+    for tag in atom['tag']:
         utag = tag
         while utag in utags:
             utag = ''.join(filter(str.isalpha, utag)) + \

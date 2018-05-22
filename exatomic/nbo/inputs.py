@@ -148,7 +148,7 @@ def _obtain_arrays(uni):
         raise Exception("Need to figure out basis desymmetrization.")
     else:
         center = uni.basis_set_order['center'].values.copy()
-    kwargs = {'center': uni.basis_set_order['center'].values.copy(),
+    kwargs = {'center': center,
               'nshell': uni.atom['set'].map(shells).sum(),
               'nexpnt': uni.atom['set'].map(expnts).sum(),
                    'L': uni.basis_set_order['L'].values}

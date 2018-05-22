@@ -163,8 +163,6 @@ class Output(six.with_metaclass(GauMeta, Editor)):
         df.rename(columns={0: 'alpha', 1: 'd'}, inplace=True)
         # Deduplicate basis sets and expand 'SP' shells if present
         df, setmap = deduplicate_basis_sets(df, sp=sp)
-        try: df.drop([2, 3], axis=1, inplace=True)
-        except ValueError: pass
         spherical = '5D' in self[found[_rebas03][0]]
         if df['L'].max() < 2:
             spherical = True
