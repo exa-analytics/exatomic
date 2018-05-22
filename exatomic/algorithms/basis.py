@@ -297,13 +297,12 @@ class BasisFunctions(object):
         if self._meta['gaussian']:
             if self._meta.get('symmetrized', False):
                 func = self._evaluate_gau_bso_sym
-            elif self._meta['program'] in ['nwchem']:
-                func = self._evaluate_gau_bso
             elif self._meta['program'] in ['molcas']:
                 func = self._evaluate_gau_mag
+            else:
+                func = self._evaluate_gau_bso
         else:
             func = self._evaluate_sto
-        # if verbose: print('calling {}'.format(func.__name__))
         return func(xs=xs, ys=ys, zs=zs, irrep=irrep)
 
 

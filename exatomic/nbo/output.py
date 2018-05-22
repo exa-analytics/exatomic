@@ -85,7 +85,7 @@ class MOMatrix(Editor):
         column = 'coef' if column is None else column
         nmo = nbas if nmo is None else nmo
         start = 0
-        while True:
+        while start < len(self):
             try:
                 float(self[start].split()[0])
                 break

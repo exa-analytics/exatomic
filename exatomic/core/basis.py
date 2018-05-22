@@ -162,6 +162,59 @@ class BasisSet(DataFrame):
         #self.gaussian = gaussian
 
 
+def deduplicate_basis_sets(sets, sp=False):
+    """Deduplicate identical basis sets on different centers.
+
+    Args:
+        sets (pd.DataFrame): non-unique basis sets
+        sp (bool): Whether or not to call _expand_sp (gaussian program only)
+
+    Returns:
+        tup (tuple): deduplicated basis sets and basis set map for atom table
+    """
+    unique, setmap, cnt = [], {}, 0
+    sets = sets.groupby('center')
+    chk = ['alpha', 'd']
+    for center, seht in sets:
+        for i, other in enumerate(unique):
+            if other.shape != seht.shape: continue
+            if np.allclose(other[chk], seht[chk]):
+                setmap[center] = i
+                break
+        else:
+            unique.append(seht)
+            setmap[center] = cnt
+            cnt += 1
+    if sp: unique = _expand_sp(unique)
+    sets = pd.concat(unique).reset_index(drop=True)
+    try: sets.drop([2, 3], axis=1, inplace=True)
+    except (KeyError, ValueError): pass
+    sets.rename(columns={'center': 'set'}, inplace=True)
+    sets['set'] = sets['set'].map(setmap)
+    sets['frame'] = 0
+    return sets, setmap
+
+def _expand_sp(unique):
+    """Currently only used when 'program' == 'gaussian'."""
+    expand = []
+    for seht in unique:
+        if np.isnan(seht[2]).sum() == seht.shape[0]:
+            expand.append(seht)
+            continue
+        sps = seht[2][~np.isnan(seht[2])].index
+        shls = len(seht.ix[sps]['shell'].unique())
+        dupl = seht.ix[sps[0]:sps[-1]].copy()
+        dupl[1] = dupl[2]
+        dupl['L'] = 1
+        dupl['shell'] += shls
+        last = seht.ix[sps[-1] + 1:].copy()
+        last['shell'] += shls
+        expand.append(pd.concat([seht.ix[:sps[0] - 1],
+                                 seht.ix[sps[0]:sps[-1]],
+                                 dupl, last]))
+    return expand
+
+
 class BasisSetOrder(DataFrame):
     """
     BasisSetOrder uniquely determines the basis function ordering scheme for
@@ -223,22 +276,38 @@ class Overlap(DataFrame):
     _columns = ['chi0', 'chi1', 'coef', 'frame']
     _index = 'index'
 
-    #@property
-    #def _constructor(self):
-    #    return Overlap
 
-    def square(self, frame=0, column='coef', mocoefs=None):
+    def square(self, frame=0, column='coef', mocoefs=None, irrep=None):
         """Return a 'square' matrix DataFrame of the Overlap.
 
         Args:
             column (str): column of coefficients to reshape
             mocoefs (str): alias for `column`
             frame (int): default 0
+            irrep (int): irreducible representation if symmetrized
         """
         if mocoefs is not None: column = mocoefs
+        if 'irrep' in self.columns:
+            if irrep is None:
+                irreps, i, j = self.groupby('irrep'), 0, 0
+                norb = (irreps.chi0.max() + 1).sum()
+                nchi = (irreps.chi1.max() + 1).sum()
+                cmat = np.zeros((nchi, norb))
+                for irrep, grp in irreps:
+                    piv = grp.pivot('chi0', 'chi1', column)
+                    ii, jj = piv.shape
+                    cmat[i : i + ii, j : j + jj] = piv.values
+                    i += ii
+                    j += jj
+                idx = pd.Index(range(nchi), name='chi0')
+                orb = pd.Index(range(norb), name='chi1')
+                return pd.DataFrame(cmat, index=idx, columns=orb)
+            return self.groupby('irrep').get_group(irrep
+                        ).pivot('chi', 'orbital', column)
         sq = _square(self[column].values)
-        return pd.DataFrame(sq, index=pd.Index(range(sq.shape[0]), name='chi0'),
-                            columns=pd.Index(range(sq.shape[1]), name='chi1'))
+        idx = pd.Index(range(sq.shape[0]), name='chi0')
+        orb = pd.Index(range(sq.shape[1]), name='chi1')
+        return pd.DataFrame(sq, index=idx, columns=orb)
 
     @classmethod
     def from_column(cls, source):

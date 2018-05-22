@@ -160,7 +160,7 @@ try:
         def test_parse_atom(self):
             self.sym.parse_atom()
             self.nym.parse_atom()
-            self.assertTrue(self.sym.atom.shape[0] == 3)
+            self.assertTrue(self.sym.atom.shape[0] == 8)
             self.assertTrue(self.nym.atom.shape[0] == 8)
 
         def test_parse_basis_set_order(self):

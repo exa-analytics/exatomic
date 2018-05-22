@@ -18,6 +18,7 @@ from exatomic.core.basis import BasisSetOrder, Overlap
 from exatomic.core.orbital import DensityMatrix, MOMatrix
 from exatomic.algorithms.basis import lorder, cart_lml_count, spher_lml_count
 from exatomic.algorithms.orbital_util import _check_column
+from exatomic.base import sym2z
 from itertools import combinations_with_replacement as cwr
 
 
@@ -143,8 +144,11 @@ def _obtain_arrays(uni):
     # Exponents per basis set
     expnts = bases.apply(lambda x: x.shape[0])
     # mapped onto the atoms with each basis set
-
-    kwargs = {'center': uni.basis_set_order['center'].values.copy(),
+    if uni.basis_set_order.irrep.max():
+        raise Exception("Need to figure out basis desymmetrization.")
+    else:
+        center = uni.basis_set_order['center'].values.copy()
+    kwargs = {'center': center,
               'nshell': uni.atom['set'].map(shells).sum(),
               'nexpnt': uni.atom['set'].map(expnts).sum(),
                    'L': uni.basis_set_order['L'].values}
@@ -324,6 +328,8 @@ class Input(six.with_metaclass(InpMeta, Editor)):
         columns = ('Z', 'Z', 'x', 'y', 'z')
         if 'Zeff' in uni.atom.columns:
             columns = ('Z', 'Zeff', 'x', 'y', 'z')
+        if 'Z' not in uni.atom.columns:
+            uni.atom['Z'] = uni.atom.symbol.map(sym2z)
         kwargs['atom'] = uni.atom.to_xyz(columns=columns)
         # Assign appropriate NBO basis function labels
         if 'ml' in kwargs:
@@ -344,11 +350,16 @@ class Input(six.with_metaclass(InpMeta, Editor)):
 
         matargs = {'overlap': '', 'density': ''}
         margs = {'decimals': 15, 'width': 23, 'just': False}
-        matargs['overlap'] = _clean_to_string(uni.overlap['coef'].values,
-                                              **margs)
+        if 'irrep' in uni.overlap.columns:
+            matargs['overlap'] = _clean_to_string(uni.overlap.square().values.flatten(),
+                                                  **margs)
+        else:
+            matargs['overlap'] = _clean_to_string(uni.overlap['coef'].values,
+                                                  **margs)
         d = DensityMatrix.from_momatrix(uni.momatrix,
                                         uni.orbital[orbocc].values,
                                         mocoefs=mocoefs)
+        #if 'irrep' in uni.overlap.columns:
         matargs['density'] = _clean_to_string(d['coef'].values, **margs)
         kwargs['check'] = np.trace(np.dot(d.square(), uni.overlap.square()))
         print('If {:.8f} is not the correct number of electrons,\n'
