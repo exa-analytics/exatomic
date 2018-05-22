@@ -188,7 +188,7 @@ def deduplicate_basis_sets(sets, sp=False):
     if sp: unique = _expand_sp(unique)
     sets = pd.concat(unique).reset_index(drop=True)
     try: sets.drop([2, 3], axis=1, inplace=True)
-    except ValueError: pass
+    except (KeyError, ValueError): pass
     sets.rename(columns={'center': 'set'}, inplace=True)
     sets['set'] = sets['set'].map(setmap)
     sets['frame'] = 0
