@@ -272,7 +272,10 @@ class Output(six.with_metaclass(OutMeta, Editor)):
         if allatom.shape[0] > self.atom.shape[0]:
             self.atom = allatom
             self.meta['symmetrized'] = True
-            self.atom['utag'] = _add_unique_tags(self.atom)
+            try:
+                self.atom['utag'] = _add_unique_tags(self.atom)
+            except ValueError:
+                pass
 
 
     def parse_basis_set_order(self):
@@ -464,7 +467,10 @@ class HDF(six.with_metaclass(HDFMeta, object)):
                                                                          expand=True)
             self.atom['tag'] = self.atom['tag'].str.strip()
             self.atom['symop'] = self.atom['symop'].str.strip()
-            self.atom['utag'] = _add_unique_tags(self.atom)
+            try:
+                self.atom['utag'] = _add_unique_tags(self.atom)
+            except ValueError:
+                pass
 
 
     def parse_basis_set_order(self):
