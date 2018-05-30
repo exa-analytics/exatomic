@@ -43,17 +43,12 @@ install:
 #   - conda install -q -c exaanalytics exa
     - pip install exa
     - pip install travis-sphinx codacy-coverage
-#   - git clone https://github.com/exa-analytics/exa.git
-#   - cd exa
-#   - pip install .
-#   - cd ../
-#   - pip install -e .
+    - pip install .
 
 script:
     - export PYTHONDONTWRITEBYTECODE=1
     - pytest --cov
     - if [[ $TRAVIS_OS_NAME == "linux" ]] && [[ $PYTHONVER == 3.6 ]]; then
-#         coverage xml;
           coverage run --source=exatomic setup.py test
           travis-sphinx build;
       fi
