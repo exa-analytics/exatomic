@@ -6,3 +6,4 @@ Clustering Algorithms
 #####################################
 .. automodule:: exatomic.algorithms.neighbors
     :members:
+    :private-members:

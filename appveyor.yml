@@ -51,11 +51,9 @@ install:
   - cmd: conda install -q -c conda-forge numpy scipy matplotlib networkx pandas
   - cmd: conda install -q -c conda-forge numba six pytest pytables sympy seaborn
   - cmd: conda install -q -c conda-forge psutil numexpr nodejs ipywidgets
-  - cmd: git clone https://github.com/exa-analytics/exa.git
-  - cmd: cd exa
+# - cmd: conda install -q -c exaanalytics exa
+  - cmd: pip install exa
   - cmd: pip install .
-  - cmd: cd ../
-  - cmd: pip install -e .
 
 build: false
 

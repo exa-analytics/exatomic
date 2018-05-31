@@ -52,8 +52,8 @@ class XYZ(six.with_metaclass(Meta, Editor)):
         nats = pd.Series(df[df[['y', 'z']].isnull().all(axis=1)].index)
         nats = nats[nats.diff() != 1].values
         comments = nats + 1
-        nats = df.ix[nats, 'symbol']
-        comments = df.ix[comments, :].dropna(how='all').index
+        nats = df.loc[nats, 'symbol']
+        comments = df.loc[comments, :].dropna(how='all').index
         initials = nats.index.values.astype(np.int64) + 2
         counts = nats.values.astype(np.int64)
         frame, _, indices = starts_counts(initials, counts)

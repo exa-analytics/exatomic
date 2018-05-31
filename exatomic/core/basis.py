@@ -186,7 +186,7 @@ def deduplicate_basis_sets(sets, sp=False):
             setmap[center] = cnt
             cnt += 1
     if sp: unique = _expand_sp(unique)
-    sets = pd.concat(unique).reset_index(drop=True)
+    sets = pd.concat(unique, sort=False).reset_index(drop=True)    # sort=False silences warning
     try: sets.drop([2, 3], axis=1, inplace=True)
     except (KeyError, ValueError): pass
     sets.rename(columns={'center': 'set'}, inplace=True)
@@ -202,16 +202,16 @@ def _expand_sp(unique):
             expand.append(seht)
             continue
         sps = seht[2][~np.isnan(seht[2])].index
-        shls = len(seht.ix[sps]['shell'].unique())
-        dupl = seht.ix[sps[0]:sps[-1]].copy()
+        shls = len(seht.loc[sps]['shell'].unique())
+        dupl = seht.loc[sps[0]:sps[-1]].copy()
         dupl[1] = dupl[2]
         dupl['L'] = 1
         dupl['shell'] += shls
-        last = seht.ix[sps[-1] + 1:].copy()
+        last = seht.loc[sps[-1] + 1:].copy()
         last['shell'] += shls
-        expand.append(pd.concat([seht.ix[:sps[0] - 1],
-                                 seht.ix[sps[0]:sps[-1]],
-                                 dupl, last]))
+        expand.append(pd.concat([seht.loc[:sps[0] - 1],
+                                 seht.loc[sps[0]:sps[-1]],
+                                 dupl, last], sort=False))   # Silences warning
     return expand
 
 
