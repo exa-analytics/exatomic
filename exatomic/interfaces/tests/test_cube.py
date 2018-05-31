@@ -24,20 +24,20 @@ class TestCube(TestCase):
         self.lg.parse_atom()
         self.sm1.parse_atom()
         self.sm2.parse_atom()
-        self.assertEquals(self.lg.atom.shape[0], 1)
-        self.assertEquals(self.sm1.atom.shape[0], 1)
-        self.assertEquals(self.sm2.atom.shape[0], 1)
+        self.assertEqual(self.lg.atom.shape[0], 1)
+        self.assertEqual(self.sm1.atom.shape[0], 1)
+        self.assertEqual(self.sm2.atom.shape[0], 1)
 
     def test_parse_field(self):
         self.lg.parse_field()
         self.sm1.parse_field()
         self.sm2.parse_field()
-        self.assertEquals(self.lg.field.shape[0], 1)
-        self.assertEquals(self.sm1.field.shape[0], 1)
-        self.assertEquals(self.sm2.field.shape[0], 1)
-        self.assertEquals(self.lg.field.field_values[0].shape[0], 132651)
-        self.assertEquals(self.sm1.field.field_values[0].shape[0], 4913)
-        self.assertEquals(self.sm2.field.field_values[0].shape[0], 4913)
+        self.assertEqual(self.lg.field.shape[0], 1)
+        self.assertEqual(self.sm1.field.shape[0], 1)
+        self.assertEqual(self.sm2.field.shape[0], 1)
+        self.assertEqual(self.lg.field.field_values[0].shape[0], 132651)
+        self.assertEqual(self.sm1.field.field_values[0].shape[0], 4913)
+        self.assertEqual(self.sm2.field.field_values[0].shape[0], 4913)
 
     def test_to_universe(self):
         lg = self.lg.to_universe()
@@ -48,9 +48,9 @@ class TestCube(TestCase):
                 self.assertTrue(hasattr(uni, attr))
 
     def test_uni_from_cubes_rotate_and_write(self):
-        self.assertEquals(self.uni.field.shape[0], 2)
-        self.assertEquals(len(self.uni.field.field_values), 2)
+        self.assertEqual(self.uni.field.shape[0], 2)
+        self.assertEqual(len(self.uni.field.field_values), 2)
         rot = self.uni.field.rotate(0, 1, np.pi / 4)
-        self.assertEquals(rot.shape[0], 2)
+        self.assertEqual(rot.shape[0], 2)
         f = Cube.from_universe(self.uni, 1)
-        self.assertEquals(len(f), 874)
+        self.assertEqual(len(f), 874)

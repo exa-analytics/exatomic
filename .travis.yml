@@ -41,7 +41,8 @@ install:
     - conda install -q -c conda-forge coveralls coverage pytest pytest-cov
     - conda install -q -c conda-forge numexpr nodejs ipywidgets
     - pip install travis-sphinx codacy-coverage
-    - conda install -q -c exaanalytics exa
+#   - conda install -q -c exaanalytics exa
+    - pip install exa
     - pip install -e .
 
 script:
