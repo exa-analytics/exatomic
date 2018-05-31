@@ -186,7 +186,7 @@ def deduplicate_basis_sets(sets, sp=False):
             setmap[center] = cnt
             cnt += 1
     if sp: unique = _expand_sp(unique)
-    sets = pd.concat(unique).reset_index(drop=True)
+    sets = pd.concat(unique, sort=False).reset_index(drop=True)    # sort=False silences warning
     try: sets.drop([2, 3], axis=1, inplace=True)
     except (KeyError, ValueError): pass
     sets.rename(columns={'center': 'set'}, inplace=True)
@@ -211,7 +211,7 @@ def _expand_sp(unique):
         last['shell'] += shls
         expand.append(pd.concat([seht.loc[:sps[0] - 1],
                                  seht.loc[sps[0]:sps[-1]],
-                                 dupl, last]))   # ], sort=True)) ?????
+                                 dupl, last], sort=False))   # Silences warning
     return expand
 
 
