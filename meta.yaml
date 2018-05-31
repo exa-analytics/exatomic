@@ -6,7 +6,7 @@ package:
   version: {{ version }}
 
 source:
-  url: https://github.com/exa-analytics/{{ name }}/archive/v{{ version }}.tar.gz
+  url: https://github.com/avmarchenko/{{ name }}/archive/v{{ version }}.tar.gz
 
 requirements:
   build:
