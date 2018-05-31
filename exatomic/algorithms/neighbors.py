@@ -108,7 +108,7 @@ def periodic_nearest_neighbors_by_atom(uni, source, a, sizes, **kwargs):
 
     Warning:
         For universes with more than about 250 atoms, consider using the
-        slower but more memory efficient 
+        slower but more memory efficient
         :func:`~exatomic.algorithms.neighbors.periodic_nearest_neighbors_by_atom_large`.
 
     For a simple cubic periodic system with unit cell dimension ``a``,
@@ -237,10 +237,6 @@ def periodic_nearest_neighbors_by_atom_large(uni, source, a, sizes, **kwargs):
         Sliced universe construction can be facilitated by
         :func:`~exatomic.algorithms.neighbors.construct`.
     """
-    def sorter(group, source_atom_idxs):
-        s = group[['atom0', 'atom1']].stack()
-        return s[~s.isin(source_atom_idxs)].reset_index()
-
     if "label" not in uni.atom.columns:
         uni.atom['label'] = uni.atom.get_atom_labels()
     if not isinstance(sizes, list):
@@ -289,7 +285,7 @@ def periodic_nearest_neighbors_by_atom_large(uni, source, a, sizes, **kwargs):
                 sliced_u.compute_molecule()
                 source_adxs1 = sliced_u.atom[(sliced_u.atom['prj'] == 13) & sliced_u.atom['atom'].isin(source_atom_idxs)].index
                 source_mdxs1 = sliced_u.atom.loc[source_adxs1, 'molecule'].unique().tolist()
-                nearest_atoms1 = sliced_u.atom_two[sliced_u.atom_two['atom0'].isin(source_adxs1) | 
+                nearest_atoms1 = sliced_u.atom_two[sliced_u.atom_two['atom0'].isin(source_adxs1) |
                                                    sliced_u.atom_two['atom1'].isin(source_adxs1)].sort_values('dr')[['atom0', 'atom1']].copy()
                 nearest_atoms1['molecule0'] = nearest_atoms1['atom0'].map(sliced_u.atom['molecule'])
                 nearest_atoms1['molecule1'] = nearest_atoms1['atom1'].map(sliced_u.atom['molecule'])
