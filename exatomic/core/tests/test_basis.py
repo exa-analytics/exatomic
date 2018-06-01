@@ -32,9 +32,9 @@ class TestBasisSet(TestCase):
                                  'L': [0, 0, 0, 1, 1, 2, 0, 0, 1]})
 
     def test_lmax(self):
-        self.assertEquals(self.bs.lmax, 0)
-        self.assertEquals(self.mbs.lmax, 1)
-        self.assertEquals(self.lbs.lmax, 2)
+        self.assertEqual(self.bs.lmax, 0)
+        self.assertEqual(self.mbs.lmax, 1)
+        self.assertEqual(self.lbs.lmax, 2)
 
     def test_shells(self):
         self.bs.shells()

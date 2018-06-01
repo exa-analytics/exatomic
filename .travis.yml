@@ -41,15 +41,15 @@ install:
     - conda install -q -c conda-forge coveralls coverage pytest pytest-cov
     - conda install -q -c conda-forge numexpr nodejs ipywidgets
 #   - conda install -q -c exaanalytics exa
-    - pip install exa
     - pip install travis-sphinx codacy-coverage
+    - pip install exa
     - pip install .
 
 script:
     - export PYTHONDONTWRITEBYTECODE=1
     - pytest --cov
     - if [[ $TRAVIS_OS_NAME == "linux" ]] && [[ $PYTHONVER == 3.6 ]]; then
-          coverage run --source=exatomic setup.py test
+          coverage run --source=exatomic setup.py test;
           travis-sphinx build;
       fi
 
