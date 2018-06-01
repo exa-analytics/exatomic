@@ -208,7 +208,7 @@ var UniverseSceneView = base.ExatomicSceneView.extend({
                                     this.atom_y[fdx][adx],
                                     this.atom_z[fdx][adx],
                                     scaling,
-                                    this.tensor_d[fdx][property]["label"]+property.toString());
+                                    this.tensor_d[fdx][property]["label"]+" tensor "+property.toString());
                 }
                 this.app3d.add_meshes("tensor"+property);
             }

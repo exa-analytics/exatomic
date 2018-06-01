@@ -41,6 +41,7 @@ def atom_traits(df, atomcolors=None, atomradii=None, atomlabels=None):
               if v in df.unique_atoms}
     unq = df['symbol'].astype(str).unique()
     radii = {k: sym2radius[k] for k in unq}
+    print(radii)
     colors = {k: sym2color[k] for k in unq}
     labels = symmap
     colors.update(atomcolors)
@@ -48,7 +49,7 @@ def atom_traits(df, atomcolors=None, atomradii=None, atomlabels=None):
     labels.update(atomlabels)
     traits['atom_s'] = syms.to_json(orient='values')
     # TODO : This multiplication by 0.5 is in a bad place
-    traits['atom_r'] = {i: 0.5 * radii[v] for i, v in symmap.items()}
+    traits['atom_r'] = {i: radii[v] for i, v in symmap.items()}
     traits['atom_c'] = {i: colors[v] for i, v in symmap.items()}
     traits['atom_l'] = labels
     return traits

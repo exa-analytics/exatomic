@@ -99,10 +99,11 @@ class ExatomicScene(DOMWidget):
         if name[-1] == "\u212B":
             label = "bond"
         elif len(name) == 1 or len(name) == 2:
-            print(len(name))
             label = "atom"
         else:
             label = "object"
+            if name.split(' ')[-2] == "tensor":
+                name = "tensor"
         if label is not '':
             print("Index: {}\tLabel: {}\tName: {}".format(idx,label,name))
 

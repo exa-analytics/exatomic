@@ -16,10 +16,10 @@ from __future__ import absolute_import
 from __future__ import print_function
 from __future__ import division
 #from traitlets import Unicode, link
-from traitlets import Unicode
+from traitlets import Unicode, Bool
 from ipywidgets import (Button, Dropdown, jslink, register, VBox, HBox,
                         IntSlider, IntRangeSlider, FloatSlider, Play,
-                        FloatText, Layout, Text, Label)
+                        FloatText, Layout, Text, Label, Select)
 from .widget_base import (ExatomicScene, UniverseScene,
                           TensorScene, ExatomicBox)
 from .widget_utils import _wlo, _ListDict, Folder
@@ -475,7 +475,11 @@ class UniverseWidget(ExatomicBox):
 #            scale.value = tensor[0][tdx]['scale']
 
         def _tens(c):
-            for scn in self.active(): scn.tens = not scn.tens
+            for scn in self.active(): 
+                scn.tens = not scn.tens
+                variables = [x for x in dir(scn) if not callable(getattr(scn, x)) and not \
+                                            ( x.startswith('__') or x.startswith('_'))]
+                print([isinstance(x, Bool) for x in variables], variables)
 #            self.coords = self._filter_coords()
 #            sceneIndex.options = [x for x in range(len(self.active()))]
 #            sceneIndex.value = sceneIndex.options[0]
@@ -509,6 +513,12 @@ class UniverseWidget(ExatomicBox):
 #                ('coord', cbox)])
         return Folder(tens, content)
 
+    def _fill_folder(self):
+        atoms = Button(description=' Fill', icon='adjust', layout=_wlo)
+        opt = ['High Performance', 'Ball and Stick', 'Van Der Waals Spheres', 
+               'Stick', 'Wireframe']
+        
+
     def _init_gui(self, **kwargs):
         nframes = kwargs.pop("nframes", 1)
         fields = kwargs.pop("fields", None)
@@ -528,9 +538,12 @@ class UniverseWidget(ExatomicBox):
         atoms.active = True
         atoms.disabled = False
         axis.active = True
-        atoms.disabled = False
+        axis.disabled = False
         mainopts.update([('atom_3d', atoms), ('axis', axis),
                          ('frame', self._frame_folder(nframes))])
+        #mainopts.update([
+        #                 ('axis', axis),
+        #                 ('frame', self._frame_folder(nframes))])
         if fields is not None:
             folder = self._field_folder(fields, **kwargs)
             self._iso_folder(folder)
