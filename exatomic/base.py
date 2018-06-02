@@ -8,6 +8,7 @@ Base Functionality
 import os
 from exa.util import isotopes
 from platform import system
+from IPython.display import display_html
 
 # For numba compiled functions
 sysname= system().lower()
@@ -69,3 +70,10 @@ def list_resources():
     for path, _, files_ in os.walk(staticdir()):
         files.extend(files_)
     return files
+
+
+def display_side_by_side(*args):
+    """Simple function to display 2 dataframes side by side in a notebook."""
+    html_str = ''.join([df.to_html() for df in args])
+    display_html(html_str.replace('table','table style=\"display:inline\"'),
+                 raw=True)

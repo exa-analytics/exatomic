@@ -2,8 +2,10 @@
 .. Distributed under the terms of the Apache License 2.0
 
 #####################################
-Clustering Algorithms
+Auxiliary Features
 #####################################
-.. automodule:: exatomic.algorithms.neighbors
+.. automodule:: exatomic.base
     :members:
-    :private-members:
+
+.. automodule:: exatomic.formula
+    :members:

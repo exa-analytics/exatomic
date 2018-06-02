@@ -38,22 +38,18 @@ install:
     - conda install -q -c conda-forge six numpy pandas pytables numba sympy
     - conda install -q -c conda-forge sphinx sphinx_rtd_theme ply seaborn
     - conda install -c conda-forge pandoc pypandoc nbsphinx ipython
-    - conda install -q -c conda-forge python-coveralls coverage pytest pytest-cov
+    - conda install -q -c conda-forge coveralls coverage pytest pytest-cov
     - conda install -q -c conda-forge numexpr nodejs ipywidgets
 #   - conda install -q -c exaanalytics exa
-    - pip install exa
     - pip install travis-sphinx codacy-coverage
-#   - git clone https://github.com/exa-analytics/exa.git
-#   - cd exa
-#   - pip install .
-#   - cd ../
-#   - pip install -e .
+    - pip install exa
+    - pip install .
 
 script:
     - export PYTHONDONTWRITEBYTECODE=1
     - pytest --cov
     - if [[ $TRAVIS_OS_NAME == "linux" ]] && [[ $PYTHONVER == 3.6 ]]; then
-          coverage xml;
+          coverage run --source=exatomic setup.py test;
           travis-sphinx build;
       fi
 
