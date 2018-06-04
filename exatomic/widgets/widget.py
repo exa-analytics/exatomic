@@ -432,41 +432,41 @@ class UniverseWidget(ExatomicBox):
         alo = Layout(width='70px')
         rlo = Layout(width='220px')
         scale =  FloatSlider(max=10.0, step=0.001, readout=True, value=1.0)
-        xs = [Text(layout=alo,disabled=True),
-              Text(layout=alo,disabled=True),
-              Text(layout=alo,disabled=True)]
-        ys = [Text(layout=alo,disabled=True),
-              Text(layout=alo,disabled=True),
-              Text(layout=alo,disabled=True)]
-        zs = [Text(layout=alo,disabled=True),
-              Text(layout=alo,disabled=True),
-              Text(layout=alo,disabled=True)]
+#        xs = [Text(layout=alo,disabled=True),
+#              Text(layout=alo,disabled=True),
+#              Text(layout=alo,disabled=True)]
+#        ys = [Text(layout=alo,disabled=True),
+#              Text(layout=alo,disabled=True),
+#              Text(layout=alo,disabled=True)]
+#        zs = [Text(layout=alo,disabled=True),
+#              Text(layout=alo,disabled=True),
+#              Text(layout=alo,disabled=True)]
 #        cs = [Text(layout=alo,disabled=True),
 #              Text(layout=alo,disabled=True),
 #              Text(layout=alo,disabled=True)]
 #        cidx = HBox([Text(disabled=True,description='Atom Index',layout=rlo)])
-        xbox = HBox(xs, layout=rlo)
-        ybox = HBox(ys, layout=rlo)
-        zbox = HBox(zs, layout=rlo)
+#        xbox = HBox(xs, layout=rlo)
+#        ybox = HBox(ys, layout=rlo)
+#        zbox = HBox(zs, layout=rlo)
 #        cbox = HBox(cs, layout=rlo)
         tens = Button(description=' Tensor', icon='bank')
-        tensor_cont = VBox([xbox,ybox,zbox])
-        tensorIndex = Dropdown(options=[0],value=0,description='Tensor')
+#        tensor_cont = VBox([xbox,ybox,zbox])
+#        tensorIndex = Dropdown(options=[0],value=0,description='Tensor')
 #        sceneIndex = Dropdown(options=[0],value=0,description='Scene')
-        ten_label = Label(value="Change selected tensor:")
-        sel_label = Label(value="Selected tensor in gray frame")
+#        ten_label = Label(value="Change selected tensor:")
+#        sel_label = Label(value="Selected tensor in gray frame")
 #        cod_label = Label(value="Center of selected tensor: (x,y,z)")
-        tensor = []
+#        tensor = []
 #        self.coords = []
 
-        def _changeTensor(tensor, tdx):
-            carts = ['x','y','z']
-            for i,bra in enumerate(carts):
-                for j,ket in enumerate(carts):
-                    tensor_cont.children[i].children[j].disabled=False
-                    tensor_cont.children[i].children[j].value = \
-                                            str(tensor[0][tdx][bra+ket])
-                    tensor_cont.children[i].children[j].disabled=True
+#        def _changeTensor(tensor, tdx):
+#            carts = ['x','y','z']
+#            for i,bra in enumerate(carts):
+#                for j,ket in enumerate(carts):
+#                    tensor_cont.children[i].children[j].disabled=False
+#                    tensor_cont.children[i].children[j].value = \
+#                                            str(tensor[0][tdx][bra+ket])
+#                    tensor_cont.children[i].children[j].disabled=True
 #            adx = tensor[0][tdx]['atom']
 #            cidx.children[0].value = str(adx)
 #            cbox.children[0].value = str(self.coords[0][int(adx)])
@@ -477,35 +477,35 @@ class UniverseWidget(ExatomicBox):
         def _tens(c):
             for scn in self.active(): 
                 scn.tens = not scn.tens
-                variables = [x for x in dir(scn) if not callable(getattr(scn, x)) and not \
-                                            ( x.startswith('__') or x.startswith('_'))]
-                print([isinstance(x, Bool) for x in variables], variables)
+#                variables = [x for x in dir(scn) if not callable(getattr(scn, x)) and not \
+#                                            ( x.startswith('__') or x.startswith('_'))]
+#                print([isinstance(x, Bool) for x in variables], variables)
 #            self.coords = self._filter_coords()
 #            sceneIndex.options = [x for x in range(len(self.active()))]
 #            sceneIndex.value = sceneIndex.options[0]
-            tensor = self.active()[0].tensor_d
-            tensorIndex.options = [x for x in range(len(tensor[0]))]
-            tensorIndex.value = tensorIndex.options[0]
-            tdx = tensorIndex.value
-            _changeTensor(tensor, tdx)
+#            tensor = self.active()[0].tensor_d
+#            tensorIndex.options = [x for x in range(len(tensor[0]))]
+#            tensorIndex.value = tensorIndex.options[0]
+#            tdx = tensorIndex.value
+#            _changeTensor(tensor, tdx)
 
         def _scale(c):
             for scn in self.active(): scn.scale = c.new
 
-        def _idx(c):
-            for scn in self.active(): scn.tidx = c.new
-            tensor = self.active()[0].tensor_d
-            tdx = c.new
-            _changeTensor(tensor, tdx)
+#        def _idx(c):
+#            for scn in self.active(): scn.tidx = c.new
+#            tensor = self.active()[0].tensor_d
+#            tdx = c.new
+#            _changeTensor(tensor, tdx)
 
         tens.on_click(_tens)
         scale.observe(_scale, names='value')
-        tensorIndex.observe(_idx, names='value')
+#        tensorIndex.observe(_idx, names='value')
         content = _ListDict([
                 ('scale', scale),
-                ('ten', ten_label),
-                ('tdx', tensorIndex),
-                ('tensor', tensor_cont)
+#                ('ten', ten_label),
+#                ('tdx', tensorIndex),
+#                ('tensor', tensor_cont)
                 ])
 #                ('sel', sel_label),
 #                ('cidx', cidx),
@@ -562,8 +562,7 @@ class UniverseWidget(ExatomicBox):
         atomcolors = scenekwargs.get('atomcolors', None)
         atomradii = scenekwargs.get('atomradii', None)
         atomlabels = scenekwargs.get('atomlabels', None)
-        fields, masterkwargs = [], []
-        tensors = []
+        fields, masterkwargs, tensors = [], [], []
         for uni in unis:
             unargs, flds, tens = uni_traits(uni,
                                             atomcolors=atomcolors,
