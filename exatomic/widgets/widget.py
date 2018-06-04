@@ -516,8 +516,20 @@ class UniverseWidget(ExatomicBox):
     def _fill_folder(self):
         atoms = Button(description=' Fill', icon='adjust', layout=_wlo)
         opt = ['High Performance', 'Ball and Stick', 'Van Der Waals Spheres', 
-               'Stick', 'Wireframe']
-        
+               'Covalent Spheres', "Stick"]
+        fill = Select(options=opt, value=opt[0], layout=_wlo)
+
+        def _atoms(c):
+            for scn in self.active(): scn.atom_3d = not scn.atom_3d
+        def _fill(c):
+            for scn in self.active(): scn.fill_idx = c.new
+
+        atoms.on_click(_atoms)
+        fill.observe(_fill, names='index')
+        content = _ListDict([
+                    ('opt', fill)
+                    ])
+        return Folder(atoms, content)
 
     def _init_gui(self, **kwargs):
         nframes = kwargs.pop("nframes", 1)
@@ -539,11 +551,11 @@ class UniverseWidget(ExatomicBox):
         atoms.disabled = False
         axis.active = True
         axis.disabled = False
-        mainopts.update([('atom_3d', atoms), ('axis', axis),
-                         ('frame', self._frame_folder(nframes))])
-        #mainopts.update([
-        #                 ('axis', axis),
+        #mainopts.update([('atom_3d', atoms), ('axis', axis),
         #                 ('frame', self._frame_folder(nframes))])
+        mainopts.update([('atom_3d', self._fill_folder()),
+                         ('axis', axis),
+                         ('frame', self._frame_folder(nframes))])
         if fields is not None:
             folder = self._field_folder(fields, **kwargs)
             self._iso_folder(folder)
