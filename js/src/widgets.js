@@ -96,9 +96,9 @@ var UniverseSceneView = base.ExatomicSceneView.extend({
 //        this.app3d.add_meshes();
 //    },
     add_atom: function() {
-        //if (this.interv == null) { 
-        //    this.send_obj();
-        //}
+        if (this.interv == null) { 
+            this.send_obj();
+        }
         this.app3d.clear_meshes("atom");
         this.app3d.clear_meshes("two");
         var fdx = this.model.get("frame_idx");
@@ -111,7 +111,8 @@ var UniverseSceneView = base.ExatomicSceneView.extend({
         //} else {
         //    var radii = utils.mapper(syms, this.atom_cr);
         //}
-        var atom, bond, radii, r = 0.05;
+        var atom, bond, radii, r = ((this.model.get("bond_r") > 0) ? this.model.get("bond_r") : 0.05);
+        console.log(r);
         if (this.model.get("atom_3d")) {
             switch (this.model.get("fill_idx")) {
                 case 0:
@@ -129,8 +130,7 @@ var UniverseSceneView = base.ExatomicSceneView.extend({
                 case 2:
                     radii = utils.mapper(syms, this.atom_vr);
                     atom = this.app3d.add_spheres;
-                    bond = this.app3d.add_cylinders;
-                    
+                    bond = null;
                     break;
                 case 3:
                     radii = utils.mapper(syms, this.atom_cr);
@@ -139,9 +139,10 @@ var UniverseSceneView = base.ExatomicSceneView.extend({
                     break;
                 case 4:
                     r = 0.6
-                    radii = r;
+                    radii = r+0.05;
                     atom = this.app3d.add_spheres;
-                    bond = this.app3d.add_stick;
+                    bond = this.app3d.add_cylinders;
+                    break;
             }
         } else {
             radii = utils.mapper(syms, this.atom_cr)
@@ -167,10 +168,10 @@ var UniverseSceneView = base.ExatomicSceneView.extend({
             this.atom_x[fdx], this.atom_y[fdx],
             this.atom_z[fdx], colrs, radii, labels);
         if (this.two_b0.length !== 0) {
-            this.app3d.meshes["two"] = bond(
+            this.app3d.meshes["two"] = (bond != null) ? bond(
                 this.two_b0[fdx], this.two_b1[fdx],
                 this.atom_x[fdx], this.atom_y[fdx],
-                this.atom_z[fdx], colrs, r);
+                this.atom_z[fdx], colrs, r) : null ;
         };
         this.app3d.add_meshes();
     },
@@ -324,6 +325,7 @@ var UniverseSceneView = base.ExatomicSceneView.extend({
         this.listenTo(this.model, "change:scale", this.add_tensor);
         this.listenTo(this.model, "change:tidx", this.color_tensor);
         this.listenTo(this.model, "change:fill_idx", this.add_atom);
+        this.listenTo(this.model, "change:bond_r", this.add_atom);
     }
 
 });

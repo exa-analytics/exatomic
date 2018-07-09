@@ -234,7 +234,7 @@ var ExatomicSceneView = widgets.DOMWidgetView.extend({
 
     send_obj: function() {
         var _this = this
-        //console.log(_this.app3d.probe);
+        console.log(_this.app3d.probe);
         _this.interv = setInterval(function() {
             _this.send({"type": "object", "content": _this.app3d.probe()})
         }, 1000);

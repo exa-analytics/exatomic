@@ -1271,6 +1271,12 @@ class App3D {
                 reflectivity: 0.8,
                 shininess: 5
             });
+            //var mesh = new THREE.SceneUtils.createMultiMaterialObject(geometry, [mat_0, mat_1]);
+            //mesh.position.set(center.x, center.y, center.z);
+            //mesh.lookAt(vector1);
+            //mesh.name = (length * 0.52918).toFixed(4) + "\u212B";
+            //meshes.push(mesh);
+            var singlebond = new THREE.Geometry();
             var mesh_0 = new THREE.Mesh(geometry, mat_0);
             var mesh_1 = new THREE.Mesh(geometry, mat_1);
             mesh_0.name = (length * 0.52918).toFixed(4) + "\u212B";
@@ -1279,10 +1285,29 @@ class App3D {
             mesh_1.name = (length * 0.52918).toFixed(4) + "\u212B";
             mesh_1.position.set(center_1.x, center_1.y, center_1.z);
             mesh_1.lookAt(vector1);
-            ////mesh.label = "bond";
-            meshes.push(mesh_0);
-            meshes.push(mesh_1);
+            //mesh_0.updateMatrix();
+            //mesh_1.updateMatrix();
+            //singlebond.merge(mesh_0.geometry, mesh_0.matrix);
+            //singlebond.merge(mesh_1.geometry, mesh_1.matrix);
+            for ( var face in mesh_0.geometry.faces ) {
+                mesh_0.geometry.faces[face].materialIndex = 0;
+            }
+            for ( var face in mesh_1.geometry.faces ) {
+                mesh_1.geometry.faces[face].materialIndex = 0;
+            }
+            singlebond.merge(mesh_0.geometry, mesh_0.matrix);
+            singlebond.merge(mesh_1.geometry, mesh_1.matrix, 1);
+            var material = new THREE.MeshFaceMaterial([mesh_0.material, mesh_1.material]);
+            var mesh = new THREE.Mesh(singlebond, material);
+            mesh.position.set(center.x, center.y, center.z);
+            mesh.lookAt(vector1);
+            //for ( var face in singlebond.faces) { console.log(singlebond.faces[face].materialIndex); }
+            meshes.push(mesh);
+            console.log(material);
+            //meshes.push(mesh_0);
+            //meshes.push(mesh_1);
         };
+        console.log(meshes);
         return meshes;
     };
 

@@ -518,16 +518,27 @@ class UniverseWidget(ExatomicBox):
         opt = ['High Performance', 'Ball and Stick', 'Van Der Waals Spheres', 
                'Covalent Spheres', "Stick"]
         fill = Select(options=opt, value=opt[0], layout=_wlo)
+        bond_r = FloatSlider(max=1.0,description='Bond Radius')
 
         def _atoms(c):
             for scn in self.active(): scn.atom_3d = not scn.atom_3d
+
         def _fill(c):
             for scn in self.active(): scn.fill_idx = c.new
+            if c.new == 2:
+                bond_r.disabled = True
+            else:
+                bond_r.disabled = False
+
+        def _bond_r(c):
+            for scn in self.active(): scn.bond_r = c.new
 
         atoms.on_click(_atoms)
         fill.observe(_fill, names='index')
+        bond_r.observe(_bond_r, names='value')
         content = _ListDict([
-                    ('opt', fill)
+                    ('opt', fill),
+                    ('bond_r', bond_r)
                     ])
         return Folder(atoms, content)
 

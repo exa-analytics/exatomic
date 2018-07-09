@@ -234,6 +234,7 @@ class UniverseScene(ExatomicScene):
     tidx = Int(0).tag(sync=True)
     # View traits
     fill_idx = Int(0).tag(sync=True)
+    bond_r = Float(-1).tag(sync=True)
 
 @register
 class ExatomicBox(Box):
