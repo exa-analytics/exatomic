@@ -2,9 +2,9 @@
 # Copyright (c) 2015-2018, Exa Analytics Development Team
 # Distributed under the terms of the Apache License 2.0
 """
-Gaussian Editor
+Q-Chem Editor
 #######################
-Base class on top of exatomic.Editor for Gaussian Editors
+Base class on top of exatomic.Editor for Q-Chem Editors
 """
 #import pandas as pd
 from exatomic import Editor
