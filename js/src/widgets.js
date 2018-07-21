@@ -35,7 +35,6 @@ var UniverseSceneView = base.ExatomicSceneView.extend({
         this.three_promises = this.app3d.init_promise();
         this.promises = Promise.all([utils.fparse(this, "atom_x"),
             utils.fparse(this, "atom_y"), utils.fparse(this, "atom_z"),
-            //utils.fparse(this, "atom_s"), utils.mesolv(this, "atom_r"),
             utils.fparse(this, "atom_s"), utils.mesolv(this, "atom_cr"),
             utils.mesolv(this, "atom_vr"),
             utils.mesolv(this, "atom_c"), utils.mesolv(this, "atom_l"),
@@ -52,67 +51,16 @@ var UniverseSceneView = base.ExatomicSceneView.extend({
     },
     
 
-//    add_atom: function() {
-//        //if (this.interv == null) { 
-//        //    this.send_obj();
-//        //}
-//        this.app3d.clear_meshes("atom");
-//        this.app3d.clear_meshes("two");
-//        var fdx = this.model.get("frame_idx");
-//        var syms = this.atom_s[fdx];
-//        var colrs = utils.mapper(syms, this.atom_c);
-//        //var radii = utils.mapper(syms, this.atom_r);
-//        console.log(this.model.get("atom_3d"));
-//        console.log(this.atom_vr);
-//        //console.log(this.atom_cr);
-//        if (this.model.get("atom_3d")) {
-//            var radii = utils.mapper(syms, this.atom_vr);
-//        } else {
-//            var radii = utils.mapper(syms, this.atom_cr);
-//        }
-//        console.log(radii); 
-//        var labels = utils.mapper(syms, this.atom_l);
-//        var atom, bond;
-//        var entry = labels.entries();
-//        var a = []
-//        for ( let e of entry ) { a.push(e[1]+e[0].toString()); }
-//        labels = a;
-//        //if (this.model.get("atom_3d")) {
-//            atom = this.app3d.add_spheres;
-//            bond = this.app3d.add_cylinders;
-//        //} else {
-//        //    atom = this.app3d.add_points;
-//        //    bond = this.app3d.add_lines;
-//        //}
-//        this.app3d.meshes["atom"] = atom(
-//            this.atom_x[fdx], this.atom_y[fdx],
-//            this.atom_z[fdx], colrs, radii, labels);
-//        if (this.two_b0.length !== 0) {
-//            this.app3d.meshes["two"] = bond(
-//                this.two_b0[fdx], this.two_b1[fdx],
-//                this.atom_x[fdx], this.atom_y[fdx],
-//                this.atom_z[fdx], colrs);
-//        };
-//        this.app3d.add_meshes();
-//    },
     add_atom: function() {
-        if (this.interv == null) { 
-            this.send_obj();
-        }
+        //if (this.interv == null) { 
+        //    this.send_obj();
+        //}
         this.app3d.clear_meshes("atom");
         this.app3d.clear_meshes("two");
         var fdx = this.model.get("frame_idx");
         var syms = this.atom_s[fdx];
         var colrs = utils.mapper(syms, this.atom_c);
-        //var radii = utils.mapper(syms, this.atom_r);
-        //console.log(this.atom_cr);
-        //if (this.model.get("atom_3d")) {
-        //    var radii = utils.mapper(syms, this.atom_vr);
-        //} else {
-        //    var radii = utils.mapper(syms, this.atom_cr);
-        //}
         var atom, bond, radii, r = ((this.model.get("bond_r") > 0) ? this.model.get("bond_r") : 0.05);
-        console.log(r);
         if (this.model.get("atom_3d")) {
             switch (this.model.get("fill_idx")) {
                 case 0:
@@ -137,12 +85,12 @@ var UniverseSceneView = base.ExatomicSceneView.extend({
                     atom = this.app3d.add_spheres;
                     bond = this.app3d.add_cylinders;
                     break;
-                case 4:
-                    r = 0.6
-                    radii = r+0.05;
-                    atom = this.app3d.add_spheres;
-                    bond = this.app3d.add_cylinders;
-                    break;
+                //case 4:
+                //    r = 0.6
+                //    radii = r+0.05;
+                //    atom = this.app3d.add_spheres;
+                //    bond = this.app3d.add_cylinders;
+                //    break;
             }
         } else {
             radii = utils.mapper(syms, this.atom_cr)
@@ -151,19 +99,10 @@ var UniverseSceneView = base.ExatomicSceneView.extend({
             bond = this.app3d.add_lines;  
         }
         var labels = utils.mapper(syms, this.atom_l);
-        //var atom = new Array(), bond;
-        //var atom, bond;
         var entry = labels.entries();
         var a = []
         for ( let e of entry ) { a.push(e[1]+e[0].toString()); }
         labels = a;
-        //if (this.model.get("atom_3d")) {
-        //    atom = this.app3d.add_spheres;
-        //    bond = this.app3d.add_cylinders;
-        //} else {
-        //    atom = this.app3d.add_points;
-        //    bond = this.app3d.add_lines;
-        //}
         this.app3d.meshes["atom"] = atom(
             this.atom_x[fdx], this.atom_y[fdx],
             this.atom_z[fdx], colrs, radii, labels);

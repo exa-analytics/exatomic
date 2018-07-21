@@ -515,8 +515,11 @@ class UniverseWidget(ExatomicBox):
 
     def _fill_folder(self):
         atoms = Button(description=' Fill', icon='adjust', layout=_wlo)
-        opt = ['High Performance', 'Ball and Stick', 'Van Der Waals Spheres', 
-               'Covalent Spheres', "Stick"]
+        opt = ['High Performance',
+               'Ball and Stick',
+               'Van Der Waals Spheres',
+               'Covalent Spheres']
+               #'Stick']
         fill = Select(options=opt, value=opt[0], layout=_wlo)
         bond_r = FloatSlider(max=1.0,description='Bond Radius')
 
