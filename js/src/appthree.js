@@ -268,7 +268,22 @@ class App3D {
             that.mouse.y = -((event.clientY - pos.y) / that.h) * 2 + 1;
             that.raycaster.setFromCamera(that.mouse, that.camera);
             var intersects = that.raycaster.intersectObjects(that.scene.children);
-            that.highlight_active(intersects);
+            //that.highlight_active(intersects);
+        }, false);
+        this.view.el.addEventListener('mouseup',
+        function(event) {
+            event.preventDefault();
+            var pos = this.getBoundingClientRect();
+            that.mouse.x =  ((event.clientX - pos.x) / that.w) * 2 - 1;
+            that.mouse.y = -((event.clientY - pos.y) / that.h) * 2 + 1;
+            that.raycaster.setFromCamera(that.mouse, that.camera);
+            var intersects = that.raycaster.intersectObjects(that.scene.children);
+            if ( intersects.length > 0 ) {
+                selected = intersects[0].object;
+                selected.currentHex = selected.material.color.getHex();
+                var newHex = that.lighten_color(selected.currentHex);
+                selected.material.color.setHex(newHex);
+            };
         }, false);
     };
 
