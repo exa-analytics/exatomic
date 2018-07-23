@@ -23,6 +23,7 @@ class App3D {
                           "atom": [],   "two": []};
         this.ACTIVE = null;
         this.set_dims();
+        this.selected = new Array();
         //base.DOMWidgetView.prototype.initialize.apply(this, arguments);
     };
 
@@ -229,15 +230,16 @@ class App3D {
     };
 
     highlight_active(intersects) {
+        var uuid = this.selected.map(function(obj) {return obj.uuid;}, false);
         if (intersects.length > 0) {
             if (this.ACTIVE != intersects[0].object) {
                 if (this.ACTIVE != null) {
-                    if (this.ACTIVE.material.color) {
+                    if (this.ACTIVE.material.color && !uuid.includes(this.ACTIVE.uuid)) {
                         this.ACTIVE.material.color.setHex(this.ACTIVE.currentHex);
                     };
                 };
                 this.ACTIVE = intersects[0].object;
-                if (this.ACTIVE.material.color) {
+                if (this.ACTIVE.material.color && !uuid.includes(this.ACTIVE.uuid)) {
                     this.ACTIVE.currentHex = this.ACTIVE.material.color.getHex();
                     var newHex = this.lighten_color(this.ACTIVE.currentHex);
                     this.ACTIVE.material.color.setHex(newHex);
@@ -247,7 +249,7 @@ class App3D {
             };
         } else {
             if (this.ACTIVE != null) {
-                if (this.ACTIVE.material.color) {
+                if (this.ACTIVE.material.color && !uuid.includes(this.ACTIVE.uuid)) {
                     this.ACTIVE.material.color.setHex(this.ACTIVE.currentHex);
                 };
             };
@@ -268,7 +270,7 @@ class App3D {
             that.mouse.y = -((event.clientY - pos.y) / that.h) * 2 + 1;
             that.raycaster.setFromCamera(that.mouse, that.camera);
             var intersects = that.raycaster.intersectObjects(that.scene.children);
-            //that.highlight_active(intersects);
+            that.highlight_active(intersects);
         }, false);
         this.view.el.addEventListener('mouseup',
         function(event) {
@@ -279,10 +281,32 @@ class App3D {
             that.raycaster.setFromCamera(that.mouse, that.camera);
             var intersects = that.raycaster.intersectObjects(that.scene.children);
             if ( intersects.length > 0 ) {
-                selected = intersects[0].object;
-                selected.currentHex = selected.material.color.getHex();
-                var newHex = that.lighten_color(selected.currentHex);
-                selected.material.color.setHex(newHex);
+                if ( that.selected.length - 1  < 0 ) {
+                    that.selected.push(intersects[0].object);
+                    var n = that.selected.length - 1;
+                    that.selected[n].currentHex = that.ACTIVE.currentHex;//selected[n].material.color.getHex();
+                    var newHex = that.lighten_color(that.selected[n].currentHex);
+                    that.selected[n].material.color.setHex(newHex);
+                } else {
+                    var uuid = that.selected.map(function(obj) {return obj.uuid;}, false);
+                    if ( !uuid.includes(intersects[0].object['uuid']) ) {
+                        if ( uuid.length < 4 ) {
+                            that.selected.push(intersects[0].object);
+                        } else {
+                            that.selected[0].material.color.setHex(that.selected[0].currentHex);
+                            that.selected.shift();
+                            that.selected.push(intersects[0].object);
+                        };
+                        var n = that.selected.length - 1;
+                        that.selected[n].currentHex = that.ACTIVE.currentHex;//selected[n].material.color.getHex();
+                        var newHex = that.lighten_color(that.selected[n].currentHex);
+                        that.selected[n].material.color.setHex(newHex);
+                    } else {
+                        var sdx = uuid.indexOf(intersects[0].object['uuid']);
+                        that.selected[sdx].material.color.setHex(that.selected[sdx].currentHex);
+                        that.selected.splice(sdx, 1);
+                    };
+                };
             };
         }, false);
     };
