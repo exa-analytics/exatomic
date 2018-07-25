@@ -54,10 +54,11 @@ class App3D {
     };
 
     probe() {
-        if ((this.ACTIVE === null) ||
-            (this.ACTIVE.name === "") ||
-            (this.ACTIVE instanceof THREE.Points)) { return null}
-        else { return this.ACTIVE.name/*[this.ACTIVE.name, this.ACTIVE.label]*/; }
+        if (this.selected.length > 0) { return this.selected; }
+        //if ((this.ACTIVE === null) ||
+        //    (this.ACTIVE.name === "") ||
+        //    (this.ACTIVE instanceof THREE.Points)) { return null}
+        //else { return this.ACTIVE.name/*[this.ACTIVE.name, this.ACTIVE.label]*/; }
     };
 
     set_dims(w, h) {
@@ -230,6 +231,8 @@ class App3D {
     };
 
     highlight_active(intersects) {
+        // New uuid in the if's allows so the already chosen objects won't be highlighted.
+        // All others act as they used to.
         var uuid = this.selected.map(function(obj) {return obj.uuid;}, false);
         if (intersects.length > 0) {
             if (this.ACTIVE != intersects[0].object) {
@@ -281,27 +284,34 @@ class App3D {
             that.raycaster.setFromCamera(that.mouse, that.camera);
             var intersects = that.raycaster.intersectObjects(that.scene.children);
             if ( intersects.length > 0 ) {
+                // Initialize array
                 if ( that.selected.length - 1  < 0 ) {
                     that.selected.push(intersects[0].object);
+                    // Can probably put this code block in a function
                     var n = that.selected.length - 1;
-                    that.selected[n].currentHex = that.ACTIVE.currentHex;//selected[n].material.color.getHex();
+                    that.selected[n].currentHex = that.ACTIVE.currentHex;
                     var newHex = that.lighten_color(that.selected[n].currentHex);
                     that.selected[n].material.color.setHex(newHex);
                 } else {
+                    // Make new array from uuid's
                     var uuid = that.selected.map(function(obj) {return obj.uuid;}, false);
+                    // Check for already existing objects
                     if ( !uuid.includes(intersects[0].object['uuid']) ) {
                         if ( uuid.length < 4 ) {
+                            // Append new object into array
                             that.selected.push(intersects[0].object);
                         } else {
+                            // Remove the first entry to make room for a new one
                             that.selected[0].material.color.setHex(that.selected[0].currentHex);
                             that.selected.shift();
                             that.selected.push(intersects[0].object);
                         };
                         var n = that.selected.length - 1;
-                        that.selected[n].currentHex = that.ACTIVE.currentHex;//selected[n].material.color.getHex();
+                        that.selected[n].currentHex = that.ACTIVE.currentHex;
                         var newHex = that.lighten_color(that.selected[n].currentHex);
                         that.selected[n].material.color.setHex(newHex);
                     } else {
+                        // Deselects a certain object and deletes it from array
                         var sdx = uuid.indexOf(intersects[0].object['uuid']);
                         that.selected[sdx].material.color.setHex(that.selected[sdx].currentHex);
                         that.selected.splice(sdx, 1);
@@ -490,6 +500,7 @@ class App3D {
         geometry.mergeVertices();
         geometry.computeFaceNormals();
         geometry.computeVertexNormals();
+        geometry.type = "TensorGeometry"
         var pmat = new THREE.MeshPhongMaterial({color:'white',
                                                 shading: THREE.FlatShading,
                                                 side: THREE.DoubleSide,

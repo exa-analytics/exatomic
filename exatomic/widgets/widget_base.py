@@ -93,19 +93,24 @@ class ExatomicScene(DOMWidget):
                     'msg         : {}'.format(msg['type'],
                                               msg['content']))
     def _update_df(self, content):
+        #if content is None: return
+        #idx = ''.join(filter(lambda x: x.isdigit(), content))
+        #name = ''.join(filter(lambda x: not x.isdigit(), content))
+        #if name[-1] == "\u212B":
+        #    label = "bond"
+        #elif len(name) == 1 or len(name) == 2:
+        #    label = "atom"
+        #else:
+        #    label = "object"
+        #    if name.split(' ')[-2] == "tensor":
+        #        name = "tensor"
+        #if label is not '':
+        #    print("Index: {}\tLabel: {}\tName: {}".format(idx,label,name))
         if content is None: return
-        idx = ''.join(filter(lambda x: x.isdigit(), content))
-        name = ''.join(filter(lambda x: not x.isdigit(), content))
-        if name[-1] == "\u212B":
-            label = "bond"
-        elif len(name) == 1 or len(name) == 2:
-            label = "atom"
-        else:
-            label = "object"
-            if name.split(' ')[-2] == "tensor":
-                name = "tensor"
-        if label is not '':
-            print("Index: {}\tLabel: {}\tName: {}".format(idx,label,name))
+        idx = [''.join(filter(lambda x: x.isdigit(), i)) for i in content[0]]
+        name = [x.replace('Geometry','') for x in content[1]]
+        print(idx,name)
+
 
     def _save_camera(self, content):
         """Cache a save state of the current camera."""

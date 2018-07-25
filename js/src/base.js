@@ -233,10 +233,26 @@ var ExatomicSceneView = widgets.DOMWidgetView.extend({
     },
 
     send_obj: function() {
+        //return null;
         var _this = this
-        console.log(_this.app3d.probe);
+        //console.log(_this.app3d.probe);
+        //var handler = {
+        //    get: function(target, property) {
+        //        console.log('Selected Stuff:'+target);
+        //        //return target[property];
+        //    }
+        //};
+        //var p = new Proxy(this.app3d.selector, handler);
+        //this.selectorN = this.app3d.selected.length;
+
+
         _this.interv = setInterval(function() {
-            _this.send({"type": "object", "content": _this.app3d.probe()})
+            //_this.send({"type": "object", "content": _this.app3d.probe()})
+            var idx = _this.app3d.selected.map(function(obj) {return obj.name;});
+            var type = _this.app3d.selected.map(function(obj) {return obj.geometry.type;});
+
+            console.log(idx,type);
+            _this.send({"type": "object", "content": [idx,type]});
         }, 1000);
     },
 
@@ -285,12 +301,3 @@ module.exports = {
     ExatomicBoxView: ExatomicBoxView
 }
 
-//ExatomicSceneView.prototype.send_obj = function() {
-//    var _this = this;
-//    _this.interv = setInterval(function() {
-//        _this.send({"type": "object", "content": _this.app3d.probe()});
-//        //var vals = _this.app3d.probe();
-//        //_this.model.set("obj", vals[0]);
-//        //console.log(vals);
-//    }, 1000);
-//};
