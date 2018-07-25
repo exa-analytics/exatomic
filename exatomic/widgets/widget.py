@@ -410,24 +410,6 @@ class UniverseWidget(ExatomicBox):
         contour = Folder(control, content)
         folder.insert(2, 'contour', contour, active=True, update=True)
 
-#    def _filter_coords(self,scn=0):
-#        coords = []
-#        filtered = [self.active()[scn].atom_x.strip('[['),
-#                    self.active()[scn].atom_y.strip('[['),
-#                    self.active()[scn].atom_z.strip('[[')]
-#        filtered = [filtered[0].strip(']]'),
-#                    filtered[1].strip(']]'),
-#                    filtered[2].strip(']]')]
-#        lbls = [filtered[0].split(','),
-#                filtered[1].split(','),
-#                filtered[2].split(',')]
-#        for rows in lbls:
-#            coords.append([])
-#            for cols in rows:
-#                if cols != "":
-#                    coords[-1].append(float(cols))
-#        return coords
-
     def _tensor_folder(self):
         alo = Layout(width='70px')
         rlo = Layout(width='220px')
@@ -528,10 +510,9 @@ class UniverseWidget(ExatomicBox):
 
         def _fill(c):
             for scn in self.active(): scn.fill_idx = c.new
-            if c.new == 2:
-                bond_r.disabled = True
-            else:
-                bond_r.disabled = False
+            bond_r.disabled = True if c.new == 2 else False
+            #if c.new == 2: bond_r.disabled = True
+            #else: bond_r.disabled = False
 
         def _bond_r(c):
             for scn in self.active(): scn.bond_r = c.new
