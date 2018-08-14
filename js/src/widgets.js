@@ -63,25 +63,25 @@ var UniverseSceneView = base.ExatomicSceneView.extend({
                 case 0:
                     radii = utils.mapper(syms, this.atom_cr)
                                     .map(function(x) { return x * 0.5; });
-                    atom = this.app3d.add_points;
-                    bond = this.app3d.add_lines; 
-                    break;
-                case 1:
-                    radii = utils.mapper(syms, this.atom_cr)
-                                    .map(function(x) { return x * 0.5; });
                     atom = this.app3d.add_spheres;
                     bond = this.app3d.add_cylinders;
                     break;
-                case 2:
+                case 1:
                     radii = utils.mapper(syms, this.atom_vr);
                     atom = this.app3d.add_spheres;
                     bond = null;
                     break;
-                case 3:
+                case 2:
                     radii = utils.mapper(syms, this.atom_cr);
                     atom = this.app3d.add_spheres;
                     bond = this.app3d.add_cylinders;
                     break;
+                //case 3:
+                //    radii = utils.mapper(syms, this.atom_cr)
+                //                    .map(function(x) { return x * 0.5; });
+                //    atom = this.app3d.add_points;
+                //    bond = this.app3d.add_lines;
+                //    break;
                 //case 4:
                 //    r = 0.6
                 //    radii = r+0.05;
