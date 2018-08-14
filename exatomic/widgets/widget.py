@@ -414,90 +414,22 @@ class UniverseWidget(ExatomicBox):
         alo = Layout(width='70px')
         rlo = Layout(width='220px')
         scale =  FloatSlider(max=10.0, step=0.001, readout=True, value=1.0)
-#        xs = [Text(layout=alo,disabled=True),
-#              Text(layout=alo,disabled=True),
-#              Text(layout=alo,disabled=True)]
-#        ys = [Text(layout=alo,disabled=True),
-#              Text(layout=alo,disabled=True),
-#              Text(layout=alo,disabled=True)]
-#        zs = [Text(layout=alo,disabled=True),
-#              Text(layout=alo,disabled=True),
-#              Text(layout=alo,disabled=True)]
-#        cs = [Text(layout=alo,disabled=True),
-#              Text(layout=alo,disabled=True),
-#              Text(layout=alo,disabled=True)]
-#        cidx = HBox([Text(disabled=True,description='Atom Index',layout=rlo)])
-#        xbox = HBox(xs, layout=rlo)
-#        ybox = HBox(ys, layout=rlo)
-#        zbox = HBox(zs, layout=rlo)
-#        cbox = HBox(cs, layout=rlo)
         tens = Button(description=' Tensor', icon='bank')
-#        tensor_cont = VBox([xbox,ybox,zbox])
-#        tensorIndex = Dropdown(options=[0],value=0,description='Tensor')
-#        sceneIndex = Dropdown(options=[0],value=0,description='Scene')
-#        ten_label = Label(value="Change selected tensor:")
-#        sel_label = Label(value="Selected tensor in gray frame")
-#        cod_label = Label(value="Center of selected tensor: (x,y,z)")
-#        tensor = []
-#        self.coords = []
-
-#        def _changeTensor(tensor, tdx):
-#            carts = ['x','y','z']
-#            for i,bra in enumerate(carts):
-#                for j,ket in enumerate(carts):
-#                    tensor_cont.children[i].children[j].disabled=False
-#                    tensor_cont.children[i].children[j].value = \
-#                                            str(tensor[0][tdx][bra+ket])
-#                    tensor_cont.children[i].children[j].disabled=True
-#            adx = tensor[0][tdx]['atom']
-#            cidx.children[0].value = str(adx)
-#            cbox.children[0].value = str(self.coords[0][int(adx)])
-#            cbox.children[1].value = str(self.coords[1][int(adx)])
-#            cbox.children[2].value = str(self.coords[2][int(adx)])
-#            scale.value = tensor[0][tdx]['scale']
-
         def _tens(c):
             for scn in self.active(): 
                 scn.tens = not scn.tens
-#                variables = [x for x in dir(scn) if not callable(getattr(scn, x)) and not \
-#                                            ( x.startswith('__') or x.startswith('_'))]
-#                print([isinstance(x, Bool) for x in variables], variables)
-#            self.coords = self._filter_coords()
-#            sceneIndex.options = [x for x in range(len(self.active()))]
-#            sceneIndex.value = sceneIndex.options[0]
-#            tensor = self.active()[0].tensor_d
-#            tensorIndex.options = [x for x in range(len(tensor[0]))]
-#            tensorIndex.value = tensorIndex.options[0]
-#            tdx = tensorIndex.value
-#            _changeTensor(tensor, tdx)
-
         def _scale(c):
             for scn in self.active(): scn.scale = c.new
-
-#        def _idx(c):
-#            for scn in self.active(): scn.tidx = c.new
-#            tensor = self.active()[0].tensor_d
-#            tdx = c.new
-#            _changeTensor(tensor, tdx)
-
         tens.on_click(_tens)
         scale.observe(_scale, names='value')
-#        tensorIndex.observe(_idx, names='value')
         content = _ListDict([
                 ('scale', scale),
-#                ('ten', ten_label),
-#                ('tdx', tensorIndex),
-#                ('tensor', tensor_cont)
                 ])
-#                ('sel', sel_label),
-#                ('cidx', cidx),
-#                ('center', cod_label),
-#                ('coord', cbox)])
         return Folder(tens, content)
 
     def _fill_folder(self):
         atoms = Button(description=' Fill', icon='adjust', layout=_wlo)
-        opt = ['High Performance',
+        opt = [#'High Performance',
                'Ball and Stick',
                'Van Der Waals Spheres',
                'Covalent Spheres']
@@ -511,8 +443,6 @@ class UniverseWidget(ExatomicBox):
         def _fill(c):
             for scn in self.active(): scn.fill_idx = c.new
             bond_r.disabled = True if c.new == 2 else False
-            #if c.new == 2: bond_r.disabled = True
-            #else: bond_r.disabled = False
 
         def _bond_r(c):
             for scn in self.active(): scn.bond_r = c.new
@@ -546,8 +476,6 @@ class UniverseWidget(ExatomicBox):
         atoms.disabled = False
         axis.active = True
         axis.disabled = False
-        #mainopts.update([('atom_3d', atoms), ('axis', axis),
-        #                 ('frame', self._frame_folder(nframes))])
         mainopts.update([('atom_3d', self._fill_folder()),
                          ('axis', axis),
                          ('frame', self._frame_folder(nframes))])
