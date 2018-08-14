@@ -243,6 +243,21 @@ var UniverseSceneView = base.ExatomicSceneView.extend({
         if (this.model.get("tens")) {this.color_tensor();}
     },
 
+    events: {
+        'click': '_handle_click'
+    },
+
+    _handle_click: function(event) {
+        // Handles click event to write data to a Python traitlet value
+        event.preventDefault();
+        if (this.app3d.selected.length > 0) {
+            var idx = this.app3d.selected.map(function(obj) {return obj.name;});
+            var type = this.app3d.selected.map(function(obj) {return obj.geometry.type;});
+            this.model.set('selected', {'idx': idx, 'type': type}); //Types must match exactly
+            this.touch();
+        }
+    },
+
     init_listeners: function() {
         base.ExatomicSceneView.prototype.init_listeners.call(this);
         this.listenTo(this.model, "change:frame_idx", this.add_atom);

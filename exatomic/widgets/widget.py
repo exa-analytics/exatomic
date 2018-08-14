@@ -19,12 +19,16 @@ from __future__ import division
 from traitlets import Unicode, Bool
 from ipywidgets import (Button, Dropdown, jslink, register, VBox, HBox,
                         IntSlider, IntRangeSlider, FloatSlider, Play,
-                        FloatText, Layout, Text, Label, Select)
+                        FloatText, Layout, Text, Label, Select, Output)
 from .widget_base import (ExatomicScene, UniverseScene,
                           TensorScene, ExatomicBox)
 from .widget_utils import _wlo, _ListDict, Folder
 from .traits import uni_traits
 from exatomic.core.tensor import Tensor
+from exatomic.core.two import compute_atom_two
+from IPython.display import display_html
+from exa.util.units import Length
+import pandas as pd
 
 
 class DemoContainer(ExatomicBox):
@@ -456,6 +460,38 @@ class UniverseWidget(ExatomicBox):
                     ])
         return Folder(atoms, content)
 
+    def _update_output(self, out):
+        out.clear_output()
+        idx = {}
+        for sdx, scn in enumerate(self.active()):
+            two = compute_atom_two(self._df[sdx], dmax=40, vector=True, bonds=False)
+            two['dr'] *= Length['au','Angstrom']
+            idx[sdx] = [int(''.join(filter(lambda x: x.isdigit(), i))) for i in scn.selected['idx']]
+            idx[sdx] = [[idx[sdx][i],idx[sdx][i+1]] for i in range(0,len(idx[sdx]),2)]
+
+        for sdx, scn in enumerate(self.active()):
+            with out:
+                df = pd.concat([two.groupby('atom0').get_group(min(idx[sdx][i])).
+                            groupby('atom1').get_group(max(idx[sdx][i]))[['dr','atom0','atom1']]
+                            for i in range(len(idx[sdx]))])
+                display_html(df.to_html(), raw=True)
+
+    def _dfBox(self):
+        atom_df = Button(description=' Atom Info.', layout=_wlo)
+        out = Output()
+
+        def _atom_df(c):
+            c.value = not c.value
+            if c.value:
+                self._update_output(out)
+            else:
+                out.clear_output()
+
+        atom_df.on_click(_atom_df)
+        atom_df.value = False
+        content = _ListDict([('out', out)])
+        return Folder(atom_df, content)
+
     def _init_gui(self, **kwargs):
         nframes = kwargs.pop("nframes", 1)
         fields = kwargs.pop("fields", None)
@@ -489,6 +525,8 @@ class UniverseWidget(ExatomicBox):
         if tensors is not None:
             mainopts.update([('tensor', self._tensor_folder())])
 
+        mainopts.update([('df', self._dfBox())])
+
         return mainopts
 
     def __init__(self, *unis, **kwargs):
@@ -498,7 +536,9 @@ class UniverseWidget(ExatomicBox):
         atomradii = scenekwargs.get('atomradii', None)
         atomlabels = scenekwargs.get('atomlabels', None)
         fields, masterkwargs, tensors = [], [], []
+        self._df = []
         for uni in unis:
+            self._df.append(uni)
             unargs, flds, tens = uni_traits(uni,
                                             atomcolors=atomcolors,
                                             atomradii=atomradii,
