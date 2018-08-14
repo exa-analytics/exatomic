@@ -135,9 +135,7 @@ var ExatomicSceneView = widgets.DOMWidgetView.extend({
             func = this.add_geometry;
         };
         this.three_promises.then(func.bind(this))
-            .then(this.app3d.set_camera.bind(this.app3d))
-            .then(this.send_obj.bind(this));
-        this.interv = null;
+            .then(this.app3d.set_camera.bind(this.app3d));
     },
 
     resize: function() {
@@ -231,31 +229,7 @@ var ExatomicSceneView = widgets.DOMWidgetView.extend({
     clear_meshes: function() {
         this.app3d.clear_meshes();
     },
-
-    send_obj: function() {
-        //return null;
-        var _this = this
-        //console.log(_this.app3d.probe);
-        //var handler = {
-        //    get: function(target, property) {
-        //        console.log('Selected Stuff:'+target);
-        //        //return target[property];
-        //    }
-        //};
-        //var p = new Proxy(this.app3d.selector, handler);
-        //this.selectorN = this.app3d.selected.length;
-
-
-        _this.interv = setInterval(function() {
-            //_this.send({"type": "object", "content": _this.app3d.probe()})
-            var idx = _this.app3d.selected.map(function(obj) {return obj.name;});
-            var type = _this.app3d.selected.map(function(obj) {return obj.geometry.type;});
-
-            console.log(idx,type);
-            _this.send({"type": "object", "content": [idx,type]});
-        }, 1000);
-    },
-
+        
     save: function() {
         this.send({"type": "image", "content": this.app3d.save()});
     },

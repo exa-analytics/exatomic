@@ -53,14 +53,6 @@ class App3D {
         this.renderer.dispose();
     };
 
-    probe() {
-        if (this.selected.length > 0) { return this.selected; }
-        //if ((this.ACTIVE === null) ||
-        //    (this.ACTIVE.name === "") ||
-        //    (this.ACTIVE instanceof THREE.Points)) { return null}
-        //else { return this.ACTIVE.name/*[this.ACTIVE.name, this.ACTIVE.label]*/; }
-    };
-
     set_dims(w, h) {
         this.oldw = (this.w === undefined) ? 200 : this.w;
         this.oldh = (this.h === undefined) ? 200 : this.h;
@@ -297,7 +289,7 @@ class App3D {
                     var uuid = that.selected.map(function(obj) {return obj.uuid;}, false);
                     // Check for already existing objects
                     if ( !uuid.includes(intersects[0].object['uuid']) ) {
-                        if ( uuid.length < 4 ) {
+                        if ( uuid.length < 10 ) {
                             // Append new object into array
                             that.selected.push(intersects[0].object);
                         } else {

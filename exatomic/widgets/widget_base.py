@@ -72,13 +72,7 @@ class ExatomicScene(DOMWidget):
     field_fy = Float(3.0).tag(sync=True)
     field_fz = Float(3.0).tag(sync=True)
     geom = Bool(True).tag(sync=True)
-    obj = Unicode().tag(sync=True)
-    odx = Int(-1).tag(sync=True)
-    
-    @observe('obj')
-    def _observe_obj(self, change):
-        print(change['old'])
-        print(change['new'])
+
 
     def _handle_custom_msg(self, msg, callback):
         """Custom message handler."""
@@ -86,32 +80,11 @@ class ExatomicScene(DOMWidget):
             self._save_image(msg['content'])
         elif msg['type'] == 'camera':
             self._save_camera(msg['content'])
-        elif msg['type'] == 'object':
-            self._update_df(msg['content'])
         else: print('Custom msg not handled.\n'
                     'type of msg : {}\n'
                     'msg         : {}'.format(msg['type'],
                                               msg['content']))
-    def _update_df(self, content):
-        #if content is None: return
-        #idx = ''.join(filter(lambda x: x.isdigit(), content))
-        #name = ''.join(filter(lambda x: not x.isdigit(), content))
-        #if name[-1] == "\u212B":
-        #    label = "bond"
-        #elif len(name) == 1 or len(name) == 2:
-        #    label = "atom"
-        #else:
-        #    label = "object"
-        #    if name.split(' ')[-2] == "tensor":
-        #        name = "tensor"
-        #if label is not '':
-        #    print("Index: {}\tLabel: {}\tName: {}".format(idx,label,name))
-        if content is None: return
-        idx = [''.join(filter(lambda x: x.isdigit(), i)) for i in content[0]]
-        name = [x.replace('Geometry','') for x in content[1]]
-        print(idx,name)
-
-
+    
     def _save_camera(self, content):
         """Cache a save state of the current camera."""
         self.cameras.append(content)
@@ -240,6 +213,14 @@ class UniverseScene(ExatomicScene):
     # View traits
     fill_idx = Int(0).tag(sync=True)
     bond_r = Float(-1).tag(sync=True)
+    selected = Dict().tag(sync=True)
+    
+    # This block works to print out changes from javascript
+    #@observe('selected')
+    #def _observe_selected(self, change):
+    #    print(change['old'])
+    #    print(change['new'])
+    
 
 @register
 class ExatomicBox(Box):
