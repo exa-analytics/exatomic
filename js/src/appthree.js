@@ -253,6 +253,12 @@ class App3D {
         };
     };
 
+    reset_colors() {
+        for ( var obj in this.selected ) {
+            this.selected[obj].material.color.setHex(this.selected[obj].currentHex)
+        }
+    };
+
     finalize_mouseover() {
         var that = this;
         this.view.el.addEventListener('mousemove',
@@ -276,6 +282,14 @@ class App3D {
             that.raycaster.setFromCamera(that.mouse, that.camera);
             var intersects = that.raycaster.intersectObjects(that.scene.children);
             if ( intersects.length > 0 ) {
+                if ( intersects[0].object.name === "" ) {
+                    return;
+                } else if ( intersects[0].object.geometry.type === "CylinderGeometry" ) {
+                    return;
+                } else if (intersects[0].object.geometry.type === "TensorGeometry" ) {
+                    // Temporary Block until a full description table is implemented
+                    return;
+                };
                 // Initialize array
                 if ( that.selected.length - 1  < 0 ) {
                     that.selected.push(intersects[0].object);

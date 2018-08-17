@@ -33,23 +33,16 @@ class Output(six.with_metaclass(QMeta, Editor)):
         _regeom02 = "Coordinates (Angstroms)"
         # Find Data
         found = self.find(_regeom01, keys_only=True)
-        print(found)
-        #found = self.find(_regeom01, _regeom02, keys_only=True)
-        #key = _regeom01
-        #key = _regeom02 if found[_regeom_02] else _regeom01
         starts = np.array(found) + 3
-        #starts = starts[:-1] if len(starts) > 1 else starts
         stop = starts[0]
         while '-------' not in self[stop]: stop += 1
         stops = starts + (stop - starts[0])
         dfs = []
         for i, (start, stop) in enumerate(zip(starts, stops)):
-            print(start,starts)
             atom = self.pandas_dataframe(start, stop, 5)
             atom['frame'] = i
             dfs.append(atom)
         atom = pd.concat(dfs).reset_index(drop=True)
-        #atom.reset_index(inplace=True)
         atom.columns = ['set', 'symbol', 'x', 'y', 'z', 'frame']
         atom['set'] -= 1
         atom['x'] *= Length['Angstrom', 'au']

@@ -57,7 +57,7 @@ var UniverseSceneView = base.ExatomicSceneView.extend({
         var fdx = this.model.get("frame_idx");
         var syms = this.atom_s[fdx];
         var colrs = utils.mapper(syms, this.atom_c);
-        var atom, bond, radii, r = ((this.model.get("bond_r") > 0) ? this.model.get("bond_r") : 0.05);
+        var atom, bond, radii, r = ((this.model.get("bond_r") > 0) ? this.model.get("bond_r") : 0.15);
         if (this.model.get("atom_3d")) {
             switch (this.model.get("fill_idx")) {
                 case 0:
@@ -90,6 +90,9 @@ var UniverseSceneView = base.ExatomicSceneView.extend({
                 //    break;
             }
         } else {
+            if (this.app3d.selected.length > 0) {
+                this.clear_selected();
+            };
             radii = utils.mapper(syms, this.atom_cr)
                             .map(function(x) { return x * 0.5; });
             atom = this.app3d.add_points;
@@ -258,6 +261,13 @@ var UniverseSceneView = base.ExatomicSceneView.extend({
         }
     },
 
+    clear_selected: function() {
+        this.app3d.reset_colors();
+        this.app3d.selected = [];
+        this.model.set('selected', {});
+        this.touch();
+    },
+
     init_listeners: function() {
         base.ExatomicSceneView.prototype.init_listeners.call(this);
         this.listenTo(this.model, "change:frame_idx", this.add_atom);
@@ -277,6 +287,7 @@ var UniverseSceneView = base.ExatomicSceneView.extend({
         this.listenTo(this.model, "change:tidx", this.color_tensor);
         this.listenTo(this.model, "change:fill_idx", this.add_atom);
         this.listenTo(this.model, "change:bond_r", this.add_atom);
+        this.listenTo(this.model, "change:clear_selected", this.clear_selected);
     }
 
 });

@@ -215,6 +215,7 @@ class UniverseScene(ExatomicScene):
     fill_idx = Int(0).tag(sync=True)
     bond_r = Float(-1).tag(sync=True)
     selected = Dict().tag(sync=True)
+    clear_selected = Bool(False).tag(sync=True)
     
     # This block works to print out changes from javascript
     #@observe('selected')

@@ -51,8 +51,6 @@ def atom_traits(df, atomcolors=None, atomradii=None, atomlabels=None):
     van_radii.update(atomradii)
     labels.update(atomlabels)
     traits['atom_s'] = syms.to_json(orient='values')
-    # TODO : This multiplication by 0.5 is in a bad place
-#    traits['atom_r'] = {i: radii[v] for i, v in symmap.items()}
     traits['atom_cr'] = {i: cov_radii[v] for i, v in symmap.items()}
     traits['atom_vr'] = {i: van_radii[v] for i, v in symmap.items()}
     traits['atom_c'] = {i: colors[v] for i, v in symmap.items()}

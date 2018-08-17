@@ -25,10 +25,10 @@ from .widget_base import (ExatomicScene, UniverseScene,
 from .widget_utils import _wlo, _ListDict, Folder
 from .traits import uni_traits
 from exatomic.core.tensor import Tensor
-from exatomic.core.two import compute_atom_two
 from IPython.display import display_html
 from exa.util.units import Length
 import pandas as pd
+from numpy import sqrt
 
 
 class DemoContainer(ExatomicBox):
@@ -464,32 +464,75 @@ class UniverseWidget(ExatomicBox):
         out.clear_output()
         idx = {}
         for sdx, scn in enumerate(self.active()):
-            two = compute_atom_two(self._df[sdx], dmax=40, vector=True, bonds=False)
-            two['dr'] *= Length['au','Angstrom']
+            if not scn.selected:
+                return
             idx[sdx] = [int(''.join(filter(lambda x: x.isdigit(), i))) for i in scn.selected['idx']]
-            idx[sdx] = [[idx[sdx][i],idx[sdx][i+1]] for i in range(0,len(idx[sdx]),2)]
-
-        for sdx, scn in enumerate(self.active()):
+            if len(idx[sdx])%2 != 0:
+                raise ValueError("Must select an even number of atoms. Last selected atom has been truncated.")
+            atom_coords = self._df[sdx].atom.loc[[i for i in idx[sdx]], ['x', 'y', 'z']]
+            atom_coords.set_index([[i for i in range(len(atom_coords))]], inplace=True)
+            distance = [self._get_distance(atom_coords.loc[i, ['x', 'y', 'z']].values,
+                        atom_coords.loc[i+1, ['x', 'y', 'z']].values)
+                        for i in range(0, len(atom_coords), 2)]
+            distance = [i*Length['au', 'Angstrom'] for i in distance]
+            #TODO: Concat the df into one table with the scene index
             with out:
-                df = pd.concat([two.groupby('atom0').get_group(min(idx[sdx][i])).
-                            groupby('atom1').get_group(max(idx[sdx][i]))[['dr','atom0','atom1']]
-                            for i in range(len(idx[sdx]))])
+                df = pd.DataFrame([[distance[int(i/2)], idx[sdx][i], idx[sdx][i+1], sdx]
+                                    for i in range(0, len(idx[sdx]), 2)],
+                                    columns=["dr (Angs.)", "atom0", "atom1", "scene"])
                 display_html(df.to_html(), raw=True)
 
-    def _dfBox(self):
-        atom_df = Button(description=' Atom Info.', layout=_wlo)
+    def _get_distance(self, x, y):
+        """
+        Simple function to calculate distance between selected atoms
+
+        Args:
+            x (List): List of position of atom 1
+            y (List): List of position of atom 2
+        """
+        return sqrt((x[0]-y[0])**2 + (x[1]-y[1])**2 +(x[2]-y[2])**2)
+
+    def _distanceBox(self):
+        #TODO: Find way to automatically update the table when there
+        #      is a change in the selected atoms on the javascript side.
+        atom_df = Button(description='Distance', layout=_wlo)
+        clear_selected = Button(description='Clear Sel.')
+        get_selected = Button(description='Update out')
+        select_opt = HBox([clear_selected, get_selected], layout=_wlo)
         out = Output()
+
+        #selected = Dict().tag(sync=True)
 
         def _atom_df(c):
             c.value = not c.value
             if c.value:
                 self._update_output(out)
+                #link((self.scenes[0].selected, 'value'), (selected, 'value'))
             else:
                 out.clear_output()
 
+        def _clear_selected(c):
+            for scn in self.active(): scn.clear_selected = not scn.clear_selected
+            out.clear_output()
+
+        def _get_selected(c):
+            self._update_output(out)
+
+        #selected = List(Dict()).tag(sync=True)
+        #for scn in self.active():
+        #    selected.append(scn.selected)
+        #
+        #@observe('selected')
+        #def _selected(c):
+        #    print(c)
+
         atom_df.on_click(_atom_df)
         atom_df.value = False
-        content = _ListDict([('out', out)])
+        clear_selected.on_click(_clear_selected)
+        get_selected.on_click(_get_selected)
+        content = _ListDict([('out', out),
+                             ('select_opt', select_opt)
+                            ])
         return Folder(atom_df, content)
 
     def _init_gui(self, **kwargs):
@@ -525,7 +568,7 @@ class UniverseWidget(ExatomicBox):
         if tensors is not None:
             mainopts.update([('tensor', self._tensor_folder())])
 
-        mainopts.update([('df', self._dfBox())])
+        mainopts.update([('df', self._distanceBox())])
 
         return mainopts
 
