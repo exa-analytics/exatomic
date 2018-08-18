@@ -100,6 +100,7 @@ class App3D {
         renderer.shadowMap.type = THREE.PCFSoftShadowMap;
         renderer.gammaInput = true;
         renderer.gammaOutput = true;
+        //renderer.setClearColor(0x000000, 1);
         return Promise.resolve(renderer);
     };
 

@@ -446,7 +446,7 @@ class UniverseWidget(ExatomicBox):
 
         def _fill(c):
             for scn in self.active(): scn.fill_idx = c.new
-            bond_r.disabled = True if c.new == 2 else False
+            bond_r.disabled = True if c.new == 1 else False
 
         def _bond_r(c):
             for scn in self.active(): scn.bond_r = c.new
@@ -463,9 +463,12 @@ class UniverseWidget(ExatomicBox):
     def _update_output(self, out):
         out.clear_output()
         idx = {}
+        df = pd.DataFrame([])
         for sdx, scn in enumerate(self.active()):
             if not scn.selected:
-                return
+                continue
+            elif len(scn.selected['idx']) == 0:
+                continue
             idx[sdx] = [int(''.join(filter(lambda x: x.isdigit(), i))) for i in scn.selected['idx']]
             if len(idx[sdx])%2 != 0:
                 raise ValueError("Must select an even number of atoms. Last selected atom has been truncated.")
@@ -475,12 +478,12 @@ class UniverseWidget(ExatomicBox):
                         atom_coords.loc[i+1, ['x', 'y', 'z']].values)
                         for i in range(0, len(atom_coords), 2)]
             distance = [i*Length['au', 'Angstrom'] for i in distance]
-            #TODO: Concat the df into one table with the scene index
             with out:
-                df = pd.DataFrame([[distance[int(i/2)], idx[sdx][i], idx[sdx][i+1], sdx]
+                df = pd.concat([df,pd.DataFrame([[distance[int(i/2)], idx[sdx][i], idx[sdx][i+1], sdx]
                                     for i in range(0, len(idx[sdx]), 2)],
-                                    columns=["dr (Angs.)", "atom0", "atom1", "scene"])
-                display_html(df.to_html(), raw=True)
+                                    columns=["dr (Angs.)", "adx0", "adx1", "scene"])])
+        with out:
+            display_html(df.to_html(), raw=True)
 
     def _get_distance(self, x, y):
         """
@@ -499,7 +502,7 @@ class UniverseWidget(ExatomicBox):
         clear_selected = Button(description='Clear Sel.')
         get_selected = Button(description='Update out')
         select_opt = HBox([clear_selected, get_selected], layout=_wlo)
-        out = Output()
+        out = Output(layout=_wlo)
 
         #selected = Dict().tag(sync=True)
 
