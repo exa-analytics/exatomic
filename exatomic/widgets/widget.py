@@ -100,8 +100,8 @@ class TensorContainer(ExatomicBox):
         """Initialize generic GUI controls and observe callbacks."""
         mainopts = super(TensorContainer, self)._init_gui(**kwargs)
         scn = self.scenes[0]
-        alo = Layout(width='74px')
-        rlo = Layout(width='235px')
+        #alo = Layout(width='74px')
+        #rlo = Layout(width='235px')
         if self._df is not None:
             scn.txx = self._df.loc[0,'xx']
             scn.txy = self._df.loc[0,'xy']
@@ -420,7 +420,7 @@ class UniverseWidget(ExatomicBox):
         scale =  FloatSlider(max=10.0, step=0.001, readout=True, value=1.0)
         tens = Button(description=' Tensor', icon='bank')
         def _tens(c):
-            for scn in self.active(): 
+            for scn in self.active():
                 scn.tens = not scn.tens
         def _scale(c):
             for scn in self.active(): scn.scale = c.new

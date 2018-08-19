@@ -83,7 +83,7 @@ class ExatomicScene(DOMWidget):
                     'type of msg : {}\n'
                     'msg         : {}'.format(msg['type'],
                                               msg['content']))
- 
+
     def _save_camera(self, content):
         """Cache a save state of the current camera."""
         self.cameras.append(content)

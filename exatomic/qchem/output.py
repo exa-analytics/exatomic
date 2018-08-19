@@ -6,21 +6,19 @@ Q-Chem Ouput Editor
 #######################
 Editor classes for simple Q-Chem output files
 """
-import re
 import six
 import numpy as np
 import pandas as pd
 
-from collections import defaultdict
 from exa import TypedMeta
-from exa.util.units import Length, Energy
+from exa.util.units import Length#, Energy
 from .editor import Editor
 from exatomic.base import sym2z
 from exatomic.core.atom import Atom, Frequency
-from exatomic.core.frame import Frame, compute_frame_from_atom
-from exatomic.core.basis import (BasisSet, BasisSetOrder, Overlap, deduplicate_basis_sets)
+from exatomic.core.frame import Frame#, compute_frame_from_atom
+from exatomic.core.basis import (BasisSet, BasisSetOrder, Overlap)#, deduplicate_basis_sets)
 from exatomic.core.orbital import Orbital, MOMatrix, Excitation
-from exatomic.algorithms.basis import lmap, lorder
+#from exatomic.algorithms.basis import lmap, lorder
 
 class QMeta(TypedMeta):
     atom = Atom

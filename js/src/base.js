@@ -239,7 +239,7 @@ var ExatomicSceneView = widgets.DOMWidgetView.extend({
     },
 
     _handle_custom_msg: function(msg, clbk) {
-        if (msg["type"] === "close") { this.app3d.close(); };
+        if (msg["type"] === "close") { this.app3d.close() };
         if (msg["type"] === "camera") {
             this.app3d.set_camera_from_camera(msg["content"]);
         };

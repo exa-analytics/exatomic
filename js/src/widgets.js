@@ -100,7 +100,7 @@ var UniverseSceneView = base.ExatomicSceneView.extend({
         }
         var labels = utils.mapper(syms, this.atom_l);
         var entry = labels.entries();
-        var a = []
+        var a = [];
         for ( let e of entry ) { a.push(e[1]+e[0].toString()); }
         labels = a;
         this.app3d.meshes["atom"] = atom(
@@ -247,22 +247,22 @@ var UniverseSceneView = base.ExatomicSceneView.extend({
     },
 
     events: {
-        'click': '_handle_click'
+        "click": "handle_click"
     },
 
-    _handle_click: function(event) {
+    handle_click: function(event) {
         // Handles click event to write data to a Python traitlet value
         event.preventDefault();
         var idx = this.app3d.selected.map(function(obj) {return obj.name;});
         var type = this.app3d.selected.map(function(obj) {return obj.geometry.type;});
-        this.model.set('selected', {'idx': idx, 'type': type}); //Types must match exactly
+        this.model.set("selected", {"idx": idx, "type": type}); //Types must match exactly
         this.touch();
     },
 
     clear_selected: function() {
         this.app3d.reset_colors();
         this.app3d.selected = [];
-        this.model.set('selected', {});
+        this.model.set("selected", {});
         this.touch();
     },
 
