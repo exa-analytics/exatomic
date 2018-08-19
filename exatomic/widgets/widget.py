@@ -16,7 +16,7 @@ from __future__ import absolute_import
 from __future__ import print_function
 from __future__ import division
 #from traitlets import Unicode, link
-from traitlets import Unicode, Bool
+from traitlets import Unicode
 from ipywidgets import (Button, Dropdown, jslink, register, VBox, HBox,
                         IntSlider, IntRangeSlider, FloatSlider, Play,
                         FloatText, Layout, Text, Label, Select, Output)
