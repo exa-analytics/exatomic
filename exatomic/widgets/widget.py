@@ -485,14 +485,8 @@ class UniverseWidget(ExatomicBox):
         with out:
             display_html(df.to_html(), raw=True)
 
-    def _get_distance(self, x, y):
-        """
-        Simple function to calculate distance between selected atoms
-
-        Args:
-            x (List): List of position of atom 1
-            y (List): List of position of atom 2
-        """
+    @staticmethod
+    def _get_distance(x, y):
         return sqrt((x[0]-y[0])**2 + (x[1]-y[1])**2 +(x[2]-y[2])**2)
 
     def _distanceBox(self):

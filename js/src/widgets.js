@@ -91,7 +91,7 @@ var UniverseSceneView = base.ExatomicSceneView.extend({
             }
         } else {
             if (this.app3d.selected.length > 0) {
-                this.clear_selected();
+                this.clearSelected();
             };
             radii = utils.mapper(syms, this.atom_cr)
                             .map(function(x) { return x * 0.5; });
@@ -247,19 +247,19 @@ var UniverseSceneView = base.ExatomicSceneView.extend({
     },
 
     events: {
-        "click": "handle_click"
+        "click": "handleClick"
     },
 
-    handle_click: function(event) {
+    handleClick: function(event) {
         // Handles click event to write data to a Python traitlet value
         event.preventDefault();
         var idx = this.app3d.selected.map(function(obj) {return obj.name;});
         var type = this.app3d.selected.map(function(obj) {return obj.geometry.type;});
-        this.model.set("selected", {"idx": idx, "type": type}); //Types must match exactly
+        this.model.set("selected", {idx, type}); //Types must match exactly
         this.touch();
     },
 
-    clear_selected: function() {
+    clearSelected: function() {
         this.app3d.reset_colors();
         this.app3d.selected = [];
         this.model.set("selected", {});
@@ -285,7 +285,7 @@ var UniverseSceneView = base.ExatomicSceneView.extend({
         this.listenTo(this.model, "change:tidx", this.color_tensor);
         this.listenTo(this.model, "change:fill_idx", this.add_atom);
         this.listenTo(this.model, "change:bond_r", this.add_atom);
-        this.listenTo(this.model, "change:clear_selected", this.clear_selected);
+        this.listenTo(this.model, "change:clear_selected", this.clearSelected);
     }
 
 });
