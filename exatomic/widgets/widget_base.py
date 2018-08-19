@@ -220,7 +220,7 @@ class UniverseScene(ExatomicScene):
     #def _observe_selected(self, change):
     #    print(change['old'])
     #    print(change['new'])
-    
+
 
 @register
 class ExatomicBox(Box):
