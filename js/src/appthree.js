@@ -9,7 +9,6 @@
 var THREE = require("three");
 var TBC = require("three-trackballcontrols");
 var utils = require("./utils");
-//var base = require("./base")
 
 
 
@@ -24,7 +23,6 @@ class App3D {
         this.ACTIVE = null;
         this.set_dims();
         this.selected = new Array();
-        //base.DOMWidgetView.prototype.initialize.apply(this, arguments);
     };
 
     save() {
@@ -100,7 +98,6 @@ class App3D {
         renderer.shadowMap.type = THREE.PCFSoftShadowMap;
         renderer.gammaInput = true;
         renderer.gammaOutput = true;
-        //renderer.setClearColor(0x000000, 1);
         return Promise.resolve(renderer);
     };
 
@@ -1229,7 +1226,7 @@ class App3D {
         Returns:
             linesegs (THREE.LineSegments): Line segment objects
         */
-        var r = r || 0.05;
+        var r = r || 0.15;
         var mat = new THREE.MeshPhongMaterial({
             vertexColors: THREE.VertexColors,
             color: 0x606060,
@@ -1268,105 +1265,106 @@ class App3D {
         return meshes;
     };
 
-    add_stick(v0, v1, x, y, z, colors, r) {
-        /*"""
-        add_stick
-        ------------
-        Add cylinders between atoms with the same radii as the atoms. All have been
-        made to be of the same radius.
-
-        Args:
-            v0 (array): Array of first vertex in pair
-            v1 (array): Array of second vertex
-            x (array): Position in x of vertices
-            y (array): Position in y of vertices
-            z (array): Position in z of vertices
-            colors (array): Colors of vertices
-            r (float): radius of the cylinder
-
-        Returns:
-            linesegs (THREE.LineSegments): Line segment objects
-        */
-        var r = r || 0.05;
-        var meshes = [];
-        var n = v0.length;
-        for (var i=0; i<n; i++) {
-            var j = v0[i];
-            var k = v1[i];
-            var vector0 = new THREE.Vector3(x[j], y[j], z[j]);
-            var vector1 = new THREE.Vector3(x[k], y[k], z[k]);
-            var direction = new THREE.Vector3().subVectors(vector0, vector1);
-            var center = new THREE.Vector3().addVectors(vector0, vector1);
-            center.divideScalar(2.0);
-            var center_0 = new THREE.Vector3().addVectors(vector0, center);
-            center_0.divideScalar(2.0);
-            var center_1 = new THREE.Vector3().addVectors(vector1, center);
-            center_1.divideScalar(2.0);
-            var length = 0.5*direction.length();
-            var geometry = new THREE.CylinderGeometry(r, r, length);
-            geometry.openEnded = true;
-            geometry.applyMatrix(new THREE.Matrix4().makeRotationX( Math.PI / 2));
-            /*var nn = geometry.faces.length;
-            var color0 = new THREE.Color(colors[j]);
-            var color1 = new THREE.Color(colors[k]);
-            geometry.colors.push(color0.clone());
-            geometry.colors.push(color1.clone());
-            for (var l=0; l<nn; l++) {
-                geometry.faces[l].vertexColors[0] =
-            };*/
-            var mat_0 = new THREE.MeshPhongMaterial({
-                vertexColors: THREE.VertexColors,
-                color: colors[j],
-                //specular: 0x606060,
-                reflectivity: 0.8,
-                shininess: 5
-            });
-            var mat_1 = new THREE.MeshPhongMaterial({
-                vertexColors: THREE.VertexColors,
-                color: colors[k],
-                //specular: 0x606060,
-                reflectivity: 0.8,
-                shininess: 5
-            });
-            //var mesh = new THREE.SceneUtils.createMultiMaterialObject(geometry, [mat_0, mat_1]);
-            //mesh.position.set(center.x, center.y, center.z);
-            //mesh.lookAt(vector1);
-            //mesh.name = (length * 0.52918).toFixed(4) + "\u212B";
-            //meshes.push(mesh);
-            var singlebond = new THREE.Geometry();
-            var mesh_0 = new THREE.Mesh(geometry, mat_0);
-            var mesh_1 = new THREE.Mesh(geometry, mat_1);
-            mesh_0.name = (length * 0.52918).toFixed(4) + "\u212B";
-            mesh_0.position.set(center_0.x, center_0.y, center_0.z);
-            mesh_0.lookAt(vector1);
-            mesh_1.name = (length * 0.52918).toFixed(4) + "\u212B";
-            mesh_1.position.set(center_1.x, center_1.y, center_1.z);
-            mesh_1.lookAt(vector1);
-            //mesh_0.updateMatrix();
-            //mesh_1.updateMatrix();
-            //singlebond.merge(mesh_0.geometry, mesh_0.matrix);
-            //singlebond.merge(mesh_1.geometry, mesh_1.matrix);
-            for ( var face in mesh_0.geometry.faces ) {
-                mesh_0.geometry.faces[face].materialIndex = 0;
-            }
-            for ( var face in mesh_1.geometry.faces ) {
-                mesh_1.geometry.faces[face].materialIndex = 0;
-            }
-            singlebond.merge(mesh_0.geometry, mesh_0.matrix);
-            singlebond.merge(mesh_1.geometry, mesh_1.matrix, 1);
-            var material = new THREE.MeshFaceMaterial([mesh_0.material, mesh_1.material]);
-            var mesh = new THREE.Mesh(singlebond, material);
-            mesh.position.set(center.x, center.y, center.z);
-            mesh.lookAt(vector1);
-            //for ( var face in singlebond.faces) { console.log(singlebond.faces[face].materialIndex); }
-            meshes.push(mesh);
-            console.log(material);
-            //meshes.push(mesh_0);
-            //meshes.push(mesh_1);
-        };
-        console.log(meshes);
-        return meshes;
-    };
+// Not yet ready
+//    add_stick(v0, v1, x, y, z, colors, r) {
+//        /*"""
+//        add_stick
+//        ------------
+//        Add cylinders between atoms with the same radii as the atoms. All have been
+//        made to be of the same radius.
+//
+//        Args:
+//            v0 (array): Array of first vertex in pair
+//            v1 (array): Array of second vertex
+//            x (array): Position in x of vertices
+//            y (array): Position in y of vertices
+//            z (array): Position in z of vertices
+//            colors (array): Colors of vertices
+//            r (float): radius of the cylinder
+//
+//        Returns:
+//            linesegs (THREE.LineSegments): Line segment objects
+//        */
+//        var r = r || 0.05;
+//        var meshes = [];
+//        var n = v0.length;
+//        for (var i=0; i<n; i++) {
+//            var j = v0[i];
+//            var k = v1[i];
+//            var vector0 = new THREE.Vector3(x[j], y[j], z[j]);
+//            var vector1 = new THREE.Vector3(x[k], y[k], z[k]);
+//            var direction = new THREE.Vector3().subVectors(vector0, vector1);
+//            var center = new THREE.Vector3().addVectors(vector0, vector1);
+//            center.divideScalar(2.0);
+//            var center_0 = new THREE.Vector3().addVectors(vector0, center);
+//            center_0.divideScalar(2.0);
+//            var center_1 = new THREE.Vector3().addVectors(vector1, center);
+//            center_1.divideScalar(2.0);
+//            var length = 0.5*direction.length();
+//            var geometry = new THREE.CylinderGeometry(r, r, length);
+//            geometry.openEnded = true;
+//            geometry.applyMatrix(new THREE.Matrix4().makeRotationX( Math.PI / 2));
+//            /*var nn = geometry.faces.length;
+//            var color0 = new THREE.Color(colors[j]);
+//            var color1 = new THREE.Color(colors[k]);
+//            geometry.colors.push(color0.clone());
+//            geometry.colors.push(color1.clone());
+//            for (var l=0; l<nn; l++) {
+//                geometry.faces[l].vertexColors[0] =
+//            };*/
+//            var mat_0 = new THREE.MeshPhongMaterial({
+//                vertexColors: THREE.VertexColors,
+//                color: colors[j],
+//                //specular: 0x606060,
+//                reflectivity: 0.8,
+//                shininess: 5
+//            });
+//            var mat_1 = new THREE.MeshPhongMaterial({
+//                vertexColors: THREE.VertexColors,
+//                color: colors[k],
+//                //specular: 0x606060,
+//                reflectivity: 0.8,
+//                shininess: 5
+//            });
+//            //var mesh = new THREE.SceneUtils.createMultiMaterialObject(geometry, [mat_0, mat_1]);
+//            //mesh.position.set(center.x, center.y, center.z);
+//            //mesh.lookAt(vector1);
+//            //mesh.name = (length * 0.52918).toFixed(4) + "\u212B";
+//            //meshes.push(mesh);
+//            var singlebond = new THREE.Geometry();
+//            var mesh_0 = new THREE.Mesh(geometry, mat_0);
+//            var mesh_1 = new THREE.Mesh(geometry, mat_1);
+//            mesh_0.name = (length * 0.52918).toFixed(4) + "\u212B";
+//            mesh_0.position.set(center_0.x, center_0.y, center_0.z);
+//            mesh_0.lookAt(vector1);
+//            mesh_1.name = (length * 0.52918).toFixed(4) + "\u212B";
+//            mesh_1.position.set(center_1.x, center_1.y, center_1.z);
+//            mesh_1.lookAt(vector1);
+//            //mesh_0.updateMatrix();
+//            //mesh_1.updateMatrix();
+//            //singlebond.merge(mesh_0.geometry, mesh_0.matrix);
+//            //singlebond.merge(mesh_1.geometry, mesh_1.matrix);
+//            for ( var face in mesh_0.geometry.faces ) {
+//                mesh_0.geometry.faces[face].materialIndex = 0;
+//            }
+//            for ( var face in mesh_1.geometry.faces ) {
+//                mesh_1.geometry.faces[face].materialIndex = 0;
+//            }
+//            singlebond.merge(mesh_0.geometry, mesh_0.matrix);
+//            singlebond.merge(mesh_1.geometry, mesh_1.matrix, 1);
+//            var material = new THREE.MeshFaceMaterial([mesh_0.material, mesh_1.material]);
+//            var mesh = new THREE.Mesh(singlebond, material);
+//            mesh.position.set(center.x, center.y, center.z);
+//            mesh.lookAt(vector1);
+//            //for ( var face in singlebond.faces) { console.log(singlebond.faces[face].materialIndex); }
+//            meshes.push(mesh);
+//            console.log(material);
+//            //meshes.push(mesh_0);
+//            //meshes.push(mesh_1);
+//        };
+//        console.log(meshes);
+//        return meshes;
+//    };
 
     add_wireframe(vertices, color, opac) {
         /*"""

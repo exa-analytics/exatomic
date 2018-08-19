@@ -11,10 +11,9 @@ from __future__ import print_function
 from __future__ import division
 import os
 #import numpy as np
-#import pandas as pd
 from base64 import b64decode
 from traitlets import (Bool, Int, Float, Unicode,
-                       List, Any, Dict, link, observe)
+                       List, Any, Dict, link)
 from ipywidgets import (
     Box, VBox, HBox, IntSlider, Text, ToggleButton,
     DOMWidget, Layout, Button, Dropdown, register)
@@ -74,7 +73,6 @@ class ExatomicScene(DOMWidget):
     field_fz = Float(3.0).tag(sync=True)
     geom = Bool(True).tag(sync=True)
 
-
     def _handle_custom_msg(self, msg, callback):
         """Custom message handler."""
         if msg['type'] == 'image':
@@ -85,7 +83,7 @@ class ExatomicScene(DOMWidget):
                     'type of msg : {}\n'
                     'msg         : {}'.format(msg['type'],
                                               msg['content']))
-    
+ 
     def _save_camera(self, content):
         """Cache a save state of the current camera."""
         self.cameras.append(content)

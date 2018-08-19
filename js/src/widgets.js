@@ -96,7 +96,7 @@ var UniverseSceneView = base.ExatomicSceneView.extend({
             radii = utils.mapper(syms, this.atom_cr)
                             .map(function(x) { return x * 0.5; });
             atom = this.app3d.add_points;
-            bond = this.app3d.add_lines;  
+            bond = this.app3d.add_lines;
         }
         var labels = utils.mapper(syms, this.atom_l);
         var entry = labels.entries();
@@ -253,12 +253,10 @@ var UniverseSceneView = base.ExatomicSceneView.extend({
     _handle_click: function(event) {
         // Handles click event to write data to a Python traitlet value
         event.preventDefault();
-        //if (this.app3d.selected.length > 0) {
-            var idx = this.app3d.selected.map(function(obj) {return obj.name;});
-            var type = this.app3d.selected.map(function(obj) {return obj.geometry.type;});
-            this.model.set('selected', {'idx': idx, 'type': type}); //Types must match exactly
-            this.touch();
-        //}
+        var idx = this.app3d.selected.map(function(obj) {return obj.name;});
+        var type = this.app3d.selected.map(function(obj) {return obj.geometry.type;});
+        this.model.set('selected', {'idx': idx, 'type': type}); //Types must match exactly
+        this.touch();
     },
 
     clear_selected: function() {
@@ -297,4 +295,3 @@ module.exports = {
     UniverseSceneModel: UniverseSceneModel,
     UniverseSceneView: UniverseSceneView
 }
-
