@@ -520,7 +520,6 @@ class App3D {
         var nsurf = new THREE.LineSegments( edges,mat );
         psurf.add( nsurf );
         psurf.name = label;
-        //psurf.label = "tensor";
         return [psurf];
     };
 
