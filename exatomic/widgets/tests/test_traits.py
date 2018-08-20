@@ -30,8 +30,8 @@ class TestTraits(TestCase):
         self.assertEqual(atom['atom_z'], '[[-0.661,0.661]]')
         self.assertEqual(atom['atom_s'], '[[1,0]]')
         # Alphabetical order of categories
-        self.assertTrue(np.isclose(atom['atom_cr'][0], 0.708647))
-        self.assertTrue(np.isclose(atom['atom_cr'][1], 0.302356))
+        self.assertTrue(np.isclose(atom['atom_cr'][0], 1.4172945))
+        self.assertTrue(np.isclose(atom['atom_cr'][1], 0.60471232))
         self.assertEqual(atom['atom_c'][0], '#909090')
         self.assertEqual(atom['atom_c'][1][0], '#') # H changing colors
         atom = atom_traits(self.uni.atom, atomcolors={'H': '#000000'},
