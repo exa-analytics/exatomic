@@ -43,7 +43,7 @@ install:
 #   - conda install -q -c exaanalytics exa
     - pip install travis-sphinx codacy-coverage
 #   - pip install exa
-    - git clone https://github.com/exa-analytics/exa.git
+    - git clone https://github.com/herbertludowieg/exa.git
     - pip install -e exa/
     - pip install .
 
