@@ -37,7 +37,7 @@ class TestTraits(TestCase):
         atom = atom_traits(self.uni.atom, atomcolors={'H': '#000000'},
                                           atomradii={'H': 1.0})
         self.assertEqual(atom['atom_c'][1], '#000000')
-        self.assertTrue(np.isclose(atom['atom_cr'][1], 0.5))
+        self.assertTrue(np.isclose(atom['atom_cr'][1], 1.0))
 
     def test_two_traits(self):
         two = two_traits(self.uni)
