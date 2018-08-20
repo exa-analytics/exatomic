@@ -564,7 +564,7 @@ class UniverseWidget(ExatomicBox):
         if tensors is not None:
             mainopts.update([('tensor', self._tensor_folder())])
 
-        mainopts.update([('df', self._distanceBox())])
+        mainopts.update([('distance', self._distanceBox())])
 
         return mainopts
 
