@@ -250,7 +250,7 @@ var UniverseSceneView = base.ExatomicSceneView.extend({
         "click": "handleClick"
     },
 
-    handleClick: function(event) {
+    handleClick(event) {
         // Handles click event to write data to a Python traitlet value
         event.preventDefault();
         var idx = this.app3d.selected.map(function(obj) {return obj.name;});
@@ -259,7 +259,7 @@ var UniverseSceneView = base.ExatomicSceneView.extend({
         this.touch();
     },
 
-    clearSelected: function() {
+    clearSelected() {
         this.app3d.reset_colors();
         this.app3d.selected = [];
         this.model.set("selected", {});

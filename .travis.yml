@@ -28,7 +28,6 @@ install:
       fi;
       echo "DONE"
     - bash miniconda.sh -b -p $HOME/miniconda
-#   - export NUMBA_DISABLE_JIT=1    # For coverage report
     - export PATH="$HOME/miniconda/bin:$PATH"
     - conda config --set always_yes yes --set changeps1 no
     - conda update -q --all
@@ -40,9 +39,7 @@ install:
     - conda install -c conda-forge pandoc pypandoc nbsphinx ipython
     - conda install -q -c conda-forge coveralls coverage pytest pytest-cov
     - conda install -q -c conda-forge numexpr nodejs ipywidgets
-#   - conda install -q -c exaanalytics exa
     - pip install travis-sphinx codacy-coverage
-#   - pip install exa
     - git clone https://github.com/herbertludowieg/exa.git
     - pip install -e exa/
     - pip install .
