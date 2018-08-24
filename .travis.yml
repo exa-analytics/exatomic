@@ -40,7 +40,7 @@ install:
     - conda install -q -c conda-forge coveralls coverage pytest pytest-cov
     - conda install -q -c conda-forge numexpr nodejs ipywidgets
     - pip install travis-sphinx codacy-coverage
-    - git clone https://github.com/herbertludowieg/exa.git
+    - git clone https://github.com/exa-analytics/exa.git
     - pip install -e exa/
     - pip install .
 
