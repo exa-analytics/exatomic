@@ -471,7 +471,8 @@ class UniverseWidget(ExatomicBox):
             idx[sdx] = [int(''.join(filter(lambda x: x.isdigit(), i))) for i in scn.selected['idx']]
             if len(idx[sdx])%2 != 0:
                 raise ValueError("Must select an even number of atoms. Last selected atom has been truncated.")
-            atom_coords = self._df[sdx].atom.loc[[i for i in idx[sdx]], ['x', 'y', 'z']]
+            atom_coords = self._df[sdx].atom.groupby('frame').get_group(scn.frame_idx). \
+                               reset_index(drop=True).loc[[i for i in idx[sdx]], ['x', 'y', 'z']]
             atom_coords.set_index([[i for i in range(len(atom_coords))]], inplace=True)
             distance = [self._get_distance(atom_coords.loc[i, ['x', 'y', 'z']].values,
                         atom_coords.loc[i+1, ['x', 'y', 'z']].values)
