@@ -575,7 +575,7 @@ class UniverseWidget(ExatomicBox):
         atomcolors = scenekwargs.get('atomcolors', None)
         atomradii = scenekwargs.get('atomradii', None)
         atomlabels = scenekwargs.get('atomlabels', None)
-        fields, masterkwargs, tensors = [], [], []
+        fields, masterkwargs, tens = [], [], []
         self._df = []
         for uni in unis:
             self._df.append(uni)
@@ -583,7 +583,7 @@ class UniverseWidget(ExatomicBox):
                                             atomcolors=atomcolors,
                                             atomradii=atomradii,
                                             atomlabels=atomlabels)
-            tensors = tens
+            #tensors = tens
             fields = flds if len(flds) > len(fields) else fields
             unargs.update(scenekwargs)
             masterkwargs.append(unargs)
