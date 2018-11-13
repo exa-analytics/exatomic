@@ -100,8 +100,8 @@ class TensorContainer(ExatomicBox):
         """Initialize generic GUI controls and observe callbacks."""
         mainopts = super(TensorContainer, self)._init_gui(**kwargs)
         scn = self.scenes[0]
-        #alo = Layout(width='74px')
-        #rlo = Layout(width='235px')
+        alo = Layout(width='74px')
+        rlo = Layout(width='235px')
         if self._df is not None:
             scn.txx = self._df.loc[0,'xx']
             scn.txy = self._df.loc[0,'xy']
@@ -471,7 +471,7 @@ class UniverseWidget(ExatomicBox):
             idx[sdx] = [int(''.join(filter(lambda x: x.isdigit(), i))) for i in scn.selected['idx']]
             if len(idx[sdx])%2 != 0:
                 raise ValueError("Must select an even number of atoms. Last selected atom has been truncated.")
-            atom_coords = self._df[sdx].atom.groupby('frame').get_group(scn.frame_idx). \
+            atom_coords = self._uniatom[sdx].groupby('frame').get_group(scn.frame_idx). \
                                reset_index(drop=True).loc[[i for i in idx[sdx]], ['x', 'y', 'z']]
             atom_coords.set_index([[i for i in range(len(atom_coords))]], inplace=True)
             distance = [self._get_distance(atom_coords.loc[i, ['x', 'y', 'z']].values,
@@ -536,6 +536,7 @@ class UniverseWidget(ExatomicBox):
         nframes = kwargs.pop("nframes", 1)
         fields = kwargs.pop("fields", None)
         tensors = kwargs.pop("tensors", None)
+        freq = kwargs.pop("freq", None)
         mainopts = super(UniverseWidget, self)._init_gui(**kwargs)
         atoms = Button(description=' Fill', icon='adjust', layout=_wlo)
         axis = Button(description=' Axis', icon='arrows-alt', layout=_wlo)
@@ -565,6 +566,10 @@ class UniverseWidget(ExatomicBox):
         if tensors is not None:
             mainopts.update([('tensor', self._tensor_folder())])
 
+        print(freq)
+        if freq is not None:
+            print("Inside frequency")
+
         mainopts.update([('distance', self._distanceBox())])
 
         return mainopts
@@ -575,14 +580,14 @@ class UniverseWidget(ExatomicBox):
         atomcolors = scenekwargs.get('atomcolors', None)
         atomradii = scenekwargs.get('atomradii', None)
         atomlabels = scenekwargs.get('atomlabels', None)
-        fields, masterkwargs, tens = [], [], []
-        self._df = []
+        fields, masterkwargs, tens, freq = [], [], [], []
+        self._uniatom = []
         for uni in unis:
-            self._df.append(uni)
-            unargs, flds, tens = uni_traits(uni,
-                                            atomcolors=atomcolors,
-                                            atomradii=atomradii,
-                                            atomlabels=atomlabels)
+            self._uniatom.append(uni.atom)
+            unargs, flds, tens, freq = uni_traits(uni,
+                                                  atomcolors=atomcolors,
+                                                  atomradii=atomradii,
+                                                  atomlabels=atomlabels)
             #tensors = tens
             fields = flds if len(flds) > len(fields) else fields
             unargs.update(scenekwargs)
@@ -595,5 +600,6 @@ class UniverseWidget(ExatomicBox):
                                              nframes=nframes,
                                              fields=fields,
                                              typ=UniverseScene,
-                                             tensors=tensors,
+                                             tensors=tens,
+                                             freq=freq,
                                              **kwargs)

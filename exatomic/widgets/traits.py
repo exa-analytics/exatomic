@@ -118,11 +118,17 @@ def tensor_traits(uni):
     except: idxs = [list(grp.index) for i, grp in grps]
     return {'tensor_d': grps.apply(lambda x: x.T.to_dict()).to_dict(), 'tensor_i': idxs}
 
+def freq_traits(uni):
+    grps = uni.frequency.groupby('frequency')
+    try: idxs = list(grps.groups.keys())
+    except: idxs = [list(grp.index) for i, grp in grps]
+    #print(idxs)
+    return {'freq_d': grps.apply(lambda x: x.T.to_dict()).to_dict(), 'freq_i': idxs}
 
 def uni_traits(uni, atomcolors=None, atomradii=None, atomlabels=None):
     """Get Universe traits."""
     unargs = {}
-    fields, tensors = [], None
+    fields, tensors, freq = [], None, None
     if hasattr(uni, 'frame'):
         unargs.update(frame_traits(uni))
     if hasattr(uni, 'atom'):
@@ -135,4 +141,7 @@ def uni_traits(uni, atomcolors=None, atomradii=None, atomlabels=None):
     if hasattr(uni, 'tensor'):
         unargs.update(tensor_traits(uni))
         tensors = unargs['tensor_i'][0]
-    return unargs, fields, tensors
+    if hasattr(uni, 'frequency'):
+        unargs.update(freq_traits(uni))
+        freq = unargs['freq_i']
+    return unargs, fields, tensors, freq
