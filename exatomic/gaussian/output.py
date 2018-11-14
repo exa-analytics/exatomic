@@ -398,6 +398,7 @@ class Output(six.with_metaclass(GauMeta, Editor)):
             labels = np.tile(df[0].values, nfreqs)
             zs = np.tile(df[1].values, nfreqs)
             freqdxs = np.repeat(range(fdx, fdx + nfreqs), df.shape[0])
+            print(freqs, df.shape[0])
             freqs = np.repeat(freqs, df.shape[0])
             fdx += nfreqs
             # Put it all together
@@ -608,7 +609,64 @@ class Fchk(six.with_metaclass(GauMeta, Editor)):
         if bcoefs is not None:
             self.momatrix['coef1'] = bcoefs
 
+    def parse_frequency(self):
+        # Frequency regex
+        _renat = 'Number of atoms'
+        _renmode = 'Number of Normal Modes'
+        _redisp = 'Vib-Modes'
+        _refinfo = 'Vib-E2'
+        _remass = 'Vib-AtMass'
+        _reznum = 'Atomic numbers'
+        # TODO: find out what these two values are useful for
+        _rendim = 'Vib-NDim'
+        _rendim0 = 'Vib-NDim0'
 
+        found = self.find(_renmode, _redisp, _refinfo, _remass,
+                          _reznum, _renat, keys_only=True)
+        # find number of vibrational modes
+        nmode = self._intme(found[_renmode])
+        # get extended data (given by mapper array)
+        all_info = self._dfme(found[_refinfo], nmode * 14)
+        # mapper array to filter through all of the values printed on the fchk file
+        # TODO: have to find labels of unknown columns
+        mapper = ["freq", "r_mass", "f_const", "ir_int", "unk1", "unk2", "unk3",
+                  "dipole_s", "rot_s", "unk4", "unk5", "unk6", "unk7", "em_angle"]
+        # TODO: is it worth it to make two dataframes?
+        self.frequency_ext = pd.DataFrame.from_dict({mapper[int(i/nmode)]: all_info[i:i+nmode]
+                                                     for i in range(0, nmode*14-1, nmode)})
+        # get masses (need to get number of atoms)
+        nat = self._intme(found[_renat])
+        znums = self._dfme(found[_reznum], nat)
+        # TODO: will the order of the atoms and their frequencies always be the same?
+        # get frequency modes from extended data table
+        freq = all_info[:nmode]
+        # get frequency mode displacements
+        disp = self._dfme(found[_redisp], nat * nmode * 3)
+        dx = disp[::3]
+        dy = disp[1::3]
+        dz = disp[2::3]
+        freqdx = [i for i in range(len(freq))]
+        label = [i for i in range(len(znums))]
+        print("znum: {}\nlabel: {}\nfreqdx: {}\nfreq: {}".format(znums,label,freqdx,freq))
+        freq = np.repeat(freq, nat)
+        freqdx = np.repeat(freqdx, nat)
+        znums = np.tile(znums, nat)
+        frame = np.zeros(len(znums))
+        label = np.tile(label, nat)
+        symbols = list(map(lambda x: z2sym[x], znums))
+        print(len(freq),len(freqdx),len(znums),len(frame),len(dx),len(dy),len(dz),len(symbols))
+        self.frequency = pd.DataFrame.from_dict({"Z": znums, "label": label, "dx": dx,
+                                                 "dy": dy, "dz": dz, "frequency": freq,
+                                                 "freqdx": freqdx, "symbol": symbols,
+                                                 "frame": frame})
+
+    def parse_polarizability(self):
+        # Polarizability regex
+        _repolar = 'Polarizability'
+
+    # TODO:
+    #       def parse_gradients
+    #       def parse_polarizability
     def parse_orbital(self):
         # Orbital regex
         _reorboc = 'Number of .*electrons'
