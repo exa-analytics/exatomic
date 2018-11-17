@@ -566,9 +566,9 @@ class UniverseWidget(ExatomicBox):
         if tensors is not None:
             mainopts.update([('tensor', self._tensor_folder())])
 
-        print(freq)
-        if freq is not None:
-            print("Inside frequency")
+        #print(freq)
+        #if freq is not None:
+        #    print("Inside frequency")
 
         mainopts.update([('distance', self._distanceBox())])
 
@@ -584,10 +584,14 @@ class UniverseWidget(ExatomicBox):
         self._uniatom = []
         for uni in unis:
             self._uniatom.append(uni.atom)
-            unargs, flds, tens, freq = uni_traits(uni,
+            unargs, flds, tens = uni_traits(uni,
                                                   atomcolors=atomcolors,
                                                   atomradii=atomradii,
                                                   atomlabels=atomlabels)
+            #unargs, flds, tens, freq = uni_traits(uni,
+            #                                      atomcolors=atomcolors,
+            #                                      atomradii=atomradii,
+            #                                      atomlabels=atomlabels)
             #tensors = tens
             fields = flds if len(flds) > len(fields) else fields
             unargs.update(scenekwargs)
@@ -601,5 +605,5 @@ class UniverseWidget(ExatomicBox):
                                              fields=fields,
                                              typ=UniverseScene,
                                              tensors=tens,
-                                             freq=freq,
+                                             #freq=freq,
                                              **kwargs)
