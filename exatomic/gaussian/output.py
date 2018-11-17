@@ -372,6 +372,10 @@ class Output(six.with_metaclass(GauMeta, Editor)):
 
 
     def parse_frequency(self):
+        # TODO: generalize code to be able to read frequencies when performing
+        #       both a geometry optimization and frequency calculation
+        #       possible fix is to look for Link1 flags as the frequency calculation
+        #       is always after the geometry optimization
         # Frequency flags
         _refreq = 'Freq'
         found = self.regex(_refreq, stop=1000, flags=re.IGNORECASE)
@@ -398,7 +402,6 @@ class Output(six.with_metaclass(GauMeta, Editor)):
             labels = np.tile(df[0].values, nfreqs)
             zs = np.tile(df[1].values, nfreqs)
             freqdxs = np.repeat(range(fdx, fdx + nfreqs), df.shape[0])
-            print(freqs, df.shape[0])
             freqs = np.repeat(freqs, df.shape[0])
             fdx += nfreqs
             # Put it all together
@@ -631,42 +634,50 @@ class Fchk(six.with_metaclass(GauMeta, Editor)):
         # TODO: have to find labels of unknown columns
         mapper = ["freq", "r_mass", "f_const", "ir_int", "unk1", "unk2", "unk3",
                   "dipole_s", "rot_s", "unk4", "unk5", "unk6", "unk7", "em_angle"]
+        # build extended frequency table
         # TODO: is it worth it to make two dataframes?
         self.frequency_ext = pd.DataFrame.from_dict({mapper[int(i/nmode)]: all_info[i:i+nmode]
                                                      for i in range(0, nmode*14-1, nmode)})
-        # get masses (need to get number of atoms)
+        # find number of atoms
         nat = self._intme(found[_renat])
+        # get atomic numbers
         znums = self._dfme(found[_reznum], nat)
         # TODO: will the order of the atoms and their frequencies always be the same?
         # get frequency modes from extended data table
         freq = all_info[:nmode]
         # get frequency mode displacements
         disp = self._dfme(found[_redisp], nat * nmode * 3)
+        # unstack column vector to displacement along each cartesian direction
         dx = disp[::3]
         dy = disp[1::3]
         dz = disp[2::3]
+        # extend each property to have the same size
         freqdx = [i for i in range(len(freq))]
         label = [i for i in range(len(znums))]
-        print("znum: {}\nlabel: {}\nfreqdx: {}\nfreq: {}".format(znums,label,freqdx,freq))
         freq = np.repeat(freq, nat)
         freqdx = np.repeat(freqdx, nat)
         znums = np.tile(znums, nat)
-        frame = np.zeros(len(znums))
         label = np.tile(label, nat)
         symbols = list(map(lambda x: z2sym[x], znums))
-        print(len(freq),len(freqdx),len(znums),len(frame),len(dx),len(dy),len(dz),len(symbols))
+        # just to have the same table as the one generated for normal output parser
+        frame = np.zeros(len(znums)).astype(np.int)
+        # build frequency table
         self.frequency = pd.DataFrame.from_dict({"Z": znums, "label": label, "dx": dx,
                                                  "dy": dy, "dz": dz, "frequency": freq,
                                                  "freqdx": freqdx, "symbol": symbols,
                                                  "frame": frame})
+        # convert atomic displacements to atomic units
+        self.frequency['dx'] *= Length['Angstrom', 'au']
+        self.frequency['dy'] *= Length['Angstrom', 'au']
+        self.frequency['dz'] *= Length['Angstrom', 'au']
 
-    def parse_polarizability(self):
-        # Polarizability regex
-        _repolar = 'Polarizability'
-
-    # TODO:
-    #       def parse_gradients
-    #       def parse_polarizability
+#    def parse_polarizability(self):
+#        # Polarizability regex
+#        _repolar = 'Polarizability'
+#
+#    # TODO:
+#    #       def parse_gradients
+#    #       def parse_polarizability
     def parse_orbital(self):
         # Orbital regex
         _reorboc = 'Number of .*electrons'
