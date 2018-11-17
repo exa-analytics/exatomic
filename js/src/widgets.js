@@ -243,7 +243,7 @@ var UniverseSceneView = base.ExatomicSceneView.extend({
                 this.app3d.add_meshes("tensor"+property);
             }
         }
-        if (this.model.get("tens")) {this.color_tensor();}
+        //if (this.model.get("tens")) {this.color_tensor();}
     },
 
     events: {
