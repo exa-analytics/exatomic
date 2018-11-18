@@ -182,7 +182,9 @@ class UniverseScene(ExatomicScene):
     atom_z = Unicode().tag(sync=True)
     atom_l = Dict().tag(sync=True)
     atom_s = Unicode().tag(sync=True)
-    atom_r = Dict().tag(sync=True)
+#    atom_r = Dict().tag(sync=True)
+    atom_vr = Dict().tag(sync=True)
+    atom_cr = Dict().tag(sync=True)
     atom_c = Dict().tag(sync=True)
     atom_3d = Bool(False).tag(sync=True)
     # Two traits
@@ -200,8 +202,6 @@ class UniverseScene(ExatomicScene):
     cont_num = Int(10).tag(sync=True)
     cont_lim = List([-8, -1]).tag(sync=True)
     cont_val = Float(0.0).tag(sync=True)
-    # Tensor traits
-    tensor_d = Dict().tag(sync=True)
     # Frame traits
     frame__a = Float(0.0).tag(sync=True)
     # Tensor traits
@@ -209,6 +209,17 @@ class UniverseScene(ExatomicScene):
     tensor_d = Dict().tag(sync=True)
     scale = Float(1.).tag(sync=True)
     tidx = Int(0).tag(sync=True)
+    # View traits
+    fill_idx = Int(0).tag(sync=True)
+    bond_r = Float(-1).tag(sync=True)
+    selected = Dict().tag(sync=True)
+    clear_selected = Bool(False).tag(sync=True)
+
+    # This block works to print out changes from javascript
+    #@observe('selected')
+    #def _observe_selected(self, change):
+    #    print(change['old'])
+    #    print(change['new'])
 
 
 @register
