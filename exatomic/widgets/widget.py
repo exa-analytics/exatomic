@@ -100,8 +100,8 @@ class TensorContainer(ExatomicBox):
         """Initialize generic GUI controls and observe callbacks."""
         mainopts = super(TensorContainer, self)._init_gui(**kwargs)
         scn = self.scenes[0]
-        #alo = Layout(width='74px')
-        #rlo = Layout(width='235px')
+        alo = Layout(width='74px')
+        rlo = Layout(width='235px')
         if self._df is not None:
             scn.txx = self._df.loc[0,'xx']
             scn.txy = self._df.loc[0,'xy']
