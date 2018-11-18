@@ -19,12 +19,16 @@ from __future__ import division
 from traitlets import Unicode
 from ipywidgets import (Button, Dropdown, jslink, register, VBox, HBox,
                         IntSlider, IntRangeSlider, FloatSlider, Play,
-                        FloatText, Layout, Text, Label)
+                        FloatText, Layout, Text, Label, Select, Output)
 from .widget_base import (ExatomicScene, UniverseScene,
                           TensorScene, ExatomicBox)
 from .widget_utils import _wlo, _ListDict, Folder
 from .traits import uni_traits
 from exatomic.core.tensor import Tensor
+from IPython.display import display_html
+from exa.util.units import Length
+import pandas as pd
+from numpy import sqrt
 
 
 class DemoContainer(ExatomicBox):
@@ -96,8 +100,8 @@ class TensorContainer(ExatomicBox):
         """Initialize generic GUI controls and observe callbacks."""
         mainopts = super(TensorContainer, self)._init_gui(**kwargs)
         scn = self.scenes[0]
-        alo = Layout(width='74px')
-        rlo = Layout(width='235px')
+        #alo = Layout(width='74px')
+        #rlo = Layout(width='235px')
         if self._df is not None:
             scn.txx = self._df.loc[0,'xx']
             scn.txy = self._df.loc[0,'xy']
@@ -117,7 +121,6 @@ class TensorContainer(ExatomicBox):
         zs = [FloatText(value=scn.tzx , layout=alo),
               FloatText(value=scn.tzy , layout=alo),
               FloatText(value=scn.tzz , layout=alo)]
-        #scale =  FloatSlider(max=10.0, step=0.01, readout=True, value=1.0)
         opt = [0] if self._df is None else [int(x) for x in self._df.index.values]
         tensorIndex = Dropdown(options=opt, value=opt[0], layout=rlo)
         tdxlabel = Label(value='Select the tensor index:')
@@ -411,125 +414,123 @@ class UniverseWidget(ExatomicBox):
         contour = Folder(control, content)
         folder.insert(2, 'contour', contour, active=True, update=True)
 
-#    def _filter_labels(self,scn=0):
-#        labels = []
-#        filtered = self.active()[scn].atom_l.strip('[[')
-#        filtered = filtered.strip(']]')
-#        lbls = filtered.split(',')
-#        for i in range(len(lbls)):
-#            if lbls[i] != "":
-#                labels.append(lbls[i].strip('"'))
-#        return labels
-
-    def _filter_coords(self,scn=0):
-        coords = []
-        filtered = [self.active()[scn].atom_x.strip('[['),
-                    self.active()[scn].atom_y.strip('[['),
-                    self.active()[scn].atom_z.strip('[[')]
-        filtered = [filtered[0].strip(']]'),
-                    filtered[1].strip(']]'),
-                    filtered[2].strip(']]')]
-        lbls = [filtered[0].split(','),
-                filtered[1].split(','),
-                filtered[2].split(',')]
-        for rows in lbls:
-            coords.append([])
-            for cols in rows:
-                if cols != "":
-                    coords[-1].append(float(cols))
-        return coords
-
     def _tensor_folder(self):
         alo = Layout(width='70px')
         rlo = Layout(width='220px')
         scale =  FloatSlider(max=10.0, step=0.001, readout=True, value=1.0)
-        xs = [Text(layout=alo,disabled=True),
-              Text(layout=alo,disabled=True),
-              Text(layout=alo,disabled=True)]
-        ys = [Text(layout=alo,disabled=True),
-              Text(layout=alo,disabled=True),
-              Text(layout=alo,disabled=True)]
-        zs = [Text(layout=alo,disabled=True),
-              Text(layout=alo,disabled=True),
-              Text(layout=alo,disabled=True)]
-        cs = [Text(layout=alo,disabled=True),
-              Text(layout=alo,disabled=True),
-              Text(layout=alo,disabled=True)]
-        cidx = HBox([Text(disabled=True,description='Atom Index',layout=rlo)])
-        xbox = HBox(xs, layout=rlo)
-        ybox = HBox(ys, layout=rlo)
-        zbox = HBox(zs, layout=rlo)
-        cbox = HBox(cs, layout=rlo)
         tens = Button(description=' Tensor', icon='bank')
-        tensor_cont = VBox([xbox,ybox,zbox])
-        tensorIndex = Dropdown(options=[0],value=0,description='Tensor')
-#        sceneIndex = Dropdown(options=[0],value=0,description='Scene')
-        ten_label = Label(value="Change selected tensor:")
-        sel_label = Label(value="Selected tensor in gray frame")
-        cod_label = Label(value="Center of selected tensor: (x,y,z)")
-        tensor = []
-        self.coords = []
-
-        def _changeTensor(tensor, tdx):
-            carts = ['x','y','z']
-            for i,bra in enumerate(carts):
-                for j,ket in enumerate(carts):
-                    tensor_cont.children[i].children[j].disabled=False
-                    tensor_cont.children[i].children[j].value = \
-                                            str(tensor[0][tdx][bra+ket])
-                    tensor_cont.children[i].children[j].disabled=True
-            adx = tensor[0][tdx]['atom']
-            cidx.children[0].value = str(adx)
-            cbox.children[0].value = str(self.coords[0][int(adx)])
-            cbox.children[1].value = str(self.coords[1][int(adx)])
-            cbox.children[2].value = str(self.coords[2][int(adx)])
-#            scale.value = tensor[0][tdx]['scale']
-
         def _tens(c):
-            for scn in self.active(): scn.tens = not scn.tens
-            self.coords = self._filter_coords()
-#            sceneIndex.options = [x for x in range(len(self.active()))]
-#            sceneIndex.value = sceneIndex.options[0]
-            tensor = self.active()[0].tensor_d
-            tensorIndex.options = [x for x in range(len(tensor[0]))]
-            tensorIndex.value = tensorIndex.options[0]
-            tdx = tensorIndex.value
-            _changeTensor(tensor, tdx)
-
+            for scn in self.active():
+                scn.tens = not scn.tens
         def _scale(c):
             for scn in self.active(): scn.scale = c.new
-#            tdx = tensorIndex.value
-#            tensor = self.active()[0].tensor_d
-#            tensor[0][tdx]['scale'] = c.new
-
-        def _idx(c):
-            for scn in self.active(): scn.tidx = c.new
-            tensor = self.active()[0].tensor_d
-            tdx = c.new
-            _changeTensor(tensor, tdx)
-
-#        def _sdx(c):
-#            tensor = self.active()[sceneIndex.value].tensor_d
-#            tensorIndex.options = [x for x in range(len(tensor[0]))]
-#            tensorIndex.value = tensorIndex.options[0]
-#            tdx = tensorIndex.value
-#            _changeTensor(tensor, tdx)
-
         tens.on_click(_tens)
         scale.observe(_scale, names='value')
-        tensorIndex.observe(_idx, names='value')
-#        sceneIndex.observe(_sdx, names='value')
         content = _ListDict([
                 ('scale', scale),
-                ('ten', ten_label),
-#               ('sdx', sceneIndex),
-                ('tdx', tensorIndex),
-                ('tensor', tensor_cont),
-                ('sel', sel_label),
-                ('cidx', cidx),
-                ('center', cod_label),
-                ('coord', cbox)])
+                ])
         return Folder(tens, content)
+
+    def _fill_folder(self):
+        atoms = Button(description=' Fill', icon='adjust', layout=_wlo)
+        opt = ['Ball and Stick',
+               'Van Der Waals Spheres',
+               'Covalent Spheres']
+               #'High Performance']#,'Stick']
+        fill = Select(options=opt, value=opt[0], layout=_wlo)
+        bond_r = FloatSlider(max=1.0,description='Bond Radius')
+
+        def _atoms(c):
+            for scn in self.active(): scn.atom_3d = not scn.atom_3d
+
+        def _fill(c):
+            for scn in self.active(): scn.fill_idx = c.new
+            bond_r.disabled = True if c.new == 1 else False
+
+        def _bond_r(c):
+            for scn in self.active(): scn.bond_r = c.new
+
+        atoms.on_click(_atoms)
+        fill.observe(_fill, names='index')
+        bond_r.observe(_bond_r, names='value')
+        content = _ListDict([
+                    ('opt', fill),
+                    ('bond_r', bond_r)
+                    ])
+        return Folder(atoms, content)
+
+    def _update_output(self, out):
+        out.clear_output()
+        idx = {}
+        df = pd.DataFrame([])
+        for sdx, scn in enumerate(self.active()):
+            if not scn.selected:
+                continue
+            elif len(scn.selected['idx']) == 0:
+                continue
+            idx[sdx] = [int(''.join(filter(lambda x: x.isdigit(), i))) for i in scn.selected['idx']]
+            if len(idx[sdx])%2 != 0:
+                raise ValueError("Must select an even number of atoms. Last selected atom has been truncated.")
+            atom_coords = self._df[sdx].atom.groupby('frame').get_group(scn.frame_idx). \
+                               reset_index(drop=True).loc[[i for i in idx[sdx]], ['x', 'y', 'z']]
+            atom_coords.set_index([[i for i in range(len(atom_coords))]], inplace=True)
+            distance = [self._get_distance(atom_coords.loc[i, ['x', 'y', 'z']].values,
+                        atom_coords.loc[i+1, ['x', 'y', 'z']].values)
+                        for i in range(0, len(atom_coords), 2)]
+            distance = [i*Length['au', 'Angstrom'] for i in distance]
+            with out:
+                df = pd.concat([df,pd.DataFrame([[distance[int(i/2)], idx[sdx][i], idx[sdx][i+1], sdx]
+                                    for i in range(0, len(idx[sdx]), 2)],
+                                    columns=["dr (Angs.)", "adx0", "adx1", "scene"])])
+        with out:
+            display_html(df.to_html(), raw=True)
+
+    @staticmethod
+    def _get_distance(x, y):
+        return sqrt((x[0]-y[0])**2 + (x[1]-y[1])**2 +(x[2]-y[2])**2)
+
+    def _distanceBox(self):
+        #TODO: Find way to automatically update the table when there
+        #      is a change in the selected atoms on the javascript side.
+        atom_df = Button(description='Distance', layout=_wlo)
+        clear_selected = Button(description='Clear Sel.')
+        get_selected = Button(description='Update out')
+        select_opt = HBox([clear_selected, get_selected], layout=_wlo)
+        out = Output(layout=_wlo)
+
+        #selected = Dict().tag(sync=True)
+
+        def _atom_df(c):
+            c.value = not c.value
+            if c.value:
+                self._update_output(out)
+                #link((self.scenes[0].selected, 'value'), (selected, 'value'))
+            else:
+                out.clear_output()
+
+        def _clear_selected(c):
+            for scn in self.active(): scn.clear_selected = not scn.clear_selected
+            out.clear_output()
+
+        def _get_selected(c):
+            self._update_output(out)
+
+        #selected = List(Dict()).tag(sync=True)
+        #for scn in self.active():
+        #    selected.append(scn.selected)
+        #
+        #@observe('selected')
+        #def _selected(c):
+        #    print(c)
+
+        atom_df.on_click(_atom_df)
+        atom_df.value = False
+        clear_selected.on_click(_clear_selected)
+        get_selected.on_click(_get_selected)
+        content = _ListDict([('out', out),
+                             ('select_opt', select_opt)
+                            ])
+        return Folder(atom_df, content)
 
     def _init_gui(self, **kwargs):
         nframes = kwargs.pop("nframes", 1)
@@ -550,8 +551,9 @@ class UniverseWidget(ExatomicBox):
         atoms.active = True
         atoms.disabled = False
         axis.active = True
-        atoms.disabled = False
-        mainopts.update([('atom_3d', atoms), ('axis', axis),
+        axis.disabled = False
+        mainopts.update([('atom_3d', self._fill_folder()),
+                         ('axis', axis),
                          ('frame', self._frame_folder(nframes))])
         if fields is not None:
             folder = self._field_folder(fields, **kwargs)
@@ -563,6 +565,8 @@ class UniverseWidget(ExatomicBox):
         if tensors is not None:
             mainopts.update([('tensor', self._tensor_folder())])
 
+        mainopts.update([('distance', self._distanceBox())])
+
         return mainopts
 
     def __init__(self, *unis, **kwargs):
@@ -571,9 +575,10 @@ class UniverseWidget(ExatomicBox):
         atomcolors = scenekwargs.get('atomcolors', None)
         atomradii = scenekwargs.get('atomradii', None)
         atomlabels = scenekwargs.get('atomlabels', None)
-        fields, masterkwargs = [], []
-        tensors = []
+        fields, masterkwargs, tensors = [], [], []
+        self._df = []
         for uni in unis:
+            self._df.append(uni)
             unargs, flds, tens = uni_traits(uni,
                                             atomcolors=atomcolors,
                                             atomradii=atomradii,
