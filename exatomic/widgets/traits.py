@@ -141,7 +141,8 @@ def uni_traits(uni, atomcolors=None, atomradii=None, atomlabels=None):
     if hasattr(uni, 'tensor'):
         unargs.update(tensor_traits(uni))
         tensors = unargs['tensor_i'][0]
-    if hasattr(uni, 'frequency'):
-        unargs.update(freq_traits(uni))
-        freq = unargs['freq_i']
-    return unargs, fields, tensors, freq
+#    if hasattr(uni, 'frequency'):
+#        unargs.update(freq_traits(uni))
+#        freq = unargs['freq_i']
+#    return unargs, fields, tensors, freq
+    return unargs, fields, tensors
