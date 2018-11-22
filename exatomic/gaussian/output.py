@@ -21,6 +21,8 @@ from exatomic.base import z2sym
 from exatomic.core.frame import compute_frame_from_atom
 from exatomic.core.frame import Frame
 from exatomic.core.atom import Atom, Frequency
+from exatomic.core.gradient import Gradient
+from exatomic.core.tensor import Tensor
 from exatomic.core.basis import (BasisSet, BasisSetOrder, Overlap,
                                  deduplicate_basis_sets)
 from exatomic.core.orbital import Orbital, MOMatrix, Excitation
@@ -53,6 +55,8 @@ class GauMeta(TypedMeta):
     frequency = Frequency
     overlap = Overlap
     multipole = pd.DataFrame
+    gradient = Gradient
+    shielding_tensor = Tensor
 
 class Output(six.with_metaclass(GauMeta, Editor)):
     def _parse_triangular_matrix(self, regex, column='coef', values_only=False):
@@ -613,6 +617,12 @@ class Fchk(six.with_metaclass(GauMeta, Editor)):
             self.momatrix['coef1'] = bcoefs
 
     def parse_frequency(self):
+        '''
+        Parses frequency data from FChk file
+
+        Note:
+            Requires Freq(SaveNormalModes) in input
+        '''
         # Frequency regex
         _renat = 'Number of atoms'
         _renmode = 'Number of Normal Modes'
@@ -624,8 +634,11 @@ class Fchk(six.with_metaclass(GauMeta, Editor)):
         _rendim = 'Vib-NDim'
         _rendim0 = 'Vib-NDim0'
 
-        found = self.find(_renmode, _redisp, _refinfo, _remass,
-                          _reznum, _renat, keys_only=True)
+        found = self.find(_renmode)
+        if not found:
+            return
+        else:
+            found = self.find(_renmode, _redisp, _refinfo, _remass, _renat, _reznum, keys_only=True)
         # find number of vibrational modes
         nmode = self._intme(found[_renmode])
         # get extended data (given by mapper array)
@@ -670,6 +683,134 @@ class Fchk(six.with_metaclass(GauMeta, Editor)):
         self.frequency['dx'] *= Length['Angstrom', 'au']
         self.frequency['dy'] *= Length['Angstrom', 'au']
         self.frequency['dz'] *= Length['Angstrom', 'au']
+
+    def parse_gradient(self):
+        # gradient regex
+        _regrad = 'Cartesian Gradient'
+        _reznums = 'Atomic numbers'
+        _renat = 'Number of atoms'
+
+        found = self.find(_regrad)
+        if not found:
+            return
+        else:
+            found = self.find(_regrad, _reznums, _renat, keys_only=True)
+        # get number of atoms
+        nat = self._intme(found[_renat])
+        # get atomic numbers
+        znums = self._dfme(found[_reznums], nat)
+        # generate symbols
+        symbols = list(map(lambda x: z2sym[x], znums))
+        # generate labels
+        label = [i for i in range(len(znums))]
+        ngrad = nat * 3
+        # get gradients(Ha/Bohr)
+        grad = self._dfme(found[_regrad], ngrad)
+        # get x, y, z gradients
+        fx = grad[::3]
+        fy = grad[1::3]
+        fz = grad[2::3]
+        nframes = int(len(fx)/nat)
+        # generate frame labels
+        frame = [i for i in range(nframes)]
+        # extend to match sizes of all arrays
+        frame = np.repeat(frame, nat)
+        label = np.tile(label, nframes)
+        znums = np.tile(znums, nframes)
+        symbols = np.tile(symbols, nframes)
+        # create dataframe
+        self.gradient = pd.DataFrame.from_dict({"Z": znums, "label": label, "fx": fx, "fy": fy,
+                                                "fz": fz, "symbols": symbols, "frame": frame})
+
+    def parse_shielding_tensor(self):
+        # nmr shielding regex
+        _renmr = 'NMR shielding'
+        # base properties
+        _renat = 'Number of atoms'
+        _reznums = 'Atomic numbers'
+
+        found = self.find(_renmr)
+        if not found:
+            return
+        else:
+            found = self.find(_renmr, _renat, _reznums, keys_only=True)
+        # get number of atoms
+        nat = self._intme(found[_renat])
+        # get atomic numbers
+        znums = self._dfme(found[_reznums], nat)
+        # generate symbols
+        symbols = list(map(lambda x: z2sym[x], znums))
+        # generate labels
+        label = [i for i in range(len(znums))]
+        ntens = nat * 9
+        # get NMR shielding tensors (Hz)
+        # TODO: Check that this is in fact in Hz
+        shield = self._dfme(found[_renmr], ntens)
+        # arrange into x, y, z cols
+        x = shield[::3]
+        y = shield[1::3]
+        z = shield[2::3]
+#        # conversion from Hz to ppm
+#        # (only done for some test calculations may not be accurate for all)
+#        x *= 1e6/18778.86
+#        y *= 1e6/18778.86
+#        z *= 1e6/18778.86
+        df = pd.DataFrame(np.transpose([x, y, z]))
+        label = 'nmr shielding'
+        # get atom center indexes
+        atom = [i for i in range(nat)]
+        # get atom symbols
+        symbols = list(map(lambda x: z2sym[x], znums))
+        nframes = int(len(x)/(3*nat))
+        # get frame indexes
+        frame = [i for i in range(nframes)]
+        # extend arrays to match size
+        frame = np.repeat(frame, nat)
+        label = np.repeat(label, nat)
+        atom = np.tile(atom, nframes)
+        symbols = np.tile(symbols, nframes)
+        df['grp'] = [i for i in range(nframes * nat) for j in range(3)]
+        matrix = df.groupby('grp').apply(lambda x: x.select_dtypes(np.float64).values).values
+        df = pd.DataFrame(df.groupby('grp').apply(lambda x:
+                          x.unstack().values[:-3]).values.tolist(),
+                          columns=['xx','xy','xz','yx','yy','yz','zx','zy','zz'])
+        df['atom'] = atom.astype(np.int64)
+        df['symbols'] = symbols
+        df['label'] = label
+        df['frame'] = frame.astype(np.int64)
+        # compute isotropic and anisotropic values
+        # done in units of Hz
+        #print(df[['xx','yx','zx']].values, df[['xy', 'yy', 'zy']].values, df[['xz', 'yz', 'zz']].values)
+        iso = np.zeros(len(matrix))
+        aniso = np.zeros(len(matrix))
+        # TODO: check when we get complex eigenvalues
+        # TODO: we do not get the same eigenvalues for H2O NMR shielding
+        #       we do get the same isotropic value but not the same anisotropic value for H
+        for i in range(len(matrix)):
+            vals = np.linalg.eigvals(np.transpose(matrix[i]))
+            vals.sort()
+            iso[i] = np.average(vals, axis=-1)
+            aniso[i] = vals[2] - (vals[0] + vals[1])/2
+        df['isotropic'] = iso
+        df['anisotropy'] = aniso
+#        diag = np.transpose(np.asarray([df['xx'], df['yy'], df['zz']]))
+#        diag.sort(axis=-1)
+#        iso = np.average(diag, axis=-1)*1e6/18778.86
+#        aniso = [(diag[i][2]-(diag[i][0]+diag[i][1])/2)*1e6/18778.86 for i in range(3)]
+#        print(aniso,iso)
+        #vals.sort(axis=-1)
+        #iso = np.average(vals, axiz=-1)*1e6/18778.86
+        #aniso =
+        # TODO: must make a conditional so it can detect if a tensor object already exists and
+        #       concat the two dataframes
+        #       will also have to consider in core.tensor.add_tensor
+        self.shielding_tensor = df
+#        try:
+#            if self.tensor:
+#                self.tensor = pd.concat(self.tensor, df)
+#        except:
+#            self.tensor = df
+        #self.nmr_shielding = pd.DataFrame.from_dict({'x': x, 'y': y, 'z': z})
 
 #    def parse_polarizability(self):
 #        # Polarizability regex
