@@ -57,6 +57,7 @@ class GauMeta(TypedMeta):
     multipole = pd.DataFrame
     gradient = Gradient
     shielding_tensor = Tensor
+    frequency_ext = Frequency
 
 class Output(six.with_metaclass(GauMeta, Editor)):
     def _parse_triangular_matrix(self, regex, column='coef', values_only=False):
@@ -616,20 +617,18 @@ class Fchk(six.with_metaclass(GauMeta, Editor)):
         if bcoefs is not None:
             self.momatrix['coef1'] = bcoefs
 
-    def parse_frequency(self):
+    def parse_frequency_ext(self):
         '''
-        Parses frequency data from FChk file
+        Parses extended frequency data present in FChk file
 
         Note:
             Requires Freq(SaveNormalModes) in input
         '''
         # Frequency regex
-        _renat = 'Number of atoms'
         _renmode = 'Number of Normal Modes'
         _redisp = 'Vib-Modes'
         _refinfo = 'Vib-E2'
         _remass = 'Vib-AtMass'
-        _reznum = 'Atomic numbers'
         # TODO: find out what these two values are useful for
         _rendim = 'Vib-NDim'
         _rendim0 = 'Vib-NDim0'
@@ -638,7 +637,7 @@ class Fchk(six.with_metaclass(GauMeta, Editor)):
         if not found:
             return
         else:
-            found = self.find(_renmode, _redisp, _refinfo, _remass, _renat, _reznum, keys_only=True)
+            found = self.find(_renmode, _redisp, _refinfo, _remass, keys_only=True)
         # find number of vibrational modes
         nmode = self._intme(found[_renmode])
         # get extended data (given by mapper array)
@@ -651,13 +650,31 @@ class Fchk(six.with_metaclass(GauMeta, Editor)):
         # TODO: is it worth it to make two dataframes?
         self.frequency_ext = pd.DataFrame.from_dict({mapper[int(i/nmode)]: all_info[i:i+nmode]
                                                      for i in range(0, nmode*14-1, nmode)})
-        # find number of atoms
-        nat = self._intme(found[_renat])
+
+    def parse_frequency(self):
+        '''
+        Parses frequency data from FChk file
+
+        Note:
+            Requires Freq(SaveNormalModes) in input
+        '''
+        # Frequency regex
+        _renmode = 'Number of Normal Modes'
+        _redisp = 'Vib-Modes'
+
+        found = self.find(_renmode)
+        if not found:
+            return
+        else:
+            found = self.find(_renmode, _redisp, keys_only=True)
         # get atomic numbers
-        znums = self._dfme(found[_reznum], nat)
+        znums = self.atom['Zeff'].values
+        # get number of atoms
+        nat = len(znums)
         # TODO: will the order of the atoms and their frequencies always be the same?
         # get frequency modes from extended data table
-        freq = all_info[:nmode]
+        freq = self.frequency_ext['freq']
+        nmode = len(freq)
         # get frequency mode displacements
         disp = self._dfme(found[_redisp], nat * nmode * 3)
         # unstack column vector to displacement along each cartesian direction
@@ -677,7 +694,7 @@ class Fchk(six.with_metaclass(GauMeta, Editor)):
         # build frequency table
         self.frequency = pd.DataFrame.from_dict({"Z": znums, "label": label, "dx": dx,
                                                  "dy": dy, "dz": dz, "frequency": freq,
-                                                 "freqdx": freqdx, "symbol": symbols,
+                                                 "freqdx": freqdx, "symbols": symbols,
                                                  "frame": frame})
         # convert atomic displacements to atomic units
         self.frequency['dx'] *= Length['Angstrom', 'au']
