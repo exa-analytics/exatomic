@@ -769,6 +769,7 @@ class Fchk(six.with_metaclass(GauMeta, Editor)):
         z = shield[2::3]
 #        # conversion from Hz to ppm
 #        # (only done for some test calculations may not be accurate for all)
+        conv = 1e6/18778.86
 #        x *= 1e6/18778.86
 #        y *= 1e6/18778.86
 #        z *= 1e6/18778.86
@@ -797,45 +798,28 @@ class Fchk(six.with_metaclass(GauMeta, Editor)):
         df['frame'] = frame.astype(np.int64)
         # compute isotropic and anisotropic values
         # done in units of Hz
-        #print(df[['xx','yx','zx']].values, df[['xy', 'yy', 'zy']].values, df[['xz', 'yz', 'zz']].values)
         iso = np.zeros(len(matrix))
         aniso = np.zeros(len(matrix))
         # TODO: check when we get complex eigenvalues
         # TODO: we do not get the same eigenvalues for H2O NMR shielding
         #       we do get the same isotropic value but not the same anisotropic value for H
         for i in range(len(matrix)):
-            vals = np.linalg.eigvals(np.transpose(matrix[i]))
+            vals = np.linalg.eigvals(matrix[i])
+#            vals = np.linalg.eigvals(np.transpose(matrix[i]))
+            vals = np.real(vals)
             vals.sort()
+            #print("====================={}=====================".format(i+1))
+            #print("Eigenvalues:\t{}\t{}\t{}".format(vals[0]*conv, vals[1]*conv, vals[2]*conv))
             iso[i] = np.average(vals, axis=-1)
             aniso[i] = vals[2] - (vals[0] + vals[1])/2
+            #print("Isotropic:\t{}\nAnisotropy:\t{}".format(iso[i]*conv, aniso[i]*conv))
         df['isotropic'] = iso
         df['anisotropy'] = aniso
-#        diag = np.transpose(np.asarray([df['xx'], df['yy'], df['zz']]))
-#        diag.sort(axis=-1)
-#        iso = np.average(diag, axis=-1)*1e6/18778.86
-#        aniso = [(diag[i][2]-(diag[i][0]+diag[i][1])/2)*1e6/18778.86 for i in range(3)]
-#        print(aniso,iso)
-        #vals.sort(axis=-1)
-        #iso = np.average(vals, axiz=-1)*1e6/18778.86
-        #aniso =
         # TODO: must make a conditional so it can detect if a tensor object already exists and
         #       concat the two dataframes
         #       will also have to consider in core.tensor.add_tensor
         self.shielding_tensor = df
-#        try:
-#            if self.tensor:
-#                self.tensor = pd.concat(self.tensor, df)
-#        except:
-#            self.tensor = df
-        #self.nmr_shielding = pd.DataFrame.from_dict({'x': x, 'y': y, 'z': z})
 
-#    def parse_polarizability(self):
-#        # Polarizability regex
-#        _repolar = 'Polarizability'
-#
-#    # TODO:
-#    #       def parse_gradients
-#    #       def parse_polarizability
     def parse_orbital(self):
         # Orbital regex
         _reorboc = 'Number of .*electrons'
