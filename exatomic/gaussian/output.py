@@ -448,7 +448,8 @@ class Output(six.with_metaclass(GauMeta, Editor)):
 
 
 class Fchk(six.with_metaclass(GauMeta, Editor)):
-
+    # set a minimum tolerance for displayed values
+    tol = 1e-7
     def _intme(self, fitem, idx=0):
         """Helper gets an integer of interest."""
         return int(self[fitem[idx]].split()[-1])
@@ -642,12 +643,12 @@ class Fchk(six.with_metaclass(GauMeta, Editor)):
         nmode = self._intme(found[_renmode])
         # get extended data (given by mapper array)
         all_info = self._dfme(found[_refinfo], nmode * 14)
+        all_info[abs(all_info) < self.tol] = 0
         # mapper array to filter through all of the values printed on the fchk file
         # TODO: have to find labels of unknown columns
         mapper = ["freq", "r_mass", "f_const", "ir_int", "unk1", "unk2", "unk3",
                   "dipole_s", "rot_s", "unk4", "unk5", "unk6", "unk7", "em_angle"]
         # build extended frequency table
-        # TODO: is it worth it to make two dataframes?
         self.frequency_ext = pd.DataFrame.from_dict({mapper[int(i/nmode)]: all_info[i:i+nmode]
                                                      for i in range(0, nmode*14-1, nmode)})
 
@@ -677,6 +678,7 @@ class Fchk(six.with_metaclass(GauMeta, Editor)):
         nmode = len(freq)
         # get frequency mode displacements
         disp = self._dfme(found[_redisp], nat * nmode * 3)
+        disp[abs(disp) < self.tol] = 0
         # unstack column vector to displacement along each cartesian direction
         dx = disp[::3]
         dy = disp[1::3]
@@ -723,6 +725,7 @@ class Fchk(six.with_metaclass(GauMeta, Editor)):
         ngrad = nat * 3
         # get gradients(Ha/Bohr)
         grad = self._dfme(found[_regrad], ngrad)
+        grad[abs(grad) < self.tol] = 0
         # get x, y, z gradients
         fx = grad[::3]
         fy = grad[1::3]
@@ -759,21 +762,39 @@ class Fchk(six.with_metaclass(GauMeta, Editor)):
         symbols = list(map(lambda x: z2sym[x], znums))
         # generate labels
         label = [i for i in range(len(znums))]
-        ntens = nat * 9
         # get NMR shielding tensors (Hz)
         # TODO: Check that this is in fact in Hz
-        shield = self._dfme(found[_renmr], ntens)
+        shield = self._dfme(found[_renmr], nat * 9)
+        shield[abs(shield) < self.tol] = 0
         # arrange into x, y, z cols
         x = shield[::3]
         y = shield[1::3]
         z = shield[2::3]
 #        # conversion from Hz to ppm
 #        # (only done for some test calculations may not be accurate for all)
-        conv = 1e6/18778.86
 #        x *= 1e6/18778.86
 #        y *= 1e6/18778.86
 #        z *= 1e6/18778.86
-        df = pd.DataFrame(np.transpose([x, y, z]))
+        matrix = np.transpose([x,y,z]).reshape(nat,3,3)
+        matrix = np.asarray([0.5*(matrix[i] + np.transpose(matrix[i])) for i in range(len(matrix))])
+        # compute isotropic and anisotropic values
+        # done in units of Hz
+        iso = np.zeros(len(matrix))
+        aniso = np.zeros(len(matrix))
+        # TODO: check when we get complex eigenvalues
+        for i in range(len(matrix)):
+            vals = np.linalg.eigvals(matrix[i])
+#            vals = np.real(vals)
+            vals.sort()
+            iso[i] = np.average(vals, axis=-1)
+            aniso[i] = vals[2] - (vals[0] + vals[1])/2
+            # for debugging
+            #conv = 1e6/18778.86
+            #print("====================={}=====================".format(i+1))
+            #print("Eigenvalues:\t{}\t{}\t{}".format(vals[0]*conv, vals[1]*conv, vals[2]*conv))
+            #print("Isotropic:\t{}\nAnisotropy:\t{}".format(iso[i]*conv, aniso[i]*conv))
+        matrix = matrix.reshape(len(matrix)*3, -1)
+        df = pd.DataFrame(matrix, columns=['x', 'y', 'z'])
         label = 'nmr shielding'
         # get atom center indexes
         atom = [i for i in range(nat)]
@@ -788,7 +809,6 @@ class Fchk(six.with_metaclass(GauMeta, Editor)):
         atom = np.tile(atom, nframes)
         symbols = np.tile(symbols, nframes)
         df['grp'] = [i for i in range(nframes * nat) for j in range(3)]
-        matrix = df.groupby('grp').apply(lambda x: x.select_dtypes(np.float64).values).values
         df = pd.DataFrame(df.groupby('grp').apply(lambda x:
                           x.unstack().values[:-3]).values.tolist(),
                           columns=['xx','xy','xz','yx','yy','yz','zx','zy','zz'])
@@ -796,23 +816,6 @@ class Fchk(six.with_metaclass(GauMeta, Editor)):
         df['symbols'] = symbols
         df['label'] = label
         df['frame'] = frame.astype(np.int64)
-        # compute isotropic and anisotropic values
-        # done in units of Hz
-        iso = np.zeros(len(matrix))
-        aniso = np.zeros(len(matrix))
-        # TODO: check when we get complex eigenvalues
-        # TODO: we do not get the same eigenvalues for H2O NMR shielding
-        #       we do get the same isotropic value but not the same anisotropic value for H
-        for i in range(len(matrix)):
-            vals = np.linalg.eigvals(matrix[i])
-#            vals = np.linalg.eigvals(np.transpose(matrix[i]))
-            vals = np.real(vals)
-            vals.sort()
-            #print("====================={}=====================".format(i+1))
-            #print("Eigenvalues:\t{}\t{}\t{}".format(vals[0]*conv, vals[1]*conv, vals[2]*conv))
-            iso[i] = np.average(vals, axis=-1)
-            aniso[i] = vals[2] - (vals[0] + vals[1])/2
-            #print("Isotropic:\t{}\nAnisotropy:\t{}".format(iso[i]*conv, aniso[i]*conv))
         df['isotropic'] = iso
         df['anisotropy'] = aniso
         # TODO: must make a conditional so it can detect if a tensor object already exists and
