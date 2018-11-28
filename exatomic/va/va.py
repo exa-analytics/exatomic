@@ -173,8 +173,8 @@ class GenInput:
                 g.write('\n')
             with open(mkp(path, prop_file), 'w') as p:
                 xyz = grouped.get_group(fdx)[['symbols', 'x', 'y', 'z']]
-                p.write(_gauss_template.format(link0=link0, route=routeg, 
-                        title=str(fdx)+' gradient', charge=charge, mult=mult))
+                p.write(_gauss_template.format(link0=link0, route=routep,
+                        title=str(fdx)+' property', charge=charge, mult=mult))
                 xyz['x'] *= Length['au', 'Angstrom']
                 xyz['y'] *= Length['au', 'Angstrom']
                 xyz['z'] *= Length['au', 'Angstrom']
