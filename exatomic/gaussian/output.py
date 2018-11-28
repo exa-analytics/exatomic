@@ -699,6 +699,7 @@ class Fchk(six.with_metaclass(GauMeta, Editor)):
                                                  "dy": dy, "dz": dz, "frequency": freq,
                                                  "freqdx": freqdx, "symbols": symbols,
                                                  "frame": frame})
+        self.frequency.reset_index(drop=True, inplace=True)
         # convert atomic displacements to atomic units
         #self.frequency['dx'] *= Length['Angstrom', 'au']
         #self.frequency['dy'] *= Length['Angstrom', 'au']
