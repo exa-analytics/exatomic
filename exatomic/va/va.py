@@ -73,50 +73,64 @@ class GenInput:
             # print(vec_sum)
             d = freq.groupby(['freqdx', 'frame']).apply(
                 lambda x: np.sum(np.linalg.norm(
-                    x[['dx', 'dy', 'dz']].values, axis=1, ord=2))).values
+                    x[['dx', 'dy', 'dz']].values, axis=1))).values
             delta = 0.04 * nat / d
-            delta = np.repeat(delta, nmode)
+            delta = np.repeat(delta, nat)
     
         # global avrage displacement of 0.04 bohr for all atom displacements
         elif delta_type == 1:
             d = np.sum(np.linalg.norm(
-                freq[['dx', 'dy', 'dz']].values))
+                freq[['dx', 'dy', 'dz']].values, axis=1))
             delta = 0.04 * nat * nmode / d
             delta = np.repeat(delta, nat*nmode)
     
         # maximum displacement of 0.04 bohr for any atom in each normal mode
         elif delta_type == 2:
-            d = freq.groupby(['freqdx', 'frame', 'label']).apply(lambda x: 
-                max(abs(x[['dx', 'dy', 'dz']].values[0]))).values
+            d = freq.groupby(['freqdx', 'frame']).apply(lambda x:
+                np.amax(abs(np.linalg.norm(x[['dx', 'dy', 'dz']].values, axis=1)))).values
             delta = 0.04 / d
             delta = np.repeat(delta, nat)
-        self.delta = pd.Series(delta)
+        self.delta = pd.DataFrame.from_dict({'delta': delta, 'freqdx': freqdx})
+        #self.delta['delta'] *= Length['Angstrom', 'au']
 
-    def _gen_displaced(self, freq, atom):
+    def _gen_displaced(self, freq, atom, fdx):
         # get needed data from dataframes
         eqcoord = atom[['x', 'y', 'z']].values
         symbols = atom['symbol'].values
         znums = atom['Zeff'].values
-        disp = freq[['dx','dy','dz']].values
-        modes = freq['frequency'].values
+        if fdx == -1:
+            freq_g = freq.copy()
+        else:
+            freq_g = freq.groupby('freqdx').filter(lambda x: fdx in
+                                                    x['freqdx'].drop_duplicates().values).copy()
+        disp = freq_g[['dx','dy','dz']].values
+        modes = freq_g['frequency'].drop_duplicates().values
         nat = len(eqcoord)
-        nmodes = len(freq['freqdx'].drop_duplicates())
+        freqdx = freq_g['freqdx'].drop_duplicates().values
+        tnmodes = len(freq['freqdx'].drop_duplicates())
+        nmodes = len(freqdx)
         # chop all values less than 1e-6
         eqcoord[abs(eqcoord) < 1e-6] = 0.0
+        # get delta values for wanted frequencies
+        if fdx == -1:
+            delta = self.delta['delta'].values
+        else:
+            delta = self.delta.groupby('freqdx').filter(lambda x:
+                                      fdx in x['freqdx'].drop_duplicates().values)['delta'].values
         # calculate displaced coordinates in positive and negative directions
-        disp_pos = np.tile(eqcoord, nmodes) + np.multiply(np.transpose(disp), self.delta.values)
-        disp_neg = np.tile(eqcoord, nmodes) - np.multiply(np.transpose(disp), self.delta.values)
+        disp_pos = np.tile(np.transpose(eqcoord), nmodes) + np.multiply(np.transpose(disp), delta)
+        disp_neg = np.tile(np.transpose(eqcoord), nmodes) - np.multiply(np.transpose(disp), delta)
         # for now we comment this out so that we can just generate the necessary files in the 
         # format of the original program
-#        full = np.concatenate((np.transpose(disp_neg), np.transpose(eqcoord), 
-#                                                                np.transpose(disp_pos)), axis=0)
+#        full = np.concatenate((np.transpose(disp_neg), eqcoord, np.transpose(disp_pos)), axis=0)
 #        # generate frequency indexes
 #        # negative values are for displacement in negative direction
 #        freqdx = [i for i in range(-nmodes, nmodes+1, 1)]
-        full = np.concatenate((np.transpose(eqcoord), np.transpose(disp_pos), 
-                                                                np.transpose(disp_neg)), axis=0)
-        freqdx = [i for i in range(2*nmodes+1)]
+        full = np.concatenate((eqcoord, np.transpose(disp_pos), np.transpose(disp_neg)), axis=0)
+        freqdx = [i+1+tnmodes*j for j in range(0,2,1) for i in freqdx]
+        freqdx = np.concatenate(([0],freqdx))
         freqdx = np.repeat(freqdx, nat)
+        modes = np.repeat(np.concatenate(([0],modes,modes)), nat)
         symbols = np.tile(symbols, 2*nmodes+1)
         znums = np.tile(znums, 2*nmodes+1)
         # create dataframe
@@ -168,11 +182,11 @@ class GenInput:
                             quoting=csv.QUOTE_NONE, escapechar=' ')
                 p.write('\n')
 
-    def __init__(self, uni, delta_type=0, *args, **kwargs):
+    def __init__(self, uni, delta_type=0, fdx=-1, *args, **kwargs):
         if "_frequency" not in vars(uni):
             raise AttributeError("Frequency dataframe cannot be found in universe")
         freq = uni.frequency.copy()
         atom = uni.atom.copy()
         self._gen_delta(freq, delta_type)
-        self._gen_displaced(freq, atom)
+        self._gen_displaced(freq, atom, fdx)
         
