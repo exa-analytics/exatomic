@@ -59,6 +59,7 @@ class GenInput:
         # average displacement of 0.04 bohr for each normal mode
         nat = len(freq['label'].drop_duplicates())
         nmode = len(freq['freqdx'].drop_duplicates())
+        freqdx = freq['freqdx'].values
         if delta_type == 0:
             # Code using for loops
             # a = np.linalg.norm(freq[['dx', 'dy', 'dz']].
@@ -123,6 +124,7 @@ class GenInput:
         df['freqdx'] = freqdx
         df['Z'] = znums
         df['symbols'] = symbols
+        df['modes'] = modes
         self.displacements = df
 
     def gen_gauss_inputs(self, path, routeg, routep, charge=0, mult=1, link0=''):

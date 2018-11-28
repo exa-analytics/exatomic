@@ -680,16 +680,17 @@ class Fchk(six.with_metaclass(GauMeta, Editor)):
         disp = self._dfme(found[_redisp], nat * nmode * 3)
         disp[abs(disp) < self.tol] = 0
         # unstack column vector to displacement along each cartesian direction
-        dx = disp[::3]
-        dy = disp[1::3]
-        dz = disp[2::3]
+        # we flip sign to account for the sign flip in the FChk vs. the Output file
+        dx = -disp[::3]
+        dy = -disp[1::3]
+        dz = -disp[2::3]
         # extend each property to have the same size
         freqdx = [i for i in range(len(freq))]
         label = [i for i in range(len(znums))]
         freq = np.repeat(freq, nat)
         freqdx = np.repeat(freqdx, nat)
-        znums = np.tile(znums, nat)
-        label = np.tile(label, nat)
+        znums = np.tile(znums, nmode)
+        label = np.tile(label, nmode)
         symbols = list(map(lambda x: z2sym[x], znums))
         # just to have the same table as the one generated for normal output parser
         frame = np.zeros(len(znums)).astype(np.int)
@@ -699,9 +700,9 @@ class Fchk(six.with_metaclass(GauMeta, Editor)):
                                                  "freqdx": freqdx, "symbols": symbols,
                                                  "frame": frame})
         # convert atomic displacements to atomic units
-        self.frequency['dx'] *= Length['Angstrom', 'au']
-        self.frequency['dy'] *= Length['Angstrom', 'au']
-        self.frequency['dz'] *= Length['Angstrom', 'au']
+        #self.frequency['dx'] *= Length['Angstrom', 'au']
+        #self.frequency['dy'] *= Length['Angstrom', 'au']
+        #self.frequency['dz'] *= Length['Angstrom', 'au']
 
     def parse_gradient(self):
         # gradient regex
