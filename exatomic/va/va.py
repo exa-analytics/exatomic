@@ -81,7 +81,7 @@ class GenInput:
         elif delta_type == 1:
             d = np.sum(np.linalg.norm(
                 freq[['dx', 'dy', 'dz']].values, axis=1))
-            delta = 0.04 * nat * nmode / d
+            delta = 0.04 * nat * nmode / (np.sqrt(3) * d)
             delta = np.repeat(delta, nat*nmode)
     
         # maximum displacement of 0.04 bohr for any atom in each normal mode
