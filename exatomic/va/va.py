@@ -182,6 +182,115 @@ class GenInput:
                             quoting=csv.QUOTE_NONE, escapechar=' ')
                 p.write('\n')
 
+    def gen_slurm_inputs(self, path, sbatch, module, end_com=''):
+        """
+        Method to write slurm scripts to execute gradients and property calculations given
+        the displaced coordinates.
+
+        Method generates separate directories containing the slurm script for each calculation.
+        Will need to submit with some external shell script.
+
+        Need to define the module and sbatch variables to what is needed by each user. It was
+        built like this to make it the most general and applicable to more than one type of
+        quantum chemistry code.
+
+        Args:
+            path (str): path to where the directories will be generated and the inputs will
+                        will be read from
+            sbatch (dict): sbatch commands that are to be used for batch script execution
+            module (str): multiline string that will contain the module loading and other
+                          user specific variables
+            end_com (str): commands to be placed at the end of the slurm script
+        """
+        _name = "{job}{int}.dir"
+        _sbatch = "#SBATCH --{key}={value}"
+        files = os.listdir(path)
+        for file in files:
+            if file.endswith(".inp") and file.startswith("confo"):
+                fdx = file.replace("confo", "").replace(".inp", "")
+                job = "jobo"
+            elif file.endswith(".inp") and file.startswith("confg"):
+                fdx = file.replace("confg", "").replace(".inp","")
+                job = "jobg"
+            else:
+                continue
+            try:
+                os.mkdir(path+_name.format(job=job, int=fdx))
+                j_path = path+_name.format(job=job, int=fdx)
+            except OSError:
+                raise OSError("Failed to create directory {}".format(path+_name.format(
+                                                                                job=job, int=fdx)))
+            slurm = file.replace(".inp", ".slurm")
+            with open(path+file, 'r') as f:
+                with open(mkp(j_path, slurm), 'w') as j:
+                    j.write("#!/bin/bash\n")
+                    for key in sbatch.keys():
+                        j.write(_sbatch.format(key=key, value=sbatch[key])+'\n')
+                    j.write(module)
+                    for line in f:
+                        j.write(line)
+                    j.write(end_com+'\n')
+                    f.close()
+                    j.close()
+
+    @staticmethod
+    def write_data_file(path, array, fn):
+        with open(mkp(path, fn), 'w') as f:
+            for item in array:
+                f.write("{}\n".format(item))
+            f.close()
+
+    def to_va(self, uni, path):
+        """
+        Simple script to be able to use the vibaverage.exe program to calculate the needed
+        parameters (temporary).
+
+        Args:
+            uni (:class:`~exatomic.Universe`): Universe object containg pertinent data
+            path (str): path to where the *.dat files will be written to
+        """
+        freq = uni.frequency.copy()
+        atom = uni.atom.copy()
+        freq_ext = uni.frequency_ext.copy()
+        # construct delta data file
+        fn = "delta.dat"
+        delta = self.delta['delta'].drop_duplicates().values
+        self.write_data_file(path=path, array=delta, fn=fn)
+        # construct smatrix data file
+        fn = "smatrix.dat"
+        smatrix = freq[['dx', 'dy', 'dz']].stack().values
+        self.write_data_file(path=path, array=smatrix, fn=fn)
+        # construct atom order data file
+        fn = "atom_order.dat"
+        atom_order = atom['symbol'].values
+        self.write_data_file(path=path, array=atom_order, fn=fn)
+        # construct reduced mass data file
+        fn = "redmass.dat"
+        redmass = freq_ext['r_mass'].values
+        self.write_data_file(path=path, array=redmass, fn=fn)
+        # construct eqcoord data file
+        fn = "eqcoord.dat"
+        eqcoord = atom[['x', 'y', 'z']].stack().values
+        self.write_data_file(path=path, array=eqcoord, fn=fn)
+        # construct frequency data file
+        fn = "freq.dat"
+        frequency = freq_ext['freq'].values
+        self.write_data_file(path=path, array=frequency, fn=fn)
+        # construct actual displacement data file
+        fn = "displac_a.dat"
+        disp = np.multiply(np.linalg.norm(np.transpose(freq[['dx','dy','dz']].values), axis=0),
+                                                        self.delta['delta'].values)
+        disp *= Length['au', 'Angstrom']
+        freqdx = freq['freqdx'].drop_duplicates().values
+        n = len(atom_order)
+        with open(mkp(path, fn), 'w') as f:
+            f.write("actual displacement in angstroms\n")
+            f.write("atom normal_mode distance_atom_moves\n")
+            for fdx in range(len(freqdx)):
+                for idx in range(n):
+                    f.write("{} {}\t{}\n".format(idx+1, fdx+1, disp[fdx*15+idx]))
+            f.close()
+
     def __init__(self, uni, delta_type=0, fdx=-1, *args, **kwargs):
         if "_frequency" not in vars(uni):
             raise AttributeError("Frequency dataframe cannot be found in universe")
