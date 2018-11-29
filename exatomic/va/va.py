@@ -226,6 +226,8 @@ class GenInput:
                     j.write("#!/bin/bash\n")
                     for key in sbatch.keys():
                         j.write(_sbatch.format(key=key, value=sbatch[key])+'\n')
+                    j.write(_sbatch.format(key="job-name", value=file.replace(".inp", "")))
+                    j.write(_sbatch.format(key="output", value=file.replace(".inp", ".out")))
                     j.write(module)
                     for line in f:
                         j.write(line)
@@ -313,7 +315,7 @@ class GenInput:
         fn = "prop.dat"
         if isinstance(prop[0], np.ndarray):
             raise ValueError("prop array must be a 1D array")
-        self.write_data_file(path=path, array=prop, fn=fn
+        self.write_data_file(path=path, array=prop, fn=fn)
 
     def __init__(self, uni, delta_type=0, fdx=-1, *args, **kwargs):
         if "_frequency" not in vars(uni):
