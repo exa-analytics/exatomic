@@ -291,6 +291,30 @@ class GenInput:
                     f.write("{} {}\t{}\n".format(idx+1, fdx+1, disp[fdx*15+idx]))
             f.close()
 
+    def write_grad_prop(self, path, grad, prop):
+        """
+        Simple function to write the gradient and property datafiles to the format needed for
+        vibaverage.exe (temporary).
+
+        The gradient and property dataframes must be from the single point calculations. We
+        assume this by not grouping by the frame column.
+
+        Args:
+            path (str): path to where the *.dat files will be written
+            grad (np.ndarray): 1D array of values from grad[['fx', 'fy', 'fz']].stack().values
+            prop (np.ndarray): 1D array of values from prop[property].values
+        """
+        # construct gradient data file
+        fn = "grad.dat"
+        if isinstance(grad[0], np.ndarray):
+            raise ValueError("grad array must be a 1D array")
+        self.write_data_file(path=path, array=grad, fn=fn)
+        # construct property data file
+        fn = "prop.dat"
+        if isinstance(prop[0], np.ndarray):
+            raise ValueError("prop array must be a 1D array")
+        self.write_data_file(path=path, array=prop, fn=fn
+
     def __init__(self, uni, delta_type=0, fdx=-1, *args, **kwargs):
         if "_frequency" not in vars(uni):
             raise AttributeError("Frequency dataframe cannot be found in universe")
