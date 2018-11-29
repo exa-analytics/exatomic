@@ -422,9 +422,9 @@ class Output(six.with_metaclass(GauMeta, Editor)):
         # TODO: verify with an external program that vibrational
         #       modes look the same as the ones generated with
         #       this methodology.
-        frequency['dx'] *= Length['Angstrom', 'au']
-        frequency['dy'] *= Length['Angstrom', 'au']
-        frequency['dz'] *= Length['Angstrom', 'au']
+        #frequency['dx'] *= Length['Angstrom', 'au']
+        #frequency['dy'] *= Length['Angstrom', 'au']
+        #frequency['dz'] *= Length['Angstrom', 'au']
         # Frame not really implemented here either
         frequency['frame'] = 0
         self.frequency = frequency
