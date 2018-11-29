@@ -418,6 +418,7 @@ class Output(six.with_metaclass(GauMeta, Editor)):
         # Now put all our frequencies together
         frequency = pd.concat(dfs).reset_index(drop=True)
         # Pretty sure displacements are in cartesian angstroms
+        # TODO: Make absolutely sure what units gaussian reports the displacements as
         # TODO: verify with an external program that vibrational
         #       modes look the same as the ones generated with
         #       this methodology.
@@ -449,7 +450,7 @@ class Output(six.with_metaclass(GauMeta, Editor)):
 
 class Fchk(six.with_metaclass(GauMeta, Editor)):
     # set a minimum tolerance for displayed values
-    tol = 1e-7
+    tol = 1e-8
     def _intme(self, fitem, idx=0):
         """Helper gets an integer of interest."""
         return int(self[fitem[idx]].split()[-1])
@@ -680,10 +681,9 @@ class Fchk(six.with_metaclass(GauMeta, Editor)):
         disp = self._dfme(found[_redisp], nat * nmode * 3)
         disp[abs(disp) < self.tol] = 0
         # unstack column vector to displacement along each cartesian direction
-        # we flip sign to account for the sign flip in the FChk vs. the Output file
-        dx = -disp[::3]
-        dy = -disp[1::3]
-        dz = -disp[2::3]
+        dx = disp[::3]
+        dy = disp[1::3]
+        dz = disp[2::3]
         # extend each property to have the same size
         freqdx = [i for i in range(len(freq))]
         label = [i for i in range(len(znums))]
@@ -697,10 +697,11 @@ class Fchk(six.with_metaclass(GauMeta, Editor)):
         # build frequency table
         self.frequency = pd.DataFrame.from_dict({"Z": znums, "label": label, "dx": dx,
                                                  "dy": dy, "dz": dz, "frequency": freq,
-                                                 "freqdx": freqdx, "symbols": symbols,
+                                                 "freqdx": freqdx, "symbol": symbols,
                                                  "frame": frame})
         self.frequency.reset_index(drop=True, inplace=True)
         # convert atomic displacements to atomic units
+        # TODO: Make absolutely sure what units gaussian reports the displacements as
         #self.frequency['dx'] *= Length['Angstrom', 'au']
         #self.frequency['dy'] *= Length['Angstrom', 'au']
         #self.frequency['dz'] *= Length['Angstrom', 'au']
@@ -742,7 +743,7 @@ class Fchk(six.with_metaclass(GauMeta, Editor)):
         symbols = np.tile(symbols, nframes)
         # create dataframe
         self.gradient = pd.DataFrame.from_dict({"Z": znums, "label": label, "fx": fx, "fy": fy,
-                                                "fz": fz, "symbols": symbols, "frame": frame})
+                                                "fz": fz, "symbol": symbols, "frame": frame})
 
     def parse_shielding_tensor(self):
         # nmr shielding regex
@@ -815,7 +816,7 @@ class Fchk(six.with_metaclass(GauMeta, Editor)):
                           x.unstack().values[:-3]).values.tolist(),
                           columns=['xx','xy','xz','yx','yy','yz','zx','zy','zz'])
         df['atom'] = atom.astype(np.int64)
-        df['symbols'] = symbols
+        df['symbol'] = symbols
         df['label'] = label
         df['frame'] = frame.astype(np.int64)
         df['isotropic'] = iso
