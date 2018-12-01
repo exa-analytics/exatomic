@@ -33,9 +33,16 @@ class GenInput:
     on this keyword see the documentation on the
     :class:`~exatomic.va.va.GenInputs.gen_delta` function.
 
+    We can also define a specific normal mode or a list of normal modes that are of
+    interest and generate displaced coordinates along those specific modes rather
+    than all of the normal modes. Note that we use python indexing so the first
+    normal mode corresponds to the index of 0.
+
     Args:
         uni (:class:`~exatomic.Universe`): Universe object containg pertinent data
         delta_type (int): Integer value to define the type of delta parameter to use
+        fdx (int or list): Integer or list parameter to only displace along the
+                           selected normal modes
     """
 
     def _gen_delta(self, freq, delta_type):
