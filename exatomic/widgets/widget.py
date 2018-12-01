@@ -536,7 +536,7 @@ class UniverseWidget(ExatomicBox):
         nframes = kwargs.pop("nframes", 1)
         fields = kwargs.pop("fields", None)
         tensors = kwargs.pop("tensors", None)
-        freq = kwargs.pop("freq", None)
+#        freq = kwargs.pop("freq", None)
         mainopts = super(UniverseWidget, self)._init_gui(**kwargs)
         atoms = Button(description=' Fill', icon='adjust', layout=_wlo)
         axis = Button(description=' Axis', icon='arrows-alt', layout=_wlo)
@@ -580,7 +580,8 @@ class UniverseWidget(ExatomicBox):
         atomcolors = scenekwargs.get('atomcolors', None)
         atomradii = scenekwargs.get('atomradii', None)
         atomlabels = scenekwargs.get('atomlabels', None)
-        fields, masterkwargs, tens, freq = [], [], [], []
+#        fields, masterkwargs, tens, freq = [], [], [], []
+        fields, masterkwargs, tens = [], [], []
         self._uniatom = []
         for uni in unis:
             self._uniatom.append(uni.atom)

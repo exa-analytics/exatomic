@@ -701,7 +701,8 @@ class Fchk(six.with_metaclass(GauMeta, Editor)):
                                                  "frame": frame})
         self.frequency.reset_index(drop=True, inplace=True)
         # convert atomic displacements to atomic units
-        # TODO: Make absolutely sure what units gaussian reports the displacements as
+        # TODO: Make absolutely sure what units gaussian reports the displacements in
+        #       bohr instead of angstroms
         #self.frequency['dx'] *= Length['Angstrom', 'au']
         #self.frequency['dy'] *= Length['Angstrom', 'au']
         #self.frequency['dz'] *= Length['Angstrom', 'au']
@@ -761,8 +762,6 @@ class Fchk(six.with_metaclass(GauMeta, Editor)):
         nat = self._intme(found[_renat])
         # get atomic numbers
         znums = self._dfme(found[_reznums], nat)
-        # generate symbols
-        symbols = list(map(lambda x: z2sym[x], znums))
         # generate labels
         label = [i for i in range(len(znums))]
         # get NMR shielding tensors (Hz)
@@ -779,18 +778,17 @@ class Fchk(six.with_metaclass(GauMeta, Editor)):
 #        y *= 1e6/18778.86
 #        z *= 1e6/18778.86
         matrix = np.transpose([x,y,z]).reshape(nat,3,3)
-        matrix = np.asarray([0.5*(matrix[i] + np.transpose(matrix[i])) for i in range(len(matrix))])
+        matrix = np.asarray([0.5*(mat + np.transpose(mat)) for mat in matrix])
         # compute isotropic and anisotropic values
         # done in units of Hz
         iso = np.zeros(len(matrix))
         aniso = np.zeros(len(matrix))
         # TODO: check when we get complex eigenvalues
-        for i in range(len(matrix)):
-            vals = np.linalg.eigvals(matrix[i])
-#            vals = np.real(vals)
+        for idx, mat in enumerate(matrix):
+            vals = np.linalg.eigvals(mat)
             vals.sort()
-            iso[i] = np.average(vals, axis=-1)
-            aniso[i] = vals[2] - (vals[0] + vals[1])/2
+            iso[idx] = np.average(vals, axis=-1)
+            aniso[idx] = vals[2] - (vals[0] + vals[1])/2
             # for debugging
             #conv = 1e6/18778.86
             #print("====================={}=====================".format(i+1))
@@ -802,15 +800,14 @@ class Fchk(six.with_metaclass(GauMeta, Editor)):
         # get atom center indexes
         atom = [i for i in range(nat)]
         # get atom symbols
-        symbols = list(map(lambda x: z2sym[x], znums))
         nframes = int(len(x)/(3*nat))
+        symbols = np.tile([z2sym[z] for z in znums], nframes)
         # get frame indexes
         frame = [i for i in range(nframes)]
         # extend arrays to match size
         frame = np.repeat(frame, nat)
         label = np.repeat(label, nat)
         atom = np.tile(atom, nframes)
-        symbols = np.tile(symbols, nframes)
         df['grp'] = [i for i in range(nframes * nat) for j in range(3)]
         df = pd.DataFrame(df.groupby('grp').apply(lambda x:
                           x.unstack().values[:-3]).values.tolist(),

@@ -76,7 +76,7 @@ class GenInput:
                     x[['dx', 'dy', 'dz']].values, axis=1))).values
             delta = 0.04 * nat / d
             delta = np.repeat(delta, nat)
-    
+
         # global avrage displacement of 0.04 bohr for all atom displacements
         elif delta_type == 1:
             d = np.sum(np.linalg.norm(
@@ -120,7 +120,7 @@ class GenInput:
         # calculate displaced coordinates in positive and negative directions
         disp_pos = np.tile(np.transpose(eqcoord), nmodes) + np.multiply(np.transpose(disp), delta)
         disp_neg = np.tile(np.transpose(eqcoord), nmodes) - np.multiply(np.transpose(disp), delta)
-        # for now we comment this out so that we can just generate the necessary files in the 
+        # for now we comment this out so that we can just generate the necessary files in the
         # format of the original program
 #        full = np.concatenate((np.transpose(disp_neg), eqcoord, np.transpose(disp_pos)), axis=0)
 #        # generate frequency indexes
@@ -163,7 +163,7 @@ class GenInput:
             prop_file = 'confo'+str(fdx).zfill(n)+'.inp'
             with open(mkp(path, grad_file), 'w') as g:
                 xyz = grouped.get_group(fdx)[['symbols', 'x', 'y', 'z']]
-                g.write(_gauss_template.format(link0=link0, route=routeg, 
+                g.write(_gauss_template.format(link0=link0, route=routeg,
                         title=str(fdx)+' gradient', charge=charge, mult=mult))
                 xyz['x'] *= Length['au', 'Angstrom']
                 xyz['y'] *= Length['au', 'Angstrom']
@@ -210,7 +210,7 @@ class GenInput:
                 fdx = file.replace("confo", "").replace(".inp", "")
                 job = "jobo"
             elif file.endswith(".inp") and file.startswith("confg"):
-                fdx = file.replace("confg", "").replace(".inp","")
+                fdx = file.replace("confg", "").replace(".inp", "")
                 job = "jobg"
             else:
                 continue
@@ -232,8 +232,6 @@ class GenInput:
                     for line in f:
                         j.write(line)
                     j.write(end_com+'\n')
-                    f.close()
-                    j.close()
 
     @staticmethod
     def write_data_file(path, array, fn):
@@ -261,6 +259,7 @@ class GenInput:
         # construct smatrix data file
         fn = "smatrix.dat"
         smatrix = freq[['dx', 'dy', 'dz']].stack().values
+        smatrix *= Length['au', 'Angstrom']
         self.write_data_file(path=path, array=smatrix, fn=fn)
         # construct atom order data file
         fn = "atom_order.dat"
@@ -273,6 +272,7 @@ class GenInput:
         # construct eqcoord data file
         fn = "eqcoord.dat"
         eqcoord = atom[['x', 'y', 'z']].stack().values
+        eqcoord *= Length['au', 'Angstrom']
         self.write_data_file(path=path, array=eqcoord, fn=fn)
         # construct frequency data file
         fn = "freq.dat"

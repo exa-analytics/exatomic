@@ -378,7 +378,7 @@ class ExatomicBox(Box):
         nframes = kwargs.pop('nframes', None)
         fields = kwargs.pop('fields', None)
         tensors = kwargs.pop('tensors', None)
-        freq = kwargs.pop('freq', None)
+#        freq = kwargs.pop('freq', None)
         self.scenes, scenes = _scene_grid(objs, mh, mw, test,
                                           uni, typ, scenekwargs)
         self._controls = self._init_gui(nframes=nframes,
