@@ -450,7 +450,7 @@ class Output(six.with_metaclass(GauMeta, Editor)):
 
 class Fchk(six.with_metaclass(GauMeta, Editor)):
     # set a minimum tolerance for displayed values
-    tol = 1e-8
+    _tol = 1e-8
     def _intme(self, fitem, idx=0):
         """Helper gets an integer of interest."""
         return int(self[fitem[idx]].split()[-1])
@@ -644,7 +644,8 @@ class Fchk(six.with_metaclass(GauMeta, Editor)):
         nmode = self._intme(found[_renmode])
         # get extended data (given by mapper array)
         all_info = self._dfme(found[_refinfo], nmode * 14)
-        all_info[abs(all_info) < self.tol] = 0
+        all_info[abs(all_info) < self._tol] = 0
+        freqdx = [i for i in range(nmode)]
         # mapper array to filter through all of the values printed on the fchk file
         # TODO: have to find labels of unknown columns
         mapper = ["freq", "r_mass", "f_const", "ir_int", "unk1", "unk2", "unk3",
@@ -652,6 +653,7 @@ class Fchk(six.with_metaclass(GauMeta, Editor)):
         # build extended frequency table
         self.frequency_ext = pd.DataFrame.from_dict({mapper[int(i/nmode)]: all_info[i:i+nmode]
                                                      for i in range(0, nmode*14-1, nmode)})
+        self.frequency_ext['freqdx'] = freqdx
 
     def parse_frequency(self):
         '''
@@ -663,23 +665,26 @@ class Fchk(six.with_metaclass(GauMeta, Editor)):
         # Frequency regex
         _renmode = 'Number of Normal Modes'
         _redisp = 'Vib-Modes'
+        _refinfo = 'Vib-E2'
 
         found = self.find(_renmode)
         if not found:
             return
         else:
-            found = self.find(_renmode, _redisp, keys_only=True)
+            found = self.find(_renmode, _refinfo, _redisp, keys_only=True)
         # get atomic numbers
         znums = self.atom['Zeff'].values
         # get number of atoms
         nat = len(znums)
         # TODO: will the order of the atoms and their frequencies always be the same?
-        # get frequency modes from extended data table
-        freq = self.frequency_ext['freq']
-        nmode = len(freq)
+        # find number of vibrational modes
+        nmode = self._intme(found[_renmode])
+        # get extended data (given by mapper array)
+        all_info = self._dfme(found[_refinfo], nmode * 14)
+        freq = all_info[:nmode]
         # get frequency mode displacements
         disp = self._dfme(found[_redisp], nat * nmode * 3)
-        disp[abs(disp) < self.tol] = 0
+        disp[abs(disp) < self._tol] = 0
         # unstack column vector to displacement along each cartesian direction
         dx = disp[::3]
         dy = disp[1::3]
@@ -729,7 +734,7 @@ class Fchk(six.with_metaclass(GauMeta, Editor)):
         ngrad = nat * 3
         # get gradients(Ha/Bohr)
         grad = self._dfme(found[_regrad], ngrad)
-        grad[abs(grad) < self.tol] = 0
+        grad[abs(grad) < self._tol] = 0
         # get x, y, z gradients
         fx = grad[::3]
         fy = grad[1::3]
@@ -743,8 +748,9 @@ class Fchk(six.with_metaclass(GauMeta, Editor)):
         znums = np.tile(znums, nframes)
         symbols = np.tile(symbols, nframes)
         # create dataframe
-        self.gradient = pd.DataFrame.from_dict({"Z": znums, "label": label, "fx": fx, "fy": fy,
+        self.gradient = pd.DataFrame.from_dict({"Z": znums, "atom": label, "fx": fx, "fy": fy,
                                                 "fz": fz, "symbol": symbols, "frame": frame})
+        self.gradient['Z'] = self.gradient['Z'].astype(np.int64)
 
     def parse_shielding_tensor(self):
         # nmr shielding regex
@@ -767,7 +773,7 @@ class Fchk(six.with_metaclass(GauMeta, Editor)):
         # get NMR shielding tensors (Hz)
         # TODO: Check that this is in fact in Hz
         shield = self._dfme(found[_renmr], nat * 9)
-        shield[abs(shield) < self.tol] = 0
+        shield[abs(shield) < self._tol] = 0
         # arrange into x, y, z cols
         x = shield[::3]
         y = shield[1::3]

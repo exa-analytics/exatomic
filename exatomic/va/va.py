@@ -31,12 +31,13 @@ class GenInput:
     :class:`~exatomic.atom.Frequency` dataframe. It will scale these displacements to a
     desired type defined by the user with the delta_type keyword. For more information
     on this keyword see the documentation on the
-    :class:`~exatomic.va.va.GenInputs.gen_delta` function.
+    :class:`~exatomic.va.va.GenInputs._gen_delta` function.
 
     We can also define a specific normal mode or a list of normal modes that are of
     interest and generate displaced coordinates along those specific modes rather
     than all of the normal modes. Note that we use python indexing so the first
-    normal mode corresponds to the index of 0.
+    normal mode corresponds to the index of 0. This is highly recommended if applicable
+    as it may reduce number of computations and memory usage significantly.
 
     Args:
         uni (:class:`~exatomic.Universe`): Universe object containg pertinent data
@@ -45,6 +46,7 @@ class GenInput:
                            selected normal modes
     """
 
+    _tol = 1e-6
     def _gen_delta(self, freq, delta_type):
         """
         Function to compute the delta parameter to be used for the maximum distortion
@@ -101,6 +103,29 @@ class GenInput:
         #self.delta['delta'] *= Length['Angstrom', 'au']
 
     def _gen_displaced(self, freq, atom, fdx):
+        """
+        Function to generate displaced coordinates for each selected normal mode.
+        We scale the displacements by the selected delta value in the positive and negative
+        directions. We generate an array of coordinates that are put into a dataframe to
+        write them to a file input for later evaluation.
+
+        Note:
+            The index 0 is reserved for the optimized coordinates, the equilibrium geometry.
+            The displaced coordinates in the positive direction are given an index from
+            1 to tnmodes (total number of normal modes).
+            The displaced coordinates in the negative direction are given an index from
+            tnmodes to 2*tnmodes.
+            In an example with 39 normal modes 0 is the equilibrium geometry, 1-39 are the
+            positive displacements and 40-78 are the negative displacements.
+            nmodes are the number of normal modes that are selected. tnmodes are the total
+            number of normal modes for the system.
+
+        Args:
+            freq (:class:`exatomic.atom.Frequency`): Frequency dataframe
+            atom (:class:`exatomic.atom.Atom`): Atom dataframe
+            fdx (int or list): Integer or list parameter to only displace along the
+                               selected normal modes
+        """
         # get needed data from dataframes
         eqcoord = atom[['x', 'y', 'z']].values
         symbols = atom['symbol'].values
@@ -117,7 +142,7 @@ class GenInput:
         tnmodes = len(freq['freqdx'].drop_duplicates())
         nmodes = len(freqdx)
         # chop all values less than 1e-6
-        eqcoord[abs(eqcoord) < 1e-6] = 0.0
+        eqcoord[abs(eqcoord) < self._tol] = 0.0
         # get delta values for wanted frequencies
         if fdx == -1:
             delta = self.delta['delta'].values

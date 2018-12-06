@@ -12,5 +12,5 @@ class Gradient(DataFrame):
     """
     # simple function that will have to be seen if it can have any other functions
     _index = 'gradient'
-    _columns = ['Z', 'label', 'fx', 'fy', 'fz', 'symbol', 'frame']
-    _categories = {'frame': np.int64, 'label': np.int64, 'symbol': str}
+    _columns = ['Z', 'atom', 'fx', 'fy', 'fz', 'symbol', 'frame']
+    _categories = {'frame': np.int64, 'atom': np.int64, 'symbol': str}
