@@ -10,8 +10,13 @@ import numpy as np
 import pandas as pd
 import csv
 import os
+import glob
+import re
 from exa.util.units import Length
 from exa.util.utility import mkp
+from exatomic.core import Atom
+#from exatomic import gaussian
+#from exatomic import nwchem
 
 _gauss_template='''{link0}
 {route}
@@ -21,6 +26,42 @@ _gauss_template='''{link0}
 {charge} {mult}
 '''
 float_format = '%    .8f'
+
+def get_data(path, attr, f_end, soft, f_start=''):
+    # TODO: Make something so that we do not have to set the type of output parser by default
+    #       allow the user to specify which it is based on the file.
+    #       Consider just using soft as an input of a class
+    #prog = {'gauss': gaussian.Fchk, 'gaussian': gaussian.Fchk}
+    #if soft.lower() not in prog.keys():
+    #    raise NotImplementedError("Cannot find the chosen program {} in known programs {}".format(
+    #                                                                            soft, prog.keys()))
+    #else:
+    #    soft = prog[soft.lower()]
+    if not hasattr(soft, attr):
+        raise NotImplementedError("parse_{} is not an attribute of {}".format(attr, soft))
+    files = glob.glob(path)
+    array = []
+    for file in files:
+        if file.split('/')[-1].endswith(f_end) and file.split('/')[-1].startswith(f_start):
+            ed = soft(file)
+            try:
+                df = getattr(ed, attr)
+            except AttributeError:
+                raise AttributeError("The property {} cannot be found in output {}".format(
+                                                                                        attr, file))
+            fdx = list(map(int, re.findall('\d+', file)))
+            df['frame'] = np.tile(fdx, len(df))
+        else:
+            continue
+        array.append(df)
+    cdf = pd.concat([arr for arr in array])
+    try:
+        cdf.sort_values(by=['frame', 'label'], inplace=True)
+    except KeyError:
+        cdf.sort_values(by=['frame', 'atom'], inplace=True)
+    cdf.reset_index(drop=True, inplace=True)
+    return cdf
+
 class GenInput:
     """
     Supporting class for Vibrational Averaging that will generate input files
@@ -171,7 +212,7 @@ class GenInput:
         df['Z'] = znums
         df['symbols'] = symbols
         df['modes'] = modes
-        self.displacements = df
+        self.displaced = df
 
     def gen_gauss_inputs(self, path, routeg, routep, charge=0, mult=1, link0=''):
         """
@@ -213,6 +254,32 @@ class GenInput:
                 xyz.to_csv(p, header=False, index=False, sep=' ', float_format=float_format,
                             quoting=csv.QUOTE_NONE, escapechar=' ')
                 p.write('\n')
+
+#    def gen_inputs(self, path, comm, soft):
+#        """
+#        Method to write the displaced coordinates as an input for the quantum code program
+#        of choice. Currently supported input generators include:
+#            - NWChem
+#            - Gaussian
+#        More to come as the need is met.
+#
+#        Note:
+#            comm is defined as a single dictionary, but it can be a dictionary of dictionaries
+#            if multiple inputs based on thge same geometry must be written. If this is the case
+#            the dictionary must be
+#                {'gradient': {gradient commands},
+#                 'property': {property commands}}
+#            If a 1D dictionary is passed we assume that there will only need to be one file
+#            to calculate the gradient and property values.
+#
+#            We only support soft keyword values 'gauss', 'gaussian' and 'nwchem'. More to come.
+#
+#        Args:
+#            path (str): Path pointing to filepath to where files will be written
+#            comm (dict): Dictionary containing all of the pertinent commands for the input
+#            soft (str): Software of choice for the input generation
+#        """
+#        pass
 
     def gen_slurm_inputs(self, path, sbatch, module, end_com=''):
         """
@@ -270,7 +337,6 @@ class GenInput:
         with open(mkp(path, fn), 'w') as f:
             for item in array:
                 f.write("{}\n".format(item))
-            f.close()
 
     def to_va(self, uni, path):
         """
@@ -323,7 +389,6 @@ class GenInput:
             for fdx in range(len(freqdx)):
                 for idx in range(n):
                     f.write("{} {}\t{}\n".format(idx+1, fdx+1, disp[fdx*15+idx]))
-            f.close()
 
     def write_grad_prop(self, path, grad, prop):
         """
@@ -356,4 +421,7 @@ class GenInput:
         atom = uni.atom.copy()
         self._gen_delta(freq, delta_type)
         self._gen_displaced(freq, atom, fdx)
-        
+
+class VA:
+    def __init__(self, *args, **kwargs):
+        pass
