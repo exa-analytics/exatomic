@@ -63,7 +63,66 @@ def get_data(path, attr, f_end, soft, f_start=''):
     cdf.reset_index(drop=True, inplace=True)
     return cdf
 
-class GenInput:
+def gen_delta(freq, delta_type):
+    """
+    Function to compute the delta parameter to be used for the maximum distortion
+    of the molecule along the normal mode.
+
+    When delta_type = 0 we normalize the displacments to have a maximum of 0.04 Bohr
+    on each normal mode.
+
+    When delta_type = 1 we normalize all atomic displacements along all normal modes
+    to have a global average displacement of 0.04 Bohr.
+
+    When delta_type = 2 we normalize each displacement so every atom has a maximum
+    displacement of 0.04 Bohr on every normal mode.
+
+    Args:
+        freq (:class:`exatomic.atom.Frequency`): Frequency dataframe
+        delta_type (int): Integer value to define the type of delta parameter to use
+    """
+    # average displacement of 0.04 bohr for each normal mode
+    nat = len(freq['label'].drop_duplicates())
+    nmode = len(freq['freqdx'].drop_duplicates())
+    freqdx = freq['freqdx'].drop_duplicates().values
+    if delta_type == 0:
+        # Code using for loops
+        # a = np.linalg.norm(freq[['dx', 'dy', 'dz']].
+        #                                    values, axis=1, ord=2)
+        # vec_sum = []
+        # for i in range(0,len(a),3):
+        #     vec_sum.append([0])
+        #     for j in range(i,i+3):
+        #         vec_sum[-1] += a[j]
+        # print(a)
+        # print(vec_sum)
+        d = freq.groupby(['freqdx', 'frame']).apply(
+            lambda x: np.sum(np.linalg.norm(
+                x[['dx', 'dy', 'dz']].values, axis=1))).values
+        delta = 0.04 * nat / d
+    #    delta = np.repeat(delta, nat)
+
+    # global avrage displacement of 0.04 bohr for all atom displacements
+    elif delta_type == 1:
+        d = np.sum(np.linalg.norm(
+            freq[['dx', 'dy', 'dz']].values, axis=1))
+        delta = 0.04 * nat * nmode / (np.sqrt(3) * d)
+        delta = np.repeat(delta, nmode)
+    #    delta = np.repeat(delta, nat*nmode)
+
+    # maximum displacement of 0.04 bohr for any atom in each normal mode
+    elif delta_type == 2:
+        d = freq.groupby(['freqdx', 'frame']).apply(lambda x:
+            np.amax(abs(np.linalg.norm(x[['dx', 'dy', 'dz']].values, axis=1)))).values
+        delta = 0.04 / d
+    #    delta = np.repeat(delta, nat)
+    return pd.DataFrame.from_dict({'delta': delta, 'freqdx': freqdx})
+
+class GenMeta(TypedMeta):
+    disp = Atom
+    delta = pd.DataFrame
+
+class GenInput(metaclass = GenMeta):
     """
     Supporting class for Vibrational Averaging that will generate input files
     for a selected program under a certain displacement parameter.
@@ -89,60 +148,64 @@ class GenInput:
     """
 
     _tol = 1e-6
-    def _gen_delta(self, freq, delta_type):
-        """
-        Function to compute the delta parameter to be used for the maximum distortion
-        of the molecule along the normal mode.
 
-        When delta_type = 0 we normalize the displacments to have a maximum of 0.04 Bohr
-        on each normal mode.
+    @property
+    def atom(self):
+        return self.disp
 
-        When delta_type = 1 we normalize all atomic displacements along all normal modes
-        to have a global average displacement of 0.04 Bohr.
-
-        When delta_type = 2 we normalize each displacement so every atom has a maximum
-        displacement of 0.04 Bohr on every normal mode.
-
-        Args:
-            freq (:class:`exatomic.atom.Frequency`): Frequency dataframe
-            delta_type (int): Integer value to define the type of delta parameter to use
-        """
-        # average displacement of 0.04 bohr for each normal mode
-        nat = len(freq['label'].drop_duplicates())
-        nmode = len(freq['freqdx'].drop_duplicates())
-        freqdx = freq['freqdx'].values
-        if delta_type == 0:
-            # Code using for loops
-            # a = np.linalg.norm(freq[['dx', 'dy', 'dz']].
-            #                                    values, axis=1, ord=2)
-            # vec_sum = []
-            # for i in range(0,len(a),3):
-            #     vec_sum.append([0])
-            #     for j in range(i,i+3):
-            #         vec_sum[-1] += a[j]
-            # print(a)
-            # print(vec_sum)
-            d = freq.groupby(['freqdx', 'frame']).apply(
-                lambda x: np.sum(np.linalg.norm(
-                    x[['dx', 'dy', 'dz']].values, axis=1))).values
-            delta = 0.04 * nat / d
-            delta = np.repeat(delta, nat)
-
-        # global avrage displacement of 0.04 bohr for all atom displacements
-        elif delta_type == 1:
-            d = np.sum(np.linalg.norm(
-                freq[['dx', 'dy', 'dz']].values, axis=1))
-            delta = 0.04 * nat * nmode / (np.sqrt(3) * d)
-            delta = np.repeat(delta, nat*nmode)
-    
-        # maximum displacement of 0.04 bohr for any atom in each normal mode
-        elif delta_type == 2:
-            d = freq.groupby(['freqdx', 'frame']).apply(lambda x:
-                np.amax(abs(np.linalg.norm(x[['dx', 'dy', 'dz']].values, axis=1)))).values
-            delta = 0.04 / d
-            delta = np.repeat(delta, nat)
-        self.delta = pd.DataFrame.from_dict({'delta': delta, 'freqdx': freqdx})
-        #self.delta['delta'] *= Length['Angstrom', 'au']
+#    def _gen_delta(self, freq, delta_type):
+#        """
+#        Function to compute the delta parameter to be used for the maximum distortion
+#        of the molecule along the normal mode.
+#
+#        When delta_type = 0 we normalize the displacments to have a maximum of 0.04 Bohr
+#        on each normal mode.
+#
+#        When delta_type = 1 we normalize all atomic displacements along all normal modes
+#        to have a global average displacement of 0.04 Bohr.
+#
+#        When delta_type = 2 we normalize each displacement so every atom has a maximum
+#        displacement of 0.04 Bohr on every normal mode.
+#
+#        Args:
+#            freq (:class:`exatomic.atom.Frequency`): Frequency dataframe
+#            delta_type (int): Integer value to define the type of delta parameter to use
+#        """
+#        # average displacement of 0.04 bohr for each normal mode
+#        nat = len(freq['label'].drop_duplicates())
+#        nmode = len(freq['freqdx'].drop_duplicates())
+#        freqdx = freq['freqdx'].values
+#        if delta_type == 0:
+#            # Code using for loops
+#            # a = np.linalg.norm(freq[['dx', 'dy', 'dz']].
+#            #                                    values, axis=1, ord=2)
+#            # vec_sum = []
+#            # for i in range(0,len(a),3):
+#            #     vec_sum.append([0])
+#            #     for j in range(i,i+3):
+#            #         vec_sum[-1] += a[j]
+#            # print(a)
+#            # print(vec_sum)
+#            d = freq.groupby(['freqdx', 'frame']).apply(
+#                lambda x: np.sum(np.linalg.norm(
+#                    x[['dx', 'dy', 'dz']].values, axis=1))).values
+#            delta = 0.04 * nat / d
+#            delta = np.repeat(delta, nat)
+#
+#        # global avrage displacement of 0.04 bohr for all atom displacements
+#        elif delta_type == 1:
+#            d = np.sum(np.linalg.norm(
+#                freq[['dx', 'dy', 'dz']].values, axis=1))
+#            delta = 0.04 * nat * nmode / (np.sqrt(3) * d)
+#            delta = np.repeat(delta, nat*nmode)
+#
+#        # maximum displacement of 0.04 bohr for any atom in each normal mode
+#        elif delta_type == 2:
+#            d = freq.groupby(['freqdx', 'frame']).apply(lambda x:
+#                np.amax(abs(np.linalg.norm(x[['dx', 'dy', 'dz']].values, axis=1)))).values
+#            delta = 0.04 / d
+#            delta = np.repeat(delta, nat)
+#        return pd.DataFrame.from_dict({'delta': delta, 'freqdx': freqdx})
 
     def _gen_displaced(self, freq, atom, fdx):
         """
