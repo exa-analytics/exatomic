@@ -249,11 +249,22 @@ class GenInput(metaclass = GenMeta):
         # chop all values less than 1e-6
         eqcoord[abs(eqcoord) < self._tol] = 0.0
         # get delta values for wanted frequencies
-        if fdx == -1:
-            delta = self.delta['delta'].values
-        else:
-            delta = self.delta.groupby('freqdx').filter(lambda x:
+        try:
+            if fdx == -1:
+                delta = self.delta['delta'].values
+            elif -1 not in fdx:
+                delta = self.delta.groupby('freqdx').filter(lambda x:
                                       fdx in x['freqdx'].drop_duplicates().values)['delta'].values
+            else:
+                raise TypeError("fdx must be a list of integers or a single integer")
+            if len(delta.index.values) != tnmodes:
+                raise ValueError("Inappropriate length of delta. Passed a length of {} "+
+                                 "when it should have a length of {}. One value for each "+
+                                 "normal mode.".format(len(delta.index.values), tnmodes))
+            else:
+                delta = np.repeat(delta, nat)
+        except AttributeError:
+            raise AttributeError("Please compute self.delta first")
         # calculate displaced coordinates in positive and negative directions
         disp_pos = np.tile(np.transpose(eqcoord), nmodes) + np.multiply(np.transpose(disp), delta)
         disp_neg = np.tile(np.transpose(eqcoord), nmodes) - np.multiply(np.transpose(disp), delta)
@@ -485,8 +496,9 @@ class GenInput(metaclass = GenMeta):
             raise AttributeError("Frequency dataframe cannot be found in universe")
         freq = uni.frequency.copy()
         atom = uni.atom.copy()
-        self._gen_delta(freq, delta_type)
-        self._gen_displaced(freq, atom, fdx)
+        self.delta = gen_delta(freq, delta_type)
+        self.disp = self._gen_displaced(freq, atom, fdx)
+
 
 class VA:
     def __init__(self, *args, **kwargs):
