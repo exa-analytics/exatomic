@@ -14,7 +14,8 @@ import glob
 import re
 from exa.util.units import Length
 from exa.util.utility import mkp
-from exatomic.core import Atom
+from exatomic.core import Atom, Gradient
+from exa import TypedMeta
 #from exatomic import gaussian
 #from exatomic import nwchem
 
@@ -50,15 +51,15 @@ def get_data(path, attr, f_end, soft, f_start=''):
                 raise AttributeError("The property {} cannot be found in output {}".format(
                                                                                         attr, file))
             fdx = list(map(int, re.findall('\d+', file)))
-            df['frame'] = np.tile(fdx, len(df))
+            df['file'] = np.tile(fdx, len(df))
         else:
             continue
         array.append(df)
     cdf = pd.concat([arr for arr in array])
     try:
-        cdf.sort_values(by=['frame', 'label'], inplace=True)
+        cdf.sort_values(by=['file', 'label'], inplace=True)
     except KeyError:
-        cdf.sort_values(by=['frame', 'atom'], inplace=True)
+        cdf.sort_values(by=['file', 'atom'], inplace=True)
     cdf.reset_index(drop=True, inplace=True)
     return cdf
 
@@ -206,13 +207,15 @@ class GenInput:
         modes = np.repeat(np.concatenate(([0],modes,modes)), nat)
         symbols = np.tile(symbols, 2*nmodes+1)
         znums = np.tile(znums, 2*nmodes+1)
+        frame = np.zeros(len(znums)).astype(np.int64)
         # create dataframe
         df = pd.DataFrame(full, columns=['x', 'y', 'z'])
         df['freqdx'] = freqdx
         df['Z'] = znums
-        df['symbols'] = symbols
+        df['symbol'] = symbols
         df['modes'] = modes
-        self.displaced = df
+        df['frame'] = frame
+        return df
 
     def gen_gauss_inputs(self, path, routeg, routep, charge=0, mult=1, link0=''):
         """
