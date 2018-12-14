@@ -12,7 +12,7 @@ import csv
 import os
 import glob
 import re
-from exa.util.units import Length
+from exa.util.units import Length, Energy
 from exa.util.utility import mkp
 from exatomic.core import Atom, Gradient
 from exa import TypedMeta
@@ -26,7 +26,7 @@ _gauss_template='''{link0}
 
 {charge} {mult}
 '''
-float_format = '%    .8f'
+float_format = '%    .10f'
 
 def get_data(path, attr, f_end, soft, f_start=''):
     # TODO: Make something so that we do not have to set the type of output parser by default
@@ -305,14 +305,14 @@ class GenInput(metaclass = GenMeta):
             mult (int): spin multiplicity of molecular system
             link0 (str): link0 commands for gaussian
         """
-        grouped = self.displacements.groupby('freqdx')
-        freqdx = self.displacements['freqdx'].drop_duplicates().values
+        grouped = self.disp.groupby('freqdx')
+        freqdx = self.disp['freqdx'].drop_duplicates().values
         n = len(str(max(freqdx)))
         for fdx in freqdx:
             grad_file = 'confg'+str(fdx).zfill(n)+'.inp'
             prop_file = 'confo'+str(fdx).zfill(n)+'.inp'
             with open(mkp(path, grad_file), 'w') as g:
-                xyz = grouped.get_group(fdx)[['symbols', 'x', 'y', 'z']]
+                xyz = grouped.get_group(fdx)[['symbol', 'x', 'y', 'z']]
                 g.write(_gauss_template.format(link0=link0, route=routeg,
                         title=str(fdx)+' gradient', charge=charge, mult=mult))
                 xyz['x'] *= Length['au', 'Angstrom']
@@ -322,7 +322,7 @@ class GenInput(metaclass = GenMeta):
                             quoting=csv.QUOTE_NONE, escapechar=' ')
                 g.write('\n')
             with open(mkp(path, prop_file), 'w') as p:
-                xyz = grouped.get_group(fdx)[['symbols', 'x', 'y', 'z']]
+                xyz = grouped.get_group(fdx)[['symbol', 'x', 'y', 'z']]
                 p.write(_gauss_template.format(link0=link0, route=routep,
                         title=str(fdx)+' property', charge=charge, mult=mult))
                 xyz['x'] *= Length['au', 'Angstrom']
@@ -332,31 +332,32 @@ class GenInput(metaclass = GenMeta):
                             quoting=csv.QUOTE_NONE, escapechar=' ')
                 p.write('\n')
 
-#    def gen_inputs(self, path, comm, soft):
-#        """
-#        Method to write the displaced coordinates as an input for the quantum code program
-#        of choice. Currently supported input generators include:
-#            - NWChem
-#            - Gaussian
-#        More to come as the need is met.
-#
-#        Note:
-#            comm is defined as a single dictionary, but it can be a dictionary of dictionaries
-#            if multiple inputs based on thge same geometry must be written. If this is the case
-#            the dictionary must be
-#                {'gradient': {gradient commands},
-#                 'property': {property commands}}
-#            If a 1D dictionary is passed we assume that there will only need to be one file
-#            to calculate the gradient and property values.
-#
-#            We only support soft keyword values 'gauss', 'gaussian' and 'nwchem'. More to come.
-#
-#        Args:
-#            path (str): Path pointing to filepath to where files will be written
-#            comm (dict): Dictionary containing all of the pertinent commands for the input
-#            soft (str): Software of choice for the input generation
-#        """
-#        pass
+    def gen_inputs(self, path, comm, soft):
+        """
+        Method to write the displaced coordinates as an input for the quantum code program
+        of choice. Currently supported input generators include:
+            - NWChem
+            - Gaussian
+        More to come as the need is met.
+
+        Note:
+            comm is defined as a single dictionary, but it can be a dictionary of dictionaries
+            if multiple inputs based on thge same geometry must be written. If this is the case
+            the dictionary must be
+                {'gradient': {gradient commands},
+                 'property': {property commands}}
+            If a 1D dictionary is passed we assume that there will only need to be one file
+            to calculate the gradient and property values.
+
+            We only support soft keyword values 'gauss', 'gaussian' and 'nwchem'. More to come.
+
+        Args:
+            path (str): Path pointing to filepath to where files will be written
+            comm (dict): Dictionary containing all of the pertinent commands for the input
+            soft (class instance): Software of choice for the input generation
+        """
+        raise NotImplementedError("This method still needs some work as we all do not have enough time")
+
 
     def gen_slurm_inputs(self, path, sbatch, module, end_com=''):
         """
@@ -455,8 +456,9 @@ class GenInput(metaclass = GenMeta):
         self.write_data_file(path=path, array=frequency, fn=fn)
         # construct actual displacement data file
         fn = "displac_a.dat"
+        delta = np.repeat(self.delta['delta'].values, len(atom))
         disp = np.multiply(np.linalg.norm(np.transpose(freq[['dx','dy','dz']].values), axis=0),
-                                                        self.delta['delta'].values)
+                                                        delta)
         disp *= Length['au', 'Angstrom']
         freqdx = freq['freqdx'].drop_duplicates().values
         n = len(atom_order)
