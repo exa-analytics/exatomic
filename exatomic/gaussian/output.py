@@ -15,7 +15,7 @@ import numpy as np
 import pandas as pd
 from collections import defaultdict
 from exa import TypedMeta
-from exa.util.units import Length, Energy
+from exa.util.units import Length, Energy, Mass
 from .editor import Editor
 from exatomic.base import z2sym
 from exatomic.core.frame import compute_frame_from_atom
@@ -654,6 +654,10 @@ class Fchk(six.with_metaclass(GauMeta, Editor)):
         self.frequency_ext = pd.DataFrame.from_dict({mapper[int(i/nmode)]: all_info[i:i+nmode]
                                                      for i in range(0, nmode*14-1, nmode)})
         self.frequency_ext['freqdx'] = freqdx
+        # convert from atomic mass units to atomic units
+        self.frequency_ext['r_mass'] *= Mass['u', 'au_mass']
+        # convert from cm^{-1} to Ha
+        self.frequency_ext['freq'] *= Energy['cm^-1', 'Ha']
 
     def parse_frequency(self):
         '''
