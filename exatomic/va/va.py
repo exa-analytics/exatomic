@@ -584,7 +584,24 @@ class VA(metaclass=VAMeta):
         calcfreq *= Energy['Ha', 'cm^-1']
 
 
-
+        # This is mainly for debug purposes
+        # Will most likely eliminate most if not all of these class attributes
+        self.delfq_zero = pd.DataFrame(delfq_zero)
+        self.delfq_plus = pd.DataFrame(delfq_plus)
+        self.delfq_minus = pd.DataFrame(delfq_minus)
+        idx = uni.frequency['freqdx'].drop_duplicates().values
+        ndx = np.repeat(idx, nmodes)
+        #print(len(ndx))
+        jdx = np.tile(idx, nmodes)
+        #print(len(jdx))
+        self.kqi   = pd.DataFrame.from_dict({'idx': idx, 'kqi': kqi})
+        self.kqiii = pd.DataFrame.from_dict({'idx': idx, 'kqiii': kqiii})
+        self.kqijj = pd.DataFrame(kqijj)
+        self.delta = delta_df
+        self.vqi = pd.DataFrame.from_dict({'idx': idx, 'vqi': vqi})
+        self.calcfreq = pd.DataFrame.from_dict({'idx': idx, 'freq': calcfreq})
+        pd.options.display.float_format = '{:.6E}'.format
+#        self.kqijj = pd.DataFrame.from_dict({'idx': idx, 'jdx': jdx, 'kqijj': kqijj})
 
     def __init__(self, *args, **kwargs):
         pass
