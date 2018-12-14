@@ -50,7 +50,7 @@ def get_data(path, attr, f_end, soft, f_start=''):
             except AttributeError:
                 raise AttributeError("The property {} cannot be found in output {}".format(
                                                                                         attr, file))
-            fdx = list(map(int, re.findall('\d+', file)))
+            fdx = list(map(int, re.findall('\d+', file.split('/')[-1])))
             df['file'] = np.tile(fdx, len(df))
         else:
             continue
@@ -257,12 +257,13 @@ class GenInput(metaclass = GenMeta):
                                       fdx in x['freqdx'].drop_duplicates().values)['delta'].values
             else:
                 raise TypeError("fdx must be a list of integers or a single integer")
-            if len(delta.index.values) != tnmodes:
-                raise ValueError("Inappropriate length of delta. Passed a length of {} "+
-                                 "when it should have a length of {}. One value for each "+
-                                 "normal mode.".format(len(delta.index.values), tnmodes))
-            else:
-                delta = np.repeat(delta, nat)
+            #if len(delta) != tnmodes:
+            #    raise ValueError("Inappropriate length of delta. Passed a length of {} "+
+            #                     "when it should have a length of {}. One value for each "+
+            #                     "normal mode.".format(len(delta), tnmodes))
+            #else:
+            #    delta = np.repeat(delta, nat)
+            delta = np.repeat(delta, nat)
         except AttributeError:
             raise AttributeError("Please compute self.delta first")
         # calculate displaced coordinates in positive and negative directions
