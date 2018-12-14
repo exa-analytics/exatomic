@@ -502,7 +502,89 @@ class GenInput(metaclass = GenMeta):
         self.delta = gen_delta(freq, delta_type)
         self.disp = self._gen_displaced(freq, atom, fdx)
 
+class VAMeta(TypedMeta):
+    grad_0 = Gradient
+    grad_plus = Gradient
+    grad_minus = Gradient
+    gradient = Gradient
 
-class VA:
+class VA(metaclass=VAMeta):
+    """
+    Administrator class for VA to perform all initial calculations of necessary variables to pass
+    for calculations.
+    """
+    def init_va(self, uni):
+        """
+        uni (:class:`~exatomic.Universe`): Universe object containg pertinent data from
+                                           frequency calculation
+        """
+        # chack that all attributes to be used exist
+        if not hasattr(self, "gradient"):
+            raise AttributeError("Please set gradient attribute first")
+        if not hasattr(self, "property"):
+            raise AttributeError("Please set property attribute first")
+        if not hasattr(uni, "frequency_ext"):
+            raise AttributeError("Cannot find frequency extended dataframe in universe")
+        if not hasattr(uni, "frequency"):
+            raise AttributeError("Cannot find frequency dataframe in universe")
+        grouped = self.gradient.groupby('file')
+        # get number of normal modes
+        nmodes = len(uni.frequency_ext.index.values)
+        # generate delta dataframe
+        delta_df = gen_delta(freq=uni.frequency.copy(), delta_type=2)
+        delta = delta_df['delta'].values
+#        delta = delta.drop_duplicates(subset='freqdx').reset_index(drop=True)
+        # get gradient of the equilibrium coordinates
+        grad_0 = grouped.get_group(0)
+        # get gradients of the displaced coordinates in the positive direction
+        grad_plus = grouped.filter(lambda x: x['file'].drop_duplicates().values in
+                                                                        range(1,nmodes+1))
+        # get number of selected normal modes
+        # TODO: check stability of using this parameter
+        snmodes = len(grad_plus['file'].drop_duplicates().values)
+        # get gradients of the displaced coordinates in the negative direction
+        grad_minus = grouped.filter(lambda x: x['file'].drop_duplicates().values in
+                                                                        range(nmodes+1, 2*nmodes+1))
+        # TODO: Check if we can make use of numba to speed up this code
+        delfq_zero = uni.frequency.groupby('freqdx')[['dx', 'dy', 'dz']].apply(lambda x:
+                                    np.sum(np.multiply(grad_0[['fx', 'fy', 'fz']].values, x.values)))
+        delfq_zero = np.tile(delfq_zero, nmodes).reshape(snmodes, nmodes)
+        delfq_plus = grad_plus.groupby('file')[['fx', 'fy', 'fz']].apply(lambda x:
+                                uni.frequency.groupby('freqdx')[['dx', 'dy', 'dz']].apply(lambda y:
+                                    np.sum(np.multiply(y.values, x.values))))
+        #delfq_plus.columns = delfq_plus.columns.values-1
+        delfq_plus.reset_index(drop=True, inplace=True)
+        delfq_minus = grad_minus.groupby('file')[['fx', 'fy', 'fz']].apply(lambda x:
+                                uni.frequency.groupby('freqdx')[['dx', 'dy', 'dz']].apply(lambda y:
+                                    np.sum(np.multiply(y.values, x.values))))
+        delfq_minus.reset_index(drop=True, inplace=True)
+        #delfq_minus.columns = delfq_minus.columns.values-40
+
+        # get diagonal elements of respqective matrix
+        diag_plus = np.diag(delfq_plus)
+        diag_minus = np.diag(delfq_minus)
+        diag_zero = np.diag(delfq_zero)
+
+        # calculate force constants
+        kqi   = np.divide(diag_plus - diag_minus, 2.0*delta)
+        kqiii = np.divide(diag_plus - 2.0 * diag_zero + diag_minus, np.multiply(delta, delta))
+        kqijj = np.divide(delfq_plus - 2.0 * delfq_zero + delfq_minus,
+                                                    np.multiply(delta, delta).reshape(snmodes, 1))
+
+        # convert force constants to reduced normal coordinate force constants
+        redmass = uni.frequency_ext['r_mass'].values
+        vqi = np.divide(kqi, redmass)
+        vqijj = np.divide(kqijj, np.sqrt(np.power(redmass, 3)).reshape(snmodes,1))
+
+        # TODO: Check if we want to exit the program if we get a negative force constant
+        n_force_warn = vqi[vqi < 0.]
+
+        # calculate frequencies
+        calcfreq = np.sqrt(vqi)
+        calcfreq *= Energy['Ha', 'cm^-1']
+
+
+
+
     def __init__(self, *args, **kwargs):
         pass
