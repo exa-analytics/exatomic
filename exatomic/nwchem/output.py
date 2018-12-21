@@ -21,6 +21,8 @@ from exatomic.core.frame import Frame
 from exatomic.core.atom import Atom
 from exatomic.core.basis import BasisSet, BasisSetOrder
 from exatomic.core.orbital import Orbital, MOMatrix
+from exatomic.core.tensor import Polarizability
+from exatomic.core.gradient import Gradient
 from .editor import Editor
 from .basis import cartesian_ordering_function, spherical_ordering_function
 
@@ -32,6 +34,9 @@ class OutMeta(TypedMeta):
     basis_set = BasisSet
     basis_set_order = BasisSetOrder
     frame = Frame
+    roa = Polarizability
+    gradient = Gradient
+    
 
 class Output(six.with_metaclass(OutMeta, Editor)):
     """Editor for NWChem calculation output file (stdout)."""
@@ -256,6 +261,66 @@ class Output(six.with_metaclass(OutMeta, Editor)):
                 cache[cen][L][ml] += 1
         bso['shell'] = shls
         self.basis_set_order = bso
+
+    def parse_roa(self):
+        _reroa = 'roa begin'
+        _reare = 'alpha real'
+        _reaim = 'alpha im'
+        _reombre = 'omega beta(real)'
+        _reombim = 'omega beta(imag)'
+        _redqre = 'dipole-quadrupole real (Cartesian)'
+        _redqim = 'dipole-quadrupole imag (Cartesian)'
+
+        if not self.find(_reroa):
+            return
+        found_2d = self.find(_reare, _reaim, _reombre, _reombim, keys_only=True)
+        found_3d = self.find(_redqre, _redqim, keys_only=True)
+        data = {}
+        start = np.array(list(found_2d.values())).reshape(4,) + 1
+        end = np.array(list(found_2d.values())).reshape(4,) + 10
+        columns = ['x', 'val']
+        data = [self.pandas_dataframe(s, e, columns) for s, e in zip(start, end)]
+        df = pd.concat([dat for dat in data]).reset_index(drop=True)
+        df['grp'] = [i for i in range(4) for j in range(9)]
+        df = df[['val', 'grp']]
+        df = pd.DataFrame(df.groupby('grp').apply(lambda x: 
+                        x.unstack().values[:-9]).values.tolist(),
+                        columns=['xx', 'xy', 'xz','yx','yy','yz','zx','zy','zz'])
+        # find the electric dipole-quadrupole polarizability
+        # NWChem gives this as a list of 18 values assuming the matrix to be symmetric
+        # for our implementation we need to extend it to 81 elements
+        start = np.array(list(found_3d.values())).reshape(2,) + 1
+        end = np.array(list(found_3d.values())).reshape(2,) + 19
+        data = [self.pandas_dataframe(s, e, columns) for s, e in zip(start, end)]
+        df3 = pd.concat([dat for dat in data]).reset_index(drop=True)
+        vals = df3['val'].values.reshape(2,3,6)
+        adx = np.triu_indices(3)
+        mat = np.zeros((((2,3,3,3))))
+        for i in range(2):
+            for j in range(3):
+                mat[i][j][adx] = vals[i][j]
+                mat[i][j] = 0.5 * (mat[i][j] + np.transpose(mat[i][j]))
+        mat = mat.reshape(18,3)
+        df3 = pd.DataFrame(mat, columns=['x', 'y', 'z'])
+        df3['grp1'] = [i for i in range(2) for j in range(9)]
+        df3['grp2'] = [j for i in range(2) for j in range(3) for n in range(3)]
+        idx = [np.asarray([i for i in range(2) for j in range(3)]), 
+               np.asarray([j for i in range(2) for j in range(3)])]
+        df3 = pd.DataFrame(df3.groupby(['grp1','grp2']).apply(lambda x: 
+                                x.unstack().values[:-6]).values.tolist(), 
+                                columns=['xx', 'xy', 'xz', 'yx', 'yy', 'yz', 'zx', 'zy', 'zz'], 
+                                index=idx)
+        df['label'] = found_2d.keys()
+        df['label'].replace([_reare, _reombre, _reaim, _reombim], 
+                                ['alpha_re', 'g_re', 'alpha_im', 'g_im'], inplace=True)
+        df['frame'] = np.repeat([0], len(df.index))
+        df3['label'] = np.repeat(list(found_3d.keys()), 3)
+        df3['label'].replace([_redqre, _redqim], ['A_real', 'A_imag'], inplace=True)
+        df3['frame'] = np.repeat([0], len(df3.index))
+        self.roa = pd.concat([df, df3])
+
+    def parse_gradient(self):
+        raise NotImplementedError("Need more time...............")
 
     def parse_frame(self):
         """
