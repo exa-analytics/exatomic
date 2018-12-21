@@ -92,6 +92,22 @@ class Tensor(DataFrame):
 #        print(df)
         return cls(df)
 
+class Polarizability(Tensor):
+    _index = 'polarizability'
+    _columns = ['xx', 'xy', 'xz', 'yx', 'yy', 'yz', 'zx', 'zy', 'zz',
+                'frame', 'label']
+    _categories = {'frame': np.int64, 'label': str}
+
+class Tensor3D(DataFrame):
+    """
+    3-Dimensional tensor dataframe
+    """
+    _index = 'tensor'
+    _columns = ['xxx','xxy','xxz','yx','yy','yz','zx','zy','zz',
+                'frame','atom','label']
+    _categories = {'frame': np.int64, 'label': str}
+    
+
 def add_tensor(uni, fp):
     """
     Simple function to add a tensor object to the universe.
