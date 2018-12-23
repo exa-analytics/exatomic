@@ -15,12 +15,14 @@ import numpy as np
 import pandas as pd
 from collections import defaultdict
 from exa import TypedMeta
-from exa.util.units import Length, Energy
+from exa.util.units import Length, Energy, Mass
 from .editor import Editor
 from exatomic.base import z2sym
 from exatomic.core.frame import compute_frame_from_atom
 from exatomic.core.frame import Frame
 from exatomic.core.atom import Atom, Frequency
+from exatomic.core.gradient import Gradient
+from exatomic.core.tensor import Tensor
 from exatomic.core.basis import (BasisSet, BasisSetOrder, Overlap,
                                  deduplicate_basis_sets)
 from exatomic.core.orbital import Orbital, MOMatrix, Excitation
@@ -53,6 +55,9 @@ class GauMeta(TypedMeta):
     frequency = Frequency
     overlap = Overlap
     multipole = pd.DataFrame
+    gradient = Gradient
+    shielding_tensor = Tensor
+    frequency_ext = Frequency
 
 class Output(six.with_metaclass(GauMeta, Editor)):
     def _parse_triangular_matrix(self, regex, column='coef', values_only=False):
@@ -372,6 +377,10 @@ class Output(six.with_metaclass(GauMeta, Editor)):
 
 
     def parse_frequency(self):
+        # TODO: generalize code to be able to read frequencies when performing
+        #       both a geometry optimization and frequency calculation
+        #       possible fix is to look for Link1 flags as the frequency calculation
+        #       is always after the geometry optimization
         # Frequency flags
         _refreq = 'Freq'
         found = self.regex(_refreq, stop=1000, flags=re.IGNORECASE)
@@ -409,12 +418,13 @@ class Output(six.with_metaclass(GauMeta, Editor)):
         # Now put all our frequencies together
         frequency = pd.concat(dfs).reset_index(drop=True)
         # Pretty sure displacements are in cartesian angstroms
+        # TODO: Make absolutely sure what units gaussian reports the displacements as
         # TODO: verify with an external program that vibrational
         #       modes look the same as the ones generated with
         #       this methodology.
-        frequency['dx'] *= Length['Angstrom', 'au']
-        frequency['dy'] *= Length['Angstrom', 'au']
-        frequency['dz'] *= Length['Angstrom', 'au']
+        #frequency['dx'] *= Length['Angstrom', 'au']
+        #frequency['dy'] *= Length['Angstrom', 'au']
+        #frequency['dz'] *= Length['Angstrom', 'au']
         # Frame not really implemented here either
         frequency['frame'] = 0
         self.frequency = frequency
@@ -439,7 +449,8 @@ class Output(six.with_metaclass(GauMeta, Editor)):
 
 
 class Fchk(six.with_metaclass(GauMeta, Editor)):
-
+    # set a minimum tolerance for displayed values
+    _tol = 1e-8
     def _intme(self, fitem, idx=0):
         """Helper gets an integer of interest."""
         return int(self[fitem[idx]].split()[-1])
@@ -608,6 +619,219 @@ class Fchk(six.with_metaclass(GauMeta, Editor)):
         if bcoefs is not None:
             self.momatrix['coef1'] = bcoefs
 
+    def parse_frequency_ext(self):
+        '''
+        Parses extended frequency data present in FChk file
+
+        Note:
+            Requires Freq(SaveNormalModes) in input
+        '''
+        # Frequency regex
+        _renmode = 'Number of Normal Modes'
+        _redisp = 'Vib-Modes'
+        _refinfo = 'Vib-E2'
+        _remass = 'Vib-AtMass'
+        # TODO: find out what these two values are useful for
+        _rendim = 'Vib-NDim'
+        _rendim0 = 'Vib-NDim0'
+
+        found = self.find(_renmode)
+        if not found:
+            return
+        else:
+            found = self.find(_renmode, _redisp, _refinfo, _remass, keys_only=True)
+        # find number of vibrational modes
+        nmode = self._intme(found[_renmode])
+        # get extended data (given by mapper array)
+        all_info = self._dfme(found[_refinfo], nmode * 14)
+        all_info[abs(all_info) < self._tol] = 0
+        freqdx = [i for i in range(nmode)]
+        # mapper array to filter through all of the values printed on the fchk file
+        # TODO: have to find labels of unknown columns
+        mapper = ["freq", "r_mass", "f_const", "ir_int", "unk1", "unk2", "unk3",
+                  "dipole_s", "rot_s", "unk4", "unk5", "unk6", "unk7", "em_angle"]
+        # build extended frequency table
+        self.frequency_ext = pd.DataFrame.from_dict({mapper[int(i/nmode)]: all_info[i:i+nmode]
+                                                     for i in range(0, nmode*14-1, nmode)})
+        self.frequency_ext['freqdx'] = freqdx
+        # convert from atomic mass units to atomic units
+        self.frequency_ext['r_mass'] *= Mass['u', 'au_mass']
+        # convert from cm^{-1} to Ha
+        self.frequency_ext['freq'] *= Energy['cm^-1', 'Ha']
+
+    def parse_frequency(self):
+        '''
+        Parses frequency data from FChk file
+
+        Note:
+            Requires Freq(SaveNormalModes) in input
+        '''
+        # Frequency regex
+        _renmode = 'Number of Normal Modes'
+        _redisp = 'Vib-Modes'
+        _refinfo = 'Vib-E2'
+
+        found = self.find(_renmode)
+        if not found:
+            return
+        else:
+            found = self.find(_renmode, _refinfo, _redisp, keys_only=True)
+        # get atomic numbers
+        znums = self.atom['Zeff'].values
+        # get number of atoms
+        nat = len(znums)
+        # TODO: will the order of the atoms and their frequencies always be the same?
+        # find number of vibrational modes
+        nmode = self._intme(found[_renmode])
+        # get extended data (given by mapper array)
+        all_info = self._dfme(found[_refinfo], nmode * 14)
+        freq = all_info[:nmode]
+        # get frequency mode displacements
+        disp = self._dfme(found[_redisp], nat * nmode * 3)
+        disp[abs(disp) < self._tol] = 0
+        # unstack column vector to displacement along each cartesian direction
+        dx = disp[::3]
+        dy = disp[1::3]
+        dz = disp[2::3]
+        # extend each property to have the same size
+        freqdx = [i for i in range(len(freq))]
+        label = [i for i in range(len(znums))]
+        freq = np.repeat(freq, nat)
+        freqdx = np.repeat(freqdx, nat)
+        znums = np.tile(znums, nmode)
+        label = np.tile(label, nmode)
+        symbols = list(map(lambda x: z2sym[x], znums))
+        # just to have the same table as the one generated for normal output parser
+        frame = np.zeros(len(znums)).astype(np.int)
+        # build frequency table
+        self.frequency = pd.DataFrame.from_dict({"Z": znums, "label": label, "dx": dx,
+                                                 "dy": dy, "dz": dz, "frequency": freq,
+                                                 "freqdx": freqdx, "symbol": symbols,
+                                                 "frame": frame})
+        self.frequency.reset_index(drop=True, inplace=True)
+        # convert atomic displacements to atomic units
+        # TODO: Make absolutely sure what units gaussian reports the displacements in
+        #       bohr instead of angstroms
+        #self.frequency['dx'] *= Length['Angstrom', 'au']
+        #self.frequency['dy'] *= Length['Angstrom', 'au']
+        #self.frequency['dz'] *= Length['Angstrom', 'au']
+
+    def parse_gradient(self):
+        # gradient regex
+        _regrad = 'Cartesian Gradient'
+        _reznums = 'Atomic numbers'
+        _renat = 'Number of atoms'
+
+        found = self.find(_regrad)
+        if not found:
+            return
+        else:
+            found = self.find(_regrad, _reznums, _renat, keys_only=True)
+        # get number of atoms
+        nat = self._intme(found[_renat])
+        # get atomic numbers
+        znums = self._dfme(found[_reznums], nat)
+        # generate symbols
+        symbols = list(map(lambda x: z2sym[x], znums))
+        # generate labels
+        label = [i for i in range(len(znums))]
+        ngrad = nat * 3
+        # get gradients(Ha/Bohr)
+        grad = self._dfme(found[_regrad], ngrad)
+        grad[abs(grad) < self._tol] = 0
+        # get x, y, z gradients
+        fx = grad[::3]
+        fy = grad[1::3]
+        fz = grad[2::3]
+        nframes = int(len(fx)/nat)
+        # generate frame labels
+        frame = [i for i in range(nframes)]
+        # extend to match sizes of all arrays
+        frame = np.repeat(frame, nat)
+        label = np.tile(label, nframes)
+        znums = np.tile(znums, nframes)
+        symbols = np.tile(symbols, nframes)
+        # create dataframe
+        self.gradient = pd.DataFrame.from_dict({"Z": znums, "atom": label, "fx": fx, "fy": fy,
+                                                "fz": fz, "symbol": symbols, "frame": frame})
+        self.gradient['Z'] = self.gradient['Z'].astype(np.int64)
+
+    def parse_shielding_tensor(self):
+        # nmr shielding regex
+        _renmr = 'NMR shielding'
+        # base properties
+        _renat = 'Number of atoms'
+        _reznums = 'Atomic numbers'
+
+        found = self.find(_renmr)
+        if not found:
+            return
+        else:
+            found = self.find(_renmr, _renat, _reznums, keys_only=True)
+        # get number of atoms
+        nat = self._intme(found[_renat])
+        # get atomic numbers
+        znums = self._dfme(found[_reznums], nat)
+        # generate labels
+        label = [i for i in range(len(znums))]
+        # get NMR shielding tensors (Hz)
+        # TODO: Check that this is in fact in Hz
+        shield = self._dfme(found[_renmr], nat * 9)
+        shield[abs(shield) < self._tol] = 0
+        # arrange into x, y, z cols
+        x = shield[::3]
+        y = shield[1::3]
+        z = shield[2::3]
+#        # conversion from Hz to ppm
+#        # (only done for some test calculations may not be accurate for all)
+#        x *= 1e6/18778.86
+#        y *= 1e6/18778.86
+#        z *= 1e6/18778.86
+        matrix = np.transpose([x,y,z]).reshape(nat,3,3)
+        matrix = np.asarray([0.5*(mat + np.transpose(mat)) for mat in matrix])
+        # compute isotropic and anisotropic values
+        # done in units of Hz
+        iso = np.zeros(len(matrix))
+        aniso = np.zeros(len(matrix))
+        # TODO: check when we get complex eigenvalues
+        for idx, mat in enumerate(matrix):
+            vals = np.linalg.eigvals(mat)
+            vals.sort()
+            iso[idx] = np.average(vals, axis=-1)
+            aniso[idx] = vals[2] - (vals[0] + vals[1])/2
+            # for debugging
+            #conv = 1e6/18778.86
+            #print("====================={}=====================".format(i+1))
+            #print("Eigenvalues:\t{}\t{}\t{}".format(vals[0]*conv, vals[1]*conv, vals[2]*conv))
+            #print("Isotropic:\t{}\nAnisotropy:\t{}".format(iso[i]*conv, aniso[i]*conv))
+        matrix = matrix.reshape(len(matrix)*3, -1)
+        df = pd.DataFrame(matrix, columns=['x', 'y', 'z'])
+        label = 'nmr shielding'
+        # get atom center indexes
+        atom = [i for i in range(nat)]
+        # get atom symbols
+        nframes = int(len(x)/(3*nat))
+        symbols = np.tile([z2sym[z] for z in znums], nframes)
+        # get frame indexes
+        frame = [i for i in range(nframes)]
+        # extend arrays to match size
+        frame = np.repeat(frame, nat)
+        label = np.repeat(label, nat)
+        atom = np.tile(atom, nframes)
+        df['grp'] = [i for i in range(nframes * nat) for j in range(3)]
+        df = pd.DataFrame(df.groupby('grp').apply(lambda x:
+                          x.unstack().values[:-3]).values.tolist(),
+                          columns=['xx','xy','xz','yx','yy','yz','zx','zy','zz'])
+        df['atom'] = atom.astype(np.int64)
+        df['symbol'] = symbols
+        df['label'] = label
+        df['frame'] = frame.astype(np.int64)
+        df['isotropic'] = iso
+        df['anisotropy'] = aniso
+        # TODO: must make a conditional so it can detect if a tensor object already exists and
+        #       concat the two dataframes
+        #       will also have to consider in core.tensor.add_tensor
+        self.shielding_tensor = df
 
     def parse_orbital(self):
         # Orbital regex

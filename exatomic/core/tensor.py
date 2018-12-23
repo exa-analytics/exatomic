@@ -87,6 +87,7 @@ class Tensor(DataFrame):
         df = pd.concat([meta, df], axis=1)
         df['atom'] = df['atom'].astype(np.int64)
         df['frame'] = df['frame'].astype(np.int64)
+        df['symbols'] = np.repeat('', n)
 #        df['scale'] = scale
 #        print(df)
         return cls(df)
@@ -100,3 +101,8 @@ def add_tensor(uni, fp):
         fp (str): file pathname
     """
     uni.tensor = Tensor.from_file(fp)
+#    if fp != None:
+#        uni.tensor = Tensor.from_file(fp)
+#    if any('tensor' in x for x in vars(uni)):
+#        tmp = [x for x in vars(uni) if 'tensor' in x]
+#        uni.tensor = pd.concat([uni[i] for i in tmp], sort=False).reset_index(drop=True)
