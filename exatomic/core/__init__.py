@@ -8,3 +8,4 @@ from .frame import Frame
 from .universe import Universe
 from .editor import Editor
 from .tensor import Tensor, add_tensor
+from .gradient import Gradient

@@ -13,8 +13,5 @@ External Interfaces
 .. automodule:: exatomic.interfaces.pdb
     :members:
 
-.. automodule:: exatomic.interfaces.tens
-    :members:
-
 .. automodule:: exatomic.interfaces.xyz
     :members:
