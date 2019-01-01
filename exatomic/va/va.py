@@ -12,7 +12,7 @@ import csv
 import os
 import glob
 import re
-from exa.util.units import Length, Energy
+from exa.util.units import Length, Energy, Mass
 from exa.util.utility import mkp
 from exatomic.core import Atom, Gradient
 from exa import TypedMeta
@@ -350,14 +350,13 @@ class GenInput(metaclass = GenMeta):
             If a 1D dictionary is passed we assume that there will only need to be one file
             to calculate the gradient and property values.
 
-            We only support soft keyword values 'gauss', 'gaussian' and 'nwchem'. More to come.
-
         Args:
             path (str): Path pointing to filepath to where files will be written
             comm (dict): Dictionary containing all of the pertinent commands for the input
             soft (class instance): Software of choice for the input generation
         """
         raise NotImplementedError("This method still needs some work as we all do not have enough time")
+        
 
 
     def gen_slurm_inputs(self, path, sbatch, module, end_com=''):
@@ -436,7 +435,6 @@ class GenInput(metaclass = GenMeta):
         # construct smatrix data file
         fn = "smatrix.dat"
         smatrix = freq[['dx', 'dy', 'dz']].stack().values
-        smatrix *= Length['au', 'Angstrom']
         self.write_data_file(path=path, array=smatrix, fn=fn)
         # construct atom order data file
         fn = "atom_order.dat"
@@ -444,7 +442,7 @@ class GenInput(metaclass = GenMeta):
         self.write_data_file(path=path, array=atom_order, fn=fn)
         # construct reduced mass data file
         fn = "redmass.dat"
-        redmass = freq_ext['r_mass'].values
+        redmass = freq_ext['r_mass'].values * Mass['au_mass', 'u']
         self.write_data_file(path=path, array=redmass, fn=fn)
         # construct eqcoord data file
         fn = "eqcoord.dat"
@@ -453,7 +451,7 @@ class GenInput(metaclass = GenMeta):
         self.write_data_file(path=path, array=eqcoord, fn=fn)
         # construct frequency data file
         fn = "freq.dat"
-        frequency = freq_ext['freq'].values
+        frequency = freq_ext['freq'].values * Energy['Ha', 'cm^-1']
         self.write_data_file(path=path, array=frequency, fn=fn)
         # construct actual displacement data file
         fn = "displac_a.dat"
@@ -515,10 +513,15 @@ class VA(metaclass=VAMeta):
     """
     def init_va(self, uni):
         """
-        uni (:class:`~exatomic.Universe`): Universe object containg pertinent data from
-                                           frequency calculation
+        This is a method to initialize all of the variables that will be needed to execute the VA
+        program. As a sanity check we calculate the frequencies from the force constants. If we
+        have any negative force constants the results may not be as reliable.
+
+        Args:
+            uni (:class:`~exatomic.Universe`): Universe object containg pertinent data from
+                                               frequency calculation
         """
-        # chack that all attributes to be used exist
+        # check that all attributes to be used exist
         if not hasattr(self, "gradient"):
             raise AttributeError("Please set gradient attribute first")
         if not hasattr(self, "property"):
@@ -527,6 +530,7 @@ class VA(metaclass=VAMeta):
             raise AttributeError("Cannot find frequency extended dataframe in universe")
         if not hasattr(uni, "frequency"):
             raise AttributeError("Cannot find frequency dataframe in universe")
+        # group the gradients by file (normal mode)
         grouped = self.gradient.groupby('file')
         # get number of normal modes
         nmodes = len(uni.frequency_ext.index.values)
@@ -594,14 +598,13 @@ class VA(metaclass=VAMeta):
         #print(len(ndx))
         jdx = np.tile(idx, nmodes)
         #print(len(jdx))
-        self.kqi   = pd.DataFrame.from_dict({'idx': idx, 'kqi': kqi})
+        self.kqi   = pd.DataFrame.from_dict({'idx': idx, 'kqi': kqi, 'calculated_vqi': uni.frequency_ext['f_const']})
         self.kqiii = pd.DataFrame.from_dict({'idx': idx, 'kqiii': kqiii})
         self.kqijj = pd.DataFrame(kqijj)
         self.delta = delta_df
         self.vqi = pd.DataFrame.from_dict({'idx': idx, 'vqi': vqi})
-        self.calcfreq = pd.DataFrame.from_dict({'idx': idx, 'freq': calcfreq})
-        pd.options.display.float_format = '{:.6E}'.format
-#        self.kqijj = pd.DataFrame.from_dict({'idx': idx, 'jdx': jdx, 'kqijj': kqijj})
+        self.calcfreq = pd.DataFrame.from_dict({'idx': idx, 'calc_freq': calcfreq, 'real_freq': uni.frequency_ext['freq']*Energy['Ha', 'cm^-1']})
+        #pd.options.display.float_format = '{:.6E}'.format
 
     def __init__(self, *args, **kwargs):
         pass
