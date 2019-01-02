@@ -288,7 +288,7 @@ class Output(six.with_metaclass(OutMeta, Editor)):
                         columns=['xx', 'xy', 'xz','yx','yy','yz','zx','zy','zz'])
         # find the electric dipole-quadrupole polarizability
         # NWChem gives this as a list of 18 values assuming the matrix to be symmetric
-        # for our implementation we need to extend it to 81 elements
+        # for our implementation we need to extend it to 27 elements
         start = np.array(list(found_3d.values())).reshape(2,) + 1
         end = np.array(list(found_3d.values())).reshape(2,) + 19
         data = [self.pandas_dataframe(s, e, columns) for s, e in zip(start, end)]
@@ -304,12 +304,11 @@ class Output(six.with_metaclass(OutMeta, Editor)):
         df3 = pd.DataFrame(mat, columns=['x', 'y', 'z'])
         df3['grp1'] = [i for i in range(2) for j in range(9)]
         df3['grp2'] = [j for i in range(2) for j in range(3) for n in range(3)]
-        idx = [np.asarray([i for i in range(2) for j in range(3)]), 
-               np.asarray([j for i in range(2) for j in range(3)])]
+#        idx = [np.asarray([i for i in range(2) for j in range(3)]),
+#               np.asarray([j for i in range(2) for j in range(3)])]
         df3 = pd.DataFrame(df3.groupby(['grp1','grp2']).apply(lambda x: 
                                 x.unstack().values[:-6]).values.tolist(), 
-                                columns=['xx', 'xy', 'xz', 'yx', 'yy', 'yz', 'zx', 'zy', 'zz'], 
-                                index=idx)
+                                columns=['xx', 'xy', 'xz', 'yx', 'yy', 'yz', 'zx', 'zy', 'zz'])
         df['label'] = found_2d.keys()
         df['label'].replace([_reare, _reombre, _reaim, _reombim], 
                                 ['alpha_re', 'g_re', 'alpha_im', 'g_im'], inplace=True)
@@ -317,7 +316,7 @@ class Output(six.with_metaclass(OutMeta, Editor)):
         df3['label'] = np.repeat(list(found_3d.keys()), 3)
         df3['label'].replace([_redqre, _redqim], ['A_real', 'A_imag'], inplace=True)
         df3['frame'] = np.repeat([0], len(df3.index))
-        self.roa = pd.concat([df, df3])
+        self.roa = pd.concat([df, df3], ignore_index=True)
 
     def parse_gradient(self):
         raise NotImplementedError("Need more time...............")
