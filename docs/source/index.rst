@@ -1,4 +1,4 @@
-.. Copyright (c) 2015-2018, Exa Analytics Development Team
+.. Copyright (c) 2015-2019, Exa Analytics Development Team
 .. Distributed under the terms of the Apache License 2.0
 
 #############################
@@ -20,12 +20,8 @@ method to get started with visualization is through the `Jupyter notebook`_.
 
     install.rst
     started.rst
-
-.. toctree::
-    :maxdepth: 2
-    :caption: General
-
-    api/index.rst
+    concepts.rst
+    contrib.rst
 
 .. toctree::
     :maxdepth: 2
@@ -39,23 +35,14 @@ method to get started with visualization is through the `Jupyter notebook`_.
     notebooks/nwchem.ipynb
     notebooks/qe.ipynb
 
-.. toctree::
-    :maxdepth: 3
-    :caption: Software
 
-    software/adf.rst
-    software/gaussian.rst
-    software/molcas.rst
-    software/nbo.rst
-    software/nwchem.rst
-    software/qe.rst
+.. _api-label:
 
-.. toctree::
-    :maxdepth: 1
-    :caption: Contributors
+################
+API
+################
 
-    contrib.rst
-    concepts.rst
+.. include:: modules.txt
 
 
 ##################
