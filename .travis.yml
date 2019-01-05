@@ -49,6 +49,8 @@ script:
     - pytest --cov
     - if [[ $TRAVIS_OS_NAME == "linux" ]] && [[ $PYTHONVER == 3.6 ]]; then
           coverage run --source=exatomic setup.py test;
+          rm -rf docs/source/*.txt;
+          sphinx-apidoc -eM -s txt -o docs/source/ exatomic/;
           travis-sphinx build;
       fi
 
@@ -56,7 +58,5 @@ after_success:
     - if [[ $TRAVIS_OS_NAME == "linux" ]] && [[ $PYTHONVER == 3.6 ]]; then
           coveralls;
           python-codacy-coverage -r coverage.xml;
-          rm docs/source/*.txt;
-          sphinx-apidoc -eM -s txt -o docs/source/ exatomic/;
           travis-sphinx deploy;
       fi
