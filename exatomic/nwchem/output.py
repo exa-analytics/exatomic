@@ -14,6 +14,7 @@ from six import StringIO
 from collections import defaultdict
 from exa import TypedMeta
 from exa.util.units import Length
+from exatomic.base import sym2z
 from exatomic.core.frame import compute_frame_from_atom
 from exatomic.algorithms.numerical import _square_indices
 from exatomic.algorithms.basis import lmap
@@ -393,7 +394,35 @@ class Output(six.with_metaclass(OutMeta, Editor)):
         self.frequency = frequency
 
     def parse_gradient(self):
-        raise NotImplementedError("Need more time...............")
+        """
+        Parse :class:`exatomic.core.gradient.Gradient` dataframe.
+        """
+        _regrad = "DFT ENERGY GRADIENTS"
+
+        found = self.find(_regrad)
+        if not found:
+            return
+        found = self.find(_regrad, keys_only=True)
+        # find start and stop points
+        starts = np.array(found) + 4
+        stop = starts[0]
+        while '----' not in self[stop]: stop += 1
+        # backtrack one line as the line after the needed info is empty
+        stop -= 1
+        stops = starts + (stop - starts[0])
+        dfs = []
+        # generate dataframe array
+        columns = ['atom', 'symbol', 'x', 'y', 'z', 'fx', 'fy', 'fz']
+        for i, (start, stop) in enumerate(zip(starts, stops)):
+            gradient = self.pandas_dataframe(start, stop, columns)
+            gradient['frame'] = i
+            dfs.append(gradient[['atom', 'symbol', 'fx', 'fy', 'fz', 'frame']])
+        # construct the dataframe
+        gradient = pd.concat(dfs).reset_index(drop=True)
+        gradient['Z'] = gradient['symbol'].map(sym2z)
+        # want to keep more or less the same order across dataframes
+        # or at least try
+        self.gradient = gradient[['Z', 'atom', 'fx', 'fy', 'fz', 'symbol', 'frame']]
 
     def parse_frame(self):
         """
