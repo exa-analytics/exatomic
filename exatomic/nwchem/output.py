@@ -18,7 +18,7 @@ from exatomic.core.frame import compute_frame_from_atom
 from exatomic.algorithms.numerical import _square_indices
 from exatomic.algorithms.basis import lmap
 from exatomic.core.frame import Frame
-from exatomic.core.atom import Atom
+from exatomic.core.atom import Atom, Frequency
 from exatomic.core.basis import BasisSet, BasisSetOrder
 from exatomic.core.orbital import Orbital, MOMatrix
 from exatomic.core.tensor import Polarizability
@@ -36,6 +36,7 @@ class OutMeta(TypedMeta):
     frame = Frame
     roa = Polarizability
     gradient = Gradient
+    frequency = Frequency
     
 
 class Output(six.with_metaclass(OutMeta, Editor)):
@@ -263,6 +264,13 @@ class Output(six.with_metaclass(OutMeta, Editor)):
         self.basis_set_order = bso
 
     def parse_roa(self):
+        """
+        Parse the :class:`~exatomic.core.tensor.Polarizability` dataframe.
+
+        Note:
+            We generate a 3D tensor with the 2D tensor code. 3D tensors will have 3 rows labeled
+            with the same name.
+        """
         _reroa = 'roa begin'
         _reare = 'alpha real'
         _reaim = 'alpha im'
@@ -289,6 +297,7 @@ class Output(six.with_metaclass(OutMeta, Editor)):
         # find the electric dipole-quadrupole polarizability
         # NWChem gives this as a list of 18 values assuming the matrix to be symmetric
         # for our implementation we need to extend it to 27 elements
+        # TODO: check that NWChem does assume that the 3D tensors are symmetric
         start = np.array(list(found_3d.values())).reshape(2,) + 1
         end = np.array(list(found_3d.values())).reshape(2,) + 19
         data = [self.pandas_dataframe(s, e, columns) for s, e in zip(start, end)]
@@ -304,8 +313,6 @@ class Output(six.with_metaclass(OutMeta, Editor)):
         df3 = pd.DataFrame(mat, columns=['x', 'y', 'z'])
         df3['grp1'] = [i for i in range(2) for j in range(9)]
         df3['grp2'] = [j for i in range(2) for j in range(3) for n in range(3)]
-#        idx = [np.asarray([i for i in range(2) for j in range(3)]),
-#               np.asarray([j for i in range(2) for j in range(3)])]
         df3 = pd.DataFrame(df3.groupby(['grp1','grp2']).apply(lambda x: 
                                 x.unstack().values[:-6]).values.tolist(), 
                                 columns=['xx', 'xy', 'xz', 'yx', 'yy', 'yz', 'zx', 'zy', 'zz'])
@@ -317,6 +324,73 @@ class Output(six.with_metaclass(OutMeta, Editor)):
         df3['label'].replace([_redqre, _redqim], ['A_real', 'A_imag'], inplace=True)
         df3['frame'] = np.repeat([0], len(df3.index))
         self.roa = pd.concat([df, df3], ignore_index=True)
+
+    def parse_frequency(self):
+        """
+        Parse the :class:`~exatomic.core.atom.Frequency` dataframe.
+
+        Note:
+            This code removes all negative frequencies.
+        """
+        _remeth = "NORMAL MODE EIGENVECTORS IN CARTESIAN COORDINATES"
+        _refreq = "Frequency"
+        _renat = "Atom information"
+
+        found = self.find(_remeth)
+        fnat = self.find(_renat)
+        if not found and not fnat:
+            return
+        # get atom information
+        start = fnat[0][0]+3
+        stop = start
+        while '----' not in self[stop]: stop += 1
+        # we assume that there is only one instance of where _renat is found
+        columns = ['symbol', 'atom', 'x', 'y', 'z', 'mass']
+        atom = self.pandas_dataframe(start, stop, columns)
+        atom['atom'] -= 1
+        nat = len(atom)
+        # find bounds where the calculated frequencies are
+        start = found[0][0]
+        stop = found[1][0]
+        # get the data
+        found = self.find(_refreq, start=start, stop=stop)
+        dfs = []
+        fdx = 0
+        # get frequencies
+        for lno, ln in found:
+            # get the frequency values
+            tmp = ln.split()[1:]
+            freq = np.asarray([float(i) for i in tmp])
+            ## TODO: here we remove all negative frequencies
+            ##       need to find out if this is ok to do
+            # set start and end points for the calculated normal modes
+            staf = lno+start+1
+            stof = lno+start+nat*3+2
+            nm = self.pandas_dataframe(staf, stof, ncol=len(freq)).reset_index(drop=True)
+            # generate boolean array that shows False for negative frequencies
+            neg = [False if f < 0 else True for f in freq]
+            # remove negative frequencies
+            nm.drop(columns=[idx for idx, val in enumerate(neg) if not val], inplace=True)
+            freq = freq[neg]
+            # get normal modes in the x, y, z directions
+            nm = nm.stack().values
+            nfreq = len(freq)
+            dx = nm[::3]
+            dy = nm[1::3]
+            dz = nm[2::3]
+            # assemble dataframe
+            symbol = np.tile(atom['symbol'], nfreq)
+            adx = np.tile(atom['atom'], nfreq)
+            freq = np.repeat(freq, nat)
+            freqdx = np.repeat([i for i in range(fdx, fdx + nfreq)], nfreq)
+            frames = np.repeat([0], nfreq*nat)
+            fdx += nfreq
+            stacked = pd.DataFrame.from_dict({'symbol': symbol, 'atom': adx, 'dx': dx, 'dy': dy,
+                                              'dz': dz, 'freq': freq, 'freqdx': freqdx,
+                                              'frames': frames})
+            dfs.append(stacked)
+        frequency = pd.concat(dfs).reset_index(drop=True)
+        self.frequency = frequency
 
     def parse_gradient(self):
         raise NotImplementedError("Need more time...............")
