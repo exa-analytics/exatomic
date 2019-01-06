@@ -266,7 +266,8 @@ class Output(six.with_metaclass(OutMeta, Editor)):
 
     def parse_roa(self):
         """
-        Parse the :class:`~exatomic.core.tensor.Polarizability` dataframe.
+        Parse the :class:`~exatomic.core.tensor.Polarizability` dataframe. This will parse the
+        output from the Raman Optical Activity outputs.
 
         Note:
             We generate a 3D tensor with the 2D tensor code. 3D tensors will have 3 rows labeled
