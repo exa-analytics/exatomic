@@ -39,7 +39,7 @@ def get_data(path, attr, f_end, soft, f_start=''):
     #else:
     #    soft = prog[soft.lower()]
     if not hasattr(soft, attr):
-        raise NotImplementedError("parse_{} is not an attribute of {}".format(attr, soft))
+        raise NotImplementedError("parse_{} is not a method of {}".format(attr, soft))
     files = glob.glob(path)
     array = []
     for file in files:
@@ -121,6 +121,7 @@ def gen_delta(freq, delta_type):
 class GenMeta(TypedMeta):
     disp = Atom
     delta = pd.DataFrame
+    atom = Atom
 
 class GenInput(metaclass = GenMeta):
     """
@@ -149,63 +150,9 @@ class GenInput(metaclass = GenMeta):
 
     _tol = 1e-6
 
-    @property
-    def atom(self):
-        return self.disp
-
-#    def _gen_delta(self, freq, delta_type):
-#        """
-#        Function to compute the delta parameter to be used for the maximum distortion
-#        of the molecule along the normal mode.
-#
-#        When delta_type = 0 we normalize the displacments to have a maximum of 0.04 Bohr
-#        on each normal mode.
-#
-#        When delta_type = 1 we normalize all atomic displacements along all normal modes
-#        to have a global average displacement of 0.04 Bohr.
-#
-#        When delta_type = 2 we normalize each displacement so every atom has a maximum
-#        displacement of 0.04 Bohr on every normal mode.
-#
-#        Args:
-#            freq (:class:`exatomic.atom.Frequency`): Frequency dataframe
-#            delta_type (int): Integer value to define the type of delta parameter to use
-#        """
-#        # average displacement of 0.04 bohr for each normal mode
-#        nat = len(freq['label'].drop_duplicates())
-#        nmode = len(freq['freqdx'].drop_duplicates())
-#        freqdx = freq['freqdx'].values
-#        if delta_type == 0:
-#            # Code using for loops
-#            # a = np.linalg.norm(freq[['dx', 'dy', 'dz']].
-#            #                                    values, axis=1, ord=2)
-#            # vec_sum = []
-#            # for i in range(0,len(a),3):
-#            #     vec_sum.append([0])
-#            #     for j in range(i,i+3):
-#            #         vec_sum[-1] += a[j]
-#            # print(a)
-#            # print(vec_sum)
-#            d = freq.groupby(['freqdx', 'frame']).apply(
-#                lambda x: np.sum(np.linalg.norm(
-#                    x[['dx', 'dy', 'dz']].values, axis=1))).values
-#            delta = 0.04 * nat / d
-#            delta = np.repeat(delta, nat)
-#
-#        # global avrage displacement of 0.04 bohr for all atom displacements
-#        elif delta_type == 1:
-#            d = np.sum(np.linalg.norm(
-#                freq[['dx', 'dy', 'dz']].values, axis=1))
-#            delta = 0.04 * nat * nmode / (np.sqrt(3) * d)
-#            delta = np.repeat(delta, nat*nmode)
-#
-#        # maximum displacement of 0.04 bohr for any atom in each normal mode
-#        elif delta_type == 2:
-#            d = freq.groupby(['freqdx', 'frame']).apply(lambda x:
-#                np.amax(abs(np.linalg.norm(x[['dx', 'dy', 'dz']].values, axis=1)))).values
-#            delta = 0.04 / d
-#            delta = np.repeat(delta, nat)
-#        return pd.DataFrame.from_dict({'delta': delta, 'freqdx': freqdx})
+#    @property
+#    def atom(self):
+#        return self.disp
 
     def _gen_displaced(self, freq, atom, fdx):
         """
@@ -292,72 +239,87 @@ class GenInput(metaclass = GenMeta):
         df['frame'] = frame
         return df
 
-    def gen_gauss_inputs(self, path, routeg, routep, charge=0, mult=1, link0=''):
+#    def gen_gauss_inputs(self, path, routeg, routep, charge=0, mult=1, link0=''):
+#        """
+#        Method to write the displacements given in the displacements class variable to a
+#        gaussian input file. This writes a gradient (confg*.inp) and property (confp*.inp)
+#        files. As such, routeg and routep must be defined separately.
+#
+#        Args:
+#            path (str): path to where the files will be written
+#            routeg (str): gaussian route input for gradient calculation
+#            routep (str): gaussian route input for property calculation
+#            charge (int): charge of molecular system
+#            mult (int): spin multiplicity of molecular system
+#            link0 (str): link0 commands for gaussian
+#        """
+#        grouped = self.disp.groupby('freqdx')
+#        freqdx = self.disp['freqdx'].drop_duplicates().values
+#        n = len(str(max(freqdx)))
+#        for fdx in freqdx:
+#            grad_file = 'confg'+str(fdx).zfill(n)+'.inp'
+#            prop_file = 'confo'+str(fdx).zfill(n)+'.inp'
+#            with open(mkp(path, grad_file), 'w') as g:
+#                xyz = grouped.get_group(fdx)[['symbol', 'x', 'y', 'z']]
+#                g.write(_gauss_template.format(link0=link0, route=routeg,
+#                        title=str(fdx)+' gradient', charge=charge, mult=mult))
+#                xyz['x'] *= Length['au', 'Angstrom']
+#                xyz['y'] *= Length['au', 'Angstrom']
+#                xyz['z'] *= Length['au', 'Angstrom']
+#                xyz.to_csv(g, header=False, index=False, sep=' ', float_format=float_format,
+#                            quoting=csv.QUOTE_NONE, escapechar=' ')
+#                g.write('\n')
+#            with open(mkp(path, prop_file), 'w') as p:
+#                xyz = grouped.get_group(fdx)[['symbol', 'x', 'y', 'z']]
+#                p.write(_gauss_template.format(link0=link0, route=routep,
+#                        title=str(fdx)+' property', charge=charge, mult=mult))
+#                xyz['x'] *= Length['au', 'Angstrom']
+#                xyz['y'] *= Length['au', 'Angstrom']
+#                xyz['z'] *= Length['au', 'Angstrom']
+#                xyz.to_csv(p, header=False, index=False, sep=' ', float_format=float_format,
+#                            quoting=csv.QUOTE_NONE, escapechar=' ')
+#                p.write('\n')
+
+    def gen_inputs(self, comm, soft):
         """
-        Method to write the displacements given in the displacements class variable to a
-        gaussian input file. This writes a gradient (confg*.inp) and property (confp*.inp)
-        files. As such, routeg and routep must be defined separately.
+        Method to write the displaced coordinates as an input for the quantum code program
+        of choice. Currently only the following input generators have been tested with this
+        generalized input generator:
+            - NWChem
+            - Gaussian
+        More to come as the need is met.
+        This code will use the software input and iterate over all available frequency
+        indexes sending the data to the specified input generator. We have designed the code
+        to create the self.atom attribute as it gets called by input generators.
+
+        Note:
+            comm is currently supported as a single dictionary, i.e. the gradient and property
+            claculation will happen within the same script. The hope is that we can extend this
+            so a user can calculate the property and gradient separately. One case that this is
+            applicable to is if the user must use a different functional/basis for one of the
+            calculations.
+            The format is:
+                - {[keys of specified software]: [values]}
+            As an example this would be the comm input for a SP calculation at the
+            B3LYP/6-31G* level of theory with NProc=4 and Chk=test.chk for
+            exatomic.gaussian.Input.from_universe
+                - {'link0': {'NProc': 4, 'Chk': 'test.chk'}, 'route': '#P B3LYP/6-31G* SP',
+                   'writedir': dir_path, 'name': 'filename'}
+            For questions regarding the inputs needed for each input generator please refer
+            to the docs of the specific input generator.
 
         Args:
-            path (str): path to where the files will be written
-            routeg (str): gaussian route input for gradient calculation
-            routep (str): gaussian route input for property calculation
-            charge (int): charge of molecular system
-            mult (int): spin multiplicity of molecular system
-            link0 (str): link0 commands for gaussian
+            comm (dict): Dictionary containing all of the pertinent commands for the input
+            soft (class instance): Software of choice for the input generation
         """
         grouped = self.disp.groupby('freqdx')
         freqdx = self.disp['freqdx'].drop_duplicates().values
         n = len(str(max(freqdx)))
+        name = comm['name']
         for fdx in freqdx:
-            grad_file = 'confg'+str(fdx).zfill(n)+'.inp'
-            prop_file = 'confo'+str(fdx).zfill(n)+'.inp'
-            with open(mkp(path, grad_file), 'w') as g:
-                xyz = grouped.get_group(fdx)[['symbol', 'x', 'y', 'z']]
-                g.write(_gauss_template.format(link0=link0, route=routeg,
-                        title=str(fdx)+' gradient', charge=charge, mult=mult))
-                xyz['x'] *= Length['au', 'Angstrom']
-                xyz['y'] *= Length['au', 'Angstrom']
-                xyz['z'] *= Length['au', 'Angstrom']
-                xyz.to_csv(g, header=False, index=False, sep=' ', float_format=float_format,
-                            quoting=csv.QUOTE_NONE, escapechar=' ')
-                g.write('\n')
-            with open(mkp(path, prop_file), 'w') as p:
-                xyz = grouped.get_group(fdx)[['symbol', 'x', 'y', 'z']]
-                p.write(_gauss_template.format(link0=link0, route=routep,
-                        title=str(fdx)+' property', charge=charge, mult=mult))
-                xyz['x'] *= Length['au', 'Angstrom']
-                xyz['y'] *= Length['au', 'Angstrom']
-                xyz['z'] *= Length['au', 'Angstrom']
-                xyz.to_csv(p, header=False, index=False, sep=' ', float_format=float_format,
-                            quoting=csv.QUOTE_NONE, escapechar=' ')
-                p.write('\n')
-
-    def gen_inputs(self, path, comm, soft):
-        """
-        Method to write the displaced coordinates as an input for the quantum code program
-        of choice. Currently supported input generators include:
-            - NWChem
-            - Gaussian
-        More to come as the need is met.
-
-        Note:
-            comm is defined as a single dictionary, but it can be a dictionary of dictionaries
-            if multiple inputs based on thge same geometry must be written. If this is the case
-            the dictionary must be
-                {'gradient': {gradient commands},
-                 'property': {property commands}}
-            If a 1D dictionary is passed we assume that there will only need to be one file
-            to calculate the gradient and property values.
-
-        Args:
-            path (str): Path pointing to filepath to where files will be written
-            comm (dict): Dictionary containing all of the pertinent commands for the input
-            soft (class instance): Software of choice for the input generation
-        """
-        raise NotImplementedError("This method still needs some work as we all do not have enough time")
-        
-
+            comm['name'] = name+str(fdx).zfill(n)+'.inp'
+            self.atom = grouped.get_group(fdx)
+            soft(uni=self, **comm)
 
     def gen_slurm_inputs(self, path, sbatch, module, end_com=''):
         """
