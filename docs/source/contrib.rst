@@ -3,13 +3,11 @@
 
 .. _dev-label:
 
-#############
 Development
 #############
 
 Environment
 -----------
-
 For a development ready installation::
 
     git clone https://github.com/exa-analytics/exatomic.git

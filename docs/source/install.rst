@@ -28,7 +28,7 @@ Repository
 ----------
 Manually (or for a development installation)::
 
-    git clone https://github.com/exa-analytics/exatomic
+    git clone https://github.com/exa-analytics/exatomic.git
     cd exa
     pip install .
     jupyter nbextension install exatomic --py --sys-prefix

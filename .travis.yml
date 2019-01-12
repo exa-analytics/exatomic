@@ -23,7 +23,7 @@ install:
       fi;
       echo "DONE"
     - bash miniconda.sh -b -p $HOME/miniconda
-    - export NUMBA_DISABLE_JIT=1
+#   - export NUMBA_DISABLE_JIT=1
     - export PATH="$HOME/miniconda/bin:$PATH"
     - conda config --set always_yes yes --set changeps1 no
     - conda update -q --all
@@ -45,8 +45,8 @@ script:
     - pytest --cov
     - if [[ $TRAVIS_OS_NAME == "linux" ]] && [[ $PYTHONVER == 3.6 ]]; then
           coverage run --source=exatomic setup.py test;
-          rm docs/source/*.txt;
-          SPHINX_APIDOC_OPTIONS=members,undoc-members,private-members,special-members,inherited-members,show-inheritance sphinx-apidoc -eM -s txt -o docs/source/ exatomic/ *test*;
+          rm -rf docs/source/*.txt;
+          SPHINX_APIDOC_OPTIONS=members,undoc-members,private-members,special-members,inherited-members,show-inheritance sphinx-apidoc -eM -s txt -o docs/source/ exatomic *test*;
           travis-sphinx build;
       fi
 
