@@ -50,7 +50,7 @@ script:
     - if [[ $TRAVIS_OS_NAME == "linux" ]] && [[ $PYTHONVER == 3.6 ]]; then
           coverage run --source=exatomic setup.py test;
           rm -rf docs/source/*.txt;
-          sphinx-apidoc -eM -s txt -o docs/source/ exatomic/ */tests/* ;
+          SPHINX_APIDOC_OPTIONS=members,undoc-members,private-members,special-members,inherited-members,show-inheritance sphinx-apidoc -eM -s txt -o docs/source/ exatomic/ *test*;
           travis-sphinx build;
       fi
 
