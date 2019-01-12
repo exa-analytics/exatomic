@@ -52,14 +52,14 @@ install:
 
   - cmd: conda config --set show_channel_urls true
   - cmd: conda config --set always_yes yes --set changeps1 no
-  - cmd: conda update -n base conda
+  - cmd: conda update -y -n base conda
   - cmd: conda create -n test python=%CONDA_PY%
   - cmd: activate test
   - cmd: conda update -q -y --all
   - cmd: conda install -q -y -c conda-forge numpy scipy seaborn networkx pandas
   - cmd: conda install -q -y -c conda-forge pytest pytables six numba sympy
   - cmd: conda install -q -y -c conda-forge psutil numexpr nodejs ipywidgets
-# - cmd: conda install -q -c exaanalytics exa
+# - cmd: conda install -q -y -c exaanalytics exa
 # - cmd: pip install exa
   - cmd: git clone https://github.com/exa-analytics/exa.git
   - cmd: pip install -e exa/
