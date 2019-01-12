@@ -61,7 +61,7 @@ class DemoContainer(ExatomicBox):
     def __init__(self, *scenes, **kwargs):
         super(DemoContainer, self).__init__(*scenes,
                                             uni=False,
-                                            test=True,
+                                            #test=True,
                                             typ=ExatomicScene,
                                             **kwargs)
 
