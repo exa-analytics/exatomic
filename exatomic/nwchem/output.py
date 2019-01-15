@@ -320,10 +320,13 @@ class Output(six.with_metaclass(OutMeta, Editor)):
                                 columns=['xx', 'xy', 'xz', 'yx', 'yy', 'yz', 'zx', 'zy', 'zz'])
         df['label'] = found_2d.keys()
         df['label'].replace([_reare, _reombre, _reaim, _reombim], 
-                                ['alpha_re', 'g_re', 'alpha_im', 'g_im'], inplace=True)
+                                ['alpha-real', 'g_prime-real', 'alpha-imag', 'g_prime-imag'], inplace=True)
+        df['type'] = [i.split('-')[-1] for i in df['label'].values]
+        df['label'] = [i.split('-')[0] for i in df['label'].values]
         df['frame'] = np.repeat([0], len(df.index))
         df3['label'] = np.repeat(list(found_3d.keys()), 3)
-        df3['label'].replace([_redqre, _redqim], ['A_real', 'A_imag'], inplace=True)
+        df3['label'].replace([_redqre, _redqim], ['A', 'A'], inplace=True)
+        df3['type'] = np.repeat(['real', 'imag'], 3)
         df3['frame'] = np.repeat([0], len(df3.index))
         self.roa = pd.concat([df, df3], ignore_index=True)
 
