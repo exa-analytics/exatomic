@@ -480,7 +480,171 @@ class VA(metaclass=VAMeta):
     Administrator class for VA to perform all initial calculations of necessary variables to pass
     for calculations.
     """
-    def init_va(self, uni):
+    @staticmethod
+    def _alpha_squared(alpha):
+        alpha_squared = []
+        for fdx in range(len(alpha)):
+            sum = 0.0
+            for i in range(3):
+                for j in range(3):
+                    sum += (1./9.)*(alpha[fdx][i*3+i]*np.conj(alpha[fdx][j*3+j]))
+            alpha_squared.append(sum)
+        return alpha_squared
+
+    @staticmethod
+    def _beta_alpha(alpha):
+        beta_alpha = []
+        for fdx in range(len(alpha)):
+            sum = 0.0
+            for i in range(3):
+                for j in range(3):
+                    sum += 0.5*(3*alpha[fdx][i*3+j]*np.conj(alpha[fdx][i*3+j])- \
+                                alpha[fdx][j*3+j]*np.conj(alpha[fdx][i*3+i]))
+            beta_alpha.append(sum)
+        return beta_alpha
+
+    @staticmethod
+    def _beta_g_prime(alpha, g_prime):
+        beta_g_prime = []
+        for fdx in range(len(alpha)):
+            sum = 0.0
+            for i in range(3):
+                for j in range(3):
+                    sum += 0.5*(3*alpha[fdx][i*3+j]*np.conj(g_prime[fdx][i*3+j])- \
+                                alpha[fdx][j*3+j]*np.conj(g_prime[fdx][i*3+i]))
+            beta_g_prime.append(sum)
+        return beta_g_prime
+
+    @staticmethod
+    def _beta_A(omega, alpha, A):
+        beta_A = []
+        epsilon = [[0,0,0,0,0,1,0,-1,0],[0,0,-1,0,0,0,1,0,0],[0,1,0,-1,0,0,0,0,0]]
+        for fdx in range(len(alpha)):
+            sum = 0.0
+            for al in range(3):
+                for be in range(3):
+                    for de in range(3):
+                        for ga in range(3):
+                            sum += 0.5*omega[fdx]*alpha[fdx][be*3+al]*epsilon[al][de*3+ga]*np.conj(A[fdx][ga][be*3+de])
+            beta_A.append(sum)
+        return beta_A
+
+    @staticmethod
+    def _alpha_g_prime(alpha, g_prime):
+        alpha_g_prime = []
+        for fdx in range(len(alpha)):
+            sum = 0.0
+            for i in range(3):
+                for j in range(3):
+                    sum += 1j*alpha[fdx][i*3+i]*g_prime[fdx][j*3+j]/9.
+            alpha_g_prime.append(sum)
+        return alpha_g_prime
+
+    @staticmethod
+    def _calc_kp(lambda_0, lambda_p):
+        '''
+        Function to calculate the K_p value as given in equation 2 on J. Chem. Phys. 2007, 127, 134101.
+        We assume the temperature to be 298.15 as a hard coded value. Must get rid of this in future
+        iterations. The final units of the equation is in m^2.
+        Input values lambda_0 and lambda_p must be in the units of m^-1
+        '''
+        epsilon_0 = 1/(4*np.pi*1e-7*C**2)
+        # another hard coded value
+        temp = 298.15 # Kelvin
+        boltz = 1.0/(1.0-np.exp(-H*C*lambda_p/(KB*temp)))
+        constants = H/(8*epsilon_0**2*C)
+        variables = (lambda_0 - lambda_p)**4/lambda_p
+        kp = variables * constants * boltz
+        return kp
+
+    def vroa(self, uni, delta):
+        if not hasattr(self, 'roa'):
+            raise AttributeError("Please set roa attribute.")
+        if not hasattr(uni, 'frequency_ext'):
+            raise AttributeError("Please compute frequency_ext dataframe.")
+        # we must remove the 0 index file as by default our displaced coordinate generator will
+        # include these values and they have no significane in this code as of yet
+        try:
+            roa_0 = self.roa.groupby('file').get_group(0)
+            idxs = roa_0.index.values
+            roa = self.roa.loc[~self.roa.index.isin(idxs)]
+        except KeyError:
+            roa = self.roa.copy()
+        grouped = roa.groupby(['label', 'file'])
+        nmodes = len(uni.frequency_ext.index.values)
+        def _sum(df):
+            # simple function to sum up the imaginary and real parts of the tensors in the roa dataframe
+            # we use a np.complex128 data type to keep 64 bit precision on both the real and imaginary parts
+            cols = ['xx', 'xy', 'xz', 'yx', 'yy', 'yz', 'zx', 'zy', 'zz']
+            value_real = []
+            value_imag = []
+            # get the index values of the imaginary parts
+            mask = df.groupby('type').get_group('imag').index.values
+            # add the imaginary values
+            value_complex = 1j*df.loc[mask, cols].astype(np.complex128).values
+            # add the real values
+            value_complex += df.loc[~df.index.isin(mask), cols].astype(np.complex128).values
+            # this is a bit of an assumption given our data sets
+            # we have four tensor elements that are two dimensional and two that are 3 dimensional
+            # we do this to reduce the dimensions of the 2d elements to 1d arrays and keep
+            # the 3d tensors as 2d arrays
+            if len(value_complex) == 1:
+                value_complex = value_complex.reshape(9,)
+            return value_complex
+
+        # add the real and complex parts of the tensors
+        complex_roa = grouped.apply(lambda x: _sum(x))
+
+        # get alpha G' and A tnesors and divide by the reduced mass
+#        print(np.tile(uni.frequency_ext['r_mass'].values, 2).reshape(2*nmodes,1))
+#        print(len(complex_roa['A'].values))
+        A = complex_roa['A'] / np.tile(uni.frequency_ext['r_mass'].values, 2).reshape(2*nmodes,1)
+        alpha = complex_roa['alpha'] / np.tile(uni.frequency_ext['r_mass'].values, 2).reshape(2*nmodes,1)
+        g_prime = complex_roa['g_prime'] / np.tile(uni.frequency_ext['r_mass'].values, 2).reshape(2*nmodes,1)
+
+        # separate tensors into positive and negative displacements
+        # highly dependent on the value of the index
+        # we neglect the equilibrium coordinates
+        # 0 corresponds to equilibrium coordinates
+        # 1 - nmodes corresponds to positive displacements
+        # nmodes+1 - 2*nmodes corresponds to negative displacements
+        alpha_plus = alpha.loc[range(1,nmodes+1)].values
+        alpha_minus = alpha.loc[range(nmodes+1, 2*nmodes+1)].values
+        g_prime_plus = g_prime.loc[range(1,nmodes+1)].values
+        g_prime_minus = g_prime.loc[range(nmodes+1, 2*nmodes+1)].values
+        A_plus = A.loc[range(1,nmodes+1)].values
+        A_minus = A.loc[range(nmodes+1, 2*nmodes+1)].values
+
+        # generate derivatives by two point difference method
+        # TODO: check all of these values to Movipac software
+        dalpha_dq = np.divide((alpha_plus - alpha_minus), 2 * delta)
+        dg_dq = np.divide((g_prime_plus - g_prime_minus), 2 * delta)
+        dA_dq = [np.divide((A_plus[i] - A_minus[i]), 2 * delta[i]) for i in range(nmodes)]
+
+        # get frequencies
+        frequencies = uni.frequency_ext['freq']
+
+        # generate properties as shown on equations 5-9 in paper
+        # J. Chem. Phys. 2007, 127, 134101
+        alpha_squared = np.real(self._alpha_squared(dalpha_dq))
+        beta_alpha = np.real(self._beta_alpha(dalpha_dq))
+        beta_g_prime = np.imag(self._beta_g_prime(dalpha_dq, dg_dq))
+        beta_A = np.real(self._beta_A(frequencies, dalpha_dq, dA_dq))
+        alpha_g = np.imag(self._alpha_g_prime(dalpha_dq, dg_dq))
+
+        # hard coded value
+        lambda_0 = 1. / (514.5 * Length['nm', 'm']) #in wavenumbers (m^{-1})
+        warning.warn("Hard coded value of lambda_0 in vroa. This is a value corresponding to an "+ \
+                     "Ar ion laser with wavelength of 514.5 nm. Must find a way to calculate this.",
+                     Warning)
+
+        # have to convert frequencies from Ha to m^-1 to match equations units
+        lambda_p = uni.frequency_ext['freq'].values * Energy['Ha', 'cm^-1'] / Length['cm', 'm']
+        kp = self._calc_kp(lambda_0, lambda_p)
+        raman_activity = kp * (45 * alpha_squared + 7 * beta_alpha) / 45.
+        self.raman_activity = pd.Series(raman_activity) # in m^2
+
+    def init_va(self, uni, vroa=False):
         """
         This is a method to initialize all of the variables that will be needed to execute the VA
         program. As a sanity check we calculate the frequencies from the force constants. If we
