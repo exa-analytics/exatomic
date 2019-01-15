@@ -490,23 +490,27 @@ class VA(metaclass=VAMeta):
             uni (:class:`~exatomic.Universe`): Universe object containg pertinent data from
                                                frequency calculation
         """
-        # check that all attributes to be used exist
+        delta_df = gen_delta(freq=uni.frequency.copy(), delta_type=2)
+        delta = delta_df['delta'].values
         if not hasattr(self, "gradient"):
             raise AttributeError("Please set gradient attribute first")
-        if not hasattr(self, "property"):
-            raise AttributeError("Please set property attribute first")
         if not hasattr(uni, "frequency_ext"):
             raise AttributeError("Cannot find frequency extended dataframe in universe")
         if not hasattr(uni, "frequency"):
             raise AttributeError("Cannot find frequency dataframe in universe")
+#        if not vroa:
+#            if not hasattr(self, "property"):
+#                raise AttributeError("Please set property attribute first")
+#        else:
+#            self.vroa(uni=uni, delta=delta)
+        # check that all attributes to be used exist
         # group the gradients by file (normal mode)
         grouped = self.gradient.groupby('file')
         # get number of normal modes
         nmodes = len(uni.frequency_ext.index.values)
         # generate delta dataframe
-        delta_df = gen_delta(freq=uni.frequency.copy(), delta_type=2)
-        delta = delta_df['delta'].values
-#        delta = delta.drop_duplicates(subset='freqdx').reset_index(drop=True)
+        # TODO: make something so delta can be set
+        #       possible issues are a user using a different type of delta
         # get gradient of the equilibrium coordinates
         grad_0 = grouped.get_group(0)
         # get gradients of the displaced coordinates in the positive direction
@@ -522,16 +526,16 @@ class VA(metaclass=VAMeta):
         delfq_zero = uni.frequency.groupby('freqdx')[['dx', 'dy', 'dz']].apply(lambda x:
                                     np.sum(np.multiply(grad_0[['fx', 'fy', 'fz']].values, x.values)))
         delfq_zero = np.tile(delfq_zero, nmodes).reshape(snmodes, nmodes)
+
         delfq_plus = grad_plus.groupby('file')[['fx', 'fy', 'fz']].apply(lambda x:
                                 uni.frequency.groupby('freqdx')[['dx', 'dy', 'dz']].apply(lambda y:
                                     np.sum(np.multiply(y.values, x.values))))
-        #delfq_plus.columns = delfq_plus.columns.values-1
         delfq_plus.reset_index(drop=True, inplace=True)
+
         delfq_minus = grad_minus.groupby('file')[['fx', 'fy', 'fz']].apply(lambda x:
                                 uni.frequency.groupby('freqdx')[['dx', 'dy', 'dz']].apply(lambda y:
                                     np.sum(np.multiply(y.values, x.values))))
         delfq_minus.reset_index(drop=True, inplace=True)
-        #delfq_minus.columns = delfq_minus.columns.values-40
 
         # get diagonal elements of respqective matrix
         diag_plus = np.diag(delfq_plus)
@@ -559,21 +563,18 @@ class VA(metaclass=VAMeta):
 
         # This is mainly for debug purposes
         # Will most likely eliminate most if not all of these class attributes
-        self.delfq_zero = pd.DataFrame(delfq_zero)
-        self.delfq_plus = pd.DataFrame(delfq_plus)
-        self.delfq_minus = pd.DataFrame(delfq_minus)
-        idx = uni.frequency['freqdx'].drop_duplicates().values
-        ndx = np.repeat(idx, nmodes)
-        #print(len(ndx))
-        jdx = np.tile(idx, nmodes)
-        #print(len(jdx))
-        self.kqi   = pd.DataFrame.from_dict({'idx': idx, 'kqi': kqi, 'calculated_vqi': uni.frequency_ext['f_const']})
-        self.kqiii = pd.DataFrame.from_dict({'idx': idx, 'kqiii': kqiii})
-        self.kqijj = pd.DataFrame(kqijj)
-        self.delta = delta_df
-        self.vqi = pd.DataFrame.from_dict({'idx': idx, 'vqi': vqi})
-        self.calcfreq = pd.DataFrame.from_dict({'idx': idx, 'calc_freq': calcfreq, 'real_freq': uni.frequency_ext['freq']*Energy['Ha', 'cm^-1']})
+        #self.delfq_zero = pd.DataFrame(delfq_zero)
+        #self.delfq_plus = pd.DataFrame(delfq_plus)
+        #self.delfq_minus = pd.DataFrame(delfq_minus)
+        #idx = uni.frequency['freqdx'].drop_duplicates().values
+        #ndx = np.repeat(idx, nmodes)
+        ##print(len(ndx))
+        #jdx = np.tile(idx, nmodes)
+        ##print(len(jdx))
+        #self.kqi   = pd.DataFrame.from_dict({'idx': idx, 'kqi': kqi, 'calculated_vqi': uni.frequency_ext['f_const']})
+        #self.kqiii = pd.DataFrame.from_dict({'idx': idx, 'kqiii': kqiii})
+        #self.kqijj = pd.DataFrame(kqijj)
+        #self.delta = delta_df
+        #self.vqi = pd.DataFrame.from_dict({'idx': idx, 'vqi': vqi})
+        #self.calcfreq = pd.DataFrame.from_dict({'idx': idx, 'calc_freq': calcfreq, 'real_freq': uni.frequency_ext['freq']*Energy['Ha', 'cm^-1']})
         #pd.options.display.float_format = '{:.6E}'.format
-
-    def __init__(self, *args, **kwargs):
-        pass
