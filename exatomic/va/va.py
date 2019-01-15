@@ -161,10 +161,6 @@ class GenInput(metaclass = GenMeta):
 
     _tol = 1e-6
 
-#    @property
-#    def atom(self):
-#        return self.disp
-
     def _gen_displaced(self, freq, atom, fdx):
         """
         Function to generate displaced coordinates for each selected normal mode.
@@ -296,8 +292,8 @@ class GenInput(metaclass = GenMeta):
         Method to write the displaced coordinates as an input for the quantum code program
         of choice. Currently only the following input generators have been tested with this
         generalized input generator:
-            - NWChem
-            - Gaussian
+            - :class:`exatomic.nwchem.Input.from_universe`
+            - :class:`exatomic.gaussian.Input.from_universe`
         More to come as the need is met.
         This code will use the software input and iterate over all available frequency
         indexes sending the data to the specified input generator. We have designed the code
@@ -466,7 +462,7 @@ class GenInput(metaclass = GenMeta):
         self.write_data_file(path=path, array=prop, fn=fn)
 
     def __init__(self, uni, delta_type=0, fdx=-1, *args, **kwargs):
-        if "_frequency" not in vars(uni):
+        if not hasattr(uni, 'frequency'):
             raise AttributeError("Frequency dataframe cannot be found in universe")
         freq = uni.frequency.copy()
         atom = uni.atom.copy()
