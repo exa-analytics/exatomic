@@ -12,10 +12,14 @@ import csv
 import os
 import glob
 import re
+from exa.util.constants import speed_of_light_in_vacuum as C, Planck_constant as H, \
+                               Boltzmann_constant as KB
 from exa.util.units import Length, Energy, Mass
 from exa.util.utility import mkp
 from exatomic.core import Atom, Gradient
 from exa import TypedMeta
+import warnings
+warnings.simplefilter("default")
 #from exatomic import gaussian
 #from exatomic import nwchem
 
@@ -28,16 +32,12 @@ _gauss_template='''{link0}
 '''
 float_format = '%    .10f'
 
-def get_data(path, attr, f_end, soft, f_start=''):
+def get_data(path, attr, soft, f_end='', f_start='', sort_index=['']):
     # TODO: Make something so that we do not have to set the type of output parser by default
     #       allow the user to specify which it is based on the file.
     #       Consider just using soft as an input of a class
-    #prog = {'gauss': gaussian.Fchk, 'gaussian': gaussian.Fchk}
-    #if soft.lower() not in prog.keys():
-    #    raise NotImplementedError("Cannot find the chosen program {} in known programs {}".format(
-    #                                                                            soft, prog.keys()))
-    #else:
-    #    soft = prog[soft.lower()]
+    if not isinstance(sort_index, list):
+        raise TypeError("Variable sort_index must be of type list")
     if not hasattr(soft, attr):
         raise NotImplementedError("parse_{} is not a method of {}".format(attr, soft))
     files = glob.glob(path)
@@ -56,10 +56,21 @@ def get_data(path, attr, f_end, soft, f_start=''):
             continue
         array.append(df)
     cdf = pd.concat([arr for arr in array])
-    try:
-        cdf.sort_values(by=['file', 'label'], inplace=True)
-    except KeyError:
-        cdf.sort_values(by=['file', 'atom'], inplace=True)
+    if sort_index[0] == '':
+        if 'file' in cdf.columns.values:
+            if 'label' in cdf.columns.values or 'atom' in cdf.columns.values:
+                try:
+                    cdf.sort_values(by=['file', 'label'], inplace=True)
+                except KeyError:
+                    cdf.sort_values(by=['file', 'atom'], inplace=True)
+            else:
+                warnings.warn("Sorting only by file label on DataFrame. Be careful if there is some order dependent function that is being used later based off this output.", Warning)
+                cdf.sort_values(by=['file'], inplace=True)
+    else:
+        try:
+            cdf.sort_values(by=sort_values, inplace=True)
+        except KeyError:
+            raise KeyError("Please make sure that the keys {} exist in the dataframe created by {}.parse_{}.".format(sort_values, soft, attr))
     cdf.reset_index(drop=True, inplace=True)
     return cdf
 
@@ -133,7 +144,7 @@ class GenInput(metaclass = GenMeta):
     :class:`~exatomic.atom.Frequency` dataframe. It will scale these displacements to a
     desired type defined by the user with the delta_type keyword. For more information
     on this keyword see the documentation on the
-    :class:`~exatomic.va.va.GenInputs._gen_delta` function.
+    :class:`~exatomic.va.gen_delta` function.
 
     We can also define a specific normal mode or a list of normal modes that are of
     interest and generate displaced coordinates along those specific modes rather
