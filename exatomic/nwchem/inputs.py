@@ -47,10 +47,11 @@ end
 basis {{basisopts}}
 {{basis}}
 end
+
+{{set}}
 {extras}
 {calc}{{prop}}
-
-task {{task}}"""
+{{task}}"""
 
 
 _calcscf = """scf
@@ -77,7 +78,7 @@ class Input(Editor):
                       basisopts='spherical', basis='* library 6-31G',
                       mult=1, xc='b3lyp', iterations=100,
                       convergence='nolevelshifting', prop=' nbofile 2',
-                      relativistic='', tddft='', ecp=''):
+                      relativistic='', tddft='', ecp='', sets=None, tasks='property'):
         calc = _calcdft if task == 'dft' else _calcscf
         extras = ''
         extradict = {}
@@ -91,7 +92,6 @@ class Input(Editor):
         keys += [key.split('}')[0].split(':')[0] for key in _calcscf.split('{')[1:]]
         keys += [key.split('}')[0].split(':')[0] for key in _calcdft.split('{')[1:]]
         kwargs = {key: '' for key in keys}
-
         kwargs['atom'] = uni.atom.to_xyz()[:-1]
         if name is not None:
             kwargs['name'] = name
@@ -111,15 +111,19 @@ class Input(Editor):
         kwargs['xc'] = xc
         kwargs['iterations'] = iterations
         kwargs['convergence'] = _handle_arg('convergence', convergence)
-        kwargs['task'] = task
-        if prop and 'property' not in task:
-            kwargs['task'] += ' property'
+        if sets != None:
+            kwargs['set'] = _handle_arg('set', sets)
+        kwargs['task'] = ''
+        if isinstance(tasks, list):
+            for i in tasks:
+                kwargs['task'] += '\ntask '+task+' '+i
+        else:
+            kwargs['task'] += 'task '+task+' '+tasks
         #extras = {'ecp': _handle_arg('ecp', ecp),
         #          'tddft': _handle_arg('tddft', tddft),
         #          'property': _handle_arg('property', prop),
         #          'relativistic': _handle_arg('relativistic', relativistic)}
         kwargs.update(extradict)
-
     #### TASK AND EXTRAS
 
         #kwargs['prop'] = '\n\nproperty\n nbofile 2\nend'
@@ -137,7 +141,10 @@ class Input(Editor):
         #kwargs['extras'] = '\n'.join([extra + '\nend' for extra in extras])
         fl.format(inplace=True, **kwargs)
         if fp is not None:
-            fl.write(fp)
+            if name is not None:
+                fl.write(fp+name)
+            else:
+                fl.write(fp)
         else:
             return fl
 
@@ -148,8 +155,9 @@ class Input(Editor):
 
 def _handle_arg(opt, info):
     type1 = {'basis': 'library', 'ecp': 'library'}
-    type2 = ['convergence']
+    type2 = ['convergence', 'set']
     type3 = ['ecp', 'property', 'tddft', 'relativistic']
+#    type4 = ['set', 'task']
     if isinstance(info, str):
         if opt in type3:
             return '\n{0}\n{1}\n{2}\n'.format(opt, info, 'end')
