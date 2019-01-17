@@ -487,7 +487,8 @@ class VA(metaclass=VAMeta):
             sum = 0.0
             for i in range(3):
                 for j in range(3):
-                    sum += (1./9.)*(alpha[fdx][i*3+i]*np.conj(alpha[fdx][j*3+j]))
+#                    sum += (1./9.)*(alpha[fdx][i*3+i]*np.conj(alpha[fdx][j*3+j]))
+                    sum += (1./9.)*(alpha[fdx][i*3+i]*alpha[fdx][j*3+j])
             alpha_squared.append(sum)
         return alpha_squared
 
@@ -498,8 +499,10 @@ class VA(metaclass=VAMeta):
             sum = 0.0
             for i in range(3):
                 for j in range(3):
-                    sum += 0.5*(3*alpha[fdx][i*3+j]*np.conj(alpha[fdx][i*3+j])- \
-                                alpha[fdx][j*3+j]*np.conj(alpha[fdx][i*3+i]))
+#                    sum += 0.5*(3*alpha[fdx][i*3+j]*np.conj(alpha[fdx][i*3+j])- \
+#                                alpha[fdx][i*3+i]*np.conj(alpha[fdx][j*3+j]))
+                    sum += 0.5*(3*alpha[fdx][i*3+j]*alpha[fdx][i*3+j]- \
+                                alpha[fdx][i*3+i]*alpha[fdx][j*3+j])
             beta_alpha.append(sum)
         return beta_alpha
 
@@ -510,8 +513,10 @@ class VA(metaclass=VAMeta):
             sum = 0.0
             for i in range(3):
                 for j in range(3):
-                    sum += 0.5*(3*alpha[fdx][i*3+j]*np.conj(g_prime[fdx][i*3+j])- \
-                                alpha[fdx][j*3+j]*np.conj(g_prime[fdx][i*3+i]))
+#                    sum += 0.5*(3*alpha[fdx][i*3+j]*np.conj(g_prime[fdx][i*3+j])- \
+#                                alpha[fdx][j*3+j]*np.conj(g_prime[fdx][i*3+i]))
+                    sum += 0.5*(3*alpha[fdx][i*3+j]*g_prime[fdx][i*3+j]- \
+                                alpha[fdx][j*3+j]*g_prime[fdx][i*3+i])
             beta_g_prime.append(sum)
         return beta_g_prime
 
@@ -525,7 +530,10 @@ class VA(metaclass=VAMeta):
                 for be in range(3):
                     for de in range(3):
                         for ga in range(3):
-                            sum += 0.5*omega[fdx]*alpha[fdx][be*3+al]*epsilon[al][de*3+ga]*np.conj(A[fdx][ga][be*3+de])
+#                            sum += 0.5*omega[fdx]*alpha[fdx][be*3+al]* \
+#                                        epsilon[al][de*3+ga]*np.conj(A[fdx][ga][be*3+de])
+                            sum += 0.5*omega[fdx]*alpha[fdx][be*3+al]* \
+                                        epsilon[al][de*3+ga]*A[fdx][ga][be*3+de]
             beta_A.append(sum)
         return beta_A
 
