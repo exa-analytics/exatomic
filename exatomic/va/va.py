@@ -606,9 +606,15 @@ class VA(metaclass=VAMeta):
         # get alpha G' and A tnesors and divide by the reduced mass
 #        print(np.tile(uni.frequency_ext['r_mass'].values, 2).reshape(2*nmodes,1))
 #        print(len(complex_roa['A'].values))
-        A = complex_roa['A'] / np.tile(uni.frequency_ext['r_mass'].values, 2).reshape(2*nmodes,1)
-        alpha = complex_roa['alpha'] / np.tile(uni.frequency_ext['r_mass'].values, 2).reshape(2*nmodes,1)
-        g_prime = complex_roa['g_prime'] / np.tile(uni.frequency_ext['r_mass'].values, 2).reshape(2*nmodes,1)
+#        rmass = np.tile(uni.frequency_ext['r_mass'].values, 2)
+#        A = complex_roa['A'].values
+#        A = [a / rmass[j] for j in range(len(A)) for a in A[j]]
+#        alpha = np.divide(complex_roa['alpha'].values, rmass.reshape(2*nmodes, 1))
+#        g_prime = np.divide(complex_roa['g_prime'].values, rmass.reshape(2*nmodes, 1))
+        rmass = np.sqrt(uni.frequency_ext['r_mass'].values)
+        A = complex_roa['A']
+        alpha = complex_roa['alpha']
+        g_prime = complex_roa['g_prime']
 
         # separate tensors into positive and negative displacements
         # highly dependent on the value of the index
