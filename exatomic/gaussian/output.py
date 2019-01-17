@@ -648,14 +648,14 @@ class Fchk(six.with_metaclass(GauMeta, Editor)):
         freqdx = [i for i in range(nmode)]
         # mapper array to filter through all of the values printed on the fchk file
         # TODO: have to find labels of unknown columns
-        mapper = ["freq", "r_mass", "f_const", "ir_int", "unk1", "unk2", "unk3",
+        mapper = ["freq", "r_mass", "f_const", "ir_int", "raman_activity", "depol_plane", "depol_unpol",
                   "dipole_s", "rot_s", "unk4", "unk5", "unk6", "unk7", "em_angle"]
         # build extended frequency table
         self.frequency_ext = pd.DataFrame.from_dict({mapper[int(i/nmode)]: all_info[i:i+nmode]
                                                      for i in range(0, nmode*14-1, nmode)})
         self.frequency_ext['freqdx'] = freqdx
         # convert from atomic mass units to atomic units
-        self.frequency_ext['r_mass'] *= Mass['u', 'au_mass']
+        #self.frequency_ext['r_mass'] *= Mass['u', 'au_mass']
         # convert from cm^{-1} to Ha
         self.frequency_ext['freq'] *= Energy['cm^-1', 'Ha']
         ## convert mdyne to dyne
