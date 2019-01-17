@@ -622,18 +622,16 @@ class VA(metaclass=VAMeta):
         # 0 corresponds to equilibrium coordinates
         # 1 - nmodes corresponds to positive displacements
         # nmodes+1 - 2*nmodes corresponds to negative displacements
-        alpha_plus = alpha.loc[range(1,nmodes+1)].values
-        alpha_minus = alpha.loc[range(nmodes+1, 2*nmodes+1)].values
-        g_prime_plus = g_prime.loc[range(1,nmodes+1)].values
-        g_prime_minus = g_prime.loc[range(nmodes+1, 2*nmodes+1)].values
-        A_plus = A.loc[range(1,nmodes+1)].values
-        A_minus = A.loc[range(nmodes+1, 2*nmodes+1)].values
+        alpha_plus = np.divide(alpha.loc[range(1,nmodes+1)].values, rmass)
+        alpha_minus = np.divide(alpha.loc[range(nmodes+1, 2*nmodes+1)].values, rmass)
+        g_prime_plus = np.divide(g_prime.loc[range(1,nmodes+1)].values, rmass)
+        g_prime_minus = np.divide(g_prime.loc[range(nmodes+1, 2*nmodes+1)].values, rmass)
+        A_plus = np.divide(A.loc[range(1,nmodes+1)].values, rmass)
+        A_minus = np.divide(A.loc[range(nmodes+1, 2*nmodes+1)].values, rmass)
 
         # generate derivatives by two point difference method
         # TODO: check all of these values to Movipac software
-        dalpha_dq = np.divide((alpha_plus - alpha_minus), 2 * delta)
-        dg_dq = np.divide((g_prime_plus - g_prime_minus), 2 * delta)
-        dA_dq = [np.divide((A_plus[i] - A_minus[i]), 2 * delta[i]) for i in range(nmodes)]
+        dalpha_dq = np.divide((alpha_plus - alpha_minus), 2 * delta) * Length['au', 'Angstrom']**2
 
         # get frequencies
         frequencies = uni.frequency_ext['freq']
