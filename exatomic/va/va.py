@@ -50,7 +50,7 @@ def get_data(path, attr, soft, f_end='', f_start='', sort_index=['']):
             except AttributeError:
                 raise AttributeError("The property {} cannot be found in output {}".format(
                                                                                         attr, file))
-            fdx = list(map(int, re.findall('\d+', file.split('/')[-1])))
+            fdx = list(map(int, re.findall('\d+', file.split('/')[-1].replace(f_start, '').replace(f_end, ''))))
             df['file'] = np.tile(fdx, len(df))
         else:
             continue
