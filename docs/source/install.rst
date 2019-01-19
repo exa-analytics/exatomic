@@ -10,14 +10,14 @@ the instructions below.
 
 
 Anaconda
-#######################
+--------
 Using anaconda or miniconda::
 
     conda install -c exaanalytics exatomic
 
 
 Pypi
-#######################
+----
 Using pip::
 
     sudo pip install exatomic
@@ -25,10 +25,10 @@ Using pip::
 
 
 Repository
-#########################
+----------
 Manually (or for a development installation)::
 
-    git clone https://github.com/exa-analytics/exatomic
+    git clone https://github.com/exa-analytics/exatomic.git
     cd exa
     pip install .
     jupyter nbextension install exatomic --py --sys-prefix
@@ -36,13 +36,13 @@ Manually (or for a development installation)::
 
 
 What's Next?
-#####################
-- Users should check out the :ref:`started-label`
-- Contributors should check out the :ref:`dev-label`
-- The :ref:`api-label` contains usage and extension examples, and developer notes
+------------
+- Users should check out :ref:`started-label`
+- Contributors should check out :ref:`dev-label`
+- Full API documentation can be found here: :ref:`api-label`
 
 
 Note
-########
+----
 Although an effort has been made to fully support legacy Python 2.7.x, some (optional) dependencies
 may conflict on Windows environments.

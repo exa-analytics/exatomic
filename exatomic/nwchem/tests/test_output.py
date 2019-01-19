@@ -13,7 +13,6 @@ from exatomic.nwchem.output import Output
 
 
 class TestNWChemOutput(TestCase):
-
     def setUp(self):
         self.mam1 = Output(resource('nw-ch3nh2-631g.out'))
         self.mam2 = Output(resource('nw-ch3nh2-augccpvdz.out'))
