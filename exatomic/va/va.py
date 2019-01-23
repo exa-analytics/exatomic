@@ -472,12 +472,15 @@ class GenInput(metaclass = GenMeta):
             raise ValueError("prop array must be a 1D array")
         self.write_data_file(path=path, array=prop, fn=fn)
 
-    def __init__(self, uni, delta_type=0, fdx=-1, *args, **kwargs):
+    def __init__(self, uni, *args, **kwargs):
         if not hasattr(uni, 'frequency'):
             raise AttributeError("Frequency dataframe cannot be found in universe")
+        delta_type = kwargs.pop("delta_type", 0)
+        fdx = kwargs.pop("fdx", -1)
+        disp = kwargs.pop("disp", None)
         freq = uni.frequency.copy()
         atom = uni.atom.copy()
-        self.delta = gen_delta(freq, delta_type)
+        self.delta = gen_delta(freq, delta_type, disp)
         self.disp = self._gen_displaced(freq, atom, fdx)
 
 class VAMeta(TypedMeta):
@@ -491,16 +494,31 @@ class VA(metaclass=VAMeta):
     Administrator class for VA to perform all initial calculations of necessary variables to pass
     for calculations.
     """
+    # TODO: look to speed up code in staticmethods with jit
     @staticmethod
     def _alpha_squared(alpha):
-        alpha_squared = []
+        n = len(alpha)
+        alpha_squared = np.zeros(n).astype(np.complex128)
+        #real_text = ''
+        #imag_text = ''
+        #cart = [0,1,2,4,5,8]
         for fdx in range(len(alpha)):
+            # debug code
+            #for idx, (real, imag) in enumerate(zip(np.real(alpha[fdx]), np.imag(alpha[fdx]))):
+            #    if idx in cart:
+            #        real_text = real_text+"\n{:.10f}".format(real)
+            #        imag_text = imag_text+"\n{:.10f}".format(imag)
             sum = 0.0
-            for i in range(3):
-                for j in range(3):
-#                    sum += (1./9.)*(alpha[fdx][i*3+i]*np.conj(alpha[fdx][j*3+j]))
-                    sum += (1./9.)*(alpha[fdx][i*3+i]*alpha[fdx][j*3+j])
-            alpha_squared.append(sum)
+            for al in range(3):
+                for be in range(3):
+                    sum += (1./9.)*(alpha[fdx][al*3+al]*np.conj(alpha[fdx][be*3+be]))
+            alpha_squared[fdx] = sum
+        #fn = open("/home/herbertl/jupyter-notebooks/vroa_data_files/dalpha_dq_real_file", 'w')
+        #fn.write(real_text)
+        #fn.close()
+        #fn = open("/home/herbertl/jupyter-notebooks/vroa_data_files/dalpha_dq_imag_file", 'w')
+        #fn.write(imag_text)
+        #fn.close()
         return alpha_squared
 
     @staticmethod
@@ -508,44 +526,68 @@ class VA(metaclass=VAMeta):
         beta_alpha = []
         for fdx in range(len(alpha)):
             sum = 0.0
-            for i in range(3):
-                for j in range(3):
-#                    sum += 0.5*(3*alpha[fdx][i*3+j]*np.conj(alpha[fdx][i*3+j])- \
-#                                alpha[fdx][i*3+i]*np.conj(alpha[fdx][j*3+j]))
-                    sum += 0.5*(3*alpha[fdx][i*3+j]*alpha[fdx][i*3+j]- \
-                                alpha[fdx][i*3+i]*alpha[fdx][j*3+j])
+            for al in range(3):
+                for be in range(3):
+                    sum += 0.5*(3*alpha[fdx][al*3+be]*np.conj(alpha[fdx][al*3+be])- \
+                                alpha[fdx][al*3+al]*np.conj(alpha[fdx][be*3+be]))
             beta_alpha.append(sum)
         return beta_alpha
 
     @staticmethod
     def _beta_g_prime(alpha, g_prime):
         beta_g_prime = []
+        #cart = [0,1,2,4,5,8]
+        #real_text = ''
+        #imag_text = ''
         for fdx in range(len(alpha)):
+            # debug code
+            #for idx, (real, imag) in enumerate(zip(np.real(g_prime[fdx]), np.imag(g_prime[fdx]))):
+            #    real_text = real_text+"\n{:.10f}".format(real)
+            #    imag_text = imag_text+"\n{:.10f}".format(imag)
             sum = 0.0
-            for i in range(3):
-                for j in range(3):
-#                    sum += 0.5*(3*alpha[fdx][i*3+j]*np.conj(g_prime[fdx][i*3+j])- \
-#                                alpha[fdx][j*3+j]*np.conj(g_prime[fdx][i*3+i]))
-                    sum += 0.5*(3*alpha[fdx][i*3+j]*g_prime[fdx][i*3+j]- \
-                                alpha[fdx][j*3+j]*g_prime[fdx][i*3+i])
+            for al in range(3):
+                for be in range(3):
+                    sum += 1j*0.5*(3*alpha[fdx][al*3+be]*np.conj(g_prime[fdx][al*3+be])- \
+                                alpha[fdx][al*3+al]*np.conj(g_prime[fdx][be*3+be]))
             beta_g_prime.append(sum)
+        #fn = open("/home/herbertl/jupyter-notebooks/vroa_data_files/dg_dq_real_file", 'w')
+        #fn.write(real_text)
+        #fn.close()
+        #fn = open("/home/herbertl/jupyter-notebooks/vroa_data_files/dg_dq_imag_file", 'w')
+        #fn.write(imag_text)
+        #fn.close()
         return beta_g_prime
 
     @staticmethod
     def _beta_A(omega, alpha, A):
         beta_A = []
         epsilon = [[0,0,0,0,0,1,0,-1,0],[0,0,-1,0,0,0,1,0,0],[0,1,0,-1,0,0,0,0,0]]
+        #cart = [8,17,26]
+        real_text = ''
+        imag_text = ''
         for fdx in range(len(alpha)):
+            # debug code
+            #for ndx in [0,4,8]:
+            #    for idx in range(3):
+            #        for jdx in range(idx*9+ndx,idx*9+ndx+4):
+            #            real_text = real_text+"\n{:.10f}".format(np.real(A[fdx][jdx]))
+            #            imag_text = imag_text+"\n{:.10f}".format(np.imag(A[fdx][jdx]))
+            #            if jdx in cart:
+            #                break
             sum = 0.0
             for al in range(3):
                 for be in range(3):
                     for de in range(3):
                         for ga in range(3):
-#                            sum += 0.5*omega[fdx]*alpha[fdx][be*3+al]* \
-#                                        epsilon[al][de*3+ga]*np.conj(A[fdx][ga][be*3+de])
-                            sum += 0.5*omega[fdx]*alpha[fdx][be*3+al]* \
-                                        epsilon[al][de*3+ga]*A[fdx][ga][be*3+de]
+                            sum += 0.5*omega[fdx]*alpha[fdx][al*3+be]* \
+                                        epsilon[al][de*3+ga]*np.conj(A[fdx][de*9+ga*3+be])
             beta_A.append(sum)
+        #fn = open("/home/herbertl/jupyter-notebooks/vroa_data_files/dA_dq_real_file", 'w')
+        #fn.write(real_text)
+        #fn.close()
+        #fn = open("/home/herbertl/jupyter-notebooks/vroa_data_files/dA_dq_imag_file", 'w')
+        #fn.write(imag_text)
+        #fn.close()
         return beta_A
 
     @staticmethod
@@ -553,10 +595,10 @@ class VA(metaclass=VAMeta):
         alpha_g_prime = []
         for fdx in range(len(alpha)):
             sum = 0.0
-            for i in range(3):
-                for j in range(3):
-                    sum += 1j*alpha[fdx][i*3+i]*g_prime[fdx][j*3+j]/9.
-            alpha_g_prime.append(sum)
+            for al in range(3):
+                for be in range(3):
+                    sum += alpha[fdx][al*3+al]*np.conj(g_prime[fdx][be*3+be])/9.
+            alpha_g_prime.append(1j*sum)
         return alpha_g_prime
 
     @staticmethod
@@ -567,14 +609,28 @@ class VA(metaclass=VAMeta):
         iterations. The final units of the equation is in m^2.
         Input values lambda_0 and lambda_p must be in the units of m^-1
         '''
-        epsilon_0 = 1/(4*np.pi*1e-7*C**2)
+        # epsilon_0 = 1/(4*np.pi*1e-7*C**2)
         # another hard coded value
         temp = 298.15 # Kelvin
         boltz = 1.0/(1.0-np.exp(-H*C*lambda_p/(KB*temp)))
-        constants = H/(8*epsilon_0**2*C)
+        constants = H * np.pi**2 / C
         variables = (lambda_0 - lambda_p)**4/lambda_p
-        kp = variables * constants * boltz
+        kp = 2 * variables * constants * boltz * (Length['au', 'm']**4 / Mass['u', 'kg'])
         return kp
+
+    @staticmethod
+    def _sum(df):
+        # simple function to sum up the imaginary and real parts of the tensors in the roa dataframe
+        # we use a np.complex128 data type to keep 64 bit precision on both the real and imaginary parts
+        cols = np.array(['xx', 'xy', 'xz', 'yx', 'yy', 'yz', 'zx', 'zy', 'zz'])
+        # get the index values of the imaginary parts
+        mask = df.groupby('type').get_group('imag').index.values
+        # add the imaginary values
+        value_complex = 1j*df.loc[mask, cols].astype(np.complex128).values
+        # add the real values
+        value_complex += df.loc[~df.index.isin(mask), cols].astype(np.complex128).values
+        value_complex = value_complex.reshape(9,)
+        return value_complex
 
     def vroa(self, uni, delta):
         if not hasattr(self, 'roa'):
@@ -591,42 +647,17 @@ class VA(metaclass=VAMeta):
             roa = self.roa.copy()
         grouped = roa.groupby(['label', 'file'])
         nmodes = len(uni.frequency_ext.index.values)
-        def _sum(df):
-            # simple function to sum up the imaginary and real parts of the tensors in the roa dataframe
-            # we use a np.complex128 data type to keep 64 bit precision on both the real and imaginary parts
-            cols = ['xx', 'xy', 'xz', 'yx', 'yy', 'yz', 'zx', 'zy', 'zz']
-            value_real = []
-            value_imag = []
-            # get the index values of the imaginary parts
-            mask = df.groupby('type').get_group('imag').index.values
-            # add the imaginary values
-            value_complex = 1j*df.loc[mask, cols].astype(np.complex128).values
-            # add the real values
-            value_complex += df.loc[~df.index.isin(mask), cols].astype(np.complex128).values
-            # this is a bit of an assumption given our data sets
-            # we have four tensor elements that are two dimensional and two that are 3 dimensional
-            # we do this to reduce the dimensions of the 2d elements to 1d arrays and keep
-            # the 3d tensors as 2d arrays
-            if len(value_complex) == 1:
-                value_complex = value_complex.reshape(9,)
-            return value_complex
 
         # add the real and complex parts of the tensors
-        complex_roa = grouped.apply(lambda x: _sum(x))
+        complex_roa = grouped.apply(lambda x: self._sum(x))
 
-        # get alpha G' and A tnesors and divide by the reduced mass
-#        print(np.tile(uni.frequency_ext['r_mass'].values, 2).reshape(2*nmodes,1))
-#        print(len(complex_roa['A'].values))
-#        rmass = np.tile(uni.frequency_ext['r_mass'].values, 2)
-#        A = complex_roa['A'].values
-#        A = [a / rmass[j] for j in range(len(A)) for a in A[j]]
-#        alpha = np.divide(complex_roa['alpha'].values, rmass.reshape(2*nmodes, 1))
-#        g_prime = np.divide(complex_roa['g_prime'].values, rmass.reshape(2*nmodes, 1))
+        # get alpha G' and A tensors and divide by the reduced mass
         rmass = np.sqrt(uni.frequency_ext['r_mass'].values)
-        A = complex_roa['A']
+        A = complex_roa[['Ax','Ay','Az']]
         alpha = complex_roa['alpha']
         g_prime = complex_roa['g_prime']
-
+        A = A.groupby('file').apply(lambda x: np.array([x.values[0],x.values[1],
+                                                        x.values[2]]).flatten())
         # separate tensors into positive and negative displacements
         # highly dependent on the value of the index
         # we neglect the equilibrium coordinates
@@ -642,7 +673,12 @@ class VA(metaclass=VAMeta):
 
         # generate derivatives by two point difference method
         # TODO: check all of these values to Movipac software
-        dalpha_dq = np.divide((alpha_plus - alpha_minus), 2 * delta) * Length['au', 'Angstrom']**2
+        dalpha_dq = np.divide((alpha_plus - alpha_minus), 2 * delta)
+        dg_dq = np.divide((g_prime_plus - g_prime_minus), 2 * delta)
+        dA_dq = [np.divide((A_plus[i] - A_minus[i]), 2 * delta[i]) for i in range(nmodes)]
+        #self.dalpha_dq = pd.Series(dalpha_dq)
+        #self.dg_dq = pd.Series(dg_dq)
+        #self.dA_dq = pd.Series(dA_dq)
 
         # get frequencies
         frequencies = uni.frequency_ext['freq']
@@ -654,20 +690,34 @@ class VA(metaclass=VAMeta):
         beta_g_prime = np.imag(self._beta_g_prime(dalpha_dq, dg_dq))
         beta_A = np.real(self._beta_A(frequencies, dalpha_dq, dA_dq))
         alpha_g = np.imag(self._alpha_g_prime(dalpha_dq, dg_dq))
+        self.alpha_squared = pd.Series(alpha_squared*Length['au', 'Angstrom']**4)
+        self.beta_alpha = pd.Series(beta_alpha*Length['au', 'Angstrom']**4)
+        self.beta_g_prime = pd.Series(beta_g_prime*Length['au', 'Angstrom']**4/
+                                                            (C*Length['m', 'au']/Time['s','au']))
+        self.beta_A = pd.Series(beta_A*Length['au', 'Angstrom']**4/
+                                                            (C*Length['m', 'au']/Time['s','au']))
+        self.alpha_g = pd.Series(alpha_g*Length['au', 'Angstrom']**4/
+                                                            (C*Length['m', 'au']/Time['s','au']))
+        ## hard coded value
+        #lambda_0 = 1. / (514.5 * Length['nm', 'm']) #in wavenumbers (m^{-1})
+        #warnings.warn("Hard coded value of lambda_0 in vroa. This is a value corresponding to an "+ \
+        #             "Ar ion laser with wavelength of 514.5 nm. Must find a way to calculate this.",
+        #             Warning)
 
-        # hard coded value
-        lambda_0 = 1. / (514.5 * Length['nm', 'm']) #in wavenumbers (m^{-1})
-        warning.warn("Hard coded value of lambda_0 in vroa. This is a value corresponding to an "+ \
-                     "Ar ion laser with wavelength of 514.5 nm. Must find a way to calculate this.",
-                     Warning)
+        ## have to convert frequencies from Ha to m^-1 to match equations units
+        #lambda_p = uni.frequency_ext['freq'].values * Energy['Ha', 'cm^-1'] / Length['cm', 'm']
+        #kp = self._calc_kp(lambda_0, lambda_p)
+        #backscat = kp * (45.0 * alpha_squared + 7.0 * beta_alpha) / 45.0
 
-        # have to convert frequencies from Ha to m^-1 to match equations units
-        lambda_p = uni.frequency_ext['freq'].values * Energy['Ha', 'cm^-1'] / Length['cm', 'm']
-        kp = self._calc_kp(lambda_0, lambda_p)
-        raman_activity = kp * (45 * alpha_squared + 7 * beta_alpha) / 45.
-        self.raman_activity = pd.Series(raman_activity) # in m^2
+        # calculate VROA back scattering and forward scattering intensities
+        backscat_vroa = 4./(C*Length['m', 'au']/Time['s','au'])*(24 * beta_g_prime + 8 * beta_A)
+        forwscat_vroa = 4./(C*Length['m', 'au']/Time['s','au'])* \
+                                                 (180 * alpha_g + 4 * beta_g_prime - 4 * beta_A)
+        self.backscat = pd.Series(backscat)
+        self.backscat_vroa = pd.Series(backscat_vroa)
+        self.forwscat_vroa = pd.Series(forwscat_vroa)
 
-    def init_va(self, uni, vroa=False):
+    def init_va(self, uni):
         """
         This is a method to initialize all of the variables that will be needed to execute the VA
         program. As a sanity check we calculate the frequencies from the force constants. If we
@@ -746,6 +796,8 @@ class VA(metaclass=VAMeta):
         # calculate frequencies
         calcfreq = np.sqrt(vqi)
         calcfreq *= Energy['Ha', 'cm^-1']
+        self.calcfreq = pd.DataFrame.from_dict({'idx': idx, 'calc_freq': calcfreq,
+                                      'real_freq': uni.frequency_ext['freq']*Energy['Ha', 'cm^-1']})
 
 
         # This is mainly for debug purposes
@@ -763,5 +815,4 @@ class VA(metaclass=VAMeta):
         #self.kqijj = pd.DataFrame(kqijj)
         #self.delta = delta_df
         #self.vqi = pd.DataFrame.from_dict({'idx': idx, 'vqi': vqi})
-        #self.calcfreq = pd.DataFrame.from_dict({'idx': idx, 'calc_freq': calcfreq, 'real_freq': uni.frequency_ext['freq']*Energy['Ha', 'cm^-1']})
         #pd.options.display.float_format = '{:.6E}'.format
