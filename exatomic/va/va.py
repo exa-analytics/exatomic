@@ -713,11 +713,11 @@ class VA(metaclass=VAMeta):
         backscat_vroa = 4./(C*Length['m', 'au']/Time['s','au'])*(24 * beta_g_prime + 8 * beta_A)
         forwscat_vroa = 4./(C*Length['m', 'au']/Time['s','au'])* \
                                                  (180 * alpha_g + 4 * beta_g_prime - 4 * beta_A)
-        self.backscat = pd.Series(backscat)
+        #self.backscat = pd.Series(backscat)
         self.backscat_vroa = pd.Series(backscat_vroa)
         self.forwscat_vroa = pd.Series(forwscat_vroa)
 
-    def init_va(self, uni):
+    def init_va(self, uni, delta=None):
         """
         This is a method to initialize all of the variables that will be needed to execute the VA
         program. As a sanity check we calculate the frequencies from the force constants. If we
@@ -727,8 +727,9 @@ class VA(metaclass=VAMeta):
             uni (:class:`~exatomic.Universe`): Universe object containg pertinent data from
                                                frequency calculation
         """
-        delta_df = gen_delta(freq=uni.frequency.copy(), delta_type=2)
-        delta = delta_df['delta'].values
+        if delta is None:
+            delta_df = gen_delta(freq=uni.frequency.copy(), delta_type=2)
+            delta = delta_df['delta'].values
         if not hasattr(self, "gradient"):
             raise AttributeError("Please set gradient attribute first")
         if not hasattr(uni, "frequency_ext"):
@@ -786,7 +787,7 @@ class VA(metaclass=VAMeta):
                                                     np.multiply(delta, delta).reshape(snmodes, 1))
 
         # convert force constants to reduced normal coordinate force constants
-        redmass = uni.frequency_ext['r_mass'].values
+        redmass = uni.frequency_ext['r_mass'].values*Mass['u', 'au_mass']
         vqi = np.divide(kqi, redmass)
         vqijj = np.divide(kqijj, np.sqrt(np.power(redmass, 3)).reshape(snmodes,1))
 
@@ -796,7 +797,7 @@ class VA(metaclass=VAMeta):
         # calculate frequencies
         calcfreq = np.sqrt(vqi)
         calcfreq *= Energy['Ha', 'cm^-1']
-        self.calcfreq = pd.DataFrame.from_dict({'idx': idx, 'calc_freq': calcfreq,
+        self.calcfreq = pd.DataFrame.from_dict({'calc_freq': calcfreq,
                                       'real_freq': uni.frequency_ext['freq']*Energy['Ha', 'cm^-1']})
 
 
