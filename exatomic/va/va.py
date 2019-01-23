@@ -20,17 +20,6 @@ from exatomic.core import Atom, Gradient
 from exa import TypedMeta
 import warnings
 warnings.simplefilter("default")
-#from exatomic import gaussian
-#from exatomic import nwchem
-
-_gauss_template='''{link0}
-{route}
-
-{title}
-
-{charge} {mult}
-'''
-float_format = '%    .10f'
 
 def get_data(path, attr, soft, f_end='', f_start='', sort_index=['']):
     # TODO: Make something so that we do not have to set the type of output parser by default
