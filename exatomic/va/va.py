@@ -229,7 +229,6 @@ class VA(metaclass=VAMeta):
         except KeyError:
             roa = self.roa.copy()
         nmodes = len(uni.frequency_ext.index.values)
-        start = time.time()
         rep_label = {'Ax': 0, 'Ay': 1, 'Az': 2, 'alpha': 3, 'g_prime': 4}
         rep_type = {'real': 0, 'imag': 1}
         roa.replace(rep_label, inplace=True)
@@ -253,7 +252,6 @@ class VA(metaclass=VAMeta):
 #
 #        # add the real and complex parts of the tensors
 #        complex_roa = grouped.apply(lambda x: _sum(x))
-        print("Time to get sums: {}".format(time.time()-start))
 
         # get alpha G' and A tensors and divide by the reduced mass
         rmass = np.sqrt(uni.frequency_ext['r_mass'].values).reshape(nmodes,1)
@@ -309,9 +307,7 @@ class VA(metaclass=VAMeta):
 #        out = np.zeros(n)
 #        _alpha_squared(x,n,out)
 #        print(out)
-#        start = time.time()
         alpha_squared, beta_alpha, beta_g, beta_A, alpha_g = _make_derivatives(dalpha_dq, dg_dq, dA_dq, frequencies, epsilon, nmodes)
-#        print("Time to get derivatives: {}".format(time.time()-start))
 #        print(_make_derivatives.parallel_diagnostics(level=4))
 #        alpha_squared = np.zeros(nmodes,dtype=np.complex128)
 #        _alpha_squared(dalpha_dq, nmodes, alpha_squared)
