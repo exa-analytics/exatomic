@@ -14,7 +14,7 @@ import glob
 import re
 from exa.util.constants import speed_of_light_in_vacuum as C, Planck_constant as H, \
                                Boltzmann_constant as KB
-from exa.util.units import Length, Energy, Mass
+from exa.util.units import Length, Energy, Mass, Time
 from exa.util.utility import mkp
 from exatomic.core import Atom, Gradient
 from exa import TypedMeta
@@ -50,7 +50,8 @@ def get_data(path, attr, soft, f_end='', f_start='', sort_index=['']):
             except AttributeError:
                 raise AttributeError("The property {} cannot be found in output {}".format(
                                                                                         attr, file))
-            fdx = list(map(int, re.findall('\d+', file.split('/')[-1].replace(f_start, '').replace(f_end, ''))))
+            fdx = list(map(int, re.findall('\d+', file.split('/')[-1].replace(
+                                                                   f_start, '').replace(f_end, ''))))
             df['file'] = np.tile(fdx, len(df))
         else:
             continue
@@ -64,17 +65,20 @@ def get_data(path, attr, soft, f_end='', f_start='', sort_index=['']):
                 except KeyError:
                     cdf.sort_values(by=['file', 'atom'], inplace=True)
             else:
-                warnings.warn("Sorting only by file label on DataFrame. Be careful if there is some order dependent function that is being used later based off this output.", Warning)
+                warnings.warn("Sorting only by file label on DataFrame. Be careful if there is "+ \
+                              "some order dependent function that is being used later based off"+ \
+                              " this output.", Warning)
                 cdf.sort_values(by=['file'], inplace=True)
     else:
         try:
-            cdf.sort_values(by=sort_values, inplace=True)
+            cdf.sort_values(by=sort_index, inplace=True)
         except KeyError:
-            raise KeyError("Please make sure that the keys {} exist in the dataframe created by {}.parse_{}.".format(sort_values, soft, attr))
+            raise KeyError("Please make sure that the keys {} exist in the dataframe "+ \
+                                        "created by {}.parse_{}.".format(sort_values, soft, attr))
     cdf.reset_index(drop=True, inplace=True)
     return cdf
 
-def gen_delta(freq, delta_type):
+def gen_delta(freq, delta_type, disp=None):
     """
     Function to compute the delta parameter to be used for the maximum distortion
     of the molecule along the normal mode.
@@ -127,6 +131,11 @@ def gen_delta(freq, delta_type):
             np.amax(abs(np.linalg.norm(x[['dx', 'dy', 'dz']].values, axis=1)))).values
         delta = 0.04 / d
     #    delta = np.repeat(delta, nat)
+    elif delta_type == 3:
+        if disp is not None:
+            delta = np.repeat(disp, nmode)
+        else:
+            raise ValueError("Must provide a displacement value through the disp variable for delta_type = 3")
     return pd.DataFrame.from_dict({'delta': delta, 'freqdx': freqdx})
 
 class GenMeta(TypedMeta):
@@ -157,6 +166,8 @@ class GenInput(metaclass = GenMeta):
         delta_type (int): Integer value to define the type of delta parameter to use
         fdx (int or list): Integer or list parameter to only displace along the
                            selected normal modes
+        disp (float): Floating point value to set a specific displacement delta
+                      parameter. Must be used with delta_type=3
     """
 
     _tol = 1e-6
