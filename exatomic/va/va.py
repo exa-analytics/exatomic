@@ -117,7 +117,7 @@ def _forwscat(C_au, alpha_g, beta_g, beta_A):
     return 4./C_au * (180 * alpha_g + 4 * beta_g - 4 * beta_A)
 
 @jit(nopython=True)
-def _make_derivatives(dalpha_dq, dg_dq, dA_dq, frequencies, epsilon, nmodes):
+def _make_derivatives(dalpha_dq, dg_dq, dA_dq, frequencies, epsilon, nmodes, conver):
     alpha_squared = np.zeros(nmodes,dtype=np.complex128)
     for fdx in prange(nmodes):
         for al in prange(3):
@@ -128,7 +128,7 @@ def _make_derivatives(dalpha_dq, dg_dq, dA_dq, frequencies, epsilon, nmodes):
     beta_alpha = np.zeros(nmodes,dtype=np.complex128)
     for fdx in prange(nmodes):
         for al in prange(3):
-            for be in prange(3)
+            for be in prange(3):
                 beta_alpha[fdx] += 0.5*(3*dalpha_dq[fdx][al*3+be]*np.conj(dalpha_dq[fdx][al*3+be])- \
                             dalpha_dq[fdx][al*3+al]*np.conj(dalpha_dq[fdx][be*3+be]))
     beta_alpha = np.real(beta_alpha).astype(np.float64)
@@ -139,7 +139,7 @@ def _make_derivatives(dalpha_dq, dg_dq, dA_dq, frequencies, epsilon, nmodes):
             for be in prange(3):
                 beta_g[fdx] += 1j*0.5*(3*dalpha_dq[fdx][al*3+be]*np.conj(dg_dq[fdx][al*3+be])- \
                             dalpha_dq[fdx][al*3+al]*np.conj(dg_dq[fdx][be*3+be]))
-    beta_g = np.imag(beta_g).astype(np.float64)
+    beta_g = np.imag(beta_g).astype(np.float64)*conver
 
     beta_A = np.zeros(nmodes,dtype=np.complex128)
     for fdx in prange(nmodes):
@@ -149,14 +149,15 @@ def _make_derivatives(dalpha_dq, dg_dq, dA_dq, frequencies, epsilon, nmodes):
                     for ga in prange(3):
                         beta_A[fdx] += 0.5*frequencies[fdx]*dalpha_dq[fdx][al*3+be]* \
                                     epsilon[al][de*3+ga]*np.conj(dA_dq[fdx][de*9+ga*3+be])
-    beta_A = np.real(beta_A).astype(np.float64)
+    beta_A = np.real(beta_A).astype(np.float64)*conver
 
     alpha_g = np.zeros(nmodes,dtype=np.complex128)
     for fdx in prange(nmodes):
         for al in prange(3):
             for be in prange(3):
                 alpha_g[fdx] += 1j*dalpha_dq[fdx][al*3+al]*np.conj(dg_dq[fdx][be*3+be])/9.
-    alpha_g = np.imag(alpha_g).astype(np.float64)
+#                alpha_g[fdx] += 1j*np.real(dalpha_dq[fdx][al*3+al])*np.real(dg_dq[fdx][be*3+be])/3.
+    alpha_g = np.imag(alpha_g).astype(np.float64)*conver
     return alpha_squared, beta_alpha, beta_g, beta_A, alpha_g
 
 @jit(nopython=True)
@@ -229,6 +230,7 @@ class VA(metaclass=VAMeta):
         except KeyError:
             roa = self.roa.copy()
         nmodes = len(uni.frequency_ext.index.values)
+        conver = Length['au', 'Angstrom']**4/(C*Length['m', 'au']/Time['s','au'])
         rep_label = {'Ax': 0, 'Ay': 1, 'Az': 2, 'alpha': 3, 'g_prime': 4}
         rep_type = {'real': 0, 'imag': 1}
         roa.replace(rep_label, inplace=True)
@@ -307,7 +309,7 @@ class VA(metaclass=VAMeta):
 #        out = np.zeros(n)
 #        _alpha_squared(x,n,out)
 #        print(out)
-        alpha_squared, beta_alpha, beta_g, beta_A, alpha_g = _make_derivatives(dalpha_dq, dg_dq, dA_dq, frequencies, epsilon, nmodes)
+        alpha_squared, beta_alpha, beta_g, beta_A, alpha_g = _make_derivatives(dalpha_dq, dg_dq, dA_dq, frequencies, epsilon, nmodes, conver)
 #        print(_make_derivatives.parallel_diagnostics(level=4))
 #        alpha_squared = np.zeros(nmodes,dtype=np.complex128)
 #        _alpha_squared(dalpha_dq, nmodes, alpha_squared)
@@ -350,15 +352,21 @@ class VA(metaclass=VAMeta):
 
         # calculate VROA back scattering and forward scattering intensities
         C_au = C*Length['m', 'au']/Time['s','au']
-
-#        backscat_vroa = 4./(C*Length['m', 'au']/Time['s','au'])*(24 * beta_g_prime + 8 * beta_A)
-#        forwscat_vroa = 4./(C*Length['m', 'au']/Time['s','au'])* \
-#                                                 (180 * alpha_g + 4 * beta_g_prime - 4 * beta_A)
+        print(C_au)
+#        backscat_vroa = 4./(C*Length['m', 'au']/Time['s','au'])*(24 * beta_g + 8 * beta_A)
+#        forwscat_vroa = 4./(C_au)*(180 * alpha_g + 4 * beta_g - 4 * beta_A)
         #self.backscat = pd.Series(backscat)
         backscat_vroa = _backscat(C_au, beta_g, beta_A)
         forwscat_vroa = _forwscat(C_au, alpha_g, beta_g, beta_A)
-        self.backscat_vroa = pd.Series(backscat_vroa)
-        self.forwscat_vroa = pd.Series(forwscat_vroa)
+        pd.options.display.float_format = '{:.6f}'.format
+        beta_g = beta_g#*Length['au', 'Angstrom']**4/(C*Length['m', 'au']/Time['s','au'])
+        beta_A = beta_A#*Length['au', 'Angstrom']**4/(C*Length['m', 'au']/Time['s','au'])
+        alpha_g = alpha_g#*Length['au', 'Angstrom']**4/(C*Length['m', 'au']/Time['s','au'])
+        self.backscat_vroa = pd.DataFrame.from_dict({"beta_g*1e6":beta_g*1e6, "beta_A": beta_A,
+                                                     "backscatter*1e4": backscat_vroa*1e4})
+        self.forwscat_vroa = pd.DataFrame.from_dict({"alpha_g*1e6": 180*alpha_g*1e6,
+                                                     "beta_g*1e6": 4*beta_g*1e6, "beta_A": beta_A,
+                                                     "forwardscatter*1e4": forwscat_vroa*1e4})
 
     def init_va(self, uni, delta=None):
         """
