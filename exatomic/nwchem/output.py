@@ -38,7 +38,6 @@ class OutMeta(TypedMeta):
     roa = Polarizability
     gradient = Gradient
     frequency = Frequency
-    
 
 class Output(six.with_metaclass(OutMeta, Editor)):
     """Editor for NWChem calculation output file (stdout)."""
@@ -295,7 +294,7 @@ class Output(six.with_metaclass(OutMeta, Editor)):
         df = pd.concat([dat for dat in data]).reset_index(drop=True)
         df['grp'] = [i for i in range(4) for j in range(9)]
         df = df[['val', 'grp']]
-        df = pd.DataFrame(df.groupby('grp').apply(lambda x: 
+        df = pd.DataFrame(df.groupby('grp').apply(lambda x:
                         x.unstack().values[:-9]).values.tolist(),
                         columns=['xx', 'xy', 'xz','yx','yy','yz','zx','zy','zz'])
         # find the electric dipole-quadrupole polarizability
@@ -317,15 +316,15 @@ class Output(six.with_metaclass(OutMeta, Editor)):
         df3 = pd.DataFrame(mat, columns=['x', 'y', 'z'])
         df3['grp1'] = [i for i in range(2) for j in range(9)]
         df3['grp2'] = [j for i in range(2) for j in range(3) for n in range(3)]
-        df3 = pd.DataFrame(df3.groupby(['grp1','grp2']).apply(lambda x: 
-                                x.unstack().values[:-6]).values.tolist(), 
+        df3 = pd.DataFrame(df3.groupby(['grp1','grp2']).apply(lambda x:
+                                x.unstack().values[:-6]).values.tolist(),
                                 columns=['xx', 'xy', 'xz', 'yx', 'yy', 'yz', 'zx', 'zy', 'zz'],
                                 index=['Ax_real','Ay_real','Az_real','Ax_imag','Ay_imag','Az_imag'])
         split_label = np.transpose([i.split('_') for i in df3.index.values])
         label = split_label[0]
         types = split_label[1]
         df['label'] = found_2d.keys()
-        df['label'].replace([_reare, _reombre, _reaim, _reombim], 
+        df['label'].replace([_reare, _reombre, _reaim, _reombim],
                                 ['alpha-real', 'g_prime-real', 'alpha-imag', 'g_prime-imag'], inplace=True)
         df['type'] = [i.split('-')[-1] for i in df['label'].values]
         df['label'] = [i.split('-')[0] for i in df['label'].values]

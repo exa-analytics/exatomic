@@ -24,6 +24,9 @@ def gen_delta(freq, delta_type, disp=None):
     When delta_type = 2 we normalize each displacement so every atom has a maximum
     displacement of 0.04 Bohr on every normal mode.
 
+    When delta_typ = 3 the user can select a delta parameter to use with the disp
+    keyword this will displace all normal modes by that delta parameter.
+
     Args:
         freq (:class:`exatomic.atom.Frequency`): Frequency dataframe
         delta_type (int): Integer value to define the type of delta parameter to use

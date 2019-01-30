@@ -13,8 +13,7 @@ import os
 import glob
 import re
 from numba import jit, prange
-from exa.util.constants import speed_of_light_in_vacuum as C, Planck_constant as H, \
-                               Boltzmann_constant as KB
+from exa.util.constants import speed_of_light_in_vacuum as C
 from exa.util.units import Length, Energy, Mass, Time
 from exa.util.utility import mkp
 from exatomic.core import Atom, Gradient
@@ -68,46 +67,6 @@ def get_data(path, attr, soft, f_end='', f_start='', sort_index=['']):
     cdf.reset_index(drop=True, inplace=True)
     return cdf
 
-#@jit(nopython=True, parallel=True)
-#def _alpha_squared(alpha, n, alpha_squared):
-#    for fdx in range(n):
-#        for al in range(3):
-#            for be in range(3):
-#                alpha_squared[fdx] += (1./9.)*(alpha[fdx][al*3+al]*np.conj(alpha[fdx][be*3+be]))
-#
-#@jit(nopython=True, parallel=True)
-#def _beta_alpha(alpha, n, beta_alpha):
-#    for fdx in range(n):
-#        for al in range(3):
-#            for be in range(3):
-#                beta_alpha[fdx] += 0.5*(3*alpha[fdx][al*3+be]*np.conj(alpha[fdx][al*3+be])- \
-#                            alpha[fdx][al*3+al]*np.conj(alpha[fdx][be*3+be]))
-#
-#@jit(nopython=True, parallel=True)
-#def _beta_g(alpha, g_prime, n, beta_g):
-#    for fdx in range(n):
-#        for al in range(3):
-#            for be in range(3):
-#                beta_g += 1j*0.5*(3*alpha[fdx][al*3+be]*np.conj(g_prime[fdx][al*3+be])- \
-#                            alpha[fdx][al*3+al]*np.conj(g_prime[fdx][be*3+be]))
-#
-#@jit(nopython=True, parallel=True)
-#def _beta_A(omega, alpha, A, epsilon, n, beta_A):
-#    for fdx in range(n):
-#        for al in range(3):
-#            for be in range(3):
-#                for de in range(3):
-#                    for ga in range(3):
-#                        beta_A += 0.5*omega[fdx]*alpha[fdx][al*3+be]* \
-#                                    epsilon[al][de*3+ga]*np.conj(A[fdx][de*9+ga*3+be])
-#
-#@jit(nopython=True, parallel=True)
-#def _alpha_g_prime(alpha, g_prime, n, alpha_g_prime):
-#    for fdx in range(n):
-#        for al in range(3):
-#            for be in range(3):
-#                alpha_g_prime += alpha[fdx][al*3+al]*np.conj(g_prime[fdx][be*3+be])/9.
-
 @jit(nopython=True)
 def _backscat(C_au, beta_g, beta_A):
     return 4./C_au * (24 * beta_g + 8 * beta_A)
@@ -122,7 +81,8 @@ def _make_derivatives(dalpha_dq, dg_dq, dA_dq, frequencies, epsilon, nmodes, con
     for fdx in prange(nmodes):
         for al in prange(3):
             for be in prange(3):
-                alpha_squared[fdx] += (1./9.)*(dalpha_dq[fdx][al*3+al]*np.conj(dalpha_dq[fdx][be*3+be]))
+                alpha_squared[fdx] += (1./9.)*(dalpha_dq[fdx][al*3+al]* \
+                                                    np.conj(dalpha_dq[fdx][be*3+be]))
     alpha_squared = np.real(alpha_squared).astype(np.float64)
 
     beta_alpha = np.zeros(nmodes,dtype=np.complex128)
@@ -130,7 +90,7 @@ def _make_derivatives(dalpha_dq, dg_dq, dA_dq, frequencies, epsilon, nmodes, con
         for al in prange(3):
             for be in prange(3):
                 beta_alpha[fdx] += 0.5*(3*dalpha_dq[fdx][al*3+be]*np.conj(dalpha_dq[fdx][al*3+be])- \
-                            dalpha_dq[fdx][al*3+al]*np.conj(dalpha_dq[fdx][be*3+be]))
+                                            dalpha_dq[fdx][al*3+al]*np.conj(dalpha_dq[fdx][be*3+be]))
     beta_alpha = np.real(beta_alpha).astype(np.float64)
 
     beta_g = np.zeros(nmodes,dtype=np.complex128)
@@ -138,7 +98,7 @@ def _make_derivatives(dalpha_dq, dg_dq, dA_dq, frequencies, epsilon, nmodes, con
         for al in prange(3):
             for be in prange(3):
                 beta_g[fdx] += 1j*0.5*(3*dalpha_dq[fdx][al*3+be]*np.conj(dg_dq[fdx][al*3+be])- \
-                            dalpha_dq[fdx][al*3+al]*np.conj(dg_dq[fdx][be*3+be]))
+                                           dalpha_dq[fdx][al*3+al]*np.conj(dg_dq[fdx][be*3+be]))
     beta_g = np.imag(beta_g).astype(np.float64)*conver
 
     beta_A = np.zeros(nmodes,dtype=np.complex128)
@@ -148,16 +108,39 @@ def _make_derivatives(dalpha_dq, dg_dq, dA_dq, frequencies, epsilon, nmodes, con
                 for de in prange(3):
                     for ga in prange(3):
                         beta_A[fdx] += 0.5*frequencies[fdx]*dalpha_dq[fdx][al*3+be]* \
-                                    epsilon[al][de*3+ga]*np.conj(dA_dq[fdx][de*9+ga*3+be])
+                                              epsilon[al][de*3+ga]*np.conj(dA_dq[fdx][de*9+ga*3+be])
     beta_A = np.real(beta_A).astype(np.float64)*conver
 
-    alpha_g = np.zeros(nmodes,dtype=np.complex128)
+# Just a whole bunch of test code ############################################################
+#    alpha_g = np.zeros(nmodes, dtype=np.complex128)
+##    alpha_g = np.zeros(nmodes, dtype=np.float64)
+#    for fdx in prange(nmodes):
+#        tmp_alpha = 0.0
+#        tmp_beta = 0.0
+#        for al in prange(3):
+#        #    tmp_alpha += np.real(dalpha_dq[fdx][al*3+al])
+#        #    tmp_beta += np.real(dg_dq[fdx][al*3+al])
+#        #print(fdx, tmp_beta, tmp_alpha)
+#        #alpha_g[fdx] = tmp_alpha*tmp_beta/3.*conver
+#            #alpha_g[fdx] += dalpha_dq[fdx][al*3+al]*np.conj(dg_dq[fdx][al*3+al])/3.
+#            #print(dalpha_dq[fdx][al*3+al],dalpha_dq[fdx][al*3+al]/np.sqrt(Mass['u','au_mass']), fdx, al)
+#            for be in prange(3):
+#                alpha_g[fdx] += dalpha_dq[fdx][al*3+al]*np.conj(dg_dq[fdx][be*3+be])/3.
+#                #alpha_g[fdx] += np.real(dalpha_dq[fdx][al*3+al])*np.real(dg_dq[fdx][be*3+be])/3.
+#    alpha_g = np.real(alpha_g).astype(np.float64)*conver
+##    alpha_g = np.imag(alpha_g).astype(np.float64)*conver
+##############################################################################################
+    alpha_g = np.zeros(nmodes, dtype=np.complex128)
     for fdx in prange(nmodes):
+        tmp_alpha = 0.0
+        tmp_beta = 0.0
         for al in prange(3):
             for be in prange(3):
-                alpha_g[fdx] += 1j*dalpha_dq[fdx][al*3+al]*np.conj(dg_dq[fdx][be*3+be])/9.
-#                alpha_g[fdx] += 1j*np.real(dalpha_dq[fdx][al*3+al])*np.real(dg_dq[fdx][be*3+be])/3.
-    alpha_g = np.imag(alpha_g).astype(np.float64)*conver
+                # This equation seems to match the resonance ROA calculation by movipac
+                #alpha_g[fdx] += np.real(dalpha_dq[fdx][al*3+al])*np.real(dg_dq[fdx][be*3+be])/3.
+                # This equation matches what is on the listed paper in the docs (equation 9)
+                alpha_g[fdx] += dalpha_dq[fdx][al*3+al]*np.conj(dg_dq[fdx][be*3+be])/9.
+    alpha_g = np.real(alpha_g).astype(np.float64)*conver
     return alpha_squared, beta_alpha, beta_g, beta_A, alpha_g
 
 @jit(nopython=True)
@@ -183,44 +166,49 @@ class VA(metaclass=VAMeta):
     Administrator class for VA to perform all initial calculations of necessary variables to pass
     for calculations.
     """
-    # TODO: look to speed up code in staticmethods with jit
-
-    @staticmethod
-    def _calc_kp(lambda_0, lambda_p):
-        '''
-        Function to calculate the K_p value as given in equation 2 on J. Chem. Phys. 2007, 127, 134101.
-        We assume the temperature to be 298.15 as a hard coded value. Must get rid of this in future
-        iterations. The final units of the equation is in m^2.
-        Input values lambda_0 and lambda_p must be in the units of m^-1
-        '''
-        # epsilon_0 = 1/(4*np.pi*1e-7*C**2)
-        # another hard coded value
-        temp = 298.15 # Kelvin
-        boltz = 1.0/(1.0-np.exp(-H*C*lambda_p/(KB*temp)))
-        constants = H * np.pi**2 / C
-        variables = (lambda_0 - lambda_p)**4/lambda_p
-        kp = 2 * variables * constants * boltz * (Length['au', 'm']**4 / Mass['u', 'kg'])
-        return kp
-
 #    @staticmethod
-#    def _sum(df):
-#        # simple function to sum up the imaginary and real parts of the tensors in the roa dataframe
-#        # we use a np.complex128 data type to keep 64 bit precision on both the real and imaginary parts
-#        cols = np.array(['xx', 'xy', 'xz', 'yx', 'yy', 'yz', 'zx', 'zy', 'zz'])
-#        # get the index values of the imaginary parts
-#        mask = df.groupby('type').get_group('imag').index.values
-#        # add the imaginary values
-#        value_complex = 1j*df.loc[mask, cols].astype(np.complex128).values
-#        # add the real values
-#        value_complex += df.loc[~df.index.isin(mask), cols].astype(np.complex128).values
-#        value_complex = value_complex.reshape(9,)
-#        return value_complex
+#    def _calc_kp(lambda_0, lambda_p):
+#        '''
+#        Function to calculate the K_p value as given in equation 2 on J. Chem. Phys. 2007, 127, 134101.
+#        We assume the temperature to be 298.15 as a hard coded value. Must get rid of this in future
+#        iterations. The final units of the equation is in m^2.
+#        Input values lambda_0 and lambda_p must be in the units of m^-1
+#        '''
+#        # epsilon_0 = 1/(4*np.pi*1e-7*C**2)
+#        # another hard coded value
+#        temp = 298.15 # Kelvin
+#        boltz = 1.0/(1.0-np.exp(-H*C*lambda_p/(KB*temp)))
+#        constants = H * np.pi**2 / C
+#        variables = (lambda_0 - lambda_p)**4/lambda_p
+#        kp = 2 * variables * constants * boltz * (Length['au', 'm']**4 / Mass['u', 'kg'])
+#        return kp
 
     def vroa(self, uni, delta):
+        """
+        Here we implement the Vibrational Raman Optical Activity (VROA) equations as outlined in
+        the paper J. Chem. Phys. 2007, 127,
+        134101. The general workflow is that we must read in the data from a Raman Optical Activity
+        calculation with your software of choice and this script will take that data and generate
+        the forward and back scattering intensities for VROA. From here you will be able to plot
+        the spectra with another method in this same class.
+
+        Note:
+            It is extremely important that the delta values that you pass into the function are the
+            exact same as the ones that were used to generate the displaced structures. We do not
+            currently have a method to do this automatically but we are working on it.
+
+        Args:
+            uni (:class:`~exatomic.Universe`): Universe containing all dataframes from the
+                                               frequency calculation
+            delta (np.ndarray): Array containing all of the delta values used for the generation
+                                of the displaced structures.
+        """
         if not hasattr(self, 'roa'):
             raise AttributeError("Please set roa attribute.")
         if not hasattr(uni, 'frequency_ext'):
             raise AttributeError("Please compute frequency_ext dataframe.")
+        if not hasattr(uni, 'frequency'):
+            raise AttributeError("Please compute frequency dataframe.")
         # we must remove the 0 index file as by default our displaced coordinate generator will
         # include these values and they have no significane in this code as of yet
         try:
@@ -229,48 +217,64 @@ class VA(metaclass=VAMeta):
             roa = self.roa.loc[~self.roa.index.isin(idxs)]
         except KeyError:
             roa = self.roa.copy()
+        # set some variables that will be used throughout
+        # Number of normal modes
         nmodes = len(uni.frequency_ext.index.values)
+        # a conversion factor for the beta_g beta_A and alpha_g tensor invariants
+        # TODO: make the conversion for the alha_squared and beta_alpha invariants
         conver = Length['au', 'Angstrom']**4/(C*Length['m', 'au']/Time['s','au'])
+        print(conver)
+        # speed of light in au
+        C_au = C*Length['m', 'au']/Time['s','au']
+        # get the aquare roots of the reduced masses
+        rmass = np.sqrt(uni.frequency_ext['r_mass'].values).reshape(nmodes,1)
+        # reshape the delta array
+        delta = delta.reshape(nmodes,1)
+        # get frequencies
+        frequencies = uni.frequency_ext['freq'].values
+        # generate a Levi Civita 3x3x3 tensor
+        epsilon = np.array([[0,0,0,0,0,1,0,-1,0],[0,0,-1,0,0,0,1,0,0],[0,1,0,-1,0,0,0,0,0]])
+        # some dictionaries to replace the string labels with integers
+        # this is important so we can speed up the code with jit
         rep_label = {'Ax': 0, 'Ay': 1, 'Az': 2, 'alpha': 3, 'g_prime': 4}
         rep_type = {'real': 0, 'imag': 1}
+        # replace the columns
         roa.replace(rep_label, inplace=True)
         roa.replace(rep_type, inplace=True)
+        # get rid of the frame column serves no purpose here
         roa.drop('frame', axis=1, inplace=True)
-#        roa = roa.astype(np.float64)
+        # create a numpy array with the necessary dimensions
+        # number_of_files/2 x 9
         value_complex = np.zeros((int(len(roa)/2),9), dtype=np.complex128)
         labels = np.zeros(int(len(roa)/2), dtype=np.int8)
         files = np.zeros(int(len(roa)/2), dtype=np.int8)
         _sum(roa.values, value_complex, labels, files)
         labels = pd.Series(labels)
         files = pd.Series(files)
+        # replace the integer labels with the strings again
+        # TODO: is this really necessary?
         labels.replace({v: k for k, v in rep_label.items()}, inplace=True)
         complex_roa= pd.DataFrame(value_complex)
         complex_roa.index = labels
-#        print(files)
         complex_roa['file'] = np.repeat(range(2*nmodes),5)
-#        print(complex_roa)
-#        self.complex_roa = complex_roa
-#        grouped = roa.groupby(['label', 'file'])
-#
-#        # add the real and complex parts of the tensors
-#        complex_roa = grouped.apply(lambda x: _sum(x))
-
-        # get alpha G' and A tensors and divide by the reduced mass
-        rmass = np.sqrt(uni.frequency_ext['r_mass'].values).reshape(nmodes,1)
-        delta = delta.reshape(nmodes,1)
-#        print(A.to_dict())
-#        print(complex_roa.loc[['Ax','Ay','Az']])
+        # because I could not use range(9)............ugh
         cols = [0,1,2,3,4,5,6,7,8]
-        A = pd.DataFrame.from_dict(complex_roa.loc[['Ax','Ay','Az']].groupby('file').apply(lambda x: np.array([x[cols].values[0], 
-                                            x[cols].values[1], x[cols].values[2]]).flatten()).reset_index(drop=True).to_dict()).T
-        alpha = pd.DataFrame.from_dict(complex_roa.loc['alpha',range(9)].reset_index(drop=True).to_dict())
-        g_prime = pd.DataFrame.from_dict(complex_roa.loc['g_prime',range(9)].reset_index(drop=True).to_dict())
-        self.A = A
-        self.alpha = alpha
-        self.g_prime = g_prime
-#        print(A)
-        #A = A.groupby('file').apply(lambda x: np.array([x.values[0],x.values[1],
-        #                                                x.values[2]]).flatten())
+        # splice the data into the respective tensor dataframes
+        # we want all of the tensors in a 1d vector like form
+        A = pd.DataFrame.from_dict(complex_roa.loc[['Ax','Ay','Az']].groupby('file').
+                                   apply(lambda x: np.array([x[cols].values[0], x[cols].values[1], 
+                                                             x[cols].values[2]]).flatten()).
+                                   reset_index(drop=True).to_dict()).T
+        alpha = pd.DataFrame.from_dict(complex_roa.loc['alpha',range(9)].reset_index(drop=True).
+                                       to_dict())
+        g_prime = pd.DataFrame.from_dict(complex_roa.loc['g_prime',range(9)].reset_index(drop=True).
+                                         to_dict())
+        #***********DEBUG***********#
+        #self.A = A
+        #self.alpha = alpha
+        #self.g_prime = g_prime
+        #********END DEBUG**********#
+
         # separate tensors into positive and negative displacements
         # highly dependent on the value of the index
         # we neglect the equilibrium coordinates
@@ -285,87 +289,42 @@ class VA(metaclass=VAMeta):
         A_minus = np.divide(A.loc[np.arange(nmodes, 2*nmodes)].values, rmass)
 
         # generate derivatives by two point difference method
-        # TODO: check all of these values to Movipac software
         dalpha_dq = np.divide((alpha_plus - alpha_minus), 2 * delta)
         dg_dq = np.divide((g_prime_plus - g_prime_minus), 2 * delta)
         dA_dq = np.array([np.divide((A_plus[i] - A_minus[i]), 2 * delta[i]) for i in range(nmodes)])
+        #***********DEBUG***********#
         self.dalpha_dq = dalpha_dq
         self.dg_dq = dg_dq
-        self.dA_dq = dA_dq
-        # get frequencies
-        frequencies = uni.frequency_ext['freq'].values
-        epsilon = np.array([[0,0,0,0,0,1,0,-1,0],[0,0,-1,0,0,0,1,0,0],[0,1,0,-1,0,0,0,0,0]])
+        #self.dA_dq = dA_dq
+        #********END DEBUG**********#
 
         # generate properties as shown on equations 5-9 in paper
         # J. Chem. Phys. 2007, 127, 134101
-        #print(type(dalpha_dq),type(dalpha_dq[0]), type(dalpha_dq[0][0]))
-#        print(alpha_minus.dtype)
-##        dalpha_dq = dalpha_dq.astype(np.complex128)
-##        print(dalpha_dq.dtype)
-#        x = np.array([np.array([1,2,3,4,5,6,7,8,9]),np.array([11,12,13,14,15,16,17,18,19])])
-#        # x = [1,2,3,4,5,6,7,8,9]
-#        n = 2
-#        print(x.dtype)
-#        out = np.zeros(n)
-#        _alpha_squared(x,n,out)
-#        print(out)
-        alpha_squared, beta_alpha, beta_g, beta_A, alpha_g = _make_derivatives(dalpha_dq, dg_dq, dA_dq, frequencies, epsilon, nmodes, conver)
-#        print(_make_derivatives.parallel_diagnostics(level=4))
-#        alpha_squared = np.zeros(nmodes,dtype=np.complex128)
-#        _alpha_squared(dalpha_dq, nmodes, alpha_squared)
-#        alpha_squared = np.real(alpha_squared).astype(np.float64)
-#
-#        beta_alpha = np.zeros(nmodes,dtype=np.complex128)
-#        _beta_alpha(dalpha_dq, nmodes, beta_alpha)
-#        beta_alpha = np.real(beta_alpha).astype(np.float64)
-#
-#        beta_g_prime = np.zeros(nmodes,dtype=np.complex128)
-#        _beta_g_prime(dalpha_dq, dg_dq, nmodes, beta_g_prime)
-#        beta_g_prime = np.imag(beta_g_prime).astype(np.float64)
-#
-#        beta_A = np.zeros(nmodes,dtype=np.complex128)
-#        _beta_A(frequencies, dalpha_dq, dA_dq, epsilon, nmodes, beta_A)
-#        beta_A = np.real(beta_A).astype(np.float64)
-#
-#        alpha_g = np.zeros(nmodes,dtype=np.complex128)
-#        _alpha_g_prime(dalpha_dq, dg_dq, nmodes, alpha_g)
-#        alpha_g = np.imag(alpha_g).astype(np.float64)
+        alpha_squared, beta_alpha, beta_g, beta_A, alpha_g = _make_derivatives(dalpha_dq,
+                                                dg_dq, dA_dq, frequencies, epsilon, nmodes, conver)
 
-        self.alpha_squared = pd.Series(alpha_squared*Length['au', 'Angstrom']**4)
-        self.beta_alpha = pd.Series(beta_alpha*Length['au', 'Angstrom']**4)
-        self.beta_g = pd.Series(beta_g*Length['au', 'Angstrom']**4/
-                                                            (C*Length['m', 'au']/Time['s','au']))
-        self.beta_A = pd.Series(beta_A*Length['au', 'Angstrom']**4/
-                                                            (C*Length['m', 'au']/Time['s','au']))
-        self.alpha_g = pd.Series(alpha_g*Length['au', 'Angstrom']**4/
-                                                            (C*Length['m', 'au']/Time['s','au']))
-        ## hard coded value
-        #lambda_0 = 1. / (514.5 * Length['nm', 'm']) #in wavenumbers (m^{-1})
-        #warnings.warn("Hard coded value of lambda_0 in vroa. This is a value corresponding to an "+ \
-        #             "Ar ion laser with wavelength of 514.5 nm. Must find a way to calculate this.",
-        #             Warning)
-
-        ## have to convert frequencies from Ha to m^-1 to match equations units
-        #lambda_p = uni.frequency_ext['freq'].values * Energy['Ha', 'cm^-1'] / Length['cm', 'm']
-        #kp = self._calc_kp(lambda_0, lambda_p)
-        #backscat = kp * (45.0 * alpha_squared + 7.0 * beta_alpha) / 45.0
+        #********************************DEBUG**************************************************#
+        #self.alpha_squared = pd.Series(alpha_squared*Length['au', 'Angstrom']**4)
+        #self.beta_alpha = pd.Series(beta_alpha*Length['au', 'Angstrom']**4)
+        #self.beta_g = pd.Series(beta_g*Length['au', 'Angstrom']**4/
+        #                                                    (C*Length['m', 'au']/Time['s','au']))
+        #self.beta_A = pd.Series(beta_A*Length['au', 'Angstrom']**4/
+        #                                                    (C*Length['m', 'au']/Time['s','au']))
+        #self.alpha_g = pd.Series(alpha_g*Length['au', 'Angstrom']**4/
+        #                                                    (C*Length['m', 'au']/Time['s','au']))
+        #*******************************END DEBUG***********************************************#
 
         # calculate VROA back scattering and forward scattering intensities
-        C_au = C*Length['m', 'au']/Time['s','au']
-        print(C_au)
-#        backscat_vroa = 4./(C*Length['m', 'au']/Time['s','au'])*(24 * beta_g + 8 * beta_A)
-#        forwscat_vroa = 4./(C_au)*(180 * alpha_g + 4 * beta_g - 4 * beta_A)
-        #self.backscat = pd.Series(backscat)
         backscat_vroa = _backscat(C_au, beta_g, beta_A)
         forwscat_vroa = _forwscat(C_au, alpha_g, beta_g, beta_A)
+        # we set this just so it is easier to view the data
         pd.options.display.float_format = '{:.6f}'.format
-        beta_g = beta_g#*Length['au', 'Angstrom']**4/(C*Length['m', 'au']/Time['s','au'])
-        beta_A = beta_A#*Length['au', 'Angstrom']**4/(C*Length['m', 'au']/Time['s','au'])
-        alpha_g = alpha_g#*Length['au', 'Angstrom']**4/(C*Length['m', 'au']/Time['s','au'])
-        self.backscat_vroa = pd.DataFrame.from_dict({"beta_g*1e6":beta_g*1e6, "beta_A": beta_A,
+        self.backscat_vroa = pd.DataFrame.from_dict({"freq": frequencies*Energy['Ha', 'cm^-1'],
+                                                     "beta_g*1e6":beta_g*1e6, "beta_A": beta_A,
                                                      "backscatter*1e4": backscat_vroa*1e4})
-        self.forwscat_vroa = pd.DataFrame.from_dict({"alpha_g*1e6": 180*alpha_g*1e6,
-                                                     "beta_g*1e6": 4*beta_g*1e6, "beta_A": beta_A,
+        self.forwscat_vroa = pd.DataFrame.from_dict({"freq": frequencies*Energy['Ha', 'cm^-1'],
+                                                     "alpha_g*1e6": alpha_g*1e6,
+                                                     "beta_g*1e6": beta_g*1e6, "beta_A": beta_A,
                                                      "forwardscatter*1e4": forwscat_vroa*1e4})
 
     def init_va(self, uni, delta=None):
@@ -387,11 +346,6 @@ class VA(metaclass=VAMeta):
             raise AttributeError("Cannot find frequency extended dataframe in universe")
         if not hasattr(uni, "frequency"):
             raise AttributeError("Cannot find frequency dataframe in universe")
-#        if not vroa:
-#            if not hasattr(self, "property"):
-#                raise AttributeError("Please set property attribute first")
-#        else:
-#            self.vroa(uni=uni, delta=delta)
         # check that all attributes to be used exist
         # group the gradients by file (normal mode)
         grouped = self.gradient.groupby('file')
@@ -452,19 +406,3 @@ class VA(metaclass=VAMeta):
                                       'real_freq': uni.frequency_ext['freq']*Energy['Ha', 'cm^-1']})
 
 
-        # This is mainly for debug purposes
-        # Will most likely eliminate most if not all of these class attributes
-        #self.delfq_zero = pd.DataFrame(delfq_zero)
-        #self.delfq_plus = pd.DataFrame(delfq_plus)
-        #self.delfq_minus = pd.DataFrame(delfq_minus)
-        #idx = uni.frequency['freqdx'].drop_duplicates().values
-        #ndx = np.repeat(idx, nmodes)
-        ##print(len(ndx))
-        #jdx = np.tile(idx, nmodes)
-        ##print(len(jdx))
-        #self.kqi   = pd.DataFrame.from_dict({'idx': idx, 'kqi': kqi, 'calculated_vqi': uni.frequency_ext['f_const']})
-        #self.kqiii = pd.DataFrame.from_dict({'idx': idx, 'kqiii': kqiii})
-        #self.kqijj = pd.DataFrame(kqijj)
-        #self.delta = delta_df
-        #self.vqi = pd.DataFrame.from_dict({'idx': idx, 'vqi': vqi})
-        #pd.options.display.float_format = '{:.6E}'.format
