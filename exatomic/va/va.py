@@ -395,58 +395,83 @@ class VA(metaclass=VAMeta):
                          "Continuing assuming single excitation frequency.")
         # get number of normal modes
         nmodes = len(uni.frequency_ext.index.values)
-        # generate delta dataframe
-        # TODO: make something so delta can be set
-        #       possible issues are a user using a different type of delta
-        # get gradient of the equilibrium coordinates
-        grad_0 = grouped.get_group(0)
-        # get gradients of the displaced coordinates in the positive direction
-        grad_plus = grouped.filter(lambda x: x['file'].drop_duplicates().values in
-                                                                        range(1,nmodes+1))
-        # get number of selected normal modes
-        # TODO: check stability of using this parameter
-        snmodes = len(grad_plus['file'].drop_duplicates().values)
-        # get gradients of the displaced coordinates in the negative direction
-        grad_minus = grouped.filter(lambda x: x['file'].drop_duplicates().values in
-                                                                        range(nmodes+1, 2*nmodes+1))
-        # TODO: Check if we can make use of numba to speed up this code
-        delfq_zero = uni.frequency.groupby('freqdx')[['dx', 'dy', 'dz']].apply(lambda x:
-                                    np.sum(np.multiply(grad_0[['fx', 'fy', 'fz']].values, x.values)))
-        delfq_zero = np.tile(delfq_zero, nmodes).reshape(snmodes, nmodes)
+        calcfreq = []
+        for idx, val in enumerate(exc_freq):
+            grouped = grad.groupby('exc_freq').get_group(val).groupby('file')
+            # generate delta dataframe
+            # TODO: make something so delta can be set
+            #       possible issues are a user using a different type of delta
+            # get gradient of the equilibrium coordinates
+            grad_0 = grouped.get_group(0)
+            # get gradients of the displaced coordinates in the positive direction
+            grad_plus = grouped.filter(lambda x: x['file'].drop_duplicates().values in
+                                                                            range(1,nmodes+1))
+            select_files = grad_plus['file'].drop_duplicates().values-1
+            # get number of selected normal modes
+            # TODO: check stability of using this parameter
+            snmodes = len(select_files)
+            if snmodes < nmodes:
+                delta_sel = delta[select_files]
+                # convert force constants to reduced normal coordinate force constants
+                redmass = uni.frequency_ext.loc[select_files,'r_mass'].values*Mass['u', 'au_mass']
+            else:
+                delta_sel = delta
+                redmass = uni.frequency_ext['r_mass'].values*Mass['u','au_mass']
+            #print(delta_sel, select_files, redmass)
+            # get gradients of the displaced coordinates in the negative direction
+            grad_minus = grouped.filter(lambda x: x['file'].drop_duplicates().values in
+                                                                            range(nmodes+1, 2*nmodes+1))
+            # TODO: Check if we can make use of numba to speed up this code
+            delfq_zero = uni.frequency.groupby('freqdx')[['dx', 'dy', 'dz']].apply(lambda x:
+                                        np.sum(np.multiply(grad_0[['fx', 'fy', 'fz']].values, x.values)))
+            #print(delfq_zero)
+            delfq_zero = np.tile(delfq_zero, snmodes).reshape(snmodes, nmodes)
+            #print(delfq_zero.shape)
 
-        delfq_plus = grad_plus.groupby('file')[['fx', 'fy', 'fz']].apply(lambda x:
-                                uni.frequency.groupby('freqdx')[['dx', 'dy', 'dz']].apply(lambda y:
-                                    np.sum(np.multiply(y.values, x.values))))
-        delfq_plus.reset_index(drop=True, inplace=True)
+            delfq_plus = grad_plus.groupby('file')[['fx', 'fy', 'fz']].apply(lambda x:
+                                    uni.frequency.groupby('freqdx')[['dx', 'dy', 'dz']].apply(lambda y:
+                                        np.sum(np.multiply(y.values, x.values)))).values
+            #delfq_plus.reset_index(drop=True, inplace=True)
+            #print("delfq_plus shape: {}".format(delfq_plus.shape))
 
-        delfq_minus = grad_minus.groupby('file')[['fx', 'fy', 'fz']].apply(lambda x:
-                                uni.frequency.groupby('freqdx')[['dx', 'dy', 'dz']].apply(lambda y:
-                                    np.sum(np.multiply(y.values, x.values))))
-        delfq_minus.reset_index(drop=True, inplace=True)
+            delfq_minus = grad_minus.groupby('file')[['fx', 'fy', 'fz']].apply(lambda x:
+                                    uni.frequency.groupby('freqdx')[['dx', 'dy', 'dz']].apply(lambda y:
+                                        np.sum(np.multiply(y.values, x.values)))).values
+            #delfq_minus.reset_index(drop=True, inplace=True)
+            #print("delfq_minus shape: {}".format(delfq_minus.shape))
 
-        # get diagonal elements of respqective matrix
-        diag_plus = np.diag(delfq_plus)
-        diag_minus = np.diag(delfq_minus)
-        diag_zero = np.diag(delfq_zero)
+            # get diagonal elements of respqective matrix
+            #diag_plus = np.diag(delfq_plus)
+            #diag_minus = np.diag(delfq_minus)
+            #diag_zero = np.diag(delfq_zero)
 
-        # calculate force constants
-        kqi   = np.divide(diag_plus - diag_minus, 2.0*delta)
-        kqiii = np.divide(diag_plus - 2.0 * diag_zero + diag_minus, np.multiply(delta, delta))
-        kqijj = np.divide(delfq_plus - 2.0 * delfq_zero + delfq_minus,
-                                                    np.multiply(delta, delta).reshape(snmodes, 1))
+            # calculate force constants
+            #kqi   = np.divide(diag_plus - diag_minus, 2.0*delta_sel)
+            #kqiii = np.divide(diag_plus - 2.0 * diag_zero + diag_minus, np.multiply(delta_sel, delta_sel))
+            kqi = np.zeros(len(select_files))
+            kqiii = np.zeros(len(select_files))
+            for fdx, sval in enumerate(select_files):
+                #print(delfq_plus[fdx][sval])
+                #print(delfq_zero[fdx][sval])
+                #print(delfq_minus[fdx][sval])
+                kqi[fdx] = (delfq_plus[fdx][sval] - delfq_minus[fdx][sval]) / (2.0*delta_sel[fdx])
+                kqiii[fdx] = (delfq_plus[fdx][sval] - 2.0 * delfq_zero[fdx][sval] + delfq_minus[fdx][sval]) / (delta_sel[fdx]**2)
+            kqijj = np.divide(delfq_plus - 2.0 * delfq_zero + delfq_minus,
+                                                        np.multiply(delta_sel, delta_sel).reshape(snmodes, 1))
+            #print(kqi)
+            vqi = np.divide(kqi, redmass)
+            vqijj = np.divide(kqijj, np.sqrt(np.power(redmass, 3)).reshape(snmodes,1))
 
-        # convert force constants to reduced normal coordinate force constants
-        redmass = uni.frequency_ext['r_mass'].values*Mass['u', 'au_mass']
-        vqi = np.divide(kqi, redmass)
-        vqijj = np.divide(kqijj, np.sqrt(np.power(redmass, 3)).reshape(snmodes,1))
+            # TODO: Check if we want to exit the program if we get a negative force constant
+            n_force_warn = vqi[vqi < 0.]
+            #print(Energy['Ha','cm^-1'])
 
-        # TODO: Check if we want to exit the program if we get a negative force constant
-        n_force_warn = vqi[vqi < 0.]
-
-        # calculate frequencies
-        calcfreq = np.sqrt(vqi)
-        calcfreq *= Energy['Ha', 'cm^-1']
-        self.calcfreq = pd.DataFrame.from_dict({'calc_freq': calcfreq,
-                                      'real_freq': uni.frequency_ext['freq']*Energy['Ha', 'cm^-1']})
+            # calculate frequencies
+            df = pd.DataFrame.from_dict({'calc_freq': np.sqrt(vqi)*Energy['Ha', 'cm^-1'],
+                                         'exc_freq': np.repeat(val, snmodes)})
+            calcfreq.append(df)
+        self.calcfreq = pd.concat(calcfreq, ignore_index=True)
+        #self.calcfreq = pd.DataFrame.from_dict({'calc_freq': calcfreq,
+        #                              'real_freq': uni.frequency_ext['freq']*Energy['Ha', 'cm^-1']})
 
 
