@@ -76,7 +76,7 @@ def _forwscat(C_au, alpha_g, beta_g, beta_A):
     return 4./C_au * (180 * alpha_g + 4 * beta_g - 4 * beta_A)
 
 @jit(nopython=True)
-def _make_derivatives(dalpha_dq, dg_dq, dA_dq, frequencies, epsilon, nmodes, conver):
+def _make_derivatives(dalpha_dq, dg_dq, dA_dq, omega, epsilon, nmodes, conver):
     alpha_squared = np.zeros(nmodes,dtype=np.complex128)
     for fdx in prange(nmodes):
         for al in prange(3):
@@ -105,10 +105,10 @@ def _make_derivatives(dalpha_dq, dg_dq, dA_dq, frequencies, epsilon, nmodes, con
     for fdx in prange(nmodes):
         for al in prange(3):
             for be in prange(3):
-                for de in prange(3):
-                    for ga in prange(3):
-                        beta_A[fdx] += 0.5*frequencies[fdx]*dalpha_dq[fdx][al*3+be]* \
-                                              epsilon[al][de*3+ga]*np.conj(dA_dq[fdx][de*9+ga*3+be])
+                for ga in prange(3):
+                    for de in prange(3):
+                        beta_A[fdx] += 0.5*omega*dalpha_dq[fdx][al*3+be]* \
+                                              epsilon[al][ga*3+de]*np.conj(dA_dq[fdx][ga*9+de*3+be])
     beta_A = np.real(beta_A).astype(np.float64)*conver
 
 # Just a whole bunch of test code ############################################################
@@ -152,8 +152,8 @@ def _sum(arr, out, labels, files):
         else:
             out[int(fdx/2)] += 1j*arr[fdx][:9].astype(np.complex128)
             out[int(fdx/2)] += arr[fdx+1][:9].astype(np.complex128)
-        labels[int(fdx/2)] = arr[fdx][-3]
-        files[int(fdx/2)] = arr[fdx][-1]
+        labels[int(fdx/2)] = arr[fdx][-4]
+        files[int(fdx/2)] = arr[fdx][-2]
 
 class VAMeta(TypedMeta):
     grad_0 = Gradient
@@ -209,6 +209,8 @@ class VA(metaclass=VAMeta):
             raise AttributeError("Please compute frequency_ext dataframe.")
         if not hasattr(uni, 'frequency'):
             raise AttributeError("Please compute frequency dataframe.")
+        if not hasattr(self, 'calcfreq'):
+            raise AttributeError("Please compute calcfreq dataframe.")
         # we must remove the 0 index file as by default our displaced coordinate generator will
         # include these values and they have no significane in this code as of yet
         try:
@@ -217,6 +219,11 @@ class VA(metaclass=VAMeta):
             roa = self.roa.loc[~self.roa.index.isin(idxs)]
         except KeyError:
             roa = self.roa.copy()
+        # omega parameter
+        # TODO: what does value should it take
+        omega = 0.0
+        # initialize scatter array
+        scatter = []
         # set some variables that will be used throughout
         # Number of normal modes
         nmodes = len(uni.frequency_ext.index.values)
@@ -230,10 +237,8 @@ class VA(metaclass=VAMeta):
         rmass = np.sqrt(uni.frequency_ext['r_mass'].values).reshape(nmodes,1)
         # reshape the delta array
         delta = delta.reshape(nmodes,1)
-        # get frequencies
-        frequencies = uni.frequency_ext['freq'].values
         # generate a Levi Civita 3x3x3 tensor
-        epsilon = np.array([[0,0,0,0,0,1,0,-1,0],[0,0,-1,0,0,0,1,0,0],[0,1,0,-1,0,0,0,0,0]])
+        epsilon = np.array([[0,0,0,0,0,-1,0,1,0],[0,0,1,0,0,0,-1,0,0],[0,-1,0,1,0,0,0,0,0]])
         # some dictionaries to replace the string labels with integers
         # this is important so we can speed up the code with jit
         rep_label = {'Ax': 0, 'Ay': 1, 'Az': 2, 'alpha': 3, 'g_prime': 4}
@@ -243,6 +248,17 @@ class VA(metaclass=VAMeta):
         roa.replace(rep_type, inplace=True)
         # get rid of the frame column serves no purpose here
         roa.drop('frame', axis=1, inplace=True)
+        # the excitation frequencies
+        try:
+            exc_freq = roa['exc_freq'].drop_duplicates().values
+            text = ''
+            for f in exc_freq: text += str(f)+', '
+            print("Found excitation frequencies: {}".format(text))
+        except KeyError:
+            exc_freq = -1
+            roa['exc_freq'] = np.repeat(-1, len(roa))
+            print("No excitation frequency column (exc_freq) found in va_corr.roa."+ \
+                         "Continuing assuming single excitation frequency.")
         # create a numpy array with the necessary dimensions
         # number_of_files/2 x 9
         value_complex = np.zeros((int(len(roa)/2),9), dtype=np.complex128)
@@ -256,12 +272,13 @@ class VA(metaclass=VAMeta):
         labels.replace({v: k for k, v in rep_label.items()}, inplace=True)
         complex_roa= pd.DataFrame(value_complex)
         complex_roa.index = labels
-        complex_roa['file'] = np.repeat(range(2*nmodes),5)
+        complex_roa['file'] = np.tile(np.repeat(range(2*nmodes),5), len(exc_freq))
+        complex_roa['exc_freq'] = np.repeat(exc_freq, 10*nmodes)
         # because I could not use range(9)............ugh
         cols = [0,1,2,3,4,5,6,7,8]
         # splice the data into the respective tensor dataframes
         # we want all of the tensors in a 1d vector like form
-        A = pd.DataFrame.from_dict(complex_roa.loc[['Ax','Ay','Az']].groupby('file').
+        A = pd.DataFrame.from_dict(complex_roa.loc[['Ax','Ay','Az']].groupby(['file','exc_freq']).
                                    apply(lambda x: np.array([x[cols].values[0], x[cols].values[1], 
                                                              x[cols].values[2]]).flatten()).
                                    reset_index(drop=True).to_dict()).T
@@ -270,62 +287,79 @@ class VA(metaclass=VAMeta):
         g_prime = pd.DataFrame.from_dict(complex_roa.loc['g_prime',range(9)].reset_index(drop=True).
                                          to_dict())
         #***********DEBUG***********#
-        #self.A = A
-        #self.alpha = alpha
-        #self.g_prime = g_prime
+        self.A = A
+        self.alpha = alpha
+        self.g_prime = g_prime
         #********END DEBUG**********#
 
-        # separate tensors into positive and negative displacements
-        # highly dependent on the value of the index
-        # we neglect the equilibrium coordinates
-        # 0 corresponds to equilibrium coordinates
-        # 1 - nmodes corresponds to positive displacements
-        # nmodes+1 - 2*nmodes corresponds to negative displacements
-        alpha_plus = np.divide(alpha.loc[range(0,nmodes)].values, rmass)
-        alpha_minus = np.divide(alpha.loc[range(nmodes, 2*nmodes)].values, rmass)
-        g_prime_plus = np.divide(g_prime.loc[range(0,nmodes)].values, rmass)
-        g_prime_minus = np.divide(g_prime.loc[range(nmodes, 2*nmodes)].values, rmass)
-        A_plus = np.divide(A.loc[np.arange(nmodes)].values, rmass)
-        A_minus = np.divide(A.loc[np.arange(nmodes, 2*nmodes)].values, rmass)
+        for idx, val in enumerate(exc_freq):
+            try:
+                # get frequency
+                frequencies = self.calcfreq.groupby('exc_freq').get_group(val)['calc_freq'].values
+            except KeyError:
+                raise KeyError("Something went wrong check that self.calcfreq has column names calc_freq and exc_freq")
+            # separate tensors into positive and negative displacements
+            # highly dependent on the value of the index
+            # we neglect the equilibrium coordinates
+            # 0 corresponds to equilibrium coordinates
+            # 1 - nmodes corresponds to positive displacements
+            # nmodes+1 - 2*nmodes corresponds to negative displacements
+            extra = 2*idx*nmodes
+            alpha_plus = np.divide(alpha.loc[range(0+extra,nmodes+extra)].values, rmass)
+            alpha_minus = np.divide(alpha.loc[range(nmodes+extra, 2*nmodes+extra)].values, rmass)
+            g_prime_plus = np.divide(g_prime.loc[range(0+extra,nmodes+extra)].values, rmass)
+            g_prime_minus = np.divide(g_prime.loc[range(nmodes+extra, 2*nmodes+extra)].values, rmass)
+            A_plus = np.divide(A.loc[range(0+extra, nmodes+extra)].values, rmass)
+            A_minus = np.divide(A.loc[range(nmodes+extra, 2*nmodes+extra)].values, rmass)
 
-        # generate derivatives by two point difference method
-        dalpha_dq = np.divide((alpha_plus - alpha_minus), 2 * delta)
-        dg_dq = np.divide((g_prime_plus - g_prime_minus), 2 * delta)
-        dA_dq = np.array([np.divide((A_plus[i] - A_minus[i]), 2 * delta[i]) for i in range(nmodes)])
-        #***********DEBUG***********#
-        self.dalpha_dq = dalpha_dq
-        self.dg_dq = dg_dq
-        #self.dA_dq = dA_dq
-        #********END DEBUG**********#
+            # generate derivatives by two point difference method
+            dalpha_dq = np.divide((alpha_plus - alpha_minus), 2 * delta)
+            dg_dq = np.divide((g_prime_plus - g_prime_minus), 2 * delta)
+            dA_dq = np.array([np.divide((A_plus[i] - A_minus[i]), 2 * delta[i]) for i in range(nmodes)])
+            #***********DEBUG***********#
+            #self.dalpha_dq = dalpha_dq
+            #self.dg_dq = dg_dq
+            #self.dA_dq = dA_dq
+            #********END DEBUG**********#
 
-        # generate properties as shown on equations 5-9 in paper
-        # J. Chem. Phys. 2007, 127, 134101
-        alpha_squared, beta_alpha, beta_g, beta_A, alpha_g = _make_derivatives(dalpha_dq,
-                                                dg_dq, dA_dq, frequencies, epsilon, nmodes, conver)
+            # generate properties as shown on equations 5-9 in paper
+            # J. Chem. Phys. 2007, 127, 134101
+            alpha_squared, beta_alpha, beta_g, beta_A, alpha_g = _make_derivatives(dalpha_dq,
+                                  dg_dq, dA_dq, omega*Energy['cm^-1', 'Ha'], epsilon, nmodes, conver)
 
-        #********************************DEBUG**************************************************#
-        #self.alpha_squared = pd.Series(alpha_squared*Length['au', 'Angstrom']**4)
-        #self.beta_alpha = pd.Series(beta_alpha*Length['au', 'Angstrom']**4)
-        #self.beta_g = pd.Series(beta_g*Length['au', 'Angstrom']**4/
-        #                                                    (C*Length['m', 'au']/Time['s','au']))
-        #self.beta_A = pd.Series(beta_A*Length['au', 'Angstrom']**4/
-        #                                                    (C*Length['m', 'au']/Time['s','au']))
-        #self.alpha_g = pd.Series(alpha_g*Length['au', 'Angstrom']**4/
-        #                                                    (C*Length['m', 'au']/Time['s','au']))
-        #*******************************END DEBUG***********************************************#
+            #********************************DEBUG**************************************************#
+            #self.alpha_squared = pd.Series(alpha_squared*Length['au', 'Angstrom']**4)
+            #self.beta_alpha = pd.Series(beta_alpha*Length['au', 'Angstrom']**4)
+            #self.beta_g = pd.Series(beta_g*Length['au', 'Angstrom']**4/
+            #                                                    (C*Length['m', 'au']/Time['s','au']))
+            #self.beta_A = pd.Series(beta_A*Length['au', 'Angstrom']**4/
+            #                                                    (C*Length['m', 'au']/Time['s','au']))
+            #self.alpha_g = pd.Series(alpha_g*Length['au', 'Angstrom']**4/
+            #                                                    (C*Length['m', 'au']/Time['s','au']))
+            #*******************************END DEBUG***********************************************#
 
-        # calculate VROA back scattering and forward scattering intensities
-        backscat_vroa = _backscat(C_au, beta_g, beta_A)
-        forwscat_vroa = _forwscat(C_au, alpha_g, beta_g, beta_A)
-        # we set this just so it is easier to view the data
-        pd.options.display.float_format = '{:.6f}'.format
-        self.backscat_vroa = pd.DataFrame.from_dict({"freq": frequencies*Energy['Ha', 'cm^-1'],
-                                                     "beta_g*1e6":beta_g*1e6, "beta_A": beta_A,
-                                                     "backscatter*1e4": backscat_vroa*1e4})
-        self.forwscat_vroa = pd.DataFrame.from_dict({"freq": frequencies*Energy['Ha', 'cm^-1'],
-                                                     "alpha_g*1e6": alpha_g*1e6,
-                                                     "beta_g*1e6": beta_g*1e6, "beta_A": beta_A,
-                                                     "forwardscatter*1e4": forwscat_vroa*1e4})
+            # calculate VROA back scattering and forward scattering intensities
+            backscat_vroa = _backscat(C_au, beta_g, beta_A)
+            #backscat_vroa *= 1e4
+            backscat_vroa *= Length['au', 'Angstrom']**4*Mass['u', 'au_mass']
+            forwscat_vroa = _forwscat(C_au, alpha_g, beta_g, beta_A)
+            #forwscat_vroa *= 1e4
+            forwscat_vroa *=Length['au', 'Angstrom']**4*Mass['u', 'au_mass']
+            # we set this just so it is easier to view the data
+            pd.options.display.float_format = '{:.6f}'.format
+            df = pd.DataFrame.from_dict({"freq": frequencies, "beta_g*1e6":beta_g*1e6,
+                                        "beta_A": beta_A, "alpha_g*1e6": alpha_g*1e6,
+                                        "backscatter": backscat_vroa, "forwardscatter":forwscat_vroa})
+            df['exc_freq'] = np.repeat(val, len(df))
+            scatter.append(df)
+        self.scatter = pd.concat(scatter, ignore_index=True)
+            #self.backscat_vroa = pd.DataFrame.from_dict({"freq": frequencies*Energy['Ha', 'cm^-1'],
+            #                                             "beta_g*1e6":beta_g*1e6, "beta_A": beta_A,
+            #                                             "backscatter": backscat_vroa*Length['au', 'Angstrom']**4*Mass['u', 'au_mass']})
+            #self.forwscat_vroa = pd.DataFrame.from_dict({"freq": frequencies*Energy['Ha', 'cm^-1'],
+            #                                             "alpha_g*1e6": alpha_g*1e6,
+            #                                             "beta_g*1e6": beta_g*1e6, "beta_A": beta_A,
+            #                                             "forwardscatter": forwscat_vroa*Length['au', 'Angstrom']**4*Mass['u', 'au_mass']})
 
     def init_va(self, uni, delta=None):
         """
@@ -348,7 +382,17 @@ class VA(metaclass=VAMeta):
             raise AttributeError("Cannot find frequency dataframe in universe")
         # check that all attributes to be used exist
         # group the gradients by file (normal mode)
-        grouped = self.gradient.groupby('file')
+        grad = self.gradient.copy()
+        try:
+            exc_freq = grad['exc_freq'].drop_duplicates().values
+            text = ''
+            for f in exc_freq: text += str(f)+', '
+            print("Found excitation frequencies: {}".format(text))
+        except KeyError:
+            exc_freq = -1
+            grad['exc_freq'] = np.repeat(-1, len(grad))
+            print("No excitation frequency column (exc_freq) found in va_corr.gradient."+ \
+                         "Continuing assuming single excitation frequency.")
         # get number of normal modes
         nmodes = len(uni.frequency_ext.index.values)
         # generate delta dataframe
