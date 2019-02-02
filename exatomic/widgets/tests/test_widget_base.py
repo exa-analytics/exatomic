@@ -115,12 +115,13 @@ class TestSceneGrid(TestCase):
         # 1. a number of scenes
         # 2. iterable of scenes
         # 2. iterable of kwargs
-        flat, widg = _scene_grid([1], None, None, True, False,
+        #flat, widg = _scene_grid([1], None, None, True, False,
+        flat, widg = _scene_grid([1], None, None, False,
                                  ExatomicScene, {})
         self.assertEqual(len(flat), 1)
         self.assertEqual(len(widg.children), 1)
         flat, widg = _scene_grid([{'geom': False}, {'geom': True}],
-                                 None, None, True, False,
+                                 None, None, False,
                                  ExatomicScene, {})
         self.assertEqual(len(flat), 2)
         self.assertEqual(len(widg.children), 1)
@@ -129,7 +130,8 @@ class TestSceneGrid(TestCase):
         flat, widg = _scene_grid([UniverseScene(),
                                   UniverseScene(),
                                   ExatomicScene()],
-                                 None, None, True, False,
+                                 None, None, False,
                                  ExatomicScene, {})
         self.assertEqual(len(flat), 3)
         self.assertEqual(len(widg.children), 2)
+

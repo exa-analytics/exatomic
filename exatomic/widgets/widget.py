@@ -61,7 +61,7 @@ class DemoContainer(ExatomicBox):
     def __init__(self, *scenes, **kwargs):
         super(DemoContainer, self).__init__(*scenes,
                                             uni=False,
-                                            test=True,
+                                            #test=True,
                                             typ=ExatomicScene,
                                             **kwargs)
 
@@ -193,7 +193,7 @@ class TensorContainer(ExatomicBox):
             self._df = None
         super(TensorContainer, self).__init__(*args,
                                               uni=False,
-                                              test=False,
+                                              #test=False,
                                               typ=TensorScene,
                                               **kwargs)
 
@@ -321,7 +321,7 @@ class DemoUniverse(ExatomicBox):
 
 
     def __init__(self, *scenes, **kwargs):
-        super(DemoUniverse, self).__init__(*scenes, uni=True, test=True,
+        super(DemoUniverse, self).__init__(*scenes, uni=True, #test=True,
                                            typ=ExatomicScene, **kwargs)
 
 
@@ -571,7 +571,8 @@ class UniverseWidget(ExatomicBox):
 
     def __init__(self, *unis, **kwargs):
         scenekwargs = kwargs.pop('scenekwargs', {})
-        scenekwargs.update({'uni': True, 'test': False})
+        #scenekwargs.update({'uni': True, 'test': False})
+        scenekwargs.update({'uni': True})
         atomcolors = scenekwargs.get('atomcolors', None)
         atomradii = scenekwargs.get('atomradii', None)
         atomlabels = scenekwargs.get('atomlabels', None)
@@ -591,7 +592,7 @@ class UniverseWidget(ExatomicBox):
                       for uni in unis)) if len(unis) else 1
         super(UniverseWidget, self).__init__(*masterkwargs,
                                              uni=True,
-                                             test=False,
+                                             #test=False,
                                              nframes=nframes,
                                              fields=fields,
                                              typ=UniverseScene,

@@ -1,4 +1,4 @@
-.. Copyright (c) 2015-2018, Exa Analytics Development Team
+.. Copyright (c) 2015-2019, Exa Analytics Development Team
 .. Distributed under the terms of the Apache License 2.0
 
 .. _started-label:
@@ -15,3 +15,7 @@ Getting Started
     notebooks/01_basics.ipynb
     notebooks/02_xyz.ipynb
     notebooks/03_orbitals.ipynb
+    notebooks/04_cluster_extraction.ipynb
+    notebooks/nwchem.ipynb
+    notebooks/qe.ipynb
+
