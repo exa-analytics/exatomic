@@ -306,7 +306,7 @@ class Output(six.with_metaclass(OutMeta, Editor)):
         df3 = pd.concat([dat for dat in data]).reset_index(drop=True)
         vals = df3['val'].values.reshape(2,3,6)
         adx = np.triu_indices(3)
-        mat = np.zeros((((2,3,3,3))))
+        mat = np.zeros((2,3,3,3))
         for i in range(2):
             for j in range(3):
                 mat[i][j][adx] = vals[i][j]
@@ -370,7 +370,7 @@ class Output(six.with_metaclass(OutMeta, Editor)):
             stof = lno+start+nat*3+2
             nm = self.pandas_dataframe(staf, stof, ncol=len(freq)).reset_index(drop=True)
             # generate boolean array that shows False for negative frequencies
-            neg = [False if f < 0 else True for f in freq]
+            neg = [not f < 0 for f in freq]
             # remove negative frequencies
             nm.drop(columns=[idx for idx, val in enumerate(neg) if not val], inplace=True)
             freq = freq[neg]
