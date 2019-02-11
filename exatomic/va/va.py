@@ -94,7 +94,7 @@ class VA(metaclass=VAMeta):
 #        kp = 2 * variables * constants * boltz * (Length['au', 'm']**4 / Mass['u', 'kg'])
 #        return kp
 
-    def vroa(self, uni, delta):
+    def vroa(self, uni, delta, units='nm', assume_real=False):
         """
         Here we implement the Vibrational Raman Optical Activity (VROA) equations as outlined in
         the paper J. Chem. Phys. 2007, 127,
@@ -113,6 +113,7 @@ class VA(metaclass=VAMeta):
                                                frequency calculation
             delta (np.ndarray): Array containing all of the delta values used for the generation
                                 of the displaced structures.
+            units (string): Units of the excitation frequencies. Default to nm.
         """
         if not hasattr(self, 'roa'):
             raise AttributeError("Please set roa attribute.")
@@ -130,26 +131,21 @@ class VA(metaclass=VAMeta):
             roa = self.roa.loc[~self.roa.index.isin(idxs)]
         except KeyError:
             roa = self.roa.copy()
-        # omega parameter
-        # TODO: what does value should it take
-        omega = 0.0
         # initialize scatter array
         scatter = []
         # set some variables that will be used throughout
-        # Number of normal modes
+        # number of normal modes
         nmodes = len(uni.frequency_ext.index.values)
-        # a conversion factor for the beta_g beta_A and alpha_g tensor invariants
-        # TODO: make the conversion for the alha_squared and beta_alpha invariants
-        conver = Length['au', 'Angstrom']**4/(C*Length['m', 'au']/Time['s','au'])
-        print(conver)
         # speed of light in au
         C_au = C*Length['m', 'au']/Time['s','au']
-        # get the aquare roots of the reduced masses
-        rmass = np.sqrt(uni.frequency_ext['r_mass'].values).reshape(nmodes,1)
-        # reshape the delta array
-        delta = delta.reshape(nmodes,1)
+        # a conversion factor for the beta_g beta_A and alpha_g tensor invariants
+        # TODO: make the conversion for the alha_squared and beta_alpha invariants
+        conver = Length['au', 'Angstrom']**4/C_au
+        #conver = 1/C_au
+        # get the square roots of the reduced masses
+        rmass = np.sqrt(uni.frequency_ext['r_mass'].values)
         # generate a Levi Civita 3x3x3 tensor
-        epsilon = np.array([[0,0,0,0,0,-1,0,1,0],[0,0,1,0,0,0,-1,0,0],[0,-1,0,1,0,0,0,0,0]])
+        epsilon = np.array([[0,0,0,0,0,1,0,-1,0],[0,0,-1,0,0,0,1,0,0],[0,1,0,-1,0,0,0,0,0]])
         # some dictionaries to replace the string labels with integers
         # this is important so we can speed up the code with jit
         rep_label = {'Ax': 0, 'Ay': 1, 'Az': 2, 'alpha': 3, 'g_prime': 4}
@@ -166,46 +162,82 @@ class VA(metaclass=VAMeta):
             for f in exc_freq: text += str(f)+', '
             print("Found excitation frequencies: {}".format(text))
         except KeyError:
-            exc_freq = -1
+            exc_freq = [-1]
             roa['exc_freq'] = np.repeat(-1, len(roa))
             print("No excitation frequency column (exc_freq) found in va_corr.roa."+ \
                          "Continuing assuming single excitation frequency.")
-        # create a numpy array with the necessary dimensions
-        # number_of_files/2 x 9
-        value_complex = np.zeros((int(len(roa)/2),9), dtype=np.complex128)
-        labels = np.zeros(int(len(roa)/2), dtype=np.int8)
-        files = np.zeros(int(len(roa)/2), dtype=np.int8)
-        _sum(roa.values, value_complex, labels, files)
-        labels = pd.Series(labels)
-        files = pd.Series(files)
-        # replace the integer labels with the strings again
-        # TODO: is this really necessary?
-        labels.replace({v: k for k, v in rep_label.items()}, inplace=True)
-        complex_roa= pd.DataFrame(value_complex)
-        complex_roa.index = labels
-        complex_roa['file'] = np.tile(np.repeat(range(2*nmodes),5), len(exc_freq))
-        complex_roa['exc_freq'] = np.repeat(exc_freq, 10*nmodes)
-        # because I could not use range(9)............ugh
-        cols = [0,1,2,3,4,5,6,7,8]
-        # splice the data into the respective tensor dataframes
-        # we want all of the tensors in a 1d vector like form
-        A = pd.DataFrame.from_dict(complex_roa.loc[['Ax','Ay','Az']].groupby(['file','exc_freq']).
-                                   apply(lambda x: np.array([x[cols].values[0], x[cols].values[1], 
-                                                             x[cols].values[2]]).flatten()).
-                                   reset_index(drop=True).to_dict()).T
-        alpha = pd.DataFrame.from_dict(complex_roa.loc['alpha',range(9)].reset_index(drop=True).
-                                       to_dict())
-        g_prime = pd.DataFrame.from_dict(complex_roa.loc['g_prime',range(9)].reset_index(drop=True).
-                                         to_dict())
-        #***********DEBUG***********#
-        self.A = A
-        self.alpha = alpha
-        self.g_prime = g_prime
-        #********END DEBUG**********#
-
+        # loop over all of the excitation frequencies performing the needed calculations
         for idx, val in enumerate(exc_freq):
+            # omega parameter
+            if units == 'nm':
+                omega = H*C/(val*Length['nm', 'm'])*Energy['J', 'Ha']
+            else:
+                omega = val*Energy[units, 'Ha']
+            if val == -1:
+                omega = 0.0
+                warnings.warn("Omega parameter has been set to 0 as no excitation frequency values have been found. This leads to the beta(A)^2 tensor invariant to be zero as well.", Warning)
+            #print(omega)
+            sel_roa = roa.groupby('exc_freq').get_group(val)
+            # get the frequencies that have been calculated
+            # our code allows the user to calculate the roa of certain normal modes
+            # this allows the user to decrease the computational cost significantly
+            select_freq = sel_roa['file'].drop_duplicates().values-1
+            mask = select_freq > nmodes-1
+            select_freq = select_freq[~mask]
+            #print(select_freq)
+            snmodes = len(select_freq)
+            # get the reduced mass and delta parameters of the calculated normal modes
+            if snmodes < nmodes:
+                sel_rmass = rmass[select_freq].reshape(snmodes,1)
+                sel_delta = delta[select_freq].reshape(snmodes,1)
+            else:
+                sel_rmass = rmass.reshape(snmodes, 1)
+                sel_delta = delta.reshape(snmodes, 1)
+            # create a numpy array with the necessary dimensions
+            # number_of_files/2 x 9
+            value_complex = np.zeros((int(len(sel_roa)/2),9), dtype=np.complex128)
+            labels = np.zeros(int(len(sel_roa)/2), dtype=np.int8)
+            files = np.zeros(int(len(sel_roa)/2), dtype=np.int8)
+            #print(sel_delta)
+            #start = time.time()
+            # combine the real and imaginary values
+            # passed through jitted code
+            _sum(sel_roa.values, value_complex, labels, files)
+            #print("Completed sum: {}".format(time.time()-start))
+            labels = pd.Series(labels)
+            files = pd.Series(files)
+            # replace the integer labels with the strings again
+            # TODO: is this really necessary?
+            labels.replace({v: k for k, v in rep_label.items()}, inplace=True)
+            complex_roa= pd.DataFrame(value_complex)
+            complex_roa.index = labels
+            complex_roa['file'] = np.repeat(range(2*snmodes),5)
+            #print(complex_roa)
+            #complex_roa['exc_freq'] = np.repeat(exc_freq, 10*nmodes)
+            # because I could not use range(9)............ugh
+            cols = [0,1,2,3,4,5,6,7,8]
+            # splice the data into the respective tensor dataframes
+            # we want all of the tensors in a 1d vector like form
+            A = pd.DataFrame.from_dict(complex_roa.loc[['Ax','Ay','Az']].groupby('file').
+                                       apply(lambda x: np.array([x[cols].values[0],x[cols].values[1],
+                                                                 x[cols].values[2]]).flatten()).
+                                       reset_index(drop=True).to_dict()).T
+            alpha = pd.DataFrame.from_dict(complex_roa.loc['alpha',range(9)].reset_index(drop=True).
+                                           to_dict())
+            g_prime = pd.DataFrame.from_dict(complex_roa.loc['g_prime',range(9)].
+                                             reset_index(drop=True).to_dict())
+            #***********DEBUG***********#
+            #self.A = A
+            #self.alpha = alpha
+            #self.g_prime = g_prime
+            #for i in g_prime.values.reshape(snmodes*9*2):
+            #    print("{} {}".format(i.real, i.imag))
+            #********END DEBUG**********#
+
+            # get gradient calculated frequencies
+            # this is just to make sure that we are calculating the right frequency
+            # this comes from the init_va code
             try:
-                # get frequency
                 frequencies = self.calcfreq.groupby('exc_freq').get_group(val)['calc_freq'].values
             except KeyError:
                 raise KeyError("Something went wrong check that self.calcfreq has column names calc_freq and exc_freq")
@@ -215,28 +247,32 @@ class VA(metaclass=VAMeta):
             # 0 corresponds to equilibrium coordinates
             # 1 - nmodes corresponds to positive displacements
             # nmodes+1 - 2*nmodes corresponds to negative displacements
-            extra = 2*idx*nmodes
-            alpha_plus = np.divide(alpha.loc[range(0+extra,nmodes+extra)].values, rmass)
-            alpha_minus = np.divide(alpha.loc[range(nmodes+extra, 2*nmodes+extra)].values, rmass)
-            g_prime_plus = np.divide(g_prime.loc[range(0+extra,nmodes+extra)].values, rmass)
-            g_prime_minus = np.divide(g_prime.loc[range(nmodes+extra, 2*nmodes+extra)].values, rmass)
-            A_plus = np.divide(A.loc[range(0+extra, nmodes+extra)].values, rmass)
-            A_minus = np.divide(A.loc[range(nmodes+extra, 2*nmodes+extra)].values, rmass)
+            alpha_plus = np.divide(alpha.loc[range(0,snmodes)].values, sel_rmass)
+            alpha_minus = np.divide(alpha.loc[range(snmodes, 2*snmodes)].values, sel_rmass)
+            g_prime_plus = np.divide(g_prime.loc[range(0,snmodes)].values, sel_rmass)
+            g_prime_minus = np.divide(g_prime.loc[range(snmodes, 2*snmodes)].values, sel_rmass)
+            A_plus = np.divide(A.loc[range(0, snmodes)].values, sel_rmass)
+            A_minus = np.divide(A.loc[range(snmodes, 2*snmodes)].values, sel_rmass)
 
             # generate derivatives by two point difference method
-            dalpha_dq = np.divide((alpha_plus - alpha_minus), 2 * delta)
-            dg_dq = np.divide((g_prime_plus - g_prime_minus), 2 * delta)
-            dA_dq = np.array([np.divide((A_plus[i] - A_minus[i]), 2 * delta[i]) for i in range(nmodes)])
+            dalpha_dq = np.divide((alpha_plus - alpha_minus), 2 * sel_delta)
+            dg_dq = np.divide((g_prime_plus - g_prime_minus), 2 * sel_delta)
+            dA_dq = np.array([np.divide((A_plus[i] - A_minus[i]), 2 * sel_delta[i])
+                                                                    for i in range(snmodes)])
             #***********DEBUG***********#
             #self.dalpha_dq = dalpha_dq
             #self.dg_dq = dg_dq
             #self.dA_dq = dA_dq
+            #print("#################{}################".format(val))
+            #for i in dg_dq:
+            #    for k in i:
+            #        print("{:.6f} {:.6f}".format(k.real, k.imag))
             #********END DEBUG**********#
 
             # generate properties as shown on equations 5-9 in paper
             # J. Chem. Phys. 2007, 127, 134101
             alpha_squared, beta_alpha, beta_g, beta_A, alpha_g = _make_derivatives(dalpha_dq,
-                                  dg_dq, dA_dq, omega*Energy['cm^-1', 'Ha'], epsilon, nmodes, conver)
+                                  dg_dq, dA_dq, omega, epsilon, snmodes, conver, assume_real)
 
             #********************************DEBUG**************************************************#
             #self.alpha_squared = pd.Series(alpha_squared*Length['au', 'Angstrom']**4)
@@ -252,25 +288,25 @@ class VA(metaclass=VAMeta):
             # calculate VROA back scattering and forward scattering intensities
             backscat_vroa = _backscat(C_au, beta_g, beta_A)
             #backscat_vroa *= 1e4
+            # TODO: check the units of this because we convert the invariants from
+            #       au to Angstrom and here we convert again from au to Angstrom
             backscat_vroa *= Length['au', 'Angstrom']**4*Mass['u', 'au_mass']
+            #backscat_vroa *= Mass['u', 'au_mass']
             forwscat_vroa = _forwscat(C_au, alpha_g, beta_g, beta_A)
             #forwscat_vroa *= 1e4
+            # TODO: check the units of this because we convert the invariants from
+            #       au to Angstrom and here we convert again from au to Angstrom
             forwscat_vroa *=Length['au', 'Angstrom']**4*Mass['u', 'au_mass']
             # we set this just so it is easier to view the data
             pd.options.display.float_format = '{:.6f}'.format
+            # generate dataframe with all pertinent data for vroa scatter
             df = pd.DataFrame.from_dict({"freq": frequencies, "beta_g*1e6":beta_g*1e6,
-                                        "beta_A": beta_A, "alpha_g*1e6": alpha_g*1e6,
+                                        "beta_A*1e6": beta_A*1e6, "alpha_g*1e6": alpha_g*1e6,
                                         "backscatter": backscat_vroa, "forwardscatter":forwscat_vroa})
             df['exc_freq'] = np.repeat(val, len(df))
             scatter.append(df)
         self.scatter = pd.concat(scatter, ignore_index=True)
-            #self.backscat_vroa = pd.DataFrame.from_dict({"freq": frequencies*Energy['Ha', 'cm^-1'],
-            #                                             "beta_g*1e6":beta_g*1e6, "beta_A": beta_A,
-            #                                             "backscatter": backscat_vroa*Length['au', 'Angstrom']**4*Mass['u', 'au_mass']})
-            #self.forwscat_vroa = pd.DataFrame.from_dict({"freq": frequencies*Energy['Ha', 'cm^-1'],
-            #                                             "alpha_g*1e6": alpha_g*1e6,
-            #                                             "beta_g*1e6": beta_g*1e6, "beta_A": beta_A,
-            #                                             "forwardscatter": forwscat_vroa*Length['au', 'Angstrom']**4*Mass['u', 'au_mass']})
+        self.scatter.sort_values(by=['exc_freq','freq'], inplace=True)
 
     def init_va(self, uni, delta=None):
         """
@@ -300,7 +336,7 @@ class VA(metaclass=VAMeta):
             for f in exc_freq: text += str(f)+', '
             print("Found excitation frequencies: {}".format(text))
         except KeyError:
-            exc_freq = -1
+            exc_freq = [-1]
             grad['exc_freq'] = np.repeat(-1, len(grad))
             print("No excitation frequency column (exc_freq) found in va_corr.gradient."+ \
                          "Continuing assuming single excitation frequency.")
@@ -317,18 +353,18 @@ class VA(metaclass=VAMeta):
             # get gradients of the displaced coordinates in the positive direction
             grad_plus = grouped.filter(lambda x: x['file'].drop_duplicates().values in
                                                                             range(1,nmodes+1))
-            select_files = grad_plus['file'].drop_duplicates().values-1
+            select_freq = grad_plus['file'].drop_duplicates().values-1
             # get number of selected normal modes
             # TODO: check stability of using this parameter
-            snmodes = len(select_files)
+            snmodes = len(select_freq)
             if snmodes < nmodes:
-                delta_sel = delta[select_files]
+                delta_sel = delta[select_freq]
                 # convert force constants to reduced normal coordinate force constants
-                redmass = uni.frequency_ext.loc[select_files,'r_mass'].values*Mass['u', 'au_mass']
+                redmass = uni.frequency_ext.loc[select_freq,'r_mass'].values*Mass['u', 'au_mass']
             else:
                 delta_sel = delta
                 redmass = uni.frequency_ext['r_mass'].values*Mass['u','au_mass']
-            #print(delta_sel, select_files, redmass)
+            #print(delta_sel, select_freq, redmass)
             # get gradients of the displaced coordinates in the negative direction
             grad_minus = grouped.filter(lambda x: x['file'].drop_duplicates().values in
                                                                             range(nmodes+1, 2*nmodes+1))
@@ -359,17 +395,14 @@ class VA(metaclass=VAMeta):
             # calculate force constants
             #kqi   = np.divide(diag_plus - diag_minus, 2.0*delta_sel)
             #kqiii = np.divide(diag_plus - 2.0 * diag_zero + diag_minus, np.multiply(delta_sel, delta_sel))
-            kqi = np.zeros(len(select_files))
-            kqiii = np.zeros(len(select_files))
-            for fdx, sval in enumerate(select_files):
-                #print(delfq_plus[fdx][sval])
-                #print(delfq_zero[fdx][sval])
-                #print(delfq_minus[fdx][sval])
+            kqi = np.zeros(len(select_freq))
+            kqiii = np.zeros(len(select_freq))
+            for fdx, sval in enumerate(select_freq):
                 kqi[fdx] = (delfq_plus[fdx][sval] - delfq_minus[fdx][sval]) / (2.0*delta_sel[fdx])
-                kqiii[fdx] = (delfq_plus[fdx][sval] - 2.0 * delfq_zero[fdx][sval] + delfq_minus[fdx][sval]) / (delta_sel[fdx]**2)
+                kqiii[fdx] = (delfq_plus[fdx][sval] - 2.0 * delfq_zero[fdx][sval] + \
+                                                    delfq_minus[fdx][sval]) / (delta_sel[fdx]**2)
             kqijj = np.divide(delfq_plus - 2.0 * delfq_zero + delfq_minus,
-                                                        np.multiply(delta_sel, delta_sel).reshape(snmodes, 1))
-            #print(kqi)
+                              np.multiply(delta_sel, delta_sel).reshape(snmodes, 1))
             vqi = np.divide(kqi, redmass)
             vqijj = np.divide(kqijj, np.sqrt(np.power(redmass, 3)).reshape(snmodes,1))
 
@@ -379,7 +412,8 @@ class VA(metaclass=VAMeta):
 
             # calculate frequencies
             df = pd.DataFrame.from_dict({'calc_freq': np.sqrt(vqi)*Energy['Ha', 'cm^-1'],
-                                         'exc_freq': np.repeat(val, snmodes)})
+                                         'exc_freq': np.repeat(val, snmodes),
+                                         'freqdx': select_freq})
             calcfreq.append(df)
         self.calcfreq = pd.concat(calcfreq, ignore_index=True)
         #self.calcfreq = pd.DataFrame.from_dict({'calc_freq': calcfreq,
