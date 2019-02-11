@@ -12,19 +12,17 @@ import csv
 import os
 import glob
 import re
-from numba import jit, prange
-from exa.util.constants import speed_of_light_in_vacuum as C
+import time
+from exa.util.constants import speed_of_light_in_vacuum as C, Planck_constant as H
 from exa.util.units import Length, Energy, Mass, Time
 from exa.util.utility import mkp
 from exatomic.core import Atom, Gradient
 from exa import TypedMeta
+from .vroa_funcs import _sum, _make_derivatives, _forwscat, _backscat
 import warnings
 warnings.simplefilter("default")
 
 def get_data(path, attr, soft, f_end='', f_start='', sort_index=['']):
-    # TODO: Make something so that we do not have to set the type of output parser by default
-    #       allow the user to specify which it is based on the file.
-    #       Consider just using soft as an input of a class
     if not isinstance(sort_index, list):
         raise TypeError("Variable sort_index must be of type list")
     if not hasattr(soft, attr):
@@ -37,8 +35,8 @@ def get_data(path, attr, soft, f_end='', f_start='', sort_index=['']):
             try:
                 df = getattr(ed, attr)
             except AttributeError:
-                raise AttributeError("The property {} cannot be found in output {}".format(
-                                                                                        attr, file))
+                print("The property {} cannot be found in output {}".format(attr, file))
+                continue
             fdx = list(map(int, re.findall('\d+', file.split('/')[-1].replace(
                                                                    f_start, '').replace(f_end, ''))))
             df['file'] = np.tile(fdx, len(df))
@@ -46,6 +44,7 @@ def get_data(path, attr, soft, f_end='', f_start='', sort_index=['']):
             continue
         array.append(df)
     cdf = pd.concat([arr for arr in array])
+    # TODO: check if this just absolute overkill in error handling
     if sort_index[0] == '':
         if 'file' in cdf.columns.values:
             if 'label' in cdf.columns.values or 'atom' in cdf.columns.values:
@@ -66,94 +65,6 @@ def get_data(path, attr, soft, f_end='', f_start='', sort_index=['']):
                                         "created by {}.parse_{}.".format(sort_values, soft, attr))
     cdf.reset_index(drop=True, inplace=True)
     return cdf
-
-@jit(nopython=True)
-def _backscat(C_au, beta_g, beta_A):
-    return 4./C_au * (24 * beta_g + 8 * beta_A)
-
-@jit(nopython=True)
-def _forwscat(C_au, alpha_g, beta_g, beta_A):
-    return 4./C_au * (180 * alpha_g + 4 * beta_g - 4 * beta_A)
-
-@jit(nopython=True)
-def _make_derivatives(dalpha_dq, dg_dq, dA_dq, omega, epsilon, nmodes, conver):
-    alpha_squared = np.zeros(nmodes,dtype=np.complex128)
-    for fdx in prange(nmodes):
-        for al in prange(3):
-            for be in prange(3):
-                alpha_squared[fdx] += (1./9.)*(dalpha_dq[fdx][al*3+al]* \
-                                                    np.conj(dalpha_dq[fdx][be*3+be]))
-    alpha_squared = np.real(alpha_squared).astype(np.float64)
-
-    beta_alpha = np.zeros(nmodes,dtype=np.complex128)
-    for fdx in prange(nmodes):
-        for al in prange(3):
-            for be in prange(3):
-                beta_alpha[fdx] += 0.5*(3*dalpha_dq[fdx][al*3+be]*np.conj(dalpha_dq[fdx][al*3+be])- \
-                                            dalpha_dq[fdx][al*3+al]*np.conj(dalpha_dq[fdx][be*3+be]))
-    beta_alpha = np.real(beta_alpha).astype(np.float64)
-
-    beta_g = np.zeros(nmodes,dtype=np.complex128)
-    for fdx in prange(nmodes):
-        for al in prange(3):
-            for be in prange(3):
-                beta_g[fdx] += 1j*0.5*(3*dalpha_dq[fdx][al*3+be]*np.conj(dg_dq[fdx][al*3+be])- \
-                                           dalpha_dq[fdx][al*3+al]*np.conj(dg_dq[fdx][be*3+be]))
-    beta_g = np.imag(beta_g).astype(np.float64)*conver
-
-    beta_A = np.zeros(nmodes,dtype=np.complex128)
-    for fdx in prange(nmodes):
-        for al in prange(3):
-            for be in prange(3):
-                for ga in prange(3):
-                    for de in prange(3):
-                        beta_A[fdx] += 0.5*omega*dalpha_dq[fdx][al*3+be]* \
-                                              epsilon[al][ga*3+de]*np.conj(dA_dq[fdx][ga*9+de*3+be])
-    beta_A = np.real(beta_A).astype(np.float64)*conver
-
-# Just a whole bunch of test code ############################################################
-#    alpha_g = np.zeros(nmodes, dtype=np.complex128)
-##    alpha_g = np.zeros(nmodes, dtype=np.float64)
-#    for fdx in prange(nmodes):
-#        tmp_alpha = 0.0
-#        tmp_beta = 0.0
-#        for al in prange(3):
-#        #    tmp_alpha += np.real(dalpha_dq[fdx][al*3+al])
-#        #    tmp_beta += np.real(dg_dq[fdx][al*3+al])
-#        #print(fdx, tmp_beta, tmp_alpha)
-#        #alpha_g[fdx] = tmp_alpha*tmp_beta/3.*conver
-#            #alpha_g[fdx] += dalpha_dq[fdx][al*3+al]*np.conj(dg_dq[fdx][al*3+al])/3.
-#            #print(dalpha_dq[fdx][al*3+al],dalpha_dq[fdx][al*3+al]/np.sqrt(Mass['u','au_mass']), fdx, al)
-#            for be in prange(3):
-#                alpha_g[fdx] += dalpha_dq[fdx][al*3+al]*np.conj(dg_dq[fdx][be*3+be])/3.
-#                #alpha_g[fdx] += np.real(dalpha_dq[fdx][al*3+al])*np.real(dg_dq[fdx][be*3+be])/3.
-#    alpha_g = np.real(alpha_g).astype(np.float64)*conver
-##    alpha_g = np.imag(alpha_g).astype(np.float64)*conver
-##############################################################################################
-    alpha_g = np.zeros(nmodes, dtype=np.complex128)
-    for fdx in prange(nmodes):
-        tmp_alpha = 0.0
-        tmp_beta = 0.0
-        for al in prange(3):
-            for be in prange(3):
-                # This equation seems to match the resonance ROA calculation by movipac
-                #alpha_g[fdx] += np.real(dalpha_dq[fdx][al*3+al])*np.real(dg_dq[fdx][be*3+be])/3.
-                # This equation matches what is on the listed paper in the docs (equation 9)
-                alpha_g[fdx] += dalpha_dq[fdx][al*3+al]*np.conj(dg_dq[fdx][be*3+be])/9.
-    alpha_g = np.real(alpha_g).astype(np.float64)*conver
-    return alpha_squared, beta_alpha, beta_g, beta_A, alpha_g
-
-@jit(nopython=True)
-def _sum(arr, out, labels, files):
-    for fdx in range(0,len(arr),2):
-        if arr[fdx][-2] == 0:
-            out[int(fdx/2)] += arr[fdx][:9].astype(np.complex128)
-            out[int(fdx/2)] += 1j*arr[fdx+1][:9].astype(np.complex128)
-        else:
-            out[int(fdx/2)] += 1j*arr[fdx][:9].astype(np.complex128)
-            out[int(fdx/2)] += arr[fdx+1][:9].astype(np.complex128)
-        labels[int(fdx/2)] = arr[fdx][-4]
-        files[int(fdx/2)] = arr[fdx][-2]
 
 class VAMeta(TypedMeta):
     grad_0 = Gradient
