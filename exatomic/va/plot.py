@@ -120,9 +120,10 @@ class PlotVROA:
         ylim = kwargs.pop('yrange', None)
         fwhm = kwargs.pop('fwhm', 15) #in cm^-1
         res = kwargs.pop('res', 1) #in cm^-1
-        grid = kwargs.pop('grid', False)
+        grid = kwargs.pop('grid', True)
         legend = kwargs.pop('legend', True)
         exc_units = kwargs.pop('exc_units', 'nm')
+        normalize = kwargs.pop('normalize', 'all')
 
         if not isinstance(figsize, tuple):
             raise TypeError("figsize must be a tuple not {}".format(type(figsize)))
@@ -132,6 +133,8 @@ class PlotVROA:
         fig = plt.figure(figsize=figsize, dpi=dpi)
         ax = fig.add_subplot(111)
         norm = []
+        if normalize == 'max':
+            norm = round(abs(vroa.scatter[sct].abs().max())*2/(np.pi*fwhm),4)
         for idx, val in enumerate(exc_freq):
             inten = grouped.get_group(val)[sct].values
             freq = grouped.get_group(val)['freq'].values
@@ -140,12 +143,15 @@ class PlotVROA:
             else:
                 x = np.arange(xlim[0], xlim[1], res)
             y = self._lorentz(freq=freq, inten=inten, x=x, fwhm=fwhm)
-            norm.append(round(max(abs(y)),4))
-            y /= max(abs(y))
+            if normalize == 'max':
+                y /= norm
+            else:
+                norm.append(round(max(abs(y)),4))
+                y /= max(abs(y))
             y += idx*2
-
             ax.plot(x,y,marker=marker,linestyle=line,
                     label=str(val)+' '+exc_units if val is not -1 else "unk")
+
         ax.set_xlabel(xlabel)
         ax.set_ylabel(ylabel)
         ax.set_title(title)
@@ -154,14 +160,20 @@ class PlotVROA:
         if ylim is not None:
             ax.set_ylim(ylim)
         if grid:
-            ax.grid(grid)
+            ax.yaxis.grid(b=grid, which='major', color='k')
+            ax.yaxis.grid(b=grid, which='minor', color='k', linestyle='-', linewidth=4.0)
+            ax.xaxis.grid(b=grid)
         if legend:
-            ax.legend()
+            ax.legend(bbox_to_anchor=(1.04,1), loc="upper left")
         majors = np.arange(0, len(exc_freq)*2, 2)
-        print(majors)
+        minors = majors + 1
+        minors = np.insert(minors, 0, majors[0]-1)
+        print(minors)
+        if normalize == 'max':
+            norm = np.repeat(norm, len(majors))
         ax.yaxis.set_major_locator(ticker.FixedLocator(majors))
+        ax.yaxis.set_minor_locator(ticker.FixedLocator(minors))
         #ax.set_yticks(np.arange(len(exc_freq)*2, 2), norm)
-        print(norm)
         ax.set_yticklabels(norm)
         self.multiple_freq.append(fig)
 
