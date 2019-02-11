@@ -40,6 +40,8 @@ start {{name}}
 title {{title}}
 charge {{charge}}
 
+{{memory}}
+
 geometry {{geomopts}}
 {{atom}}
 end
@@ -62,10 +64,12 @@ end"""
 _calcdft = """dft
  direct
  mult {mult}
- grid xfine
  xc {xc}
  iterations {iterations}
+ tolerances {tolerances}
+{grid}
 {convergence}
+ {dft_other}
  {restart}
 end"""
 
@@ -78,7 +82,8 @@ class Input(Editor):
                       basisopts='spherical', basis='* library 6-31G',
                       mult=1, xc='b3lyp', iterations=100,
                       convergence='nolevelshifting', prop=' nbofile 2',
-                      relativistic='', tddft='', ecp='', sets=None, tasks='property'):
+                      relativistic='', tddft='', ecp='', sets=None, tasks='property',
+                      dft_other='', grid='xfine', tolerances='tight', memory=''):
         calc = _calcdft if task == 'dft' else _calcscf
         extras = ''
         extradict = {}
@@ -110,7 +115,11 @@ class Input(Editor):
             kwargs['mult'] = mult - 1
         kwargs['xc'] = xc
         kwargs['iterations'] = iterations
+        kwargs['tolerances'] = tolerances
         kwargs['convergence'] = _handle_arg('convergence', convergence)
+        kwargs['grid'] = _handle_arg('grid', grid)
+        kwargs['dft_other'] = _handle_arg('dft_other', dft_other)
+        kwargs['memory'] = memory
         if sets != None:
             kwargs['set'] = _handle_arg('set', sets)
         kwargs['task'] = ''
@@ -155,9 +164,8 @@ class Input(Editor):
 
 def _handle_arg(opt, info):
     type1 = {'basis': 'library', 'ecp': 'library'}
-    type2 = ['convergence', 'set']
+    type2 = ['convergence', 'set', 'grid']
     type3 = ['ecp', 'property', 'tddft', 'relativistic']
-#    type4 = ['set', 'task']
     if isinstance(info, str):
         if opt in type3:
             return '\n{0}\n{1}\n{2}\n'.format(opt, info, 'end')
