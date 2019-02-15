@@ -8,10 +8,6 @@ import matplotlib.pyplot as plt
 from matplotlib.figure import Figure
 from matplotlib import ticker
 
-class MyFigure(Figure):
-    def __save__(self):
-        print(dir(self))
-
 class PlotVROA:
     @staticmethod
     def _lorentz(freq, inten, x, fwhm):
@@ -129,7 +125,6 @@ class PlotVROA:
             raise TypeError("figsize must be a tuple not {}".format(type(figsize)))
         grouped = vroa.scatter.groupby('exc_freq')
         exc_freq = vroa.scatter['exc_freq'].drop_duplicates().values
-        self.multiple_freq = []
         fig = plt.figure(figsize=figsize, dpi=dpi)
         ax = fig.add_subplot(111)
         norm = []
@@ -164,16 +159,16 @@ class PlotVROA:
             ax.yaxis.grid(b=grid, which='minor', color='k', linestyle='-', linewidth=4.0)
             ax.xaxis.grid(b=grid)
         if legend:
-            ax.legend(bbox_to_anchor=(1.04,1), loc="upper left")
+            ax.legend(bbox_to_anchor=(1.02,1), loc="upper left")
         majors = np.arange(0, len(exc_freq)*2, 2)
         minors = majors + 1
         minors = np.insert(minors, 0, majors[0]-1)
-        print(minors)
         if normalize == 'max':
             norm = np.repeat(norm, len(majors))
         ax.yaxis.set_major_locator(ticker.FixedLocator(majors))
         ax.yaxis.set_minor_locator(ticker.FixedLocator(minors))
         #ax.set_yticks(np.arange(len(exc_freq)*2, 2), norm)
-        ax.set_yticklabels(norm)
-        self.multiple_freq.append(fig)
+        ax.set_yticklabels(['{:4.0f}'.format(n) for n in norm])
+        fig.tight_layout()
+        self.multiple_freq = fig
 
