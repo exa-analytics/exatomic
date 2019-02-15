@@ -656,8 +656,8 @@ class Fchk(six.with_metaclass(GauMeta, Editor)):
         self.frequency_ext['freqdx'] = freqdx
         # convert from atomic mass units to atomic units
         #self.frequency_ext['r_mass'] *= Mass['u', 'au_mass']
-        # convert from cm^{-1} to Ha
-        self.frequency_ext['freq'] *= Energy['cm^-1', 'Ha']
+        ## convert from cm^{-1} to Ha
+        #self.frequency_ext['freq'] *= Energy['cm^-1', 'Ha']
 
     def parse_frequency(self):
         '''
