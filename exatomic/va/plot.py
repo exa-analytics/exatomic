@@ -168,7 +168,7 @@ class PlotVROA:
         ax.yaxis.set_major_locator(ticker.FixedLocator(majors))
         ax.yaxis.set_minor_locator(ticker.FixedLocator(minors))
         #ax.set_yticks(np.arange(len(exc_freq)*2, 2), norm)
-        ax.set_yticklabels(['{:4.0f}'.format(n) for n in norm])
+        ax.set_yticklabels(['{:4.3E}'.format(n) for n in norm])
         fig.tight_layout()
         self.multiple_freq = fig
 
