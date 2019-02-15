@@ -18,7 +18,7 @@ def _forwscat(C_au, alpha_g, beta_g, beta_A):
     return 4./C_au * (180 * alpha_g + 4 * beta_g - 4 * beta_A)
 
 @jit(nopython=True, parallel=False, cache=True)
-def _make_derivatives(dalpha_dq, dg_dq, dA_dq, omega, epsilon, nmodes, conver, assume_real):
+def _make_derivatives(dalpha_dq, dg_dq, dA_dq, omega, epsilon, nmodes, conver, assume_real, no_conj):
     alpha_squared = np.zeros(nmodes,dtype=np.complex128)
     for fdx in prange(nmodes):
         for al in prange(3):
@@ -51,6 +51,19 @@ def _make_derivatives(dalpha_dq, dg_dq, dA_dq, omega, epsilon, nmodes, conver, a
                         for de in prange(3):
                             beta_A[fdx] += 0.5*omega*np.real(dalpha_dq[fdx][al*3+be])* \
                                            epsilon[al][ga*3+de]*np.real(dA_dq[fdx][ga*9+de*3+be])
+    elif no_conj:
+        for fdx in prange(nmodes):
+            for al in prange(3):
+                for be in prange(3):
+                    beta_g[fdx] += 0.5*(3*dalpha_dq[fdx][al*3+be]*dg_dq[fdx][al*3+be]- \
+                                               dalpha_dq[fdx][al*3+al]*dg_dq[fdx][be*3+be])
+        for fdx in prange(nmodes):
+            for al in prange(3):
+                for be in prange(3):
+                    for ga in prange(3):
+                        for de in prange(3):
+                            beta_A[fdx] += 0.5*omega*dalpha_dq[fdx][al*3+be]* \
+                                           epsilon[al][ga*3+de]*dA_dq[fdx][ga*9+de*3+be]
     else:
         for fdx in prange(nmodes):
             for al in prange(3):

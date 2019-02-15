@@ -37,8 +37,10 @@ def get_data(path, attr, soft, f_end='', f_start='', sort_index=['']):
             except AttributeError:
                 print("The property {} cannot be found in output {}".format(attr, file))
                 continue
+            # We assume that the file identifier is an integer
             fdx = list(map(int, re.findall('\d+', file.split('/')[-1].replace(
                                                                    f_start, '').replace(f_end, ''))))
+            #fdx = float(file.split(os.sep)[-1].replace(f_start, '').replace(f_end, ''))
             df['file'] = np.tile(fdx, len(df))
         else:
             continue
@@ -94,7 +96,7 @@ class VA(metaclass=VAMeta):
 #        kp = 2 * variables * constants * boltz * (Length['au', 'm']**4 / Mass['u', 'kg'])
 #        return kp
 
-    def vroa(self, uni, delta, units='nm', assume_real=False):
+    def vroa(self, uni, delta, units='nm', assume_real=False, no_conj=False):
         """
         Here we implement the Vibrational Raman Optical Activity (VROA) equations as outlined in
         the paper J. Chem. Phys. 2007, 127,
@@ -170,12 +172,16 @@ class VA(metaclass=VAMeta):
         for idx, val in enumerate(exc_freq):
             # omega parameter
             if units == 'nm':
-                omega = H*C/(val*Length['nm', 'm'])*Energy['J', 'Ha']
+                try:
+                    omega = H*C/(val*Length['nm', 'm'])*Energy['J', 'Ha']
+                except ZeroDivisionError:
+                    omega = 0.0
+                    warnings.warn("Omega parameter has been set to 0. beta(A)**2 will be zero by extension.", Warning)
             else:
                 omega = val*Energy[units, 'Ha']
             if val == -1:
                 omega = 0.0
-                warnings.warn("Omega parameter has been set to 0 as no excitation frequency values have been found. This leads to the beta(A)^2 tensor invariant to be zero as well.", Warning)
+                warnings.warn("Omega parameter has been set to 0. beta(A)**2 will be zero by extension.", Warning)
             #print(omega)
             sel_roa = roa.groupby('exc_freq').get_group(val)
             # get the frequencies that have been calculated
@@ -272,7 +278,8 @@ class VA(metaclass=VAMeta):
             # generate properties as shown on equations 5-9 in paper
             # J. Chem. Phys. 2007, 127, 134101
             alpha_squared, beta_alpha, beta_g, beta_A, alpha_g = _make_derivatives(dalpha_dq,
-                                  dg_dq, dA_dq, omega, epsilon, snmodes, conver, assume_real)
+                                  dg_dq, dA_dq, omega, epsilon, snmodes, conver, assume_real,
+                                  no_conj)
 
             #********************************DEBUG**************************************************#
             #self.alpha_squared = pd.Series(alpha_squared*Length['au', 'Angstrom']**4)
