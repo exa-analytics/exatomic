@@ -658,6 +658,17 @@ class Fchk(six.with_metaclass(GauMeta, Editor)):
         self.frequency_ext['r_mass'] *= Mass['u', 'au_mass']
         # convert from cm^{-1} to Ha
         self.frequency_ext['freq'] *= Energy['cm^-1', 'Ha']
+        ## convert mdyne to dyne
+        #self.frequency_ext['f_const'] /= 1000.
+        ## convert 1/Angstrom to 1/cm
+        #self.frequency_ext['f_const'] /= Length['Angstrom', 'cm']
+        ## convert from erg to Ha
+        #self.frequency_ext['f_const'] *= Energy['erg', 'Ha']
+        ## convert from 1/cm^2 to 1/Bohr^2
+        #self.frequency_ext['f_const'] *= Length['cm', 'au']**2
+        # convert 1/Da to 1/amu
+        #self.frequency_ext['f_const'] *= Mass['u', 'au_mass']
+        # convert 
 
     def parse_frequency(self):
         '''
