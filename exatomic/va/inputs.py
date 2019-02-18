@@ -92,8 +92,7 @@ class GenInput(metaclass = GenMeta):
 
     We can also define a specific normal mode or a list of normal modes that are of
     interest and generate displaced coordinates along those specific modes rather
-    than all of the normal modes. Note that we use python indexing so the first
-    normal mode corresponds to the index of 0. This is highly recommended if applicable
+    than all of the normal modes. This is highly recommended if applicable
     as it may reduce number of computations and memory usage significantly.
 
     Args:
@@ -411,8 +410,9 @@ class GenInput(metaclass = GenMeta):
         if not hasattr(uni, 'frequency'):
             raise AttributeError("Frequency dataframe cannot be found in universe")
         delta_type = kwargs.pop("delta_type", 0)
-        fdx = kwargs.pop("fdx", -1)
+        fdx = kwargs.pop("fdx", 0)
         disp = kwargs.pop("disp", None)
+        fdx = np.array(fdx) - 1
         freq = uni.frequency.copy()
         atom = uni.atom.copy()
         self.delta = gen_delta(freq, delta_type, disp)
