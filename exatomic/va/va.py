@@ -229,6 +229,7 @@ class VA(metaclass=VAMeta):
             roa = self.roa.copy()
         # initialize scatter array
         scatter = []
+        raman = []
         # set some variables that will be used throughout
         # number of normal modes
         nmodes = len(uni.frequency_ext.index.values)
@@ -236,7 +237,7 @@ class VA(metaclass=VAMeta):
         C_au = C*Length['m', 'au']/Time['s','au']
         # a conversion factor for the beta_g beta_A and alpha_g tensor invariants
         # TODO: make the conversion for the alha_squared and beta_alpha invariants
-        conver = Length['au', 'Angstrom']**4/C_au
+        au2angs = Length['au', 'Angstrom']**4
         #conver = 1/C_au
         # get the square roots of the reduced masses
         rmass = np.sqrt(uni.frequency_ext['r_mass'].values)
@@ -339,7 +340,7 @@ class VA(metaclass=VAMeta):
             # this comes from the init_va code
             try:
                 grad = self.gradient.groupby('exc_freq').get_group(val)
-                grad_derivs = self.gradient_derivatives(grad, uni.frequency.copy())
+                grad_derivs = self.get_pos_neg_gradients(grad, uni.frequency.copy())
                 frequencies = self.calculate_frequencies(*grad_derivs, sel_rmass**2, select_freq, sel_delta)
             except KeyError:
                 raise KeyError("Something went wrong check that self.calcfreq has column names "+ \
@@ -375,7 +376,7 @@ class VA(metaclass=VAMeta):
             # generate properties as shown on equations 5-9 in paper
             # J. Chem. Phys. 2007, 127, 134101
             alpha_squared, beta_alpha, beta_g, beta_A, alpha_g = _make_derivatives(dalpha_dq,
-                                  dg_dq, dA_dq, omega, epsilon, snmodes, conver, assume_real,
+                                  dg_dq, dA_dq, omega, epsilon, snmodes, au2angs, C_au, assume_real,
                                   no_conj)
 
             #********************************DEBUG**************************************************#
@@ -388,6 +389,9 @@ class VA(metaclass=VAMeta):
             #self.alpha_g = pd.Series(alpha_g*Length['au', 'Angstrom']**4/
             #                                                    (C*Length['m', 'au']/Time['s','au']))
             #*******************************END DEBUG***********************************************#
+
+            # calculate Raman intensities
+            raman_int = 4 * (45 * alpha_squared + 8 * beta_alpha)
 
             # calculate VROA back scattering and forward scattering intensities
             backscat_vroa = _backscat(C_au, beta_g, beta_A)
@@ -408,9 +412,15 @@ class VA(metaclass=VAMeta):
                                         "beta_A*1e6": beta_A*1e6, "alpha_g*1e6": alpha_g*1e6,
                                         "backscatter": backscat_vroa, "forwardscatter":forwscat_vroa})
             df['exc_freq'] = np.repeat(val, len(df))
+            rdf = pd.DataFrame.from_dict({"freq": frequencies, "alpha_squared": alpha_squared,
+                                          "beta_alpha": beta_alpha, "raman_int": raman_int})
+            rdf['exc_freq'] = np.repeat(val, len(rdf))
             scatter.append(df)
+            raman.append(rdf)
         self.scatter = pd.concat(scatter, ignore_index=True)
         self.scatter.sort_values(by=['exc_freq','freq'], inplace=True)
+        self.raman = pd.concat(raman, ignore_index=True)
+        self.raman.sort_values(by=['exc_freq', 'freq'], inplace=True)
 
 #    def init_va(self, uni, delta=None):
 #        """
