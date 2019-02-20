@@ -177,9 +177,12 @@ class VA(metaclass=VAMeta):
             delta_sel = delta
         # calculate force constants
         kqi = np.zeros(len(select_freq))
+        #print(redmass_sel.shape)
         for fdx, sval in enumerate(select_freq):
             kqi[fdx] = (delfq_plus[fdx][sval] - delfq_minus[fdx][sval]) / (2.0*delta_sel[fdx])
-        vqi = np.divide(kqi, redmass_sel)
+        #print(kqi.shape)
+        vqi = np.divide(kqi, redmass_sel.reshape(snmodes,))
+        #print(vqi.shape)
         # TODO: Check if we want to exit the program if we get a negative force constant
         n_force_warn = vqi[vqi < 0.]
         if n_force_warn.any() == True:
