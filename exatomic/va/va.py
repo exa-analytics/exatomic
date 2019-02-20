@@ -187,7 +187,7 @@ class VA(metaclass=VAMeta):
             warnings.warn("Negative force constants have been calculated be wary of results",
                             Warning)
         # return calculated frequencies
-        frequencies = np.sqrt(vqi).reshape(1,)*Energy['Ha', 'cm^-1']
+        frequencies = np.sqrt(vqi).reshape(snmodes,)*Energy['Ha', 'cm^-1']
         return frequencies
 
     def vroa(self, uni, delta, units='nm', assume_real=False, no_conj=False):
