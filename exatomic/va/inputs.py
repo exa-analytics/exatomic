@@ -134,7 +134,7 @@ class GenInput(metaclass = GenMeta):
         eqcoord = atom[['x', 'y', 'z']].values
         symbols = atom['symbol'].values
         znums = atom['Zeff'].values
-        if fdx == -1:
+        if fdx.any() == -1:
             freq_g = freq.copy()
         else:
             freq_g = freq.groupby('freqdx').filter(lambda x: fdx in
@@ -149,7 +149,7 @@ class GenInput(metaclass = GenMeta):
         eqcoord[abs(eqcoord) < self._tol] = 0.0
         # get delta values for wanted frequencies
         try:
-            if fdx == -1:
+            if fdx.any() == -1:
                 delta = self.delta['delta'].values
             elif -1 not in fdx:
                 delta = self.delta.groupby('freqdx').filter(lambda x:
@@ -412,7 +412,7 @@ class GenInput(metaclass = GenMeta):
         delta_type = kwargs.pop("delta_type", 0)
         fdx = kwargs.pop("fdx", 0)
         disp = kwargs.pop("disp", None)
-        fdx = np.array(fdx) - 1
+        fdx = fdx - 1
         freq = uni.frequency.copy()
         atom = uni.atom.copy()
         self.delta = gen_delta(freq, delta_type, disp)
