@@ -16,7 +16,7 @@ import time
 from exa.util.constants import speed_of_light_in_vacuum as C, Planck_constant as H
 from exa.util.units import Length, Energy, Mass, Time
 from exa.util.utility import mkp
-from exatomic.core import Atom, Gradient
+from exatomic.core import Atom, Gradient, Polarizability
 from exa import TypedMeta
 from .vroa_funcs import _sum, _make_derivatives, _forwscat, _backscat
 import warnings
@@ -69,10 +69,11 @@ def get_data(path, attr, soft, f_end='', f_start='', sort_index=['']):
     return cdf
 
 class VAMeta(TypedMeta):
-    grad_0 = Gradient
-    grad_plus = Gradient
-    grad_minus = Gradient
+#    grad_0 = Gradient
+#    grad_plus = Gradient
+#    grad_minus = Gradient
     gradient = Gradient
+    roa = Polarizability
 
 class VA(metaclass=VAMeta):
     """
@@ -95,6 +96,22 @@ class VA(metaclass=VAMeta):
 #        variables = (lambda_0 - lambda_p)**4/lambda_p
 #        kp = 2 * variables * constants * boltz * (Length['au', 'm']**4 / Mass['u', 'kg'])
 #        return kp
+
+    @staticmethod
+    def _check_file_continuity(df, prop, nmodes):
+        files = df['file'].drop_duplicates()
+        pos_file = files[files.isin(range(1,nmodes+1))]
+        neg_file = files[files.isin(range(nmodes+1, 2*nmodes+1))]-nmodes
+        intersect = np.intersect1d(pos_file.values, neg_file.values)
+        diff = np.unique(np.concatenate((np.setdiff1d(pos_file.values, intersect),
+                                         np.setdiff1d(neg_file.values, intersect)), axis=None))
+        rdf = df.copy()
+        if len(diff) > 0:
+            print("Seems that we are missing one of the {} outputs for frequency {} ".format(prop, diff)+ \
+                  "we will ignore the {} data for these frequencies.".format(prop))
+            rdf = rdf[~rdf['file'].isin(diff)]
+            rdf = rdf[~rdf['file'].isin(diff+nmodes)]
+        return rdf
 
     def get_pos_neg_gradients(self, grad, freq):
         '''
@@ -124,14 +141,18 @@ class VA(metaclass=VAMeta):
         # get gradients of the displaced coordinates in the positive direction
         grad_plus = grouped.filter(lambda x: x['file'].drop_duplicates().values in
                                                                         range(1,nmodes+1))
-        snmodes = len(grad_plus)
+        snmodes = len(grad_plus['file'].drop_duplicates().values)
         # get gradients of the displaced coordinates in the negative direction
         grad_minus = grouped.filter(lambda x: x['file'].drop_duplicates().values in
                                                                         range(nmodes+1, 2*nmodes+1))
         # TODO: Check if we can make use of numba to speed up this code
         delfq_zero = freq.groupby('freqdx')[['dx', 'dy', 'dz']].apply(lambda x:
-                                    np.sum(np.multiply(grad_0[['fx', 'fy', 'fz']].values, x.values)))
+                                    np.sum(np.multiply(grad_0[['fx', 'fy', 'fz']].values, x.values))).values
+        #print(delfq_zero)
+        #print(delfq_zero.shape)
         delfq_zero = np.tile(delfq_zero, snmodes).reshape(snmodes, nmodes)
+        #print(pd.DataFrame(delfq_zero).to_string())
+        #print(delfq_zero.shape)
         delfq_plus = grad_plus.groupby('file')[['fx', 'fy', 'fz']].apply(lambda x:
                                 freq.groupby('freqdx')[['dx', 'dy', 'dz']].apply(lambda y:
                                     np.sum(np.multiply(y.values, x.values)))).values
@@ -230,12 +251,12 @@ class VA(metaclass=VAMeta):
             roa = self.roa.loc[~self.roa.index.isin(idxs)]
         except KeyError:
             roa = self.roa.copy()
+        # number of normal modes
+        nmodes = len(uni.frequency_ext.index.values)
         # initialize scatter array
         scatter = []
         raman = []
         # set some variables that will be used throughout
-        # number of normal modes
-        nmodes = len(uni.frequency_ext.index.values)
         # speed of light in au
         C_au = C*Length['m', 'au']/Time['s','au']
         # a conversion factor for the beta_g beta_A and alpha_g tensor invariants
@@ -282,6 +303,10 @@ class VA(metaclass=VAMeta):
                 warnings.warn("Omega parameter has been set to 0. beta(A)**2 will be zero by extension.", Warning)
             #print(omega)
             sel_roa = roa.groupby('exc_freq').get_group(val)
+            grad = self.gradient.groupby('exc_freq').get_group(val)
+            # check for any missing files
+            sel_roa = self._check_file_continuity(sel_roa, "ROA", nmodes)
+            grad = self._check_file_continuity(grad, "gradient", nmodes)
             # get the frequencies that have been calculated
             # our code allows the user to calculate the roa of certain normal modes
             # this allows the user to decrease the computational cost significantly
@@ -342,7 +367,6 @@ class VA(metaclass=VAMeta):
             # this is just to make sure that we are calculating the right frequency
             # this comes from the init_va code
             try:
-                grad = self.gradient.groupby('exc_freq').get_group(val)
                 grad_derivs = self.get_pos_neg_gradients(grad, uni.frequency.copy())
                 frequencies = self.calculate_frequencies(*grad_derivs, sel_rmass**2, select_freq, sel_delta)
             except KeyError:
@@ -411,7 +435,7 @@ class VA(metaclass=VAMeta):
             # we set this just so it is easier to view the data
             pd.options.display.float_format = '{:.6f}'.format
             # generate dataframe with all pertinent data for vroa scatter
-            df = pd.DataFrame.from_dict({"freq": frequencies, "beta_g*1e6":beta_g*1e6,
+            df = pd.DataFrame.from_dict({"freq": frequencies, "freqdx": select_freq, "beta_g*1e6":beta_g*1e6,
                                         "beta_A*1e6": beta_A*1e6, "alpha_g*1e6": alpha_g*1e6,
                                         "backscatter": backscat_vroa, "forwardscatter":forwscat_vroa})
             df['exc_freq'] = np.repeat(val, len(df))
