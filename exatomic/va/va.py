@@ -314,6 +314,7 @@ class VA(metaclass=VAMeta):
             mask = select_freq > nmodes-1
             select_freq = select_freq[~mask]
             #print(select_freq)
+            #print(select_freq)
             snmodes = len(select_freq)
             # get the reduced mass and delta parameters of the calculated normal modes
             if snmodes < nmodes:
@@ -448,6 +449,96 @@ class VA(metaclass=VAMeta):
         self.scatter.sort_values(by=['exc_freq','freq'], inplace=True)
         self.raman = pd.concat(raman, ignore_index=True)
         self.raman.sort_values(by=['exc_freq', 'freq'], inplace=True)
+
+    def zpvc(self, uni, delta):
+        if not hasattr(self, 'gradient'):
+            raise AttributeError("Please set gradient attribute.")
+        #if not hasattr(self, 'property'):
+        #    raise AttributeError("Please set property attribute.")
+        if not hasattr(uni, 'frequency_ext'):
+            raise AttributeError("Please compute frequency_ext dataframe.")
+        if not hasattr(uni, 'frequency'):
+            raise AttributeError("Please compute frequency dataframe.")
+
+        nmodes = len(uni.frequency_ext.index.values)
+        grad = self._check_file_continuity(self.gradient, 'gradient', nmodes)
+        #prop = self._check_file_continuity(self.property, 'property', nmodes)
+        delfq_zero, delfq_plus, delfq_minus = self.get_pos_neg_gradients(grad, uni.frequency.copy())
+        select_freq = grad[grad['file'].isin(range(1,nmodes+1))]
+        select_freq = select_freq['file'].drop_duplicates().values - 1
+        snmodes = len(select_freq)
+        frequencies = uni.frequency_ext['freq'].values*Energy['cm^-1','Ha']
+        rmass = uni.frequency_ext['r_mass'].values*Mass['u', 'au_mass']
+        if snmodes < nmodes:
+            sel_delta = delta[select_freq]
+            sel_rmass = uni.frequency_ext['r_mass'].values[select_freq]*Mass['u', 'au_mass']
+            sel_freq = uni.frequency_ext['freq'].values[select_freq]*Energy['cm^-1','Ha']
+        else:
+            sel_delta = delta
+            sel_rmass = rmass
+            sel_freq = frequencies
+        #frequencies = self.calculate_frequencies(delfq_zero, delfq_plus, delfq_minus, sel_rmass, select_freq,
+        #                                         sel_delta)
+        print(frequencies)
+        # calculate cubic force constant
+        kqiii = np.zeros(len(select_freq))
+        for fdx, sval in enumerate(select_freq):
+            kqiii[fdx] = (delfq_plus[fdx][sval] - 2.0 * delfq_zero[fdx][sval] + \
+                                                delfq_minus[fdx][sval]) / (sel_delta[fdx]**2)
+        print(delfq_plus.shape, delfq_zero.shape, delfq_minus.shape, sel_delta)
+        kqijj = np.divide(delfq_plus - 2.0 * delfq_zero + delfq_minus,
+                          np.multiply(sel_delta, sel_delta).reshape(snmodes,1))
+        # get property values
+        conver = 1e6/18778.86
+        prop_grouped = self.property.groupby('file')
+        prop_zero = prop_grouped.get_group(0)
+        prop_zero.drop(columns=['file'],inplace=True)
+        prop_zero = np.repeat(prop_zero.values, snmodes)*conver
+        print(prop_zero.shape)
+        prop_plus = prop_grouped.filter(lambda x: x['file'].drop_duplicates().values in range(1,nmodes+1))
+        prop_plus.drop(columns=['file'], inplace=True)
+        prop_plus = prop_plus.values.reshape(snmodes,)*conver
+        print(prop_plus.shape)
+        prop_minus= prop_grouped.filter(lambda x: x['file'].drop_duplicates().values in
+                                                                              range(nmodes+1, 2*nmodes+1))
+        prop_minus.drop(columns=['file'], inplace=True)
+        prop_minus = prop_minus.values.reshape(snmodes,)*conver
+        print(prop_minus.shape)
+        dprop_dq = np.divide(prop_plus - prop_minus, 2*sel_delta)
+        d2prop_dq2 = np.divide(prop_plus - 2*prop_zero + prop_minus, np.multiply(sel_delta, sel_delta))
+        self.prop_split = pd.DataFrame.from_dict({"prop_zero": prop_zero, "prop_plus": prop_plus, "prop_minus": prop_minus})
+        #for i in range(snmodes):
+        #    print("{}    prop_zero    {:+.8f}    prop_plus    {:+.8f}    prop_minus    {:+.8f}".format(i, prop_zero[i]*conver, prop_plus[i]*conver, prop_minus[i]*conver))
+        #for i in range(snmodes):
+        #    for j in range(nmodes):
+        #        print("i\t{} j\t{}\t{:.8E}".format(i+1, j+1, kqijj[i][j]))
+        self.delfq_zero = pd.DataFrame(delfq_zero.reshape(snmodes*nmodes,))
+        self.delfq_plus = pd.DataFrame(delfq_plus.reshape(snmodes*nmodes,))
+        self.delfq_minus = pd.DataFrame(delfq_minus.reshape(snmodes*nmodes,))
+        self.kqijj = pd.DataFrame(kqijj)
+        # calculate anharmonicity
+        # TODO TODO TODO
+        # TODO: check the snmodes and nmodes indexing for kqijj
+        # TODO TODO TODO
+        # pretty sure that the rows are nmodes and the columns are snmodes
+        anharm = np.zeros(snmodes)
+        for i in range(snmodes):
+            temp1 = 0.0
+            for j in range(nmodes):
+                temp1 += kqijj[j][i]/(frequencies[j]*sel_rmass[j]*np.sqrt(rmass[i]))
+            print("temp1   {:+.8E}    dprop_dq    {:+.8f}    d2pdq2    {:+.8f}    freq    {:+.8f}    rmass    {:+.8f}".format(
+                                    temp1,dprop_dq[i], d2prop_dq2[i], (frequencies[i]),np.sqrt(sel_rmass[i])))
+            anharm[i] = -0.25*dprop_dq[i]/(sel_freq[i]**2*np.sqrt(sel_rmass[i]))*temp1
+        # calculate curvature of property
+        curva = np.zeros(snmodes)
+        for i in range(snmodes):
+            curva[i] = 0.25*d2prop_dq2[i]/(sel_freq[i]*sel_rmass[i])
+
+        # calculate ZPVC
+        zpvc = anharm+curva
+        self.ZPVC = pd.DataFrame.from_dict({'freq': sel_freq*Energy['Ha','cm^-1'], 'freqdx': select_freq, 'anharm': anharm, 'cruva': curva, 'zpvc': zpvc})
+
+        #print(pd.DataFrame(kqijj).to_string())
 
 #    def init_va(self, uni, delta=None):
 #        """
