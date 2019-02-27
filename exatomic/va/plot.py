@@ -8,27 +8,22 @@ import matplotlib.pyplot as plt
 from matplotlib.figure import Figure
 from matplotlib import ticker
 
-class PlotVROA:
-    @staticmethod
-    def _lorentz(freq, inten, x, fwhm):
-        y = np.zeros(len(x))
-        for i, (fdx, idx) in enumerate(zip(freq, inten)):
-            y += 1/(2*np.pi)*idx*fwhm/((fdx-x)**2+(0.5*fwhm)**2)
-        return y
+def _lorentz(freq, inten, x, fwhm):
+    y = np.zeros(len(x))
+    for i, (fdx, idx) in enumerate(zip(freq, inten)):
+        y += 1/(2*np.pi)*idx*fwhm/((fdx-x)**2+(0.5*fwhm)**2)
+    return y
 
-#    @staticmethod
-#    def _normalize
-        
-    def single_frequency(self, vroa, **kwargs):
-        #if not (isinstance(freq, list) or isinstance(freq, np.ndarray)):
-        #    raise TypeError("freq data input array must be a list or np.ndarray not {}".format(type(freq)))
-        #if not (isinstance(inten, list) or isinstance(inten, np.ndarray)):
-        #    raise TypeError("inten data input arrainten must be a list or np.ndarray not {}".format(tintenpe(inten)))
-        #if not hasattr(vroa, "calcfreq"):
-        #    raise AttributeError("Please compute calcfreq dataframe")
+class PlotVROA:
+    # variable to keep track of the figure count
+    # more important when using it outside of a jupyter notebook
+    _fig_count = 0
+    # list object that will hold all of the plots that are created
+    vroa = []
+    raman = []
+    def single_vroa(self, vroa, **kwargs):
         if not hasattr(vroa, "scatter"):
             raise AttributeError("Please compute scatter dataframe")
-
         forward = kwargs.pop('forw', False)
         backward = kwargs.pop('back', False)
         if not(forward or backward):
@@ -39,62 +34,58 @@ class PlotVROA:
             sct = 'forwardscatter'
         elif backward:
             sct = 'backscatter'
-        title = kwargs.pop('title', '')
-        xlabel = kwargs.pop('xlabel', '')
-        ylabel = kwargs.pop('ylabel', '')
-        marker = kwargs.pop('marker', 'o')
-        line = kwargs.pop('line', '-')
-        figsize = kwargs.pop('figsize', (8,8))
-        dpi = kwargs.pop('dpi', 50)
-        xlim = kwargs.pop('xrange', None)
-        ylim = kwargs.pop('yrange', None)
-        fwhm = kwargs.pop('fwhm', 15) #in cm^-1
-        res = kwargs.pop('res', 1) #in cm^-1
-        grid = kwargs.pop('grid', False)
-        legend = kwargs.pop('legend', True)
+        title     = kwargs.pop('title'    , '')
+        xlabel    = kwargs.pop('xlabel'   , '')
+        ylabel    = kwargs.pop('ylabel'   , '')
+        marker    = kwargs.pop('marker'   , '')
+        line      = kwargs.pop('line'     , '-')
+        figsize   = kwargs.pop('figsize'  , (8,8))
+        dpi       = kwargs.pop('dpi'      , 50)
+        xrange    = kwargs.pop('xrange'   , None)
+        yrange    = kwargs.pop('yrange'   , None)
+        fwhm      = kwargs.pop('fwhm'     , 15)
+        res       = kwargs.pop('res'      , 1)
+        grid      = kwargs.pop('grid'     , False)
+        legend    = kwargs.pop('legend'   , True)
         exc_units = kwargs.pop('exc_units', 'nm')
+        invert_x  = kwargs.pop('invert_x' , False
 
         if not isinstance(figsize, tuple):
             raise TypeError("figsize must be a tuple not {}".format(type(figsize)))
         grouped = vroa.scatter.groupby('exc_freq')
         exc_freq = vroa.scatter['exc_freq'].drop_duplicates().values
-        self.single_freq = []
         for idx, val in enumerate(exc_freq):
-            fig = plt.figure(idx, figsize=figsize, dpi=dpi)
+            fig = plt.figure(self._fig_count, figsize=figsize, dpi=dpi)
             inten = grouped.get_group(val)[sct].values
             freq = grouped.get_group(val)['freq'].values
             if xlim is None:
                 x = np.arange(freq[0]-fwhm*3, freq[-1]+fwhm*3, res)
             else:
-                x = np.arange(xlim[0], xlim[1], res)
-            y = self._lorentz(freq=freq, inten=inten, x=x, fwhm=fwhm)
+                x = np.arange(xrange[0], xrange[1], res)
+            y = _lorentz(freq=freq, inten=inten, x=x, fwhm=fwhm)
+            y_bar = _lorentz(freq=freq, inten=inten, x=freq, fwhm=fwhm)
 
             ax = fig.add_subplot(111)
             ax.plot(x,y,marker=marker,linestyle=line,
                     label=str(val)+' '+exc_units if val is not -1 else "unk")
+            ax.bar(freq, y_bar*0.35, width=abs(max(x)-min(x))*0.05)
             ax.set_xlabel(xlabel)
             ax.set_ylabel(ylabel)
             ax.set_title(title)
             if xlim is not None:
-                ax.set_xlim(xlim)
+                ax.set_xlim(xrange)
             if ylim is not None:
-                ax.set_ylim(ylim)
+                ax.set_ylim(yrange)
             if grid:
                 ax.grid(grid)
             if legend:
                 ax.legend()
-            self.single_freq.append(fig)
+            self._fig_count += 1
+            self.vroa.append(fig)
 
-    def multiple_frequency(self, vroa, **kwargs):
-        #if not (isinstance(freq, list) or isinstance(freq, np.ndarray)):
-        #    raise TypeError("freq data input array must be a list or np.ndarray not {}".format(type(freq)))
-        #if not (isinstance(inten, list) or isinstance(inten, np.ndarray)):
-        #    raise TypeError("inten data input arrainten must be a list or np.ndarray not {}".format(tintenpe(inten)))
-        #if not hasattr(vroa, "calcfreq"):
-        #    raise AttributeError("Please compute calcfreq dataframe")
+    def multiple_vroa(self, vroa, **kwargs):
         if not hasattr(vroa, "scatter"):
             raise AttributeError("Please compute scatter dataframe")
-
         forward = kwargs.pop('forw', False)
         backward = kwargs.pop('back', False)
         if not(forward or backward):
@@ -105,19 +96,19 @@ class PlotVROA:
             sct = 'forwardscatter'
         elif backward:
             sct = 'backscatter'
-        title = kwargs.pop('title', '')
-        xlabel = kwargs.pop('xlabel', '')
-        ylabel = kwargs.pop('ylabel', '')
-        marker = kwargs.pop('marker', 'o')
-        line = kwargs.pop('line', '-')
-        figsize = kwargs.pop('figsize', (8,8))
-        dpi = kwargs.pop('dpi', 50)
-        xlim = kwargs.pop('xrange', None)
-        ylim = kwargs.pop('yrange', None)
-        fwhm = kwargs.pop('fwhm', 15) #in cm^-1
-        res = kwargs.pop('res', 1) #in cm^-1
-        grid = kwargs.pop('grid', True)
-        legend = kwargs.pop('legend', True)
+        title     = kwargs.pop('title'    , '')
+        xlabel    = kwargs.pop('xlabel'   , '')
+        ylabel    = kwargs.pop('ylabel'   , '')
+        marker    = kwargs.pop('marker'   , '')
+        line      = kwargs.pop('line'     , '-')
+        figsize   = kwargs.pop('figsize'  , (8,8))
+        dpi       = kwargs.pop('dpi'      , 50)
+        xrange    = kwargs.pop('xrange'   , None)
+        yrange    = kwargs.pop('yrange'   , None)
+        fwhm      = kwargs.pop('fwhm'     , 15)
+        res       = kwargs.pop('res'      , 1)
+        grid      = kwargs.pop('grid'     , True)
+        legend    = kwargs.pop('legend'   , True)
         exc_units = kwargs.pop('exc_units', 'nm')
         normalize = kwargs.pop('normalize', 'all')
 
@@ -125,7 +116,7 @@ class PlotVROA:
             raise TypeError("figsize must be a tuple not {}".format(type(figsize)))
         grouped = vroa.scatter.groupby('exc_freq')
         exc_freq = vroa.scatter['exc_freq'].drop_duplicates().values
-        fig = plt.figure(figsize=figsize, dpi=dpi)
+        fig = plt.figure(self._fig_count, figsize=figsize, dpi=dpi)
         ax = fig.add_subplot(111)
         norm = []
         if normalize == 'max':
@@ -136,8 +127,8 @@ class PlotVROA:
             if xlim is None:
                 x = np.arange(freq[0]-fwhm*3, freq[-1]+fwhm*3, res)
             else:
-                x = np.arange(xlim[0], xlim[1], res)
-            y = self._lorentz(freq=freq, inten=inten, x=x, fwhm=fwhm)
+                x = np.arange(xrange[0], xrange[1], res)
+            y = _lorentz(freq=freq, inten=inten, x=x, fwhm=fwhm)
             if normalize == 'max':
                 y /= norm
             else:
@@ -151,9 +142,9 @@ class PlotVROA:
         ax.set_ylabel(ylabel)
         ax.set_title(title)
         if xlim is not None:
-            ax.set_xlim(xlim)
+            ax.set_xlim(xrange)
         if ylim is not None:
-            ax.set_ylim(ylim)
+            ax.set_ylim(yrange)
         if grid:
             ax.yaxis.grid(b=grid, which='major', color='k')
             ax.yaxis.grid(b=grid, which='minor', color='k', linestyle='-', linewidth=4.0)
@@ -167,8 +158,58 @@ class PlotVROA:
             norm = np.repeat(norm, len(majors))
         ax.yaxis.set_major_locator(ticker.FixedLocator(majors))
         ax.yaxis.set_minor_locator(ticker.FixedLocator(minors))
-        #ax.set_yticks(np.arange(len(exc_freq)*2, 2), norm)
         ax.set_yticklabels(['{:4.3E}'.format(n) for n in norm])
         fig.tight_layout()
-        self.multiple_freq = fig
+        self._fig_count += 1
+        self.vroa.append(fig)
+
+    def single_raman(self, raman, **kwargs):
+        if not hasattr(raman, "raman"):
+            raise AttributeError("Please compute raman dataframe")
+        title     = kwargs.pop('title'    , '')
+        xlabel    = kwargs.pop('xlabel'   , '')
+        ylabel    = kwargs.pop('ylabel'   , '')
+        marker    = kwargs.pop('marker'   , '')
+        line      = kwargs.pop('line'     , '-')
+        figsize   = kwargs.pop('figsize'  , (8,8))
+        dpi       = kwargs.pop('dpi'      , 50)
+        xrange    = kwargs.pop('xrange'   , None)
+        yrange    = kwargs.pop('yrange'   , None)
+        fwhm      = kwargs.pop('fwhm'     , 15)
+        res       = kwargs.pop('res'      , 1)
+        grid      = kwargs.pop('grid'     , False)
+        legend    = kwargs.pop('legend'   , True)
+        exc_units = kwargs.pop('exc_units', 'nm')
+        if not isinstance(figsize, tuple):
+            raise TypeError("figsize must be a tuple not {}".format(type(figsize)))
+        grouped = raman.raman.groupby('exc_freq')
+        exc_freq = raman.raman['exc_freq'].drop_duplicates().values
+        for idx, val in enumerate(exc_freq):
+            fig = plt.figure(self._fig_count, figsize=figsize, dpi=dpi)
+            inten = grouped.get_group(val)['raman_int'].values
+            freq = grouped.get_group(val)['freq'].values
+            if xlim is None:
+                x = np.arange(freq[0]-fwhm*3, freq[-1]+fwhm*3, res)
+            else:
+                x = np.arange(xrange[0], xrange[1], res)
+            y = _lorentz(freq=freq, inten=inten, x=x, fwhm=fwhm)
+            y_bar = _lorentz(freq=freq, inten=inten, x=freq, fwhm=fwhm)
+
+            ax = fig.add_subplot(111)
+            ax.plot(x,y,marker=marker,linestyle=line,
+                    label=str(val)+' '+exc_units if val is not -1 else "unk")
+            ax.bar(freq, y_bar*0.35, width=fwhm*0.5)
+            ax.set_xlabel(xlabel)
+            ax.set_ylabel(ylabel)
+            ax.set_title(title)
+            if xlim is not None:
+                ax.set_xlim(xrange)
+            if ylim is not None:
+                ax.set_ylim(yrange)
+            if grid:
+                ax.grid(grid)
+            if legend:
+                ax.legend()
+            self._fig_count += 1
+            self.raman.append(fig)
 
