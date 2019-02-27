@@ -134,11 +134,11 @@ class GenInput(metaclass = GenMeta):
         eqcoord = atom[['x', 'y', 'z']].values
         symbols = atom['symbol'].values
         znums = atom['Zeff'].values
-        if fdx.any() == -1:
+        if -1 in fdx:
             freq_g = freq.copy()
         else:
             freq_g = freq.groupby('freqdx').filter(lambda x: fdx in
-                                                    x['freqdx'].drop_duplicates().values).copy()
+                                                    x['freqdx'].drop_duplicates().values+1).copy()
         disp = freq_g[['dx','dy','dz']].values
         modes = freq_g['frequency'].drop_duplicates().values
         nat = len(eqcoord)
@@ -149,11 +149,11 @@ class GenInput(metaclass = GenMeta):
         eqcoord[abs(eqcoord) < self._tol] = 0.0
         # get delta values for wanted frequencies
         try:
-            if fdx.any() == -1:
+            if -1 in fdx:
                 delta = self.delta['delta'].values
             elif -1 not in fdx:
                 delta = self.delta.groupby('freqdx').filter(lambda x:
-                                      fdx in x['freqdx'].drop_duplicates().values)['delta'].values
+                                      fdx in x['freqdx'].drop_duplicates().values+1)['delta'].values
             else:
                 raise TypeError("fdx must be a list of integers or a single integer")
             #if len(delta) != tnmodes:
@@ -410,9 +410,10 @@ class GenInput(metaclass = GenMeta):
         if not hasattr(uni, 'frequency'):
             raise AttributeError("Frequency dataframe cannot be found in universe")
         delta_type = kwargs.pop("delta_type", 0)
-        fdx = kwargs.pop("fdx", 0)
+        fdx = kwargs.pop("fdx", -1)
         disp = kwargs.pop("disp", None)
-        fdx = fdx - 1
+        if isinstance(fdx, int):
+            fdx = [fdx]
         freq = uni.frequency.copy()
         atom = uni.atom.copy()
         self.delta = gen_delta(freq, delta_type, disp)
