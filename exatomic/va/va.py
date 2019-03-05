@@ -189,9 +189,9 @@ class VA(metaclass=VAMeta):
         # TODO: check stability of using this parameter
         snmodes = len(select_freq)
         if len(redmass) > snmodes:
-            redmass_sel = redmass[select_freq] * Mass['u','au_mass']
+            redmass_sel = redmass[select_freq]
         else:
-            redmass_sel = redmass * Mass['u','au_mass']
+            redmass_sel = redmass
         if len(delta) > snmodes:
             delta_sel = delta[select_freq]
         else:
@@ -261,8 +261,9 @@ class VA(metaclass=VAMeta):
         C_au = C*Length['m', 'au']/Time['s','au']
         # a conversion factor for the beta_g beta_A and alpha_g tensor invariants
         # TODO: make the conversion for the alha_squared and beta_alpha invariants
-        au2angs = Length['au', 'Angstrom']**4
+        au2angs = Length['au', 'Angstrom']
         #conver = 1/C_au
+        print(Mass['u','au_mass'],C_au,au2angs)
         # get the square roots of the reduced masses
         rmass = np.sqrt(uni.frequency_ext['r_mass'].values)
         # generate a Levi Civita 3x3x3 tensor
@@ -369,7 +370,7 @@ class VA(metaclass=VAMeta):
             # this comes from the init_va code
             try:
                 grad_derivs = self.get_pos_neg_gradients(grad, uni.frequency.copy())
-                frequencies = self.calculate_frequencies(*grad_derivs, sel_rmass**2, select_freq, sel_delta)
+                frequencies = self.calculate_frequencies(*grad_derivs, sel_rmass**2*Mass['u','au_mass'], select_freq, sel_delta)
             except KeyError:
                 raise KeyError("Something went wrong check that self.calcfreq has column names "+ \
                                "calc_freq and exc_freq")
@@ -404,8 +405,8 @@ class VA(metaclass=VAMeta):
             # generate properties as shown on equations 5-9 in paper
             # J. Chem. Phys. 2007, 127, 134101
             alpha_squared, beta_alpha, beta_g, beta_A, alpha_g = _make_derivatives(dalpha_dq,
-                                  dg_dq, dA_dq, omega, epsilon, snmodes, au2angs, C_au, assume_real,
-                                  no_conj)
+                                  dg_dq, dA_dq, omega, epsilon, snmodes, au2angs**4, C_au,
+                                  assume_real, no_conj)
 
             #********************************DEBUG**************************************************#
             #self.alpha_squared = pd.Series(alpha_squared*Length['au', 'Angstrom']**4)
@@ -426,13 +427,13 @@ class VA(metaclass=VAMeta):
             #backscat_vroa *= 1e4
             # TODO: check the units of this because we convert the invariants from
             #       au to Angstrom and here we convert again from au to Angstrom
-            backscat_vroa *= Length['au', 'Angstrom']**4*Mass['u', 'au_mass']
+            #backscat_vroa *= Length['au', 'Angstrom']**4*Mass['u', 'au_mass']
             #backscat_vroa *= Mass['u', 'au_mass']
             forwscat_vroa = _forwscat(C_au, alpha_g, beta_g, beta_A)
             #forwscat_vroa *= 1e4
             # TODO: check the units of this because we convert the invariants from
             #       au to Angstrom and here we convert again from au to Angstrom
-            forwscat_vroa *=Length['au', 'Angstrom']**4*Mass['u', 'au_mass']
+            #forwscat_vroa *=Length['au', 'Angstrom']**4*Mass['u', 'au_mass']
             # we set this just so it is easier to view the data
             pd.options.display.float_format = '{:.6f}'.format
             # generate dataframe with all pertinent data for vroa scatter

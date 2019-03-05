@@ -11,14 +11,15 @@ import numpy as np
 
 @jit(nopython=True)
 def _backscat(C_au, beta_g, beta_A):
-    return 4./C_au * (24 * beta_g + 8 * beta_A)
+    return 4.* (24 * beta_g + 8 * beta_A)
 
 @jit(nopython=True)
 def _forwscat(C_au, alpha_g, beta_g, beta_A):
-    return 4./C_au * (180 * alpha_g + 4 * beta_g - 4 * beta_A)
+    return 4.* (180 * alpha_g + 4 * beta_g - 4 * beta_A)
 
 @jit(nopython=True, parallel=False, cache=True)
-def _make_derivatives(dalpha_dq, dg_dq, dA_dq, omega, epsilon, nmodes, au2angs, C_au, assume_real, no_conj):
+def _make_derivatives(dalpha_dq, dg_dq, dA_dq, omega, epsilon, nmodes, au2angs, C_au,
+                      assume_real, no_conj):
     alpha_squared = np.zeros(nmodes,dtype=np.complex128)
     for fdx in prange(nmodes):
         for al in prange(3):
@@ -78,8 +79,8 @@ def _make_derivatives(dalpha_dq, dg_dq, dA_dq, omega, epsilon, nmodes, au2angs, 
                             beta_A[fdx] += 0.5*omega*dalpha_dq[fdx][al*3+be]* \
                                            epsilon[al][ga*3+de]*np.conj(dA_dq[fdx][ga*9+de*3+be])
 
-    beta_g = np.real(beta_g).astype(np.float64)*au2angs*C_au
-    beta_A = np.real(beta_A).astype(np.float64)*au2angs*C_au
+    beta_g = np.real(beta_g).astype(np.float64)*au2angs/C_au
+    beta_A = np.real(beta_A).astype(np.float64)*au2angs/C_au
 
     alpha_g = np.zeros(nmodes, dtype=np.complex128)
     for fdx in prange(nmodes):
@@ -89,7 +90,7 @@ def _make_derivatives(dalpha_dq, dg_dq, dA_dq, omega, epsilon, nmodes, au2angs, 
                 #alpha_g[fdx] += np.real(dalpha_dq[fdx][al*3+al])*np.real(dg_dq[fdx][be*3+be])/3.
                 # This equation matches what is on the listed paper in the docs (equation 9)
                 alpha_g[fdx] += dalpha_dq[fdx][al*3+al]*np.conj(dg_dq[fdx][be*3+be])/9.
-    alpha_g = np.real(alpha_g).astype(np.float64)*au2angs*C_au
+    alpha_g = np.real(alpha_g).astype(np.float64)*au2angs/C_au
     return alpha_squared, beta_alpha, beta_g, beta_A, alpha_g
 
 @jit(nopython=True, parallel=False, cache=True)

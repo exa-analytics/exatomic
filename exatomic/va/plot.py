@@ -48,7 +48,7 @@ class PlotVROA:
         grid      = kwargs.pop('grid'     , False)
         legend    = kwargs.pop('legend'   , True)
         exc_units = kwargs.pop('exc_units', 'nm')
-        invert_x  = kwargs.pop('invert_x' , False
+        invert_x  = kwargs.pop('invert_x' , False)
 
         if not isinstance(figsize, tuple):
             raise TypeError("figsize must be a tuple not {}".format(type(figsize)))
@@ -58,7 +58,7 @@ class PlotVROA:
             fig = plt.figure(self._fig_count, figsize=figsize, dpi=dpi)
             inten = grouped.get_group(val)[sct].values
             freq = grouped.get_group(val)['freq'].values
-            if xlim is None:
+            if xrange is None:
                 x = np.arange(freq[0]-fwhm*3, freq[-1]+fwhm*3, res)
             else:
                 x = np.arange(xrange[0], xrange[1], res)
@@ -68,18 +68,19 @@ class PlotVROA:
             ax = fig.add_subplot(111)
             ax.plot(x,y,marker=marker,linestyle=line,
                     label=str(val)+' '+exc_units if val is not -1 else "unk")
-            ax.bar(freq, y_bar*0.35, width=abs(max(x)-min(x))*0.05)
+            ax.bar(freq, y_bar*0.5, width=fwhm*0.35)
             ax.set_xlabel(xlabel)
             ax.set_ylabel(ylabel)
             ax.set_title(title)
-            if xlim is not None:
+            if xrange is not None:
                 ax.set_xlim(xrange)
-            if ylim is not None:
+            if yrange is not None:
                 ax.set_ylim(yrange)
             if grid:
                 ax.grid(grid)
             if legend:
                 ax.legend()
+            fig.tight_layout()
             self._fig_count += 1
             self.vroa.append(fig)
 
@@ -124,7 +125,7 @@ class PlotVROA:
         for idx, val in enumerate(exc_freq):
             inten = grouped.get_group(val)[sct].values
             freq = grouped.get_group(val)['freq'].values
-            if xlim is None:
+            if xrange is None:
                 x = np.arange(freq[0]-fwhm*3, freq[-1]+fwhm*3, res)
             else:
                 x = np.arange(xrange[0], xrange[1], res)
@@ -141,9 +142,9 @@ class PlotVROA:
         ax.set_xlabel(xlabel)
         ax.set_ylabel(ylabel)
         ax.set_title(title)
-        if xlim is not None:
+        if xrange is not None:
             ax.set_xlim(xrange)
-        if ylim is not None:
+        if yrange is not None:
             ax.set_ylim(yrange)
         if grid:
             ax.yaxis.grid(b=grid, which='major', color='k')
@@ -188,7 +189,7 @@ class PlotVROA:
             fig = plt.figure(self._fig_count, figsize=figsize, dpi=dpi)
             inten = grouped.get_group(val)['raman_int'].values
             freq = grouped.get_group(val)['freq'].values
-            if xlim is None:
+            if xrange is None:
                 x = np.arange(freq[0]-fwhm*3, freq[-1]+fwhm*3, res)
             else:
                 x = np.arange(xrange[0], xrange[1], res)
@@ -202,9 +203,9 @@ class PlotVROA:
             ax.set_xlabel(xlabel)
             ax.set_ylabel(ylabel)
             ax.set_title(title)
-            if xlim is not None:
+            if xrange is not None:
                 ax.set_xlim(xrange)
-            if ylim is not None:
+            if yrange is not None:
                 ax.set_ylim(yrange)
             if grid:
                 ax.grid(grid)
