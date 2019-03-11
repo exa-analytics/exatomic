@@ -15,11 +15,6 @@ matrix:
           python: 3.6
           env: PYTHONVER=3.6
 
-#        - os: osx
-#          language: generic
-#          env: PYTHONVER=3.6
-
-# There are a lot of requirements here because we do coverage, testing, reporting, doc building
 install:
     - if [[ $TRAVIS_OS_NAME == "osx" ]]; then
           wget https://repo.continuum.io/miniconda/Miniconda3-latest-MacOSX-x86_64.sh -O miniconda.sh;
@@ -28,17 +23,18 @@ install:
       fi;
       echo "DONE"
     - bash miniconda.sh -b -p $HOME/miniconda
+#   - export NUMBA_DISABLE_JIT=1
     - export PATH="$HOME/miniconda/bin:$PATH"
     - conda config --set always_yes yes --set changeps1 no
-    - conda update -q --all
-    - conda create -n test python=$PYTHONVER
+    - conda update -q -y --all
+    - conda create -y -n test python=$PYTHONVER
     - source activate test
     - conda update -q -y --all
-    - conda install -q -c conda-forge six numpy pandas pytables numba sympy
-    - conda install -q -c conda-forge sphinx sphinx_rtd_theme ply seaborn
-    - conda install -c conda-forge pandoc pypandoc nbsphinx ipython
-    - conda install -q -c conda-forge coveralls coverage pytest pytest-cov
-    - conda install -q -c conda-forge numexpr nodejs ipywidgets
+    - conda install -q -y -c conda-forge six numpy pandas pytables numba
+    - conda install -q -y -c conda-forge sphinx sphinx_rtd_theme ply sympy
+    - conda install -q -y -c conda-forge pandoc pypandoc nbsphinx ipython seaborn
+    - conda install -q -y -c conda-forge coveralls coverage pytest pytest-cov
+    - conda install -q -y -c conda-forge numexpr nodejs ipywidgets
     - pip install travis-sphinx codacy-coverage
     - git clone https://github.com/exa-analytics/exa.git
     - pip install -e exa/
@@ -49,6 +45,8 @@ script:
     - pytest --cov
     - if [[ $TRAVIS_OS_NAME == "linux" ]] && [[ $PYTHONVER == 3.6 ]]; then
           coverage run --source=exatomic setup.py test;
+          rm -rf docs/source/*.txt;
+          SPHINX_APIDOC_OPTIONS=members,undoc-members,show-inheritance sphinx-apidoc -eM -s txt -o docs/source/ exatomic *test*;
           travis-sphinx build;
       fi
 
