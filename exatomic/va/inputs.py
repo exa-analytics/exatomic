@@ -131,8 +131,11 @@ class GenInput(metaclass = GenMeta):
                                selected normal modes
         """
         # get needed data from dataframes
+        # atom coordinates should be in Bohr
         eqcoord = atom[['x', 'y', 'z']].values
         symbols = atom['symbol'].values
+        # TODO: this might throw a KeyError
+        #       check that the writting of the Fchk is the same as the Output
         znums = atom['Zeff'].values
         if -1 in fdx:
             freq_g = freq.copy()
@@ -183,6 +186,7 @@ class GenInput(metaclass = GenMeta):
         znums = np.tile(znums, 2*nmodes+1)
         frame = np.zeros(len(znums)).astype(np.int64)
         # create dataframe
+        # coordinates are in units of Bohr
         df = pd.DataFrame(full, columns=['x', 'y', 'z'])
         df['freqdx'] = freqdx
         df['Z'] = znums

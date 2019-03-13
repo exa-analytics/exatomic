@@ -495,16 +495,16 @@ class VA(metaclass=VAMeta):
         prop_zero = prop_grouped.get_group(0)
         prop_zero.drop(columns=['file'],inplace=True)
         prop_zero = np.repeat(prop_zero.values, snmodes)*conver
-        print(prop_zero.shape)
+        #print(prop_zero.shape)
         prop_plus = prop_grouped.filter(lambda x: x['file'].drop_duplicates().values in range(1,nmodes+1))
         prop_plus.drop(columns=['file'], inplace=True)
         prop_plus = prop_plus.values.reshape(snmodes,)*conver
-        print(prop_plus.shape)
+        #print(prop_plus.shape)
         prop_minus= prop_grouped.filter(lambda x: x['file'].drop_duplicates().values in
                                                                               range(nmodes+1, 2*nmodes+1))
         prop_minus.drop(columns=['file'], inplace=True)
         prop_minus = prop_minus.values.reshape(snmodes,)*conver
-        print(prop_minus.shape)
+        #print(prop_minus.shape)
         dprop_dq = np.divide(prop_plus - prop_minus, 2*sel_delta)
         d2prop_dq2 = np.divide(prop_plus - 2*prop_zero + prop_minus, np.multiply(sel_delta, sel_delta))
         self.prop_split = pd.DataFrame.from_dict({"prop_zero": prop_zero, "prop_plus": prop_plus, "prop_minus": prop_minus})
