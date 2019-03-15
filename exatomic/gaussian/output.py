@@ -537,6 +537,56 @@ class Output(six.with_metaclass(GauMeta, Editor)):
 #        # Frame not really implemented here either
 #        frequency['frame'] = 0
 #        self.frequency = frequency
+    def parse_shielding_tensor(self):
+        # nmr shielding regex
+        # this might lead to wrong behavior so it may need to change
+        _renmr = "SCF GIAO Magnetic shielding tensor (ppm):"
+        _reiso = "Isotropic"
+        found = self.find(_renmr)
+        if not found:
+            return
+        else:
+            found = self.find(_reiso)
+        # base properties
+        atom = self.atom['set'].drop_duplicates().values
+        nat = len(atom)
+        symbols = self.atom.groupby('frame').get_group(0)['symbol']
+        #print(found)
+        df = []
+        for f in found:
+            # get line value +1 for the tensors
+            start = f[0]+1
+            # set end value
+            end = start + 3
+            split_str = f[1].strip().split()
+            # get the isotropic value
+            iso = float(split_str[4])
+            # get the anisotropic value
+            aniso = float(split_str[-1])
+            #print(iso, aniso)
+            tensor_elem = []
+            for idx in range(start, end):
+                full_str = self[idx]
+                split_str = full_str.strip().split()
+                # get the tensor elements
+                tensor_elem.append(float(split_str[1]))
+                tensor_elem.append(float(split_str[3]))
+                tensor_elem.append(float(split_str[-1]))
+            # create a temporary dataframe
+            tmp = pd.DataFrame(np.array(tensor_elem).reshape(1,9),
+                               columns=['xx','xy','xz','yx','yy','yz','zx','zy','zz'])
+            tmp['isotropic'] = iso
+            tmp['anisotropic'] = aniso
+            # append to array of df's
+            df.append(tmp)
+        # create dataframe
+        shielding = pd.concat(df, ignore_index=True)
+        shielding['atom'] = atom
+        shielding['symbol'] = symbols
+        shielding['label'] = 'nmr shielding'
+        shielding['frame'] = np.tile(0, nat)
+        # write to class attribute
+        self.shielding_tensor = shielding
 
     # Below are triangular matrices -- One electron integrals
 
