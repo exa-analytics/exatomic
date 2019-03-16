@@ -79,6 +79,10 @@ class TestFchk(TestCase):
         self.assertEqual(self.mam3.gradient.shape[0], 10)
         self.assertTrue(np.all(pd.notnull(self.mam3.gradient)))
 
+    def test_shielding_tensor(self):
+        # TODO: add this thing
+        pass
+
     def test_to_universe(self):
         """Test the to_universe method."""
         mam1 = self.mam1.to_universe(ignore=True)
@@ -201,6 +205,10 @@ class TestOutput(TestCase):
         self.h2o2_tddft.parse_excitation()
         self.assertEqual(self.h2o2_tddft.excitation.shape[0], 32)
         self.assertTrue(np.all(pd.notnull(self.h2o2_tddft.excitation)))
+
+    def test_shielding_tensor(self):
+        # TODO: add this thing
+        pass
 
     def test_to_universe(self):
         """Test the to_universe method."""
