@@ -16,6 +16,8 @@ class TestNWChemOutput(TestCase):
     def setUp(self):
         self.mam1 = Output(resource('nw-ch3nh2-631g.out'))
         self.mam2 = Output(resource('nw-ch3nh2-augccpvdz.out'))
+        self.nap_roa = Output(resource('nw-naproxen-def2tzvp-roa.out'))
+        self.meth_roa = Output(resource('nw-methyloxirane-def2tzvp-roa.out'))
 
     def test_parse_atom(self):
         self.mam1.parse_atom()
@@ -53,6 +55,18 @@ class TestNWChemOutput(TestCase):
         self.mam2.parse_momatrix()
         self.assertEqual(self.mam1.momatrix.shape[0], 784)
         self.assertEqual(self.mam2.momatrix.shape[0], 8281)
+
+    def test_parse_roa(self):
+        self.nap_roa.parse_roa()
+        self.assertEqual(self.nap_roa.roa.shape[0], 10)
+        self.meth_roa.parse_roa()
+        self.assertEqual(self.meth_roa.roa.shape[0], 10)
+
+    def test_parse_gradient(self):
+        self.nap_roa.parse_gradient()
+        self.assertEqual(self.nap_roa.gradient.shape[0], 31)
+        self.meth_roa.parse_gradient()
+        self.assertEqual(self.meth_roa.gradient.shape[0], 10)
 
     def test_to_universe(self):
         self.mam1.to_universe()
