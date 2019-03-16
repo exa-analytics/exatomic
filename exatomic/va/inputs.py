@@ -241,8 +241,8 @@ class GenInput(metaclass = GenMeta):
         Method to write the displaced coordinates as an input for the quantum code program
         of choice. Currently only the following input generators have been tested with this
         generalized input generator:
-            - :class:`exatomic.nwchem.Input.from_universe`
-            - :class:`exatomic.gaussian.Input.from_universe`
+        - :class:`exatomic.nwchem.Input.from_universe`
+        - :class:`exatomic.gaussian.Input.from_universe`
         More to come as the need is met.
         This code will use the software input and iterate over all available frequency
         indexes sending the data to the specified input generator. We have designed the code
@@ -255,12 +255,12 @@ class GenInput(metaclass = GenMeta):
             applicable to is if the user must use a different functional/basis for one of the
             calculations.
             The format is:
-                - {[keys of specified software]: [values]}
+            - {[keys of specified software]: [values]}
             As an example this would be the comm input for a SP calculation at the
             B3LYP/6-31G* level of theory with NProc=4 and Chk=test.chk for
             exatomic.gaussian.Input.from_universe
-                - {'link0': {'NProc': 4, 'Chk': 'test.chk'}, 'route': '#P B3LYP/6-31G* SP',
-                   'writedir': dir_path, 'name': 'filename'}
+            - {'link0': {'NProc': 4, 'Chk': 'test.chk'}, 'route': '#P B3LYP/6-31G* SP',
+            'writedir': dir_path, 'name': 'filename'}
             For questions regarding the inputs needed for each input generator please refer
             to the docs of the specific input generator.
 
@@ -335,14 +335,14 @@ class GenInput(metaclass = GenMeta):
                 f.write("{}\n".format(item))
 
     def to_va(self, uni, path):
-        """
-        Simple script to be able to use the vibaverage.exe program to calculate the needed
-        parameters (temporary).
+        #"""
+        #Simple script to be able to use the vibaverage.exe program to calculate the needed
+        #parameters (temporary).
 
-        Args:
-            uni (:class:`~exatomic.Universe`): Universe object containg pertinent data
-            path (str): path to where the *.dat files will be written to
-        """
+        #Args:
+        #    uni (:class:`~exatomic.Universe`): Universe object containg pertinent data
+        #    path (str): path to where the dat files will be written to
+        #"""
         freq = uni.frequency.copy()
         atom = uni.atom.copy()
         freq_ext = uni.frequency_ext.copy()
@@ -387,18 +387,18 @@ class GenInput(metaclass = GenMeta):
                     f.write("{} {}\t{}\n".format(idx+1, fdx+1, disp[fdx*15+idx]))
 
     def write_grad_prop(self, path, grad, prop):
-        """
-        Simple function to write the gradient and property datafiles to the format needed for
-        vibaverage.exe (temporary).
+        #"""
+        #Simple function to write the gradient and property datafiles to the format needed for
+        #vibaverage.exe (temporary).
 
-        The gradient and property dataframes must be from the single point calculations. We
-        assume this by not grouping by the frame column.
+        #The gradient and property dataframes must be from the single point calculations. We
+        #assume this by not grouping by the frame column.
 
-        Args:
-            path (str): path to where the *.dat files will be written
-            grad (np.ndarray): 1D array of values from grad[['fx', 'fy', 'fz']].stack().values
-            prop (np.ndarray): 1D array of values from prop[property].values
-        """
+        #Args:
+        #    path (str): path to where the *.dat files will be written
+        #    grad (np.ndarray): 1D array of values from grad[['fx', 'fy', 'fz']].stack().values
+        #    prop (np.ndarray): 1D array of values from prop[property].values
+        #"""
         # construct gradient data file
         fn = "grad.dat"
         if isinstance(grad[0], np.ndarray):

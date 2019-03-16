@@ -120,16 +120,13 @@ class VA(metaclass=VAMeta):
         by multiplying them by the frequency normal mode displacement values.
 
         Args:
-            grad (:class:`exatomic.gradient.Gradient`): DataFrame containing all of the gradient
-                                                        data
+            grad (:class:`exatomic.gradient.Gradient`): DataFrame containing all of the gradient data
             freq (:class:`exatomic.atom.Frquency`): DataFrame containing all of the frequency data
 
         Returns:
             delfq_zero (pandas.DataFrame): Normal mode converted gradients of equilibrium structure
-            delfq_plus (pandas.DataFrame): Normal mode converted gradients of positive displaced
-                                           structure
-            delfq_minus (pandas.DataFrame): Normal mode converted gradients of negative displaced
-                                            structure
+            delfq_plus (pandas.DataFrame): Normal mode converted gradients of positive displaced structure
+            delfq_minus (pandas.DataFrame): Normal mode converted gradients of negative displaced structure
         '''
         grouped = grad.groupby('file')
         # generate delta dataframe
