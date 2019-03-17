@@ -134,9 +134,12 @@ class GenInput(metaclass = GenMeta):
         # atom coordinates should be in Bohr
         eqcoord = atom[['x', 'y', 'z']].values
         symbols = atom['symbol'].values
-        # TODO: this might throw a KeyError
-        #       check that the writting of the Fchk is the same as the Output
-        znums = atom['Zeff'].values
+        # gaussian Fchk class uses Zeff where the Output class uses Z
+        # add try block to account for the possible exception
+        try:
+            znums = atom['Zeff'].values
+        except KeyError:
+            znums = atom['Z'].values
         if -1 in fdx:
             freq_g = freq.copy()
         else:
