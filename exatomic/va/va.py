@@ -534,7 +534,8 @@ class VA(metaclass=VAMeta):
 
         # calculate ZPVC
         zpvc = anharm+curva
-        self.ZPVC = pd.DataFrame.from_dict({'freq': sel_freq*Energy['Ha','cm^-1'], 'freqdx': select_freq, 'anharm': anharm, 'cruva': curva, 'zpvc': zpvc})
+        self.ZPVC = pd.DataFrame.from_dict({'freq': sel_freq*Energy['Ha','cm^-1'], 'freqdx': select_freq,
+                                            'anharm': anharm, 'cruva': curva, 'zpvc': zpvc})
 
         #print(pd.DataFrame(kqijj).to_string())
 
