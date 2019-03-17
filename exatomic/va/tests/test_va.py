@@ -82,7 +82,7 @@ class TestVROA(TestCase):
                                 4.55091201e+02, 5.14500000e+02]])
         scatter_data = scatter_data.T
         raman_data = raman_data.T
-
+        print(va_corr.scatter.to_string())
         # test all columns of the respective dataframe to get a better sense of what is broken
         self.assertTrue(np.allclose(va_corr.scatter['freq'].values,           scatter_data[0]))
         self.assertTrue(np.allclose(va_corr.scatter['freqdx'].values,         scatter_data[1]))
