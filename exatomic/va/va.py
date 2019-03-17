@@ -260,7 +260,6 @@ class VA(metaclass=VAMeta):
         # TODO: make the conversion for the alha_squared and beta_alpha invariants
         au2angs = Length['au', 'Angstrom']
         #conver = 1/C_au
-        print(Mass['u','au_mass'],C_au,au2angs)
         # get the square roots of the reduced masses
         rmass = np.sqrt(uni.frequency_ext['r_mass'].values)
         # generate a Levi Civita 3x3x3 tensor
@@ -438,7 +437,8 @@ class VA(metaclass=VAMeta):
                                         "beta_A*1e6": beta_A*1e6, "alpha_g*1e6": alpha_g*1e6,
                                         "backscatter": backscat_vroa, "forwardscatter":forwscat_vroa})
             df['exc_freq'] = np.repeat(val, len(df))
-            rdf = pd.DataFrame.from_dict({"freq": frequencies, "alpha_squared": alpha_squared,
+            rdf = pd.DataFrame.from_dict({"freq": frequencies, "freqdx": select_freq,
+                                          "alpha_squared": alpha_squared,
                                           "beta_alpha": beta_alpha, "raman_int": raman_int})
             rdf['exc_freq'] = np.repeat(val, len(rdf))
             scatter.append(df)
