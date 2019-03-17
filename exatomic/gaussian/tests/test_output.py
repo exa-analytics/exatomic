@@ -15,6 +15,8 @@ class TestFchk(TestCase):
         self.mam1 = Fchk(resource('g09-ch3nh2-631g.fchk'))
         self.mam2 = Fchk(resource('g09-ch3nh2-augccpvdz.fchk'))
         self.mam3 = Fchk(resource('g16-methyloxirane-def2tzvp-freq.fchk'))
+        self.mam4 = Fchk(resource('g16-h2o2-def2tzvp-freq.fchk'))
+        self.mam5 = Fchk(resource('g16-naproxen-def2tzvp-freq.fchk'))
 
     def test_parse_atom(self):
         self.mam1.parse_atom()
@@ -68,16 +70,34 @@ class TestFchk(TestCase):
         self.mam3.parse_frequency()
         self.assertEqual(self.mam3.frequency.shape[0], 240)
         self.assertTrue(np.all(pd.notnull(self.mam3.frequency)))
+        self.mam4.parse_frequency()
+        self.assertEqual(self.mam4.frequency.shape[0], 24)
+        self.assertTrue(np.all(pd.notnull(self.mam4.frequency)))
+        self.mam5.parse_frequency()
+        self.assertEqual(self.mam5.frequency.shape[0], 2697)
+        self.assertTrue(np.all(pd.notnull(self.mam5.frequency)))
 
     def test_parse_frequency_ext(self):
         self.mam3.parse_frequency_ext()
         self.assertEqual(self.mam3.frequency_ext.shape[0], 24)
         self.assertTrue(np.all(pd.notnull(self.mam3.frequency_ext)))
+        self.mam4.parse_frequency_ext()
+        self.assertEqual(self.mam4.frequency_ext.shape[0], 6)
+        self.assertTrue(np.all(pd.notnull(self.mam4.frequency_ext)))
+        self.mam5.parse_frequency_ext()
+        self.assertEqual(self.mam5.frequency_ext.shape[0], 87)
+        self.assertTrue(np.all(pd.notnull(self.mam5.frequency_ext)))
 
     def test_parse_gradient(self):
         self.mam3.parse_gradient()
         self.assertEqual(self.mam3.gradient.shape[0], 10)
         self.assertTrue(np.all(pd.notnull(self.mam3.gradient)))
+        self.mam4.parse_gradient()
+        self.assertEqual(self.mam4.gradient.shape[0], 4)
+        self.assertTrue(np.all(pd.notnull(self.mam4.gradient)))
+        self.mam5.parse_gradient()
+        self.assertEqual(self.mam5.gradient.shape[0], 31)
+        self.assertTrue(np.all(pd.notnull(self.mam5.gradient)))
 
     def test_shielding_tensor(self):
         # TODO: add this thing
@@ -114,6 +134,8 @@ class TestOutput(TestCase):
         self.meth_freq = Output(resource('g16-methyloxirane-def2tzvp-freq.out'))
         self.nap_tddft = Output(resource('g16-naproxen-def2tzvp-tddft.out'))
         self.h2o2_tddft = Output(resource('g16-h2o2-def2tzvp-tddft.out'))
+        self.nap_opt = Output(resource('g16-naproxen-def2tzvp-opt.out'))
+        self.nap_freq = Output(resource('g16-naproxen-def2tzvp-freq.out'))
 
     def test_parse_atom(self):
         self.uo2.parse_atom()
@@ -128,6 +150,9 @@ class TestOutput(TestCase):
         self.meth_opt.parse_atom()
         self.assertEqual(self.meth_opt.atom.shape[0], 120)
         self.assertTrue(np.all(pd.notnull(self.meth_opt.atom)))
+        self.nap_opt.parse_atom()
+        self.assertEqual(self.nap_opt.atom.shape[0], 806)
+        self.assertTrue(np.all(pd.notnull(self.nap_opt.atom)))
 
     def test_parse_basis_set(self):
         self.uo2.parse_basis_set()
@@ -192,11 +217,17 @@ class TestOutput(TestCase):
         self.meth_opt.parse_frame()
         self.assertEqual(self.meth_opt.frame.shape[0], 12)
         self.assertTrue(np.all(pd.notnull(self.meth_opt.frame)))
+        self.nap_opt.parse_frame()
+        self.assertEqual(self.nap_opt.frame.shape[0], 26)
+        self.assertTrue(np.all(pd.notnull(self.nap_opt.frame)))
 
     def test_parse_frequency(self):
         self.meth_freq.parse_frequency()
         self.assertEqual(self.meth_freq.frequency.shape[0], 240)
         self.assertTrue(np.all(pd.notnull(self.meth_freq.frequency)))
+        self.nap_freq.parse_frequency()
+        self.assertEqual(self.nap_freq.frequency.shape[0], 2697)
+        self.assertTrue(np.all(pd.notnull(self.nap_freq.frequency)))
 
     def test_parse_excitation(self):
         self.nap_tddft.parse_excitation()
