@@ -451,20 +451,53 @@ class VA(metaclass=VAMeta):
     def zpvc(self, uni, delta):
         if not hasattr(self, 'gradient'):
             raise AttributeError("Please set gradient attribute.")
-        #if not hasattr(self, 'property'):
-        #    raise AttributeError("Please set property attribute.")
+        if not hasattr(self, 'property'):
+            raise AttributeError("Please set property attribute.")
         if not hasattr(uni, 'frequency_ext'):
             raise AttributeError("Please compute frequency_ext dataframe.")
         if not hasattr(uni, 'frequency'):
             raise AttributeError("Please compute frequency dataframe.")
 
+        # get the total number of normal modes
         nmodes = len(uni.frequency_ext.index.values)
+        # check for any missing files and remove the respective counterpart
         grad = self._check_file_continuity(self.gradient, 'gradient', nmodes)
-        #prop = self._check_file_continuity(self.property, 'property', nmodes)
+        prop = self._check_file_continuity(self.property, 'property', nmodes)
+        # check that the equlibrium coordinates are included
+        try:
+            tmp = grad.groupby('file').get_group(0)
+        except KeyError:
+            raise KeyError("Equilibrium coordinate gradients not found")
+
+        try:
+            tmp = prop.groupby('file').get_group(0)
+        except KeyError:
+            raise KeyError("Equilibrium coordinate property not found")
+        # check that the gradient and property dataframe have the same length of data
+        grad_files = grad[grad['file'].isin(range(0,nmodes+1))]['file'].drop_duplicates()
+        prop_files = prop[prop['file'].isin(range(nmodes+1,2*nmodes+1))]['file'].drop_duplicates()
+        #print(prop['file'].drop_duplicates().values)
+        # compare lengths
+        # TODO: make sure the minus 1 is in the right place
+        #       we suppose that it is because we grab the file number 0 as an extra
+        if grad_files.shape[0]-1 != prop_files.shape[0]:
+            print("Length mismatch of gradient and property arrays.")
+            # we create a dataframe to make use of the existing file continuity checker
+            df = pd.DataFrame(np.concatenate([grad_files, prop_files]), columns=['file'])
+            df = self._check_file_continuity(df, 'grad/prop', nmodes)
+            # overwrite the property and gradient dataframes
+            grad = grad[grad['file'].isin(df['file'])]
+            prop = prop[prop['file'].isin(df['file'])]
+        # get the gradients multiplied by the normal modes
         delfq_zero, delfq_plus, delfq_minus = self.get_pos_neg_gradients(grad, uni.frequency.copy())
+        #print(grad['file'].drop_duplicates().values)
+        # get the selected frequencies
         select_freq = grad[grad['file'].isin(range(1,nmodes+1))]
         select_freq = select_freq['file'].drop_duplicates().values - 1
         snmodes = len(select_freq)
+        #print(select_freq, snmodes)
+        # get the actual frequencies
+        # TODO: check if we should use the real or calculated frequencies
         frequencies = uni.frequency_ext['freq'].values*Energy['cm^-1','Ha']
         rmass = uni.frequency_ext['r_mass'].values*Mass['u', 'au_mass']
         if snmodes < nmodes:
@@ -477,55 +510,63 @@ class VA(metaclass=VAMeta):
             sel_freq = frequencies
         #frequencies = self.calculate_frequencies(delfq_zero, delfq_plus, delfq_minus, sel_rmass, select_freq,
         #                                         sel_delta)
-        print(frequencies)
         # calculate cubic force constant
+        # we use a for loop because we need the diagonal values
+        # if we select a specific number of modes then the diagonal elements
+        # are tricky
         kqiii = np.zeros(len(select_freq))
         for fdx, sval in enumerate(select_freq):
             kqiii[fdx] = (delfq_plus[fdx][sval] - 2.0 * delfq_zero[fdx][sval] + \
                                                 delfq_minus[fdx][sval]) / (sel_delta[fdx]**2)
-        print(delfq_plus.shape, delfq_zero.shape, delfq_minus.shape, sel_delta)
+        # calculate anharmonic cubic force constant
+        # this will have nmodes rows and snmodes cols
         kqijj = np.divide(delfq_plus - 2.0 * delfq_zero + delfq_minus,
                           np.multiply(sel_delta, sel_delta).reshape(snmodes,1))
         # get property values
-        conver = 1e6/18778.86
-        prop_grouped = self.property.groupby('file')
+        # debugging value
+        #conver = 1e6/18778.86
+        prop_grouped = prop.groupby('file')
+        # get the property value for the equilibrium coordinate
         prop_zero = prop_grouped.get_group(0)
         prop_zero.drop(columns=['file'],inplace=True)
-        prop_zero = np.repeat(prop_zero.values, snmodes)*conver
-        #print(prop_zero.shape)
+        prop_zero = np.repeat(prop_zero.values, snmodes)
+        # get the property values for the positive displaced structures
         prop_plus = prop_grouped.filter(lambda x: x['file'].drop_duplicates().values in range(1,nmodes+1))
         prop_plus.drop(columns=['file'], inplace=True)
-        prop_plus = prop_plus.values.reshape(snmodes,)*conver
-        #print(prop_plus.shape)
+        prop_plus = prop_plus.values.reshape(snmodes,)
+        # get the property values for the negative displaced structures
         prop_minus= prop_grouped.filter(lambda x: x['file'].drop_duplicates().values in
                                                                               range(nmodes+1, 2*nmodes+1))
         prop_minus.drop(columns=['file'], inplace=True)
-        prop_minus = prop_minus.values.reshape(snmodes,)*conver
-        #print(prop_minus.shape)
+        prop_minus = prop_minus.values.reshape(snmodes,)
+        # generate the derivatives of the property
         dprop_dq = np.divide(prop_plus - prop_minus, 2*sel_delta)
         d2prop_dq2 = np.divide(prop_plus - 2*prop_zero + prop_minus, np.multiply(sel_delta, sel_delta))
-        self.prop_split = pd.DataFrame.from_dict({"prop_zero": prop_zero, "prop_plus": prop_plus, "prop_minus": prop_minus})
         #for i in range(snmodes):
         #    print("{}    prop_zero    {:+.8f}    prop_plus    {:+.8f}    prop_minus    {:+.8f}".format(i, prop_zero[i]*conver, prop_plus[i]*conver, prop_minus[i]*conver))
         #for i in range(snmodes):
         #    for j in range(nmodes):
         #        print("i\t{} j\t{}\t{:.8E}".format(i+1, j+1, kqijj[i][j]))
-        self.delfq_zero = pd.DataFrame(delfq_zero.reshape(snmodes*nmodes,))
-        self.delfq_plus = pd.DataFrame(delfq_plus.reshape(snmodes*nmodes,))
-        self.delfq_minus = pd.DataFrame(delfq_minus.reshape(snmodes*nmodes,))
-        self.kqijj = pd.DataFrame(kqijj)
-        # calculate anharmonicity
-        # TODO TODO TODO
-        # TODO: check the snmodes and nmodes indexing for kqijj
-        # TODO TODO TODO
-        # pretty sure that the rows are nmodes and the columns are snmodes
+
+        # for debugging
+        #self.prop_split = pd.DataFrame.from_dict({"prop_plus": prop_plus, "prop_minus": prop_minus,
+        #                                          "dprop_dq": dprop_dq, "d2prop_dq2": d2prop_dq2})
+        #self.delfq_zero = pd.DataFrame(delfq_zero.reshape(snmodes*nmodes,))
+        #self.delfq_plus = pd.DataFrame(delfq_plus.reshape(snmodes*nmodes,))
+        #self.delfq_minus = pd.DataFrame(delfq_minus.reshape(snmodes*nmodes,))
+        #self.kqijj = pd.DataFrame(kqijj)
+
+        # calculate anharmonicity in the potential energy surface
         anharm = np.zeros(snmodes)
         for i in range(snmodes):
             temp1 = 0.0
             for j in range(nmodes):
-                temp1 += kqijj[j][i]/(frequencies[j]*sel_rmass[j]*np.sqrt(rmass[i]))
-            print("temp1   {:+.8E}    dprop_dq    {:+.8f}    d2pdq2    {:+.8f}    freq    {:+.8f}    rmass    {:+.8f}".format(
-                                    temp1,dprop_dq[i], d2prop_dq2[i], (frequencies[i]),np.sqrt(sel_rmass[i])))
+                # TODO: check the snmodes and nmodes indexing for kqijj
+                #       pretty sure that the rows are nmodes and the columns are snmodes
+                # TODO: check which is in the sqrt
+                temp1 += kqijj[j][i]/(frequencies[j]*rmass[j]*np.sqrt(sel_rmass[i]))
+            #print("temp1   {:+.8E}    dprop_dq    {:+.8f}    d2pdq2    {:+.8f}    freq    {:+.8f}    rmass    {:+.8f}".format(
+            #                        temp1,dprop_dq[i], d2prop_dq2[i], (frequencies[i]),np.sqrt(sel_rmass[i])))
             anharm[i] = -0.25*dprop_dq[i]/(sel_freq[i]**2*np.sqrt(sel_rmass[i]))*temp1
         # calculate curvature of property
         curva = np.zeros(snmodes)
@@ -533,9 +574,15 @@ class VA(metaclass=VAMeta):
             curva[i] = 0.25*d2prop_dq2[i]/(sel_freq[i]*sel_rmass[i])
 
         # calculate ZPVC
-        zpvc = anharm+curva
-        self.ZPVC = pd.DataFrame.from_dict({'freq': sel_freq*Energy['Ha','cm^-1'], 'freqdx': select_freq,
-                                            'anharm': anharm, 'cruva': curva, 'zpvc': zpvc})
+        #self.anharm_curva = pd.DataFrame.from_dict({'freq': sel_freq*Energy['Ha','cm^-1'], 'freqdx': select_freq,
+        #                                            'anharm': anharm, 'curva': curva, 'sum': anharm+curva})
+        zpvc = self.anharm_curva['sum'].sum()
+        tot_anharm = self.anharm_curva['anharm'].sum()
+        tot_curva = self.anharm_curva['curva'].sum()
+        print("----Results of ZPVC calculation")
+        print("    - Total Anharmonicity:   {:+.6f}".format(tot_anharm))
+        print("    - Total Curvature:       {:+.6f}".format(tot_curva))
+        print("    - Zero Point Vib. Corr.: {:+.6f}".format(zpvc))
 
         #print(pd.DataFrame(kqijj).to_string())
 
