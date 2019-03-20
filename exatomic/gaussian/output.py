@@ -598,6 +598,29 @@ class Output(six.with_metaclass(GauMeta, Editor)):
         # write to class attribute
         self.shielding_tensor = shielding
 
+    def parse_gradient(self):
+        # gradient regex flags
+        _regradient = "Forces (Hartrees/Bohr)"
+        # find data
+        found = self.find(_regradient, keys_only=True)
+        if not found:
+            return
+        # set start point
+        starts = np.array(found) + 3
+        stop = starts[0]
+        while '-------' not in self[stop]: stop += 1
+        stops = starts + (stop - starts[0])
+        dfs = []
+        for i, (start, stop) in enumerate(zip(starts, stops)):
+            grad = self.pandas_dataframe(start, stop, 5)
+            grad['frame'] = i
+            dfs.append(grad)
+        grad = pd.concat(dfs, ignore_index=True)
+        grad.columns = ['atom', 'Z', 'fx', 'fy', 'fz', 'frame']
+        grad['atom'] -= 1
+        grad['symbol'] = grad['Z'].map(z2sym)
+        self.gradient = grad
+
     # Below are triangular matrices -- One electron integrals
 
     def parse_overlap(self):
