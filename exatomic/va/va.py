@@ -574,127 +574,14 @@ class VA(metaclass=VAMeta):
             curva[i] = 0.25*d2prop_dq2[i]/(sel_freq[i]*sel_rmass[i])
 
         # calculate ZPVC
-        #self.anharm_curva = pd.DataFrame.from_dict({'freq': sel_freq*Energy['Ha','cm^-1'], 'freqdx': select_freq,
-        #                                            'anharm': anharm, 'curva': curva, 'sum': anharm+curva})
-        zpvc = self.anharm_curva['sum'].sum()
-        tot_anharm = self.anharm_curva['anharm'].sum()
-        tot_curva = self.anharm_curva['curva'].sum()
-        print("----Results of ZPVC calculation")
+        self.zpvc_results = pd.DataFrame.from_dict({'freq': sel_freq*Energy['Ha','cm^-1'], 'freqdx': select_freq,
+                                                    'anharm': anharm, 'curva': curva, 'sum': anharm+curva})
+        zpvc = np.sum(anharm+curva)
+        tot_anharm = np.sum(anharm)
+        tot_curva = np.sum(curva)
+        print("----Results of ZPVC calculation for {} of {} frequencies".format(snmodes, nmodes))
         print("    - Total Anharmonicity:   {:+.6f}".format(tot_anharm))
         print("    - Total Curvature:       {:+.6f}".format(tot_curva))
         print("    - Zero Point Vib. Corr.: {:+.6f}".format(zpvc))
-
-        #print(pd.DataFrame(kqijj).to_string())
-
-#    def init_va(self, uni, delta=None):
-#        """
-#        This is a method to initialize all of the variables that will be needed to execute the VA
-#        program. As a sanity check we calculate the frequencies from the force constants. If we
-#        have any negative force constants the results may not be as reliable.
-#
-#        Args:
-#            uni (:class:`~exatomic.Universe`): Universe object containg pertinent data from
-#                                               frequency calculation
-#        """
-#        if delta is None:
-#            delta_df = gen_delta(freq=uni.frequency.copy(), delta_type=2)
-#            delta = delta_df['delta'].values
-#        if not hasattr(self, "gradient"):
-#            raise AttributeError("Please set gradient attribute first")
-#        if not hasattr(uni, "frequency_ext"):
-#            raise AttributeError("Cannot find frequency extended dataframe in universe")
-#        if not hasattr(uni, "frequency"):
-#            raise AttributeError("Cannot find frequency dataframe in universe")
-#        # check that all attributes to be used exist
-#        # group the gradients by file (normal mode)
-#        grad = self.gradient.copy()
-#        try:
-#            exc_freq = grad['exc_freq'].drop_duplicates().values
-#            text = ''
-#            for f in exc_freq: text += str(f)+', '
-#            print("Found excitation frequencies: {}".format(text))
-#        except KeyError:
-#            exc_freq = [-1]
-#            grad['exc_freq'] = np.repeat(-1, len(grad))
-#            print("No excitation frequency column (exc_freq) found in va_corr.gradient."+ \
-#                         "Continuing assuming single excitation frequency.")
-#        # get number of normal modes
-#        nmodes = len(uni.frequency_ext.index.values)
-#        calcfreq = []
-#        for idx, val in enumerate(exc_freq):
-#            grouped = grad.groupby('exc_freq').get_group(val).groupby('file')
-#            # generate delta dataframe
-#            # TODO: make something so delta can be set
-#            #       possible issues are a user using a different type of delta
-#            # get gradient of the equilibrium coordinates
-#            grad_0 = grouped.get_group(0)
-#            # get gradients of the displaced coordinates in the positive direction
-#            grad_plus = grouped.filter(lambda x: x['file'].drop_duplicates().values in
-#                                                                            range(1,nmodes+1))
-#            select_freq = grad_plus['file'].drop_duplicates().values-1
-#            # get number of selected normal modes
-#            # TODO: check stability of using this parameter
-#            snmodes = len(select_freq)
-#            if snmodes < nmodes:
-#                delta_sel = delta[select_freq]
-#                # convert force constants to reduced normal coordinate force constants
-#                redmass = uni.frequency_ext.loc[select_freq,'r_mass'].values*Mass['u', 'au_mass']
-#            else:
-#                delta_sel = delta
-#                redmass = uni.frequency_ext['r_mass'].values*Mass['u','au_mass']
-#            #print(delta_sel, select_freq, redmass)
-#            # get gradients of the displaced coordinates in the negative direction
-#            grad_minus = grouped.filter(lambda x: x['file'].drop_duplicates().values in
-#                                                                            range(nmodes+1, 2*nmodes+1))
-#            # TODO: Check if we can make use of numba to speed up this code
-#            delfq_zero = uni.frequency.groupby('freqdx')[['dx', 'dy', 'dz']].apply(lambda x:
-#                                        np.sum(np.multiply(grad_0[['fx', 'fy', 'fz']].values, x.values)))
-#            #print(delfq_zero)
-#            delfq_zero = np.tile(delfq_zero, snmodes).reshape(snmodes, nmodes)
-#            #print(delfq_zero.shape)
-#
-#            delfq_plus = grad_plus.groupby('file')[['fx', 'fy', 'fz']].apply(lambda x:
-#                                    uni.frequency.groupby('freqdx')[['dx', 'dy', 'dz']].apply(lambda y:
-#                                        np.sum(np.multiply(y.values, x.values)))).values
-#            #delfq_plus.reset_index(drop=True, inplace=True)
-#            #print("delfq_plus shape: {}".format(delfq_plus.shape))
-#
-#            delfq_minus = grad_minus.groupby('file')[['fx', 'fy', 'fz']].apply(lambda x:
-#                                    uni.frequency.groupby('freqdx')[['dx', 'dy', 'dz']].apply(lambda y:
-#                                        np.sum(np.multiply(y.values, x.values)))).values
-#            #delfq_minus.reset_index(drop=True, inplace=True)
-#            #print("delfq_minus shape: {}".format(delfq_minus.shape))
-#
-#            # get diagonal elements of respqective matrix
-#            #diag_plus = np.diag(delfq_plus)
-#            #diag_minus = np.diag(delfq_minus)
-#            #diag_zero = np.diag(delfq_zero)
-#
-#            # calculate force constants
-#            #kqi   = np.divide(diag_plus - diag_minus, 2.0*delta_sel)
-#            #kqiii = np.divide(diag_plus - 2.0 * diag_zero + diag_minus, np.multiply(delta_sel, delta_sel))
-#            kqi = np.zeros(len(select_freq))
-#            kqiii = np.zeros(len(select_freq))
-#            for fdx, sval in enumerate(select_freq):
-#                kqi[fdx] = (delfq_plus[fdx][sval] - delfq_minus[fdx][sval]) / (2.0*delta_sel[fdx])
-#                kqiii[fdx] = (delfq_plus[fdx][sval] - 2.0 * delfq_zero[fdx][sval] + \
-#                                                    delfq_minus[fdx][sval]) / (delta_sel[fdx]**2)
-#            kqijj = np.divide(delfq_plus - 2.0 * delfq_zero + delfq_minus,
-#                              np.multiply(delta_sel, delta_sel).reshape(snmodes, 1))
-#            vqi = np.divide(kqi, redmass)
-#            vqijj = np.divide(kqijj, np.sqrt(np.power(redmass, 3)).reshape(snmodes,1))
-#
-#            # TODO: Check if we want to exit the program if we get a negative force constant
-#            n_force_warn = vqi[vqi < 0.]
-#            #print(Energy['Ha','cm^-1'])
-#
-#            # calculate frequencies
-#            df = pd.DataFrame.from_dict({'calc_freq': np.sqrt(vqi)*Energy['Ha', 'cm^-1'],
-#                                         'exc_freq': np.repeat(val, snmodes),
-#                                         'freqdx': select_freq})
-#            calcfreq.append(df)
-#        self.calcfreq = pd.concat(calcfreq, ignore_index=True)
-#        #self.calcfreq = pd.DataFrame.from_dict({'calc_freq': calcfreq,
-#        #                              'real_freq': uni.frequency_ext['freq']*Energy['Ha', 'cm^-1']})
-
+        print("    - Zero Point Vib. Avg.:  {:+.6f}".format(prop_zero[0] + zpvc))
 
