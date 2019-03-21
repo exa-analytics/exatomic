@@ -431,35 +431,80 @@ class Output(six.with_metaclass(GauMeta, Editor)):
     # refactoring this parser code
     # wanted to change the _refreq flag to be the exact parsing line
     # it was parsing the wrong number of lines
+    # this takes care of being able to have both a geometry optimization and
+    # vibrational frequency analysis
     def parse_frequency(self):
+        # check to see if HPModes is being used in the input
+        _rehpmodes = 'HPModes'
+        _reharm = 'Harmonic frequencies'
+        found_hp = self.regex(_rehpmodes, ignore_case=True)
+        # TODO: look into effect of the next huge assumption
+        #       test with an ROA calculation
+        found_ha = self.regex(_reharm, keys_only=True)
+        start_read = found_ha[0]
+        if found_hp:
+            print("Parsing frequency normal modes from HPModes output")
+            hpmodes = True
+            stop_read = found_ha[1]
+        else:
+            stop_read=None
+            hpmodes = False
+
         # Frequency flags
         _refreq = 'Frequencies'
         # remove stop condition
         # this will be troublesome for larger molecules
         #found = self.regex(_refreq, stop=1000, flags=re.IGNORECASE)
-        found = self.regex(_refreq)
+        found = self.regex(_refreq, start=start_read, stop=stop_read, keys_only=True)
         if not found: return
+        starts = np.array(found) + start_read
+        #print(starts)
+        #print(self[starts[0]])
+        #print(self[starts[-1]])
+        found_atom = np.array(self.regex('Atom', start=start_read, stop=stop_read, keys_only=True)) + start_read
         # Total lines per block minus the unnecessary ones
-        span = found[1][0] - found[0][0] - 7
+        span = starts[1] - found_atom[0] - 3
+        span_freq_vals = found_atom[0] - starts[0] + 1
+        #print(self.regex('Atom', start=starts[0], stop=starts[1])[0][0]+starts[0])
+        #print(span)
+        #print(self[found_atom[0]+1])
+        #print(self[found_atom[0]+span])
         dfs, fdx = [], 0
+        freq_start = 24 if hpmodes else 15
+        norm_mode = 1 if hpmodes else 3
+        extra_col = 3 if hpmodes else 2
         # Iterate over what we found
-        for lno, ln in found:
+        for lno in starts:
+            ln = self[lno]
+            #print(ln)
             # Get the frequencies first
-            freqs = ln[15:].split()
+            freqs = ln[freq_start:].split()
+            #print(freqs)
             nfreqs = len(freqs)
             # Get just the atom displacement vectors
-            start = lno + 5
+            start = lno + span_freq_vals
             stop = start + span
-            cols = range(2 + 3 * nfreqs)
+            #print(self[stop])
+            cols = range(extra_col + norm_mode * nfreqs)
             df = self.pandas_dataframe(start, stop, ncol=cols)
-            # Split up the df and unstack it
-            slices = [list(range(2 + i, 2 + 3 * nfreqs, 3)) for i in range(nfreqs)]
-            dx, dy, dz = [df[i].unstack().values for i in slices]
-            # Generate the appropriate dimensions of other columns
-            labels = np.tile(df[0].values, nfreqs)
-            zs = np.tile(df[1].values, nfreqs)
-            freqdxs = np.repeat(range(fdx, fdx + nfreqs), df.shape[0])
-            freqs = np.repeat(freqs, df.shape[0])
+            if hpmodes:
+                dx, dy, dz = df.groupby(0).apply(lambda x: x[range(3,nfreqs+3)].unstack().values).values
+                # Generate the appropriate dimensions of other columns
+                labels = np.tile(df[1].drop_duplicates().values, nfreqs)
+                zs = np.tile(df.groupby(0).get_group(1)[2].values, nfreqs)
+                freqdxs = np.repeat(range(fdx, fdx + nfreqs), int(df.shape[0]/3))
+                freqs = np.repeat(freqs, int(df.shape[0]/3))
+                print(len(labels), len(zs), len(freqdxs), len(freqs), len(dx), len(dy), len(dz))
+            else:
+                # Split up the df and unstack it
+                slices = [list(range(2 + i, 2 + 3 * nfreqs, 3)) for i in range(nfreqs)]
+                print(slices)
+                dx, dy, dz = [df[i].unstack().values for i in slices]
+                # Generate the appropriate dimensions of other columns
+                labels = np.tile(df[0].values, nfreqs)
+                zs = np.tile(df[1].values, nfreqs)
+                freqdxs = np.repeat(range(fdx, fdx + nfreqs), df.shape[0])
+                freqs = np.repeat(freqs, df.shape[0])
             fdx += nfreqs
             # Put it all together
             stacked = pd.DataFrame.from_dict({'Z': zs, 'label': labels,
@@ -473,9 +518,9 @@ class Output(six.with_metaclass(GauMeta, Editor)):
         # TODO: verify with an external program that vibrational
         #       modes look the same as the ones generated with
         #       this methodology.
-        frequency['dx'] *= Length['Angstrom', 'au']
-        frequency['dy'] *= Length['Angstrom', 'au']
-        frequency['dz'] *= Length['Angstrom', 'au']
+        #frequency['dx'] *= Length['Angstrom', 'au']
+        #frequency['dy'] *= Length['Angstrom', 'au']
+        #frequency['dz'] *= Length['Angstrom', 'au']
         # Frame not really implemented here either
         frequency['frame'] = 0
         self.frequency = frequency
