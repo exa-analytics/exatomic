@@ -433,12 +433,12 @@ class Output(six.with_metaclass(GauMeta, Editor)):
         conts['frame'] = conts['group'] = 0
         self.excitation = conts
 
-    # refactoring this parser code
-    # wanted to change the _refreq flag to be the exact parsing line
-    # it was parsing the wrong number of lines
-    # this takes care of being able to have both a geometry optimization and
-    # vibrational frequency analysis
-    def parse_frequency(self):
+    #######################################################################
+    # this is a copy-paste of the parse_frequency method
+    # the to_universe seems to be having issues with creating more than one
+    # class attribute in one method
+    #######################################################################
+    def parse_frequency_ext(self):
         # check to see if HPModes is being used in the input
         _rehpmodes = 'HPModes'
         _reharm = 'Harmonic frequencies'
@@ -447,6 +447,8 @@ class Output(six.with_metaclass(GauMeta, Editor)):
         #       test with an ROA calculation
         found_ha = self.regex(_reharm, keys_only=True)
         start_read = found_ha[0]
+        # if it is found then we get the location of the _reharm labels
+        # this gives us the location of the different precision data types
         if found_hp:
             print("Parsing frequency normal modes from HPModes output")
             hpmodes = True
@@ -457,53 +459,127 @@ class Output(six.with_metaclass(GauMeta, Editor)):
 
         # Frequency flags
         _refreq = 'Frequencies'
-        # remove stop condition
-        # this will be troublesome for larger molecules
-        #found = self.regex(_refreq, stop=1000, flags=re.IGNORECASE)
+        # we set the start and stop condition because HPModes will print the displacement
+        # data twice, once with high precision and once with normal precision
         found = self.regex(_refreq, start=start_read, stop=stop_read, keys_only=True)
         if not found: return
+        # set the start point where the matches were found and add the starting point
         starts = np.array(found) + start_read
-        #print(starts)
-        #print(self[starts[0]])
-        #print(self[starts[-1]])
+        # get the location of the Atom labels in the frequency blocks
+        # the line below this is where all of the normal mode displacement data begins
         found_atom = np.array(self.regex('Atom', start=start_read, stop=stop_read, keys_only=True)) + start_read
         # Total lines per block minus the unnecessary ones
         span = starts[1] - found_atom[0] - 3
-        span_freq_vals = found_atom[0] - starts[0] + 1
-        #print(self.regex('Atom', start=starts[0], stop=starts[1])[0][0]+starts[0])
-        #print(span)
-        #print(self[found_atom[0]+1])
-        #print(self[found_atom[0]+span])
+        # get the number of other attributes included
+        # this is done so we can have some flexibility in the code as there may be times that
+        # the number of added attributes is not always the same and we get errors
         dfs, fdx = [], 0
+        # set a bunch of conditional parameters if hpmodes is activated
+        # saves us from putting if statements in the for loop
         freq_start = 24 if hpmodes else 15
-        norm_mode = 1 if hpmodes else 3
-        extra_col = 3 if hpmodes else 2
+        #mapper = ["freq", "r_mass", "f_const", "ir_int"]
+        ext_dfs = []
         # Iterate over what we found
         for lno in starts:
             ln = self[lno]
-            #print(ln)
             # Get the frequencies first
             freqs = ln[freq_start:].split()
-            #print(freqs)
+            # get the reduced mass
+            r_mass = self[lno+1][freq_start:].split()
+            # get the force constants
+            f_const = self[lno+2][freq_start:].split()
+            # get the ir intensities
+            ir_int = self[lno+3][freq_start:].split()
             nfreqs = len(freqs)
+            # TODO: are these always present?
+            ext_dfs.append(pd.DataFrame.from_dict({'freq': freqs, 'r_mass': r_mass, 'f_const': f_const,
+                                           'ir_int': ir_int, 'freqdx': [i for i in range(fdx, fdx + nfreqs)]}))
+        freq_ext = pd.concat(ext_dfs, ignore_index=True)
+        freq_ext = freq_ext.astype(np.float64)
+        freq_ext['freqdx'] = freq_ext['freqdx'].astype(np.int64)
+        # TODO: we are having issues with the to_universe() in that it only seems to set the
+        #       class attribute corresponding to the method
+        self.frequency_ext = freq_ext
+
+    def parse_frequency(self):
+        # check to see if HPModes is being used in the input
+        _rehpmodes = 'HPModes'
+        _reharm = 'Harmonic frequencies'
+        found_hp = self.regex(_rehpmodes, ignore_case=True)
+        # TODO: look into effect of the next huge assumption
+        #       test with an ROA calculation
+        found_ha = self.regex(_reharm, keys_only=True)
+        start_read = found_ha[0]
+        # if it is found then we get the location of the _reharm labels
+        # this gives us the location of the different precision data types
+        if found_hp:
+            print("Parsing frequency normal modes from HPModes output")
+            hpmodes = True
+            stop_read = found_ha[1]
+        else:
+            stop_read=None
+            hpmodes = False
+
+        # Frequency flags
+        _refreq = 'Frequencies'
+        # we set the start and stop condition because HPModes will print the displacement
+        # data twice, once with high precision and once with normal precision
+        found = self.regex(_refreq, start=start_read, stop=stop_read, keys_only=True)
+        if not found: return
+        # set the start point where the matches were found and add the starting point
+        starts = np.array(found) + start_read
+        # get the location of the Atom labels in the frequency blocks
+        # the line below this is where all of the normal mode displacement data begins
+        found_atom = np.array(self.regex('Atom', start=start_read, stop=stop_read, keys_only=True)) + start_read
+        # Total lines per block minus the unnecessary ones
+        span = starts[1] - found_atom[0] - 3
+        # get the number of other attributes included
+        # this is done so we can have some flexibility in the code as there may be times that
+        # the number of added attributes is not always the same and we get errors
+        span_freq_vals = found_atom[0] - starts[0] + 1
+        dfs, fdx = [], 0
+        # set a bunch of conditional parameters if hpmodes is activated
+        # saves us from putting if statements in the for loop
+        freq_start = 24 if hpmodes else 15
+        norm_mode = 1 if hpmodes else 3
+        extra_col = 3 if hpmodes else 2
+        #mapper = ["freq", "r_mass", "f_const", "ir_int"]
+        ext_dfs = []
+        # Iterate over what we found
+        for lno in starts:
+            ln = self[lno]
+            # Get the frequencies first
+            freqs = ln[freq_start:].split()
+            # get the reduced mass
+            #r_mass = self[lno+1][freq_start:].split()
+            # get the force constants
+            #f_const = self[lno+2][freq_start:].split()
+            # get the ir intensities
+            #ir_int = self[lno+3][freq_start:].split()
+            nfreqs = len(freqs)
+            # TODO: are these always present?
+            #ext_dfs.append(pd.DataFrame.from_dict({'freq': freqs, 'r_mass': r_mass, 'f_const': f_const,
+            #                               'ir_int': ir_int, 'freqdx': [i for i in range(fdx, fdx + nfreqs)]}))
             # Get just the atom displacement vectors
             start = lno + span_freq_vals
             stop = start + span
-            #print(self[stop])
+            # we use the conditional parameters we set before to correctly splice all the data
             cols = range(extra_col + norm_mode * nfreqs)
             df = self.pandas_dataframe(start, stop, ncol=cols)
+            # cannot get rid of this one conditional
             if hpmodes:
+                # get the displacements
                 dx, dy, dz = df.groupby(0).apply(lambda x: x[range(3,nfreqs+3)].unstack().values).values
                 # Generate the appropriate dimensions of other columns
                 labels = np.tile(df[1].drop_duplicates().values, nfreqs)
                 zs = np.tile(df.groupby(0).get_group(1)[2].values, nfreqs)
+                # we use df.shape[0]/3 because the HPModes prints all of the coordinates as a single row
+                # so it will be the number_of_atoms * 3
                 freqdxs = np.repeat(range(fdx, fdx + nfreqs), int(df.shape[0]/3))
                 freqs = np.repeat(freqs, int(df.shape[0]/3))
-                print(len(labels), len(zs), len(freqdxs), len(freqs), len(dx), len(dy), len(dz))
             else:
                 # Split up the df and unstack it
                 slices = [list(range(2 + i, 2 + 3 * nfreqs, 3)) for i in range(nfreqs)]
-                print(slices)
                 dx, dy, dz = [df[i].unstack().values for i in slices]
                 # Generate the appropriate dimensions of other columns
                 labels = np.tile(df[0].values, nfreqs)
@@ -519,6 +595,7 @@ class Output(six.with_metaclass(GauMeta, Editor)):
             dfs.append(stacked)
         # Now put all our frequencies together
         frequency = pd.concat(dfs).reset_index(drop=True)
+        #freq_ext = pd.concat(ext_dfs, ignore_index=True)
         # Pretty sure displacements are in cartesian angstroms
         # TODO: Make absolutely sure what units gaussian reports the displacements as
         # TODO: verify with an external program that vibrational
@@ -529,6 +606,10 @@ class Output(six.with_metaclass(GauMeta, Editor)):
         #frequency['dz'] *= Length['Angstrom', 'au']
         # Frame not really implemented here either
         frequency['frame'] = 0
+        # generate the frequency and extended frequency dataframes
+        # TODO: we are having issues with the to_universe() in that it only seems to set the
+        #       class attribute corresponding to the method
+        #self.frequency_ext = freq_eVxt
         self.frequency = frequency
 
 #    def parse_frequency(self):
