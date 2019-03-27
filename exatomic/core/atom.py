@@ -84,6 +84,15 @@ class Atom(DataFrame):
             else: frame[r] = frame[r] + np.abs(center[r])
         return frame
 
+    def rotate(self, theta, axis=[0,0,1], frame=None, degrees=True):
+        pass
+        if frame is None: frame = self.last_frame.copy()
+        else: frame = self[self.frame == frame].copy()
+        # as we have the rotation axis and the angle we will rotate over
+        # we implement the Rodrigues formula
+        # v_rot = v*np.cos(theta) + (np.cross(k,v))*np.sin(theta) + k*(np.dot(k,v))*(1-np.cos(theta))
+        if degrees: theta = theta*np.pi/180.
+        
 
     def to_xyz(self, tag='symbol', header=False, comments='', columns=None,
                frame=None, units='Angstrom'):
