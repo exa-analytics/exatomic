@@ -129,7 +129,41 @@ class Atom(DataFrame):
         rotated = a + b + c
         frame[['x', 'y', 'z']] = rotated
         return frame
+
+    def translate(self, dx=0, dy=0, dz=0, vector=None, frame=None, units='au'):
+        """
+        Return a copy of a single frame of the atom table translated by
+        some specified distance.
+
+        Note:
+            Vector can be used instead of dx, dy, dz as it will be decomposed
+            into those components. If vector and any of the others are
+            specified the values in vector will be used.
         
+        Args:
+            dx (float): Displacement distance in x
+            dy (float): Displacement distance in y
+            dz (float): Displacement distance in z
+            vector (list): Displacement vector
+            units (str): Units that are used for the displacement
+
+        Returns:
+            frame (:class:`exatomic.Universe.atom`): Atom frame
+        """
+        if frame is None: frame = self.last_frame.copy()
+        else: frame = self[self.frame == frame].copy()
+        # check if vector is specified
+        if vector is not None:
+            # convert vector units to au
+            vector = [i * Length[units, 'au'] for i in vector]
+            dx = vector[0]
+            dy = vector[1]
+            dz = vector[2]
+        # add the values to each respective coordinate
+        frame['x'] += dx
+        frame['y'] += dy
+        frame['z'] += dz
+        return frame
 
     def to_xyz(self, tag='symbol', header=False, comments='', columns=None,
                frame=None, units='Angstrom'):
