@@ -85,13 +85,50 @@ class Atom(DataFrame):
         return frame
 
     def rotate(self, theta, axis=[0,0,1], frame=None, degrees=True):
-        pass
+        """
+        Return a copy of a single frame of the atom table rotated
+        around the specified rotation axis by the specified angle.
+        As we have the rotation axis and the rotation angle we are
+        able to use the Rodrigues' formula to get the rotated
+        vectors.
+
+        Args:
+            theta (float): The angle that you wish to rotate by
+            axis (list): The axis of rotation
+            frame (int): The frame that you wish to rotate
+            degrees (bool): If true convert from degrees to radians
+
+        Returns:
+            frame (:class:`exatomic.Universe.atom`): Atom frame
+        """
         if frame is None: frame = self.last_frame.copy()
         else: frame = self[self.frame == frame].copy()
         # as we have the rotation axis and the angle we will rotate over
         # we implement the Rodrigues formula
         # v_rot = v*np.cos(theta) + (np.cross(k,v))*np.sin(theta) + k*(np.dot(k,v))*(1-np.cos(theta))
+
+        # convert units if not degrees
         if degrees: theta = theta*np.pi/180.
+
+        # normalize rotation axis vector
+        norm = np.linalg.norm(axis)
+        axis /= norm
+        # get the coordinates
+        coords = frame[['x', 'y', 'z']].values
+        # generate the first term in rodrigues formula
+        # we use np.tile because this would only result in a one dimensional vector but we will need
+        # to sum up all of the matrix products
+        a = np.tile(axis * np.cos(theta), coords.shape[0]).reshape(coords.shape[0], coords.shape[1])
+        # generate second term in rodrigures formula
+        # this creates a matrix of size coords.shape[0]
+        b = np.cross(axis, coords) * np.sin(theta)
+        # generate the last term in rodrigues formula
+        # we use np.outer to make a dyadic productof the result from the dot product vector
+        # and the axis vector
+        c = np.outer(np.dot(coords, axis), axis) * (1-np.cos(theta))
+        rotated = a + b + c
+        frame[['x', 'y', 'z']] = rotated
+        return frame
         
 
     def to_xyz(self, tag='symbol', header=False, comments='', columns=None,
