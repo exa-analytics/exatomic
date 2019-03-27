@@ -446,14 +446,15 @@ class Output(six.with_metaclass(GauMeta, Editor)):
         # TODO: look into effect of the next huge assumption
         #       test with an ROA calculation
         found_ha = self.regex(_reharm, keys_only=True)
-        start_read = found_ha[0]
         # if it is found then we get the location of the _reharm labels
         # this gives us the location of the different precision data types
         if found_hp:
             print("Parsing frequency normal modes from HPModes output")
             hpmodes = True
+            start_read = found_ha[0]
             stop_read = found_ha[1]
         else:
+            start_read = 0
             stop_read=None
             hpmodes = False
 
@@ -509,7 +510,6 @@ class Output(six.with_metaclass(GauMeta, Editor)):
         # TODO: look into effect of the next huge assumption
         #       test with an ROA calculation
         found_ha = self.regex(_reharm, keys_only=True)
-        start_read = found_ha[0]
         # if it is found then we get the location of the _reharm labels
         # this gives us the location of the different precision data types
         if found_hp:
@@ -517,6 +517,7 @@ class Output(six.with_metaclass(GauMeta, Editor)):
             hpmodes = True
             stop_read = found_ha[1]
         else:
+            start_read = 0
             stop_read=None
             hpmodes = False
 
