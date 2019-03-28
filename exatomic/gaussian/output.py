@@ -512,13 +512,13 @@ class Output(six.with_metaclass(GauMeta, Editor)):
         found_ha = self.regex(_reharm, keys_only=True)
         # if it is found then we get the location of the _reharm labels
         # this gives us the location of the different precision data types
+        start_read = found_ha[0]
         if found_hp:
             print("Parsing frequency normal modes from HPModes output")
             hpmodes = True
             stop_read = found_ha[1]
         else:
-            start_read = 0
-            stop_read=None
+            stop_read = None
             hpmodes = False
 
         # Frequency flags

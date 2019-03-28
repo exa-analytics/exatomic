@@ -113,9 +113,6 @@ class TestOutput(TestCase):
     """
     def setUp(self):
         # TODO : add some cartesian basis set files
-        #        a geometry optimization and
-        #        maybe properties? like the frequency
-        #        and tddft calcs
         self.uo2 = Output(resource('g09-uo2.out'))
         self.mam3 = Output(resource('g09-ch3nh2-631g.out'))
         self.mam4 = Output(resource('g09-ch3nh2-augccpvdz.out'))
