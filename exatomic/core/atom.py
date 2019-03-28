@@ -84,7 +84,7 @@ class Atom(DataFrame):
             else: frame[r] = frame[r] + np.abs(center[r])
         return frame
 
-    def rotate(self, theta, axis=[0,0,1], frame=None, degrees=True):
+    def rotate(self, theta, axis=None, frame=None, degrees=True):
         """
         Return a copy of a single frame of the atom table rotated
         around the specified rotation axis by the specified angle.
@@ -101,10 +101,11 @@ class Atom(DataFrame):
         Returns:
             frame (:class:`exatomic.Universe.atom`): Atom frame
         """
+        if axis is None: axis = [0, 0, 1]
         if frame is None: frame = self.last_frame.copy()
         else: frame = self[self.frame == frame].copy()
         # as we have the rotation axis and the angle we will rotate over
-        # we implement the Rodrigues formula
+        # we implement the Rodrigues' rotation formula
         # v_rot = v*np.cos(theta) + (np.cross(k,v))*np.sin(theta) + k*(np.dot(k,v))*(1-np.cos(theta))
 
         # convert units if not degrees
@@ -139,7 +140,7 @@ class Atom(DataFrame):
             Vector can be used instead of dx, dy, dz as it will be decomposed
             into those components. If vector and any of the others are
             specified the values in vector will be used.
-        
+
         Args:
             dx (float): Displacement distance in x
             dy (float): Displacement distance in y
