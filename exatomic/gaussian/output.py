@@ -56,7 +56,7 @@ class GauMeta(TypedMeta):
     overlap = Overlap
     multipole = pd.DataFrame
     gradient = Gradient
-    shielding_tensor = Tensor
+    nmr_shielding = Tensor
     frequency_ext = Frequency
 
 class Output(six.with_metaclass(GauMeta, Editor)):
@@ -670,7 +670,7 @@ class Output(six.with_metaclass(GauMeta, Editor)):
 #        # Frame not really implemented here either
 #        frequency['frame'] = 0
 #        self.frequency = frequency
-    def parse_shielding_tensor(self):
+    def parse_nmr_shielding(self):
         # nmr shielding regex
         # this might lead to wrong behavior so it may need to change
         _renmr = "SCF GIAO Magnetic shielding tensor (ppm):"
@@ -719,7 +719,7 @@ class Output(six.with_metaclass(GauMeta, Editor)):
         shielding['label'] = 'nmr shielding'
         shielding['frame'] = np.tile(0, nat)
         # write to class attribute
-        self.shielding_tensor = shielding
+        self.nmr_shielding = shielding
 
     def parse_gradient(self):
         # gradient regex flags
@@ -1071,7 +1071,7 @@ class Fchk(six.with_metaclass(GauMeta, Editor)):
                                                 "fz": fz, "symbol": symbols, "frame": frame})
         self.gradient['Z'] = self.gradient['Z'].astype(np.int64)
 
-    def parse_shielding_tensor(self):
+    def parse_nmr_shielding(self):
         # nmr shielding regex
         _renmr = 'NMR shielding'
         # base properties
@@ -1146,7 +1146,7 @@ class Fchk(six.with_metaclass(GauMeta, Editor)):
         # TODO: must make a conditional so it can detect if a tensor object already exists and
         #       concat the two dataframes
         #       will also have to consider in core.tensor.add_tensor
-        self.shielding_tensor = df
+        self.nmr_shielding = df
 
     def parse_orbital(self):
         # Orbital regex
