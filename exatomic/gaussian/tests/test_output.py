@@ -16,6 +16,7 @@ class TestFchk(TestCase):
         self.mam2 = Fchk(resource('g09-ch3nh2-augccpvdz.fchk'))
         self.mam3 = Fchk(resource('g16-methyloxirane-def2tzvp-freq.fchk'))
         self.mam4 = Fchk(resource('g16-h2o2-def2tzvp-freq.fchk'))
+        self.nitro_nmr = Fchk(resource('g16-nitromalonamide-6-31++g-nmr.fchk'))
 
     def test_parse_atom(self):
         self.mam1.parse_atom()
@@ -90,8 +91,9 @@ class TestFchk(TestCase):
         self.assertTrue(np.all(pd.notnull(self.mam4.gradient)))
 
     def test_shielding_tensor(self):
-        # TODO: add this thing
-        pass
+        self.nitro_nmr.parse_nmr_shielding()
+        self.assertEqual(self.nitro_nmr.nmr_shielding.shape[0], 15)
+        self.assertTrue(np.all(pd.notnull(self.nitro_nmr.nmr_shielding)))
 
     def test_to_universe(self):
         """Test the to_universe method."""
@@ -122,6 +124,7 @@ class TestOutput(TestCase):
         self.nap_tddft = Output(resource('g16-naproxen-def2tzvp-tddft.out'))
         self.h2o2_tddft = Output(resource('g16-h2o2-def2tzvp-tddft.out'))
         self.nap_opt = Output(resource('g16-naproxen-def2tzvp-opt.out'))
+        self.nitro_nmr = Output(resource('g16-nitromalonamide-6-31++g-nmr.out'))
 
     def test_parse_atom(self):
         self.uo2.parse_atom()
@@ -221,8 +224,9 @@ class TestOutput(TestCase):
         self.assertTrue(np.all(pd.notnull(self.h2o2_tddft.excitation)))
 
     def test_shielding_tensor(self):
-        # TODO: add this thing
-        pass
+        self.nitro_nmr.parse_nmr_shielding()
+        self.assertEqual(self.nitro_nmr.nmr_shielding.shape[0], 15)
+        self.assertTrue(np.all(pd.notnull(self.nitro_nmr.nmr_shielding)))
 
     def test_to_universe(self):
         """Test the to_universe method."""
