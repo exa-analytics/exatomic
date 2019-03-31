@@ -210,6 +210,16 @@ class TestOutput(TestCase):
         self.assertEqual(self.nap_opt.frame.shape[0], 26)
         self.assertTrue(np.all(pd.notnull(self.nap_opt.frame)))
 
+    def test_parse_frequency_ext(self):
+        self.meth_freq.parse_frequency_ext()
+        self.assertEqual(self.meth_freq.frequency_ext.shape[0], 24)
+        self.assertEqual(self.meth_freq.frequency_ext.shape[1], 5)
+        self.assertTrue(np.all(pd.notnull(self.meth_freq.frequency_ext)))
+        self.meth_opt_freq_hp.parse_frequency_ext()
+        self.assertEqual(self.meth_opt_freq_hp.frequency_ext.shape[0], 24)
+        self.assertEqual(self.meth_opt_freq_hp.frequency_ext.shape[1], 5)
+        self.assertTrue(np.all(pd.notnull(self.meth_opt_freq_hp.frequency_ext)))
+
     def test_parse_frequency(self):
         self.meth_freq.parse_frequency()
         self.assertEqual(self.meth_freq.frequency.shape[0], 240)

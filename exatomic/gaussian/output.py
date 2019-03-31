@@ -495,6 +495,7 @@ class Output(six.with_metaclass(GauMeta, Editor)):
             # TODO: are these always present?
             ext_dfs.append(pd.DataFrame.from_dict({'freq': freqs, 'r_mass': r_mass, 'f_const': f_const,
                                            'ir_int': ir_int, 'freqdx': [i for i in range(fdx, fdx + nfreqs)]}))
+            fdx += nfreqs
         freq_ext = pd.concat(ext_dfs, ignore_index=True)
         freq_ext = freq_ext.astype(np.float64)
         freq_ext['freqdx'] = freq_ext['freqdx'].astype(np.int64)
