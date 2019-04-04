@@ -79,6 +79,7 @@ class TestVROA(TestCase):
                                 2.01524180e+02, 5.14500000e+02],
                                [3.59821746e+03, 5.00000000e+00, 1.60412161e+00, 5.19841596e+00,
                                 4.55091201e+02, 5.14500000e+02]])
+        self.assertTrue(np.allclose(va_corr.scatter.values, scatter_data))
         scatter_data = scatter_data.T
         raman_data = raman_data.T
         print(va_corr.scatter.to_string())
