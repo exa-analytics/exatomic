@@ -6,7 +6,7 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 from matplotlib.figure import Figure
-from matplotlib import ticker
+from matplotlib import ticker, rc
 
 def _lorentz(freq, inten, x, fwhm):
     y = np.zeros(len(x))
@@ -49,9 +49,11 @@ class PlotVROA:
         legend    = kwargs.pop('legend'   , True)
         exc_units = kwargs.pop('exc_units', 'nm')
         invert_x  = kwargs.pop('invert_x' , False)
+        font      = kwargs.pop('font'     , 10)
 
         if not isinstance(figsize, tuple):
             raise TypeError("figsize must be a tuple not {}".format(type(figsize)))
+        rc('font', size=font)
         grouped = vroa.scatter.groupby('exc_freq')
         exc_freq = vroa.scatter['exc_freq'].drop_duplicates().values
         for idx, val in enumerate(exc_freq):
@@ -73,7 +75,10 @@ class PlotVROA:
             ax.set_ylabel(ylabel)
             ax.set_title(title)
             if xrange is not None:
-                ax.set_xlim(xrange)
+                if invert_x:
+                    ax.set_xlim(xrange[1],xrange[0])
+                else:
+                    ax.set_xlim(xrange)
             if yrange is not None:
                 ax.set_ylim(yrange)
             if grid:
@@ -112,9 +117,12 @@ class PlotVROA:
         legend    = kwargs.pop('legend'   , True)
         exc_units = kwargs.pop('exc_units', 'nm')
         normalize = kwargs.pop('normalize', 'all')
+        invert_x  = kwargs.pop('invert_x' , False)
+        font      = kwargs.pop('font'     , 10)
 
         if not isinstance(figsize, tuple):
             raise TypeError("figsize must be a tuple not {}".format(type(figsize)))
+        rc('font', size=font)
         grouped = vroa.scatter.groupby('exc_freq')
         exc_freq = vroa.scatter['exc_freq'].drop_duplicates().values
         fig = plt.figure(self._fig_count, figsize=figsize, dpi=dpi)
@@ -143,7 +151,10 @@ class PlotVROA:
         ax.set_ylabel(ylabel)
         ax.set_title(title)
         if xrange is not None:
-            ax.set_xlim(xrange)
+            if invert_x:
+                ax.set_xlim(xrange[1],xrange[0])
+            else:
+                ax.set_xlim(xrange)
         if yrange is not None:
             ax.set_ylim(yrange)
         if grid:
@@ -181,8 +192,12 @@ class PlotVROA:
         grid      = kwargs.pop('grid'     , False)
         legend    = kwargs.pop('legend'   , True)
         exc_units = kwargs.pop('exc_units', 'nm')
+        invert_x  = kwargs.pop('invert_x' , False)
+        font      = kwargs.pop('font'     , 10)
+
         if not isinstance(figsize, tuple):
             raise TypeError("figsize must be a tuple not {}".format(type(figsize)))
+        rc('font', size=font)
         grouped = raman.raman.groupby('exc_freq')
         exc_freq = raman.raman['exc_freq'].drop_duplicates().values
         for idx, val in enumerate(exc_freq):
