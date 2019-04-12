@@ -491,10 +491,24 @@ class VA(metaclass=VAMeta):
             raise AttributeError("Please set gradient attribute.")
         if not hasattr(self, 'property'):
             raise AttributeError("Please set property attribute.")
+        if self.property.shape[1] != 2:
+            raise ValueError("Property dataframe must have a second dimension of 2 not {}".format(
+                                                                                    self.property.shape[1]))
         if not hasattr(uni, 'frequency_ext'):
             raise AttributeError("Please compute frequency_ext dataframe.")
         if not hasattr(uni, 'frequency'):
             raise AttributeError("Please compute frequency dataframe.")
+        if temperature is None:
+            temperature = [0]
+        elif not isinstance(temperature, list):
+            if isinstance(temperature, int) or isinstance(temperature, float):
+                temperature = [temperature]
+            else:
+                raise TypeError("Temperature variable must be of type list not {}".format(type(temperature)))
+        elif isinstance(temperature, list):
+            pass
+        else:
+            raise TypeError("Temperature variable must be of type list not {}".format(type(temperature)))
 
         # get the total number of normal modes
         nmodes = len(uni.frequency_ext.index.values)
@@ -585,7 +599,6 @@ class VA(metaclass=VAMeta):
         coor_dfs = []
         zpvc_dfs = []
         # calculate the ZPVC's at different temperatures by iterating over them
-        if temperature is None: temperature = [0]
         for tdx, t in enumerate(temperature):
             print("========Results from Vibrational Averaging at {} K==========".format(t))
             # calculate anharmonicity in the potential energy surface
