@@ -13,10 +13,12 @@ import os
 import glob
 import re
 import time
-from exa.util.constants import speed_of_light_in_vacuum as C, Planck_constant as H
+from exa.util.constants import (speed_of_light_in_vacuum as C, Planck_constant as H,
+                               Boltzmann_constant as boltzmann)
 from exa.util.units import Length, Energy, Mass, Time
 from exa.util.utility import mkp
 from exatomic.core import Atom, Gradient, Polarizability
+from exatomic.base import sym2z
 from exa import TypedMeta
 from .vroa_funcs import _sum, _make_derivatives, _forwscat, _backscat
 import warnings
@@ -74,6 +76,7 @@ class VAMeta(TypedMeta):
 #    grad_minus = Gradient
     gradient = Gradient
     roa = Polarizability
+    eff_coord = Atom
 
 class VA(metaclass=VAMeta):
     """
@@ -112,6 +115,20 @@ class VA(metaclass=VAMeta):
             rdf = rdf[~rdf['file'].isin(diff)]
             rdf = rdf[~rdf['file'].isin(diff+nmodes)]
         return rdf
+
+    @staticmethod
+    def _get_temp_factor(temp, freq):
+        if temp > 1e-6:
+            try:
+                factor = freq*Energy['Ha', 'J'] / (2 * boltzmann * temp)
+                temp_fac = np.cosh(factor) / np.sinh(factor)
+            # this should be taken care of by the conditional but always good to
+            # take care of explicitly
+            except ZeroDivisionError:
+                raise ZeroDivisionError("Something seems to have gone wrong with the sinh function")
+        else:
+            temp_fac = 1.
+        return temp_fac
 
     def get_pos_neg_gradients(self, grad, freq):
         '''
@@ -366,7 +383,8 @@ class VA(metaclass=VAMeta):
             # this comes from the init_va code
             try:
                 grad_derivs = self.get_pos_neg_gradients(grad, uni.frequency.copy())
-                frequencies = self.calculate_frequencies(*grad_derivs, sel_rmass**2*Mass['u','au_mass'], select_freq, sel_delta)
+                frequencies = self.calculate_frequencies(*grad_derivs, sel_rmass**2*Mass['u','au_mass'],
+                                                         select_freq, sel_delta)
             except KeyError:
                 raise KeyError("Something went wrong check that self.calcfreq has column names "+ \
                                "calc_freq and exc_freq")
@@ -447,7 +465,28 @@ class VA(metaclass=VAMeta):
         self.raman = pd.concat(raman, ignore_index=True)
         self.raman.sort_values(by=['exc_freq', 'freq'], inplace=True)
 
-    def zpvc(self, uni, delta):
+    def zpvc(self, uni, delta, temperature=None, geometry=True):
+        """
+        Method to compute the Zero-Point Vibrational Corrections. We implement the equations as
+        outlined in the paper J. Phys. Chem. A 2005, 109, 8617-8623 (doi:10.1021/jp051685y).
+        Here we compute the effect of vibrations on a specified property given as a n x 2 array
+        where one of the columns are the file indexes and the other is the property.
+        We use a two and three point difference method to calculate the first and second derivatives
+        respectively.
+
+        We have also implemented a way to calculate the ZPVC and effective geometries at
+        different temperatures given in Kelvin.
+
+        Note:
+            The code has been designed such that the property input array must have one column
+            labeled file corresponding to the file indexes.
+
+        Args:
+            uni (:class:`exatomic.Universe`): Universe containing all pertinent data
+            delta (np.array): Array of the delta displacement parameters
+            temperature (list): List object containing all of the temperatures of interest
+            geometry (bool): Bool value that tells the program to also calculate the effective geometry
+        """
         if not hasattr(self, 'gradient'):
             raise AttributeError("Please set gradient attribute.")
         if not hasattr(self, 'property'):
@@ -475,7 +514,6 @@ class VA(metaclass=VAMeta):
         # check that the gradient and property dataframe have the same length of data
         grad_files = grad[grad['file'].isin(range(0,nmodes+1))]['file'].drop_duplicates()
         prop_files = prop[prop['file'].isin(range(nmodes+1,2*nmodes+1))]['file'].drop_duplicates()
-        #print(prop['file'].drop_duplicates().values)
         # compare lengths
         # TODO: make sure the minus 1 is in the right place
         #       we suppose that it is because we grab the file number 0 as an extra
@@ -489,7 +527,6 @@ class VA(metaclass=VAMeta):
             prop = prop[prop['file'].isin(df['file'])]
         # get the gradients multiplied by the normal modes
         delfq_zero, delfq_plus, delfq_minus = self.get_pos_neg_gradients(grad, uni.frequency.copy())
-        #print(grad['file'].drop_duplicates().values)
         # get the selected frequencies
         select_freq = grad[grad['file'].isin(range(1,nmodes+1))]
         select_freq = select_freq['file'].drop_duplicates().values - 1
@@ -522,8 +559,6 @@ class VA(metaclass=VAMeta):
         kqijj = np.divide(delfq_plus - 2.0 * delfq_zero + delfq_minus,
                           np.multiply(sel_delta, sel_delta).reshape(snmodes,1))
         # get property values
-        # debugging value
-        #conver = 1e6/18778.86
         prop_grouped = prop.groupby('file')
         # get the property value for the equilibrium coordinate
         prop_zero = prop_grouped.get_group(0)
@@ -541,46 +576,51 @@ class VA(metaclass=VAMeta):
         # generate the derivatives of the property
         dprop_dq = np.divide(prop_plus - prop_minus, 2*sel_delta)
         d2prop_dq2 = np.divide(prop_plus - 2*prop_zero + prop_minus, np.multiply(sel_delta, sel_delta))
-        #for i in range(snmodes):
-        #    print("{}    prop_zero    {:+.8f}    prop_plus    {:+.8f}    prop_minus    {:+.8f}".format(i, prop_zero[i]*conver, prop_plus[i]*conver, prop_minus[i]*conver))
-        #for i in range(snmodes):
-        #    for j in range(nmodes):
-        #        print("i\t{} j\t{}\t{:.8E}".format(i+1, j+1, kqijj[i][j]))
+        # done with setting up everything
+        # moving on to the actual calculations
 
-        # for debugging
-        #self.prop_split = pd.DataFrame.from_dict({"prop_plus": prop_plus, "prop_minus": prop_minus,
-        #                                          "dprop_dq": dprop_dq, "d2prop_dq2": d2prop_dq2})
-        #self.delfq_zero = pd.DataFrame(delfq_zero.reshape(snmodes*nmodes,))
-        #self.delfq_plus = pd.DataFrame(delfq_plus.reshape(snmodes*nmodes,))
-        #self.delfq_minus = pd.DataFrame(delfq_minus.reshape(snmodes*nmodes,))
-        #self.kqijj = pd.DataFrame(kqijj)
+        atom_frames = uni.atom['frame'].values
+        eqcoord = uni.atom.groupby('frame').get_group(atom_frames[-1])[['x','y','z']].values
+        atom_order = uni.atom['symbol']
+        coor_dfs = []
+        zpvc_dfs = []
+        # calculate the ZPVC's at different temperatures by iterating over them
+        if temperature is None: temperature = [0]
+        for tdx, t in enumerate(temperature):
+            print("========Results from Vibrational Averaging at {} K==========".format(t))
+            # calculate anharmonicity in the potential energy surface
+            anharm = np.zeros(snmodes)
+            for i in range(snmodes):
+                temp1 = 0.0
+                for j in range(nmodes):
+                    # calculate the contribution of each vibration
+                    temp_fac = self._get_temp_factor(t, frequencies[j])
+                    # TODO: check the snmodes and nmodes indexing for kqijj
+                    #       pretty sure that the rows are nmodes and the columns are snmodes
+                    # TODO: check which is in the sqrt
+                    # sum over the first index
+                    temp1 += kqijj[j][i]/(frequencies[j]*rmass[j]*np.sqrt(sel_rmass[i]))*temp_fac
+                # sum over the second index and set anharmonicity at each vibrational mode
+                anharm[i] = -0.25*dprop_dq[i]/(sel_freq[i]**2*np.sqrt(sel_rmass[i]))*temp1
+            # calculate curvature of property
+            curva = np.zeros(snmodes)
+            for i in range(snmodes):
+                # calculate the contribution of each vibration
+                temp_fac = self._get_temp_factor(t, sel_freq[i])
+                # set the curvature at each vibrational mode
+                curva[i] = 0.25*d2prop_dq2[i]/(sel_freq[i]*sel_rmass[i])*temp_fac
 
-        # calculate anharmonicity in the potential energy surface
-        anharm = np.zeros(snmodes)
-        for i in range(snmodes):
-            temp1 = 0.0
-            for j in range(nmodes):
-                # TODO: check the snmodes and nmodes indexing for kqijj
-                #       pretty sure that the rows are nmodes and the columns are snmodes
-                # TODO: check which is in the sqrt
-                temp1 += kqijj[j][i]/(frequencies[j]*rmass[j]*np.sqrt(sel_rmass[i]))
-            #print("temp1   {:+.8E}    dprop_dq    {:+.8f}    d2pdq2    {:+.8f}    freq    {:+.8f}    rmass    {:+.8f}".format(
-            #                        temp1,dprop_dq[i], d2prop_dq2[i], (frequencies[i]),np.sqrt(sel_rmass[i])))
-            anharm[i] = -0.25*dprop_dq[i]/(sel_freq[i]**2*np.sqrt(sel_rmass[i]))*temp1
-        # calculate curvature of property
-        curva = np.zeros(snmodes)
-        for i in range(snmodes):
-            curva[i] = 0.25*d2prop_dq2[i]/(sel_freq[i]*sel_rmass[i])
-
-        # calculate ZPVC
-        self.zpvc_results = pd.DataFrame.from_dict({'freq': sel_freq*Energy['Ha','cm^-1'], 'freqdx': select_freq,
-                                                    'anharm': anharm, 'curva': curva, 'sum': anharm+curva})
-        zpvc = np.sum(anharm+curva)
-        tot_anharm = np.sum(anharm)
-        tot_curva = np.sum(curva)
-        print("----Results of ZPVC calculation for {} of {} frequencies".format(snmodes, nmodes))
-        print("    - Total Anharmonicity:   {:+.6f}".format(tot_anharm))
-        print("    - Total Curvature:       {:+.6f}".format(tot_curva))
-        print("    - Zero Point Vib. Corr.: {:+.6f}".format(zpvc))
-        print("    - Zero Point Vib. Avg.:  {:+.6f}".format(prop_zero[0] + zpvc))
+            # generate one of the zpvc dataframes
+            zpvc_dfs.append(pd.DataFrame.from_dict({'freq': sel_freq*Energy['Ha','cm^-1'], 'freqdx': select_freq,
+                                                    'anharm': anharm, 'curva': curva, 'sum': anharm+curva}))
+            # print results to stdout
+            zpvc = np.sum(anharm+curva)
+            tot_anharm = np.sum(anharm)
+            tot_curva = np.sum(curva)
+            print("----Result of ZPVC calculation for {} of {} frequencies".format(snmodes, nmodes))
+            print("    - Total Anharmonicity:   {:+.6f}".format(tot_anharm))
+            print("    - Total Curvature:       {:+.6f}".format(tot_curva))
+            print("    - Zero Point Vib. Corr.: {:+.6f}".format(zpvc))
+            print("    - Zero Point Vib. Avg.:  {:+.6f}".format(prop_zero[0] + zpvc))
+        self.zpvc_results = pd.concat(zpvc_dfs, ignore_index=True)
 
