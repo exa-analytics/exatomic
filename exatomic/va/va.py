@@ -498,17 +498,7 @@ class VA(metaclass=VAMeta):
             raise AttributeError("Please compute frequency_ext dataframe.")
         if not hasattr(uni, 'frequency'):
             raise AttributeError("Please compute frequency dataframe.")
-        if temperature is None:
-            temperature = [0]
-        elif not isinstance(temperature, list):
-            if isinstance(temperature, int) or isinstance(temperature, float):
-                temperature = [temperature]
-            else:
-                raise TypeError("Temperature variable must be of type list not {}".format(type(temperature)))
-        elif isinstance(temperature, list):
-            pass
-        else:
-            raise TypeError("Temperature variable must be of type list not {}".format(type(temperature)))
+        if temperature is None: temperature = [0]
 
         # get the total number of normal modes
         nmodes = len(uni.frequency_ext.index.values)
