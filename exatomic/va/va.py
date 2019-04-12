@@ -622,5 +622,41 @@ class VA(metaclass=VAMeta):
             print("    - Total Curvature:       {:+.6f}".format(tot_curva))
             print("    - Zero Point Vib. Corr.: {:+.6f}".format(zpvc))
             print("    - Zero Point Vib. Avg.:  {:+.6f}".format(prop_zero[0] + zpvc))
+            if geometry:
+                # calculate the effective geometry
+                # we do not check this at the beginning as it will not always be computed
+                if not hasattr(uni, 'atom'):
+                    raise AttributeError("Please set the atom dataframe")
+                sum_to_eff_geo = np.zeros((eqcoord.shape[0], 3))
+                for i in range(snmodes):
+                    temp1 = 0.0
+                    for j in range(nmodes):
+                        # calculate the contribution of each vibration
+                        temp_fac = self._get_temp_factor(t, frequencies[j])
+                        temp1 += kqijj[j][i]/(frequencies[j]*rmass[j]*np.sqrt(sel_rmass[i])) * temp_fac
+                    # get the temperature correction to the geometry in Bohr
+                    sum_to_eff_geo += -0.25 * temp1 / (sel_freq[i]**2 * np.sqrt(sel_rmass[i])) * \
+                                        uni.frequency.groupby('freqdx').get_group(i)[['dx','dy','dz']].values
+                # get the effective geometry
+                tmp_coord = np.transpose(eqcoord + sum_to_eff_geo)
+                # generate one of the coordinate dataframes
+                coor_dfs.append(pd.DataFrame.from_dict({'set': list(range(len(eqcoord))),
+                                                        'Z': atom_order.map(sym2z), 'x': tmp_coord[0],
+                                                        'y': tmp_coord[1], 'z': tmp_coord[2],
+                                                        'symbol': atom_order,
+                                                        'temp': np.repeat(t, eqcoord.shape[0]),
+                                                        'frame': np.repeat(0, len(eqcoord))}))
+                # print out the effective geometry in Angstroms
+                print("----Effective geometry in Angstroms")
+                xyz = coor_dfs[-1][['symbol','x','y','z']].copy()
+                xyz['x'] *= Length['au', 'Angstrom']
+                xyz['y'] *= Length['au', 'Angstrom']
+                xyz['z'] *= Length['au', 'Angstrom']
+                stargs = {'columns': None, 'header': False, 'index': False,
+                          'formatters': {'symbol': '{:<5}'.format}, 'float_format': '{:6f}'.format}
+                print(xyz.to_string(**stargs))
+            print("\n")
+        if geometry:
+            self.eff_coord = pd.concat(coor_dfs, ignore_index=True)
         self.zpvc_results = pd.concat(zpvc_dfs, ignore_index=True)
 
