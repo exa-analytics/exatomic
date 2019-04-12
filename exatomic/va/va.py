@@ -401,8 +401,7 @@ class VA(metaclass=VAMeta):
             # generate properties as shown on equations 5-9 in paper
             # J. Chem. Phys. 2007, 127, 134101
             alpha_squared, beta_alpha, beta_g, beta_A, alpha_g = _make_derivatives(dalpha_dq,
-                                  dg_dq, dA_dq, omega, epsilon, snmodes, au2angs**4, C_au,
-                                  assume_real, no_conj)
+                                  dg_dq, dA_dq, omega, epsilon, snmodes, au2angs**4, C_au)
 
             #********************************DEBUG**************************************************#
             #self.alpha_squared = pd.Series(alpha_squared*Length['au', 'Angstrom']**4)
