@@ -465,7 +465,7 @@ class VA(metaclass=VAMeta):
         self.raman = pd.concat(raman, ignore_index=True)
         self.raman.sort_values(by=['exc_freq', 'freq'], inplace=True)
 
-    def zpvc(self, uni, delta, temperature=None, geometry=True):
+    def zpvc(self, uni, delta, temperature=None, geometry=True, print_results=False):
         """
         Method to compute the Zero-Point Vibrational Corrections. We implement the equations as
         outlined in the paper J. Phys. Chem. A 2005, 109, 8617-8623 (doi:10.1021/jp051685y).
@@ -588,9 +588,9 @@ class VA(metaclass=VAMeta):
         atom_order = uni.atom['symbol']
         coor_dfs = []
         zpvc_dfs = []
+        va_dfs = []
         # calculate the ZPVC's at different temperatures by iterating over them
         for tdx, t in enumerate(temperature):
-            print("========Results from Vibrational Averaging at {} K==========".format(t))
             # calculate anharmonicity in the potential energy surface
             anharm = np.zeros(snmodes)
             for i in range(snmodes):
@@ -614,17 +614,21 @@ class VA(metaclass=VAMeta):
                 curva[i] = 0.25*d2prop_dq2[i]/(sel_freq[i]*sel_rmass[i])*temp_fac
 
             # generate one of the zpvc dataframes
-            zpvc_dfs.append(pd.DataFrame.from_dict({'freq': sel_freq*Energy['Ha','cm^-1'], 'freqdx': select_freq,
-                                                    'anharm': anharm, 'curva': curva, 'sum': anharm+curva}))
-            # print results to stdout
+            va_dfs.append(pd.DataFrame.from_dict({'freq': sel_freq*Energy['Ha','cm^-1'], 'freqdx': select_freq,
+                                                    'anharm': anharm, 'curva': curva, 'sum': anharm+curva,
+                                                    'temp': np.repeat(t, snmodes)}))
             zpvc = np.sum(anharm+curva)
             tot_anharm = np.sum(anharm)
             tot_curva = np.sum(curva)
-            print("----Result of ZPVC calculation for {} of {} frequencies".format(snmodes, nmodes))
-            print("    - Total Anharmonicity:   {:+.6f}".format(tot_anharm))
-            print("    - Total Curvature:       {:+.6f}".format(tot_curva))
-            print("    - Zero Point Vib. Corr.: {:+.6f}".format(zpvc))
-            print("    - Zero Point Vib. Avg.:  {:+.6f}".format(prop_zero[0] + zpvc))
+            zpvc_dfs.append([prop_zero[0], zpvc, prop_zero[0] + zpvc, tot_anharm, tot_curva, t])
+            if print_results:
+                print("========Results from Vibrational Averaging at {} K==========".format(t))
+                # print results to stdout
+                print("----Result of ZPVC calculation for {} of {} frequencies".format(snmodes, nmodes))
+                print("    - Total Anharmonicity:   {:+.6f}".format(tot_anharm))
+                print("    - Total Curvature:       {:+.6f}".format(tot_curva))
+                print("    - Zero Point Vib. Corr.: {:+.6f}".format(zpvc))
+                print("    - Zero Point Vib. Avg.:  {:+.6f}".format(prop_zero[0] + zpvc))
             if geometry:
                 # calculate the effective geometry
                 # we do not check this at the beginning as it will not always be computed
@@ -650,16 +654,18 @@ class VA(metaclass=VAMeta):
                                                         'temp': np.repeat(t, eqcoord.shape[0]),
                                                         'frame': np.repeat(0, len(eqcoord))}))
                 # print out the effective geometry in Angstroms
-                print("----Effective geometry in Angstroms")
-                xyz = coor_dfs[-1][['symbol','x','y','z']].copy()
-                xyz['x'] *= Length['au', 'Angstrom']
-                xyz['y'] *= Length['au', 'Angstrom']
-                xyz['z'] *= Length['au', 'Angstrom']
-                stargs = {'columns': None, 'header': False, 'index': False,
-                          'formatters': {'symbol': '{:<5}'.format}, 'float_format': '{:6f}'.format}
-                print(xyz.to_string(**stargs))
-            print("\n")
+                if print_results:
+                    print("----Effective geometry in Angstroms")
+                    xyz = coor_dfs[-1][['symbol','x','y','z']].copy()
+                    xyz['x'] *= Length['au', 'Angstrom']
+                    xyz['y'] *= Length['au', 'Angstrom']
+                    xyz['z'] *= Length['au', 'Angstrom']
+                    stargs = {'columns': None, 'header': False, 'index': False,
+                              'formatters': {'symbol': '{:<5}'.format}, 'float_format': '{:6f}'.format}
+                    print(xyz.to_string(**stargs))
         if geometry:
             self.eff_coord = pd.concat(coor_dfs, ignore_index=True)
-        self.zpvc_results = pd.concat(zpvc_dfs, ignore_index=True)
+        self.zpvc_results = pd.DataFrame(zpvc_dfs,
+                                         columns=['property', 'zpvc', 'zpva', 'tot_anharm', 'tot_curva', 'temp'])
+        self.vib_average = pd.concat(va_dfs, ignore_index=True)
 
