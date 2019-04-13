@@ -3,14 +3,12 @@
 # Distributed under the terms of the Apache License 2.0
 
 import numpy as np
-import pandas as pd
 import matplotlib.pyplot as plt
-from matplotlib.figure import Figure
 from matplotlib import ticker, rc
 
 def _lorentz(freq, inten, x, fwhm):
     y = np.zeros(len(x))
-    for i, (fdx, idx) in enumerate(zip(freq, inten)):
+    for fdx, idx in zip(freq, inten):
         y += 1/(2*np.pi)*idx*fwhm/((fdx-x)**2+(0.5*fwhm)**2)
     return y
 
@@ -200,7 +198,7 @@ class PlotVROA:
         rc('font', size=font)
         grouped = raman.raman.groupby('exc_freq')
         exc_freq = raman.raman['exc_freq'].drop_duplicates().values
-        for idx, val in enumerate(exc_freq):
+        for val in exc_freq:
             fig = plt.figure(self._fig_count, figsize=figsize, dpi=dpi)
             inten = grouped.get_group(val)['raman_int'].values
             freq = grouped.get_group(val)['freq'].values
@@ -219,7 +217,10 @@ class PlotVROA:
             ax.set_ylabel(ylabel)
             ax.set_title(title)
             if xrange is not None:
-                ax.set_xlim(xrange)
+                if invert_x:
+                    ax.set_xlim(xrange[1],xrange[0])
+                else:
+                    ax.set_xlim(xrange)
             if yrange is not None:
                 ax.set_ylim(yrange)
             if grid:

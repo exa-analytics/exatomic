@@ -1,5 +1,4 @@
 import numpy as np
-import pandas as pd
 from unittest import TestCase
 from os import sep
 
@@ -105,10 +104,10 @@ class TestVROA(TestCase):
         delta = gen_delta(delta_type=2, freq=self.methyloxirane_freq.frequency.copy())
         va_corr = VA()
         path = sep.join(resource('va-roa-methyloxirane-def2tzvp-488.9-00.out').split(sep)[:-1])+sep+'*'
-        va_corr.roa = get_data(path=path, attr='roa', soft=Output, 
+        va_corr.roa = get_data(path=path, attr='roa', soft=Output,
                                f_start='va-roa-methyloxirane-def2tzvp-488.9-', f_end='.out')
         va_corr.roa['exc_freq'] = np.tile(488.9, len(va_corr.roa))
-        va_corr.gradient = get_data(path=path, attr='gradient', soft=Output, 
+        va_corr.gradient = get_data(path=path, attr='gradient', soft=Output,
                                     f_start='va-roa-methyloxirane-def2tzvp-488.9-', f_end='.out')
         va_corr.gradient['exc_freq'] = np.tile(488.9, len(va_corr.gradient))
         va_corr.vroa(uni=self.methyloxirane_freq, delta=delta['delta'].values)

@@ -65,5 +65,4 @@ class TestGenInput(TestCase):
         self.assertEqual(freq_5.disp.shape[0], 12)
         self.assertTrue(np.allclose(np.concatenate([[0.], [self.h2o2.frequency_ext.loc[4,'freq']]]),
                                     freq_5.disp['modes'].drop_duplicates().values))
-        
 

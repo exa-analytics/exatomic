@@ -8,15 +8,11 @@ Collection of classes for VA program
 """
 import numpy as np
 import pandas as pd
-import csv
-import os
 import glob
 import re
-import time
 from exa.util.constants import (speed_of_light_in_vacuum as C, Planck_constant as H,
                                Boltzmann_constant as boltzmann)
 from exa.util.units import Length, Energy, Mass, Time
-from exa.util.utility import mkp
 from exatomic.core import Atom, Gradient, Polarizability
 from exatomic.base import sym2z
 from exa import TypedMeta
@@ -87,8 +83,7 @@ def get_data(path, attr, soft, f_end='', f_start='', sort_index=None):
         try:
             cdf.sort_values(by=sort_index, inplace=True)
         except KeyError:
-            raise KeyError("Please make sure that the keys {} exist in the dataframe "+ \
-                                        "created by {}.parse_{}.".format(sort_values, soft, attr))
+            raise KeyError("Please make sure that the keys {} exist in the dataframe created by {}.parse_{}.".format(sort_values, soft, attr))
     cdf.reset_index(drop=True, inplace=True)
     return cdf
 
@@ -150,7 +145,7 @@ class VA(metaclass=VAMeta):
         return temp_fac
 
     @staticmethod
-    def get_pos_neg_gradients(self, grad, freq):
+    def get_pos_neg_gradients(grad, freq):
         '''
         Here we get the gradients of the equilibrium, positive and negative displaced structures.
         We extract them from the gradient dataframe and convert them into normal coordinates
@@ -196,7 +191,7 @@ class VA(metaclass=VAMeta):
         return [delfq_zero, delfq_plus, delfq_minus]
 
     @staticmethod
-    def calculate_frequencies(self, delfq_0, delfq_plus, delfq_minus, redmass, select_freq, delta=None):
+    def calculate_frequencies(delfq_0, delfq_plus, delfq_minus, redmass, select_freq, delta=None):
         '''
         Here we calculated the frequencies from the gradients calculated for each of the
         displaced structures along the normal mode. In principle this should give the same or
@@ -242,7 +237,8 @@ class VA(metaclass=VAMeta):
         # TODO: Check if we want to exit the program if we get a negative force constant
         n_force_warn = vqi[vqi < 0.]
         if n_force_warn.any() == True:
-            negative = np.where(n_force_warn)
+            # TODO: point to exactly which frequencies are negative
+            #negative = np.where(n_force_warn)
             warnings.warn("Negative force constants have been calculated be wary of results",
                             Warning)
         # return calculated frequencies
@@ -323,7 +319,7 @@ class VA(metaclass=VAMeta):
             print("No excitation frequency column (exc_freq) found in va_corr.roa."+ \
                          "Continuing assuming single excitation frequency.")
         # loop over all of the excitation frequencies performing the needed calculations
-        for idx, val in enumerate(exc_freq):
+        for val in exc_freq:
             # omega parameter
             if units == 'nm':
                 try:
@@ -613,7 +609,7 @@ class VA(metaclass=VAMeta):
         zpvc_dfs = []
         va_dfs = []
         # calculate the ZPVC's at different temperatures by iterating over them
-        for tdx, t in enumerate(temperature):
+        for t in temperature:
             # calculate anharmonicity in the potential energy surface
             anharm = np.zeros(snmodes)
             for i in range(snmodes):
