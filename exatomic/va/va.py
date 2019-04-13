@@ -24,11 +24,33 @@ from .vroa_funcs import _sum, _make_derivatives, _forwscat, _backscat
 import warnings
 warnings.simplefilter("default")
 
-def get_data(path, attr, soft, f_end='', f_start='', sort_index=['']):
+def get_data(path, attr, soft, f_end='', f_start='', sort_index=None):
+    '''
+    This script is made to be able to extract data from many different files and
+    compile them all into one dataframe. You can pass wildcards as an input in the
+    path variable. We use the glob.glob package to get an array of the file that
+    match the given f_start and f_end strings.
+
+    Note:
+        There is nothing built in to handle returning an empty dataframe at the
+        moment.
+
+    Args:
+        path (str): String pointing to location of files
+        attr (str): The attribute that you want to extract
+        soft (class): Class that you want to use to extract the data
+        f_end (str): String to match to the end of the filename
+        f_start (str): String to match to the start of the filename
+        sort_index (list): List of strings that are to be used to sort the compiled dataframe
+
+    Returns:
+        cdf (pandas.DataFrame): Dataframe that has all of the compiled data
+    '''
     if not isinstance(sort_index, list):
         raise TypeError("Variable sort_index must be of type list")
     if not hasattr(soft, attr):
         raise NotImplementedError("parse_{} is not a method of {}".format(attr, soft))
+    if sort_index is None: sort_index = ['']
     files = glob.glob(path)
     array = []
     for file in files:
@@ -71,9 +93,6 @@ def get_data(path, attr, soft, f_end='', f_start='', sort_index=['']):
     return cdf
 
 class VAMeta(TypedMeta):
-#    grad_0 = Gradient
-#    grad_plus = Gradient
-#    grad_minus = Gradient
     gradient = Gradient
     roa = Polarizability
     eff_coord = Atom
@@ -130,6 +149,7 @@ class VA(metaclass=VAMeta):
             temp_fac = 1.
         return temp_fac
 
+    @staticmethod
     def get_pos_neg_gradients(self, grad, freq):
         '''
         Here we get the gradients of the equilibrium, positive and negative displaced structures.
@@ -175,6 +195,7 @@ class VA(metaclass=VAMeta):
                                     np.sum(np.multiply(y.values, x.values)))).values
         return [delfq_zero, delfq_plus, delfq_minus]
 
+    @staticmethod
     def calculate_frequencies(self, delfq_0, delfq_plus, delfq_minus, redmass, select_freq, delta=None):
         '''
         Here we calculated the frequencies from the gradients calculated for each of the
@@ -245,9 +266,9 @@ class VA(metaclass=VAMeta):
         Args:
             uni (:class:`~exatomic.Universe`): Universe containing all dataframes from the
                                                frequency calculation
-            delta (np.ndarray): Array containing all of the delta values used for the generation
+            delta (numpy.ndarray): Array containing all of the delta values used for the generation
                                 of the displaced structures.
-            units (string): Units of the excitation frequencies. Default to nm.
+            units (str): Units of the excitation frequencies. Default to nm.
         """
         if not hasattr(self, 'roa'):
             raise AttributeError("Please set roa attribute.")
@@ -483,7 +504,7 @@ class VA(metaclass=VAMeta):
 
         Args:
             uni (:class:`exatomic.Universe`): Universe containing all pertinent data
-            delta (np.array): Array of the delta displacement parameters
+            delta (numpy.array): Array of the delta displacement parameters
             temperature (list): List object containing all of the temperatures of interest
             geometry (bool): Bool value that tells the program to also calculate the effective geometry
         """
@@ -506,6 +527,7 @@ class VA(metaclass=VAMeta):
         grad = self._check_file_continuity(self.gradient, 'gradient', nmodes)
         prop = self._check_file_continuity(self.property, 'property', nmodes)
         # check that the equlibrium coordinates are included
+        # these are required for the three point difference methods
         try:
             tmp = grad.groupby('file').get_group(0)
         except KeyError:
