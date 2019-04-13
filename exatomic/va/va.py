@@ -46,11 +46,11 @@ def get_data(path, attr, soft, f_end='', f_start='', sort_index=None):
     Returns:
         cdf (pandas.DataFrame): Dataframe that has all of the compiled data
     '''
+    if sort_index is None: sort_index = ['']
     if not isinstance(sort_index, list):
         raise TypeError("Variable sort_index must be of type list")
     if not hasattr(soft, attr):
         raise NotImplementedError("parse_{} is not a method of {}".format(attr, soft))
-    if sort_index is None: sort_index = ['']
     files = glob.glob(path)
     array = []
     for file in files:
@@ -249,7 +249,7 @@ class VA(metaclass=VAMeta):
         frequencies = np.sqrt(vqi).reshape(snmodes,)*Energy['Ha', 'cm^-1']
         return frequencies
 
-    def vroa(self, uni, delta, units='nm', assume_real=False, no_conj=False):
+    def vroa(self, uni, delta, units='nm'):
         """
         Here we implement the Vibrational Raman Optical Activity (VROA) equations as outlined in
         the paper J. Chem. Phys. 2007, 127,
@@ -507,6 +507,7 @@ class VA(metaclass=VAMeta):
             delta (numpy.array): Array of the delta displacement parameters
             temperature (list): List object containing all of the temperatures of interest
             geometry (bool): Bool value that tells the program to also calculate the effective geometry
+            print_results(bool): Bool value to print the results from the zpvc calcualtion to stdout
         """
         if not hasattr(self, 'gradient'):
             raise AttributeError("Please set gradient attribute.")
