@@ -1,2 +1,3 @@
 recursive-include exatomic/static *
+recursive-include exatomic/conf *
 include requirements.txt
