@@ -1,71 +1,75 @@
-var version = require("./package.json").version;
+const webpack = require('webpack');
+const path = require('path');
 
-// Custom webpack loaders are generally the same for all webpack bundles, hence
-// stored in a separate local variable.
-var loaders = [
-    { test: /\.json$/, loader: "json-loader" },
-];
+/*
+ * SplitChunksPlugin is enabled by default and replaced
+ * deprecated CommonsChunkPlugin. It automatically identifies modules which
+ * should be splitted of chunk by heuristics using module duplication count and
+ * module category (i. e. node_modules). And splits the chunks…
+ *
+ * It is safe to remove "splitChunks" from the generated configuration
+ * and was added as an educational example.
+ *
+ * https://webpack.js.org/plugins/split-chunks-plugin/
+ *
+ */
 
+/*
+ * We've enabled UglifyJSPlugin for you! This minifies your app
+ * in order to load faster and run less javascript.
+ *
+ * https://github.com/webpack-contrib/uglifyjs-webpack-plugin
+ *
+ */
 
-module.exports = [
-    {// Notebook extension
-     //
-     // This bundle only contains the part of the JavaScript that is run on
-     // load of the notebook. This section generally only performs
-     // some configuration for requirejs, and provides the legacy
-     // "load_ipython_extension" function which is required for any notebook
-     // extension.
-     //
-        entry: "./src/extension.js",
-        output: {
-            filename: "extension.js",
-            path: "../exatomic/static/js",
-            libraryTarget: "amd"
-        }
-    },
-    {// Bundle for the notebook containing the custom widget views and models
-     //
-     // This bundle contains the implementation for the custom widget views and
-     // custom widget.
-     // It must be an amd module
-     //
-        entry: "./src/index.js",
-        output: {
-            filename: "index.js",
-            path: "../exatomic/static/js",
-            libraryTarget: "amd"
-        },
-        devtool: "source-map",
-        module: {
-            loaders: loaders
-        },
-        externals: ["@jupyter-widgets/base", "@jupyter-widgets/controls"]
-    },
-    {// Embeddable exatomic bundle
-     //
-     // This bundle is generally almost identical to the notebook bundle
-     // containing the custom widget views and models.
-     //
-     // The only difference is in the configuration of the webpack public path
-     // for the static assets.
-     //
-     // It will be automatically distributed by unpkg to work with the static
-     // widget embedder.
-     //
-     // The target bundle is always `dist/index.js`, which is the path required
-     // by the custom widget embedder.
-     //
-        entry: "./src/embed.js",
-        output: {
-            filename: "index.js",
-            path: "./dist/",
-            libraryTarget: "amd",
-            publicPath: "https://unpkg.com/exatomic@" + version + "/dist/"
-        },
-        devtool: "source-map",
-        module: {
-            loaders: loaders
-        },
-        externals: ["@jupyter-widgets/base", "@jupyter-widgets/controls"]
-    }
-];
+const UglifyJSPlugin = require('uglifyjs-webpack-plugin');
+
+module.exports = {
+    entry: './src/extension.js',
+	module: {
+		rules: [
+			{
+				include: [path.resolve(__dirname, 'src')],
+				loader: 'babel-loader',
+
+				options: {
+					plugins: ['syntax-dynamic-import'],
+
+					presets: [
+						[
+							'@babel/preset-env',
+							{
+								modules: false
+							}
+						]
+					]
+				},
+
+				test: /\.js$/
+			}
+		]
+	},
+
+	output: {
+		chunkFilename: '[name].[chunkhash].js',
+		filename: '[name].[chunkhash].js'
+	},
+
+	mode: 'development',
+
+	optimization: {
+		splitChunks: {
+			cacheGroups: {
+				vendors: {
+					priority: -10,
+					test: /[\\/]node_modules[\\/]/
+				}
+			},
+
+			chunks: 'async',
+			minChunks: 1,
+			minSize: 30000,
+			name: true
+		}
+	}
+};
