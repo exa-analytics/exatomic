@@ -127,7 +127,7 @@ def add_orb_ang_mom(uni, field_params=None, rcoefs=None, icoefs=None,
     angular momentum.  Requires C matrices from SODIZLDENS.X.X.R,I
     files from Molcas.
 
-    Args
+    Args:
         uni (:class:`~exatomic.container.Universe`): a universe
         field_params (dict): See :func:`~exatomic.algorithms.orbital_util.make_fps`
         rcoefs (str): column in uni.current_momatrix (default 'lreal')
