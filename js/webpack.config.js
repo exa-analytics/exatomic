@@ -1,5 +1,6 @@
-const webpack = require('webpack');
-const path = require('path');
+const webpack = require("webpack");
+const path = require("path");
+var version = require("./package.json").version;
 
 /*
  * SplitChunksPlugin is enabled by default and replaced
@@ -14,62 +15,47 @@ const path = require('path');
  *
  */
 
-/*
- * We've enabled UglifyJSPlugin for you! This minifies your app
- * in order to load faster and run less javascript.
- *
- * https://github.com/webpack-contrib/uglifyjs-webpack-plugin
- *
- */
 
-const UglifyJSPlugin = require('uglifyjs-webpack-plugin');
-
-module.exports = {
-    entry: './src/extension.js',
-	module: {
-		rules: [
-			{
-				include: [path.resolve(__dirname, 'src')],
-				loader: 'babel-loader',
-
-				options: {
-					plugins: ['syntax-dynamic-import'],
-
-					presets: [
-						[
-							'@babel/preset-env',
-							{
-								modules: false
-							}
-						]
-					]
-				},
-
-				test: /\.js$/
-			}
-		]
+module.exports = [
+    {
+        entry: "./src/extension.js",
+        mode: "development",
+	    output: {
+		    filename: "extension.js",
+            path: path.resolve(__dirname, "..", "exatomic", "static", "js"),
+            libraryTarget: "amd"
+        },
+        devtool: "source-map",
+        optimization: {
+            splitChunks: {
+                chunks: 'async',
+                minChunks: 1,
+                minSize: 30000,
+                name: true
+            }
+        }
 	},
-
-	output: {
-		chunkFilename: '[name].[chunkhash].js',
-		filename: '[name].[chunkhash].js'
-	},
-
-	mode: 'development',
-
-	optimization: {
-		splitChunks: {
-			cacheGroups: {
-				vendors: {
-					priority: -10,
-					test: /[\\/]node_modules[\\/]/
-				}
-			},
-
-			chunks: 'async',
-			minChunks: 1,
-			minSize: 30000,
-			name: true
-		}
-	}
-};
+    {
+        entry: "./src/index.js",
+        mode: "production",
+	    output: {
+		    filename: "index.js",
+            path: path.resolve(__dirname, "..", "exatomic", "static", "js"),
+            libraryTarget: "amd"
+        },
+        devtool: "source-map",
+        externals: ["@jupyter-widgets/base", "@jupyter-widgets/controls"]
+    },
+    {
+        entry: "./src/embed.js",
+        mode: "production",
+        output: {
+            filename: "index.js",
+            path: path.resolve(__dirname, "dist"),
+            libraryTarget: "amd",
+            publicPath: "https://unpkg.com/exatomic@" + version + "/dist/"
+        },
+        devtool: "source-map",
+        externals: ["@jupyter-widgets/base", "@jupyter-widgets/controls"]
+    }
+];
