@@ -50,21 +50,21 @@ class Tensor(DataFrame):
     @classmethod
     def from_file(cls, filename):
         """
-        A file reader that will take a tensor file and extract all 
-        necessary information. There is a specific file format in place 
-        and is as follows.
+        A file reader that will take a tensor file and extract all
+        necessary information. There is a specific file format in place
+        and is as follows
 
         frame label atom
         xx xy xz
         yx yy yz
         zx zy zz
 
-        For multiple tensors just append the same format as above without 
+        For multiple tensors just append the same format as above without
         whitespace unless leaving the frame, label, atom attributes as empty.
-        
+
         Args:
             filename (str): file pathname
-        
+
         Returns:
             tens (:class:`~exatomic.tensor.Tensor`): Tensor table with the tensor attributes
         """
@@ -76,7 +76,7 @@ class Tensor(DataFrame):
         df = df[~df.index.isin(idxs)]
         df[1] = df[1].astype(np.float64)
         df['grp'] = [i for i in range(n) for j in range(3)]
-        df = pd.DataFrame(df.groupby('grp').apply(lambda x: 
+        df = pd.DataFrame(df.groupby('grp').apply(lambda x:
                      x.unstack().values[:-3]).values.tolist(),
                      columns=['xx','xy','xz','yx','yy','yz','zx','zy','zz'])
 #        scale = []
@@ -101,7 +101,7 @@ class Polarizability(Tensor):
 def add_tensor(uni, fp):
     """
     Simple function to add a tensor object to the universe.
-    
+
     Args:
         uni (universe): Universe object
         fp (str): file pathname

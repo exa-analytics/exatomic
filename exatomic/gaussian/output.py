@@ -15,7 +15,7 @@ import numpy as np
 import pandas as pd
 from collections import defaultdict
 from exa import TypedMeta
-from exa.util.units import Length, Energy, Mass
+from exa.util.units import Length, Energy
 from .editor import Editor
 from exatomic.base import z2sym
 from exatomic.core.frame import compute_frame_from_atom
@@ -214,7 +214,7 @@ class Output(six.with_metaclass(GauMeta, Editor)):
             # maybe a better way to deal with this
             allsyms = []
             match = ['(', 'Orbitals']
-            for i, (start, ln) in enumerate(found[_reorb02]):
+            for i, (start, _) in enumerate(found[_reorb02]):
                 start += start_orb
                 # Find the start, stop indices for each block
                 while match[0] not in self[start]: start += 1
@@ -316,7 +316,7 @@ class Output(six.with_metaclass(GauMeta, Editor)):
         # Iterate over where the data was found
         # c counts the column in the resulting momatrix table
         _csv_args = {'delim_whitespace': True, 'header': None}
-        for c, (lno, ln) in enumerate(found[_remomat02]):
+        for c, (lno, _) in enumerate(found[_remomat02]):
             gap = 0
             while not 'eigenvalues' in self[lno + gap].lower(): gap += 1
             start = lno + gap + 1
@@ -425,7 +425,7 @@ class Output(six.with_metaclass(GauMeta, Editor)):
         cols = ['occ', 0, 'virt', 'cont']
         conts = pd.read_csv(six.StringIO('\n'.join([self[i] for i in keeps])),
                             delim_whitespace=True, header=None, names=cols,
-                            usecols=[c for c in cols if type(c) == str])
+                            usecols=[c for c in cols if isinstance(c, str)])
         conts['map'] = maps
         for col in summ.columns:
             conts[col] = conts['map'].map(summ[col])
@@ -470,11 +470,11 @@ class Output(six.with_metaclass(GauMeta, Editor)):
         # the line below this is where all of the normal mode displacement data begins
         found_atom = np.array(self.regex('Atom', start=start_read, stop=stop_read, keys_only=True)) + start_read
         # Total lines per block minus the unnecessary ones
-        span = starts[1] - found_atom[0] - 3
+        #span = starts[1] - found_atom[0] - 3
         # get the number of other attributes included
         # this is done so we can have some flexibility in the code as there may be times that
         # the number of added attributes is not always the same and we get errors
-        dfs, fdx = [], 0
+        fdx = 0
         # set a bunch of conditional parameters if hpmodes is activated
         # saves us from putting if statements in the for loop
         freq_start = 24 if hpmodes else 15
@@ -546,23 +546,12 @@ class Output(six.with_metaclass(GauMeta, Editor)):
         freq_start = 24 if hpmodes else 15
         norm_mode = 1 if hpmodes else 3
         extra_col = 3 if hpmodes else 2
-        #mapper = ["freq", "r_mass", "f_const", "ir_int"]
-        ext_dfs = []
         # Iterate over what we found
         for lno in starts:
             ln = self[lno]
             # Get the frequencies first
             freqs = ln[freq_start:].split()
-            # get the reduced mass
-            #r_mass = self[lno+1][freq_start:].split()
-            # get the force constants
-            #f_const = self[lno+2][freq_start:].split()
-            # get the ir intensities
-            #ir_int = self[lno+3][freq_start:].split()
             nfreqs = len(freqs)
-            # TODO: are these always present?
-            #ext_dfs.append(pd.DataFrame.from_dict({'freq': freqs, 'r_mass': r_mass, 'f_const': f_const,
-            #                               'ir_int': ir_int, 'freqdx': [i for i in range(fdx, fdx + nfreqs)]}))
             # Get just the atom displacement vectors
             start = lno + span_freq_vals
             stop = start + span

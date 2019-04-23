@@ -44,7 +44,7 @@ class TestVROA(TestCase):
         va_corr.roa = get_data(path=path, attr='roa', soft=Output, f_start='va-roa-h2o2-def2tzvp-514.5-',
                                f_end='.out')
         va_corr.roa['exc_freq'] = np.tile(514.5, len(va_corr.roa))
-        va_corr.gradient = get_data(path=path, attr='gradient', soft=Output, 
+        va_corr.gradient = get_data(path=path, attr='gradient', soft=Output,
                                     f_start='va-roa-h2o2-def2tzvp-514.5-', f_end='.out')
         va_corr.gradient['exc_freq'] = np.tile(514.5, len(va_corr.gradient))
         va_corr.vroa(uni=self.h2o2_freq, delta=delta['delta'].values)
