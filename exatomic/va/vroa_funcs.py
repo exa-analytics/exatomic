@@ -6,15 +6,15 @@ VROA functions
 ##################
 Functions for VROA calculations
 """
-from numba import jit, prange
+from numba import jit, prange, vectorize, float64
 import numpy as np
 
-@jit(nopython=True)
-def _backscat(C_au, beta_g, beta_A):
+@vectorize([float64(float64, float64)])
+def _backscat(beta_g, beta_A):
     return 4.* (24 * beta_g + 8 * beta_A)
 
-@jit(nopython=True)
-def _forwscat(C_au, alpha_g, beta_g, beta_A):
+@vectorize([float64(float64, float64, float64)])
+def _forwscat(alpha_g, beta_g, beta_A):
     return 4.* (180 * alpha_g + 4 * beta_g - 4 * beta_A)
 
 @jit(nopython=True, parallel=False, cache=True)

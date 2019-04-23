@@ -65,7 +65,7 @@ def get_data(path, attr, soft, f_end='', f_start='', sort_index=None):
         else:
             continue
         array.append(df)
-    cdf = pd.concat([arr for arr in array])
+    cdf = pd.concat(array)
     # TODO: check if this just absolute overkill in error handling
     if sort_index[0] == '':
         if 'file' in cdf.columns.values:
@@ -233,13 +233,16 @@ class VA(metaclass=VAMeta):
             kqi[fdx] = (delfq_plus[fdx][sval] - delfq_minus[fdx][sval]) / (2.0*delta_sel[fdx])
         #print(kqi.shape)
         vqi = np.divide(kqi, redmass_sel.reshape(snmodes,))
-        #print(vqi.shape)
         # TODO: Check if we want to exit the program if we get a negative force constant
         n_force_warn = vqi[vqi < 0.]
         if n_force_warn.any() == True:
             # TODO: point to exactly which frequencies are negative
-            #negative = np.where(n_force_warn)
-            warnings.warn("Negative force constants have been calculated be wary of results",
+            negative = np.where(vqi<0)[0]
+            text = ''
+            # frequencies are base 0
+            for n in negative[:-1]: text += str(n)+', '
+            text += str(negative[-1])
+            warnings.warn("Negative force constants have been calculated for frequencies {} be wary of results".format(text),
                             Warning)
         # return calculated frequencies
         frequencies = np.sqrt(vqi).reshape(snmodes,)*Energy['Ha', 'cm^-1']
@@ -453,13 +456,13 @@ class VA(metaclass=VAMeta):
             raman_int = 4 * (45 * alpha_squared + 8 * beta_alpha)
 
             # calculate VROA back scattering and forward scattering intensities
-            backscat_vroa = _backscat(C_au, beta_g, beta_A)
+            backscat_vroa = _backscat(beta_g, beta_A)
             #backscat_vroa *= 1e4
             # TODO: check the units of this because we convert the invariants from
             #       au to Angstrom and here we convert again from au to Angstrom
             #backscat_vroa *= Length['au', 'Angstrom']**4*Mass['u', 'au_mass']
             #backscat_vroa *= Mass['u', 'au_mass']
-            forwscat_vroa = _forwscat(C_au, alpha_g, beta_g, beta_A)
+            forwscat_vroa = _forwscat(alpha_g, beta_g, beta_A)
             #forwscat_vroa *= 1e4
             # TODO: check the units of this because we convert the invariants from
             #       au to Angstrom and here we convert again from au to Angstrom
