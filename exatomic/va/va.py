@@ -177,11 +177,10 @@ class VA(metaclass=VAMeta):
         # TODO: Check if we can make use of numba to speed up this code
         delfq_zero = freq.groupby('freqdx')[['dx', 'dy', 'dz']].apply(lambda x:
                                     np.sum(np.multiply(grad_0[['fx', 'fy', 'fz']].values, x.values))).values
-        #print(delfq_zero)
-        #print(delfq_zero.shape)
+        # we extend the size of this 1d array as we will perform some matrix summations with the
+        # other outputs from this method
         delfq_zero = np.tile(delfq_zero, snmodes).reshape(snmodes, nmodes)
-        #print(pd.DataFrame(delfq_zero).to_string())
-        #print(delfq_zero.shape)
+
         delfq_plus = grad_plus.groupby('file')[['fx', 'fy', 'fz']].apply(lambda x:
                                 freq.groupby('freqdx')[['dx', 'dy', 'dz']].apply(lambda y:
                                     np.sum(np.multiply(y.values, x.values)))).values
@@ -218,6 +217,7 @@ class VA(metaclass=VAMeta):
         # get number of selected normal modes
         # TODO: check stability of using this parameter
         snmodes = len(select_freq)
+        #print("select_freq.shape: {}".format(select_freq.shape))
         if len(redmass) > snmodes:
             redmass_sel = redmass[select_freq]
         else:
@@ -231,7 +231,7 @@ class VA(metaclass=VAMeta):
         #print(redmass_sel.shape)
         for fdx, sval in enumerate(select_freq):
             kqi[fdx] = (delfq_plus[fdx][sval] - delfq_minus[fdx][sval]) / (2.0*delta_sel[fdx])
-        #print(kqi.shape)
+
         vqi = np.divide(kqi, redmass_sel.reshape(snmodes,))
         # TODO: Check if we want to exit the program if we get a negative force constant
         n_force_warn = vqi[vqi < 0.]
@@ -401,13 +401,15 @@ class VA(metaclass=VAMeta):
             # get gradient calculated frequencies
             # this is just to make sure that we are calculating the right frequency
             # this comes from the init_va code
-            try:
-                grad_derivs = self.get_pos_neg_gradients(grad, uni.frequency.copy())
-                frequencies = self.calculate_frequencies(*grad_derivs, sel_rmass**2*Mass['u','au_mass'],
-                                                         select_freq, sel_delta)
-            except KeyError:
-                raise KeyError("Something went wrong check that self.calcfreq has column names "+ \
-                               "calc_freq and exc_freq")
+            grad_derivs = self.get_pos_neg_gradients(grad, uni.frequency.copy())
+            frequencies = self.calculate_frequencies(*grad_derivs, sel_rmass**2*Mass['u','au_mass'],
+                                                     select_freq, sel_delta)
+
+            # TODO: here we could compare the real frequencies to the ones calculated from the gradients
+            #       need to look into how stable this is.
+            #if not np.allclose(np.sort(frequencies), uni.frequency.loc[select_freq, 'frequency'].values):
+            #    warnings.warn("The calculated frequencies are not within a relative tolerance of 1e-6 to the real frequencies.", Warning)
+
             # separate tensors into positive and negative displacements
             # highly dependent on the value of the index
             # we neglect the equilibrium coordinates
@@ -480,10 +482,17 @@ class VA(metaclass=VAMeta):
             rdf['exc_freq'] = np.repeat(val, len(rdf))
             scatter.append(df)
             raman.append(rdf)
-        self.scatter = pd.concat(scatter, ignore_index=True)
+        self.scatter = pd.concat(scatter)
         self.scatter.sort_values(by=['exc_freq','freq'], inplace=True)
-        self.raman = pd.concat(raman, ignore_index=True)
+        # added this as there seems to be some issues with the indexing when there are
+        # nearly degenerate modes
+        self.scatter.reset_index(drop=True, inplace=True)
+        # check ordering of the freqdx column
+        self.raman = pd.concat(raman)
         self.raman.sort_values(by=['exc_freq', 'freq'], inplace=True)
+        self.scatter.reset_index(drop=True, inplace=True)
+        if not np.allclose(self.scatter['freqdx'].values, np.sort(self.scatter['freqdx'].values)):
+            warnings.warn("Found an ordering issue with the calculated frequencies. Make sure to check the frequency values.", Warning)
 
     def zpvc(self, uni, delta, temperature=None, geometry=True, print_results=False):
         """
@@ -563,6 +572,7 @@ class VA(metaclass=VAMeta):
         frequencies = uni.frequency_ext['freq'].values*Energy['cm^-1','Ha']
         rmass = uni.frequency_ext['r_mass'].values*Mass['u', 'au_mass']
         if snmodes < nmodes:
+            raise NotImplementedError("We do not currently have support to handle missing frequencies")
             sel_delta = delta[select_freq]
             sel_rmass = uni.frequency_ext['r_mass'].values[select_freq]*Mass['u', 'au_mass']
             sel_freq = uni.frequency_ext['freq'].values[select_freq]*Energy['cm^-1','Ha']
@@ -611,6 +621,7 @@ class VA(metaclass=VAMeta):
         coor_dfs = []
         zpvc_dfs = []
         va_dfs = []
+
         # calculate the ZPVC's at different temperatures by iterating over them
         for t in temperature:
             # calculate anharmonicity in the potential energy surface
