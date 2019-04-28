@@ -32,29 +32,29 @@ class PlotVROA:
             sct = 'forwardscatter'
         elif backward:
             sct = 'backscatter'
-        title     = kwargs.pop('title'    , '')
-        xlabel    = kwargs.pop('xlabel'   , '')
-        ylabel    = kwargs.pop('ylabel'   , '')
-        marker    = kwargs.pop('marker'   , '')
-        line      = kwargs.pop('line'     , '-')
-        figsize   = kwargs.pop('figsize'  , (8,8))
-        dpi       = kwargs.pop('dpi'      , 50)
-        xrange    = kwargs.pop('xrange'   , None)
-        yrange    = kwargs.pop('yrange'   , None)
-        fwhm      = kwargs.pop('fwhm'     , 15)
-        res       = kwargs.pop('res'      , 1)
-        grid      = kwargs.pop('grid'     , False)
-        legend    = kwargs.pop('legend'   , True)
+        title = kwargs.pop('title', '')
+        xlabel = kwargs.pop('xlabel', '')
+        ylabel = kwargs.pop('ylabel', '')
+        marker = kwargs.pop('marker', '')
+        line = kwargs.pop('line', '-')
+        figsize = kwargs.pop('figsize', (8,8))
+        dpi = kwargs.pop('dpi', 50)
+        xrange = kwargs.pop('xrange', None)
+        yrange = kwargs.pop('yrange', None)
+        fwhm = kwargs.pop('fwhm', 15)
+        res = kwargs.pop('res', 1)
+        grid = kwargs.pop('grid', False)
+        legend = kwargs.pop('legend', True)
         exc_units = kwargs.pop('exc_units', 'nm')
-        invert_x  = kwargs.pop('invert_x' , False)
-        font      = kwargs.pop('font'     , 10)
+        invert_x = kwargs.pop('invert_x', False)
+        font = kwargs.pop('font', 10)
 
         if not isinstance(figsize, tuple):
             raise TypeError("figsize must be a tuple not {}".format(type(figsize)))
         rc('font', size=font)
         grouped = vroa.scatter.groupby('exc_freq')
-        exc_freq = vroa.scatter['exc_freq'].drop_duplicates().values
-        for idx, val in enumerate(exc_freq):
+        exc_freq = vroa.scatter['exc_freq'].drop_duplicates()
+        for _, val in enumerate(exc_freq):
             fig = plt.figure(self._fig_count, figsize=figsize, dpi=dpi)
             inten = grouped.get_group(val)[sct].values
             freq = grouped.get_group(val)['freq'].values
@@ -100,23 +100,23 @@ class PlotVROA:
             sct = 'forwardscatter'
         elif backward:
             sct = 'backscatter'
-        title     = kwargs.pop('title'    , '')
-        xlabel    = kwargs.pop('xlabel'   , '')
-        ylabel    = kwargs.pop('ylabel'   , '')
-        marker    = kwargs.pop('marker'   , '')
-        line      = kwargs.pop('line'     , '-')
-        figsize   = kwargs.pop('figsize'  , (8,8))
-        dpi       = kwargs.pop('dpi'      , 50)
-        xrange    = kwargs.pop('xrange'   , None)
-        yrange    = kwargs.pop('yrange'   , None)
-        fwhm      = kwargs.pop('fwhm'     , 15)
-        res       = kwargs.pop('res'      , 1)
-        grid      = kwargs.pop('grid'     , True)
-        legend    = kwargs.pop('legend'   , True)
+        title = kwargs.pop('title', '')
+        xlabel = kwargs.pop('xlabel', '')
+        ylabel = kwargs.pop('ylabel', '')
+        marker = kwargs.pop('marker', '')
+        line = kwargs.pop('line', '-')
+        figsize = kwargs.pop('figsize', (8,8))
+        dpi = kwargs.pop('dpi', 50)
+        xrange = kwargs.pop('xrange', None)
+        yrange = kwargs.pop('yrange', None)
+        fwhm = kwargs.pop('fwhm', 15)
+        res = kwargs.pop('res', 1)
+        grid = kwargs.pop('grid', True)
+        legend = kwargs.pop('legend', True)
         exc_units = kwargs.pop('exc_units', 'nm')
         normalize = kwargs.pop('normalize', 'all')
-        invert_x  = kwargs.pop('invert_x' , False)
-        font      = kwargs.pop('font'     , 10)
+        invert_x = kwargs.pop('invert_x', False)
+        font = kwargs.pop('font', 10)
 
         if not isinstance(figsize, tuple):
             raise TypeError("figsize must be a tuple not {}".format(type(figsize)))
@@ -176,29 +176,29 @@ class PlotVROA:
     def single_raman(self, raman, **kwargs):
         if not hasattr(raman, "raman"):
             raise AttributeError("Please compute raman dataframe")
-        title     = kwargs.pop('title'    , '')
-        xlabel    = kwargs.pop('xlabel'   , '')
-        ylabel    = kwargs.pop('ylabel'   , '')
-        marker    = kwargs.pop('marker'   , '')
-        line      = kwargs.pop('line'     , '-')
-        figsize   = kwargs.pop('figsize'  , (8,8))
-        dpi       = kwargs.pop('dpi'      , 50)
-        xrange    = kwargs.pop('xrange'   , None)
-        yrange    = kwargs.pop('yrange'   , None)
-        fwhm      = kwargs.pop('fwhm'     , 15)
-        res       = kwargs.pop('res'      , 1)
-        grid      = kwargs.pop('grid'     , False)
-        legend    = kwargs.pop('legend'   , True)
+        title = kwargs.pop('title', '')
+        xlabel = kwargs.pop('xlabel', '')
+        ylabel = kwargs.pop('ylabel', '')
+        marker = kwargs.pop('marker', '')
+        line = kwargs.pop('line', '-')
+        figsize = kwargs.pop('figsize', (8,8))
+        dpi = kwargs.pop('dpi', 50)
+        xrange = kwargs.pop('xrange', None)
+        yrange = kwargs.pop('yrange', None)
+        fwhm = kwargs.pop('fwhm', 15)
+        res = kwargs.pop('res', 1)
+        grid = kwargs.pop('grid', False)
+        legend = kwargs.pop('legend', True)
         exc_units = kwargs.pop('exc_units', 'nm')
-        invert_x  = kwargs.pop('invert_x' , False)
-        font      = kwargs.pop('font'     , 10)
+        invert_x = kwargs.pop('invert_x', False)
+        font = kwargs.pop('font', 10)
 
         if not isinstance(figsize, tuple):
             raise TypeError("figsize must be a tuple not {}".format(type(figsize)))
         rc('font', size=font)
         grouped = raman.raman.groupby('exc_freq')
-        exc_freq = raman.raman['exc_freq'].drop_duplicates().values
-        for val in exc_freq:
+        exc_freq = raman.raman['exc_freq'].drop_duplicates()
+        for _, val in enumerate(exc_freq):
             fig = plt.figure(self._fig_count, figsize=figsize, dpi=dpi)
             inten = grouped.get_group(val)['raman_int'].values
             freq = grouped.get_group(val)['freq'].values
