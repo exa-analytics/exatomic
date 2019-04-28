@@ -21,8 +21,8 @@ def gen_delta(freq, delta_type, disp=None):
     When delta_type = 1 we normalize all atomic displacements along all normal modes
     to have a global average displacement of 0.04 Bohr.
 
-    When delta_type = 2 we normalize each displacement so every atom has a maximum
-    displacement of 0.04 Bohr on every normal mode.
+    When delta_type = 2 we normalize each displacement so the maximum displacement
+    of any atom in the normal mode is 0.04 Bohr.
 
     When delta_typ = 3 the user can select a delta parameter to use with the disp
     keyword this will displace all normal modes by that delta parameter.
