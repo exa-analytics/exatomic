@@ -318,8 +318,8 @@ class ExatomicBox(Box):
     def _field_folder(self, **kwargs):
         """Folder that houses controls for viewing scalar fields."""
         uni = kwargs.pop('uni', False)
-        test = kwargs.pop('test', True)
-        fdict = gui_field_widgets(uni, test)
+        #test = kwargs.pop('test', True)
+        fdict = gui_field_widgets(uni)#, test)
 
         def _iso(c):
             for scn in self.active():
@@ -370,7 +370,7 @@ class ExatomicBox(Box):
     def __init__(self, *objs, **kwargs):
         objs = (1,) if not objs else objs
         scenekwargs = kwargs.pop('scenekwargs', {})
-        test = kwargs.pop('test', False)
+        #test = kwargs.pop('test', False)
         uni = kwargs.pop('uni', False)
         typ = kwargs.pop('typ', ExatomicScene)
         mh = kwargs.pop('min_height', None)
@@ -378,13 +378,12 @@ class ExatomicBox(Box):
         nframes = kwargs.pop('nframes', None)
         fields = kwargs.pop('fields', None)
         tensors = kwargs.pop('tensors', None)
-#        freq = kwargs.pop('freq', None)
-        self.scenes, scenes = _scene_grid(objs, mh, mw, test,
+        self.scenes, scenes = _scene_grid(objs, mh, mw,# test,
                                           uni, typ, scenekwargs)
         self._controls = self._init_gui(nframes=nframes,
                                         fields=fields,
                                         tensors=tensors,
-                                        test=test,
+                                        #test=test,
                                         uni=uni)
         for _, obj in self._controls.items():
             if not hasattr(obj, 'active'): obj.active = True
@@ -397,7 +396,8 @@ class ExatomicBox(Box):
                 **kwargs)
 
 
-def _scene_grid(objs, mh, mw, test, uni, typ, scenekwargs):
+#def _scene_grid(objs, mh, mw, test, uni, typ, scenekwargs):
+def _scene_grid(objs, mh, mw, uni, typ, scenekwargs):
     """Auxiliary function to lay out multiple scenes."""
     n = objs[0] if isinstance(objs[0], int) else len(objs)
     if n > 9: raise NotImplementedError('Too many scenes')

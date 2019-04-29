@@ -8,38 +8,45 @@ Collection of classes for VA program
 """
 import numpy as np
 import pandas as pd
-import csv
-import os
 import glob
 import re
-from exa.util.units import Length, Energy, Mass
-from exa.util.utility import mkp
-from exatomic.core import Atom, Gradient
+from exa.util.constants import (speed_of_light_in_vacuum as C, Planck_constant as H,
+                               Boltzmann_constant as boltzmann)
+from exa.util.units import Length, Energy, Mass, Time
+from exatomic.core import Atom, Gradient, Polarizability
+from exatomic.base import sym2z
 from exa import TypedMeta
-#from exatomic import gaussian
-#from exatomic import nwchem
+from .vroa_funcs import _sum, _make_derivatives, _forwscat, _backscat
+import warnings
+warnings.simplefilter("default")
 
-_gauss_template='''{link0}
-{route}
+def get_data(path, attr, soft, f_end='', f_start='', sort_index=None):
+    '''
+    This script is made to be able to extract data from many different files and
+    compile them all into one dataframe. You can pass wildcards as an input in the
+    path variable. We use the glob.glob package to get an array of the file that
+    match the given f_start and f_end strings.
 
-{title}
+    Note:
+        There is nothing built in to handle returning an empty dataframe at the
+        moment.
 
-{charge} {mult}
-'''
-float_format = '%    .10f'
+    Args:
+        path (str): String pointing to location of files
+        attr (str): The attribute that you want to extract
+        soft (class): Class that you want to use to extract the data
+        f_end (str): String to match to the end of the filename
+        f_start (str): String to match to the start of the filename
+        sort_index (list): List of strings that are to be used to sort the compiled dataframe
 
-def get_data(path, attr, f_end, soft, f_start=''):
-    # TODO: Make something so that we do not have to set the type of output parser by default
-    #       allow the user to specify which it is based on the file.
-    #       Consider just using soft as an input of a class
-    #prog = {'gauss': gaussian.Fchk, 'gaussian': gaussian.Fchk}
-    #if soft.lower() not in prog.keys():
-    #    raise NotImplementedError("Cannot find the chosen program {} in known programs {}".format(
-    #                                                                            soft, prog.keys()))
-    #else:
-    #    soft = prog[soft.lower()]
+    Returns:
+        cdf (pandas.DataFrame): Dataframe that has all of the compiled data
+    '''
+    if sort_index is None: sort_index = ['']
+    if not isinstance(sort_index, list):
+        raise TypeError("Variable sort_index must be of type list")
     if not hasattr(soft, attr):
-        raise NotImplementedError("parse_{} is not an attribute of {}".format(attr, soft))
+        raise NotImplementedError("parse_{} is not a method of {}".format(attr, soft))
     files = glob.glob(path)
     array = []
     for file in files:
@@ -48,563 +55,650 @@ def get_data(path, attr, f_end, soft, f_start=''):
             try:
                 df = getattr(ed, attr)
             except AttributeError:
-                raise AttributeError("The property {} cannot be found in output {}".format(
-                                                                                        attr, file))
-            fdx = list(map(int, re.findall('\d+', file.split('/')[-1])))
+                print("The property {} cannot be found in output {}".format(attr, file))
+                continue
+            # We assume that the file identifier is an integer
+            fdx = list(map(int, re.findall('\d+', file.split('/')[-1].replace(
+                                                                   f_start, '').replace(f_end, ''))))
+            #fdx = float(file.split(os.sep)[-1].replace(f_start, '').replace(f_end, ''))
             df['file'] = np.tile(fdx, len(df))
         else:
             continue
         array.append(df)
-    cdf = pd.concat([arr for arr in array])
-    try:
-        cdf.sort_values(by=['file', 'label'], inplace=True)
-    except KeyError:
-        cdf.sort_values(by=['file', 'atom'], inplace=True)
+    cdf = pd.concat(array)
+    # TODO: check if this just absolute overkill in error handling
+    if sort_index[0] == '':
+        if 'file' in cdf.columns.values:
+            if 'label' in cdf.columns.values or 'atom' in cdf.columns.values:
+                try:
+                    cdf.sort_values(by=['file', 'label'], inplace=True)
+                except KeyError:
+                    cdf.sort_values(by=['file', 'atom'], inplace=True)
+            else:
+                warnings.warn("Sorting only by file label on DataFrame. Be careful if there is "+ \
+                              "some order dependent function that is being used later based off"+ \
+                              " this output.", Warning)
+                cdf.sort_values(by=['file'], inplace=True)
+    else:
+        try:
+            cdf.sort_values(by=sort_index, inplace=True)
+        except KeyError:
+            raise KeyError("Please make sure that the keys {} exist in the dataframe created by {}.parse_{}.".format(sort_values, soft, attr))
     cdf.reset_index(drop=True, inplace=True)
     return cdf
 
-def gen_delta(freq, delta_type):
-    """
-    Function to compute the delta parameter to be used for the maximum distortion
-    of the molecule along the normal mode.
-
-    When delta_type = 0 we normalize the displacments to have a maximum of 0.04 Bohr
-    on each normal mode.
-
-    When delta_type = 1 we normalize all atomic displacements along all normal modes
-    to have a global average displacement of 0.04 Bohr.
-
-    When delta_type = 2 we normalize each displacement so every atom has a maximum
-    displacement of 0.04 Bohr on every normal mode.
-
-    Args:
-        freq (:class:`exatomic.atom.Frequency`): Frequency dataframe
-        delta_type (int): Integer value to define the type of delta parameter to use
-    """
-    # average displacement of 0.04 bohr for each normal mode
-    nat = len(freq['label'].drop_duplicates())
-    nmode = len(freq['freqdx'].drop_duplicates())
-    freqdx = freq['freqdx'].drop_duplicates().values
-    if delta_type == 0:
-        # Code using for loops
-        # a = np.linalg.norm(freq[['dx', 'dy', 'dz']].
-        #                                    values, axis=1, ord=2)
-        # vec_sum = []
-        # for i in range(0,len(a),3):
-        #     vec_sum.append([0])
-        #     for j in range(i,i+3):
-        #         vec_sum[-1] += a[j]
-        # print(a)
-        # print(vec_sum)
-        d = freq.groupby(['freqdx', 'frame']).apply(
-            lambda x: np.sum(np.linalg.norm(
-                x[['dx', 'dy', 'dz']].values, axis=1))).values
-        delta = 0.04 * nat / d
-    #    delta = np.repeat(delta, nat)
-
-    # global avrage displacement of 0.04 bohr for all atom displacements
-    elif delta_type == 1:
-        d = np.sum(np.linalg.norm(
-            freq[['dx', 'dy', 'dz']].values, axis=1))
-        delta = 0.04 * nat * nmode / (np.sqrt(3) * d)
-        delta = np.repeat(delta, nmode)
-    #    delta = np.repeat(delta, nat*nmode)
-
-    # maximum displacement of 0.04 bohr for any atom in each normal mode
-    elif delta_type == 2:
-        d = freq.groupby(['freqdx', 'frame']).apply(lambda x:
-            np.amax(abs(np.linalg.norm(x[['dx', 'dy', 'dz']].values, axis=1)))).values
-        delta = 0.04 / d
-    #    delta = np.repeat(delta, nat)
-    return pd.DataFrame.from_dict({'delta': delta, 'freqdx': freqdx})
-
-class GenMeta(TypedMeta):
-    disp = Atom
-    delta = pd.DataFrame
-
-class GenInput(metaclass = GenMeta):
-    """
-    Supporting class for Vibrational Averaging that will generate input files
-    for a selected program under a certain displacement parameter.
-
-    Computes displaced coordinates for all available normal modes from the equilibrium
-    position by using the displacement vector components contained in the
-    :class:`~exatomic.atom.Frequency` dataframe. It will scale these displacements to a
-    desired type defined by the user with the delta_type keyword. For more information
-    on this keyword see the documentation on the
-    :class:`~exatomic.va.va.GenInputs._gen_delta` function.
-
-    We can also define a specific normal mode or a list of normal modes that are of
-    interest and generate displaced coordinates along those specific modes rather
-    than all of the normal modes. Note that we use python indexing so the first
-    normal mode corresponds to the index of 0. This is highly recommended if applicable
-    as it may reduce number of computations and memory usage significantly.
-
-    Args:
-        uni (:class:`~exatomic.Universe`): Universe object containg pertinent data
-        delta_type (int): Integer value to define the type of delta parameter to use
-        fdx (int or list): Integer or list parameter to only displace along the
-                           selected normal modes
-    """
-
-    _tol = 1e-6
-
-    @property
-    def atom(self):
-        return self.disp
-
-#    def _gen_delta(self, freq, delta_type):
-#        """
-#        Function to compute the delta parameter to be used for the maximum distortion
-#        of the molecule along the normal mode.
-#
-#        When delta_type = 0 we normalize the displacments to have a maximum of 0.04 Bohr
-#        on each normal mode.
-#
-#        When delta_type = 1 we normalize all atomic displacements along all normal modes
-#        to have a global average displacement of 0.04 Bohr.
-#
-#        When delta_type = 2 we normalize each displacement so every atom has a maximum
-#        displacement of 0.04 Bohr on every normal mode.
-#
-#        Args:
-#            freq (:class:`exatomic.atom.Frequency`): Frequency dataframe
-#            delta_type (int): Integer value to define the type of delta parameter to use
-#        """
-#        # average displacement of 0.04 bohr for each normal mode
-#        nat = len(freq['label'].drop_duplicates())
-#        nmode = len(freq['freqdx'].drop_duplicates())
-#        freqdx = freq['freqdx'].values
-#        if delta_type == 0:
-#            # Code using for loops
-#            # a = np.linalg.norm(freq[['dx', 'dy', 'dz']].
-#            #                                    values, axis=1, ord=2)
-#            # vec_sum = []
-#            # for i in range(0,len(a),3):
-#            #     vec_sum.append([0])
-#            #     for j in range(i,i+3):
-#            #         vec_sum[-1] += a[j]
-#            # print(a)
-#            # print(vec_sum)
-#            d = freq.groupby(['freqdx', 'frame']).apply(
-#                lambda x: np.sum(np.linalg.norm(
-#                    x[['dx', 'dy', 'dz']].values, axis=1))).values
-#            delta = 0.04 * nat / d
-#            delta = np.repeat(delta, nat)
-#
-#        # global avrage displacement of 0.04 bohr for all atom displacements
-#        elif delta_type == 1:
-#            d = np.sum(np.linalg.norm(
-#                freq[['dx', 'dy', 'dz']].values, axis=1))
-#            delta = 0.04 * nat * nmode / (np.sqrt(3) * d)
-#            delta = np.repeat(delta, nat*nmode)
-#
-#        # maximum displacement of 0.04 bohr for any atom in each normal mode
-#        elif delta_type == 2:
-#            d = freq.groupby(['freqdx', 'frame']).apply(lambda x:
-#                np.amax(abs(np.linalg.norm(x[['dx', 'dy', 'dz']].values, axis=1)))).values
-#            delta = 0.04 / d
-#            delta = np.repeat(delta, nat)
-#        return pd.DataFrame.from_dict({'delta': delta, 'freqdx': freqdx})
-
-    def _gen_displaced(self, freq, atom, fdx):
-        """
-        Function to generate displaced coordinates for each selected normal mode.
-        We scale the displacements by the selected delta value in the positive and negative
-        directions. We generate an array of coordinates that are put into a dataframe to
-        write them to a file input for later evaluation.
-
-        Note:
-            The index 0 is reserved for the optimized coordinates, the equilibrium geometry.
-            The displaced coordinates in the positive direction are given an index from
-            1 to tnmodes (total number of normal modes).
-            The displaced coordinates in the negative direction are given an index from
-            tnmodes to 2*tnmodes.
-            In an example with 39 normal modes 0 is the equilibrium geometry, 1-39 are the
-            positive displacements and 40-78 are the negative displacements.
-            nmodes are the number of normal modes that are selected. tnmodes are the total
-            number of normal modes for the system.
-
-        Args:
-            freq (:class:`exatomic.atom.Frequency`): Frequency dataframe
-            atom (:class:`exatomic.atom.Atom`): Atom dataframe
-            fdx (int or list): Integer or list parameter to only displace along the
-                               selected normal modes
-        """
-        # get needed data from dataframes
-        eqcoord = atom[['x', 'y', 'z']].values
-        symbols = atom['symbol'].values
-        znums = atom['Zeff'].values
-        if fdx == -1:
-            freq_g = freq.copy()
-        else:
-            freq_g = freq.groupby('freqdx').filter(lambda x: fdx in
-                                                    x['freqdx'].drop_duplicates().values).copy()
-        disp = freq_g[['dx','dy','dz']].values
-        modes = freq_g['frequency'].drop_duplicates().values
-        nat = len(eqcoord)
-        freqdx = freq_g['freqdx'].drop_duplicates().values
-        tnmodes = len(freq['freqdx'].drop_duplicates())
-        nmodes = len(freqdx)
-        # chop all values less than 1e-6
-        eqcoord[abs(eqcoord) < self._tol] = 0.0
-        # get delta values for wanted frequencies
-        try:
-            if fdx == -1:
-                delta = self.delta['delta'].values
-            elif -1 not in fdx:
-                delta = self.delta.groupby('freqdx').filter(lambda x:
-                                      fdx in x['freqdx'].drop_duplicates().values)['delta'].values
-            else:
-                raise TypeError("fdx must be a list of integers or a single integer")
-            #if len(delta) != tnmodes:
-            #    raise ValueError("Inappropriate length of delta. Passed a length of {} "+
-            #                     "when it should have a length of {}. One value for each "+
-            #                     "normal mode.".format(len(delta), tnmodes))
-            #else:
-            #    delta = np.repeat(delta, nat)
-            delta = np.repeat(delta, nat)
-        except AttributeError:
-            raise AttributeError("Please compute self.delta first")
-        # calculate displaced coordinates in positive and negative directions
-        disp_pos = np.tile(np.transpose(eqcoord), nmodes) + np.multiply(np.transpose(disp), delta)
-        disp_neg = np.tile(np.transpose(eqcoord), nmodes) - np.multiply(np.transpose(disp), delta)
-        # for now we comment this out so that we can just generate the necessary files in the
-        # format of the original program
-#        full = np.concatenate((np.transpose(disp_neg), eqcoord, np.transpose(disp_pos)), axis=0)
-#        # generate frequency indexes
-#        # negative values are for displacement in negative direction
-#        freqdx = [i for i in range(-nmodes, nmodes+1, 1)]
-        full = np.concatenate((eqcoord, np.transpose(disp_pos), np.transpose(disp_neg)), axis=0)
-        freqdx = [i+1+tnmodes*j for j in range(0,2,1) for i in freqdx]
-        freqdx = np.concatenate(([0],freqdx))
-        freqdx = np.repeat(freqdx, nat)
-        modes = np.repeat(np.concatenate(([0],modes,modes)), nat)
-        symbols = np.tile(symbols, 2*nmodes+1)
-        znums = np.tile(znums, 2*nmodes+1)
-        frame = np.zeros(len(znums)).astype(np.int64)
-        # create dataframe
-        df = pd.DataFrame(full, columns=['x', 'y', 'z'])
-        df['freqdx'] = freqdx
-        df['Z'] = znums
-        df['symbol'] = symbols
-        df['modes'] = modes
-        df['frame'] = frame
-        return df
-
-    def gen_gauss_inputs(self, path, routeg, routep, charge=0, mult=1, link0=''):
-        """
-        Method to write the displacements given in the displacements class variable to a
-        gaussian input file. This writes a gradient (confg*.inp) and property (confp*.inp)
-        files. As such, routeg and routep must be defined separately.
-
-        Args:
-            path (str): path to where the files will be written
-            routeg (str): gaussian route input for gradient calculation
-            routep (str): gaussian route input for property calculation
-            charge (int): charge of molecular system
-            mult (int): spin multiplicity of molecular system
-            link0 (str): link0 commands for gaussian
-        """
-        grouped = self.disp.groupby('freqdx')
-        freqdx = self.disp['freqdx'].drop_duplicates().values
-        n = len(str(max(freqdx)))
-        for fdx in freqdx:
-            grad_file = 'confg'+str(fdx).zfill(n)+'.inp'
-            prop_file = 'confo'+str(fdx).zfill(n)+'.inp'
-            with open(mkp(path, grad_file), 'w') as g:
-                xyz = grouped.get_group(fdx)[['symbol', 'x', 'y', 'z']]
-                g.write(_gauss_template.format(link0=link0, route=routeg,
-                        title=str(fdx)+' gradient', charge=charge, mult=mult))
-                xyz['x'] *= Length['au', 'Angstrom']
-                xyz['y'] *= Length['au', 'Angstrom']
-                xyz['z'] *= Length['au', 'Angstrom']
-                xyz.to_csv(g, header=False, index=False, sep=' ', float_format=float_format,
-                            quoting=csv.QUOTE_NONE, escapechar=' ')
-                g.write('\n')
-            with open(mkp(path, prop_file), 'w') as p:
-                xyz = grouped.get_group(fdx)[['symbol', 'x', 'y', 'z']]
-                p.write(_gauss_template.format(link0=link0, route=routep,
-                        title=str(fdx)+' property', charge=charge, mult=mult))
-                xyz['x'] *= Length['au', 'Angstrom']
-                xyz['y'] *= Length['au', 'Angstrom']
-                xyz['z'] *= Length['au', 'Angstrom']
-                xyz.to_csv(p, header=False, index=False, sep=' ', float_format=float_format,
-                            quoting=csv.QUOTE_NONE, escapechar=' ')
-                p.write('\n')
-
-    def gen_inputs(self, path, comm, soft):
-        """
-        Method to write the displaced coordinates as an input for the quantum code program
-        of choice. Currently supported input generators include:
-            - NWChem
-            - Gaussian
-        More to come as the need is met.
-
-        Note:
-            comm is defined as a single dictionary, but it can be a dictionary of dictionaries
-            if multiple inputs based on thge same geometry must be written. If this is the case
-            the dictionary must be
-                {'gradient': {gradient commands},
-                 'property': {property commands}}
-            If a 1D dictionary is passed we assume that there will only need to be one file
-            to calculate the gradient and property values.
-
-        Args:
-            path (str): Path pointing to filepath to where files will be written
-            comm (dict): Dictionary containing all of the pertinent commands for the input
-            soft (class instance): Software of choice for the input generation
-        """
-        raise NotImplementedError("This method still needs some work as we all do not have enough time")
-        
-
-
-    def gen_slurm_inputs(self, path, sbatch, module, end_com=''):
-        """
-        Method to write slurm scripts to execute gradients and property calculations given
-        the displaced coordinates.
-
-        Method generates separate directories containing the slurm script for each calculation.
-        Will need to submit with some external shell script.
-
-        Need to define the module and sbatch variables to what is needed by each user. It was
-        built like this to make it the most general and applicable to more than one type of
-        quantum chemistry code.
-
-        Args:
-            path (str): path to where the directories will be generated and the inputs will
-                        will be read from
-            sbatch (dict): sbatch commands that are to be used for batch script execution
-            module (str): multiline string that will contain the module loading and other
-                          user specific variables
-            end_com (str): commands to be placed at the end of the slurm script
-        """
-        _name = "{job}{int}.dir"
-        _sbatch = "#SBATCH --{key}={value}"
-        files = os.listdir(path)
-        for file in files:
-            if file.endswith(".inp") and file.startswith("confo"):
-                fdx = file.replace("confo", "").replace(".inp", "")
-                job = "jobo"
-            elif file.endswith(".inp") and file.startswith("confg"):
-                fdx = file.replace("confg", "").replace(".inp", "")
-                job = "jobg"
-            else:
-                continue
-            try:
-                os.mkdir(path+_name.format(job=job, int=fdx))
-                j_path = path+_name.format(job=job, int=fdx)
-            except OSError:
-                raise OSError("Failed to create directory {}".format(path+_name.format(
-                                                                                job=job, int=fdx)))
-            slurm = file.replace(".inp", ".slurm")
-            with open(path+file, 'r') as f:
-                with open(mkp(j_path, slurm), 'w') as j:
-                    j.write("#!/bin/bash\n")
-                    for key in sbatch.keys():
-                        j.write(_sbatch.format(key=key, value=sbatch[key])+'\n')
-                    j.write(_sbatch.format(key="job-name", value=file.replace(".inp", "")))
-                    j.write(_sbatch.format(key="output", value=file.replace(".inp", ".out")))
-                    j.write(module)
-                    for line in f:
-                        j.write(line)
-                    j.write(end_com+'\n')
-
-    @staticmethod
-    def write_data_file(path, array, fn):
-        with open(mkp(path, fn), 'w') as f:
-            for item in array:
-                f.write("{}\n".format(item))
-
-    def to_va(self, uni, path):
-        """
-        Simple script to be able to use the vibaverage.exe program to calculate the needed
-        parameters (temporary).
-
-        Args:
-            uni (:class:`~exatomic.Universe`): Universe object containg pertinent data
-            path (str): path to where the *.dat files will be written to
-        """
-        freq = uni.frequency.copy()
-        atom = uni.atom.copy()
-        freq_ext = uni.frequency_ext.copy()
-        # construct delta data file
-        fn = "delta.dat"
-        delta = self.delta['delta'].drop_duplicates().values
-        self.write_data_file(path=path, array=delta, fn=fn)
-        # construct smatrix data file
-        fn = "smatrix.dat"
-        smatrix = freq[['dx', 'dy', 'dz']].stack().values
-        self.write_data_file(path=path, array=smatrix, fn=fn)
-        # construct atom order data file
-        fn = "atom_order.dat"
-        atom_order = atom['symbol'].values
-        self.write_data_file(path=path, array=atom_order, fn=fn)
-        # construct reduced mass data file
-        fn = "redmass.dat"
-        redmass = freq_ext['r_mass'].values * Mass['au_mass', 'u']
-        self.write_data_file(path=path, array=redmass, fn=fn)
-        # construct eqcoord data file
-        fn = "eqcoord.dat"
-        eqcoord = atom[['x', 'y', 'z']].stack().values
-        eqcoord *= Length['au', 'Angstrom']
-        self.write_data_file(path=path, array=eqcoord, fn=fn)
-        # construct frequency data file
-        fn = "freq.dat"
-        frequency = freq_ext['freq'].values * Energy['Ha', 'cm^-1']
-        self.write_data_file(path=path, array=frequency, fn=fn)
-        # construct actual displacement data file
-        fn = "displac_a.dat"
-        delta = np.repeat(self.delta['delta'].values, len(atom))
-        disp = np.multiply(np.linalg.norm(np.transpose(freq[['dx','dy','dz']].values), axis=0),
-                                                        delta)
-        disp *= Length['au', 'Angstrom']
-        freqdx = freq['freqdx'].drop_duplicates().values
-        n = len(atom_order)
-        with open(mkp(path, fn), 'w') as f:
-            f.write("actual displacement in angstroms\n")
-            f.write("atom normal_mode distance_atom_moves\n")
-            for fdx in range(len(freqdx)):
-                for idx in range(n):
-                    f.write("{} {}\t{}\n".format(idx+1, fdx+1, disp[fdx*15+idx]))
-
-    def write_grad_prop(self, path, grad, prop):
-        """
-        Simple function to write the gradient and property datafiles to the format needed for
-        vibaverage.exe (temporary).
-
-        The gradient and property dataframes must be from the single point calculations. We
-        assume this by not grouping by the frame column.
-
-        Args:
-            path (str): path to where the *.dat files will be written
-            grad (np.ndarray): 1D array of values from grad[['fx', 'fy', 'fz']].stack().values
-            prop (np.ndarray): 1D array of values from prop[property].values
-        """
-        # construct gradient data file
-        fn = "grad.dat"
-        if isinstance(grad[0], np.ndarray):
-            raise ValueError("grad array must be a 1D array")
-        self.write_data_file(path=path, array=grad, fn=fn)
-        # construct property data file
-        fn = "prop.dat"
-        if isinstance(prop[0], np.ndarray):
-            raise ValueError("prop array must be a 1D array")
-        self.write_data_file(path=path, array=prop, fn=fn)
-
-    def __init__(self, uni, delta_type=0, fdx=-1, *args, **kwargs):
-        if "_frequency" not in vars(uni):
-            raise AttributeError("Frequency dataframe cannot be found in universe")
-        freq = uni.frequency.copy()
-        atom = uni.atom.copy()
-        self.delta = gen_delta(freq, delta_type)
-        self.disp = self._gen_displaced(freq, atom, fdx)
-
 class VAMeta(TypedMeta):
-    grad_0 = Gradient
-    grad_plus = Gradient
-    grad_minus = Gradient
     gradient = Gradient
+    roa = Polarizability
+    eff_coord = Atom
 
 class VA(metaclass=VAMeta):
     """
     Administrator class for VA to perform all initial calculations of necessary variables to pass
     for calculations.
     """
-    def init_va(self, uni):
-        """
-        This is a method to initialize all of the variables that will be needed to execute the VA
-        program. As a sanity check we calculate the frequencies from the force constants. If we
-        have any negative force constants the results may not be as reliable.
+#    @staticmethod
+#    def _calc_kp(lambda_0, lambda_p):
+#        '''
+#        Function to calculate the K_p value as given in equation 2 on J. Chem. Phys. 2007, 127, 134101.
+#        We assume the temperature to be 298.15 as a hard coded value. Must get rid of this in future
+#        iterations. The final units of the equation is in m^2.
+#        Input values lambda_0 and lambda_p must be in the units of m^-1
+#        '''
+#        # epsilon_0 = 1/(4*np.pi*1e-7*C**2)
+#        # another hard coded value
+#        temp = 298.15 # Kelvin
+#        boltz = 1.0/(1.0-np.exp(-H*C*lambda_p/(KB*temp)))
+#        constants = H * np.pi**2 / C
+#        variables = (lambda_0 - lambda_p)**4/lambda_p
+#        kp = 2 * variables * constants * boltz * (Length['au', 'm']**4 / Mass['u', 'kg'])
+#        return kp
+
+    @staticmethod
+    def _check_file_continuity(df, prop, nmodes):
+        files = df['file'].drop_duplicates()
+        pos_file = files[files.isin(range(1,nmodes+1))]
+        neg_file = files[files.isin(range(nmodes+1, 2*nmodes+1))]-nmodes
+        intersect = np.intersect1d(pos_file.values, neg_file.values)
+        diff = np.unique(np.concatenate((np.setdiff1d(pos_file.values, intersect),
+                                         np.setdiff1d(neg_file.values, intersect)), axis=None))
+        rdf = df.copy()
+        if len(diff) > 0:
+            print("Seems that we are missing one of the {} outputs for frequency {} ".format(prop, diff)+ \
+                  "we will ignore the {} data for these frequencies.".format(prop))
+            rdf = rdf[~rdf['file'].isin(diff)]
+            rdf = rdf[~rdf['file'].isin(diff+nmodes)]
+        return rdf
+
+    @staticmethod
+    def _get_temp_factor(temp, freq):
+        if temp > 1e-6:
+            try:
+                factor = freq*Energy['Ha', 'J'] / (2 * boltzmann * temp)
+                temp_fac = np.cosh(factor) / np.sinh(factor)
+            # this should be taken care of by the conditional but always good to
+            # take care of explicitly
+            except ZeroDivisionError:
+                raise ZeroDivisionError("Something seems to have gone wrong with the sinh function")
+        else:
+            temp_fac = 1.
+        return temp_fac
+
+    @staticmethod
+    def get_pos_neg_gradients(grad, freq):
+        '''
+        Here we get the gradients of the equilibrium, positive and negative displaced structures.
+        We extract them from the gradient dataframe and convert them into normal coordinates
+        by multiplying them by the frequency normal mode displacement values.
 
         Args:
-            uni (:class:`~exatomic.Universe`): Universe object containg pertinent data from
-                                               frequency calculation
-        """
-        # check that all attributes to be used exist
-        if not hasattr(self, "gradient"):
-            raise AttributeError("Please set gradient attribute first")
-        if not hasattr(self, "property"):
-            raise AttributeError("Please set property attribute first")
-        if not hasattr(uni, "frequency_ext"):
-            raise AttributeError("Cannot find frequency extended dataframe in universe")
-        if not hasattr(uni, "frequency"):
-            raise AttributeError("Cannot find frequency dataframe in universe")
-        # group the gradients by file (normal mode)
-        grouped = self.gradient.groupby('file')
-        # get number of normal modes
-        nmodes = len(uni.frequency_ext.index.values)
+            grad (:class:`exatomic.gradient.Gradient`): DataFrame containing all of the gradient data
+            freq (:class:`exatomic.atom.Frquency`): DataFrame containing all of the frequency data
+
+        Returns:
+            delfq_zero (pandas.DataFrame): Normal mode converted gradients of equilibrium structure
+            delfq_plus (pandas.DataFrame): Normal mode converted gradients of positive displaced structure
+            delfq_minus (pandas.DataFrame): Normal mode converted gradients of negative displaced structure
+        '''
+        grouped = grad.groupby('file')
         # generate delta dataframe
-        delta_df = gen_delta(freq=uni.frequency.copy(), delta_type=2)
-        delta = delta_df['delta'].values
-#        delta = delta.drop_duplicates(subset='freqdx').reset_index(drop=True)
+        # TODO: make something so delta can be set
+        #       possible issues are a user using a different type of delta
+        nmodes = len(freq['freqdx'].drop_duplicates().values)
         # get gradient of the equilibrium coordinates
         grad_0 = grouped.get_group(0)
         # get gradients of the displaced coordinates in the positive direction
         grad_plus = grouped.filter(lambda x: x['file'].drop_duplicates().values in
                                                                         range(1,nmodes+1))
-        # get number of selected normal modes
-        # TODO: check stability of using this parameter
         snmodes = len(grad_plus['file'].drop_duplicates().values)
         # get gradients of the displaced coordinates in the negative direction
         grad_minus = grouped.filter(lambda x: x['file'].drop_duplicates().values in
                                                                         range(nmodes+1, 2*nmodes+1))
         # TODO: Check if we can make use of numba to speed up this code
-        delfq_zero = uni.frequency.groupby('freqdx')[['dx', 'dy', 'dz']].apply(lambda x:
-                                    np.sum(np.multiply(grad_0[['fx', 'fy', 'fz']].values, x.values)))
-        delfq_zero = np.tile(delfq_zero, nmodes).reshape(snmodes, nmodes)
+        delfq_zero = freq.groupby('freqdx')[['dx', 'dy', 'dz']].apply(lambda x:
+                                    np.sum(np.multiply(grad_0[['fx', 'fy', 'fz']].values, x.values))).values
+        # we extend the size of this 1d array as we will perform some matrix summations with the
+        # other outputs from this method
+        delfq_zero = np.tile(delfq_zero, snmodes).reshape(snmodes, nmodes)
+
         delfq_plus = grad_plus.groupby('file')[['fx', 'fy', 'fz']].apply(lambda x:
-                                uni.frequency.groupby('freqdx')[['dx', 'dy', 'dz']].apply(lambda y:
-                                    np.sum(np.multiply(y.values, x.values))))
-        #delfq_plus.columns = delfq_plus.columns.values-1
-        delfq_plus.reset_index(drop=True, inplace=True)
+                                freq.groupby('freqdx')[['dx', 'dy', 'dz']].apply(lambda y:
+                                    np.sum(np.multiply(y.values, x.values)))).values
         delfq_minus = grad_minus.groupby('file')[['fx', 'fy', 'fz']].apply(lambda x:
-                                uni.frequency.groupby('freqdx')[['dx', 'dy', 'dz']].apply(lambda y:
-                                    np.sum(np.multiply(y.values, x.values))))
-        delfq_minus.reset_index(drop=True, inplace=True)
-        #delfq_minus.columns = delfq_minus.columns.values-40
+                                freq.groupby('freqdx')[['dx', 'dy', 'dz']].apply(lambda y:
+                                    np.sum(np.multiply(y.values, x.values)))).values
+        return [delfq_zero, delfq_plus, delfq_minus]
 
-        # get diagonal elements of respqective matrix
-        diag_plus = np.diag(delfq_plus)
-        diag_minus = np.diag(delfq_minus)
-        diag_zero = np.diag(delfq_zero)
+    @staticmethod
+    def calculate_frequencies(delfq_0, delfq_plus, delfq_minus, redmass, select_freq, delta=None):
+        '''
+        Here we calculated the frequencies from the gradients calculated for each of the
+        displaced structures along the normal mode. In principle this should give the same or
+        nearly the same frequency value as that from a frequency calculation.
 
+        Args:
+            delfq_0 (numpy.ndarray): Array that holds all of the information about the gradient
+                                     derivative of the equlilibrium coordinates
+            delfq_plus (numpy.ndarray): Array that holds all of the information about the gradient
+                                        derivative of the positive displaced coordinates
+            delfq_minus (numpy.ndarray): Array that holds all of the information about the gradient
+                                         derivative of the negative displaced coordinates
+            redmass (numpy.ndarray): Array that holds all of the reduced masses. We can handle both
+                                     a subset of the entire values or all of the values
+            select_freq (numpy.ndarray): Array that holds the selected frequency indexes
+            delta (numpy.ndarray): Array that has the delta values used in the displaced structures
+
+        Returns:
+            frequencies (numpy.ndarray): Frequency array from the calculation
+        '''
+        if delta is None:
+            print("No delta has been given. Assume delta_type to be 2.")
+            delta = va.gen_delta(delta_type=2, freq=freq.copy())['delta'].values
+        # get number of selected normal modes
+        # TODO: check stability of using this parameter
+        snmodes = len(select_freq)
+        #print("select_freq.shape: {}".format(select_freq.shape))
+        if len(redmass) > snmodes:
+            redmass_sel = redmass[select_freq]
+        else:
+            redmass_sel = redmass
+        if len(delta) > snmodes:
+            delta_sel = delta[select_freq]
+        else:
+            delta_sel = delta
         # calculate force constants
-        kqi   = np.divide(diag_plus - diag_minus, 2.0*delta)
-        kqiii = np.divide(diag_plus - 2.0 * diag_zero + diag_minus, np.multiply(delta, delta))
-        kqijj = np.divide(delfq_plus - 2.0 * delfq_zero + delfq_minus,
-                                                    np.multiply(delta, delta).reshape(snmodes, 1))
+        kqi = np.zeros(len(select_freq))
+        #print(redmass_sel.shape)
+        for fdx, sval in enumerate(select_freq):
+            kqi[fdx] = (delfq_plus[fdx][sval] - delfq_minus[fdx][sval]) / (2.0*delta_sel[fdx])
 
-        # convert force constants to reduced normal coordinate force constants
-        redmass = uni.frequency_ext['r_mass'].values
-        vqi = np.divide(kqi, redmass)
-        vqijj = np.divide(kqijj, np.sqrt(np.power(redmass, 3)).reshape(snmodes,1))
-
+        vqi = np.divide(kqi, redmass_sel.reshape(snmodes,))
         # TODO: Check if we want to exit the program if we get a negative force constant
         n_force_warn = vqi[vqi < 0.]
+        if n_force_warn.any() == True:
+            # TODO: point to exactly which frequencies are negative
+            negative = np.where(vqi<0)[0]
+            text = ''
+            # frequencies are base 0
+            for n in negative[:-1]: text += str(n)+', '
+            text += str(negative[-1])
+            warnings.warn("Negative force constants have been calculated for frequencies {} be wary of results".format(text),
+                            Warning)
+        # return calculated frequencies
+        frequencies = np.sqrt(vqi).reshape(snmodes,)*Energy['Ha', 'cm^-1']
+        return frequencies
 
-        # calculate frequencies
-        calcfreq = np.sqrt(vqi)
-        calcfreq *= Energy['Ha', 'cm^-1']
+    def vroa(self, uni, delta, units='nm'):
+        """
+        Here we implement the Vibrational Raman Optical Activity (VROA) equations as outlined in
+        the paper J. Chem. Phys. 2007, 127,
+        134101. The general workflow is that we must read in the data from a Raman Optical Activity
+        calculation with your software of choice and this script will take that data and generate
+        the forward and back scattering intensities for VROA. From here you will be able to plot
+        the spectra with another method in this same class.
 
+        Note:
+            It is extremely important that the delta values that you pass into the function are the
+            exact same as the ones that were used to generate the displaced structures. We do not
+            currently have a method to do this automatically but we are working on it.
 
-        # This is mainly for debug purposes
-        # Will most likely eliminate most if not all of these class attributes
-        self.delfq_zero = pd.DataFrame(delfq_zero)
-        self.delfq_plus = pd.DataFrame(delfq_plus)
-        self.delfq_minus = pd.DataFrame(delfq_minus)
-        idx = uni.frequency['freqdx'].drop_duplicates().values
-        ndx = np.repeat(idx, nmodes)
-        #print(len(ndx))
-        jdx = np.tile(idx, nmodes)
-        #print(len(jdx))
-        self.kqi   = pd.DataFrame.from_dict({'idx': idx, 'kqi': kqi, 'calculated_vqi': uni.frequency_ext['f_const']})
-        self.kqiii = pd.DataFrame.from_dict({'idx': idx, 'kqiii': kqiii})
-        self.kqijj = pd.DataFrame(kqijj)
-        self.delta = delta_df
-        self.vqi = pd.DataFrame.from_dict({'idx': idx, 'vqi': vqi})
-        self.calcfreq = pd.DataFrame.from_dict({'idx': idx, 'calc_freq': calcfreq, 'real_freq': uni.frequency_ext['freq']*Energy['Ha', 'cm^-1']})
-        #pd.options.display.float_format = '{:.6E}'.format
+        Args:
+            uni (:class:`~exatomic.Universe`): Universe containing all dataframes from the
+                                               frequency calculation
+            delta (numpy.ndarray): Array containing all of the delta values used for the generation
+                                of the displaced structures.
+            units (str): Units of the excitation frequencies. Default to nm.
+        """
+        if not hasattr(self, 'roa'):
+            raise AttributeError("Please set roa attribute.")
+        if not hasattr(self, 'gradient'):
+            raise AttributeError("Please set gradient attribute.")
+        if not hasattr(uni, 'frequency_ext'):
+            raise AttributeError("Please compute frequency_ext dataframe.")
+        if not hasattr(uni, 'frequency'):
+            raise AttributeError("Please compute frequency dataframe.")
+        # we must remove the 0 index file as by default our displaced coordinate generator will
+        # include these values and they have no significane in this code as of yet
+        try:
+            roa_0 = self.roa.groupby('file').get_group(0)
+            idxs = roa_0.index.values
+            roa = self.roa.loc[~self.roa.index.isin(idxs)]
+        except KeyError:
+            roa = self.roa.copy()
+        # number of normal modes
+        nmodes = len(uni.frequency_ext.index.values)
+        # initialize scatter array
+        scatter = []
+        raman = []
+        # set some variables that will be used throughout
+        # speed of light in au
+        C_au = C*Length['m', 'au']/Time['s','au']
+        # a conversion factor for the beta_g beta_A and alpha_g tensor invariants
+        # TODO: make the conversion for the alha_squared and beta_alpha invariants
+        au2angs = Length['au', 'Angstrom']
+        #conver = 1/C_au
+        # get the square roots of the reduced masses
+        rmass = np.sqrt(uni.frequency_ext['r_mass'].values)
+        # generate a Levi Civita 3x3x3 tensor
+        epsilon = np.array([[0,0,0,0,0,1,0,-1,0],[0,0,-1,0,0,0,1,0,0],[0,1,0,-1,0,0,0,0,0]])
+        # some dictionaries to replace the string labels with integers
+        # this is important so we can speed up the code with jit
+        rep_label = {'Ax': 0, 'Ay': 1, 'Az': 2, 'alpha': 3, 'g_prime': 4}
+        rep_type = {'real': 0, 'imag': 1}
+        # replace the columns
+        roa.replace(rep_label, inplace=True)
+        roa.replace(rep_type, inplace=True)
+        # get rid of the frame column serves no purpose here
+        roa.drop('frame', axis=1, inplace=True)
+        # the excitation frequencies
+        try:
+            exc_freq = roa['exc_freq'].drop_duplicates().values
+            text = ''
+            for f in exc_freq: text += str(f)+', '
+            print("Found excitation frequencies: {}".format(text))
+        except KeyError:
+            exc_freq = [-1]
+            roa['exc_freq'] = np.repeat(-1, len(roa))
+            print("No excitation frequency column (exc_freq) found in va_corr.roa."+ \
+                         "Continuing assuming single excitation frequency.")
+        # loop over all of the excitation frequencies performing the needed calculations
+        for val in exc_freq:
+            # omega parameter
+            if units == 'nm':
+                try:
+                    omega = H*C/(val*Length['nm', 'm'])*Energy['J', 'Ha']
+                except ZeroDivisionError:
+                    omega = 0.0
+                    warnings.warn("Omega parameter has been set to 0. beta(A)**2 will be zero by extension.", Warning)
+            else:
+                omega = val*Energy[units, 'Ha']
+            if val == -1:
+                omega = 0.0
+                warnings.warn("Omega parameter has been set to 0. beta(A)**2 will be zero by extension.", Warning)
+            #print(omega)
+            sel_roa = roa.groupby('exc_freq').get_group(val)
+            grad = self.gradient.groupby('exc_freq').get_group(val)
+            # check for any missing files
+            sel_roa = self._check_file_continuity(sel_roa, "ROA", nmodes)
+            grad = self._check_file_continuity(grad, "gradient", nmodes)
+            # get the frequencies that have been calculated
+            # our code allows the user to calculate the roa of certain normal modes
+            # this allows the user to decrease the computational cost significantly
+            select_freq = sel_roa['file'].drop_duplicates().values-1
+            mask = select_freq > nmodes-1
+            select_freq = select_freq[~mask]
+            #print(select_freq)
+            #print(select_freq)
+            snmodes = len(select_freq)
+            # get the reduced mass and delta parameters of the calculated normal modes
+            if snmodes < nmodes:
+                sel_rmass = rmass[select_freq].reshape(snmodes,1)
+                sel_delta = delta[select_freq].reshape(snmodes,1)
+            else:
+                sel_rmass = rmass.reshape(snmodes, 1)
+                sel_delta = delta.reshape(snmodes, 1)
+            # create a numpy array with the necessary dimensions
+            # number_of_files/2 x 9
+            value_complex = np.zeros((int(len(sel_roa)/2),9), dtype=np.complex128)
+            labels = np.zeros(int(len(sel_roa)/2), dtype=np.int8)
+            files = np.zeros(int(len(sel_roa)/2), dtype=np.int8)
+            #print(sel_delta)
+            #start = time.time()
+            # combine the real and imaginary values
+            # passed through jitted code
+            _sum(sel_roa.values, value_complex, labels, files)
+            #print("Completed sum: {}".format(time.time()-start))
+            labels = pd.Series(labels)
+            files = pd.Series(files)
+            # replace the integer labels with the strings again
+            # TODO: is this really necessary?
+            labels.replace({v: k for k, v in rep_label.items()}, inplace=True)
+            complex_roa= pd.DataFrame(value_complex)
+            complex_roa.index = labels
+            complex_roa['file'] = np.repeat(range(2*snmodes),5)
+            #print(complex_roa)
+            #complex_roa['exc_freq'] = np.repeat(exc_freq, 10*nmodes)
+            # because I could not use range(9)............ugh
+            cols = [0,1,2,3,4,5,6,7,8]
+            # splice the data into the respective tensor dataframes
+            # we want all of the tensors in a 1d vector like form
+            A = pd.DataFrame.from_dict(complex_roa.loc[['Ax','Ay','Az']].groupby('file').
+                                       apply(lambda x: np.array([x[cols].values[0],x[cols].values[1],
+                                                                 x[cols].values[2]]).flatten()).
+                                       reset_index(drop=True).to_dict()).T
+            alpha = pd.DataFrame.from_dict(complex_roa.loc['alpha',range(9)].reset_index(drop=True).
+                                           to_dict())
+            g_prime = pd.DataFrame.from_dict(complex_roa.loc['g_prime',range(9)].
+                                             reset_index(drop=True).to_dict())
+            #***********DEBUG***********#
+            #self.A = A
+            #self.alpha = alpha
+            #self.g_prime = g_prime
+            #for i in g_prime.values.reshape(snmodes*9*2):
+            #    print("{} {}".format(i.real, i.imag))
+            #********END DEBUG**********#
 
-    def __init__(self, *args, **kwargs):
-        pass
+            # get gradient calculated frequencies
+            # this is just to make sure that we are calculating the right frequency
+            # this comes from the init_va code
+            grad_derivs = self.get_pos_neg_gradients(grad, uni.frequency.copy())
+            frequencies = self.calculate_frequencies(*grad_derivs, sel_rmass**2*Mass['u','au_mass'],
+                                                     select_freq, sel_delta)
+
+            # TODO: here we could compare the real frequencies to the ones calculated from the gradients
+            #       need to look into how stable this is.
+            #if not np.allclose(np.sort(frequencies), uni.frequency.loc[select_freq, 'frequency'].values):
+            #    warnings.warn("The calculated frequencies are not within a relative tolerance of 1e-6 to the real frequencies.", Warning)
+
+            # separate tensors into positive and negative displacements
+            # highly dependent on the value of the index
+            # we neglect the equilibrium coordinates
+            # 0 corresponds to equilibrium coordinates
+            # 1 - nmodes corresponds to positive displacements
+            # nmodes+1 - 2*nmodes corresponds to negative displacements
+            alpha_plus = np.divide(alpha.loc[range(0,snmodes)].values, sel_rmass)
+            alpha_minus = np.divide(alpha.loc[range(snmodes, 2*snmodes)].values, sel_rmass)
+            g_prime_plus = np.divide(g_prime.loc[range(0,snmodes)].values, sel_rmass)
+            g_prime_minus = np.divide(g_prime.loc[range(snmodes, 2*snmodes)].values, sel_rmass)
+            A_plus = np.divide(A.loc[range(0, snmodes)].values, sel_rmass)
+            A_minus = np.divide(A.loc[range(snmodes, 2*snmodes)].values, sel_rmass)
+
+            # generate derivatives by two point difference method
+            dalpha_dq = np.divide((alpha_plus - alpha_minus), 2 * sel_delta)
+            dg_dq = np.divide((g_prime_plus - g_prime_minus), 2 * sel_delta)
+            dA_dq = np.array([np.divide((A_plus[i] - A_minus[i]), 2 * sel_delta[i])
+                                                                    for i in range(snmodes)])
+            #***********DEBUG***********#
+            #self.dalpha_dq = dalpha_dq
+            #self.dg_dq = dg_dq
+            #self.dA_dq = dA_dq
+            #print("#################{}################".format(val))
+            #for i in dg_dq:
+            #    for k in i:
+            #        print("{:.6f} {:.6f}".format(k.real, k.imag))
+            #********END DEBUG**********#
+
+            # generate properties as shown on equations 5-9 in paper
+            # J. Chem. Phys. 2007, 127, 134101
+            alpha_squared, beta_alpha, beta_g, beta_A, alpha_g = _make_derivatives(dalpha_dq,
+                                  dg_dq, dA_dq, omega, epsilon, snmodes, au2angs**4, C_au)
+
+            #********************************DEBUG**************************************************#
+            #self.alpha_squared = pd.Series(alpha_squared*Length['au', 'Angstrom']**4)
+            #self.beta_alpha = pd.Series(beta_alpha*Length['au', 'Angstrom']**4)
+            #self.beta_g = pd.Series(beta_g*Length['au', 'Angstrom']**4/
+            #                                                    (C*Length['m', 'au']/Time['s','au']))
+            #self.beta_A = pd.Series(beta_A*Length['au', 'Angstrom']**4/
+            #                                                    (C*Length['m', 'au']/Time['s','au']))
+            #self.alpha_g = pd.Series(alpha_g*Length['au', 'Angstrom']**4/
+            #                                                    (C*Length['m', 'au']/Time['s','au']))
+            #*******************************END DEBUG***********************************************#
+
+            # calculate Raman intensities
+            raman_int = 4 * (45 * alpha_squared + 8 * beta_alpha)
+
+            # calculate VROA back scattering and forward scattering intensities
+            backscat_vroa = _backscat(beta_g, beta_A)
+            #backscat_vroa *= 1e4
+            # TODO: check the units of this because we convert the invariants from
+            #       au to Angstrom and here we convert again from au to Angstrom
+            #backscat_vroa *= Length['au', 'Angstrom']**4*Mass['u', 'au_mass']
+            #backscat_vroa *= Mass['u', 'au_mass']
+            forwscat_vroa = _forwscat(alpha_g, beta_g, beta_A)
+            #forwscat_vroa *= 1e4
+            # TODO: check the units of this because we convert the invariants from
+            #       au to Angstrom and here we convert again from au to Angstrom
+            #forwscat_vroa *=Length['au', 'Angstrom']**4*Mass['u', 'au_mass']
+            # we set this just so it is easier to view the data
+            pd.options.display.float_format = '{:.6f}'.format
+            # generate dataframe with all pertinent data for vroa scatter
+            df = pd.DataFrame.from_dict({"freq": frequencies, "freqdx": select_freq, "beta_g*1e6":beta_g*1e6,
+                                        "beta_A*1e6": beta_A*1e6, "alpha_g*1e6": alpha_g*1e6,
+                                        "backscatter": backscat_vroa, "forwardscatter":forwscat_vroa})
+            df['exc_freq'] = np.repeat(val, len(df))
+            rdf = pd.DataFrame.from_dict({"freq": frequencies, "freqdx": select_freq,
+                                          "alpha_squared": alpha_squared,
+                                          "beta_alpha": beta_alpha, "raman_int": raman_int})
+            rdf['exc_freq'] = np.repeat(val, len(rdf))
+            scatter.append(df)
+            raman.append(rdf)
+        self.scatter = pd.concat(scatter)
+        self.scatter.sort_values(by=['exc_freq','freq'], inplace=True)
+        # added this as there seems to be some issues with the indexing when there are
+        # nearly degenerate modes
+        self.scatter.reset_index(drop=True, inplace=True)
+        # check ordering of the freqdx column
+        self.raman = pd.concat(raman)
+        self.raman.sort_values(by=['exc_freq', 'freq'], inplace=True)
+        self.scatter.reset_index(drop=True, inplace=True)
+        if not np.allclose(self.scatter['freqdx'].values, np.sort(self.scatter['freqdx'].values)):
+            warnings.warn("Found an ordering issue with the calculated frequencies. Make sure to check the frequency values.", Warning)
+
+    def zpvc(self, uni, delta, temperature=None, geometry=True, print_results=False):
+        """
+        Method to compute the Zero-Point Vibrational Corrections. We implement the equations as
+        outlined in the paper J. Phys. Chem. A 2005, 109, 8617-8623 (doi:10.1021/jp051685y).
+        Here we compute the effect of vibrations on a specified property given as a n x 2 array
+        where one of the columns are the file indexes and the other is the property.
+        We use a two and three point difference method to calculate the first and second derivatives
+        respectively.
+
+        We have also implemented a way to calculate the ZPVC and effective geometries at
+        different temperatures given in Kelvin.
+
+        Note:
+            The code has been designed such that the property input array must have one column
+            labeled file corresponding to the file indexes.
+
+        Args:
+            uni (:class:`exatomic.Universe`): Universe containing all pertinent data
+            delta (numpy.array): Array of the delta displacement parameters
+            temperature (list): List object containing all of the temperatures of interest
+            geometry (bool): Bool value that tells the program to also calculate the effective geometry
+            print_results(bool): Bool value to print the results from the zpvc calcualtion to stdout
+        """
+        if not hasattr(self, 'gradient'):
+            raise AttributeError("Please set gradient attribute.")
+        if not hasattr(self, 'property'):
+            raise AttributeError("Please set property attribute.")
+        if self.property.shape[1] != 2:
+            raise ValueError("Property dataframe must have a second dimension of 2 not {}".format(
+                                                                                    self.property.shape[1]))
+        if not hasattr(uni, 'frequency_ext'):
+            raise AttributeError("Please compute frequency_ext dataframe.")
+        if not hasattr(uni, 'frequency'):
+            raise AttributeError("Please compute frequency dataframe.")
+        if temperature is None: temperature = [0]
+
+        # get the total number of normal modes
+        nmodes = len(uni.frequency_ext.index.values)
+        # check for any missing files and remove the respective counterpart
+        grad = self._check_file_continuity(self.gradient, 'gradient', nmodes)
+        prop = self._check_file_continuity(self.property, 'property', nmodes)
+        # check that the equlibrium coordinates are included
+        # these are required for the three point difference methods
+        try:
+            tmp = grad.groupby('file').get_group(0)
+        except KeyError:
+            raise KeyError("Equilibrium coordinate gradients not found")
+
+        try:
+            tmp = prop.groupby('file').get_group(0)
+        except KeyError:
+            raise KeyError("Equilibrium coordinate property not found")
+        # check that the gradient and property dataframe have the same length of data
+        grad_files = grad[grad['file'].isin(range(0,nmodes+1))]['file'].drop_duplicates()
+        prop_files = prop[prop['file'].isin(range(nmodes+1,2*nmodes+1))]['file'].drop_duplicates()
+        # compare lengths
+        # TODO: make sure the minus 1 is in the right place
+        #       we suppose that it is because we grab the file number 0 as an extra
+        if grad_files.shape[0]-1 != prop_files.shape[0]:
+            print("Length mismatch of gradient and property arrays.")
+            # we create a dataframe to make use of the existing file continuity checker
+            df = pd.DataFrame(np.concatenate([grad_files, prop_files]), columns=['file'])
+            df = self._check_file_continuity(df, 'grad/prop', nmodes)
+            # overwrite the property and gradient dataframes
+            grad = grad[grad['file'].isin(df['file'])]
+            prop = prop[prop['file'].isin(df['file'])]
+        # get the gradients multiplied by the normal modes
+        delfq_zero, delfq_plus, delfq_minus = self.get_pos_neg_gradients(grad, uni.frequency.copy())
+        # get the selected frequencies
+        select_freq = grad[grad['file'].isin(range(1,nmodes+1))]
+        select_freq = select_freq['file'].drop_duplicates().values - 1
+        snmodes = len(select_freq)
+        #print(select_freq, snmodes)
+        # get the actual frequencies
+        # TODO: check if we should use the real or calculated frequencies
+        frequencies = uni.frequency_ext['freq'].values*Energy['cm^-1','Ha']
+        rmass = uni.frequency_ext['r_mass'].values*Mass['u', 'au_mass']
+        if snmodes < nmodes:
+            raise NotImplementedError("We do not currently have support to handle missing frequencies")
+            sel_delta = delta[select_freq]
+            sel_rmass = uni.frequency_ext['r_mass'].values[select_freq]*Mass['u', 'au_mass']
+            sel_freq = uni.frequency_ext['freq'].values[select_freq]*Energy['cm^-1','Ha']
+        else:
+            sel_delta = delta
+            sel_rmass = rmass
+            sel_freq = frequencies
+        #frequencies = self.calculate_frequencies(delfq_zero, delfq_plus, delfq_minus, sel_rmass, select_freq,
+        #                                         sel_delta)
+        # calculate cubic force constant
+        # we use a for loop because we need the diagonal values
+        # if we select a specific number of modes then the diagonal elements
+        # are tricky
+        kqiii = np.zeros(len(select_freq))
+        for fdx, sval in enumerate(select_freq):
+            kqiii[fdx] = (delfq_plus[fdx][sval] - 2.0 * delfq_zero[fdx][sval] + \
+                                                delfq_minus[fdx][sval]) / (sel_delta[fdx]**2)
+        # calculate anharmonic cubic force constant
+        # this will have nmodes rows and snmodes cols
+        kqijj = np.divide(delfq_plus - 2.0 * delfq_zero + delfq_minus,
+                          np.multiply(sel_delta, sel_delta).reshape(snmodes,1))
+        # get property values
+        prop_grouped = prop.groupby('file')
+        # get the property value for the equilibrium coordinate
+        prop_zero = prop_grouped.get_group(0)
+        prop_zero.drop(columns=['file'],inplace=True)
+        prop_zero = np.repeat(prop_zero.values, snmodes)
+        # get the property values for the positive displaced structures
+        prop_plus = prop_grouped.filter(lambda x: x['file'].drop_duplicates().values in range(1,nmodes+1))
+        prop_plus.drop(columns=['file'], inplace=True)
+        prop_plus = prop_plus.values.reshape(snmodes,)
+        # get the property values for the negative displaced structures
+        prop_minus= prop_grouped.filter(lambda x: x['file'].drop_duplicates().values in
+                                                                              range(nmodes+1, 2*nmodes+1))
+        prop_minus.drop(columns=['file'], inplace=True)
+        prop_minus = prop_minus.values.reshape(snmodes,)
+        # generate the derivatives of the property
+        dprop_dq = np.divide(prop_plus - prop_minus, 2*sel_delta)
+        d2prop_dq2 = np.divide(prop_plus - 2*prop_zero + prop_minus, np.multiply(sel_delta, sel_delta))
+        # done with setting up everything
+        # moving on to the actual calculations
+
+        atom_frames = uni.atom['frame'].values
+        eqcoord = uni.atom.groupby('frame').get_group(atom_frames[-1])[['x','y','z']].values
+        atom_order = uni.atom['symbol']
+        coor_dfs = []
+        zpvc_dfs = []
+        va_dfs = []
+
+        # calculate the ZPVC's at different temperatures by iterating over them
+        for t in temperature:
+            # calculate anharmonicity in the potential energy surface
+            anharm = np.zeros(snmodes)
+            for i in range(snmodes):
+                temp1 = 0.0
+                for j in range(nmodes):
+                    # calculate the contribution of each vibration
+                    temp_fac = self._get_temp_factor(t, frequencies[j])
+                    # TODO: check the snmodes and nmodes indexing for kqijj
+                    #       pretty sure that the rows are nmodes and the columns are snmodes
+                    # TODO: check which is in the sqrt
+                    # sum over the first index
+                    temp1 += kqijj[j][i]/(frequencies[j]*rmass[j]*np.sqrt(sel_rmass[i]))*temp_fac
+                # sum over the second index and set anharmonicity at each vibrational mode
+                anharm[i] = -0.25*dprop_dq[i]/(sel_freq[i]**2*np.sqrt(sel_rmass[i]))*temp1
+            # calculate curvature of property
+            curva = np.zeros(snmodes)
+            for i in range(snmodes):
+                # calculate the contribution of each vibration
+                temp_fac = self._get_temp_factor(t, sel_freq[i])
+                # set the curvature at each vibrational mode
+                curva[i] = 0.25*d2prop_dq2[i]/(sel_freq[i]*sel_rmass[i])*temp_fac
+
+            # generate one of the zpvc dataframes
+            va_dfs.append(pd.DataFrame.from_dict({'freq': sel_freq*Energy['Ha','cm^-1'], 'freqdx': select_freq,
+                                                    'anharm': anharm, 'curva': curva, 'sum': anharm+curva,
+                                                    'temp': np.repeat(t, snmodes)}))
+            zpvc = np.sum(anharm+curva)
+            tot_anharm = np.sum(anharm)
+            tot_curva = np.sum(curva)
+            zpvc_dfs.append([prop_zero[0], zpvc, prop_zero[0] + zpvc, tot_anharm, tot_curva, t])
+            if print_results:
+                print("========Results from Vibrational Averaging at {} K==========".format(t))
+                # print results to stdout
+                print("----Result of ZPVC calculation for {} of {} frequencies".format(snmodes, nmodes))
+                print("    - Total Anharmonicity:   {:+.6f}".format(tot_anharm))
+                print("    - Total Curvature:       {:+.6f}".format(tot_curva))
+                print("    - Zero Point Vib. Corr.: {:+.6f}".format(zpvc))
+                print("    - Zero Point Vib. Avg.:  {:+.6f}".format(prop_zero[0] + zpvc))
+            if geometry:
+                # calculate the effective geometry
+                # we do not check this at the beginning as it will not always be computed
+                if not hasattr(uni, 'atom'):
+                    raise AttributeError("Please set the atom dataframe")
+                sum_to_eff_geo = np.zeros((eqcoord.shape[0], 3))
+                for i in range(snmodes):
+                    temp1 = 0.0
+                    for j in range(nmodes):
+                        # calculate the contribution of each vibration
+                        temp_fac = self._get_temp_factor(t, frequencies[j])
+                        temp1 += kqijj[j][i]/(frequencies[j]*rmass[j]*np.sqrt(sel_rmass[i])) * temp_fac
+                    # get the temperature correction to the geometry in Bohr
+                    sum_to_eff_geo += -0.25 * temp1 / (sel_freq[i]**2 * np.sqrt(sel_rmass[i])) * \
+                                        uni.frequency.groupby('freqdx').get_group(i)[['dx','dy','dz']].values
+                # get the effective geometry
+                tmp_coord = np.transpose(eqcoord + sum_to_eff_geo)
+                # generate one of the coordinate dataframes
+                coor_dfs.append(pd.DataFrame.from_dict({'set': list(range(len(eqcoord))),
+                                                        'Z': atom_order.map(sym2z), 'x': tmp_coord[0],
+                                                        'y': tmp_coord[1], 'z': tmp_coord[2],
+                                                        'symbol': atom_order,
+                                                        'temp': np.repeat(t, eqcoord.shape[0]),
+                                                        'frame': np.repeat(0, len(eqcoord))}))
+                # print out the effective geometry in Angstroms
+                if print_results:
+                    print("----Effective geometry in Angstroms")
+                    xyz = coor_dfs[-1][['symbol','x','y','z']].copy()
+                    xyz['x'] *= Length['au', 'Angstrom']
+                    xyz['y'] *= Length['au', 'Angstrom']
+                    xyz['z'] *= Length['au', 'Angstrom']
+                    stargs = {'columns': None, 'header': False, 'index': False,
+                              'formatters': {'symbol': '{:<5}'.format}, 'float_format': '{:6f}'.format}
+                    print(xyz.to_string(**stargs))
+        if geometry:
+            self.eff_coord = pd.concat(coor_dfs, ignore_index=True)
+        self.zpvc_results = pd.DataFrame(zpvc_dfs,
+                                         columns=['property', 'zpvc', 'zpva', 'tot_anharm', 'tot_curva', 'temp'])
+        self.vib_average = pd.concat(va_dfs, ignore_index=True)
+

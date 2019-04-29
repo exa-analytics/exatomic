@@ -141,7 +141,7 @@ class BasisSet(DataFrame):
         else:
             mapper = lambda x: cart_lml_count[x]
         n = self.functions_by_shell()
-        return n * n.index.get_level_values('L').map(mapper)
+        return n * n.index.get_level_values('L').map(mapper).astype(np.int64)
 
     def primitives(self, spherical):
         """Return a series of n primitives per (set, L).
@@ -151,7 +151,7 @@ class BasisSet(DataFrame):
         else:
             mapper = lambda x: cart_lml_count[x]
         n = self.primitives_by_shell()
-        return n * n.index.get_level_values('L').map(mapper)
+        return n * n.index.get_level_values('L').map(mapper).astype(np.int64)
 
     #def __init__(self, *args, **kwargs):
         #spherical = kwargs.pop("spherical", True)
