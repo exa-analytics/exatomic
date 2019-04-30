@@ -248,7 +248,7 @@ class VA(metaclass=VAMeta):
         frequencies = np.sqrt(vqi).reshape(snmodes,)*Energy['Ha', 'cm^-1']
         return frequencies
 
-    def vroa(self, uni, delta, units='nm'):
+    def vroa(self, uni, delta, units='nm', assume_real=False):
         """
         Here we implement the Vibrational Raman Optical Activity (VROA) equations as outlined in
         the paper J. Chem. Phys. 2007, 127,
@@ -441,7 +441,7 @@ class VA(metaclass=VAMeta):
             # generate properties as shown on equations 5-9 in paper
             # J. Chem. Phys. 2007, 127, 134101
             alpha_squared, beta_alpha, beta_g, beta_A, alpha_g = _make_derivatives(dalpha_dq,
-                                  dg_dq, dA_dq, omega, epsilon, snmodes, au2angs**4, C_au)
+                                  dg_dq, dA_dq, omega, epsilon, snmodes, au2angs**4, C_au, assume_real)
 
             #********************************DEBUG**************************************************#
             #self.alpha_squared = pd.Series(alpha_squared*Length['au', 'Angstrom']**4)
