@@ -63,12 +63,12 @@ class PlotVROA:
             else:
                 x = np.arange(xrange[0], xrange[1], res)
             y = _lorentz(freq=freq, inten=inten, x=x, fwhm=fwhm)
-            y_bar = _lorentz(freq=freq, inten=inten, x=freq, fwhm=fwhm)
+            #y_bar = _lorentz(freq=freq, inten=inten, x=x, fwhm=fwhm)
 
             ax = fig.add_subplot(111)
             ax.plot(x,y,marker=marker,linestyle=line,
                     label=str(val)+' '+exc_units if val is not -1 else "unk")
-            ax.bar(freq, y_bar*0.5, width=fwhm*0.35)
+            #ax.bar(freq, y_bar*0.5, width=fwhm*0.35)
             ax.set_xlabel(xlabel)
             ax.set_ylabel(ylabel)
             ax.set_title(title)
@@ -207,12 +207,12 @@ class PlotVROA:
             else:
                 x = np.arange(xrange[0], xrange[1], res)
             y = _lorentz(freq=freq, inten=inten, x=x, fwhm=fwhm)
-            y_bar = _lorentz(freq=freq, inten=inten, x=freq, fwhm=fwhm)
+            #y_bar = _lorentz(freq=freq, inten=inten, x=x, fwhm=fwhm)
 
             ax = fig.add_subplot(111)
             ax.plot(x,y,marker=marker,linestyle=line,
                     label=str(val)+' '+exc_units if val is not -1 else "unk")
-            ax.bar(freq, y_bar*0.35, width=fwhm*0.5)
+            #ax.bar(freq, y_bar*0.35, width=fwhm*0.5)
             ax.set_xlabel(xlabel)
             ax.set_ylabel(ylabel)
             ax.set_title(title)
