@@ -5,3 +5,4 @@ seaborn
 ipywidgets
 sympy
 numexpr
+pyyaml
