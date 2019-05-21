@@ -592,7 +592,6 @@ class Output(six.with_metaclass(GauMeta, Editor)):
             dfs.append(stacked)
         # Now put all our frequencies together
         frequency = pd.concat(dfs).reset_index(drop=True)
-        frequency
         #freq_ext = pd.concat(ext_dfs, ignore_index=True)
         # Pretty sure displacements are in cartesian angstroms
         # TODO: Make absolutely sure what units gaussian reports the displacements as
