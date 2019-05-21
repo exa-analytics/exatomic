@@ -16,6 +16,7 @@ from exatomic.base import sym2z, sym2mass
 from exatomic.algorithms.distance import modv
 from exatomic.core.error import PeriodicUniverseError
 from exatomic.algorithms.geometry import make_small_molecule
+from exatomic import plotter
 
 
 class Atom(DataFrame):
@@ -268,11 +269,18 @@ class Frequency(DataFrame):
     +-------------------+----------+-------------------------------------------+
     | dz                | float    | atomic displacement in z direction (req.) |
     +-------------------+----------+-------------------------------------------+
+    | ir_int            | float    | ir intensity of the vibrational mode      |
+    +-------------------+----------+-------------------------------------------+
     | symbol            | str      | atomic symbol (req.)                      |
     +-------------------+----------+-------------------------------------------+
     | label             | int      | atomic identifier                         |
     +-------------------+----------+-------------------------------------------+
     """
+    _index = 'frequency'
+    _cardinal = ('frame', np.int64)
+    _categories = {'symbol': str, 'freqdx': np.int64, 'ir_int': np.float64,
+                   'label': np.int64, 'frequency': np.float64}
+    _columns = ['dx', 'dy', 'dz', 'symbol', 'frequency', 'freqdx', 'ir_int']
     #@property
     #def _constructor(self):
     #    return Frequency
@@ -280,6 +288,24 @@ class Frequency(DataFrame):
     def displacement(self, freqdx):
         return self[self['freqdx'] == freqdx][['dx', 'dy', 'dz', 'symbol']]
 
+    def ir_spectra(self, fwhm=15, lineshape='gaussian', **kwargs):
+        if lineshape == 'lorentzian':
+            line = plotter.lorentzian
+        elif lineshape == 'gaussian':
+            line = plotter.gaussian
+        else:
+            raise NotImplementedError("Sorry we have not yet implemented the lineshape {}.".format(lineshape))
+        if not "plot_width" in kwargs:
+            kwargs.update(plot_width=900)
+        plot = plotter.Plot(**kwargs)
+        freq = self['frequency'].astype(np.float64).drop_duplicates()
+        inten = self.loc[freq.index, 'ir_int'].astype(np.float64).values[0]
+        freq = freq.values
+        x_data = np.arange(0, 4000, fwhm/50)
+        y_data = line(freq=freq, x=x_data, fwhm=fwhm, inten=inten)
+        plot.fig.line(x_data, y_data)
+        plot.fig.scatter(freq, line(freq=freq, x=freq, fwhm=fwhm, inten=inten))
+        plot.show()
 
 def add_vibrational_mode(uni, freqdx):
     displacements = uni.frequency.displacements(freqdx)
