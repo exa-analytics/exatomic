@@ -34,7 +34,7 @@ install:
     - conda install -q -y -c conda-forge sphinx sphinx_rtd_theme ply sympy
     - conda install -q -y -c conda-forge pandoc pypandoc nbsphinx ipython seaborn
     - conda install -q -y -c conda-forge coveralls coverage pytest pytest-cov
-    - conda install -q -y -c conda-forge numexpr nodejs ipywidgets
+    - conda install -q -y -c conda-forge numexpr nodejs ipywidgets bokeh
     - pip install travis-sphinx codacy-coverage
     - git clone https://github.com/exa-analytics/exa.git
     - pip install -e exa/
