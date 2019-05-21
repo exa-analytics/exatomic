@@ -450,7 +450,4 @@ def add_vibrational_mode(uni, freqdx):
     movie['frame'] = np.repeat(range(len(factor)), len(uni.atom))
     uni.frame = pd.concat(frames).reset_index()
     uni.atom = movie
-<<<<<<< HEAD
-=======
 
->>>>>>> 3b7ae90... Adding documentation
