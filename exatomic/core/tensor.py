@@ -5,6 +5,7 @@
 from exa import DataFrame
 import numpy as np
 import pandas as pd
+from exatomic import plotter
 
 class Tensor(DataFrame):
     """
@@ -97,6 +98,76 @@ class Polarizability(Tensor):
     _columns = ['xx', 'xy', 'xz', 'yx', 'yy', 'yz', 'zx', 'zy', 'zz',
                 'frame', 'label', 'type']
     _categories = {'frame': np.int64, 'label': str}
+
+class NMRshielding(Tensor):
+    """
+    The NMR Shielding tensor dataframe.
+
+    +---------------+----------+-----------------------------------------+
+    | Column        | Type     | Description                             |
+    +===============+==========+=========================================+
+    | xx            | float    | 0,0 position in tensor                  |
+    +---------------+----------+-----------------------------------------+
+    | xy            | float    | 0,1 position in tensor                  |
+    +---------------+----------+-----------------------------------------+
+    | xz            | float    | 0,2 position in tensor                  |
+    +---------------+----------+-----------------------------------------+
+    | yx            | float    | 1,0 position in tensor                  |
+    +---------------+----------+-----------------------------------------+
+    | yy            | float    | 1,1 position in tensor                  |
+    +---------------+----------+-----------------------------------------+
+    | yz            | float    | 1,2 position in tensor                  |
+    +---------------+----------+-----------------------------------------+
+    | zx            | float    | 3,0 position in tensor                  |
+    +---------------+----------+-----------------------------------------+
+    | zy            | float    | 3,1 position in tensor                  |
+    +---------------+----------+-----------------------------------------+
+    | zz            | float    | 3,2 position in tensor                  |
+    +---------------+----------+-----------------------------------------+
+    | frame         | category | frame value to which atach tensor       |
+    +---------------+----------+-----------------------------------------+
+    | atom          | int      | atom index of molecule to place tensor  |
+    +---------------+----------+-----------------------------------------+
+    | label         | category | label of the type of tensor             |
+    +---------------+----------+-----------------------------------------+
+    | symbol        | category | atom symbol the tensor is attached to   |
+    +---------------+----------+-----------------------------------------+
+    | isotropic     | float    | isotropic shift value of the tensor     |
+    +---------------+----------+-----------------------------------------+
+    """
+    _index = 'nmr_shielding'
+    _columns = ['xx','xy','xz','yx','yy','yz','zx','zy','zz',
+                'frame','atom','label','symbol','isotropic']
+    _categories = {'frame': np.int64, 'label': str, 'symbol': str}
+
+    def nmr_spectra(self, fwhm=1, ref=None, atom='H', lineshape='lorentzian', **kwargs):
+        if lineshape == 'lorentzian':
+            line = plotter.lorentzian
+        elif lineshape == 'gaussian':
+            line = plotter.gaussian
+        else:
+            raise NotImplementedError("Sorry we have not yet implemented the lineshape {}.".format(lineshape))
+        if not "plot_width" in kwargs:
+            kwargs.update(plot_width=900)
+        plot = plotter.Plot(**kwargs)
+        # this is designed for a single frame
+        if self['frame'].drop_duplicates().values[-1] != 0:
+            raise NotImplementedError("We have not yet expanded to include multiple frames")
+        shifts = self.groupby('symbol').get_group(atom)['isotropic'].astype(np.float64)
+        if ref is not None:
+            if isinstance(ref, float) or isinstance(ref, int):
+                shifts = ref - shifts
+            elif isinstance(ref, list) or isinstance(ref, np.ndarray):
+                shifts = ref[0] - shifts
+            else:
+                raise TypeError("Could not understand type ref type {}.".format(type(ref)))
+        x_data = np.arange(shifts.min()-10*fwhm, shifts.max()+10*fwhm, fwhm/50)
+        y_data = line(freq=shifts, x=x_data, fwhm=fwhm)
+        plot.fig.line(x_data, y_data)
+        plot.fig.scatter(shifts, line(freq=shifts, x=shifts, fwhm=fwhm))
+        if ref is not None:
+            plot.set_xrange(xmin=max(x_data), xmax=min(x_data))
+        plot.show()
 
 def add_tensor(uni, fp):
     """
