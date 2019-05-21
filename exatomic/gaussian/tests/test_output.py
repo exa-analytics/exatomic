@@ -14,6 +14,9 @@ class TestFchk(TestCase):
     def setUp(self):
         self.mam1 = Fchk(resource('g09-ch3nh2-631g.fchk'))
         self.mam2 = Fchk(resource('g09-ch3nh2-augccpvdz.fchk'))
+        self.mam3 = Fchk(resource('g16-methyloxirane-def2tzvp-freq.fchk'))
+        self.mam4 = Fchk(resource('g16-h2o2-def2tzvp-freq.fchk'))
+        self.nitro_nmr = Fchk(resource('g16-nitromalonamide-6-31++g-nmr.fchk'))
 
     def test_parse_atom(self):
         self.mam1.parse_atom()
@@ -63,11 +66,42 @@ class TestFchk(TestCase):
         self.assertEqual(self.mam2.frame.shape[0], 1)
         self.assertTrue(np.all(pd.notnull(self.mam2.frame)))
 
+    def test_parse_frequency(self):
+        self.mam3.parse_frequency()
+        self.assertEqual(self.mam3.frequency.shape[0], 240)
+        self.assertTrue(np.all(pd.notnull(self.mam3.frequency)))
+        self.mam4.parse_frequency()
+        self.assertEqual(self.mam4.frequency.shape[0], 24)
+        self.assertTrue(np.all(pd.notnull(self.mam4.frequency)))
+
+    def test_parse_frequency_ext(self):
+        self.mam3.parse_frequency_ext()
+        self.assertEqual(self.mam3.frequency_ext.shape[0], 24)
+        self.assertTrue(np.all(pd.notnull(self.mam3.frequency_ext)))
+        self.mam4.parse_frequency_ext()
+        self.assertEqual(self.mam4.frequency_ext.shape[0], 6)
+        self.assertTrue(np.all(pd.notnull(self.mam4.frequency_ext)))
+
+    def test_parse_gradient(self):
+        self.mam3.parse_gradient()
+        self.assertEqual(self.mam3.gradient.shape[0], 10)
+        self.assertTrue(np.all(pd.notnull(self.mam3.gradient)))
+        self.mam4.parse_gradient()
+        self.assertEqual(self.mam4.gradient.shape[0], 4)
+        self.assertTrue(np.all(pd.notnull(self.mam4.gradient)))
+
+    def test_shielding_tensor(self):
+        self.nitro_nmr.parse_nmr_shielding()
+        self.assertEqual(self.nitro_nmr.nmr_shielding.shape[0], 15)
+        self.assertTrue(np.all(pd.notnull(self.nitro_nmr.nmr_shielding)))
+
     def test_to_universe(self):
         """Test the to_universe method."""
         mam1 = self.mam1.to_universe(ignore=True)
         mam2 = self.mam2.to_universe(ignore=True)
         for uni in [mam1, mam2]:
+            # cannot add frequency and frequency_ext attributes as they require
+            # very specific inputs
             for attr in ['atom', 'basis_set', 'basis_set_order',
                          'momatrix', 'orbital', 'frame']:
                 self.assertTrue(hasattr(uni, attr))
@@ -81,12 +115,18 @@ class TestOutput(TestCase):
     """
     def setUp(self):
         # TODO : add some cartesian basis set files
-        #        a geometry optimization and
-        #        maybe properties? like the frequency
-        #        and tddft calcs
         self.uo2 = Output(resource('g09-uo2.out'))
         self.mam3 = Output(resource('g09-ch3nh2-631g.out'))
         self.mam4 = Output(resource('g09-ch3nh2-augccpvdz.out'))
+        # need two because of the current limitations in the parse_frequency code
+        self.meth_opt = Output(resource('g16-methyloxirane-def2tzvp-opt.out'))
+        self.meth_freq = Output(resource('g16-methyloxirane-def2tzvp-freq.out'))
+        self.nap_tddft = Output(resource('g16-naproxen-def2tzvp-tddft.out'))
+        self.h2o2_tddft = Output(resource('g16-h2o2-def2tzvp-tddft.out'))
+        self.nap_opt = Output(resource('g16-naproxen-def2tzvp-opt.out'))
+        self.nitro_nmr = Output(resource('g16-nitromalonamide-6-31++g-nmr.out'))
+        # to test having both a geometry optimization and frequencies calculation
+        self.meth_opt_freq_hp = Output(resource('g16-methyloxirane-def2tzvp-opt-freq.out'))
 
     def test_parse_atom(self):
         self.uo2.parse_atom()
@@ -98,6 +138,15 @@ class TestOutput(TestCase):
         self.mam4.parse_atom()
         self.assertEqual(self.mam4.atom.shape[0], 7)
         self.assertTrue(np.all(pd.notnull(self.mam4.atom)))
+        self.meth_opt.parse_atom()
+        self.assertEqual(self.meth_opt.atom.shape[0], 120)
+        self.assertTrue(np.all(pd.notnull(self.meth_opt.atom)))
+        self.nap_opt.parse_atom()
+        self.assertEqual(self.nap_opt.atom.shape[0], 806)
+        self.assertTrue(np.all(pd.notnull(self.nap_opt.atom)))
+        self.meth_opt_freq_hp.parse_atom()
+        self.assertEqual(self.meth_opt_freq_hp.atom.shape[0], 130)
+        self.assertTrue(np.all(pd.notnull(self.meth_opt_freq_hp.atom)))
 
     def test_parse_basis_set(self):
         self.uo2.parse_basis_set()
@@ -120,6 +169,12 @@ class TestOutput(TestCase):
         self.mam4.parse_orbital()
         self.assertEqual(self.mam4.orbital.shape[0], 91)
         self.assertTrue(np.all(pd.notnull(self.mam4.orbital)))
+        self.meth_opt.parse_orbital()
+        self.assertEqual(self.meth_opt.orbital.shape[0], 160)
+        self.assertTrue(np.all(pd.notnull(self.meth_opt.orbital)))
+        self.nap_tddft.parse_orbital()
+        self.assertEqual(self.nap_tddft.orbital.shape[0], 611)
+        self.assertTrue(np.all(pd.notnull(self.nap_tddft.orbital)))
 
     def test_parse_momatrix(self):
         self.uo2.parse_momatrix()
@@ -153,11 +208,49 @@ class TestOutput(TestCase):
         self.mam4.parse_frame()
         self.assertEqual(self.mam4.frame.shape[0], 1)
         self.assertTrue(np.all(pd.notnull(self.mam4.frame)))
+        self.meth_opt.parse_frame()
+        self.assertEqual(self.meth_opt.frame.shape[0], 12)
+        self.assertTrue(np.all(pd.notnull(self.meth_opt.frame)))
+        self.nap_opt.parse_frame()
+        self.assertEqual(self.nap_opt.frame.shape[0], 26)
+        self.assertTrue(np.all(pd.notnull(self.nap_opt.frame)))
+
+    def test_parse_frequency_ext(self):
+        self.meth_freq.parse_frequency_ext()
+        self.assertEqual(self.meth_freq.frequency_ext.shape[0], 24)
+        self.assertEqual(self.meth_freq.frequency_ext.shape[1], 5)
+        self.assertTrue(np.all(pd.notnull(self.meth_freq.frequency_ext)))
+        self.meth_opt_freq_hp.parse_frequency_ext()
+        self.assertEqual(self.meth_opt_freq_hp.frequency_ext.shape[0], 24)
+        self.assertEqual(self.meth_opt_freq_hp.frequency_ext.shape[1], 5)
+        self.assertTrue(np.all(pd.notnull(self.meth_opt_freq_hp.frequency_ext)))
+
+    def test_parse_frequency(self):
+        self.meth_freq.parse_frequency()
+        self.assertEqual(self.meth_freq.frequency.shape[0], 240)
+        self.assertTrue(np.all(pd.notnull(self.meth_freq.frequency)))
+        self.meth_opt_freq_hp.parse_frequency()
+        self.assertEqual(self.meth_opt_freq_hp.frequency.shape[0], 240)
+        self.assertTrue(np.all(pd.notnull(self.meth_opt_freq_hp.frequency)))
+
+    def test_parse_excitation(self):
+        self.nap_tddft.parse_excitation()
+        self.assertEqual(self.nap_tddft.excitation.shape[0], 15)
+        self.assertTrue(np.all(pd.notnull(self.nap_tddft.excitation)))
+        self.h2o2_tddft.parse_excitation()
+        self.assertEqual(self.h2o2_tddft.excitation.shape[0], 32)
+        self.assertTrue(np.all(pd.notnull(self.h2o2_tddft.excitation)))
+
+    def test_shielding_tensor(self):
+        self.nitro_nmr.parse_nmr_shielding()
+        self.assertEqual(self.nitro_nmr.nmr_shielding.shape[0], 15)
+        self.assertTrue(np.all(pd.notnull(self.nitro_nmr.nmr_shielding)))
 
     def test_to_universe(self):
         """Test the to_universe method."""
         uo2 = self.uo2.to_universe(ignore=True)
         mam3 = self.mam3.to_universe(ignore=True)
+        #meth_opt = self.meth_opt.to_universe(ignore=True)
         for uni in [uo2, mam3]:
             for attr in ['atom', 'basis_set', 'basis_set_order',
                          'momatrix', 'orbital', 'frame']:
