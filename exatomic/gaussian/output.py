@@ -988,6 +988,8 @@ class Fchk(six.with_metaclass(GauMeta, Editor)):
             return
         else:
             found = self.find(_renmode, _refinfo, _redisp, keys_only=True)
+        if not hasattr(self, 'frequency_ext'):
+            self.parse_frequency()
         # get atomic numbers
         znums = self.atom['Zeff'].values
         # get number of atoms
@@ -1013,12 +1015,14 @@ class Fchk(six.with_metaclass(GauMeta, Editor)):
         znums = np.tile(znums, nmode)
         label = np.tile(label, nmode)
         symbols = list(map(lambda x: z2sym[x], znums))
+        ir_int = np.repeat(self.frequency_ext['ir_int'].values, nat)
         # just to have the same table as the one generated for normal output parser
         frame = np.zeros(len(znums)).astype(np.int)
         # build frequency table
         self.frequency = pd.DataFrame.from_dict({"Z": znums, "label": label, "dx": dx,
                                                  "dy": dy, "dz": dz, "frequency": freq,
                                                  "freqdx": freqdx, "symbol": symbols,
+                                                 "ir_int": ir_int,
                                                  "frame": frame})
         self.frequency.reset_index(drop=True, inplace=True)
         # convert atomic displacements to atomic units
