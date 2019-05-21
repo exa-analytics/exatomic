@@ -7,6 +7,8 @@ import numpy as np
 import pandas as pd
 from exatomic import plotter
 
+# changing this so that tensor refers to a base class of attributes that all
+# tensor property dataframes should have
 class Tensor(DataFrame):
     """
     The tensor dataframe.
@@ -141,6 +143,18 @@ class NMRshielding(Tensor):
     _categories = {'frame': np.int64, 'label': str, 'symbol': str}
 
     def nmr_spectra(self, fwhm=1, ref=None, atom='H', lineshape='lorentzian', **kwargs):
+        '''
+        Generate NMR spectra with the plotter class. We can define a gaussian or lorentzian
+        lineshape function. For the most part we pass all of the kwargs directly into the
+        plotter.Plot class.
+
+        Args:
+            fwhm (float): Full-width at half-maximum
+            ref (float): Isotropic shift of the reference compound
+            atom (str): Atom that we want to display the spectra for
+            lineshape (str): Switch beteen the different lineshape functions available
+        '''
+        # define the lineshape and store the function call in the line variable
         if lineshape == 'lorentzian':
             line = plotter.lorentzian
         elif lineshape == 'gaussian':
@@ -149,12 +163,16 @@ class NMRshielding(Tensor):
             raise NotImplementedError("Sorry we have not yet implemented the lineshape {}.".format(lineshape))
         if not "plot_width" in kwargs:
             kwargs.update(plot_width=900)
+        # define the class
         plot = plotter.Plot(**kwargs)
         # this is designed for a single frame
         if self['frame'].drop_duplicates().values[-1] != 0:
             raise NotImplementedError("We have not yet expanded to include multiple frames")
+        # grab the locations of the peaks
         shifts = self.groupby('symbol').get_group(atom)['isotropic'].astype(np.float64)
         if ref is not None:
+            # we just try to take care of any possible types for the ref variable
+            # its a bit of overkill but just want to make sure we can deal with them
             if isinstance(ref, float) or isinstance(ref, int):
                 shifts = ref - shifts
             elif isinstance(ref, list) or isinstance(ref, np.ndarray):
@@ -162,11 +180,18 @@ class NMRshielding(Tensor):
             else:
                 raise TypeError("Could not understand type ref type {}.".format(type(ref)))
         x_data = np.arange(shifts.min()-10*fwhm, shifts.max()+10*fwhm, fwhm/50)
-        y_data = line(freq=shifts, x=x_data, fwhm=fwhm)
+        # get the y data by calling the lineshape function generator
+        y_data = line(freq=shifts.values, x=x_data, fwhm=fwhm)
+        # plot the lineshape data
         plot.fig.line(x_data, y_data)
+        # plot the points on the plot to show were the frequency values are
+        # more useful when we have nearly degenerate vibrations
         plot.fig.scatter(shifts, line(freq=shifts, x=shifts, fwhm=fwhm))
+        # just to make sure the plot is oriemted correctly
+        # typically 0 is on the left when we have a reference compound god knows why
         if ref is not None:
             plot.set_xrange(xmin=max(x_data), xmax=min(x_data))
+        # display the figure with our generated method
         plot.show()
 
 def add_tensor(uni, fp):
