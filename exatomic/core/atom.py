@@ -361,7 +361,7 @@ class Frequency(DataFrame):
     """
     _index = 'frequency'
     _cardinal = ('frame', np.int64)
-    _categories = {'symbol': str, 'freqdx': np.int64, 'ir_int': np.float64,
+    _categories = {'symbol': str,
                    'label': np.int64, 'frequency': np.float64}
     _columns = ['dx', 'dy', 'dz', 'symbol', 'frequency', 'freqdx', 'ir_int']
     #@property
