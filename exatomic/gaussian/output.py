@@ -988,7 +988,7 @@ class Fchk(six.with_metaclass(GauMeta, Editor)):
         else:
             found = self.find(_renmode, _refinfo, _redisp, keys_only=True)
         if not hasattr(self, 'frequency_ext'):
-            self.parse_frequency()
+            self.parse_frequency_ext()
         # get atomic numbers
         znums = self.atom['Zeff'].values
         # get number of atoms
