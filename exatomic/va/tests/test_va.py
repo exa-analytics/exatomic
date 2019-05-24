@@ -1,19 +1,35 @@
 import numpy as np
 from unittest import TestCase
-from os import sep
+from os import sep, remove, rmdir
+from tarfile import open
+from glob import glob
+from inspect import getfile
 
 #from exatomic import va
 from exatomic.base import resource
 from exatomic.va import VA, get_data, gen_delta
-from exatomic.gaussian import Fchk
+from exatomic.gaussian import Fchk, Output as gOutput
 from exatomic.nwchem import Output
 
 class TestGetData(TestCase):
     def setUp(self):
-        pass
+        tar = open(resource('va-vroa-h2o2.tar.bz'), mode='r')
+        tar.extractall()
+        tar.close()
+        tar = open(resource('va-vroa-methyloxirane.tar.bz'), mode='r')
+        tar.extractall()
+        tar.close()
+
+    def tearDown(self):
+        dirs = ['h2o2', 'methyloxirane']
+        for dir in dirs:
+            path = sep.join([dir, '*'])
+            for i in glob(path):
+                remove(i)
+            rmdir(dir)
 
     def test_getter_small(self):
-        path = sep.join(resource('va-roa-h2o2-def2tzvp-514.5-00.out').split(sep)[:-1])+sep+'*'
+        path = sep.join(['h2o2', '*'])
         df = get_data(path=path, attr='roa', soft=Output, f_start='va-roa-h2o2-def2tzvp-514.5-',
                       f_end='.out')
         self.assertEqual(df.shape[0], 130)
@@ -22,7 +38,7 @@ class TestGetData(TestCase):
         self.assertEqual(df.shape[0], 52)
 
     def test_getter_large(self):
-        path = sep.join(resource('va-roa-methyloxirane-def2tzvp-488.9-00.out').split(sep)[:-1])+sep+'*'
+        path = sep.join(['methyloxirane', '*'])
         df = get_data(path=path, attr='roa', soft=Output, f_start='va-roa-methyloxirane-def2tzvp-488.9-',
                       f_end='.out')
         self.assertEqual(df.shape[0], 160)
@@ -34,13 +50,27 @@ class TestVROA(TestCase):
     def setUp(self):
         self.h2o2_freq = Fchk(resource('g16-h2o2-def2tzvp-freq.fchk'))
         self.methyloxirane_freq = Fchk(resource('g16-methyloxirane-def2tzvp-freq.fchk'))
+        tar = open(resource('va-vroa-h2o2.tar.bz'), mode='r')
+        tar.extractall()
+        tar.close()
+        tar = open(resource('va-vroa-methyloxirane.tar.bz'), mode='r')
+        tar.extractall()
+        tar.close()
+
+    def tearDown(self):
+        dirs = ['h2o2', 'methyloxirane']
+        for dir in dirs:
+            path = sep.join([dir, '*'])
+            for i in glob(path):
+                remove(i)
+            rmdir(dir)
 
     def test_vroa(self):
         self.h2o2_freq.parse_frequency()
         self.h2o2_freq.parse_frequency_ext()
         delta = gen_delta(delta_type=2, freq=self.h2o2_freq.frequency.copy())
         va_corr = VA()
-        path = sep.join(resource('va-roa-h2o2-def2tzvp-514.5-00.out').split(sep)[:-1])+sep+'*'
+        path = sep.join(['h2o2', '*'])
         va_corr.roa = get_data(path=path, attr='roa', soft=Output, f_start='va-roa-h2o2-def2tzvp-514.5-',
                                f_end='.out')
         va_corr.roa['exc_freq'] = np.tile(514.5, len(va_corr.roa))
@@ -103,7 +133,7 @@ class TestVROA(TestCase):
         self.methyloxirane_freq.parse_frequency_ext()
         delta = gen_delta(delta_type=2, freq=self.methyloxirane_freq.frequency.copy())
         va_corr = VA()
-        path = sep.join(resource('va-roa-methyloxirane-def2tzvp-488.9-00.out').split(sep)[:-1])+sep+'*'
+        path = sep.join(['methyloxirane', '*'])
         va_corr.roa = get_data(path=path, attr='roa', soft=Output,
                                f_start='va-roa-methyloxirane-def2tzvp-488.9-', f_end='.out')
         va_corr.roa['exc_freq'] = np.tile(488.9, len(va_corr.roa))
