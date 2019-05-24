@@ -330,88 +330,88 @@ class GenInput(metaclass = GenMeta):
 #                    for line in f:
 #                        j.write(line)
 #                    j.write(end_com+'\n')
-
-    @staticmethod
-    def write_data_file(path, array, fn):
-        with open(mkp(path, fn), 'w') as f:
-            for item in array:
-                f.write("{}\n".format(item))
-
-    def to_va(self, uni, path):
-        #"""
-        #Simple script to be able to use the vibaverage.exe program to calculate the needed
-        #parameters (temporary).
-
-        #Args:
-        #    uni (:class:`~exatomic.Universe`): Universe object containg pertinent data
-        #    path (str): path to where the dat files will be written to
-        #"""
-        freq = uni.frequency.copy()
-        atom = uni.atom.copy()
-        freq_ext = uni.frequency_ext.copy()
-        # construct delta data file
-        fn = "delta.dat"
-        delta = self.delta['delta'].drop_duplicates().values
-        self.write_data_file(path=path, array=delta, fn=fn)
-        # construct smatrix data file
-        fn = "smatrix.dat"
-        smatrix = freq[['dx', 'dy', 'dz']].stack().values
-        self.write_data_file(path=path, array=smatrix, fn=fn)
-        # construct atom order data file
-        fn = "atom_order.dat"
-        atom_order = atom['symbol'].values
-        self.write_data_file(path=path, array=atom_order, fn=fn)
-        # construct reduced mass data file
-        fn = "redmass.dat"
-        redmass = freq_ext['r_mass'].values * Mass['au_mass', 'u']
-        self.write_data_file(path=path, array=redmass, fn=fn)
-        # construct eqcoord data file
-        fn = "eqcoord.dat"
-        eqcoord = atom[['x', 'y', 'z']].stack().values
-        eqcoord *= Length['au', 'Angstrom']
-        self.write_data_file(path=path, array=eqcoord, fn=fn)
-        # construct frequency data file
-        fn = "freq.dat"
-        frequency = freq_ext['freq'].values * Energy['Ha', 'cm^-1']
-        self.write_data_file(path=path, array=frequency, fn=fn)
-        # construct actual displacement data file
-        fn = "displac_a.dat"
-        delta = np.repeat(self.delta['delta'].values, len(atom))
-        disp = np.multiply(np.linalg.norm(np.transpose(freq[['dx','dy','dz']].values), axis=0),
-                                                        delta)
-        disp *= Length['au', 'Angstrom']
-        freqdx = freq['freqdx'].drop_duplicates().values
-        n = len(atom_order)
-        with open(mkp(path, fn), 'w') as f:
-            f.write("actual displacement in angstroms\n")
-            f.write("atom normal_mode distance_atom_moves\n")
-            for fdx in range(len(freqdx)):
-                for idx in range(n):
-                    f.write("{} {}\t{}\n".format(idx+1, fdx+1, disp[fdx*15+idx]))
-
-    def write_grad_prop(self, path, grad, prop):
-        #"""
-        #Simple function to write the gradient and property datafiles to the format needed for
-        #vibaverage.exe (temporary).
-
-        #The gradient and property dataframes must be from the single point calculations. We
-        #assume this by not grouping by the frame column.
-
-        #Args:
-        #    path (str): path to where the *.dat files will be written
-        #    grad (np.ndarray): 1D array of values from grad[['fx', 'fy', 'fz']].stack().values
-        #    prop (np.ndarray): 1D array of values from prop[property].values
-        #"""
-        # construct gradient data file
-        fn = "grad.dat"
-        if isinstance(grad[0], np.ndarray):
-            raise ValueError("grad array must be a 1D array")
-        self.write_data_file(path=path, array=grad, fn=fn)
-        # construct property data file
-        fn = "prop.dat"
-        if isinstance(prop[0], np.ndarray):
-            raise ValueError("prop array must be a 1D array")
-        self.write_data_file(path=path, array=prop, fn=fn)
+#
+#    @staticmethod
+#    def write_data_file(path, array, fn):
+#        with open(mkp(path, fn), 'w') as f:
+#            for item in array:
+#                f.write("{}\n".format(item))
+#
+#    def to_va(self, uni, path):
+#        #"""
+#        #Simple script to be able to use the vibaverage.exe program to calculate the needed
+#        #parameters (temporary).
+#
+#        #Args:
+#        #    uni (:class:`~exatomic.Universe`): Universe object containg pertinent data
+#        #    path (str): path to where the dat files will be written to
+#        #"""
+#        freq = uni.frequency.copy()
+#        atom = uni.atom.copy()
+#        freq_ext = uni.frequency_ext.copy()
+#        # construct delta data file
+#        fn = "delta.dat"
+#        delta = self.delta['delta'].drop_duplicates().values
+#        self.write_data_file(path=path, array=delta, fn=fn)
+#        # construct smatrix data file
+#        fn = "smatrix.dat"
+#        smatrix = freq[['dx', 'dy', 'dz']].stack().values
+#        self.write_data_file(path=path, array=smatrix, fn=fn)
+#        # construct atom order data file
+#        fn = "atom_order.dat"
+#        atom_order = atom['symbol'].values
+#        self.write_data_file(path=path, array=atom_order, fn=fn)
+#        # construct reduced mass data file
+#        fn = "redmass.dat"
+#        redmass = freq_ext['r_mass'].values * Mass['au_mass', 'u']
+#        self.write_data_file(path=path, array=redmass, fn=fn)
+#        # construct eqcoord data file
+#        fn = "eqcoord.dat"
+#        eqcoord = atom[['x', 'y', 'z']].stack().values
+#        eqcoord *= Length['au', 'Angstrom']
+#        self.write_data_file(path=path, array=eqcoord, fn=fn)
+#        # construct frequency data file
+#        fn = "freq.dat"
+#        frequency = freq_ext['freq'].values * Energy['Ha', 'cm^-1']
+#        self.write_data_file(path=path, array=frequency, fn=fn)
+#        # construct actual displacement data file
+#        fn = "displac_a.dat"
+#        delta = np.repeat(self.delta['delta'].values, len(atom))
+#        disp = np.multiply(np.linalg.norm(np.transpose(freq[['dx','dy','dz']].values), axis=0),
+#                                                        delta)
+#        disp *= Length['au', 'Angstrom']
+#        freqdx = freq['freqdx'].drop_duplicates().values
+#        n = len(atom_order)
+#        with open(mkp(path, fn), 'w') as f:
+#            f.write("actual displacement in angstroms\n")
+#            f.write("atom normal_mode distance_atom_moves\n")
+#            for fdx in range(len(freqdx)):
+#                for idx in range(n):
+#                    f.write("{} {}\t{}\n".format(idx+1, fdx+1, disp[fdx*15+idx]))
+#
+#    def write_grad_prop(self, path, grad, prop):
+#        #"""
+#        #Simple function to write the gradient and property datafiles to the format needed for
+#        #vibaverage.exe (temporary).
+#
+#        #The gradient and property dataframes must be from the single point calculations. We
+#        #assume this by not grouping by the frame column.
+#
+#        #Args:
+#        #    path (str): path to where the *.dat files will be written
+#        #    grad (np.ndarray): 1D array of values from grad[['fx', 'fy', 'fz']].stack().values
+#        #    prop (np.ndarray): 1D array of values from prop[property].values
+#        #"""
+#        # construct gradient data file
+#        fn = "grad.dat"
+#        if isinstance(grad[0], np.ndarray):
+#            raise ValueError("grad array must be a 1D array")
+#        self.write_data_file(path=path, array=grad, fn=fn)
+#        # construct property data file
+#        fn = "prop.dat"
+#        if isinstance(prop[0], np.ndarray):
+#            raise ValueError("prop array must be a 1D array")
+#        self.write_data_file(path=path, array=prop, fn=fn)
 
     def __init__(self, uni, *args, **kwargs):
         if not hasattr(uni, 'frequency'):
