@@ -246,6 +246,14 @@ class TestOutput(TestCase):
         self.assertEqual(self.nitro_nmr.nmr_shielding.shape[0], 15)
         self.assertTrue(np.all(pd.notnull(self.nitro_nmr.nmr_shielding)))
 
+    def test_parse_gradient(self):
+        self.meth_opt.parse_gradient()
+        self.assertEqual(self.meth_opt.gradient.shape[0], 120)
+        self.assertTrue(np.all(pd.notnull(self.meth_opt.gradient)))
+        self.nap_opt.parse_gradient()
+        self.assertEqual(self.nap_opt.gradient.shape[0], 806)
+        self.assertTrue(np.all(pd.notnull(self.nap_opt.gradient)))
+
     def test_to_universe(self):
         """Test the to_universe method."""
         uo2 = self.uo2.to_universe(ignore=True)
