@@ -731,6 +731,9 @@ class Output(six.with_metaclass(GauMeta, Editor)):
             dfs.append(grad)
         grad = pd.concat(dfs, ignore_index=True)
         grad.columns = ['atom', 'Z', 'fx', 'fy', 'fz', 'frame']
+        # not sure why this should be here but it make it so it agrees with other
+        # codes when using the va calculations
+        grad[['fx', 'fy', 'fz']] *= -1.0
         grad['atom'] -= 1
         grad['symbol'] = grad['Z'].map(z2sym)
         self.gradient = grad
