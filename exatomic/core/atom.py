@@ -16,6 +16,7 @@ from exatomic.base import sym2z, sym2mass
 from exatomic.algorithms.distance import modv
 from exatomic.core.error import PeriodicUniverseError
 from exatomic.algorithms.geometry import make_small_molecule
+from exatomic import plotter
 
 
 class Atom(DataFrame):
@@ -349,11 +350,18 @@ class Frequency(DataFrame):
     +-------------------+----------+-------------------------------------------+
     | dz                | float    | atomic displacement in z direction (req.) |
     +-------------------+----------+-------------------------------------------+
+    | ir_int            | float    | ir intensity of the vibrational mode      |
+    +-------------------+----------+-------------------------------------------+
     | symbol            | str      | atomic symbol (req.)                      |
     +-------------------+----------+-------------------------------------------+
     | label             | int      | atomic identifier                         |
     +-------------------+----------+-------------------------------------------+
     """
+    _index = 'frequency'
+    _cardinal = ('frame', np.int64)
+    _categories = {'symbol': str,
+                   'label': np.int64, 'frequency': np.float64}
+    _columns = ['dx', 'dy', 'dz', 'symbol', 'frequency', 'freqdx', 'ir_int']
     #@property
     #def _constructor(self):
     #    return Frequency
@@ -361,6 +369,49 @@ class Frequency(DataFrame):
     def displacement(self, freqdx):
         return self[self['freqdx'] == freqdx][['dx', 'dy', 'dz', 'symbol']]
 
+    def ir_spectra(self, fwhm=15, lineshape='gaussian', **kwargs):
+        '''
+        Generate an IR spectra with the plotter classes. We can define a gaussian or lorentzian
+        lineshape functions. For the most part we pass all of the kwargs directly into the
+        plotter.Plot class.
+
+        Args:
+            fwhm (float): Full-width at half-maximum
+            lineshape (str): Switch between the different lineshape functions available
+        '''
+        # define the lineshape and store the function call in the line variable
+        if lineshape == 'lorentzian':
+            line = plotter.lorentzian
+        elif lineshape == 'gaussian':
+            line = plotter.gaussian
+        else:
+            raise NotImplementedError("Sorry we have not yet implemented the lineshape {}.".format(lineshape))
+        # define a default parameter for the plot width
+        # we did this for a full-screen jupyter notebook on a 1920x1080 monitor
+        if not "plot_width" in kwargs:
+            kwargs.update(plot_width=900)
+        # define the class
+        plot = plotter.Plot(**kwargs)
+        # this is designed for a single frame
+        if self['frame'].drop_duplicates().values[-1] != 0:
+            raise NotImplementedError("We have not yet expanded to include multiple frames")
+        # grab the locations of the peaks
+        freq = self['frequency'].astype(np.float64).drop_duplicates()
+        # grab the ir intensity data
+        inten = self.loc[freq.index, 'ir_int'].astype(np.float64).values[0]
+        # change to using the values instead as we no longer need the index data
+        # we could also use jit for the lineshape functions as we only deal with numpy arrays
+        freq = freq.values
+        x_data = np.arange(0, 4000, fwhm/50)
+        # get the y data by calling the lineshape function generator
+        y_data = line(freq=freq, x=x_data, fwhm=fwhm, inten=inten)
+        # plot the lineshape data
+        plot.fig.line(x_data, y_data)
+        # plot the points on the plot to show were the frequency values are
+        # more useful when we have nearly degenerate vibrations
+        plot.fig.scatter(freq, line(freq=freq, x=freq, fwhm=fwhm, inten=inten))
+        # display the figure with our generated method
+        plot.show()
 
 def add_vibrational_mode(uni, freqdx):
     displacements = uni.frequency.displacements(freqdx)
@@ -382,3 +433,4 @@ def add_vibrational_mode(uni, freqdx):
     movie['frame'] = np.repeat(range(len(factor)), len(uni.atom))
     uni.frame = pd.concat(frames).reset_index()
     uni.atom = movie
+
