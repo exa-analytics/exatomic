@@ -400,7 +400,7 @@ class Frequency(DataFrame):
         # grab the locations of the peaks
         freq = self['frequency'].astype(np.float64).drop_duplicates()
         # grab the ir intensity data
-        inten = self.loc[freq.index, 'ir_int'].astype(np.float64).values[0]
+        inten = self.loc[freq.index, 'ir_int'].astype(np.float64).values
         # change to using the values instead as we no longer need the index data
         # we could also use jit for the lineshape functions as we only deal with numpy arrays
         freq = freq.values
