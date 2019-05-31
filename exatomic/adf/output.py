@@ -20,9 +20,10 @@ from exa import TypedMeta
 from exatomic.base import sym2z
 from exatomic.algorithms.basis import lmap, enum_cartesian
 from exatomic.algorithms.numerical import dfac21
-from ..core.atom import Atom
+from exatomic.core.atom import Atom
+from exatomic.core.gradient import Gradient
 from exatomic.core.basis import BasisSet, BasisSetOrder
-from ..core.orbital import Orbital, Excitation, MOMatrix
+from exatomic.core.orbital import Orbital, Excitation, MOMatrix
 from .editor import Editor
 
 
@@ -35,6 +36,7 @@ class OutMeta(TypedMeta):
     excitation = Excitation
     momatrix = MOMatrix
     sphr_momatrix = MOMatrix
+    gradient = Gradient
 
 
 class Output(six.with_metaclass(OutMeta, Editor)):
@@ -314,6 +316,27 @@ class Output(six.with_metaclass(OutMeta, Editor)):
                                            'chi': [j for _ in range(m) for j in range(n)]})
         momatrix['frame'] = self.atom['frame'].unique()[-1]
         self.sphr_momatrix = momatrix
+
+    def parse_gradient(self):
+        _regrad = "Energy gradients wrt nuclear displacements"
+        found = self.find(_regrad, keys_only=True)
+        if not found:
+            return
+        starts = np.array(found) + 6
+        stop = starts[0]
+        while '----' not in self[stop]: stop += 1
+        stops = starts + (stop - starts[0])
+        dfs = []
+        for i, (start, stop) in enumerate(zip(starts, stops)):
+            df = self.pandas_dataframe(start, stop, ncol=5)
+            df.columns = ['atom', 'symbol', 'fx', 'fy', 'fz']
+            df['frame'] = i
+            df['atom'] -= 1
+            dfs.append(df)
+        grad = pd.concat(dfs, ignore_index=True)
+        grad['Z'] = grad['symbol'].map(sym2z)
+        grad = grad[['atom', 'Z', 'fx', 'fy', 'fz', 'symbol', 'frame']]
+        self.gradient = grad
 
     def __init__(self, *args, **kwargs):
         super(Output, self).__init__(*args, **kwargs)
