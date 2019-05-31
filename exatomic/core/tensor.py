@@ -101,7 +101,7 @@ class Polarizability(Tensor):
                 'frame', 'label', 'type']
     _categories = {'frame': np.int64, 'label': str}
 
-class NMRshielding(Tensor):
+class NMRShielding(Tensor):
     """
     The NMR Shielding tensor dataframe.
 

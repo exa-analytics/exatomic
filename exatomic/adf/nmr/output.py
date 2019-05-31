@@ -21,14 +21,14 @@ from exatomic.base import sym2z
 #from exatomic.algorithms.basis import lmap, enum_cartesian
 #from exatomic.algorithms.numerical import dfac21
 from exatomic.core.atom import Atom
-from exatomic.core.tensor import NMRshielding
+from exatomic.core.tensor import NMRShielding
 #from exatomic.core.basis import BasisSet, BasisSetOrder
 #from ..core.orbital import Orbital, Excitation, MOMatrix
 from ..editor import Editor
 
 class OutMeta(TypedMeta):
     atom = Atom
-    nmr_shielding = NMRshielding
+    nmr_shielding = NMRShielding
 
 class Output(six.with_metaclass(OutMeta, Editor)):
     """ADF NMR parser"""
