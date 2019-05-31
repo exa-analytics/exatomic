@@ -369,7 +369,7 @@ class Frequency(DataFrame):
     def displacement(self, freqdx):
         return self[self['freqdx'] == freqdx][['dx', 'dy', 'dz', 'symbol']]
 
-    def ir_spectra(self, fwhm=15, lineshape='gaussian', **kwargs):
+    def ir_spectra(self, fwhm=15, lineshape='gaussian', xrange=None, res=None, invert_x=False, **kwargs):
         '''
         Generate an IR spectra with the plotter classes. We can define a gaussian or lorentzian
         lineshape functions. For the most part we pass all of the kwargs directly into the
@@ -378,31 +378,42 @@ class Frequency(DataFrame):
         Args:
             fwhm (float): Full-width at half-maximum
             lineshape (str): Switch between the different lineshape functions available
+            xrange (list): X-bounds for the plot
+            res (float): Resolution for the plot line
+            invert_x (bool): Invert x-axis
         '''
         # define the lineshape and store the function call in the line variable
-        if lineshape == 'lorentzian':
-            line = plotter.lorentzian
-        elif lineshape == 'gaussian':
-            line = plotter.gaussian
-        else:
+        try:
+            line = getattr(plotter, lineshape)
+        except AttributeError:
             raise NotImplementedError("Sorry we have not yet implemented the lineshape {}.".format(lineshape))
         # define a default parameter for the plot width
         # we did this for a full-screen jupyter notebook on a 1920x1080 monitor
         if not "plot_width" in kwargs:
             kwargs.update(plot_width=900)
+        # define xbounds
+        xrange = [0, 4000] if xrange is None else xrange
+        # deal with inverted bounds
+        if xrange[0] > xrange[1]:
+            xrange = sorted(xrange)
+            invert_x = True
+        # define the resolution
+        res = fwhm/50 if res is None else res
         # define the class
         plot = plotter.Plot(**kwargs)
         # this is designed for a single frame
-        if self['frame'].drop_duplicates().values[-1] != 0:
+        if self['frame'].unique().shape[0] != 1:
             raise NotImplementedError("We have not yet expanded to include multiple frames")
-        # grab the locations of the peaks
+        # grab the locations of the peaks between the bounds
         freq = self['frequency'].astype(np.float64).drop_duplicates()
+        freq = freq[freq.between(*xrange)]
         # grab the ir intensity data
+        # we use the frequency indexes instead of drop duplicates as we may have similar intensities
         inten = self.loc[freq.index, 'ir_int'].astype(np.float64).values
         # change to using the values instead as we no longer need the index data
         # we could also use jit for the lineshape functions as we only deal with numpy arrays
         freq = freq.values
-        x_data = np.arange(0, 4000, fwhm/50)
+        x_data = np.arange(*xrange, res)
         # get the y data by calling the lineshape function generator
         y_data = line(freq=freq, x=x_data, fwhm=fwhm, inten=inten)
         # plot the lineshape data
@@ -410,6 +421,10 @@ class Frequency(DataFrame):
         # plot the points on the plot to show were the frequency values are
         # more useful when we have nearly degenerate vibrations
         plot.fig.scatter(freq, line(freq=freq, x=freq, fwhm=fwhm, inten=inten))
+        if invert_x:
+            plot.set_xrange(xmin=xrange[1], xmax=xrange[0])
+        else:
+            plot.set_xrange(xmin=xrange[0], xmax=xrange[1])
         # display the figure with our generated method
         plot.show()
 
