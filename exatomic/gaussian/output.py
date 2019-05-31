@@ -692,17 +692,11 @@ class Output(six.with_metaclass(GauMeta, Editor)):
             iso = float(split_str[4])
             # get the anisotropic value
             aniso = float(split_str[-1])
-            #print(iso, aniso)
-            tensor_elem = []
-            for idx in range(start, end):
-                full_str = self[idx]
-                split_str = full_str.strip().split()
-                # get the tensor elements
-                tensor_elem.append(float(split_str[1]))
-                tensor_elem.append(float(split_str[3]))
-                tensor_elem.append(float(split_str[-1]))
+            # get the tensor elements
+            tmp = self.pandas_dataframe(start, end, ncol=6)
+            tmp.drop([0,2,4], axis='columns', inplace=True)
             # create a temporary dataframe
-            tmp = pd.DataFrame(np.array(tensor_elem).reshape(1,9),
+            tmp = pd.DataFrame(tmp.unstack().values.reshape(1,9),
                                columns=['xx','xy','xz','yx','yy','yz','zx','zy','zz'])
             tmp['isotropic'] = iso
             tmp['anisotropic'] = aniso
