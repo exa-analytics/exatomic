@@ -194,7 +194,7 @@ class NMRShielding(Tensor):
         # display the figure with our generated method
         plot.show()
 
-def JCoupling(Tensor):
+class JCoupling(Tensor):
     """
     The J-Coupling tensor dataframe
 
@@ -236,7 +236,7 @@ def JCoupling(Tensor):
     """
     _index = 'j_coupling'
     _columns = ['xx','xy','xz','yx','yy','yz','zx','zy','zz',
-                'istropic', 'atom', 'symbol', 'pt_atom', 'pt_symbol',
+                'isotropic', 'atom', 'symbol', 'pt_atom', 'pt_symbol',
                 'label', 'frame']
     _categories = {'frame': np.int64, 'label': str, 'symbol': str, 'pt_symbol': str}
 
