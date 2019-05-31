@@ -18,21 +18,21 @@ class Tensor(DataFrame):
     +===============+==========+=========================================+
     | xx            | float    | 0,0 position in tensor                  |
     +---------------+----------+-----------------------------------------+
-    | xy            | float    | 0,1 position in tensor                  |
+    | xy            | float    | 1,0 position in tensor                  |
     +---------------+----------+-----------------------------------------+
-    | xz            | float    | 0,2 position in tensor                  |
+    | xz            | float    | 2,0 position in tensor                  |
     +---------------+----------+-----------------------------------------+
-    | yx            | float    | 1,0 position in tensor                  |
+    | yx            | float    | 0,1 position in tensor                  |
     +---------------+----------+-----------------------------------------+
     | yy            | float    | 1,1 position in tensor                  |
     +---------------+----------+-----------------------------------------+
-    | yz            | float    | 1,2 position in tensor                  |
+    | yz            | float    | 2,1 position in tensor                  |
     +---------------+----------+-----------------------------------------+
-    | zx            | float    | 3,0 position in tensor                  |
+    | zx            | float    | 0,3 position in tensor                  |
     +---------------+----------+-----------------------------------------+
-    | zy            | float    | 3,1 position in tensor                  |
+    | zy            | float    | 1,3 position in tensor                  |
     +---------------+----------+-----------------------------------------+
-    | zz            | float    | 3,2 position in tensor                  |
+    | zz            | float    | 2,3 position in tensor                  |
     +---------------+----------+-----------------------------------------+
     | frame         | category | frame value to which atach tensor       |
     +---------------+----------+-----------------------------------------+
@@ -110,21 +110,21 @@ class NMRShielding(Tensor):
     +===============+==========+=========================================+
     | xx            | float    | 0,0 position in tensor                  |
     +---------------+----------+-----------------------------------------+
-    | xy            | float    | 0,1 position in tensor                  |
+    | xy            | float    | 1,0 position in tensor                  |
     +---------------+----------+-----------------------------------------+
-    | xz            | float    | 0,2 position in tensor                  |
+    | xz            | float    | 2,0 position in tensor                  |
     +---------------+----------+-----------------------------------------+
-    | yx            | float    | 1,0 position in tensor                  |
+    | yx            | float    | 0,1 position in tensor                  |
     +---------------+----------+-----------------------------------------+
     | yy            | float    | 1,1 position in tensor                  |
     +---------------+----------+-----------------------------------------+
-    | yz            | float    | 1,2 position in tensor                  |
+    | yz            | float    | 2,1 position in tensor                  |
     +---------------+----------+-----------------------------------------+
-    | zx            | float    | 3,0 position in tensor                  |
+    | zx            | float    | 0,3 position in tensor                  |
     +---------------+----------+-----------------------------------------+
-    | zy            | float    | 3,1 position in tensor                  |
+    | zy            | float    | 1,3 position in tensor                  |
     +---------------+----------+-----------------------------------------+
-    | zz            | float    | 3,2 position in tensor                  |
+    | zz            | float    | 2,3 position in tensor                  |
     +---------------+----------+-----------------------------------------+
     | frame         | category | frame value to which atach tensor       |
     +---------------+----------+-----------------------------------------+
