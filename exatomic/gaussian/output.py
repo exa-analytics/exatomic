@@ -22,7 +22,7 @@ from exatomic.core.frame import compute_frame_from_atom
 from exatomic.core.frame import Frame
 from exatomic.core.atom import Atom, Frequency
 from exatomic.core.gradient import Gradient
-from exatomic.core.tensor import NMRshielding
+from exatomic.core.tensor import NMRShielding
 from exatomic.core.basis import (BasisSet, BasisSetOrder, Overlap,
                                  deduplicate_basis_sets)
 from exatomic.core.orbital import Orbital, MOMatrix, Excitation
@@ -56,7 +56,7 @@ class GauMeta(TypedMeta):
     overlap = Overlap
     multipole = pd.DataFrame
     gradient = Gradient
-    nmr_shielding = NMRshielding
+    nmr_shielding = NMRShielding
     frequency_ext = pd.DataFrame
 
 class Output(six.with_metaclass(GauMeta, Editor)):
