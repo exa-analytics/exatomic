@@ -95,3 +95,40 @@ class Output(six.with_metaclass(OutMeta, Editor)):
         shielding = pd.concat(dfs, ignore_index=True)
         self.nmr_shielding = shielding
 
+    def parse_j_coupling(self):
+        _recoupl = "total calculated spin-spin coupling:"
+        _reatom = "Internal CPL numbering of atoms:"
+        found = self.find(_reatom, keys_only=True)
+        if not found:
+            return
+        found = self.find(_reatom, _recoupl, keys_only=True)
+        # we grab the tensors inside the principal axis representation
+        # for the cartesian axis representation we start the list at 0 and grab every other instance
+        start_coupl = found[_recoupl][1::2]
+        start_pert = np.array(found[_reatom]) - 3
+        dfs = []
+        # grab atoms
+        cols = ['xx', 'xy', 'xz', 'yx', 'yy', 'yz', 'zx', 'zy', 'zz']
+        for ln, start in zip(start_pert, start_coupl):
+            line = self[ln].split()
+            # we just replace all of the () in the strings
+            pert_nucl = list(map(lambda x: x.replace('(', '').replace(')', ''), line[5:]))
+            nucl = list(map(lambda x: x.replace('(', '').replace(')', ''), line[1:3]))
+            # grab both tensors
+            df = self.pandas_dataframe(start+2, start+5, ncol=6)
+            # this will grab the iso value and tensor elements for the j coupling in hz
+            df.drop(range(3), axis='columns', inplace=True)
+            df = pd.DataFrame(df.unstack().values.reshape(1,9), columns=cols)
+            iso = self[start+1].split()[-1]
+            # place all of the dataframe columns
+            df['isotropic'] = float(iso)
+            df['atom'] = int(nucl[0])
+            df['symbol'] = nucl[1]
+            df['pt_atom'] = int(pert_nucl[0])
+            df['pt_symbol'] = pert_nucl[1]
+            df['label'] = 'j coupling'
+            df['frame'] = 0
+            dfs.append(df)
+        j_coupling = pd.concat(dfs, ignore_index=True)
+        self.j_coupling = j_coupling
+
