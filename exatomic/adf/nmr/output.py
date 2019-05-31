@@ -21,20 +21,23 @@ from exatomic.base import sym2z
 #from exatomic.algorithms.basis import lmap, enum_cartesian
 #from exatomic.algorithms.numerical import dfac21
 from exatomic.core.atom import Atom
-from exatomic.core.tensor import NMRShielding
+from exatomic.core.tensor import NMRShielding, JCoupling
 #from exatomic.core.basis import BasisSet, BasisSetOrder
 #from ..core.orbital import Orbital, Excitation, MOMatrix
-from ..editor import Editor
+from exatomic.adf.editor import Editor
 
 class OutMeta(TypedMeta):
     atom = Atom
     nmr_shielding = NMRShielding
+    j_coupling = JCoupling
 
 class Output(six.with_metaclass(OutMeta, Editor)):
     """ADF NMR parser"""
     def parse_atom(self):
-        _reatom = "NUCLEAR COORDINATES (ANGSTROMS):"
-        found = self.find(_reatom, keys_only=True)
+        # use the regex instead of find because we have a similar search string in an nmr and
+        # cpl calculation for the nuclear coordinates
+        _reatom = "(?i)NUCLEAR COORDINATES"
+        found = self.regex(_reatom, keys_only=True)
         #if len(found) > 1:
         #    raise NotImplementedError("We can only parse outputs from a single NMR calculation")
         atom = []
@@ -48,11 +51,11 @@ class Output(six.with_metaclass(OutMeta, Editor)):
             # delimitter and therefore the number of columns
             self[start:stop] = map(lambda x: x.replace('(', ''), self[start:stop])
             df = self.pandas_dataframe(start, stop, ncol=5)
-            #df.drop(1, axis='columns', inplace=True)
             df.columns = ['symbol', 'set', 'x', 'y', 'z']
             for c in ['x', 'y', 'z']: df[c] *= Length['Angstrom', 'au']
             df['Z'] = df['symbol'].map(sym2z)
             df['frame'] = idx
+            # remove the trailing chracters from the index
             df['set'] = list(map(lambda x: x.replace('):', ''), df['set']))
             df['set'] = df['set'].astype(int) - 1
             atom.append(df)
@@ -64,7 +67,8 @@ class Output(six.with_metaclass(OutMeta, Editor)):
         _renatom = "NUCLEAR COORDINATES (ANGSTROMS)"
         found = self.find(_reatom, keys_only=True)
         if not found:
-            raise NotImplementedError("Could not find {} in output".format(_reatom))
+            #raise NotImplementedError("Could not find {} in output".format(_reatom))
+            return
         ncalc = self.find(_renatom, keys_only=True)
         ncalc.append(len(self))
         ndx = 0
