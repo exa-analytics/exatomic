@@ -194,6 +194,52 @@ class NMRShielding(Tensor):
         # display the figure with our generated method
         plot.show()
 
+def JCoupling(Tensor):
+    """
+    The J-Coupling tensor dataframe
+
+    +---------------+----------+-----------------------------------------+
+    | Column        | Type     | Description                             |
+    +===============+==========+=========================================+
+    | xx            | float    | 0,0 position in tensor                  |
+    +---------------+----------+-----------------------------------------+
+    | xy            | float    | 1,0 position in tensor                  |
+    +---------------+----------+-----------------------------------------+
+    | xz            | float    | 2,0 position in tensor                  |
+    +---------------+----------+-----------------------------------------+
+    | yx            | float    | 0,1 position in tensor                  |
+    +---------------+----------+-----------------------------------------+
+    | yy            | float    | 1,1 position in tensor                  |
+    +---------------+----------+-----------------------------------------+
+    | yz            | float    | 2,1 position in tensor                  |
+    +---------------+----------+-----------------------------------------+
+    | zx            | float    | 0,3 position in tensor                  |
+    +---------------+----------+-----------------------------------------+
+    | zy            | float    | 1,3 position in tensor                  |
+    +---------------+----------+-----------------------------------------+
+    | zz            | float    | 2,3 position in tensor                  |
+    +---------------+----------+-----------------------------------------+
+    | isotropic     | float    | isotropic shift value of the tensor     |
+    +---------------+----------+-----------------------------------------+
+    | atom          | int      | atom index of molecule to place tensor  |
+    +---------------+----------+-----------------------------------------+
+    | symbol        | category | atom symbol the tensor is attached to   |
+    +---------------+----------+-----------------------------------------+
+    | pt_atom       | int      | atom index of perturbing atom           |
+    +---------------+----------+-----------------------------------------+
+    | pt_symbol     | category | atom symbol of perturbing atom          |
+    +---------------+----------+-----------------------------------------+
+    | label         | category | label of the type of tensor             |
+    +---------------+----------+-----------------------------------------+
+    | frame         | category | frame value to which atach tensor       |
+    +---------------+----------+-----------------------------------------+
+    """
+    _index = 'j_coupling'
+    _columns = ['xx','xy','xz','yx','yy','yz','zx','zy','zz',
+                'istropic', 'atom', 'symbol', 'pt_atom', 'pt_symbol',
+                'label', 'frame']
+    _categories = {'frame': np.int64, 'label': str, 'symbol': str, 'pt_symbol': str}
+
 def add_tensor(uni, fp):
     """
     Simple function to add a tensor object to the universe.
