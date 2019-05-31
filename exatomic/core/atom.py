@@ -359,8 +359,7 @@ class Frequency(DataFrame):
     """
     _index = 'frequency'
     _cardinal = ('frame', np.int64)
-    _categories = {'symbol': str,
-                   'label': np.int64, 'frequency': np.float64}
+    _categories = {'symbol': str, 'label': np.int64}
     _columns = ['dx', 'dy', 'dz', 'symbol', 'frequency', 'freqdx', 'ir_int']
     #@property
     #def _constructor(self):
@@ -405,7 +404,8 @@ class Frequency(DataFrame):
         if self['frame'].unique().shape[0] != 1:
             raise NotImplementedError("We have not yet expanded to include multiple frames")
         # grab the locations of the peaks between the bounds
-        freq = self['frequency'].astype(np.float64).drop_duplicates()
+        freqdx = self['freqdx'].drop_duplicates().index
+        freq = self.loc[freqdx, 'frequency']
         freq = freq[freq.between(*xrange)]
         # grab the ir intensity data
         # we use the frequency indexes instead of drop duplicates as we may have similar intensities
