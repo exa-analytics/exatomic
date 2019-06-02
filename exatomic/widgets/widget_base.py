@@ -12,8 +12,9 @@ from __future__ import division
 import os
 #import numpy as np
 from base64 import b64decode
-from traitlets import (Bool, Int, Float, Unicode,
-                       List, Any, Dict, link)
+from traitlets import (Bool, Int, Float, Unicode, Integer,
+                       List, Any, Dict, link, Tuple, default,
+                       observe)
 from ipywidgets import (
     Box, VBox, HBox, IntSlider, Text, ToggleButton,
     DOMWidget, Layout, Button, Dropdown, register)
@@ -24,6 +25,96 @@ from exatomic import Universe, __js_version__
 from .widget_utils import (_flo, _wlo, _hboxlo,
                            _vboxlo, _bboxlo, _ListDict,
                            Folder, GUIBox, gui_field_widgets)
+
+@register
+class ThreeScene(DOMWidget):
+    _model_module_version = Unicode(__js_version__).tag(sync=True)
+    _view_module_version = Unicode(__js_version__).tag(sync=True)
+    _model_name = Unicode('ThreeSceneModel').tag(sync=True)
+    _view_name = Unicode('ThreeSceneView').tag(sync=True)
+    _model_module = Unicode('exatomic').tag(sync=True)
+    _view_module = Unicode('exatomic').tag(sync=True)
+    camera_position = Tuple((40., 40., 40.)).tag(sync=True)
+    camera_origin = Tuple((0., 0., 0.)).tag(sync=True)
+    dims = Tuple((300, 300)).tag(sync=True)
+    recording = Bool(False).tag(sync=True)
+    savedir = Unicode().tag(sync=True)
+    imgname = Unicode().tag(sync=True)
+    filled = Bool(False).tag(sync=True)
+    two = Bool(False).tag(sync=True)
+    two_b0 = Unicode().tag(sync=True)
+    two_b1 = Unicode().tag(sync=True)
+    test = Bool(True).tag(sync=True)
+    atom = Bool(False).tag(sync=True)
+    atom_x = List().tag(sync=True)
+    atom_y = List().tag(sync=True)
+    atom_z = List().tag(sync=True)
+    atom_s = List().tag(sync=True)
+    atom_c = Dict().tag(sync=True)
+    atom_l = Dict().tag(sync=True)
+    atom_cr = Dict().tag(sync=True)
+    atom_vr = Dict().tag(sync=True)
+    frame = Integer(0).tag(sync=True)
+    field = Bool(False).tag(sync=True)
+    field_ox = Float(-5.0).tag(sync=True)
+    field_oy = Float(-5.0).tag(sync=True)
+    field_oz = Float(-5.0).tag(sync=True)
+    field_nx = Integer(35).tag(sync=True)
+    field_ny = Integer(35).tag(sync=True)
+    field_nz = Integer(35).tag(sync=True)
+    field_fx = Float(5.0).tag(sync=True)
+    field_fy = Float(5.0).tag(sync=True)
+    field_fz = Float(5.0).tag(sync=True)
+    field_map = List().tag(sync=True) # field_i
+    field_val = List().tag(sync=True) # field_v
+    field_lab = List().tag(sync=True) # labels
+    field_par = Dict().tag(sync=True) # field_p
+    field_idx = Integer(0).tag(sync=True) # Analog to frame index
+    field_fun = Unicode('').tag(sync=True) # String mapping to js func
+    field_typ = Unicode('').tag(sync=True) # Parameter to pass to js func
+    field_sub = Unicode('').tag(sync=True) # Additional parameter for js
+    field_pos = Unicode('#003399').tag(sync=True)
+    field_neg = Unicode('#FF9900').tag(sync=True)
+    field_iso = Float(5.0).tag(sync=True)
+    field_alp = Float(1.0).tag(sync=True)
+
+    @observe('field_fun')
+    def _default_iso_val(self, c):
+        if c['new'] in ['Sphere', 'Torus', 'Ellipsoid']:
+            self.field_iso = 5.
+        else:
+            self.field_iso = 0.005
+
+    @default('savedir')
+    def _default_savedir(self):
+        return os.getcwd()
+
+    @default('imgname')
+    def _default_imgname(self, nxt=0):
+        fmt = '{:06d}.png'.format
+        while os.path.isfile(os.path.join(self.savedir, fmt(nxt))):
+            nxt += 1
+        if nxt >= 10000:
+            raise Exception("this operation may overwrite an image")
+        return fmt(nxt)
+
+    def _handle_custom_msg(self, msg, callback):
+        """Custom message handler."""
+        if msg['type'] == 'image':
+            self._save_image(msg['content'])
+
+    def _save_image(self, content):
+        """Save a PNG of the scene."""
+        if not os.path.isdir(self.savedir):
+            raise Exception('Must supply a valid directory.')
+        #if self.index:
+        #    raise NotImplementedError("fix multiple scenes")
+
+        nxt = int(self.imgname.split('.')[0])
+        self.imgname = self._default_imgname(nxt=nxt)
+        repl = 'data:image/png;base64,'
+        with open(os.path.join(self.savedir, self.imgname), 'wb') as f:
+            f.write(b64decode(content.replace(repl, '')))
 
 
 @register

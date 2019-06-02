@@ -15,6 +15,17 @@ var version = require("./package.json").version;
  *
  */
 
+/*
+ * We've enabled UglifyJSPlugin for you! This minifies your app
+ * in order to load faster and run less javascript.
+ *
+ * https://github.com/webpack-contrib/uglifyjs-webpack-plugin
+ *
+ */
+
+const UglifyJSPlugin = require('uglifyjs-webpack-plugin');
+
+
 
 module.exports = [
     {
@@ -26,14 +37,44 @@ module.exports = [
             libraryTarget: "amd"
         },
         devtool: "source-map",
-        optimization: {
-            splitChunks: {
-                chunks: 'async',
-                minChunks: 1,
-                minSize: 30000,
-                name: true
-            }
-        }
+    	optimization: {
+    		splitChunks: {
+    			cacheGroups: {
+    				vendors: {
+    					priority: -10,
+    					test: /[\\/]node_modules[\\/]/
+    				}
+    			},
+    
+    			chunks: 'async',
+    			minChunks: 1,
+    			minSize: 30000,
+    			name: true
+    		}
+    	},
+        module: {
+    		rules: [
+    			{
+    				include: [path.resolve(__dirname, 'src')],
+    				loader: 'babel-loader',
+    
+    				options: {
+    					plugins: ['syntax-dynamic-import'],
+    
+    					presets: [
+    						[
+    							'@babel/preset-env',
+    							{
+    								modules: "amd"
+    							}
+    						]
+    					]
+    				},
+    
+    				test: /\.js$/
+    			}
+		    ],
+         }
 	},
     {
         entry: "./src/index.js",
@@ -44,7 +85,30 @@ module.exports = [
             libraryTarget: "amd"
         },
         devtool: "source-map",
-        externals: ["@jupyter-widgets/base", "@jupyter-widgets/controls"]
+        externals: ["@jupyter-widgets/base", "@jupyter-widgets/controls"],
+        module: {
+    		rules: [
+    			{
+    				include: [path.resolve(__dirname, 'src')],
+    				loader: 'babel-loader',
+    
+    				options: {
+    					plugins: ['syntax-dynamic-import'],
+    
+    					presets: [
+    						[
+    							'@babel/preset-env',
+    							{
+    								modules: "amd"
+    							}
+    						]
+    					]
+    				},
+    
+    				test: /\.js$/
+    			}
+		    ],
+         }
     },
     {
         entry: "./src/embed.js",
@@ -56,6 +120,29 @@ module.exports = [
             publicPath: "https://unpkg.com/exatomic@" + version + "/dist/"
         },
         devtool: "source-map",
-        externals: ["@jupyter-widgets/base", "@jupyter-widgets/controls"]
+        externals: ["@jupyter-widgets/base", "@jupyter-widgets/controls"],
+        module: {
+    		rules: [
+    			{
+    				include: [path.resolve(__dirname, 'src')],
+    				loader: 'babel-loader',
+    
+    				options: {
+    					plugins: ['syntax-dynamic-import'],
+    
+    					presets: [
+    						[
+    							'@babel/preset-env',
+    							{
+    								modules: "amd"
+    							}
+    						]
+    					]
+    				},
+    
+    				test: /\.js$/
+    			}
+		    ],
+         }
     }
 ];

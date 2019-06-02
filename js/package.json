@@ -1,6 +1,6 @@
 {
   "name": "exatomic",
-  "version": "0.4.7",
+  "version": "0.5.0",
   "description": "A unified platform for theoretical and computational chemists.",
   "author": "Thomas J. Duignan and Alex Marchenko",
   "license": "Apache-2.0",
@@ -17,13 +17,27 @@
     "notebook",
     "visualization"
   ],
+  "babel": {
+    "presets": [
+      "@babel/preset-env"
+    ],
+    "plugins": [
+      "@babel/plugin-proposal-class-properties"
+    ]
+  },
   "scripts": {
     "build": "webpack",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "devDependencies": {
+    "@babel/core": "^7.4.3",
+    "@babel/plugin-proposal-class-properties": "^7.4.0",
+    "@babel/preset-env": "^7.4.3",
+    "babel-loader": "^8.0.5",
+    "babel-plugin-syntax-dynamic-import": "^6.18.0",
+    "uglifyjs-webpack-plugin": "^2.1.2",
     "webpack": "^4.30.0",
-    "webpack-cli": "^3.3.0"
+    "webpack-cli": "^3.3.1"
   },
   "dependencies": {
     "@jupyter-widgets/base": "^1.2.4",

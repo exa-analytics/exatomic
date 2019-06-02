@@ -12,10 +12,13 @@ for use within the Jupyter notebook interface.
 var widgets = require("@jupyter-widgets/base");
 var control = require("@jupyter-widgets/controls");
 var _ = require("underscore");
+var THREE = require("three");
 var three = require("./appthree");
+var thapp = require("./app");
 var utils = require("./utils");
 var semver = "^" + require("../package.json").version;
 console.log("exatomic JS version: " + require("../package.json").version);
+console.log("are we current? yes we can");
 
 
 var ExatomicBoxModel = control.BoxModel.extend({
@@ -100,6 +103,262 @@ var ExatomicBoxView = control.BoxView.extend({
     }
 
 });
+
+
+var ThreeSceneModel = widgets.DOMWidgetModel.extend({
+
+    defaults: _.extend({}, widgets.DOMWidgetModel.prototype.defaults, {
+        _model_name: "ThreeSceneModel",
+        _view_name: "ThreeSceneView",
+        _model_module_version: semver,
+        _view_module_version: semver,
+        _model_module: "exatomic",
+        _view_module: "exatomic"//,
+        //w: 200,
+        //h: 200
+    })
+
+});
+
+var ThreeSceneView = widgets.DOMWidgetView.extend({
+
+    initialize: function() {
+        widgets.DOMWidgetView.prototype.initialize.apply(this, arguments)
+        this.init()
+        this.init_listeners()
+    },
+
+    render: function() {
+        return this.promises
+    },
+
+    parse: function(key) {
+        return Promise.resolve(
+            JSON.parse(this.model.get(key))
+        ).then((arr) => {
+            if (arr.length) {
+                console.log("parsed json", key, arr.length, "frames")
+            }
+            this[key] = arr
+        })
+    },
+
+    setattr: function(key) {
+        return Promise.resolve(
+            this.model.get(key)
+        ).then((obj) => {
+            if (Object.keys(obj).length) {
+                console.log("setting attr", key)
+            }
+            this[key] = obj
+        })
+    },
+
+    init: function() {
+        this.app3d = new three.NewApp3D(this)
+        this.promises = Promise.all([
+            this.app3d.init(),
+            this.setattr("atom_x"),
+            this.setattr("atom_y"),
+            this.setattr("atom_z"),
+            this.setattr("atom_s"),
+            this.setattr("field_val")
+        ])
+        this.promises.then(() => {
+            this.set_test()
+            this.set_dims()
+            this.set_atom()
+            this.app3d.set_camera_from_scene()
+        })
+    },
+
+    init_listeners: function() {
+        this.listenTo(this.model, "change:dims", this.set_dims)
+        this.listenTo(this.model, "change:atom", this.set_atom)
+        this.listenTo(this.model, "change:test", this.set_test)
+        this.listenTo(this.model, "change:frame", this.set_atom)
+        this.listenTo(this.model, "change:field", this.set_field)
+        this.listenTo(this.model, "change:filled", this.set_atom)
+        this.listenTo(this.model, "change:field_alp", this.update_field)
+        this.listenTo(this.model, "change:field_idx", this.set_field)
+        this.listenTo(this.model, "change:field_iso", this.set_field)
+        this.listenTo(this.model, "change:field_fun", this.set_field)
+        this.listenTo(this.model, "change:field_typ", this.set_field)
+        this.listenTo(this.model, "change:field_sub", this.set_field)
+        this.listenTo(this.model, "change:recording", this.set_recording)
+        this.listenTo(this.model, "change:camera_origin", this.set_camera_origin)
+        this.listenTo(this.model, "change:camera_position", this.set_camera_position)
+    },
+
+    get_fps: function() {
+        return {
+            "ox": this.model.get("field_ox"),
+            "oy": this.model.get("field_oy"),
+            "oz": this.model.get("field_oz"),
+            "nx": this.model.get("field_nx"),
+            "ny": this.model.get("field_ny"),
+            "nz": this.model.get("field_nz"),
+            "fx": this.model.get("field_fx"),
+            "fy": this.model.get("field_fy"),
+            "fz": this.model.get("field_fz")
+        }
+    },
+
+    get_colors: function() {
+        return {
+            "pos": this.model.get("field_pos"),
+            "neg": this.model.get("field_neg")
+        }
+    },
+
+    set_recording: function() {
+        this.app3d.recording = this.model.get("recording")
+    },
+
+    update_field: function() {
+        var meshes = this.app3d.meshes["field"]
+        for (var i = 0; i < meshes.length; i++) {
+            meshes[i].material.transparent = true
+            meshes[i].material.opacity = this.model.get("field_alp")
+            meshes[i].material.needsUpdate = true
+        }
+    },
+
+    _handle_custom_msg: function(msg, clbk) {
+        if (msg["type"] === "close") {
+            this.app3d.close()
+        }
+        if (msg["type"] === "camera") {
+            this.app3d.set_camera_from_camera(msg["content"])
+        }
+    },
+
+    set_atom: function() {
+        this.app3d.clear_meshes("atom")
+        let atom = this.model.get("atom")
+        console.log("setting atom", atom)
+        if (atom) {
+            this.app3d.clear_meshes("test")
+            let func
+            let frame = this.model.get("frame")
+            if (typeof this.atom_x[frame] === "string") {
+                this.atom_x[frame] = JSON.parse(this.atom_x[frame])
+                this.atom_y[frame] = JSON.parse(this.atom_y[frame])
+                this.atom_z[frame] = JSON.parse(this.atom_z[frame])
+                this.atom_s[frame] = JSON.parse(this.atom_s[frame])
+            }
+            if (this.atom_x[frame].length) {
+                if (this.model.get("filled")) {
+                    func = this.app3d.add_spheres
+                    console.log("drawing spheres for frame", frame)
+                } else {
+                    func = this.app3d.add_points
+                    console.log("drawing points for frame", frame)
+                }
+                this.app3d.meshes["atom"] = func(
+                    this.atom_x[frame],
+                    this.atom_y[frame],
+                    this.atom_z[frame],
+                    this.atom_s[frame].map(s => this.model.get("atom_c")[s]),
+                    this.atom_s[frame].map(s => this.model.get("atom_cr")[s]),
+                    this.atom_s[frame].map(s => this.model.get("atom_l")[s]))
+                this.app3d.add_meshes("atom")
+            }
+        }
+    },
+
+    set_field: function() {
+        this.app3d.clear_meshes("field")
+        let field = this.model.get("field")
+        console.log("setting field", field)
+        if (field) {
+            let fld, fun
+            let idx = this.model.get("field_idx")
+            let val = this.model.get("field_val")
+            let nam = this.model.get("field_fun")
+            let iso = this.model.get("field_iso")
+            let alp = this.model.get("field_alp")
+            let col = this.get_colors()
+            // First check for fields passed from python
+            if (val.length) {
+                fld = this.field_val[idx]
+                if (typeof fld === "string") {
+                    console.log("parsing field array from python")
+                    this.field_val[idx] = JSON.parse(fld)
+                }
+                fld = utils.scalar_field(this.get_fps(), fld)
+                console.log("adding field from array")
+                this.app3d.add_scalar_field(fld, iso, alp, 2, col)
+                let lab = this.model.get("field_lab")[idx]
+                this.app3d.meshes["field"][0].name = `${lab}(${iso})`
+                this.app3d.meshes["field"][1].name = `${lab}(-${iso})`
+            // Otherwise generate fields from func in
+            //     Torus, Sphere, Ellipsoid,
+            //     Gaussian, Hydrogenic, SolidHarmonic
+            } else if (nam) {
+                if (["Torus", "Sphere", "Ellipsoid"].includes(nam)) {
+                    console.log("adding plain func")
+                    console.log("nam", nam)
+                    fun = utils[nam]
+                    fld = utils.scalar_field(this.get_fps(), fun)
+                    this.app3d.add_scalar_field(fld, iso, alp)
+                    this.app3d.meshes["field"][0].name = `${nam}(${iso})`
+                } else {
+                    console.log("adding configurable func")
+                    console.log("typ", "sub",
+                                this.model.get("field_typ"),
+                                this.model.get("field_sub"))
+                    fun = utils[nam](this.model.get("field_typ"),
+                                     this.model.get("field_sub"))
+                    fld = utils.scalar_field(this.get_fps(), fun)
+                    if (iso > 0.1) {
+                        iso = 0.005
+                    }
+                    this.app3d.add_scalar_field(fld, iso, alp, 2, this.get_colors())
+                    this.app3d.meshes["field"][0].name =`${nam}(${iso})`
+                    this.app3d.meshes["field"][1].name =`${nam}(-${iso})`
+                }
+            }
+        }
+    },
+
+    set_dims: function() {
+        let dims = this.model.get("dims")
+        console.log("setting scene dims", dims)
+        let w = dims[0]
+        let h = dims[1]
+        this.app3d.w = w
+        this.app3d.h = h
+        this.app3d.w2 = w / 2
+        this.app3d.h2 = h / 2
+        this.app3d.camera.aspect = w / h
+        this.app3d.renderer.setSize(w, h)
+        this.app3d.hudcamera.left   = -w / 2
+        this.app3d.hudcamera.right  =  w / 2
+        this.app3d.hudcamera.top    =  h / 2
+        this.app3d.hudcamera.bottom = -h / 2
+    },
+
+    set_test: function() {
+        let test = this.model.get("test")
+        console.log("setting test", test)
+        this.app3d.test_mesh(test)
+    },
+
+    set_camera_position: function() {
+        let pos = this.model.get("camera_position")
+        console.log("setting camera position", pos)
+        this.app3d.camera.position.set(pos[0], pos[1], pos[2])
+    },
+
+    set_camera_origin: function() {
+        let orig = this.model.get("camera_origin")
+        console.log("setting camera origin", orig)
+        this.app3d.set_camera_origin(orig[0], orig[1], orig[2])
+    }
+
+});
+
 
 
 var ExatomicSceneModel = widgets.DOMWidgetModel.extend({
@@ -272,6 +531,8 @@ module.exports = {
     ExatomicSceneModel: ExatomicSceneModel,
     ExatomicSceneView: ExatomicSceneView,
     ExatomicBoxModel: ExatomicBoxModel,
-    ExatomicBoxView: ExatomicBoxView
+    ExatomicBoxView: ExatomicBoxView,
+    ThreeSceneModel: ThreeSceneModel,
+    ThreeSceneView: ThreeSceneView
 }
 

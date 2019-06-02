@@ -28,19 +28,16 @@ def atom_traits(df, atomcolors=None, atomradii=None, atomlabels=None):
     atomcolors = pd.Series() if atomcolors is None else pd.Series(atomcolors)
     atomradii = pd.Series() if atomradii is None else pd.Series(atomradii)
     traits = {}
-    cols = ['x', 'y', 'z']
     grps = df.groupby('frame')
-    for col in cols:
-        ncol = 'atom_' + col
-        traits[ncol] = grps.apply(
-            lambda y: y[col].to_json(
-            orient='values', double_precision=3)
-            ).to_json(orient="values").replace('"', '')
-    syms = grps.apply(lambda g: g['symbol'].cat.codes.values)
+    for c in ['x', 'y', 'z']:
+        traits['atom_' + c] = grps[c].apply(
+                pd.Series.to_json, orient='values',
+                double_precision=3).tolist()
+    traits['atom_s'] = grps['symbol'].apply(
+        lambda x: x.cat.codes.to_json(orient='values')).tolist()
     symmap = {i: v for i, v in enumerate(df['symbol'].cat.categories)
               if v in df.unique_atoms}
     unq = df['symbol'].astype(str).unique()
-#    radii = {k: sym2radius[k][1] for k in unq}
     cov_radii = {k: sym2radius[k][0] for k in unq}
     van_radii = {k: sym2radius[k][1] for k in unq}
     colors = {k: sym2color[k] for k in unq}
@@ -50,7 +47,6 @@ def atom_traits(df, atomcolors=None, atomradii=None, atomlabels=None):
     cov_radii.update(atomradii)
     van_radii.update(atomradii)
     labels.update(atomlabels)
-    traits['atom_s'] = syms.to_json(orient='values')
     traits['atom_cr'] = {i: cov_radii[v] for i, v in symmap.items()}
     traits['atom_vr'] = {i: van_radii[v] for i, v in symmap.items()}
     traits['atom_c'] = {i: colors[v] for i, v in symmap.items()}
@@ -67,10 +63,15 @@ def field_traits(df):
     fps = grps.apply(lambda x: x[['ox', 'oy', 'oz',
                                   'nx', 'ny', 'nz',
                                   'fx', 'fy', 'fz']].T.to_dict()).to_dict()
-    try: idxs = list(map(list, grps.groups.values()))
-    except: idxs = [list(grp.index) for i, grp in grps]
+    try:
+        idxs = list(map(list, grps.groups.values()))
+    except:
+        idxs = [list(grp.index) for i, grp in grps]
+    if 'label' in df.columns:
+        labs = grps['label'].tolist()
     return {'field_v': [f.to_json(orient='values',
-                        double_precision=5) for f in df.field_values],
+                                  double_precision=5)
+                        for f in df.field_values],
             'field_i': idxs,
             'field_p': fps}
 
