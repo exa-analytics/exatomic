@@ -6,3 +6,4 @@ ipywidgets
 sympy
 numexpr
 pyyaml
+bokeh

@@ -301,8 +301,8 @@ class Output(six.with_metaclass(OutMeta, Editor)):
         # NWChem gives this as a list of 18 values assuming the matrix to be symmetric
         # for our implementation we need to extend it to 27 elements
         # TODO: check that NWChem does assume that the 3D tensors are symmetric
-        start = np.array(list(found_3d.values())).reshape(2,) + 1
-        end = np.array(list(found_3d.values())).reshape(2,) + 19
+        start = np.sort(np.array(list(found_3d.values())).reshape(2,)) + 1
+        end = np.sort(np.array(list(found_3d.values())).reshape(2,)) + 19
         data = [self.pandas_dataframe(s, e, columns) for s, e in zip(start, end)]
         df3 = pd.concat([dat for dat in data]).reset_index(drop=True)
         vals = df3['val'].values.reshape(2,3,6)

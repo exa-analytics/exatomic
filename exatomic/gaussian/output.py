@@ -22,7 +22,7 @@ from exatomic.core.frame import compute_frame_from_atom
 from exatomic.core.frame import Frame
 from exatomic.core.atom import Atom, Frequency
 from exatomic.core.gradient import Gradient
-from exatomic.core.tensor import Tensor
+from exatomic.core.tensor import NMRShielding
 from exatomic.core.basis import (BasisSet, BasisSetOrder, Overlap,
                                  deduplicate_basis_sets)
 from exatomic.core.orbital import Orbital, MOMatrix, Excitation
@@ -56,8 +56,8 @@ class GauMeta(TypedMeta):
     overlap = Overlap
     multipole = pd.DataFrame
     gradient = Gradient
-    nmr_shielding = Tensor
-    frequency_ext = Frequency
+    nmr_shielding = NMRShielding
+    frequency_ext = pd.DataFrame
 
 class Output(six.with_metaclass(GauMeta, Editor)):
     def _parse_triangular_matrix(self, regex, column='coef', values_only=False):
@@ -551,6 +551,8 @@ class Output(six.with_metaclass(GauMeta, Editor)):
             ln = self[lno]
             # Get the frequencies first
             freqs = ln[freq_start:].split()
+            # get the ir intensities
+            ir_int = self[lno+3][freq_start:].split()
             nfreqs = len(freqs)
             # Get just the atom displacement vectors
             start = lno + span_freq_vals
@@ -561,7 +563,7 @@ class Output(six.with_metaclass(GauMeta, Editor)):
             # cannot get rid of this one conditional
             if hpmodes:
                 # get the displacements
-                dx, dy, dz = df.groupby(0).apply(lambda x: x[range(3,nfreqs+3)].unstack().values).values
+                dx, dy, dz = df.groupby(0).apply(lambda x: x[np.arange(3,nfreqs+3)].unstack().values).values
                 # Generate the appropriate dimensions of other columns
                 labels = np.tile(df[1].drop_duplicates().values, nfreqs)
                 zs = np.tile(df.groupby(0).get_group(1)[2].values, nfreqs)
@@ -569,6 +571,7 @@ class Output(six.with_metaclass(GauMeta, Editor)):
                 # so it will be the number_of_atoms * 3
                 freqdxs = np.repeat(range(fdx, fdx + nfreqs), int(df.shape[0]/3))
                 freqs = np.repeat(freqs, int(df.shape[0]/3))
+                ir_int = np.repeat(ir_int, int(df.shape[0]/3))
             else:
                 # Split up the df and unstack it
                 slices = [list(range(2 + i, 2 + 3 * nfreqs, 3)) for i in range(nfreqs)]
@@ -578,15 +581,18 @@ class Output(six.with_metaclass(GauMeta, Editor)):
                 zs = np.tile(df[1].values, nfreqs)
                 freqdxs = np.repeat(range(fdx, fdx + nfreqs), df.shape[0])
                 freqs = np.repeat(freqs, df.shape[0])
+                ir_int = np.repeat(ir_int, df.shape[0])
             fdx += nfreqs
             # Put it all together
             stacked = pd.DataFrame.from_dict({'Z': zs, 'label': labels,
                                     'dx': dx, 'dy': dy, 'dz': dz,
-                                    'frequency': freqs, 'freqdx': freqdxs})
+                                    'frequency': freqs, 'freqdx': freqdxs,
+                                    'ir_int': ir_int})
             stacked['symbol'] = stacked['Z'].map(z2sym)
             dfs.append(stacked)
         # Now put all our frequencies together
         frequency = pd.concat(dfs).reset_index(drop=True)
+        frequency['frequency'] = frequency['frequency'].astype(np.float64)
         #freq_ext = pd.concat(ext_dfs, ignore_index=True)
         # Pretty sure displacements are in cartesian angstroms
         # TODO: Make absolutely sure what units gaussian reports the displacements as
@@ -982,6 +988,8 @@ class Fchk(six.with_metaclass(GauMeta, Editor)):
             return
         else:
             found = self.find(_renmode, _refinfo, _redisp, keys_only=True)
+        if not hasattr(self, 'frequency_ext'):
+            self.parse_frequency_ext()
         # get atomic numbers
         znums = self.atom['Zeff'].values
         # get number of atoms
@@ -1007,12 +1015,14 @@ class Fchk(six.with_metaclass(GauMeta, Editor)):
         znums = np.tile(znums, nmode)
         label = np.tile(label, nmode)
         symbols = list(map(lambda x: z2sym[x], znums))
+        ir_int = np.repeat(self.frequency_ext['ir_int'].values, nat)
         # just to have the same table as the one generated for normal output parser
         frame = np.zeros(len(znums)).astype(np.int)
         # build frequency table
         self.frequency = pd.DataFrame.from_dict({"Z": znums, "label": label, "dx": dx,
                                                  "dy": dy, "dz": dz, "frequency": freq,
                                                  "freqdx": freqdx, "symbol": symbols,
+                                                 "ir_int": ir_int,
                                                  "frame": frame})
         self.frequency.reset_index(drop=True, inplace=True)
         # convert atomic displacements to atomic units

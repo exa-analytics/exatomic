@@ -5,7 +5,10 @@
 from exa import DataFrame
 import numpy as np
 import pandas as pd
+from exatomic import plotter
 
+# changing this so that tensor refers to a base class of attributes that all
+# tensor property dataframes should have
 class Tensor(DataFrame):
     """
     The tensor dataframe.
@@ -97,6 +100,114 @@ class Polarizability(Tensor):
     _columns = ['xx', 'xy', 'xz', 'yx', 'yy', 'yz', 'zx', 'zy', 'zz',
                 'frame', 'label', 'type']
     _categories = {'frame': np.int64, 'label': str}
+
+class NMRShielding(Tensor):
+    """
+    The NMR Shielding tensor dataframe.
+
+    +---------------+----------+-----------------------------------------+
+    | Column        | Type     | Description                             |
+    +===============+==========+=========================================+
+    | xx            | float    | 0,0 position in tensor                  |
+    +---------------+----------+-----------------------------------------+
+    | xy            | float    | 0,1 position in tensor                  |
+    +---------------+----------+-----------------------------------------+
+    | xz            | float    | 0,2 position in tensor                  |
+    +---------------+----------+-----------------------------------------+
+    | yx            | float    | 1,0 position in tensor                  |
+    +---------------+----------+-----------------------------------------+
+    | yy            | float    | 1,1 position in tensor                  |
+    +---------------+----------+-----------------------------------------+
+    | yz            | float    | 1,2 position in tensor                  |
+    +---------------+----------+-----------------------------------------+
+    | zx            | float    | 3,0 position in tensor                  |
+    +---------------+----------+-----------------------------------------+
+    | zy            | float    | 3,1 position in tensor                  |
+    +---------------+----------+-----------------------------------------+
+    | zz            | float    | 3,2 position in tensor                  |
+    +---------------+----------+-----------------------------------------+
+    | frame         | category | frame value to which atach tensor       |
+    +---------------+----------+-----------------------------------------+
+    | atom          | int      | atom index of molecule to place tensor  |
+    +---------------+----------+-----------------------------------------+
+    | label         | category | label of the type of tensor             |
+    +---------------+----------+-----------------------------------------+
+    | symbol        | category | atom symbol the tensor is attached to   |
+    +---------------+----------+-----------------------------------------+
+    | isotropic     | float    | isotropic shift value of the tensor     |
+    +---------------+----------+-----------------------------------------+
+    """
+    _index = 'nmr_shielding'
+    _columns = ['xx','xy','xz','yx','yy','yz','zx','zy','zz',
+                'frame','atom','label','symbol','isotropic']
+    _categories = {'frame': np.int64, 'label': str, 'symbol': str}
+
+    def nmr_spectra(self, fwhm=1, ref=None, atom='H', lineshape='lorentzian',
+                    xrange=None, res=None, invert_x=False, **kwargs):
+        '''
+        Generate NMR spectra with the plotter class. We can define a gaussian or lorentzian
+        lineshape function. For the most part we pass all of the kwargs directly into the
+        plotter.Plot class.
+
+        Args:
+            fwhm (float): Full-width at half-maximum
+            ref (float): Isotropic shift of the reference compound
+            atom (str): Atom that we want to display the spectra for
+            lineshape (str): Switch beteen the different lineshape functions available
+            xrange (list): X-bounds for the plot
+            res (float): Resolution for the plot line
+            invert_x (bool): Invert x-axis
+        '''
+        # define the lineshape and store the function call in the line variable
+        try:
+            line = getattr(plotter, lineshape)
+        except AttributeError:
+            raise NotImplementedError("Sorry we have not yet implemented the lineshape {}.".format(lineshape))
+        # define a default parameter for the plot width
+        # we did this for a full-screen jupyter notebook on a 1920x1080 monitor
+        if not "plot_width" in kwargs:
+            kwargs.update(plot_width=900)
+        # define the class
+        plot = plotter.Plot(**kwargs)
+        # this is designed for a single frame
+        if self['frame'].unique().shape[0] != 1:
+            raise NotImplementedError("We have not yet expanded to include multiple frames")
+        # grab the locations of the peaks
+        shifts = self.groupby('symbol').get_group(atom)['isotropic'].astype(np.float64)
+        if ref is not None:
+            # we just try to take care of any possible types for the ref variable
+            # its a bit of overkill but just want to make sure we can deal with them
+            if isinstance(ref, float) or isinstance(ref, int):
+                shifts = ref - shifts
+            elif isinstance(ref, list) or isinstance(ref, np.ndarray):
+                shifts = ref[0] - shifts
+            else:
+                raise TypeError("Could not understand type ref type {}.".format(type(ref)))
+        # define xbounds
+        xrange = [shifts.min()-10*fwhm, shifts.max()+10*fwhm] if xrange is None else xrange
+        # deal with inverted bounds
+        if xrange[0] > xrange[1]:
+            xrange = sorted(xrange)
+            invert_x = True
+        res = fwhm/50 if res is None else res
+        x_data = np.arange(*xrange, res)
+        shifts = shifts[shifts.between(*xrange)]
+        shifts = shifts.values
+        # get the y data by calling the lineshape function generator
+        y_data = line(freq=shifts, x=x_data, fwhm=fwhm)
+        # plot the lineshape data
+        plot.fig.line(x_data, y_data)
+        # plot the points on the plot to show were the frequency values are
+        # more useful when we have nearly degenerate vibrations
+        plot.fig.scatter(shifts, line(freq=shifts, x=shifts, fwhm=fwhm))
+        # just to make sure the plot is oriemted correctly
+        # typically 0 is on the left when we have a reference compound god knows why
+        if ref is not None or invert_x:
+            plot.set_xrange(xmin=xrange[1], xmax=xrange[0])
+        else:
+            plot.set_xrange(xmin=xrange[0], xmax=xrange[1])
+        # display the figure with our generated method
+        plot.show()
 
 def add_tensor(uni, fp):
     """
