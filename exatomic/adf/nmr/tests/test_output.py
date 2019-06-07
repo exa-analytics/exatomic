@@ -27,6 +27,6 @@ class TestOutput(TestCase):
 
     def test_j_coupling(self):
         self.c2h2.parse_j_coupling()
-        self.assertEqual(self.c2h2.j_coupling.shape[0], 8)
-        self.assertTrue(np.all(pd.notnull(self.c2h2.j_couplig)))
+        self.assertEqual(self.c2h2.j_coupling.shape[0], 4)
+        self.assertTrue(np.all(pd.notnull(self.c2h2.j_coupling)))
 
