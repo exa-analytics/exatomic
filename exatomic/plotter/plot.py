@@ -15,7 +15,7 @@ def lorentzian(freq, x, fwhm, inten=None):
     Plot lorentzian lineshapes
 
     Args:
-        freq (numpy.ndarray): Frequencies where the peaks will be located
+        freq (np.ndarray): Frequencies where the peaks will be located
         x (np.ndarray): X-axis data points
         fwhm (float): Full-width at half maximum
         inten (np.ndarray): Intensities of the peaks
@@ -37,7 +37,7 @@ def gaussian(freq, x, fwhm, inten=None):
     Plot gaussian lineshapes
 
     Args:
-        freq (numpy.ndarray): Frequencies where the peaks will be located
+        freq (np.ndarray): Frequencies where the peaks will be located
         x (np.ndarray): X-axis data points
         fwhm (float): Full-width at half maximum
         inten (np.ndarray): Intensities of the peaks

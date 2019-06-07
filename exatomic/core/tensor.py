@@ -142,7 +142,8 @@ class NMRShielding(Tensor):
                 'frame','atom','label','symbol','isotropic']
     _categories = {'frame': np.int64, 'label': str, 'symbol': str}
 
-    def nmr_spectra(self, fwhm=1, ref=None, atom='H', lineshape='lorentzian', **kwargs):
+    def nmr_spectra(self, fwhm=1, ref=None, atom='H', lineshape='lorentzian',
+                    xrange=None, res=None, invert_x=False, **kwargs):
         '''
         Generate NMR spectra with the plotter class. We can define a gaussian or lorentzian
         lineshape function. For the most part we pass all of the kwargs directly into the
@@ -153,20 +154,23 @@ class NMRShielding(Tensor):
             ref (float): Isotropic shift of the reference compound
             atom (str): Atom that we want to display the spectra for
             lineshape (str): Switch beteen the different lineshape functions available
+            xrange (list): X-bounds for the plot
+            res (float): Resolution for the plot line
+            invert_x (bool): Invert x-axis
         '''
         # define the lineshape and store the function call in the line variable
-        if lineshape == 'lorentzian':
-            line = plotter.lorentzian
-        elif lineshape == 'gaussian':
-            line = plotter.gaussian
-        else:
+        try:
+            line = getattr(plotter, lineshape)
+        except AttributeError:
             raise NotImplementedError("Sorry we have not yet implemented the lineshape {}.".format(lineshape))
+        # define a default parameter for the plot width
+        # we did this for a full-screen jupyter notebook on a 1920x1080 monitor
         if not "plot_width" in kwargs:
             kwargs.update(plot_width=900)
         # define the class
         plot = plotter.Plot(**kwargs)
         # this is designed for a single frame
-        if self['frame'].drop_duplicates().values[-1] != 0:
+        if self['frame'].unique().shape[0] != 1:
             raise NotImplementedError("We have not yet expanded to include multiple frames")
         # grab the locations of the peaks
         shifts = self.groupby('symbol').get_group(atom)['isotropic'].astype(np.float64)
@@ -179,9 +183,18 @@ class NMRShielding(Tensor):
                 shifts = ref[0] - shifts
             else:
                 raise TypeError("Could not understand type ref type {}.".format(type(ref)))
-        x_data = np.arange(shifts.min()-10*fwhm, shifts.max()+10*fwhm, fwhm/50)
+        # define xbounds
+        xrange = [shifts.min()-10*fwhm, shifts.max()+10*fwhm] if xrange is None else xrange
+        # deal with inverted bounds
+        if xrange[0] > xrange[1]:
+            xrange = sorted(xrange)
+            invert_x = True
+        res = fwhm/50 if res is None else res
+        x_data = np.arange(*xrange, res)
+        shifts = shifts[shifts.between(*xrange)]
+        shifts = shifts.values
         # get the y data by calling the lineshape function generator
-        y_data = line(freq=shifts.values, x=x_data, fwhm=fwhm)
+        y_data = line(freq=shifts, x=x_data, fwhm=fwhm)
         # plot the lineshape data
         plot.fig.line(x_data, y_data)
         # plot the points on the plot to show were the frequency values are
@@ -189,8 +202,10 @@ class NMRShielding(Tensor):
         plot.fig.scatter(shifts, line(freq=shifts, x=shifts, fwhm=fwhm))
         # just to make sure the plot is oriemted correctly
         # typically 0 is on the left when we have a reference compound god knows why
-        if ref is not None:
-            plot.set_xrange(xmin=max(x_data), xmax=min(x_data))
+        if ref is not None or invert_x:
+            plot.set_xrange(xmin=xrange[1], xmax=xrange[0])
+        else:
+            plot.set_xrange(xmin=xrange[0], xmax=xrange[1])
         # display the figure with our generated method
         plot.show()
 
