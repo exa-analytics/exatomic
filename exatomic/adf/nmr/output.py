@@ -129,6 +129,7 @@ class Output(six.with_metaclass(OutMeta, Editor)):
             df['label'] = 'j coupling'
             df['frame'] = 0
             dfs.append(df)
+        # put everything together
         j_coupling = pd.concat(dfs, ignore_index=True)
         self.j_coupling = j_coupling
 
