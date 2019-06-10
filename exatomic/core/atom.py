@@ -167,8 +167,6 @@ class Atom(DataFrame):
         frame['z'] += dz
         return frame
 
-
-
     def to_xyz(self, tag='symbol', header=False, comments='', columns=None,
                frame=None, units='Angstrom'):
         """
