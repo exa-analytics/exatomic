@@ -230,59 +230,6 @@ class Output(six.with_metaclass(GauMeta, Editor)):
             orbital['symmetry'] = allsyms[-orbital.shape[0]:]
         self.orbital = orbital
 
-#    # this only parses the first instance of the orbital energies
-#    # does not grab final orbital energies from geometry optimization
-#    def parse_orbital(self):
-#        _rebas01 = r'basis functions,'
-#        # Orbital flags
-#        _realphaelec = 'alpha electrons'
-#        _reorb01 = '(?=Alpha|Beta).*(?=occ|virt)'
-#        _reorb02 = 'Orbital symmetries'
-#        _orbslice = [slice(10 * i, 10 * i + 9) for i in range(5)]
-#        _symrep = {'Occupied': '', 'Virtual': '', 'Alpha Orbitals:': '',
-#                   'Beta  Orbitals:': '', '\(': '', '\)': ''}
-#        _resympat = re.compile('|'.join(_symrep.keys()))
-#        _symrep['('] = ''
-#        _symrep[')'] = ''
-#        # Find where our data is
-#        found = self.regex(_reorb01, _reorb02, _rebas01, _realphaelec)
-#        # If no orbital energies, quit
-#        if not found[_reorb01]: return
-#        # Check if open shell
-#        os = any(('Beta' in ln for lno, ln in found[_reorb01]))
-#        #UNUSED?
-#        #occ = 1 if os else 2
-#        # Find number of electrons
-#        ae, x, x, be, x, x = found[_realphaelec][0][1].split()
-#        ae, be = int(ae), int(be)
-#        # Get orbital energies
-#        ens = '\n'.join([ln.split('-- ')[1] for i, ln in found[_reorb01]])
-#        ens = pd.read_fwf(six.StringIO(ens), header=None,
-#                          widths=np.repeat(10, 5)).stack().values
-#        # Other arrays
-#        orbital = Orbital.from_energies(ens, ae, be, os=os)
-#        # Symmetry labels
-#        if found[_reorb02]:
-#            # Gaussian seems to print out a lot of these blocks
-#            # maybe a better way to deal with this
-#            allsyms = []
-#            match = ['(', 'Orbitals']
-#            for i, (start, ln) in enumerate(found[_reorb02]):
-#                # Find the start, stop indices for each block
-#                while match[0] not in self[start]: start += 1
-#                stop = start + 1
-#                while any((i in self[stop] for i in match)): stop += 1
-#                # Clean up the text block so it is just symmetries
-#                syms = _resympat.sub(lambda m: _symrep[m.group(0)],
-#                                     ' '.join([i.strip() for i in
-#                                     self[start:stop]])).split()
-#                # cat the syms for each block together
-#                allsyms += syms
-#            # Add it to our dataframe
-#            orbital['symmetry'] = allsyms[-orbital.shape[0]:]
-#        self.orbital = orbital
-
-
     def parse_momatrix(self):
         """
         Parses the MO matrix if asked for in the input.
@@ -605,68 +552,8 @@ class Output(six.with_metaclass(GauMeta, Editor)):
         # Frame not really implemented here either
         frequency['frame'] = 0
         # generate the frequency and extended frequency dataframes
-        # TODO: we are having issues with the to_universe() in that it only seems to set the
-        #       class attribute corresponding to the method
-        #self.frequency_ext = freq_eVxt
         self.frequency = frequency
 
-#    def parse_frequency(self):
-#        # TODO: generalize code to be able to read frequencies when performing
-#        #       both a geometry optimization and frequency calculation
-#        #       possible fix is to look for Link1 flags as the frequency calculation
-#        #       is always after the geometry optimization
-#        # Frequency flags
-#        _refreq = 'Freq'
-#        #found = self.regex(_refreq, stop=1000, flags=re.IGNORECASE)
-#        # remove stop condition
-#        # this will be troublesome for larger molecules
-#        found = self.regex(_refreq, flags=re.IGNORECASE)
-#        print(found)
-#        # Don't need the input deck or 2 from the summary at the end
-#        found = self.find(_refreq)[1:-2]
-#        print(found)
-#        if not found: return
-#        # Total lines per block minus the unnecessary ones
-#        span = found[1][0] - found[0][0] - 7
-#        dfs, fdx = [], 0
-#        # Iterate over what we found
-#        for lno, ln in found:
-#            # Get the frequencies first
-#            freqs = ln[15:].split()
-#            nfreqs = len(freqs)
-#            # Get just the atom displacement vectors
-#            start = lno + 5
-#            stop = start + span
-#            cols = range(2 + 3 * nfreqs)
-#            df = self.pandas_dataframe(start, stop, ncol=cols)
-#            # Split up the df and unstack it
-#            slices = [list(range(2 + i, 2 + 3 * nfreqs, 3)) for i in range(nfreqs)]
-#            dx, dy, dz = [df[i].unstack().values for i in slices]
-#            # Generate the appropriate dimensions of other columns
-#            labels = np.tile(df[0].values, nfreqs)
-#            zs = np.tile(df[1].values, nfreqs)
-#            freqdxs = np.repeat(range(fdx, fdx + nfreqs), df.shape[0])
-#            freqs = np.repeat(freqs, df.shape[0])
-#            fdx += nfreqs
-#            # Put it all together
-#            stacked = pd.DataFrame.from_dict({'Z': zs, 'label': labels,
-#                                    'dx': dx, 'dy': dy, 'dz': dz,
-#                                    'frequency': freqs, 'freqdx': freqdxs})
-#            stacked['symbol'] = stacked['Z'].map(z2sym)
-#            dfs.append(stacked)
-#        # Now put all our frequencies together
-#        frequency = pd.concat(dfs).reset_index(drop=True)
-#        # Pretty sure displacements are in cartesian angstroms
-#        # TODO: Make absolutely sure what units gaussian reports the displacements as
-#        # TODO: verify with an external program that vibrational
-#        #       modes look the same as the ones generated with
-#        #       this methodology.
-#        #frequency['dx'] *= Length['Angstrom', 'au']
-#        #frequency['dy'] *= Length['Angstrom', 'au']
-#        #frequency['dz'] *= Length['Angstrom', 'au']
-#        # Frame not really implemented here either
-#        frequency['frame'] = 0
-#        self.frequency = frequency
     def parse_nmr_shielding(self):
         # nmr shielding regex
         # this might lead to wrong behavior so it may need to change
@@ -693,17 +580,11 @@ class Output(six.with_metaclass(GauMeta, Editor)):
             iso = float(split_str[4])
             # get the anisotropic value
             aniso = float(split_str[-1])
-            #print(iso, aniso)
-            tensor_elem = []
-            for idx in range(start, end):
-                full_str = self[idx]
-                split_str = full_str.strip().split()
-                # get the tensor elements
-                tensor_elem.append(float(split_str[1]))
-                tensor_elem.append(float(split_str[3]))
-                tensor_elem.append(float(split_str[-1]))
+            # get the tensor elements
+            tmp = self.pandas_dataframe(start, end, ncol=6)
+            tmp.drop([0,2,4], axis='columns', inplace=True)
             # create a temporary dataframe
-            tmp = pd.DataFrame(np.array(tensor_elem).reshape(1,9),
+            tmp = pd.DataFrame(tmp.unstack().values.reshape(1,9),
                                columns=['xx','xy','xz','yx','yy','yz','zx','zy','zz'])
             tmp['isotropic'] = iso
             tmp['anisotropic'] = aniso

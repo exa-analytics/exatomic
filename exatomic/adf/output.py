@@ -20,9 +20,10 @@ from exa import TypedMeta
 from exatomic.base import sym2z
 from exatomic.algorithms.basis import lmap, enum_cartesian
 from exatomic.algorithms.numerical import dfac21
-from ..core.atom import Atom
+from exatomic.core.atom import Atom, Frequency
+from exatomic.core.gradient import Gradient
 from exatomic.core.basis import BasisSet, BasisSetOrder
-from ..core.orbital import Orbital, Excitation, MOMatrix
+from exatomic.core.orbital import Orbital, Excitation, MOMatrix
 from .editor import Editor
 
 
@@ -35,6 +36,8 @@ class OutMeta(TypedMeta):
     excitation = Excitation
     momatrix = MOMatrix
     sphr_momatrix = MOMatrix
+    gradient = Gradient
+    frequency = Frequency
 
 
 class Output(six.with_metaclass(OutMeta, Editor)):
@@ -315,6 +318,75 @@ class Output(six.with_metaclass(OutMeta, Editor)):
         momatrix['frame'] = self.atom['frame'].unique()[-1]
         self.sphr_momatrix = momatrix
 
+    def parse_gradient(self):
+        _regrad = "Energy gradients wrt nuclear displacements"
+        found = self.find(_regrad, keys_only=True)
+        if not found:
+            return
+        starts = np.array(found) + 6
+        stop = starts[0]
+        while '----' not in self[stop]: stop += 1
+        stops = starts + (stop - starts[0])
+        dfs = []
+        for i, (start, stop) in enumerate(zip(starts, stops)):
+            df = self.pandas_dataframe(start, stop, ncol=5)
+            df.columns = ['atom', 'symbol', 'fx', 'fy', 'fz']
+            df['frame'] = i
+            df['atom'] -= 1
+            dfs.append(df)
+        grad = pd.concat(dfs, ignore_index=True)
+        grad['Z'] = grad['symbol'].map(sym2z)
+        grad = grad[['atom', 'Z', 'fx', 'fy', 'fz', 'symbol', 'frame']]
+        for u in ['fx', 'fy', 'fz']: grad[u] *= 1./Length['Angstrom', 'au']
+        self.gradient = grad
+
+    def parse_frequency(self):
+        _renorm = "Vibrations and Normal Modes"
+        _refreq = "List of All Frequencies:"
+        found = self.find(_refreq, keys_only=True)
+        if not found:
+            return
+        elif len(found) > 1:
+            raise NotImplementedError("We cannot parse more than one frequency calculation in a single output")
+        found = self.find(_refreq, _renorm, keys_only=True)
+        start = found[_refreq][0] + 9
+        stop = start
+        while self[stop]: stop += 1
+        df = self.pandas_dataframe(start, stop, ncol=3)
+        freqs = df[0].values
+        n = int(np.ceil(freqs.shape[0]/3))
+        start = found[_renorm][0] + 9
+        stop = start
+        while self[stop]: stop += 1
+        natoms = stop - start
+        dfs = []
+        fdx = 0
+        for i in range(n):
+            if i == 0:
+                start = found[_renorm][0] + 9
+            else:
+                start = stop + 4
+            stop = start + natoms
+            freqs = list(map(lambda x: float(x), self[start-2].split()))
+            ncol = len(freqs)
+            df = self.pandas_dataframe(start, stop, ncol=1+3*ncol)
+            tmp = list(map(lambda x: x.split('.'), df[0]))
+            index, symbol = list(map(list, zip(*tmp)))
+            slices = [list(range(1+i, 1+3*ncol, 3)) for i in range(ncol)]
+            dx, dy, dz = [df[i].unstack().values for i in slices]
+            freqdx = np.repeat(list(range(fdx, ncol+fdx)), natoms)
+            zs = pd.Series(symbol).map(sym2z)
+            freqs = np.repeat(freqs, natoms)
+            stacked = pd.DataFrame.from_dict({'Z': np.tile(zs, ncol), 'label': np.tile(index, ncol), 'dx': dx,
+                                              'dy': dy, 'dz': dz, 'frequency': freqs, 'freqdx': freqdx})
+            stacked['ir_int'] = 0.0
+            stacked['symbol'] = np.tile(symbol, ncol)
+            dfs.append(stacked)
+            fdx += ncol
+        frequency = pd.concat(dfs, ignore_index=True)
+        frequency['frame'] = 0
+        # TODO: check units of the normal modes
+        self.frequency = frequency
 
     def __init__(self, *args, **kwargs):
         super(Output, self).__init__(*args, **kwargs)
