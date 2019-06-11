@@ -3,7 +3,6 @@ from unittest import TestCase
 from os import sep, remove, rmdir
 from tarfile import open
 from glob import glob
-from inspect import getfile
 
 #from exatomic import va
 from exatomic.base import resource
