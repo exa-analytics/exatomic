@@ -16,7 +16,7 @@ class TestADFOutput(TestCase):
         # TODO :: File with excitation
         self.pf3 = Output(resource('adf-pf3-nmr.out'))
         self.c2h2 = Output(resource('adf-c2h2-cpl.out'))
-        self.ch4 = Ouput(resource('adf-ch4-opt-freq.out'))
+        self.ch4 = Output(resource('adf-ch4-opt-freq.out'))
 
     def test_parse_atom(self):
         self.lu.parse_atom()
