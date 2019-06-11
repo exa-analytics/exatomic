@@ -45,14 +45,45 @@ class Output(six.with_metaclass(OutMeta, Editor)):
     def parse_atom(self):
         # TODO : only supports single frame, gets last atomic positions
         _re_atom_00 = 'Atoms in this Fragment     Cart. coord.s (Angstrom)'
-        start = stop = self.find(_re_atom_00, keys_only=True)[0] + 2
-        while self[stop].strip(): stop += 1
-        atom = self.pandas_dataframe(start, stop, 7)
-        atom.drop([0, 2, 3], axis=1, inplace=True)
-        atom.columns = ['symbol', 'x', 'y', 'z']
-        for c in ['x', 'y', 'z']: atom[c] *= Length['Angstrom', 'au']
-        atom['Z'] = atom['symbol'].map(sym2z)
-        atom['frame'] = 0
+        found1 = self.find(_re_atom_00, keys_only=True)
+        # use the regex instead of find because we have a similar search string in an nmr and
+        # cpl calculation for the nuclear coordinates
+        _reatom = "(?i)NUCLEAR COORDINATES"
+        found2 = self.regex(_reatom, keys_only=True)
+        if found1:
+            start = stop = found1[0] + 2
+            while self[stop].strip(): stop += 1
+            atom = self.pandas_dataframe(start, stop, 7)
+            atom.drop([0, 2, 3], axis=1, inplace=True)
+            atom.columns = ['symbol', 'x', 'y', 'z']
+            for c in ['x', 'y', 'z']: atom[c] *= Length['Angstrom', 'au']
+            atom['Z'] = atom['symbol'].map(sym2z)
+            atom['frame'] = 0
+        elif found2:
+            #if len(found) > 1:
+            #    raise NotImplementedError("We can only parse outputs from a single NMR calculation")
+            atom = []
+            for idx, val in enumerate(found2):
+                start = val + 3
+                stop = start
+                while self[stop].strip(): stop += 1
+                # a bit of a hack to make sure that there is no formatting change depending on the
+                # number of atoms in the molecule as the index is right justified so if there are
+                # more than 100 atoms it will fill the alloted space for the atom index and change the
+                # delimitter and therefore the number of columns
+                self[start:stop] = map(lambda x: x.replace('(', ''), self[start:stop])
+                df = self.pandas_dataframe(start, stop, ncol=5)
+                df.columns = ['symbol', 'set', 'x', 'y', 'z']
+                for c in ['x', 'y', 'z']: df[c] *= Length['Angstrom', 'au']
+                df['Z'] = df['symbol'].map(sym2z)
+                df['frame'] = idx
+                # remove the trailing chracters from the index
+                df['set'] = list(map(lambda x: x.replace('):', ''), df['set']))
+                df['set'] = df['set'].astype(int) - 1
+                atom.append(df)
+        else:
+            raise NotImplementedError("We could not find the atom table in this output. Please submit "+ \
+                                      "an issue ticket so we can add it in.")
         self.atom = atom
 
 
