@@ -14,11 +14,19 @@ class TestADFOutput(TestCase):
     def setUp(self):
         self.lu = Output(resource('adf-lu.out'))
         # TODO :: File with excitation
+        self.pf3 = Output(resource('adf-pf3-nmr.out'))
+        self.c2h2 = Output(resource('adf-c2h2-cpl.out'))
 
     def test_parse_atom(self):
         self.lu.parse_atom()
         self.assertEqual(self.lu.atom.shape[0], 1)
         self.assertTrue(np.all(pd.notnull(self.lu.atom)))
+        self.pf3.parse_atom()
+        self.assertEqual(self.pf3.atom.shape[0], 4)
+        self.assertTrue(np.all(pd.notnull(self.pf3.atom)))
+        self.c2h2.parse_atom()
+        self.assertEqual(self.c2h2.atom.shape[0], 4)
+        self.assertTrue(np.all(pd.notnull(self.c2h2.atom)))
 
     def test_parse_basis_set(self):
         self.lu.parse_basis_set()
@@ -46,3 +54,14 @@ class TestADFOutput(TestCase):
         self.lu.parse_orbital()
         self.assertEqual(self.lu.orbital.shape[0], 20)
         self.assertTrue(np.all(pd.notnull(self.lu.orbital)))
+
+    def test_nmr_shielding(self):
+        self.pf3.parse_nmr_shielding()
+        self.assertEqual(self.pf3.nmr_shielding.shape[0], 4)
+        self.assertTrue(np.all(pd.notnull(self.pf3.nmr_shielding)))
+
+    def test_j_coupling(self):
+        self.c2h2.parse_j_coupling()
+        self.assertEqual(self.c2h2.j_coupling.shape[0], 4)
+        self.assertTrue(np.all(pd.notnull(self.c2h2.j_coupling)))
+
