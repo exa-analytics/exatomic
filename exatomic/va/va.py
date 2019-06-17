@@ -609,8 +609,8 @@ class VA(metaclass=VAMeta):
             sel_delta = delta
             sel_rmass = rmass
             sel_freq = frequencies
-        #frequencies = self.calculate_frequencies(delfq_zero, delfq_plus, delfq_minus, sel_rmass, select_freq,
-        #                                         sel_delta)
+        _ = self.calculate_frequencies(delfq_zero, delfq_plus, delfq_minus, sel_rmass, select_freq,
+                                                 sel_delta)
         # calculate cubic force constant
         # we use a for loop because we need the diagonal values
         # if we select a specific number of modes then the diagonal elements
