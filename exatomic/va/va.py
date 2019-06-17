@@ -94,8 +94,16 @@ class VAMeta(TypedMeta):
 
 class VA(metaclass=VAMeta):
     """
-    Administrator class for VA to perform all initial calculations of necessary variables to pass
-    for calculations.
+    Class that contains all of the Vibrational Averaging methods. Currently we have implemented:
+    Vibrational Raman Optical Activity (vroa), Zero-Point Vibrational Corrections (zpvc).
+
+    Note:
+        We do not have any code that will get the class attributes that are needed to execute
+        the respective methods. We only check to make sure that the class attributes exist.
+        The vroa method will look for the gradient and roa class attributes. The zpvc method will
+        look for the gradient and property class attibutes. We recommend using the
+        exatomic.va.va.get_data function to get the data as it will compress everything into
+        one dataframe as is expected for the zpvc and vroa methods
     """
 #    @staticmethod
 #    def _calc_kp(lambda_0, lambda_p):
@@ -268,6 +276,9 @@ class VA(metaclass=VAMeta):
             delta (numpy.ndarray): Array containing all of the delta values used for the generation
                                 of the displaced structures.
             units (str): Units of the excitation frequencies. Default to nm.
+            temp (float): Temperature value for the calculation
+            raman_units (bool): Convert from atomic units to the Raman intensity units see raman_int_units for more information
+            assume_real (bool): Neglect the contribution from the imaginary tensor values
         """
         if not hasattr(self, 'roa'):
             raise AttributeError("Please set roa attribute.")
@@ -580,8 +591,8 @@ class VA(metaclass=VAMeta):
             sel_delta = delta
             sel_rmass = rmass
             sel_freq = frequencies
-        #frequencies = self.calculate_frequencies(delfq_zero, delfq_plus, delfq_minus, sel_rmass, select_freq,
-        #                                         sel_delta)
+        _ = self.calculate_frequencies(delfq_zero, delfq_plus, delfq_minus, sel_rmass, select_freq,
+                                                 sel_delta)
         # calculate cubic force constant
         # we use a for loop because we need the diagonal values
         # if we select a specific number of modes then the diagonal elements
@@ -680,12 +691,14 @@ class VA(metaclass=VAMeta):
                 # get the effective geometry
                 tmp_coord = np.transpose(eqcoord + sum_to_eff_geo)
                 # generate one of the coordinate dataframes
+                # we write the frame to be the same as the temp column so that one can take
+                # advantage of the exatomic.core.atom.Atom.to_xyz method
                 coor_dfs.append(pd.DataFrame.from_dict({'set': list(range(len(eqcoord))),
                                                         'Z': atom_order.map(sym2z), 'x': tmp_coord[0],
                                                         'y': tmp_coord[1], 'z': tmp_coord[2],
                                                         'symbol': atom_order,
                                                         'temp': np.repeat(t, eqcoord.shape[0]),
-                                                        'frame': np.repeat(0, len(eqcoord))}))
+                                                        'frame': np.repeat(t, len(eqcoord))}))
                 # print out the effective geometry in Angstroms
                 if print_results:
                     print("----Effective geometry in Angstroms")
