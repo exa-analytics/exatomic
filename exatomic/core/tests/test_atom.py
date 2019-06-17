@@ -35,9 +35,9 @@ class TestAtom(TestCase):
         self.assertTrue(np.allclose(trans_vec[self.cols].values, vec_data))
 
     def test_rotate(self):
-        rot_data = np.array([[-0.779160467,  -7.122082568,  -0.768625925],
-                             [-0.741892786,  -5.800115434,  -0.663653044],
-                             [ 0.044456645,  -7.508749805,   1.550842405]])
+        rot_data = np.array([[6.342922101, -7.901243041, -0.036037077],
+                             [5.058222648, -6.542008224,  0.025454611],
+                             [7.553206450, -7.464293163,  1.322676007]])
         rotated = self.h2o.atom.rotate(theta=135.0)
         self.assertTrue(np.allclose(rotated[self.cols].values, rot_data))
 
