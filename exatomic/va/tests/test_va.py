@@ -407,7 +407,9 @@ class TestZPVC(TestCase):
          3.54638132e-04, -1.37928042e-03,  2.00000000e+02],
        [ 3.69638850e+03,  3.80000000e+01, -7.51344750e-04,
         -3.25687908e-04, -1.07703266e-03,  2.00000000e+02]])
-        self.assertTrue(np.allclose(va_corr.zpvc_results.values, zpvc_results, rtol=5e-4))
+        cols = ['property', 'zpvc', 'zpva', 'tot_anharm', 'tot_curva', 'temp']
+        self.assertTrue(np.allclose(va_corr.zpvc_results[cols].values, zpvc_results, rtol=5e-4))
         self.assertTrue(np.allclose(va_corr.eff_coord[['Z','x','y','z']].values, eff_coord, rtol=5e-4))
-        self.assertTrue(np.allclose(va_corr.vib_average.values, vib_average, rtol=5e-4))
+        cols = ['freq', 'freqdx', 'anharm', 'curva', 'sum', 'temp']
+        self.assertTrue(np.allclose(va_corr.vib_average[cols].values, vib_average, rtol=5e-4))
 
