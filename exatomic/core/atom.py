@@ -118,9 +118,7 @@ class Atom(DataFrame):
         # get the coordinates
         coords = frame[['x', 'y', 'z']].values
         # generate the first term in rodrigues formula
-        # we use np.tile because this would only result in a one dimensional vector but we will need
-        # to sum up all of the matrix products
-        a = np.tile(axis * np.cos(theta), coords.shape[0]).reshape(coords.shape[0], coords.shape[1])
+        a = coords * np.cos(theta)
         # generate second term in rodrigures formula
         # this creates a matrix of size coords.shape[0]
         b = np.cross(axis, coords) * np.sin(theta)
