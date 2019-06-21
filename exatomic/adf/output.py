@@ -491,6 +491,8 @@ class Output(six.with_metaclass(OutMeta, Editor)):
             dfs.append(df)
         # put everything together
         j_coupling = pd.concat(dfs, ignore_index=True)
+        j_coupling['atom'] -= 1
+        j_coupling['pt_atom'] -= 1
         self.j_coupling = j_coupling
 
     def __init__(self, *args, **kwargs):
