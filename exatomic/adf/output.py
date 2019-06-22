@@ -83,6 +83,7 @@ class Output(six.with_metaclass(OutMeta, Editor)):
                 df['set'] = list(map(lambda x: x.replace('):', ''), df['set']))
                 df['set'] = df['set'].astype(int) - 1
                 atom.append(df)
+            atom = pd.concat(atom)
         else:
             raise NotImplementedError("We could not find the atom table in this output. Please submit "+ \
                                       "an issue ticket so we can add it in.")

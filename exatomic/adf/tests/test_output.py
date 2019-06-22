@@ -17,6 +17,7 @@ class TestADFOutput(TestCase):
         self.pf3 = Output(resource('adf-pf3-nmr.out'))
         self.c2h2 = Output(resource('adf-c2h2-cpl.out'))
         self.ch4 = Output(resource('adf-ch4-opt-freq.out'))
+        self.c2h2_nofrag = Output(resource('adf-c2h2-cpl-nofrag.out'))
 
     def test_parse_atom(self):
         self.lu.parse_atom()
@@ -26,6 +27,9 @@ class TestADFOutput(TestCase):
         self.assertEqual(self.pf3.atom.shape[0], 4)
         self.assertTrue(np.all(pd.notnull(self.pf3.atom)))
         self.c2h2.parse_atom()
+        self.assertEqual(self.c2h2.atom.shape[0], 4)
+        self.assertTrue(np.all(pd.notnull(self.c2h2.atom)))
+        self.c2h2_nofrag.parse_atom()
         self.assertEqual(self.c2h2.atom.shape[0], 4)
         self.assertTrue(np.all(pd.notnull(self.c2h2.atom)))
 
