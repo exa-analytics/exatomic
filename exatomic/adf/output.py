@@ -54,7 +54,29 @@ class Output(six.with_metaclass(OutMeta, Editor)):
         # cpl calculation for the nuclear coordinates
         _reatom = "(?i)NUCLEAR COORDINATES"
         found2 = self.regex(_reatom, keys_only=True)
-        if found1:
+        # to find the optimized frames
+        _reopt = "Coordinates (Cartesian)"
+        found_opt = self.find(_reopt, keys_only=True)
+        if found_opt:
+            starts = np.array(found_opt) + 6
+            stop = starts[0]
+            while '------' not in self[stop]: stop += 1
+            stops = starts + stop - starts[0]
+            dfs = []
+            for idx, (start, stop) in enumerate(zip(starts, stops)):
+                # parse everything as they may be useful in the future
+                df = self.pandas_dataframe(start, stop, ncol=11)
+                # drop everything
+                df.drop(list(range(5, 11)), axis='columns', inplace=True)
+                # we read the coordinates in bohr so no need to convrt
+                df.columns = ['set', 'symbol', 'x', 'y', 'z']
+                df['set'] = df['set'].astype(int)
+                df['Z'] = df['symbol'].map(sym2z)
+                df['frame'] = idx
+                df['set'] -= 1
+                dfs.append(df)
+            atom = pd.concat(dfs, ignore_index=True)
+        elif found1:
             start = stop = found1[-1] + 4
             while self[stop].strip(): stop += 1
             atom = self.pandas_dataframe(start, stop, ncol=8)
