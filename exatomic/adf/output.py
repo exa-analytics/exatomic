@@ -46,20 +46,23 @@ class Output(six.with_metaclass(OutMeta, Editor)):
     """The ADF output parser."""
     def parse_atom(self):
         # TODO : only supports single frame, gets last atomic positions
-        _re_atom_00 = 'Atoms in this Fragment     Cart. coord.s (Angstrom)'
+        #        this will actually get the very first coordinates
+        #_re_atom_00 = 'Atoms in this Fragment     Cart. coord.s (Angstrom)'
+        _re_atom_00 = 'ATOMS'
         found1 = self.find(_re_atom_00, keys_only=True)
         # use the regex instead of find because we have a similar search string in an nmr and
         # cpl calculation for the nuclear coordinates
         _reatom = "(?i)NUCLEAR COORDINATES"
         found2 = self.regex(_reatom, keys_only=True)
         if found1:
-            start = stop = found1[0] + 2
+            start = stop = found1[-1] + 4
             while self[stop].strip(): stop += 1
-            atom = self.pandas_dataframe(start, stop, 7)
-            atom.drop([0, 2, 3], axis=1, inplace=True)
-            atom.columns = ['symbol', 'x', 'y', 'z']
+            atom = self.pandas_dataframe(start, stop, ncol=8)
+            atom.drop(list(range(5,8)), axis='columns', inplace=True)
+            atom.columns = ['set', 'symbol', 'x', 'y', 'z']
             for c in ['x', 'y', 'z']: atom[c] *= Length['Angstrom', 'au']
             atom['Z'] = atom['symbol'].map(sym2z)
+            atom['set'] -= 1
             atom['frame'] = 0
         elif found2:
             #if len(found) > 1:
