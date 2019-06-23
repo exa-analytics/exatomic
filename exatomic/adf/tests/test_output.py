@@ -18,6 +18,8 @@ class TestADFOutput(TestCase):
         self.c2h2 = Output(resource('adf-c2h2-cpl.out'))
         self.ch4 = Output(resource('adf-ch4-opt-freq.out'))
         self.c2h2_nofrag = Output(resource('adf-c2h2-cpl-nofrag.out'))
+        self.c2h3i = Output(resource('adf-c2h3i-opt.out'))
+        self.nico4 = Output(resource('adf-nico4.out'))
 
     def test_parse_atom(self):
         self.lu.parse_atom()
@@ -32,6 +34,15 @@ class TestADFOutput(TestCase):
         self.c2h2_nofrag.parse_atom()
         self.assertEqual(self.c2h2.atom.shape[0], 4)
         self.assertTrue(np.all(pd.notnull(self.c2h2.atom)))
+        self.c2h3i.parse_atom()
+        self.assertEqual(self.c2h3i.atom.shape[0], 66)
+        self.assertTrue(np.all(pd.notnull(self.c2h3i.atom)))
+        self.nico4.parse_atom()
+        self.assertEqual(self.nico4.atom.shape[0], 9)
+        self.assertTrue(np.all(pd.notnull(self.nico4.atom)))
+        self.ch4.parse_atom()
+        self.assertEqual(self.ch4.atom.shape[0], 15)
+        self.assertTrue(np.all(pd.notnull(self.ch4.atom)))
 
     def test_parse_basis_set(self):
         self.lu.parse_basis_set()
@@ -79,4 +90,7 @@ class TestADFOutput(TestCase):
         self.ch4.parse_gradient()
         self.assertEqual(self.ch4.gradient.shape[0], 15)
         self.assertTrue(np.all(pd.notnull(self.ch4.gradient)))
+        self.c2h3i.parse_gradient()
+        self.assertEqual(self.c2h3i.gradient.shape[0], 66)
+        self.assertTrue(np.all(pd.notnull(self.c2h3i.gradient)))
 
