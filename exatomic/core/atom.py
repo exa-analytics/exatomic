@@ -165,6 +165,36 @@ class Atom(DataFrame):
         frame['z'] += dz
         return frame
 
+    def align(self, adx0, adx1, axis=None, frame=None):
+        '''
+        This a short method to center and align the molecule along some defined axis.
+
+        Args:
+            adx0 (int): Atom to place at the origin
+            adx1 (int): Atom to align along the axis
+            axis (list): Axis that the vector adx0-adx1 will align to
+            frame (int): Frame to align
+
+        Returns:
+            aligned (:class:`exatomic.Universe.atom`): Aligned atom frame
+        '''
+        if frame is None: atom = self.last_frame.copy()
+        else: atom = self[self.frame == frame].copy()
+        cols = ['x', 'y', 'z']
+        # define the original vector
+        v0 = atom.iloc[adx1][cols].values.astype(np.float64) - atom.iloc[adx0][cols].values.astype(np.float64)
+        # get the vector to align with and normalize
+        v1 = axis/np.linalg.norm(axis)
+        # find the normal vector to rotate around
+        n = np.cross(v0, v1)
+        # find the angle to rotate the vector
+        theta = np.arccos(np.dot(v0, v1) / (np.linalg.norm(v0)*np.linalg.norm(v1)))
+        # use the center method to center the molecule
+        centered = Atom(atom).center(adx0, frame=frame)
+        # rotate the molecule around the normal vector
+        aligned = Atom(centered).rotate(theta=theta, axis=n, degrees=False)
+        return aligned
+
     def to_xyz(self, tag='symbol', header=False, comments='', columns=None,
                frame=None, units='Angstrom'):
         """
