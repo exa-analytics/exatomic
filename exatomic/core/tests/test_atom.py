@@ -41,6 +41,13 @@ class TestAtom(TestCase):
         rotated = self.h2o.atom.rotate(theta=135.0)
         self.assertTrue(np.allclose(rotated[self.cols].values, rot_data))
 
+    def test_align(self):
+        align_data = np.array([[ 0.0000000000, 0.0000000000, 0.0000000000],
+                               [ 1.8712970607, 0.0000000000,-0.0000000000],
+                               [-0.4688643421,-1.1790804580, 1.3754088998]])
+        aligned = self.h2o.atom.align(adx0=0, adx1=1, axis=[1,0,0])
+        self.assertTrue(np.allclose(aligned[self.cols].values, align_data))
+
 
 #"""
 #Tests for the Atom DataFrame
