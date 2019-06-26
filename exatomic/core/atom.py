@@ -79,7 +79,7 @@ class Atom(DataFrame):
         centered around a specific atom index."""
         if frame is None: frame = self.last_frame.copy()
         else: frame = self[self.frame == frame].copy()
-        center = frame.ix[idx]
+        center = frame.iloc[idx]
         for r in ['x', 'y', 'z']:
             if center[r] > 0: frame[r] = frame[r] - center[r]
             else: frame[r] = frame[r] + np.abs(center[r])
