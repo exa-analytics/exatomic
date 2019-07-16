@@ -74,12 +74,26 @@ class Atom(DataFrame):
         """Return unique atom symbols of the last frame."""
         return self.last_frame.symbol.unique()
 
-    def center(self, idx, frame=None):
+    def center(self, idx, frame=None, to=None):
         """Return a copy of a single frame of the atom table
         centered around a specific atom index."""
         if frame is None: frame = self.last_frame.copy()
         else: frame = self[self.frame == frame].copy()
-        center = frame.iloc[idx]
+#        center = frame.iloc[idx]
+        if to is None:
+            center = frame.iloc[idx]
+        elif to == 'NuclCharg':
+            try:
+                Z = frame['Z'].values
+            except KeyError:
+                Z = frame['symbol'].map(sym2z).values
+            coords = frame[['x', 'y', 'z']].values
+            center = 1/np.sum(Z)*np.sum(np.multiply(np.transpose(coords), Z), axis=1)
+            center = pd.Series(center, index=['x', 'y', 'z'])
+        elif to == 'Mass':
+            center = 0
+        else:
+            raise NotImplementedError("Sorry the to option {} is not available".format(to))
         for r in ['x', 'y', 'z']:
             if center[r] > 0: frame[r] = frame[r] - center[r]
             else: frame[r] = frame[r] + np.abs(center[r])
@@ -165,7 +179,7 @@ class Atom(DataFrame):
         frame['z'] += dz
         return frame
 
-    def align(self, adx0, adx1, axis=None, frame=None):
+    def align(self, adx0, adx1, axis=None, frame=None, center_to=None):
         '''
         This a short method to center and align the molecule along some defined axis.
 
@@ -190,7 +204,7 @@ class Atom(DataFrame):
         # find the angle to rotate the vector
         theta = np.arccos(np.dot(v0, v1) / (np.linalg.norm(v0)*np.linalg.norm(v1)))
         # use the center method to center the molecule
-        centered = Atom(atom).center(adx0, frame=frame)
+        centered = Atom(atom).center(adx0, frame=frame, to=center_to)
         # rotate the molecule around the normal vector
         aligned = Atom(centered).rotate(theta=theta, axis=n, degrees=False)
         return aligned
