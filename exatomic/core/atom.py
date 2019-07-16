@@ -119,6 +119,8 @@ class Atom(DataFrame):
         if axis is None: axis = [0, 0, 1]
         if frame is None: frame = self.last_frame.copy()
         else: frame = self[self.frame == frame].copy()
+
+        if all(list(map(lambda x: x == 0., axis))) or theta == 0.: return frame
         # as we have the rotation axis and the angle we will rotate over
         # we implement the Rodrigues' rotation formula
         # v_rot = v*np.cos(theta) + (np.cross(k,v))*np.sin(theta) + k*(np.dot(k,v))*(1-np.cos(theta))
@@ -128,7 +130,10 @@ class Atom(DataFrame):
 
         # normalize rotation axis vector
         norm = np.linalg.norm(axis)
-        axis /= norm
+        try:
+            axis /= norm
+        except ZeroDivisionError:
+            raise ZeroDivisionError("Trying to normalize axis {} by a 0 value".format(axis))
         # get the coordinates
         coords = frame[['x', 'y', 'z']].values
         # generate the first term in rodrigues formula
