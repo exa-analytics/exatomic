@@ -105,22 +105,33 @@ class VA(metaclass=VAMeta):
         exatomic.va.va.get_data function to get the data as it will compress everything into
         one dataframe as is expected for the zpvc and vroa methods
     """
-#    @staticmethod
-#    def _calc_kp(lambda_0, lambda_p):
-#        '''
-#        Function to calculate the K_p value as given in equation 2 on J. Chem. Phys. 2007, 127, 134101.
-#        We assume the temperature to be 298.15 as a hard coded value. Must get rid of this in future
-#        iterations. The final units of the equation is in m^2.
-#        Input values lambda_0 and lambda_p must be in the units of m^-1
-#        '''
-#        # epsilon_0 = 1/(4*np.pi*1e-7*C**2)
-#        # another hard coded value
-#        temp = 298.15 # Kelvin
-#        boltz = 1.0/(1.0-np.exp(-H*C*lambda_p/(KB*temp)))
-#        constants = H * np.pi**2 / C
-#        variables = (lambda_0 - lambda_p)**4/lambda_p
-#        kp = 2 * variables * constants * boltz * (Length['au', 'm']**4 / Mass['u', 'kg'])
-#        return kp
+    # TODO: can probably use jit for this but it may not provide a significant speed up
+    @staticmethod
+    def raman_int_units(lambda_0, lambda_p, temp=None):
+        '''
+        Function to calculate the K_p value as given in equation 2 on J. Chem. Phys. 2007, 127, 134101.
+        We assume the temperature to be 298.15 as a hard coded value. Must get rid of this in future
+        iterations. The final units of the equation are in cm^2/sr which are said to be the units for
+        the Raman intensities.
+
+        Note:
+            Input values lambda_0 and lambda_p must be in the units of m^-1
+
+        Args:
+            lambda_0 (float): Wavenumber value of the incident light
+            lambda_1 (numpy.array): Wavenumber values of the vibrational modes
+            temp (float): Value of the temperature of the experiment
+
+        Returns:
+            kp (numpy.array): Array with the values of the conversion units of length lambda_1.shape[0]
+        '''
+        if temp is None: temp=298.15
+        boltz = 1.0/(1.0-np.exp(-H*C*lambda_p/(boltzmann*temp)))
+        constants = H * np.pi**2 / C
+        variables = (lambda_0 - lambda_p)**4/lambda_p
+        kp = variables * constants * boltz * (Length['au', 'm']**4 / Mass['u', 'kg']) * 16 / 45. * Length['m', 'cm']**2
+        print(kp, boltz, lambda_p)
+        return kp
 
     @staticmethod
     def _check_file_continuity(df, prop, nmodes):
@@ -256,7 +267,7 @@ class VA(metaclass=VAMeta):
         frequencies = np.sqrt(vqi).reshape(snmodes,)*Energy['Ha', 'cm^-1']
         return frequencies
 
-    def vroa(self, uni, delta, units='nm'):
+    def vroa(self, uni, delta, units='nm', raman_units=False, temp=None, assume_real=False):
         """
         Here we implement the Vibrational Raman Optical Activity (VROA) equations as outlined in
         the paper J. Chem. Phys. 2007, 127,
@@ -452,7 +463,7 @@ class VA(metaclass=VAMeta):
             # generate properties as shown on equations 5-9 in paper
             # J. Chem. Phys. 2007, 127, 134101
             alpha_squared, beta_alpha, beta_g, beta_A, alpha_g = _make_derivatives(dalpha_dq,
-                                  dg_dq, dA_dq, omega, epsilon, snmodes, au2angs**4, C_au)
+                                  dg_dq, dA_dq, omega, epsilon, snmodes, au2angs**4, C_au, assume_real)
 
             #********************************DEBUG**************************************************#
             #self.alpha_squared = pd.Series(alpha_squared*Length['au', 'Angstrom']**4)
@@ -477,6 +488,13 @@ class VA(metaclass=VAMeta):
             #backscat_vroa *= Mass['u', 'au_mass']
             forwscat_vroa = _forwscat(alpha_g, beta_g, beta_A)
             #forwscat_vroa *= 1e4
+            if raman_units:
+                lambda_0 = 1/(val*Length['nm', 'm'])
+                lambda_p = frequencies/Length['cm', 'm']
+                kp = self.raman_int_units(lambda_0=lambda_0, lambda_p=lambda_p, temp=temp)*Length['m', 'cm']**2
+                raman_int *= kp
+                backscat_vroa *= kp
+                forwscat_vroa *= kp
             # TODO: check the units of this because we convert the invariants from
             #       au to Angstrom and here we convert again from au to Angstrom
             #forwscat_vroa *=Length['au', 'Angstrom']**4*Mass['u', 'au_mass']
