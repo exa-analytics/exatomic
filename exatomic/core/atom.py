@@ -82,7 +82,7 @@ class Atom(DataFrame):
 #        center = frame.iloc[idx]
         if to is None:
             center = frame.iloc[idx]
-        elif to == 'NuclCharg':
+        elif to == 'NuclChrg':
             try:
                 Z = frame['Z'].values
             except KeyError:
