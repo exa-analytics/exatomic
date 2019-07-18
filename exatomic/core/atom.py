@@ -79,7 +79,6 @@ class Atom(DataFrame):
         centered around a specific atom index."""
         if frame is None: frame = self.last_frame.copy()
         else: frame = self[self.frame == frame].copy()
-#        center = frame.iloc[idx]
         if to is None:
             center = frame.iloc[idx]
         elif to == 'NuclChrg':
@@ -91,9 +90,9 @@ class Atom(DataFrame):
             center = 1/np.sum(Z)*np.sum(np.multiply(np.transpose(coords), Z), axis=1)
             center = pd.Series(center, index=['x', 'y', 'z'])
         elif to == 'Mass':
-            center = 0
+            raise NotImplementedError("Coming soon!!")
         else:
-            raise NotImplementedError("Sorry the to option {} is not available".format(to))
+            raise NotImplementedError("Sorry the centering option {} is not available".format(to))
         for r in ['x', 'y', 'z']:
             if center[r] > 0: frame[r] = frame[r] - center[r]
             else: frame[r] = frame[r] + np.abs(center[r])
