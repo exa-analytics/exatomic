@@ -7,9 +7,12 @@
 */
 "use strict";
 var THREE = require("three")
-//var ccap = require("ccapture")
 var TBC = require("three-trackballcontrols")
 var utils = require("./utils")
+var gpu = require("./gpupicker")
+
+
+gpu.add_gpupicker(THREE)
 
 
 class NewApp3D {
@@ -23,7 +26,7 @@ class NewApp3D {
             "field": [],
             "atom": [],
             "test": [],
-            "two": []
+            "two": [],
         }
         this.selected = []
         this.recording = false
@@ -101,21 +104,29 @@ class NewApp3D {
                 this.camera = cam
             })
         ]).then(() => {
-            return Promise.resolve(new TBC(
-                this.camera, this.renderer.domElement
-            )).then((con) => {
-                con.rotateSpeed = 10.0
-                con.zoomSpeed = 5.0
-                con.panSpeed = 0.5
-                con.noZoom = false
-                con.noPan = false
-                con.staticMoving = true
-                con.dynamicDampingFactor = 0.3
-                con.keys = [65, 83, 68]
-                con.target = new THREE.Vector3(0.0, 0.0, 0.0)
-                this.controls = con
-                this.controls.addEventListener("change", this.render.bind(this))
-            })
+            return Promise.all([
+                Promise.resolve(new TBC(
+                    this.camera, this.renderer.domElement
+                )).then((con) => {
+                    con.rotateSpeed = 10.0
+                    con.zoomSpeed = 5.0
+                    con.panSpeed = 0.5
+                    con.noZoom = false
+                    con.noPan = false
+                    con.staticMoving = true
+                    con.dynamicDampingFactor = 0.3
+                    con.keys = [65, 83, 68]
+                    con.target = new THREE.Vector3(0.0, 0.0, 0.0)
+                    this.controls = con
+                    this.controls.addEventListener("change", this.render.bind(this))
+                }),
+                Promise.resolve(new THREE.GPUPicker(
+                    {renderer: this.renderer} //, debug: true}
+                )).then((gpu) => {
+                    this.gpicker = gpu
+                    this.gpicker.setCamera(this.camera)
+                })
+            ])
         })
     }
 
@@ -194,17 +205,16 @@ class NewApp3D {
             that.mouse.x =  ((event.clientX - pos.x) / that.w) * 2 - 1
             that.mouse.y = -((event.clientY - pos.y) / that.h) * 2 + 1
             that.raycaster.setFromCamera(that.mouse, that.camera)
-            let intersects = that.raycaster.intersectObjects(that.scene.children)
-            if (intersects.length) {
-                let obj = intersects[0].object
-                // If obj has a name to display in the HUD
-                if (obj.name) {
+            let gpick = that.gpicker.pick(that.mouse, that.raycaster)
+            if (gpick && gpick.object) {
+                console.log(`hover: ${gpick.object.type}: ${gpick.object.name}`)
+                if (gpick.object.name) {
                     that.context.clearRect(0, 0, 1024, 1024)
                     that.context.fillStyle = "rgba(245,245,245,0.9)"
-                    let w = that.context.measureText(obj.name).width
+                    let w = that.context.measureText(gpick.object.name).width
                     that.context.fillRect(512 - 2, 512 - 60, w + 6, 72)
                     that.context.fillStyle = "rgba(0,0,0,0.95)"
-                    that.context.fillText(obj.name, 512, 512)
+                    that.context.fillText(gpick.object.name, 512, 512)
                     that.sprite.position.set(-that.w2 + 2, -that.h2 + 4, 1)
                     that.sprite.material.needsUpdate = true
                     that.texture.needsUpdate = true
@@ -222,9 +232,10 @@ class NewApp3D {
             that.mouse.x =  ((event.clientX - pos.x) / that.w) * 2 - 1
             that.mouse.y = -((event.clientY - pos.y) / that.h) * 2 + 1
             that.raycaster.setFromCamera(that.mouse, that.camera)
-            let intersects = that.raycaster.intersectObjects(that.scene.children)
-            if (intersects.length) {
-                let obj = intersects[0].object
+            let gpick = that.gpicker.pick(that.mouse, that.raycaster)
+            if (gpick && gpick.object) {
+                console.log(`click: ${gpick.object.type}: ${gpick.object.name}`)
+                let obj = gpick.object
                 let uuids = that.selected.map(obj => obj.uuid)
                 let idx = uuids.indexOf(obj.uuid)
                 // If obj previously selected, remove it
@@ -258,6 +269,8 @@ class NewApp3D {
         this.renderer.clearDepth()
         this.renderer.render(this.scene, this.camera)
         this.renderer.render(this.hudscene, this.hudcamera)
+        this.gpicker.needUpdate = true
+        this.gpicker.update()
         if (this.recording) {
             console.log("saving the renderer")
             this.view.send({
@@ -300,10 +313,12 @@ class NewApp3D {
                 delete this.meshes[kind][obj]
             }
         }
+        this.gpicker.setScene(this.scene)
     }
 
     add_meshes(kind) {
         kind = kind || "all"
+        console.log(this.meshes)
         if (kind == "all") {
             for (let key in this.meshes) {
                 for (let obj in this.meshes[key]) {
@@ -315,6 +330,7 @@ class NewApp3D {
                 this.scene.add(this.meshes[kind][obj])
             }
         }
+        this.gpicker.setScene(this.scene)
     }
 
     test_mesh(test) {
@@ -322,9 +338,9 @@ class NewApp3D {
         if (test) {
             let mesh = new THREE.Mesh(
                 new THREE.IcosahedronGeometry(2, 1),
-                new THREE.MeshBasicMaterial({
-                    color: 0x000000,
-                    wireframe: true
+                new THREE.MeshPhongMaterial({
+                    color: 0x000000
+                    // wireframe: true
                 })
             )
             mesh.position.set(0, 0, -3)
@@ -339,8 +355,8 @@ class NewApp3D {
             omesh.position.set(0, 0, 3)
             omesh.name = "Icosahedron 2"
             this.meshes["test"] = [mesh, omesh]
-            this.scene.add(mesh)
-            this.scene.add(omesh)
+            console.log("adding test meshes")
+            this.add_meshes("test")
         }
     }
 

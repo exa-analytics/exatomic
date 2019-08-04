@@ -13,6 +13,7 @@ module.exports = {};
 var loaded = [
     require("./base"),
     require("./utils"),
+    require("./gpupicker"),
     require("./appthree"),
     require("./widgets"),
     require("./tensor")

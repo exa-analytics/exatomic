@@ -95,7 +95,7 @@ class ThreeScene(DOMWidget):
         while os.path.isfile(os.path.join(self.savedir, fmt(nxt))):
             nxt += 1
         if nxt >= 10000:
-            raise Exception("this operation may overwrite an image")
+            raise Exception('this operation may overwrite an image')
         return fmt(nxt)
 
     def _handle_custom_msg(self, msg, callback):
@@ -115,6 +115,10 @@ class ThreeScene(DOMWidget):
         repl = 'data:image/png;base64,'
         with open(os.path.join(self.savedir, self.imgname), 'wb') as f:
             f.write(b64decode(content.replace(repl, '')))
+
+    def __init__(self, *args, **kwargs):
+        super(DOMWidget, self).__init__(*args, **kwargs)
+
 
 
 @register

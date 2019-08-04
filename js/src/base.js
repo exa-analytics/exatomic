@@ -1,10 +1,10 @@
-// Copright (c) 2015-2018, Exa Analytics Development Team
+// Copright (c) 2015-2018, Exa Analytics Development Team)
 // Distributed under the terms of the Apache License 2.0
 /*"""
 =================
 base.js
 =================
-JavaScript "frontend" complement of exatomic"s Universe
+JavaScript "frontend" complement of exatomic's Universe
 for use within the Jupyter notebook interface.
 */
 
@@ -12,13 +12,13 @@ for use within the Jupyter notebook interface.
 var widgets = require("@jupyter-widgets/base");
 var control = require("@jupyter-widgets/controls");
 var _ = require("underscore");
-var THREE = require("three");
 var three = require("./appthree");
-var thapp = require("./app");
+//var thapp = require("./app");
 var utils = require("./utils");
 var semver = "^" + require("../package.json").version;
+
+
 console.log("exatomic JS version: " + require("../package.json").version);
-console.log("are we current? yes we can");
 
 
 var ExatomicBoxModel = control.BoxModel.extend({
@@ -113,9 +113,7 @@ var ThreeSceneModel = widgets.DOMWidgetModel.extend({
         _model_module_version: semver,
         _view_module_version: semver,
         _model_module: "exatomic",
-        _view_module: "exatomic"//,
-        //w: 200,
-        //h: 200
+        _view_module: "exatomic"
     })
 
 });
@@ -311,9 +309,6 @@ var ThreeSceneView = widgets.DOMWidgetView.extend({
                     fun = utils[nam](this.model.get("field_typ"),
                                      this.model.get("field_sub"))
                     fld = utils.scalar_field(this.get_fps(), fun)
-                    if (iso > 0.1) {
-                        iso = 0.005
-                    }
                     this.app3d.add_scalar_field(fld, iso, alp, 2, this.get_colors())
                     this.app3d.meshes["field"][0].name =`${nam}(${iso})`
                     this.app3d.meshes["field"][1].name =`${nam}(-${iso})`
@@ -333,6 +328,7 @@ var ThreeSceneView = widgets.DOMWidgetView.extend({
         this.app3d.h2 = h / 2
         this.app3d.camera.aspect = w / h
         this.app3d.renderer.setSize(w, h)
+        this.app3d.gpicker.resizeTexture(w, h)
         this.app3d.hudcamera.left   = -w / 2
         this.app3d.hudcamera.right  =  w / 2
         this.app3d.hudcamera.top    =  h / 2
