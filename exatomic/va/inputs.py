@@ -146,7 +146,8 @@ class GenInput(metaclass = GenMeta):
             freq_g = freq.groupby('freqdx').filter(lambda x: fdx in
                                                     x['freqdx'].drop_duplicates().values+1).copy()
         disp = freq_g[['dx','dy','dz']].values
-        modes = freq_g['frequency'].drop_duplicates().values
+        mdx = freq_g['freqdx'].drop_duplicates().index
+        modes = freq_g.loc[mdx, 'frequency'].values
         nat = len(eqcoord)
         freqdx = freq_g['freqdx'].drop_duplicates().values
         tnmodes = len(freq['freqdx'].drop_duplicates())
