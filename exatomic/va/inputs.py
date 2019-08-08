@@ -131,14 +131,15 @@ class GenInput(metaclass = GenMeta):
         """
         # get needed data from dataframes
         # atom coordinates should be in Bohr
-        eqcoord = atom[['x', 'y', 'z']].values
-        symbols = atom['symbol'].values
+        frame = atom.last_frame
+        eqcoord = frame[['x', 'y', 'z']].values
+        symbols = frame['symbol'].values
         # gaussian Fchk class uses Zeff where the Output class uses Z
         # add try block to account for the possible exception
         try:
-            znums = atom['Zeff'].values
+            znums = frame['Zeff'].values
         except KeyError:
-            znums = atom['Z'].values
+            znums = frame['Z'].values
         if -1 in fdx:
             freq_g = freq.copy()
         else:
