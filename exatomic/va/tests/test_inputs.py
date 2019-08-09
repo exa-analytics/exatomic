@@ -58,7 +58,7 @@ class TestGenInput(TestCase):
         self.ch4.parse_atom()
         self.ch4.parse_frequency()
         inputs = gi(uni=self.ch4, delta_type=2)
-        self.assertEqual(inputs.disp.shapee[0], 95)
+        self.assertEqual(inputs.disp.shape[0], 95)
 
     def test_select_freq(self):
         self.h2o2.parse_atom()
