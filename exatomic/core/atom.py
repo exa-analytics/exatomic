@@ -74,6 +74,15 @@ class Atom(DataFrame):
         """Return unique atom symbols of the last frame."""
         return self.last_frame.symbol.unique()
 
+    @staticmethod
+    def _determine_center(attr, coords):
+        """Determine the center of the molecule with respect to
+        the given attribute data. Used for the center of nuclear
+        charge and center of mass."""
+        center = 1/np.sum(attr)*np.sum(np.multiply(np.transpose(coords), attr), axis=1)
+        center = pd.Series(center, index=['x', 'y', 'z'])
+        return center
+
     def center(self, idx=None, frame=None, to=None):
         """
         Return a copy of a single frame of the atom table
@@ -92,23 +101,23 @@ class Atom(DataFrame):
         if frame is None: frame = self.last_frame.copy()
         else: frame = self[self.frame == frame].copy()
         if to is None:
+            if idx is None: raise TypeError("Must provide an atom to center to")
             center = frame.iloc[idx]
         elif to == 'NuclChrg':
             try:
                 Z = frame['Z'].values
             except KeyError:
                 Z = frame['symbol'].map(sym2z).values
-            coords = frame[['x', 'y', 'z']].values
-            center = 1/np.sum(Z)*np.sum(np.multiply(np.transpose(coords), Z), axis=1)
-            center = pd.Series(center, index=['x', 'y', 'z'])
+            center = self._determine_center(attr=Z, coords=frame[['x', 'y', 'z']].values)
         elif to == 'Mass':
-            raise NotImplementedError("Coming soon!!")
+            mass = frame['symbol'].map(sym2mass).values
+            center = self._determine_center(attr=mass, coords=frame[['x', 'y', 'z']].values)
         else:
             raise NotImplementedError("Sorry the centering option {} is not available".format(to))
         for r in ['x', 'y', 'z']:
             if center[r] > 0: frame[r] = frame[r] - center[r]
             else: frame[r] = frame[r] + np.abs(center[r])
-        return frame
+        return Atom(frame)
 
     def rotate(self, theta, axis=None, frame=None, degrees=True):
         """
@@ -158,7 +167,7 @@ class Atom(DataFrame):
         c = np.outer(np.dot(coords, axis), axis) * (1-np.cos(theta))
         rotated = a + b + c
         frame[['x', 'y', 'z']] = rotated
-        return frame
+        return Atom(frame)
 
     def translate(self, dx=0, dy=0, dz=0, vector=None, frame=None, units='au'):
         """
@@ -193,7 +202,7 @@ class Atom(DataFrame):
         frame['x'] += dx
         frame['y'] += dy
         frame['z'] += dz
-        return frame
+        return Atom(frame)
 
     def align(self, adx0, adx1, axis=None, frame=None, center_to=None):
         '''
@@ -222,8 +231,8 @@ class Atom(DataFrame):
         # use the center method to center the molecule
         centered = Atom(atom).center(adx0, frame=frame, to=center_to)
         # rotate the molecule around the normal vector
-        aligned = Atom(centered).rotate(theta=theta, axis=n, degrees=False)
-        return aligned
+        aligned = centered.rotate(theta=theta, axis=n, degrees=False)
+        return Atom(aligned)
 
     def to_xyz(self, tag='symbol', header=False, comments='', columns=None,
                frame=None, units='Angstrom'):
