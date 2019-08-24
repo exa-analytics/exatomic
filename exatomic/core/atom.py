@@ -74,9 +74,21 @@ class Atom(DataFrame):
         """Return unique atom symbols of the last frame."""
         return self.last_frame.symbol.unique()
 
-    def center(self, idx, frame=None, to=None):
-        """Return a copy of a single frame of the atom table
-        centered around a specific atom index."""
+    def center(self, idx=None, frame=None, to=None):
+        """
+        Return a copy of a single frame of the atom table
+        centered around a specific atom index. There is also
+        the ability to center the molecule to the center of
+        nuclear charge (NuclChrg) or center of mass (Mass).
+
+        Args:
+            idx (int): Atom index in the atom table
+            frame (int): Frame to perform the operation on
+            to (str): Tells the program which centering algorithm to use
+
+        Returs:
+            frame (:class:`exatomic.Universe.atom`): Atom frame
+        """
         if frame is None: frame = self.last_frame.copy()
         else: frame = self[self.frame == frame].copy()
         if to is None:
