@@ -13,6 +13,8 @@ class TestAtom(TestCase):
         self.h2o.parse_atom()
         self.h2 = XYZ(resource('H2.xyz'))
         self.h2.parse_atom()
+        self.znpor = XYZ(resource('ZnPorphyrin.xyz'))
+        self.znpor.parse_atom()
         self.cols = ['x', 'y', 'z']
 
     def test_center(self):
@@ -22,15 +24,27 @@ class TestAtom(TestCase):
                            [ 1.86954385, -0.05270446,  0.06149169],
                            [-0.54683005, -1.16477049,  1.35871308]])
         self.assertTrue(np.allclose(centered[self.cols].values, center))
-        # test center of nuclear charge algorithm with a displaced H2 molecue
+        # test center of nuclear charge algorithm with a displaced H2 molecule
+        center_nc = np.array([[ 0.00019274,  0.00011528, -0.00017576]])
+        centered = self.znpor.atom.center(to='NuclChrg')
+        self.assertTrue(np.allclose(centered.head(1)[self.cols].values, center_nc))
         center_nc = np.array([[-0.66832999,  0.02918682,  0.        ],
                               [ 0.66832999, -0.02918682,  0.        ]])
-        centered = self.h2.atom.center(idx=0, to='NuclChrg')
+        centered = self.h2.atom.center(to='NuclChrg')
         self.assertTrue(np.allclose(centered[self.cols].values, center_nc))
+        # test center of mass centering
+        # for h2 it is the same as center of nuclear charge
+        centered = self.h2.atom.center(to='Mass')
+        self.assertTrue(np.allclose(centered[self.cols].values, center_nc))
+        center_mass = np.array([[ 0.00018759,  0.00011283, -0.0001942 ]])
+        centered = self.znpor.atom.center(to='Mass')
+        self.assertTrue(np.allclose(centered.head(1)[self.cols].values, center_mass))
         # make sure we raise an error when a centering method that has not been implemented
         # is given
         with self.assertRaises(NotImplementedError):
            self.h2.atom.center(idx=0, to='UnknownCenteringMethod')
+        with self.assertRaises(TypeError):
+           self.h2.atom.center()
 
     def test_translate(self):
         # displace in each coordinate direction by 0.1 Bohr
@@ -71,7 +85,6 @@ class TestAtom(TestCase):
         align_nc = np.array([[0., 0., -0.668966999],
                              [0., 0.,  0.668966999]])
         aligned = self.h2.atom.align(adx0=0, adx1=1, axis=[0, 0, 1], center_to='NuclChrg')
-        print(aligned[self.cols].values)
         self.assertTrue(np.allclose(aligned[self.cols].values, align_nc))
 
 
