@@ -9,6 +9,7 @@ import os
 from exa.util import isotopes
 from platform import system
 from IPython.display import display_html
+from pandas import DataFrame, concat
 
 # For numba compiled functions
 sysname= system().lower()
@@ -22,6 +23,7 @@ z2sym = {v: k for k, v in sym2z.items()}
 sym2mass = {}
 sym2radius = {}
 sym2color = {}
+dfs = []
 for k, v in vars(isotopes).items():
     if isinstance(v, isotopes.Element):
         sym2mass[k] = v.mass
@@ -32,10 +34,10 @@ for k, v in vars(isotopes).items():
         isos = list(map(lambda x: x.A, v.isotopes))
         z = list(map(lambda x: x.Z, v.isotopes))
         symbol = list(map(lambda x: x.symbol, v.isotopes))
-        df = pd.DataFrame.from_dict({'abundance': abds, 'mass': masses, 'isotope': isos, 'Z': z,
-                                     'symbol': symbol})
+        df = DataFrame.from_dict({'abundance': abds, 'mass': masses, 'isotope': isos, 'Z': z,
+                                  'symbol': symbol})
         dfs.append(df)
-isomass = pd.concat(dfs)
+isomass = concat(dfs)
 isomass.dropna(how='any', inplace=True)
 isomass.reset_index(drop=True, inplace=True)
 
@@ -106,9 +108,9 @@ def sym2isomass(symbol, isotope=None):
     # TODO: if isotopes is passed we need a way to make sure that
     #       we determine if the isotopes are the same and differentiate
     #       between them
-    symbol = list(set(symbol)))
+    symbol = list(set(symbol))
     if isotope is not None:
-        if isinstance(isotope, int) or isinstance(isotope, float)):
+        if isinstance(isotope, int) or isinstance(isotope, float):
             isotope = [int(isotope)]
         else:
             isotope = list(set(symbol)) # since we do it for the symbols
