@@ -88,3 +88,51 @@ def display_side_by_side(*args):
     html_str = ''.join([df.to_html() for df in args])
     display_html(html_str.replace('table','table style=\"display:inline\"'),
                  raw=True)
+
+def sym2isomass(symbol, isotope=None):
+    """
+    Function to get a mapper dictionary based on isotopes
+
+    Args:
+        symbol (list or iterable): Elements of interest
+        isotope (list or iterable): Isotopes of interest
+
+    Returns:
+        masses (dict): Dictionary that can be used inplace of sym2mass
+    """
+    # take care of right type but not iterable object
+    if isinstance(symbol, str): symbol = [symbol]
+    # take care of duplicates
+    # TODO: if isotopes is passed we need a way to make sure that
+    #       we determine if the isotopes are the same and differentiate
+    #       between them
+    symbol = list(set(symbol)))
+    if isotope is not None:
+        if isinstance(isotope, int) or isinstance(isotope, float)):
+            isotope = [int(isotope)]
+        else:
+            isotope = list(set(symbol)) # since we do it for the symbols
+    # determine the most abundant isotopes
+    if isotope is None:
+        # needs to be sorted because of the groupby method
+        symbol = sorted(symbol)
+        # TODO: maybe condense to one line
+        filtered = isomass.groupby('symbol').filter(lambda x: x['symbol'].unique() in symbol)
+        isotope = filtered.groupby('symbol').apply(lambda x:
+                                                        x.loc[x['abundance'].idxmax(), 'isotope'])
+    # this is old but may be a good idea to consider
+    #elif len(symbol) != len(isotope):
+    #    raise AttributeError("Length mismatch between symbol input " \
+    #                         + "{} and isotope input {}".format(len(symbol), len(isotope)))
+    # we will return a mapping dictionary
+    masses = {}
+    for i, (sym, iso) in enumerate(zip(symbol, isotope)):
+        # TODO: make sure that we do not change the isotope and symbols relationship when
+        #       sorting/eliminating duplicates
+        try:
+            mass = isomass.groupby(['symbol', 'isotope']).get_group((sym, iso))['mass'].values[0]
+            masses[sym] = mass
+        except KeyError:
+            raise KeyError("An invalid symbol or isotope was given " \
+                           "currently {}, {}".format(sym, iso))
+    return masses
