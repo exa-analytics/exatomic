@@ -173,7 +173,8 @@ class Universe(six.with_metaclass(Meta, Container)):
 
     def compute_basis_dims(self):
         """Compute basis dimensions."""
-        bset = self.basis_set
+        bset = self.basis_set.copy()
+        bset['set'] = bset['set'].astype(np.int64)
         mapr = self.atom.set.map
         self.basis_dims = {
             'npc': mapr(bset.primitives(False).groupby('set').sum()).sum(),
