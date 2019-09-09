@@ -170,6 +170,11 @@ var ThreeSceneView = widgets.DOMWidgetView.extend({
         })
     },
 
+    set_atom_x: function() { this.setattr("atom_x") },
+    set_atom_y: function() { this.setattr("atom_y") },
+    set_atom_z: function() { this.setattr("atom_z") },
+    set_atom_s: function() { this.setattr("atom_s") },
+
     init_listeners: function() {
         this.listenTo(this.model, "change:dims", this.set_dims)
         this.listenTo(this.model, "change:atom", this.set_atom)
@@ -177,6 +182,10 @@ var ThreeSceneView = widgets.DOMWidgetView.extend({
         this.listenTo(this.model, "change:frame", this.set_atom)
         this.listenTo(this.model, "change:field", this.set_field)
         this.listenTo(this.model, "change:filled", this.set_atom)
+        this.listenTo(this.model, "change:atom_x", this.set_atom_x)
+        this.listenTo(this.model, "change:atom_y", this.set_atom_y)
+        this.listenTo(this.model, "change:atom_z", this.set_atom_z)
+        this.listenTo(this.model, "change:atom_s", this.set_atom_s)
         this.listenTo(this.model, "change:field_alp", this.update_field)
         this.listenTo(this.model, "change:field_idx", this.set_field)
         this.listenTo(this.model, "change:field_iso", this.set_field)
@@ -236,7 +245,7 @@ var ThreeSceneView = widgets.DOMWidgetView.extend({
         let atom = this.model.get("atom")
         console.log("setting atom", atom)
         if (atom) {
-            this.app3d.clear_meshes("test")
+            // this.app3d.clear_meshes("test")
             let func
             let frame = this.model.get("frame")
             if (typeof this.atom_x[frame] === "string") {
@@ -245,6 +254,7 @@ var ThreeSceneView = widgets.DOMWidgetView.extend({
                 this.atom_z[frame] = JSON.parse(this.atom_z[frame])
                 this.atom_s[frame] = JSON.parse(this.atom_s[frame])
             }
+            console.log(this.atom_x[frame])
             if (this.atom_x[frame].length) {
                 if (this.model.get("filled")) {
                     func = this.app3d.add_spheres
@@ -295,8 +305,7 @@ var ThreeSceneView = widgets.DOMWidgetView.extend({
             //     Gaussian, Hydrogenic, SolidHarmonic
             } else if (nam) {
                 if (["Torus", "Sphere", "Ellipsoid"].includes(nam)) {
-                    console.log("adding plain func")
-                    console.log("nam", nam)
+                    console.log("adding plain func", nam)
                     fun = utils[nam]
                     fld = utils.scalar_field(this.get_fps(), fun)
                     this.app3d.add_scalar_field(fld, iso, alp)

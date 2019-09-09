@@ -18,8 +18,18 @@ gpu.add_gpupicker(THREE)
 class NewApp3D {
 
     constructor(view) {
+        /*"""
+        constructor
+        ------------------------
+        Initialize relevant attributes used throughout the API
+
+        Args:
+            view (ThreeSceneView): DOMWidgetView Wrapper
+
+        */
         console.log("Constructing THREEjs scene")
         this.view = view
+        this.debug = true
         this.meshes = {
             "contour": [],
             "frame": [],
@@ -28,19 +38,27 @@ class NewApp3D {
             "test": [],
             "two": [],
         }
+        // this.app_index = 0
         this.selected = []
+        this.selected_points = []
+        this.points_start = 0
         this.recording = false
     }
 
     close() {
+        /*"""
+        close
+        ------------------------
+        Dispose of all objects managed by App3D
+
+        */
         console.log("Disposing THREEjs scene")
         for (let idx in this.meshes) {
             for (let sub in this.meshes[idx]) {
-                if (this.meshes[idx][sub].geometry) {
-                    this.meshes[idx][sub].geometry.dispose()
-                }
-                if (this.meshes[idx][sub].material) {
-                    this.meshes[idx][sub].material.dispose()
+                for (let obj in ["geometry", "material"]) {
+                    if (this.meshes[idx][sub][obj]) {
+                        this.meshes[idx][sub][obj].dispose()
+                    }
                 }
             }
         }
@@ -53,6 +71,15 @@ class NewApp3D {
     }
 
     init() {
+        /*"""
+        init
+        ------------------------
+        Set up promises to pass to the
+        DOMWidgetView render method.
+
+        TODO: promise chaining
+
+        */
         return Promise.all([
             this.init_scene(),
             this.init_renderer(),
@@ -66,6 +93,13 @@ class NewApp3D {
     }
 
     init_scene() {
+        /*"""
+        init_scene
+        ------------------------
+        Establish a minimal working THREE.js scene
+        with some default lighting.
+
+        */
         let scene = new THREE.Scene()
         let amlight = new THREE.AmbientLight(0xdddddd, 0.5)
         let dlight0 = new THREE.DirectionalLight(0xdddddd, 0.3)
@@ -85,6 +119,15 @@ class NewApp3D {
     }
 
     init_renderer() {
+        /*"""
+        init_renderer
+        ------------------------
+        Create a WebGLRenderer, attach a camera, set up
+        the TrackBallControls, and then set up the GPU picker.
+
+        TODO: promise chaining
+
+        */
         return Promise.all([
             Promise.resolve(new THREE.WebGLRenderer({
                 antialias: true,
@@ -120,9 +163,11 @@ class NewApp3D {
                     this.controls = con
                     this.controls.addEventListener("change", this.render.bind(this))
                 }),
-                Promise.resolve(new THREE.GPUPicker(
-                    {renderer: this.renderer} //, debug: true}
-                )).then((gpu) => {
+                Promise.resolve(new THREE.GPUPicker({
+                    renderer: this.renderer,
+                    pointShell: 2000.0,
+                    debug: true
+                })).then((gpu) => {
                     this.gpicker = gpu
                     this.gpicker.setCamera(this.camera)
                 })
@@ -131,6 +176,15 @@ class NewApp3D {
     }
 
     init_hud() {
+        /*"""
+        init_hud
+        ------------------------
+        Create a second scene to paint hover over content
+        to an overlay of the actual 3D scene.
+
+        TODO: promise chaining
+
+        */
         return Promise.all([
             Promise.resolve(new THREE.Raycaster()).then((ray) => {
                 this.raycaster = ray
@@ -138,16 +192,18 @@ class NewApp3D {
             Promise.resolve(new THREE.Scene()).then((hud) => {
                 this.hudscene = hud
             }),
+            Promise.resolve(new THREE.Vector2()).then((mouse) => {
+                this.mouse = mouse
+            }),
             Promise.resolve(new THREE.OrthographicCamera(
                 -this.w2,  this.w2, this.h2, -this.h2, 1, 1500
             )).then((cam) => {
                 cam.position.z = 1000
                 this.hudcamera = cam
             }),
-            Promise.resolve(new THREE.Vector2()).then((mouse) => {
-                this.mouse = mouse
-            }),
-            Promise.resolve(document.createElement("canvas")).then((can) => {
+            Promise.resolve(
+                document.createElement("canvas")
+            ).then((can) => {
                 can.width = 1024
                 can.height = 1024
                 this.hudcanvas = can
@@ -156,6 +212,13 @@ class NewApp3D {
     }
 
     init_field() {
+        /*"""
+        init_field
+        ------------------------
+        Create array attributes for use in marching
+        cubes over scalar fields.
+
+        */
         return Promise.all([
             Promise.resolve(new Int32Array(12)).then((fv) => {
                 this.face_vertices = fv
@@ -179,7 +242,16 @@ class NewApp3D {
     }   
 
     finalize_hudcanvas() {
-        // Requires existence of hudcanvas and renderer 
+        /*"""
+        finalize_hudcanvas
+        ------------------------
+        Create the remaining attributes utilized by the
+        hover over functionality. 
+
+        Note:
+            Requires existence of hudcanvas and renderer 
+
+        */
         this.context = this.hudcanvas.getContext("2d")
         this.context.textAlign = "bottom"
         this.context.textBaseline = "left"
@@ -196,64 +268,161 @@ class NewApp3D {
         this.hudscene.add(this.sprite)
     }
 
+    
+    update_mouseover(ints, gpick) {
+        /*"""
+        update_mouseover
+        ------------------------
+        Write text to the hudscene sprite for overlaid
+        display of the THREE.js object directly underneath
+        the mouse cursor.
+
+        Note:
+            Requires that object has the 'name' attribute
+
+        */
+        let obj = ints[0].object
+        // console.log(`hover: ${obj.type}: ${obj.name}`)
+        if (obj.name) {
+            this.context.clearRect(0, 0, 1024, 1024)
+            this.context.fillStyle = "rgba(245,245,245,0.9)"
+            let w = this.context.measureText(obj.name).width
+            this.context.fillRect(512 - 2, 512 - 60, w + 6, 72)
+            this.context.fillStyle = "rgba(0,0,0,0.95)"
+            this.context.fillText(obj.name, 512, 512)
+            this.sprite.position.set(-this.w2 + 2, -this.h2 + 4, 1)
+            this.sprite.material.needsUpdate = true
+            this.texture.needsUpdate = true
+        } else {
+            this.sprite.position.set(1000, 1000, 1000)
+        }
+    }
+
+    update_mouseup(ints, gpick) {
+        /*"""
+        update_mouseup
+        ------------------------
+        Add and remove objects from a reserved
+        array of "selected" objects controlled by user
+        interaction.
+
+        Note:
+            Normal THREE.js objects will lighten color
+            but THREE.js Points are indexed separately.
+
+        */
+        let idx
+        let light = 38
+        let obj = ints[0].object
+        let gpu = gpick.object
+        // console.log(`click: ${obj.type}: ${obj.name}`)
+        // Manage point selection here for now.
+        // TODO : unify selected_points and selected
+        //        and figure out inverse GPU idx mapping
+        if (obj.material.fragmentShader) {
+            idx = gpu.point_idx - this.points_start
+            let off = this.selected_points.indexOf(idx)
+            let colors = obj.geometry.attributes.color
+            if (off > -1) {
+                colors.array[idx] = obj.oldColors.array[idx]
+                colors.array[idx + 1] = obj.oldColors.array[idx + 1]
+                colors.array[idx + 2] = obj.oldColors.array[idx + 2]
+                this.selected_points.splice(off, 1)
+            } else {
+                if (!obj.oldColors) {
+                    let len = colors.length / 3
+                    obj.oldColors = new THREE.BufferAttribute(len, 3)
+                    obj.oldColors.copy(colors)
+                    console.log("initial caching", colors, obj.oldColors)
+                    this.points_start = gpu.point_idx
+                }
+                this.lighten_buffer_color(colors, idx, light)
+                this.selected_points.push(idx)
+            } 
+            colors.needsUpdate = true
+        // The simple case of whole material highlighting
+        } else {
+            idx = this.selected.map(obj => obj.uuid).indexOf(obj.uuid)
+            // If obj was previously selected, remove it from selected
+            if (idx > -1) { 
+                obj.material.color.setHex(obj.oldHex)
+                this.selected.splice(idx, 1)
+            // Add obj to selected and highlight it
+            } else {
+                obj.oldHex = obj.material.color.getHex()
+                let newHex = this.lighten_color(obj.oldHex, light)
+                obj.material.color.setHex(newHex) 
+                this.selected.push(obj)
+            }
+        }
+    }
+
+    route_interaction(kind) {
+        /*"""
+        route_interaction
+        ------------------------
+        Apply shared logic between various user interaction
+        motifs and call appropriate functions based on
+        kind of user interaction.
+
+        Note:
+            Currently does traditional raycasting and on GPU
+            in order to conveniently leverage one or the other.
+
+        */
+        this.raycaster.setFromCamera(this.mouse, this.camera)
+        this.gpicker.needsUpdate = true
+        this.gpicker.update()
+        let ints = this.raycaster.intersectObjects(this.scene.children)
+        let gpick = this.gpicker.pick(this.mouse, this.raycaster)
+        if (ints[0] && ints[0].object && gpick && gpick.object) {
+            if (kind === "mousemove") {
+                this.update_mouseover(ints, gpick)
+            } else if (kind == "mouseup") {
+                this.update_mouseup(ints, gpick)
+            } else {
+                console.log("route_interaction: kind", kind, "not understood")
+            }
+        } else {
+            this.sprite.position.set(1000, 1000, 1000)
+        }
+    }
+
     finalize_mouseover() {
+        /*"""
+        finalize_mouseover
+        ------------------------
+        Register event listeners to allow for user
+        interaction with the THREE.js scene.
+
+        */
         let that = this
         // Display the object's name in the HUD
-        this.view.el.addEventListener('mousemove', function(event) {
+        this.view.el.addEventListener("mousemove", function(event) {
             event.preventDefault()
             let pos = this.getBoundingClientRect()
             that.mouse.x =  ((event.clientX - pos.x) / that.w) * 2 - 1
             that.mouse.y = -((event.clientY - pos.y) / that.h) * 2 + 1
-            that.raycaster.setFromCamera(that.mouse, that.camera)
-            let gpick = that.gpicker.pick(that.mouse, that.raycaster)
-            if (gpick && gpick.object) {
-                console.log(`hover: ${gpick.object.type}: ${gpick.object.name}`)
-                if (gpick.object.name) {
-                    that.context.clearRect(0, 0, 1024, 1024)
-                    that.context.fillStyle = "rgba(245,245,245,0.9)"
-                    let w = that.context.measureText(gpick.object.name).width
-                    that.context.fillRect(512 - 2, 512 - 60, w + 6, 72)
-                    that.context.fillStyle = "rgba(0,0,0,0.95)"
-                    that.context.fillText(gpick.object.name, 512, 512)
-                    that.sprite.position.set(-that.w2 + 2, -that.h2 + 4, 1)
-                    that.sprite.material.needsUpdate = true
-                    that.texture.needsUpdate = true
-                } else {
-                    that.sprite.position.set(1000, 1000, 1000)
-                }
-            } else {
-                that.sprite.position.set(1000, 1000, 1000)
-            }
+            that.route_interaction("mousemove")
         }, false)
         // Select objects in the scene for comparisons
-        this.view.el.addEventListener('mouseup', function(event) {
+        this.view.el.addEventListener("mouseup", function(event) {
             event.preventDefault()
             let pos = this.getBoundingClientRect()
             that.mouse.x =  ((event.clientX - pos.x) / that.w) * 2 - 1
             that.mouse.y = -((event.clientY - pos.y) / that.h) * 2 + 1
-            that.raycaster.setFromCamera(that.mouse, that.camera)
-            let gpick = that.gpicker.pick(that.mouse, that.raycaster)
-            if (gpick && gpick.object) {
-                console.log(`click: ${gpick.object.type}: ${gpick.object.name}`)
-                let obj = gpick.object
-                let uuids = that.selected.map(obj => obj.uuid)
-                let idx = uuids.indexOf(obj.uuid)
-                // If obj previously selected, remove it
-                if (idx > -1) { 
-                    obj.material.color.setHex(obj.oldHex)
-                    that.selected.splice(idx, 1)
-                // Else add obj and highlight it
-                } else {
-                    obj.oldHex = obj.material.color.getHex()
-                    let newHex = that.lighten_color(obj.oldHex)
-                    obj.material.color.setHex(newHex) 
-                    that.selected.push(obj)
-                }
-            }
+            that.route_interaction("mouseup")
         }, false)
     }
 
     animate() {
+        /*"""
+        animate
+        ------------------------
+        Call all relevant real-time updates required for
+        dynamic, interactive functionality.
+
+        */
         window.requestAnimationFrame(this.animate.bind(this))
         this.camera.updateProjectionMatrix()
         this.camera.updateMatrix()
@@ -261,15 +430,24 @@ class NewApp3D {
         this.hudcamera.updateMatrix()
         this.controls.handleResize()
         this.controls.update()
+        this.gpicker.needsUpdate = true
         this.render()
     }
 
     render() {
+        /*"""
+        render
+        ------------------------
+        Render both the 3D renderer and the HUD renderer.
+        Optionally fire off png messages back to python
+        in order to record video.
+
+        */
         this.renderer.clear()
         this.renderer.clearDepth()
         this.renderer.render(this.scene, this.camera)
         this.renderer.render(this.hudscene, this.hudcamera)
-        this.gpicker.needUpdate = true
+        // this.gpicker.needUpdate = true
         this.gpicker.update()
         if (this.recording) {
             console.log("saving the renderer")
@@ -281,23 +459,92 @@ class NewApp3D {
     }
 
     save() {
+        /*"""
+        save
+        ------------------------
+        Send a base-64 encoded bytestream back to python
+        to save as a PNG image format.
+
+        */
         return this.renderer.domElement.toDataURL("image/png")
     }
 
-    lighten_color(color) {
-        // Need to check if color being passed is hex or int
-        let R = (color >> 16)
-        let G = (color >> 8 & 0x00FF)
-        let B = (color & 0x0000FF)
-        R = (R == 0) ? 110 : R + 76
-        G = (G == 0) ? 110 : G + 76
-        B = (B == 0) ? 111 : B + 76
-        R = R < 255 ? R < 1 ? 0 : R : 255
-        G = G < 255 ? G < 1 ? 0 : G : 255
-        B = B < 255 ? B < 1 ? 0 : B : 255
-        return (0x1000000 + R * 0x10000 + G * 0x100 + B)
+    color_to_rgb(c) {
+        /*"""
+        color_to_rgb
+        ------------------------
+        Convert hex or int color to r, g, b components
+
+        Args:
+            c (int/hex): color
+
+        */
+        return {
+            r: (c >> 16),
+            g: (c >> 8 & 0x00FF),
+            b: (c & 0x0000FF)
+        }
     }
 
+    rgb_to_color(r, g, b) {
+        /*"""
+        rgb_to_color
+        ------------------------
+        Convert an r, g, b tuple to an integer
+
+        Args:
+            r (int): red
+            g (int): green
+            R (int): blue
+
+        */
+        return (r << 16) + (g << 8) + b
+    }
+
+    lighten_buffer_color(colors, idx, l) {
+        let r, g, b, c
+        let m = 255
+        r = Math.round(colors.array[idx + 0] * m)
+        g = Math.round(colors.array[idx + 1] * m)
+        b = Math.round(colors.array[idx + 2] * m)
+        c = this.rgb_to_color(r, g, b)
+        c = this.lighten_color(c, l)
+        c = this.color_to_rgb(c)
+        colors.array[idx + 0] = c.r / m 
+        colors.array[idx + 1] = c.g / m 
+        colors.array[idx + 2] = c.b / m 
+    }
+
+    lighten_color(color, l) {
+        let r, g, b
+        let M = 255
+        let c = this.color_to_rgb(color)
+        r = c.r
+        g = c.g
+        b = c.b
+        r = (r == 0) ? 110 : r + l
+        g = (g == 0) ? 110 : g + l
+        b = (b == 0) ? 111 : b + l
+        r = r < M ? r < 1 ? 0 : r : M
+        g = g < M ? g < 1 ? 0 : g : M
+        b = b < M ? b < 1 ? 0 : b : M
+        return this.rgb_to_color(r, g, b)
+//        return (0x1000000 + R * 0x10000 + G * 0x100 + B)
+    }
+
+//    clear_meshes(kinds) {
+//        // R = (R == 0) ? 110 : R + 76
+//        kinds = (typeof kinds === "string") ? [kinds] : Object.keys(this.meshes)
+//        console.log("clearing", kinds, this.meshes)
+//        for (let kind in kinds) {
+//            for (let obj in this.meshes[kind]) {
+//                console.log(this.meshes[kind][obj])
+//                this.scene.remove(this.meshes[kind][obj])
+//                delete this.meshes[kind][obj]
+//            }
+//        }
+//        this.gpicker.setScene(this.scene)
+//    }
     clear_meshes(kind) {
         kind = kind || "all"
         if (kind == "all") {
@@ -314,11 +561,12 @@ class NewApp3D {
             }
         }
         this.gpicker.setScene(this.scene)
+        this.gpicker.needUpdate = true
     }
 
     add_meshes(kind) {
         kind = kind || "all"
-        console.log(this.meshes)
+        console.log(kind, this.meshes)
         if (kind == "all") {
             for (let key in this.meshes) {
                 for (let obj in this.meshes[key]) {
@@ -331,7 +579,28 @@ class NewApp3D {
             }
         }
         this.gpicker.setScene(this.scene)
+        this.gpicker.needUpdate = true
     }
+
+
+
+
+//    add_meshes(kind) {
+////        kinds = (typeof kinds === "string") ? [kinds] : Object.keys(this.meshes)
+//        let kinds = (kind) ? [kind] : Object.keys(this.meshes)
+//        console.log("adding", kinds, this.meshes)
+//        for (let kind in kinds) {
+//            for (let obj in this.meshes[kind]) {
+//                console.log(this.meshes[kind][obj])
+//                //this.meshes[kind][obj].app_index = this.app_index
+//                // this.app_map[this.app_index] = this.meshes[key][obj]
+//                //this.app_index += 1
+//                this.scene.add(this.meshes[kind][obj])
+//            }
+//        }
+//        this.gpicker.setScene(this.scene)
+//        this.gpicker.needsUpdate = true
+//    }
 
     test_mesh(test) {
         this.clear_meshes("test")
@@ -422,7 +691,9 @@ class NewApp3D {
         geometry.addAttribute("position", new THREE.BufferAttribute(xyz, 3))
         geometry.addAttribute("color", new THREE.BufferAttribute(c, 3))
         geometry.addAttribute("size", new THREE.BufferAttribute(r, 1))
-        return [new THREE.Points(geometry, material)]
+        let point_cloud = new THREE.Points(geometry, material)
+        point_cloud.name = "Hello World!"
+        return [point_cloud]
     }
 
     add_spheres(x, y, z, c, r, l) {
@@ -943,6 +1214,21 @@ class NewApp3D {
 
 }
 
+ // * (2000.0 / length(mvPosition.xyz));\
+
+//NewApp3D.vertex_shader = "\
+//    varying vec3 vUv;\
+//    attribute vec3 color;\
+//    varying vec3 vColor;\
+//    \
+//    void main() {\
+//        vColor = color;\
+//        vUv = position;\
+//        \
+//        vec4 modelViewPosition = modelViewMatrix * vec4(position, 1.0);\
+//        gl_Position = projectionMatrix * modelViewPosition;\
+//    }\
+//";
 
 NewApp3D.vertex_shader = "\
     attribute float size;\
@@ -956,6 +1242,19 @@ NewApp3D.vertex_shader = "\
         gl_Position = projectionMatrix * mvPosition;\
     }\
 ";
+
+//NewApp3D.vertex_shader = "\
+//    attribute float size;\
+//    attribute vec3 color;\
+//    varying vec3 vColor;\
+//    \
+//    void main() {\
+//        vColor = color;\
+//        vec4 mvPosition = modelViewMatrix * vec4(position, 1.0);\
+//        gl_PointSize = size * (1000.0 / length(mvPosition.xyz));\
+//        gl_Position = projectionMatrix * mvPosition;\
+//    }\
+//";
 
 NewApp3D.point_frag_shader = "\
     varying vec3 vColor;\
@@ -1017,262 +1316,118 @@ NewApp3D.prototype.edge_table = new Uint32Array([
 ])
 
 NewApp3D.prototype.tri_table = [
-    [],
-    [0, 8, 3],
-    [0, 1, 9],
-    [1, 8, 3, 9, 8, 1],
-    [1, 2, 10],
-    [0, 8, 3, 1, 2, 10],
-    [9, 2, 10, 0, 2, 9],
-    [2, 8, 3, 2, 10, 8, 10, 9, 8],
-    [3, 11, 2],
-    [0, 11, 2, 8, 11, 0],
-    [1, 9, 0, 2, 3, 11],
-    [1, 11, 2, 1, 9, 11, 9, 8, 11],
-    [3, 10, 1, 11, 10, 3],
-    [0, 10, 1, 0, 8, 10, 8, 11, 10],
-    [3, 9, 0, 3, 11, 9, 11, 10, 9],
-    [9, 8, 10, 10, 8, 11],
-    [4, 7, 8],
-    [4, 3, 0, 7, 3, 4],
-    [0, 1, 9, 8, 4, 7],
-    [4, 1, 9, 4, 7, 1, 7, 3, 1],
-    [1, 2, 10, 8, 4, 7],
-    [3, 4, 7, 3, 0, 4, 1, 2, 10],
-    [9, 2, 10, 9, 0, 2, 8, 4, 7],
-    [2, 10, 9, 2, 9, 7, 2, 7, 3, 7, 9, 4],
-    [8, 4, 7, 3, 11, 2],
-    [11, 4, 7, 11, 2, 4, 2, 0, 4],
-    [9, 0, 1, 8, 4, 7, 2, 3, 11],
-    [4, 7, 11, 9, 4, 11, 9, 11, 2, 9, 2, 1],
-    [3, 10, 1, 3, 11, 10, 7, 8, 4],
-    [1, 11, 10, 1, 4, 11, 1, 0, 4, 7, 11, 4],
-    [4, 7, 8, 9, 0, 11, 9, 11, 10, 11, 0, 3],
-    [4, 7, 11, 4, 11, 9, 9, 11, 10],
-    [9, 5, 4],
-    [9, 5, 4, 0, 8, 3],
-    [0, 5, 4, 1, 5, 0],
-    [8, 5, 4, 8, 3, 5, 3, 1, 5],
-    [1, 2, 10, 9, 5, 4],
-    [3, 0, 8, 1, 2, 10, 4, 9, 5],
-    [5, 2, 10, 5, 4, 2, 4, 0, 2],
-    [2, 10, 5, 3, 2, 5, 3, 5, 4, 3, 4, 8],
-    [9, 5, 4, 2, 3, 11],
-    [0, 11, 2, 0, 8, 11, 4, 9, 5],
-    [0, 5, 4, 0, 1, 5, 2, 3, 11],
-    [2, 1, 5, 2, 5, 8, 2, 8, 11, 4, 8, 5],
-    [10, 3, 11, 10, 1, 3, 9, 5, 4],
-    [4, 9, 5, 0, 8, 1, 8, 10, 1, 8, 11, 10],
-    [5, 4, 0, 5, 0, 11, 5, 11, 10, 11, 0, 3],
-    [5, 4, 8, 5, 8, 10, 10, 8, 11],
-    [9, 7, 8, 5, 7, 9],
-    [9, 3, 0, 9, 5, 3, 5, 7, 3],
-    [0, 7, 8, 0, 1, 7, 1, 5, 7],
-    [1, 5, 3, 3, 5, 7],
-    [9, 7, 8, 9, 5, 7, 10, 1, 2],
-    [10, 1, 2, 9, 5, 0, 5, 3, 0, 5, 7, 3],
-    [8, 0, 2, 8, 2, 5, 8, 5, 7, 10, 5, 2],
-    [2, 10, 5, 2, 5, 3, 3, 5, 7],
-    [7, 9, 5, 7, 8, 9, 3, 11, 2],
-    [9, 5, 7, 9, 7, 2, 9, 2, 0, 2, 7, 11],
-    [2, 3, 11, 0, 1, 8, 1, 7, 8, 1, 5, 7],
-    [11, 2, 1, 11, 1, 7, 7, 1, 5],
-    [9, 5, 8, 8, 5, 7, 10, 1, 3, 10, 3, 11],
+    [], [0, 8, 3], [0, 1, 9], [1, 8, 3, 9, 8, 1],
+    [1, 2, 10], [0, 8, 3, 1, 2, 10], [9, 2, 10, 0, 2, 9],
+    [2, 8, 3, 2, 10, 8, 10, 9, 8], [3, 11, 2], [0, 11, 2, 8, 11, 0],
+    [1, 9, 0, 2, 3, 11], [1, 11, 2, 1, 9, 11, 9, 8, 11], [3, 10, 1, 11, 10, 3],
+    [0, 10, 1, 0, 8, 10, 8, 11, 10], [3, 9, 0, 3, 11, 9, 11, 10, 9],
+    [9, 8, 10, 10, 8, 11], [4, 7, 8], [4, 3, 0, 7, 3, 4], [0, 1, 9, 8, 4, 7],
+    [4, 1, 9, 4, 7, 1, 7, 3, 1], [1, 2, 10, 8, 4, 7], [3, 4, 7, 3, 0, 4, 1, 2, 10],
+    [9, 2, 10, 9, 0, 2, 8, 4, 7], [2, 10, 9, 2, 9, 7, 2, 7, 3, 7, 9, 4],
+    [8, 4, 7, 3, 11, 2], [11, 4, 7, 11, 2, 4, 2, 0, 4], [9, 0, 1, 8, 4, 7, 2, 3, 11],
+    [4, 7, 11, 9, 4, 11, 9, 11, 2, 9, 2, 1], [3, 10, 1, 3, 11, 10, 7, 8, 4],
+    [1, 11, 10, 1, 4, 11, 1, 0, 4, 7, 11, 4], [4, 7, 8, 9, 0, 11, 9, 11, 10, 11, 0, 3],
+    [4, 7, 11, 4, 11, 9, 9, 11, 10], [9, 5, 4], [9, 5, 4, 0, 8, 3], [0, 5, 4, 1, 5, 0],
+    [8, 5, 4, 8, 3, 5, 3, 1, 5], [1, 2, 10, 9, 5, 4], [3, 0, 8, 1, 2, 10, 4, 9, 5],
+    [5, 2, 10, 5, 4, 2, 4, 0, 2], [2, 10, 5, 3, 2, 5, 3, 5, 4, 3, 4, 8],
+    [9, 5, 4, 2, 3, 11], [0, 11, 2, 0, 8, 11, 4, 9, 5], [0, 5, 4, 0, 1, 5, 2, 3, 11],
+    [2, 1, 5, 2, 5, 8, 2, 8, 11, 4, 8, 5], [10, 3, 11, 10, 1, 3, 9, 5, 4],
+    [4, 9, 5, 0, 8, 1, 8, 10, 1, 8, 11, 10], [5, 4, 0, 5, 0, 11, 5, 11, 10, 11, 0, 3],
+    [5, 4, 8, 5, 8, 10, 10, 8, 11], [9, 7, 8, 5, 7, 9], [9, 3, 0, 9, 5, 3, 5, 7, 3],
+    [0, 7, 8, 0, 1, 7, 1, 5, 7], [1, 5, 3, 3, 5, 7], [9, 7, 8, 9, 5, 7, 10, 1, 2],
+    [10, 1, 2, 9, 5, 0, 5, 3, 0, 5, 7, 3], [8, 0, 2, 8, 2, 5, 8, 5, 7, 10, 5, 2],
+    [2, 10, 5, 2, 5, 3, 3, 5, 7], [7, 9, 5, 7, 8, 9, 3, 11, 2],
+    [9, 5, 7, 9, 7, 2, 9, 2, 0, 2, 7, 11], [2, 3, 11, 0, 1, 8, 1, 7, 8, 1, 5, 7],
+    [11, 2, 1, 11, 1, 7, 7, 1, 5], [9, 5, 8, 8, 5, 7, 10, 1, 3, 10, 3, 11],
     [5, 7, 0, 5, 0, 9, 7, 11, 0, 1, 0, 10, 11, 10, 0],
     [11, 10, 0, 11, 0, 3, 10, 5, 0, 8, 0, 7, 5, 7, 0],
-    [11, 10, 5, 7, 11, 5],
-    [10, 6, 5],
-    [0, 8, 3, 5, 10, 6],
-    [9, 0, 1, 5, 10, 6],
-    [1, 8, 3, 1, 9, 8, 5, 10, 6],
-    [1, 6, 5, 2, 6, 1],
-    [1, 6, 5, 1, 2, 6, 3, 0, 8],
-    [9, 6, 5, 9, 0, 6, 0, 2, 6],
-    [5, 9, 8, 5, 8, 2, 5, 2, 6, 3, 2, 8],
-    [2, 3, 11, 10, 6, 5],
-    [11, 0, 8, 11, 2, 0, 10, 6, 5],
-    [0, 1, 9, 2, 3, 11, 5, 10, 6],
-    [5, 10, 6, 1, 9, 2, 9, 11, 2, 9, 8, 11],
-    [6, 3, 11, 6, 5, 3, 5, 1, 3],
-    [0, 8, 11, 0, 11, 5, 0, 5, 1, 5, 11, 6],
-    [3, 11, 6, 0, 3, 6, 0, 6, 5, 0, 5, 9],
-    [6, 5, 9, 6, 9, 11, 11, 9, 8],
-    [5, 10, 6, 4, 7, 8],
-    [4, 3, 0, 4, 7, 3, 6, 5, 10],
-    [1, 9, 0, 5, 10, 6, 8, 4, 7],
-    [10, 6, 5, 1, 9, 7, 1, 7, 3, 7, 9, 4],
-    [6, 1, 2, 6, 5, 1, 4, 7, 8],
-    [1, 2, 5, 5, 2, 6, 3, 0, 4, 3, 4, 7],
-    [8, 4, 7, 9, 0, 5, 0, 6, 5, 0, 2, 6],
-    [7, 3, 9, 7, 9, 4, 3, 2, 9, 5, 9, 6, 2, 6, 9],
-    [3, 11, 2, 7, 8, 4, 10, 6, 5],
-    [5, 10, 6, 4, 7, 2, 4, 2, 0, 2, 7, 11],
-    [0, 1, 9, 4, 7, 8, 2, 3, 11, 5, 10, 6],
+    [11, 10, 5, 7, 11, 5], [10, 6, 5], [0, 8, 3, 5, 10, 6], [9, 0, 1, 5, 10, 6],
+    [1, 8, 3, 1, 9, 8, 5, 10, 6], [1, 6, 5, 2, 6, 1], [1, 6, 5, 1, 2, 6, 3, 0, 8],
+    [9, 6, 5, 9, 0, 6, 0, 2, 6], [5, 9, 8, 5, 8, 2, 5, 2, 6, 3, 2, 8],
+    [2, 3, 11, 10, 6, 5], [11, 0, 8, 11, 2, 0, 10, 6, 5],
+    [0, 1, 9, 2, 3, 11, 5, 10, 6], [5, 10, 6, 1, 9, 2, 9, 11, 2, 9, 8, 11],
+    [6, 3, 11, 6, 5, 3, 5, 1, 3], [0, 8, 11, 0, 11, 5, 0, 5, 1, 5, 11, 6],
+    [3, 11, 6, 0, 3, 6, 0, 6, 5, 0, 5, 9], [6, 5, 9, 6, 9, 11, 11, 9, 8],
+    [5, 10, 6, 4, 7, 8], [4, 3, 0, 4, 7, 3, 6, 5, 10], [1, 9, 0, 5, 10, 6, 8, 4, 7],
+    [10, 6, 5, 1, 9, 7, 1, 7, 3, 7, 9, 4], [6, 1, 2, 6, 5, 1, 4, 7, 8],
+    [1, 2, 5, 5, 2, 6, 3, 0, 4, 3, 4, 7], [8, 4, 7, 9, 0, 5, 0, 6, 5, 0, 2, 6],
+    [7, 3, 9, 7, 9, 4, 3, 2, 9, 5, 9, 6, 2, 6, 9], [3, 11, 2, 7, 8, 4, 10, 6, 5],
+    [5, 10, 6, 4, 7, 2, 4, 2, 0, 2, 7, 11], [0, 1, 9, 4, 7, 8, 2, 3, 11, 5, 10, 6],
     [9, 2, 1, 9, 11, 2, 9, 4, 11, 7, 11, 4, 5, 10, 6],
     [8, 4, 7, 3, 11, 5, 3, 5, 1, 5, 11, 6],
     [5, 1, 11, 5, 11, 6, 1, 0, 11, 7, 11, 4, 0, 4, 11],
     [0, 5, 9, 0, 6, 5, 0, 3, 6, 11, 6, 3, 8, 4, 7],
-    [6, 5, 9, 6, 9, 11, 4, 7, 9, 7, 11, 9],
-    [10, 4, 9, 6, 4, 10],
-    [4, 10, 6, 4, 9, 10, 0, 8, 3],
-    [10, 0, 1, 10, 6, 0, 6, 4, 0],
-    [8, 3, 1, 8, 1, 6, 8, 6, 4, 6, 1, 10],
-    [1, 4, 9, 1, 2, 4, 2, 6, 4],
-    [3, 0, 8, 1, 2, 9, 2, 4, 9, 2, 6, 4],
-    [0, 2, 4, 4, 2, 6],
-    [8, 3, 2, 8, 2, 4, 4, 2, 6],
-    [10, 4, 9, 10, 6, 4, 11, 2, 3],
-    [0, 8, 2, 2, 8, 11, 4, 9, 10, 4, 10, 6],
-    [3, 11, 2, 0, 1, 6, 0, 6, 4, 6, 1, 10],
-    [6, 4, 1, 6, 1, 10, 4, 8, 1, 2, 1, 11, 8, 11, 1],
-    [9, 6, 4, 9, 3, 6, 9, 1, 3, 11, 6, 3],
-    [8, 11, 1, 8, 1, 0, 11, 6, 1, 9, 1, 4, 6, 4, 1],
-    [3, 11, 6, 3, 6, 0, 0, 6, 4],
-    [6, 4, 8, 11, 6, 8],
-    [7, 10, 6, 7, 8, 10, 8, 9, 10],
-    [0, 7, 3, 0, 10, 7, 0, 9, 10, 6, 7, 10],
-    [10, 6, 7, 1, 10, 7, 1, 7, 8, 1, 8, 0],
-    [10, 6, 7, 10, 7, 1, 1, 7, 3],
-    [1, 2, 6, 1, 6, 8, 1, 8, 9, 8, 6, 7],
-    [2, 6, 9, 2, 9, 1, 6, 7, 9, 0, 9, 3, 7, 3, 9],
-    [7, 8, 0, 7, 0, 6, 6, 0, 2],
-    [7, 3, 2, 6, 7, 2],
-    [2, 3, 11, 10, 6, 8, 10, 8, 9, 8, 6, 7],
+    [6, 5, 9, 6, 9, 11, 4, 7, 9, 7, 11, 9], [10, 4, 9, 6, 4, 10],
+    [4, 10, 6, 4, 9, 10, 0, 8, 3], [10, 0, 1, 10, 6, 0, 6, 4, 0],
+    [8, 3, 1, 8, 1, 6, 8, 6, 4, 6, 1, 10], [1, 4, 9, 1, 2, 4, 2, 6, 4],
+    [3, 0, 8, 1, 2, 9, 2, 4, 9, 2, 6, 4], [0, 2, 4, 4, 2, 6],
+    [8, 3, 2, 8, 2, 4, 4, 2, 6], [10, 4, 9, 10, 6, 4, 11, 2, 3],
+    [0, 8, 2, 2, 8, 11, 4, 9, 10, 4, 10, 6], [3, 11, 2, 0, 1, 6, 0, 6, 4, 6, 1, 10],
+    [6, 4, 1, 6, 1, 10, 4, 8, 1, 2, 1, 11, 8, 11, 1], [9, 6, 4, 9, 3, 6, 9, 1, 3, 11, 6, 3],
+    [8, 11, 1, 8, 1, 0, 11, 6, 1, 9, 1, 4, 6, 4, 1], [3, 11, 6, 3, 6, 0, 0, 6, 4],
+    [6, 4, 8, 11, 6, 8], [7, 10, 6, 7, 8, 10, 8, 9, 10],
+    [0, 7, 3, 0, 10, 7, 0, 9, 10, 6, 7, 10], [10, 6, 7, 1, 10, 7, 1, 7, 8, 1, 8, 0],
+    [10, 6, 7, 10, 7, 1, 1, 7, 3], [1, 2, 6, 1, 6, 8, 1, 8, 9, 8, 6, 7],
+    [2, 6, 9, 2, 9, 1, 6, 7, 9, 0, 9, 3, 7, 3, 9], [7, 8, 0, 7, 0, 6, 6, 0, 2],
+    [7, 3, 2, 6, 7, 2], [2, 3, 11, 10, 6, 8, 10, 8, 9, 8, 6, 7],
     [2, 0, 7, 2, 7, 11, 0, 9, 7, 6, 7, 10, 9, 10, 7],
     [1, 8, 0, 1, 7, 8, 1, 10, 7, 6, 7, 10, 2, 3, 11],
     [11, 2, 1, 11, 1, 7, 10, 6, 1, 6, 7, 1],
     [8, 9, 6, 8, 6, 7, 9, 1, 6, 11, 6, 3, 1, 3, 6],
-    [0, 9, 1, 11, 6, 7],
-    [7, 8, 0, 7, 0, 6, 3, 11, 0, 11, 6, 0],
-    [7, 11, 6],
-    [7, 6, 11],
-    [3, 0, 8, 11, 7, 6],
-    [0, 1, 9, 11, 7, 6],
-    [8, 1, 9, 8, 3, 1, 11, 7, 6],
-    [10, 1, 2, 6, 11, 7],
-    [1, 2, 10, 3, 0, 8, 6, 11, 7],
-    [2, 9, 0, 2, 10, 9, 6, 11, 7],
-    [6, 11, 7, 2, 10, 3, 10, 8, 3, 10, 9, 8],
-    [7, 2, 3, 6, 2, 7],
-    [7, 0, 8, 7, 6, 0, 6, 2, 0],
-    [2, 7, 6, 2, 3, 7, 0, 1, 9],
-    [1, 6, 2, 1, 8, 6, 1, 9, 8, 8, 7, 6],
-    [10, 7, 6, 10, 1, 7, 1, 3, 7],
-    [10, 7, 6, 1, 7, 10, 1, 8, 7, 1, 0, 8],
-    [0, 3, 7, 0, 7, 10, 0, 10, 9, 6, 10, 7],
-    [7, 6, 10, 7, 10, 8, 8, 10, 9],
-    [6, 8, 4, 11, 8, 6],
-    [3, 6, 11, 3, 0, 6, 0, 4, 6],
-    [8, 6, 11, 8, 4, 6, 9, 0, 1],
-    [9, 4, 6, 9, 6, 3, 9, 3, 1, 11, 3, 6],
-    [6, 8, 4, 6, 11, 8, 2, 10, 1],
-    [1, 2, 10, 3, 0, 11, 0, 6, 11, 0, 4, 6],
-    [4, 11, 8, 4, 6, 11, 0, 2, 9, 2, 10, 9],
-    [10, 9, 3, 10, 3, 2, 9, 4, 3, 11, 3, 6, 4, 6, 3],
-    [8, 2, 3, 8, 4, 2, 4, 6, 2],
-    [0, 4, 2, 4, 6, 2],
-    [1, 9, 0, 2, 3, 4, 2, 4, 6, 4, 3, 8],
-    [1, 9, 4, 1, 4, 2, 2, 4, 6],
-    [8, 1, 3, 8, 6, 1, 8, 4, 6, 6, 10, 1],
-    [10, 1, 0, 10, 0, 6, 6, 0, 4],
-    [4, 6, 3, 4, 3, 8, 6, 10, 3, 0, 3, 9, 10, 9, 3],
-    [10, 9, 4, 6, 10, 4],
-    [4, 9, 5, 7, 6, 11],
-    [0, 8, 3, 4, 9, 5, 11, 7, 6],
-    [5, 0, 1, 5, 4, 0, 7, 6, 11],
-    [11, 7, 6, 8, 3, 4, 3, 5, 4, 3, 1, 5],
-    [9, 5, 4, 10, 1, 2, 7, 6, 11],
-    [6, 11, 7, 1, 2, 10, 0, 8, 3, 4, 9, 5],
-    [7, 6, 11, 5, 4, 10, 4, 2, 10, 4, 0, 2],
-    [3, 4, 8, 3, 5, 4, 3, 2, 5, 10, 5, 2, 11, 7, 6],
-    [7, 2, 3, 7, 6, 2, 5, 4, 9],
-    [9, 5, 4, 0, 8, 6, 0, 6, 2, 6, 8, 7],
-    [3, 6, 2, 3, 7, 6, 1, 5, 0, 5, 4, 0],
-    [6, 2, 8, 6, 8, 7, 2, 1, 8, 4, 8, 5, 1, 5, 8],
-    [9, 5, 4, 10, 1, 6, 1, 7, 6, 1, 3, 7],
-    [1, 6, 10, 1, 7, 6, 1, 0, 7, 8, 7, 0, 9, 5, 4],
-    [4, 0, 10, 4, 10, 5, 0, 3, 10, 6, 10, 7, 3, 7, 10],
-    [7, 6, 10, 7, 10, 8, 5, 4, 10, 4, 8, 10],
-    [6, 9, 5, 6, 11, 9, 11, 8, 9],
-    [3, 6, 11, 0, 6, 3, 0, 5, 6, 0, 9, 5],
-    [0, 11, 8, 0, 5, 11, 0, 1, 5, 5, 6, 11],
-    [6, 11, 3, 6, 3, 5, 5, 3, 1],
-    [1, 2, 10, 9, 5, 11, 9, 11, 8, 11, 5, 6],
-    [0, 11, 3, 0, 6, 11, 0, 9, 6, 5, 6, 9, 1, 2, 10],
-    [11, 8, 5, 11, 5, 6, 8, 0, 5, 10, 5, 2, 0, 2, 5],
-    [6, 11, 3, 6, 3, 5, 2, 10, 3, 10, 5, 3],
-    [5, 8, 9, 5, 2, 8, 5, 6, 2, 3, 8, 2],
-    [9, 5, 6, 9, 6, 0, 0, 6, 2],
-    [1, 5, 8, 1, 8, 0, 5, 6, 8, 3, 8, 2, 6, 2, 8],
-    [1, 5, 6, 2, 1, 6],
-    [1, 3, 6, 1, 6, 10, 3, 8, 6, 5, 6, 9, 8, 9, 6],
-    [10, 1, 0, 10, 0, 6, 9, 5, 0, 5, 6, 0],
-    [0, 3, 8, 5, 6, 10],
-    [10, 5, 6],
-    [11, 5, 10, 7, 5, 11],
-    [11, 5, 10, 11, 7, 5, 8, 3, 0],
-    [5, 11, 7, 5, 10, 11, 1, 9, 0],
-    [10, 7, 5, 10, 11, 7, 9, 8, 1, 8, 3, 1],
-    [11, 1, 2, 11, 7, 1, 7, 5, 1],
-    [0, 8, 3, 1, 2, 7, 1, 7, 5, 7, 2, 11],
-    [9, 7, 5, 9, 2, 7, 9, 0, 2, 2, 11, 7],
-    [7, 5, 2, 7, 2, 11, 5, 9, 2, 3, 2, 8, 9, 8, 2],
-    [2, 5, 10, 2, 3, 5, 3, 7, 5],
-    [8, 2, 0, 8, 5, 2, 8, 7, 5, 10, 2, 5],
-    [9, 0, 1, 5, 10, 3, 5, 3, 7, 3, 10, 2],
-    [9, 8, 2, 9, 2, 1, 8, 7, 2, 10, 2, 5, 7, 5, 2],
-    [1, 3, 5, 3, 7, 5],
-    [0, 8, 7, 0, 7, 1, 1, 7, 5],
-    [9, 0, 3, 9, 3, 5, 5, 3, 7],
-    [9, 8, 7, 5, 9, 7],
-    [5, 8, 4, 5, 10, 8, 10, 11, 8],
-    [5, 0, 4, 5, 11, 0, 5, 10, 11, 11, 3, 0],
-    [0, 1, 9, 8, 4, 10, 8, 10, 11, 10, 4, 5],
-    [10, 11, 4, 10, 4, 5, 11, 3, 4, 9, 4, 1, 3, 1, 4],
-    [2, 5, 1, 2, 8, 5, 2, 11, 8, 4, 5, 8],
-    [0, 4, 11, 0, 11, 3, 4, 5, 11, 2, 11, 1, 5, 1, 11],
-    [0, 2, 5, 0, 5, 9, 2, 11, 5, 4, 5, 8, 11, 8, 5],
-    [9, 4, 5, 2, 11, 3],
-    [2, 5, 10, 3, 5, 2, 3, 4, 5, 3, 8, 4],
-    [5, 10, 2, 5, 2, 4, 4, 2, 0],
-    [3, 10, 2, 3, 5, 10, 3, 8, 5, 4, 5, 8, 0, 1, 9],
-    [5, 10, 2, 5, 2, 4, 1, 9, 2, 9, 4, 2],
-    [8, 4, 5, 8, 5, 3, 3, 5, 1],
-    [0, 4, 5, 1, 0, 5],
-    [8, 4, 5, 8, 5, 3, 9, 0, 5, 0, 3, 5],
-    [9, 4, 5],
-    [4, 11, 7, 4, 9, 11, 9, 10, 11],
-    [0, 8, 3, 4, 9, 7, 9, 11, 7, 9, 10, 11],
-    [1, 10, 11, 1, 11, 4, 1, 4, 0, 7, 4, 11],
-    [3, 1, 4, 3, 4, 8, 1, 10, 4, 7, 4, 11, 10, 11, 4],
-    [4, 11, 7, 9, 11, 4, 9, 2, 11, 9, 1, 2],
-    [9, 7, 4, 9, 11, 7, 9, 1, 11, 2, 11, 1, 0, 8, 3],
-    [11, 7, 4, 11, 4, 2, 2, 4, 0],
-    [11, 7, 4, 11, 4, 2, 8, 3, 4, 3, 2, 4],
-    [2, 9, 10, 2, 7, 9, 2, 3, 7, 7, 4, 9],
-    [9, 10, 7, 9, 7, 4, 10, 2, 7, 8, 7, 0, 2, 0, 7],
-    [3, 7, 10, 3, 10, 2, 7, 4, 10, 1, 10, 0, 4, 0, 10],
-    [1, 10, 2, 8, 7, 4],
-    [4, 9, 1, 4, 1, 7, 7, 1, 3],
-    [4, 9, 1, 4, 1, 7, 0, 8, 1, 8, 7, 1],
-    [4, 0, 3, 7, 4, 3],
-    [4, 8, 7],
-    [9, 10, 8, 10, 11, 8],
-    [3, 0, 9, 3, 9, 11, 11, 9, 10],
-    [0, 1, 10, 0, 10, 8, 8, 10, 11],
-    [3, 1, 10, 11, 3, 10],
-    [1, 2, 11, 1, 11, 9, 9, 11, 8],
-    [3, 0, 9, 3, 9, 11, 1, 2, 9, 2, 11, 9],
-    [0, 2, 11, 8, 0, 11],
-    [3, 2, 11],
-    [2, 3, 8, 2, 8, 10, 10, 8, 9],
-    [9, 10, 2, 0, 9, 2],
-    [2, 3, 8, 2, 8, 10, 0, 1, 8, 1, 10, 8],
-    [1, 10, 2],
-    [1, 3, 8, 9, 1, 8],
-    [0, 9, 1],
-    [0, 3, 8],
-    []
+    [0, 9, 1, 11, 6, 7], [7, 8, 0, 7, 0, 6, 3, 11, 0, 11, 6, 0], [7, 11, 6],
+    [7, 6, 11], [3, 0, 8, 11, 7, 6], [0, 1, 9, 11, 7, 6], [8, 1, 9, 8, 3, 1, 11, 7, 6],
+    [10, 1, 2, 6, 11, 7], [1, 2, 10, 3, 0, 8, 6, 11, 7], [2, 9, 0, 2, 10, 9, 6, 11, 7],
+    [6, 11, 7, 2, 10, 3, 10, 8, 3, 10, 9, 8], [7, 2, 3, 6, 2, 7], [7, 0, 8, 7, 6, 0, 6, 2, 0],
+    [2, 7, 6, 2, 3, 7, 0, 1, 9], [1, 6, 2, 1, 8, 6, 1, 9, 8, 8, 7, 6], [10, 7, 6, 10, 1, 7, 1, 3, 7],
+    [10, 7, 6, 1, 7, 10, 1, 8, 7, 1, 0, 8], [0, 3, 7, 0, 7, 10, 0, 10, 9, 6, 10, 7],
+    [7, 6, 10, 7, 10, 8, 8, 10, 9], [6, 8, 4, 11, 8, 6], [3, 6, 11, 3, 0, 6, 0, 4, 6],
+    [8, 6, 11, 8, 4, 6, 9, 0, 1], [9, 4, 6, 9, 6, 3, 9, 3, 1, 11, 3, 6],
+    [6, 8, 4, 6, 11, 8, 2, 10, 1], [1, 2, 10, 3, 0, 11, 0, 6, 11, 0, 4, 6],
+    [4, 11, 8, 4, 6, 11, 0, 2, 9, 2, 10, 9], [10, 9, 3, 10, 3, 2, 9, 4, 3, 11, 3, 6, 4, 6, 3],
+    [8, 2, 3, 8, 4, 2, 4, 6, 2], [0, 4, 2, 4, 6, 2], [1, 9, 0, 2, 3, 4, 2, 4, 6, 4, 3, 8],
+    [1, 9, 4, 1, 4, 2, 2, 4, 6], [8, 1, 3, 8, 6, 1, 8, 4, 6, 6, 10, 1], [10, 1, 0, 10, 0, 6, 6, 0, 4],
+    [4, 6, 3, 4, 3, 8, 6, 10, 3, 0, 3, 9, 10, 9, 3], [10, 9, 4, 6, 10, 4], [4, 9, 5, 7, 6, 11],
+    [0, 8, 3, 4, 9, 5, 11, 7, 6], [5, 0, 1, 5, 4, 0, 7, 6, 11], [11, 7, 6, 8, 3, 4, 3, 5, 4, 3, 1, 5],
+    [9, 5, 4, 10, 1, 2, 7, 6, 11], [6, 11, 7, 1, 2, 10, 0, 8, 3, 4, 9, 5],
+    [7, 6, 11, 5, 4, 10, 4, 2, 10, 4, 0, 2], [3, 4, 8, 3, 5, 4, 3, 2, 5, 10, 5, 2, 11, 7, 6],
+    [7, 2, 3, 7, 6, 2, 5, 4, 9], [9, 5, 4, 0, 8, 6, 0, 6, 2, 6, 8, 7],
+    [3, 6, 2, 3, 7, 6, 1, 5, 0, 5, 4, 0], [6, 2, 8, 6, 8, 7, 2, 1, 8, 4, 8, 5, 1, 5, 8],
+    [9, 5, 4, 10, 1, 6, 1, 7, 6, 1, 3, 7], [1, 6, 10, 1, 7, 6, 1, 0, 7, 8, 7, 0, 9, 5, 4],
+    [4, 0, 10, 4, 10, 5, 0, 3, 10, 6, 10, 7, 3, 7, 10], [7, 6, 10, 7, 10, 8, 5, 4, 10, 4, 8, 10],
+    [6, 9, 5, 6, 11, 9, 11, 8, 9], [3, 6, 11, 0, 6, 3, 0, 5, 6, 0, 9, 5],
+    [0, 11, 8, 0, 5, 11, 0, 1, 5, 5, 6, 11], [6, 11, 3, 6, 3, 5, 5, 3, 1],
+    [1, 2, 10, 9, 5, 11, 9, 11, 8, 11, 5, 6], [0, 11, 3, 0, 6, 11, 0, 9, 6, 5, 6, 9, 1, 2, 10],
+    [11, 8, 5, 11, 5, 6, 8, 0, 5, 10, 5, 2, 0, 2, 5], [6, 11, 3, 6, 3, 5, 2, 10, 3, 10, 5, 3],
+    [5, 8, 9, 5, 2, 8, 5, 6, 2, 3, 8, 2], [9, 5, 6, 9, 6, 0, 0, 6, 2],
+    [1, 5, 8, 1, 8, 0, 5, 6, 8, 3, 8, 2, 6, 2, 8], [1, 5, 6, 2, 1, 6],
+    [1, 3, 6, 1, 6, 10, 3, 8, 6, 5, 6, 9, 8, 9, 6], [10, 1, 0, 10, 0, 6, 9, 5, 0, 5, 6, 0],
+    [0, 3, 8, 5, 6, 10], [10, 5, 6], [11, 5, 10, 7, 5, 11], [11, 5, 10, 11, 7, 5, 8, 3, 0],
+    [5, 11, 7, 5, 10, 11, 1, 9, 0], [10, 7, 5, 10, 11, 7, 9, 8, 1, 8, 3, 1],
+    [11, 1, 2, 11, 7, 1, 7, 5, 1], [0, 8, 3, 1, 2, 7, 1, 7, 5, 7, 2, 11],
+    [9, 7, 5, 9, 2, 7, 9, 0, 2, 2, 11, 7], [7, 5, 2, 7, 2, 11, 5, 9, 2, 3, 2, 8, 9, 8, 2],
+    [2, 5, 10, 2, 3, 5, 3, 7, 5], [8, 2, 0, 8, 5, 2, 8, 7, 5, 10, 2, 5],
+    [9, 0, 1, 5, 10, 3, 5, 3, 7, 3, 10, 2], [9, 8, 2, 9, 2, 1, 8, 7, 2, 10, 2, 5, 7, 5, 2],
+    [1, 3, 5, 3, 7, 5], [0, 8, 7, 0, 7, 1, 1, 7, 5], [9, 0, 3, 9, 3, 5, 5, 3, 7],
+    [9, 8, 7, 5, 9, 7], [5, 8, 4, 5, 10, 8, 10, 11, 8], [5, 0, 4, 5, 11, 0, 5, 10, 11, 11, 3, 0],
+    [0, 1, 9, 8, 4, 10, 8, 10, 11, 10, 4, 5], [10, 11, 4, 10, 4, 5, 11, 3, 4, 9, 4, 1, 3, 1, 4],
+    [2, 5, 1, 2, 8, 5, 2, 11, 8, 4, 5, 8], [0, 4, 11, 0, 11, 3, 4, 5, 11, 2, 11, 1, 5, 1, 11],
+    [0, 2, 5, 0, 5, 9, 2, 11, 5, 4, 5, 8, 11, 8, 5], [9, 4, 5, 2, 11, 3],
+    [2, 5, 10, 3, 5, 2, 3, 4, 5, 3, 8, 4], [5, 10, 2, 5, 2, 4, 4, 2, 0],
+    [3, 10, 2, 3, 5, 10, 3, 8, 5, 4, 5, 8, 0, 1, 9], [5, 10, 2, 5, 2, 4, 1, 9, 2, 9, 4, 2],
+    [8, 4, 5, 8, 5, 3, 3, 5, 1], [0, 4, 5, 1, 0, 5], [8, 4, 5, 8, 5, 3, 9, 0, 5, 0, 3, 5],
+    [9, 4, 5], [4, 11, 7, 4, 9, 11, 9, 10, 11], [0, 8, 3, 4, 9, 7, 9, 11, 7, 9, 10, 11],
+    [1, 10, 11, 1, 11, 4, 1, 4, 0, 7, 4, 11], [3, 1, 4, 3, 4, 8, 1, 10, 4, 7, 4, 11, 10, 11, 4],
+    [4, 11, 7, 9, 11, 4, 9, 2, 11, 9, 1, 2], [9, 7, 4, 9, 11, 7, 9, 1, 11, 2, 11, 1, 0, 8, 3],
+    [11, 7, 4, 11, 4, 2, 2, 4, 0], [11, 7, 4, 11, 4, 2, 8, 3, 4, 3, 2, 4],
+    [2, 9, 10, 2, 7, 9, 2, 3, 7, 7, 4, 9], [9, 10, 7, 9, 7, 4, 10, 2, 7, 8, 7, 0, 2, 0, 7],
+    [3, 7, 10, 3, 10, 2, 7, 4, 10, 1, 10, 0, 4, 0, 10], [1, 10, 2, 8, 7, 4],
+    [4, 9, 1, 4, 1, 7, 7, 1, 3], [4, 9, 1, 4, 1, 7, 0, 8, 1, 8, 7, 1],
+    [4, 0, 3, 7, 4, 3], [4, 8, 7], [9, 10, 8, 10, 11, 8],
+    [3, 0, 9, 3, 9, 11, 11, 9, 10], [0, 1, 10, 0, 10, 8, 8, 10, 11],
+    [3, 1, 10, 11, 3, 10], [1, 2, 11, 1, 11, 9, 9, 11, 8],
+    [3, 0, 9, 3, 9, 11, 1, 2, 9, 2, 11, 9], [0, 2, 11, 8, 0, 11], [3, 2, 11],
+    [2, 3, 8, 2, 8, 10, 10, 8, 9], [9, 10, 2, 0, 9, 2], [2, 3, 8, 2, 8, 10, 0, 1, 8, 1, 10, 8],
+    [1, 10, 2], [1, 3, 8, 9, 1, 8], [0, 9, 1], [0, 3, 8], []
 ]
 
 

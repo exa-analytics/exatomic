@@ -270,7 +270,8 @@ var add_gpupicker = (THREE) => {
 
             var testPoint = function (point, index) {
                 var rayPointDistance = ray.distanceToPoint(point);
-                var intersectPoint = ray.closestPointToPoint(point);
+                var target = new THREE.Vector3();
+                var intersectPoint = ray.closestPointToPoint(point, target);
                 intersectPoint.applyMatrix4(object.matrixWorld);
 
                 var distance = raycaster.ray.origin.distanceTo(intersectPoint);
@@ -279,6 +280,7 @@ var add_gpupicker = (THREE) => {
 
                 var intersect = {
 
+                    target: target,
                     distance: distance,
                     distanceToRay: rayPointDistance,
                     point: intersectPoint.clone(),
@@ -310,6 +312,9 @@ var add_gpupicker = (THREE) => {
         this.lineShell = option.lineShell !== undefined ? option.lineShell : 4;
         this.pointShell = option.pointShell !== undefined ? option.pointShell : 0.1;
         this.debug = option.debug !== undefined ? option.debug : false;
+        if (this.debug) {
+            console.log("GPUPicker initialized with:", option)
+        }
         this.needUpdate = true;
         if (option.renderer) {
             this.setRenderer(option.renderer);
@@ -368,10 +373,15 @@ var add_gpupicker = (THREE) => {
 
 
     THREE.GPUPicker.prototype.pick = function (mouse, raycaster) {
-        this.update();
         var calcx = Math.round((mouse.x + 1) * (this.pickingTexture.width / 2))
         var calcy = Math.round((mouse.y + 1) * (this.pickingTexture.height / 2))
         var index = calcx + calcy * this.pickingTexture.width
+        // console.log("current calc", calcx, calcy)
+        // console.log("picking components", this.pickingTexture.width, this.pickingTexture.height)
+        // console.log("calc components", calcx, calcy, index)
+        // console.log("mouse components", mouse.x, mouse.y)
+        // console.log("original index", mouse.x + (this.pickingTexture.height - mouse.y) * this.pickingTexture.width)
+        // console.log("current index", index)
         //interpret the pixel as an ID
         var id = ((this.pixelBuffer[index * 4 + 2] * 255 * 255) +
                   (this.pixelBuffer[index * 4 + 1] * 255) +
@@ -379,17 +389,16 @@ var add_gpupicker = (THREE) => {
         if (id === 0) {
             return;
         }
-        console.log("pick id:", id)
         var result = this._getObject(this.pickingScene, 0, id);
         var object = result[1];
         var elementId = id - result[0];
         if (object) {
+            // console.log("pick id:", id, this.pickingScene)
             if (object.raycastWithID) {
                 var intersect = object.raycastWithID(elementId, raycaster);
-                // console.log("intersect", intersect)
                 intersect.object = object.originalObject;
                 if (intersect.object) {
-                    intersect.object.name = `${intersect.object.type}:${id}`
+                    intersect.object.point_idx = id
                 }
                 return intersect;
             }
@@ -425,14 +434,12 @@ var add_gpupicker = (THREE) => {
         baseId += this._addElementID(object, baseId);
         for (var i = 0; i < object.children.length; i++) {
             baseId = this._processObject(object.children[i], baseId);
-
         }
         return baseId;
     };
 
     THREE.GPUPicker.prototype._addElementID = function (object, baseId) {
         if (this.debug) console.log("adding element ID")
-        console.log(object, baseId)
         if (!this.filterFunc(object) && object.geometry !== undefined) {
             object.visible = false;
             return 0;
