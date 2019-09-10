@@ -1,4 +1,4 @@
-// Copright (c) 2015-2018, Exa Analytics Development Team)
+// Copright (c) 2015-2018, Exa Analytics Development Team
 // Distributed under the terms of the Apache License 2.0
 
 /*
@@ -35,6 +35,42 @@ var THREE = require("three")
 
 var add_gpupicker = (THREE) => {
     var FaceIDShader = {
+
+        vertex_shader: [
+            "attribute float size;",
+            "attribute vec3 color;",
+            "varying vec3 vColor;",
+            "",
+            "void main() {",
+            "    vColor = color;",
+            "    vec4 mvPosition = modelViewMatrix * vec4(position, 1.0);",
+            "    gl_PointSize = size * (2000.0 / length(mvPosition.xyz));",
+            "    gl_Position = projectionMatrix * mvPosition;",
+            "}"
+        ].join("\n"),
+
+        fragmentShader: [
+            "#ifdef GL_ES",
+            "precision highp float;",
+            "#endif",
+            "",
+            "varying vec4 worldId;",
+            "",
+            "void main() {",
+            "  gl_FragColor = worldId;",
+            "}"
+        ].join("\n"),
+
+        point_frag_shader: [
+            "varying vec3 vColor;",
+            "",
+            "void main() {",
+            "    if (length(gl_PointCoord * 2.0 - 1.0) > 1.0)",
+            "        discard;",
+            "    gl_FragColor = vec4(vColor, 1.0);",
+            "}"
+        ].join("\n"),
+
         vertexShader: [
             "attribute float id;",
             "",
@@ -53,19 +89,8 @@ var add_gpupicker = (THREE) => {
             "  worldId = vec4(a,1);",
             "  gl_Position = projectionMatrix * modelViewMatrix * vec4( position, 1.0 );",
             "}"
-        ].join("\n"),
-
-        fragmentShader: [
-            "#ifdef GL_ES\n",
-            "precision highp float;\n",
-            "#endif\n",
-            "",
-            "varying vec4 worldId;",
-            "",
-            "void main() {",
-            "  gl_FragColor = worldId;",
-            "}"
         ].join("\n")
+
     };
 
     var FaceIDMaterial = function () {
@@ -329,7 +354,7 @@ var add_gpupicker = (THREE) => {
     THREE.GPUPicker.prototype.setRenderer = function (renderer) {
         this.renderer = renderer;
         var size = renderer.getSize();
-        if (this.debug) console.log("GPUPicker setting renderer", size.width, size.height * 2)
+        if (this.debug) console.log("GPUPicker setting renderer", size.width, size.height)
         this.resizeTexture(size.width, size.height * 2);
         this.needUpdate = true;
     };
@@ -350,7 +375,6 @@ var add_gpupicker = (THREE) => {
             //read the rendering texture
             this.renderer.readRenderTargetPixels(this.pickingTexture, 0, 0, this.pickingTexture.width, this.pickingTexture.height, this.pixelBuffer);
             this.needUpdate = false;
-            // console.log("GPUPicker update", this.pickingScene)
             if (this.debug) console.log("GPUPicker rendering updated");
         }
     };
@@ -373,19 +397,20 @@ var add_gpupicker = (THREE) => {
 
 
     THREE.GPUPicker.prototype.pick = function (mouse, raycaster) {
-        var calcx = Math.round((mouse.x + 1) * (this.pickingTexture.width / 2))
-        var calcy = Math.round((mouse.y + 1) * (this.pickingTexture.height / 2))
+        /*"""
+        Args:
+            mouse (THREE.Vector2): {x in [-1,1], y in [-1,1]}
+            raycaster (THREE.Raycaster): caster
+
+        */
+        this.update()
+        var calcx = Math.round((mouse.x / 2 + 0.5) * this.pickingTexture.width)
+        var calcy = Math.round((mouse.y / 2 + 0.5) * this.pickingTexture.height)
         var index = calcx + calcy * this.pickingTexture.width
-        // console.log("current calc", calcx, calcy)
-        // console.log("picking components", this.pickingTexture.width, this.pickingTexture.height)
-        // console.log("calc components", calcx, calcy, index)
-        // console.log("mouse components", mouse.x, mouse.y)
-        // console.log("original index", mouse.x + (this.pickingTexture.height - mouse.y) * this.pickingTexture.width)
-        // console.log("current index", index)
         //interpret the pixel as an ID
         var id = ((this.pixelBuffer[index * 4 + 2] * 255 * 255) +
                   (this.pixelBuffer[index * 4 + 1] * 255) +
-                  (this.pixelBuffer[index * 4]))
+                  (this.pixelBuffer[index * 4    ]))
         if (id === 0) {
             return;
         }
@@ -393,12 +418,18 @@ var add_gpupicker = (THREE) => {
         var object = result[1];
         var elementId = id - result[0];
         if (object) {
-            // console.log("pick id:", id, this.pickingScene)
+            console.log(mouse.x, this.pickingTexture.width, calcx)
+            console.log(mouse.y, this.pickingTexture.height, calcy)
+            console.log("index, pick id:", index, id)
             if (object.raycastWithID) {
                 var intersect = object.raycastWithID(elementId, raycaster);
+                if (!intersect) {
+                    return
+                }
                 intersect.object = object.originalObject;
                 if (intersect.object) {
                     intersect.object.point_idx = id
+                    // intersect.object.name = `Points: ${id}`
                 }
                 return intersect;
             }

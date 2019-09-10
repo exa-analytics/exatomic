@@ -232,24 +232,24 @@ class NewApp3D {
                 this.bits = [1, 2, 4, 8, 16, 32, 64, 128]
             }),
             Promise.resolve(new Float32Array(8)).then((vv) => {
-                this.vertex_values = vv 
+                this.vertex_values = vv
                 this.cube_vertices = [[0, 0, 0], [1, 0, 0],
                                       [1, 1, 0], [0, 1, 0],
                                       [0, 0, 1], [1, 0, 1],
                                       [1, 1, 1], [0, 1, 1]]
             })
         ])
-    }   
+    }
 
     finalize_hudcanvas() {
         /*"""
         finalize_hudcanvas
         ------------------------
         Create the remaining attributes utilized by the
-        hover over functionality. 
+        hover over functionality.
 
         Note:
-            Requires existence of hudcanvas and renderer 
+            Requires existence of hudcanvas and renderer
 
         */
         this.context = this.hudcanvas.getContext("2d")
@@ -268,7 +268,7 @@ class NewApp3D {
         this.hudscene.add(this.sprite)
     }
 
-    
+
     update_mouseover(ints, gpick) {
         /*"""
         update_mouseover
@@ -281,21 +281,70 @@ class NewApp3D {
             Requires that object has the 'name' attribute
 
         */
-        let obj = ints[0].object
-        // console.log(`hover: ${obj.type}: ${obj.name}`)
+        let obj = gpick.object // ints[0].object
+        console.log(`hover: ${obj.type}: ${obj.name}`)
         if (obj.name) {
             this.context.clearRect(0, 0, 1024, 1024)
             this.context.fillStyle = "rgba(245,245,245,0.9)"
             let w = this.context.measureText(obj.name).width
             this.context.fillRect(512 - 2, 512 - 60, w + 6, 72)
             this.context.fillStyle = "rgba(0,0,0,0.95)"
-            this.context.fillText(obj.name, 512, 512)
+            this.context.fillText(`${obj.name}: ${obj.point_idx}`, 512, 512)
             this.sprite.position.set(-this.w2 + 2, -this.h2 + 4, 1)
             this.sprite.material.needsUpdate = true
             this.texture.needsUpdate = true
         } else {
             this.sprite.position.set(1000, 1000, 1000)
         }
+    }
+
+    select_obj(obj, light) {
+        let idx = this.selected.map(obj => obj.uuid).indexOf(obj.uuid)
+        if (idx > -1) {
+            // If obj was previously selected, remove it from selected
+            obj.material.color.setHex(obj.oldHex)
+            this.selected.splice(idx, 1)
+        } else {
+            // Add obj to selected and highlight it
+            obj.oldHex = obj.material.color.getHex()
+            let newHex = this.lighten_color(obj.oldHex, light)
+            obj.material.color.setHex(newHex)
+            this.selected.push(obj)
+        }
+    }
+
+    select_gpu(obj, gpu, light) {
+        // Manage point selection here for now.
+        // TODO : unify selected_points and selected
+        //        and figure out inverse GPU idx mapping
+        let idx = gpu.point_idx - this.points_start
+        let off = this.selected_points.indexOf(idx)
+        let colors = obj.geometry.attributes.color
+        if (off > -1) {
+            console.log("off", off, (obj.oldColors.array[idx    ],
+                                     obj.oldColors.array[idx + 1],
+                                     obj.oldColors.array[idx + 2]))
+            colors.array[idx    ] = obj.oldColors.array[idx    ]
+            colors.array[idx + 1] = obj.oldColors.array[idx + 1]
+            colors.array[idx + 2] = obj.oldColors.array[idx + 2]
+            this.selected_points.splice(off, 1)
+        } else {
+            if (!obj.oldColors) {
+                this.points_start = gpu.point_idx
+                obj.oldColors = new THREE.BufferAttribute(colors.count, 3)
+                obj.oldColors.copy(colors)
+                this.lighten_buffer_color(colors, idx, light)
+                this.selected_points.push(idx)
+                console.log("initial caching", colors, obj.oldColors)
+                colors.needsUpdate = true
+            } else {
+                this.lighten_buffer_color(colors, idx, light)
+                console.log("after lighten", colors.array[idx    ], colors.array[idx + 1], colors.array[idx + 2])
+                this.selected_points.push(idx)
+                colors.needsUpdate = true
+            }
+        }
+        colors.needsUpdate = true
     }
 
     update_mouseup(ints, gpick) {
@@ -311,49 +360,15 @@ class NewApp3D {
             but THREE.js Points are indexed separately.
 
         */
-        let idx
         let light = 38
         let obj = ints[0].object
         let gpu = gpick.object
         // console.log(`click: ${obj.type}: ${obj.name}`)
-        // Manage point selection here for now.
-        // TODO : unify selected_points and selected
-        //        and figure out inverse GPU idx mapping
         if (obj.material.fragmentShader) {
-            idx = gpu.point_idx - this.points_start
-            let off = this.selected_points.indexOf(idx)
-            let colors = obj.geometry.attributes.color
-            if (off > -1) {
-                colors.array[idx] = obj.oldColors.array[idx]
-                colors.array[idx + 1] = obj.oldColors.array[idx + 1]
-                colors.array[idx + 2] = obj.oldColors.array[idx + 2]
-                this.selected_points.splice(off, 1)
-            } else {
-                if (!obj.oldColors) {
-                    let len = colors.length / 3
-                    obj.oldColors = new THREE.BufferAttribute(len, 3)
-                    obj.oldColors.copy(colors)
-                    console.log("initial caching", colors, obj.oldColors)
-                    this.points_start = gpu.point_idx
-                }
-                this.lighten_buffer_color(colors, idx, light)
-                this.selected_points.push(idx)
-            } 
-            colors.needsUpdate = true
-        // The simple case of whole material highlighting
+            this.select_gpu(obj, gpu, light)
         } else {
-            idx = this.selected.map(obj => obj.uuid).indexOf(obj.uuid)
-            // If obj was previously selected, remove it from selected
-            if (idx > -1) { 
-                obj.material.color.setHex(obj.oldHex)
-                this.selected.splice(idx, 1)
-            // Add obj to selected and highlight it
-            } else {
-                obj.oldHex = obj.material.color.getHex()
-                let newHex = this.lighten_color(obj.oldHex, light)
-                obj.material.color.setHex(newHex) 
-                this.selected.push(obj)
-            }
+            // The simple case of whole material highlighting
+            this.select_obj(obj, light)
         }
     }
 
@@ -504,15 +519,15 @@ class NewApp3D {
     lighten_buffer_color(colors, idx, l) {
         let r, g, b, c
         let m = 255
-        r = Math.round(colors.array[idx + 0] * m)
+        r = Math.round(colors.array[idx    ] * m)
         g = Math.round(colors.array[idx + 1] * m)
         b = Math.round(colors.array[idx + 2] * m)
         c = this.rgb_to_color(r, g, b)
         c = this.lighten_color(c, l)
         c = this.color_to_rgb(c)
-        colors.array[idx + 0] = c.r / m 
-        colors.array[idx + 1] = c.g / m 
-        colors.array[idx + 2] = c.b / m 
+        colors.array[idx    ] = c.r / m
+        colors.array[idx + 1] = c.g / m
+        colors.array[idx + 2] = c.b / m
     }
 
     lighten_color(color, l) {
@@ -678,8 +693,8 @@ class NewApp3D {
         */
         let geometry = new THREE.BufferGeometry()
         let material = new THREE.ShaderMaterial({
-            vertexShader: NewApp3D.vertex_shader,
-            fragmentShader: NewApp3D.point_frag_shader,
+            vertexShader: NewApp3D.vertex_shader, //vertexShader,
+            fragmentShader: NewApp3D.point_frag_shader, //fragmentShader,
             transparent: true,
             opacity: 1.0,
             fog: true
@@ -690,6 +705,7 @@ class NewApp3D {
         r = new Float32Array(r)
         geometry.addAttribute("position", new THREE.BufferAttribute(xyz, 3))
         geometry.addAttribute("color", new THREE.BufferAttribute(c, 3))
+        geometry.attributes.color.dynamic = true
         geometry.addAttribute("size", new THREE.BufferAttribute(r, 1))
         let point_cloud = new THREE.Points(geometry, material)
         point_cloud.name = "Hello World!"
@@ -884,7 +900,7 @@ class NewApp3D {
         ------------------------
         Run the marching cubes algorithm finding the volumetric shell that is
         smaller than the isovalue.
-    
+
         The marching cubes algorithm takes a scalar field and for each field
         vertex looks at the nearest indices (in an evenly space field this
         forms a cube), determines along what edges the scalar field is less
@@ -899,7 +915,7 @@ class NewApp3D {
             3-------2
         Field values are given for each field vertex. Edges are
         labeled as follows (see the lookup table below).
-    
+
                                             4
                o-------o                o-------o
              / |     / |            7 / | 6   / |  5
@@ -911,11 +927,11 @@ class NewApp3D {
         Edges 8, 9, 10, and 11 wrap around (clockwise looking from the top
         as drawn) the vertical edges of the cube, with 8 being the vertical
         edge between vertex 0 and 4 (see above).
-    
+
         Note:
             Scalar fields are assumed to be in row major order (also known C
             style, and implies that the last index is changing the fastest).
-    
+
         */
         let offset, oi, oj, ok, valdx
         let cubdx = 0
@@ -998,8 +1014,8 @@ class NewApp3D {
             nfaces = curfaces.length
             for (let m=0; m<nfaces; m+=3) {
                 geom.faces.push(new THREE.Face3(
-                    this.face_vertices[curfaces[m    ]], 
-                    this.face_vertices[curfaces[m + 1]], 
+                    this.face_vertices[curfaces[m    ]],
+                    this.face_vertices[curfaces[m + 1]],
                     this.face_vertices[curfaces[m + 2]]))
             }
         }
@@ -1229,6 +1245,38 @@ class NewApp3D {
 //        gl_Position = projectionMatrix * modelViewPosition;\
 //    }\
 //";
+
+NewApp3D.vertexShader = [
+    "attribute float id;",
+    "",
+    "uniform float size;",
+    "uniform float scale;",
+    "uniform float baseId;",
+    "",
+    "varying vec4 worldId;",
+    "",
+    "void main() {",
+    "  vec4 mvPosition = modelViewMatrix * vec4( position, 1.0 );",
+    "  gl_PointSize = size * ( scale / length( mvPosition.xyz ) );",
+    "  float i = baseId + id;",
+    "  vec3 a = fract(vec3(1.0/255.0, 1.0/(255.0*255.0), 1.0/(255.0*255.0*255.0)) * i);",
+    "  a -= a.xxy * vec3(0.0, 1.0/255.0, 1.0/255.0);",
+    "  worldId = vec4(a,1);",
+    "  gl_Position = projectionMatrix * modelViewMatrix * vec4( position, 1.0 );",
+    "}"
+].join("\n")
+
+NewApp3D.fragmentShader = [
+    "#ifdef GL_ES\n",
+    "precision highp float;\n",
+    "#endif\n",
+    "",
+    "varying vec4 worldId;",
+    "",
+    "void main() {",
+    "  gl_FragColor = worldId;",
+    "}"
+].join("\n")
 
 NewApp3D.vertex_shader = "\
     attribute float size;\
@@ -1894,7 +1942,7 @@ class App3D {
         var cArray = new Array();
         var ou, ov, p;
         for (var i = 0; i <= slices; i++) {
-            ov = i / slices; 
+            ov = i / slices;
             for (var j = 0; j <= stacks; j++) {
                 ou = j / stacks;
                 p = func(ou, ov);

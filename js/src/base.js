@@ -13,8 +13,8 @@ var widgets = require("@jupyter-widgets/base");
 var control = require("@jupyter-widgets/controls");
 var _ = require("underscore");
 var three = require("./appthree");
-//var thapp = require("./app");
 var utils = require("./utils");
+// var myapp = require("./app");
 var semver = "^" + require("../package.json").version;
 
 
@@ -154,7 +154,9 @@ var ThreeSceneView = widgets.DOMWidgetView.extend({
 
     init: function() {
         this.app3d = new three.NewApp3D(this)
+       // this.test_app = new myapp.App(this)
         this.promises = Promise.all([
+         //   this.test_app.init(),
             this.app3d.init(),
             this.setattr("atom_x"),
             this.setattr("atom_y"),
