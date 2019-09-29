@@ -354,7 +354,7 @@ var add_gpupicker = (THREE) => {
     THREE.GPUPicker.prototype.setRenderer = function (renderer) {
         this.renderer = renderer;
         var size = renderer.getSize();
-        if (this.debug) console.log("GPUPicker setting renderer", size.width, size.height)
+        if (this.debug) console.log("GPUPicker setting renderer", size.width, size.height * 2)
         this.resizeTexture(size.width, size.height * 2);
         this.needUpdate = true;
     };
@@ -373,6 +373,7 @@ var add_gpupicker = (THREE) => {
         if (this.needUpdate) {
             this.renderer.render(this.pickingScene, this.camera, this.pickingTexture);
             //read the rendering texture
+            console.log("reading renderer into pixelBuffer")
             this.renderer.readRenderTargetPixels(this.pickingTexture, 0, 0, this.pickingTexture.width, this.pickingTexture.height, this.pixelBuffer);
             this.needUpdate = false;
             if (this.debug) console.log("GPUPicker rendering updated");
@@ -399,13 +400,27 @@ var add_gpupicker = (THREE) => {
     THREE.GPUPicker.prototype.pick = function (mouse, raycaster) {
         /*"""
         Args:
-            mouse (THREE.Vector2): {x in [-1,1], y in [-1,1]}
+            mouse (THREE.Vector2): {x: in [-1,1], y: in [-1,1]}
             raycaster (THREE.Raycaster): caster
 
+        Note:
+            pixelBuffer is all the pixels read from the renderer
+            readRenderTargetPixels target rectangle starting from
+            the lower left corner 
+
+            event.clientX, event.clientY is offset from larger window. unuseful
+            this.getBoundingClientRect 
+
+        Plan to recompute mouse position to pixel buffer mapping
+        from the [-1,1] space.
+
         */
+        this.needUpdate = true
         this.update()
-        var calcx = Math.round((mouse.x / 2 + 0.5) * this.pickingTexture.width)
-        var calcy = Math.round((mouse.y / 2 + 0.5) * this.pickingTexture.height)
+//        var calcx = Math.round((mouse.x / 2 + 0.5) * this.pickingTexture.width)
+//        var calcy = Math.round((mouse.y / 2 + 0.5) * this.pickingTexture.height)
+        let calcx = Math.round((mouse.x + 1) / 2 * this.pickingTexture.width)
+        let calcy = Math.round((mouse.y + 1) / 2 * this.pickingTexture.height)
         var index = calcx + calcy * this.pickingTexture.width
         //interpret the pixel as an ID
         var id = ((this.pixelBuffer[index * 4 + 2] * 255 * 255) +
@@ -414,22 +429,28 @@ var add_gpupicker = (THREE) => {
         if (id === 0) {
             return;
         }
+        console.log("pick id:", id)
         var result = this._getObject(this.pickingScene, 0, id);
         var object = result[1];
         var elementId = id - result[0];
+        let a, b, c
         if (object) {
-            console.log(mouse.x, this.pickingTexture.width, calcx)
-            console.log(mouse.y, this.pickingTexture.height, calcy)
-            console.log("index, pick id:", index, id)
             if (object.raycastWithID) {
                 var intersect = object.raycastWithID(elementId, raycaster);
-                if (!intersect) {
-                    return
+                a = this.pixelBuffer[index * 4 + 2]
+                b = this.pixelBuffer[index * 4 + 1]
+                c = this.pixelBuffer[index * 4    ]
+                if (false) {
+                    console.log("gpu calc", calcx, calcy, index, index * 4)
+                    console.log("gpu pidx", a, b, c)
+                    console.log("gpu col ", a * 255 * 255, b * 255, c)
                 }
+                // console.log("gpu buf ", this.pixelBuffer)
                 intersect.object = object.originalObject;
                 if (intersect.object) {
                     intersect.object.point_idx = id
-                    // intersect.object.name = `Points: ${id}`
+                    
+                    intersect.object.name = `${intersect.object.base_name}:${id}`
                 }
                 return intersect;
             }

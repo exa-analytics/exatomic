@@ -19,6 +19,7 @@ var semver = "^" + require("../package.json").version;
 
 
 console.log("exatomic JS version: " + require("../package.json").version);
+console.log("trogdor burninating the countryside")
 
 
 var ExatomicBoxModel = control.BoxModel.extend({

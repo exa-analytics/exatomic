@@ -21,7 +21,7 @@ class NewApp3D {
         /*"""
         constructor
         ------------------------
-        Initialize relevant attributes used throughout the API
+        Initialize attributes used throughout the API
 
         Args:
             view (ThreeSceneView): DOMWidgetView Wrapper
@@ -38,10 +38,10 @@ class NewApp3D {
             "test": [],
             "two": [],
         }
-        // this.app_index = 0
         this.selected = []
         this.selected_points = []
         this.points_start = 0
+        this.hud_font_size = 64
         this.recording = false
     }
 
@@ -87,7 +87,7 @@ class NewApp3D {
             this.init_field()
         ]).then(() => {
             this.finalize_hudcanvas()
-            this.finalize_mouseover()
+            this.finalize_interactive()
             this.animate()
         })
     }
@@ -166,7 +166,7 @@ class NewApp3D {
                 Promise.resolve(new THREE.GPUPicker({
                     renderer: this.renderer,
                     pointShell: 2000.0,
-                    debug: true
+                    debug: this.debug
                 })).then((gpu) => {
                     this.gpicker = gpu
                     this.gpicker.setCamera(this.camera)
@@ -195,8 +195,13 @@ class NewApp3D {
             Promise.resolve(new THREE.Vector2()).then((mouse) => {
                 this.mouse = mouse
             }),
+            Promise.resolve(new THREE.Vector2()).then((mouse) => {
+                this.gpuse = mouse
+            }),
             Promise.resolve(new THREE.OrthographicCamera(
-                -this.w2,  this.w2, this.h2, -this.h2, 1, 1500
+                -this.w2,  this.w2,
+                 this.h2, -this.h2,
+                 1, 1500
             )).then((cam) => {
                 cam.position.z = 1000
                 this.hudcamera = cam
@@ -207,7 +212,14 @@ class NewApp3D {
                 can.width = 1024
                 can.height = 1024
                 this.hudcanvas = can
-            })
+            }),
+            Promise.resolve(
+                document.createElement("canvas")
+            ).then((can) => {
+                can.width = 1024
+                can.height = 1024
+                this.hudcanvasbuf = can
+            }),
         ])
     }
 
@@ -252,26 +264,58 @@ class NewApp3D {
             Requires existence of hudcanvas and renderer
 
         */
-        this.context = this.hudcanvas.getContext("2d")
-        this.context.textAlign = "bottom"
-        this.context.textBaseline = "left"
-        this.context.font = "64px Arial"
-        this.texture = new THREE.Texture(this.hudcanvas)
-        this.texture.anisotropy = this.renderer.capabilities.getMaxAnisotropy()
-        this.texture.minFilter = THREE.NearestMipMapLinearFilter
-        this.texture.magFilter = THREE.NearestFilter
-        this.texture.needsUpdate = true
-        let material = new THREE.SpriteMaterial({map: this.texture})
-        this.sprite = new THREE.Sprite(material)
-        this.sprite.position.set(1000, 1000, 1000)
-        this.sprite.scale.set(256, 256, 1)
+        let ctx, txt, mat, spr, can
+        let txts = []
+        let mats = []
+        let sprs = []
+        let ctxs = []
+        let cans = [this.hudcanvas, this.hudcanvasbuf]
+        console.log("cans", cans)
+        for (let idx in cans) {
+            can = cans[idx]
+            ctx = can.getContext("2d")
+            ctx.textBaseline = "left"
+            ctx.textAlign = "bottom"
+            txt = new THREE.Texture(can)
+            txt.anisotropy = this.renderer.capabilities.getMaxAnisotropy()
+            txt.minFilter = THREE.NearestMipMapLinearFilter
+            txt.magFilter = THREE.NearestFilter
+            txt.needsUpdate = true
+            mat = new THREE.SpriteMaterial({map: txt})
+            spr = new THREE.Sprite(mat)
+            ctxs.push(ctx)
+            txts.push(txt)
+            mats.push(mat)
+            sprs.push(spr)
+        }
+        this.context = ctxs[0]
+        this.texture = txts[0]
+        this.sprite = sprs[0]
         this.hudscene.add(this.sprite)
+        this.sprite.position.set(0, 0, 1)
+        this.sprite.scale.set(1024, 1024, 1)
+        this.hudscene.add(this.sprite)
+//        this.context.font = `${this.hud_font_size}px Arial`
+//        this.context = this.hudcanvas.getContext("2d")
+//        this.context.textBaseline = "left"
+//        this.context.textAlign = "bottom"
+//        this.context.font = `${this.hud_font_size}px Arial`
+//        this.texture = new THREE.Texture(this.hudcanvas)
+//        this.texture.anisotropy = this.renderer.capabilities.getMaxAnisotropy()
+//        this.texture.minFilter = THREE.NearestMipMapLinearFilter
+//        this.texture.magFilter = THREE.NearestFilter
+//        this.texture.needsUpdate = true
+//        let material = new THREE.SpriteMaterial({map: this.texture})
+//        this.sprite = new THREE.Sprite(material)
+//        this.sprite.position.set(0, 0, 1) // 1000, 1000, 1000)
+//        this.sprite.scale.set(256, 256, 1)
+//        this.hudscene.add(this.sprite)
     }
 
 
-    update_mouseover(ints, gpick) {
+    update_mousemove(ints, gpick) {
         /*"""
-        update_mouseover
+        update_mousemove
         ------------------------
         Write text to the hudscene sprite for overlaid
         display of the THREE.js object directly underneath
@@ -284,21 +328,39 @@ class NewApp3D {
         let obj = gpick.object // ints[0].object
         console.log(`hover: ${obj.type}: ${obj.name}`)
         if (obj.name) {
-            this.context.clearRect(0, 0, 1024, 1024)
-            this.context.fillStyle = "rgba(245,245,245,0.9)"
+            let off = 6
+            let cen = 512
+            let h = this.hud_font_size
             let w = this.context.measureText(obj.name).width
-            this.context.fillRect(512 - 2, 512 - 60, w + 6, 72)
+            // clear context and draw a background box
+            // this.context.save()
+            this.context.clearRect(  0, 2 * cen - (h + 2 * off), 2 * cen, (h + 2 * off))
+            this.context.fillStyle = "rgba(245,245,245,0.9)"
+            this.context.fillRect(  0, 2 * cen - (h + off), w + 2 * off, h + off)
+            // write the HUD display name: xi, yi, maxwidth
             this.context.fillStyle = "rgba(0,0,0,0.95)"
-            this.context.fillText(`${obj.name}: ${obj.point_idx}`, 512, 512)
-            this.sprite.position.set(-this.w2 + 2, -this.h2 + 4, 1)
+            this.context.fillText(`${obj.name}`, off, 2 * cen - 2 * off, 2 * cen - 2 * off)
+            // update sprite
+            this.sprite.position.set(-(2 * off), -this.h2 + off, 1)
             this.sprite.material.needsUpdate = true
             this.texture.needsUpdate = true
-        } else {
-            this.sprite.position.set(1000, 1000, 1000)
+            // this.context.restore()
+            if (true) {
+                console.log("clearRect", 0, 2 * cen - (h + 2 * off), 2 * cen, (h + 2 * off))
+                console.log("fillRect", 0, 2 * cen - (h + off), w + 2 * off, h + off)
+                console.log("fillText",              off, 2 * cen - 2 * off, 2 * cen - 2 * off)
+            }
         }
     }
 
     select_obj(obj, light) {
+        /*"""
+        select_obj
+        ------------------
+        manage THREE objects selected by the user.
+        if object was previously selected and lightened, undo it
+        otherwise lighten it and add it to the selected array
+        */
         let idx = this.selected.map(obj => obj.uuid).indexOf(obj.uuid)
         if (idx > -1) {
             // If obj was previously selected, remove it from selected
@@ -314,35 +376,37 @@ class NewApp3D {
     }
 
     select_gpu(obj, gpu, light) {
-        // Manage point selection here for now.
-        // TODO : unify selected_points and selected
-        //        and figure out inverse GPU idx mapping
+        /*"""
+        select_gpu
+        ------------------
+        if there's only one ever point cloud
+            it is sufficient to manage interaction
+            with it here.
+        */
         let idx = gpu.point_idx - this.points_start
         let off = this.selected_points.indexOf(idx)
         let colors = obj.geometry.attributes.color
+        console.log("selected points", this.selected_points)
         if (off > -1) {
-            console.log("off", off, (obj.oldColors.array[idx    ],
-                                     obj.oldColors.array[idx + 1],
-                                     obj.oldColors.array[idx + 2]))
-            colors.array[idx    ] = obj.oldColors.array[idx    ]
-            colors.array[idx + 1] = obj.oldColors.array[idx + 1]
-            colors.array[idx + 2] = obj.oldColors.array[idx + 2]
+            console.log("off", off, obj.oldColors[idx    ],
+                                    obj.oldColors[idx + 1],
+                                    obj.oldColors[idx + 2])
+            colors.array[idx    ] = obj.oldColors[idx    ]
+            colors.array[idx + 1] = obj.oldColors[idx + 1]
+            colors.array[idx + 2] = obj.oldColors[idx + 2]
             this.selected_points.splice(off, 1)
         } else {
             if (!obj.oldColors) {
                 this.points_start = gpu.point_idx
                 obj.oldColors = new THREE.BufferAttribute(colors.count, 3)
-                obj.oldColors.copy(colors)
-                this.lighten_buffer_color(colors, idx, light)
-                this.selected_points.push(idx)
-                console.log("initial caching", colors, obj.oldColors)
-                colors.needsUpdate = true
-            } else {
-                this.lighten_buffer_color(colors, idx, light)
-                console.log("after lighten", colors.array[idx    ], colors.array[idx + 1], colors.array[idx + 2])
-                this.selected_points.push(idx)
-                colors.needsUpdate = true
+                obj.oldColors.copy(colors.array)
+                console.log("caching colors", colors.array, obj.oldColors)
             }
+            this.lighten_buffer_color(colors, idx, light)
+            console.log("after lighten", colors.array[idx    ],
+                                         colors.array[idx + 1],
+                                         colors.array[idx + 2])
+            this.selected_points.push(idx)
         }
         colors.needsUpdate = true
     }
@@ -360,14 +424,14 @@ class NewApp3D {
             but THREE.js Points are indexed separately.
 
         */
-        let light = 38
-        let obj = ints[0].object
+        let light = 30
         let gpu = gpick.object
-        // console.log(`click: ${obj.type}: ${obj.name}`)
+        let obj = ints[0].object
         if (obj.material.fragmentShader) {
+            // GPU object selection
             this.select_gpu(obj, gpu, light)
         } else {
-            // The simple case of whole material highlighting
+            // Original object selection
             this.select_obj(obj, light)
         }
     }
@@ -386,26 +450,50 @@ class NewApp3D {
 
         */
         this.raycaster.setFromCamera(this.mouse, this.camera)
-        this.gpicker.needsUpdate = true
-        this.gpicker.update()
         let ints = this.raycaster.intersectObjects(this.scene.children)
         let gpick = this.gpicker.pick(this.mouse, this.raycaster)
         if (ints[0] && ints[0].object && gpick && gpick.object) {
             if (kind === "mousemove") {
-                this.update_mouseover(ints, gpick)
-            } else if (kind == "mouseup") {
+                this.update_mousemove(ints, gpick)
+            } else if (kind === "mouseup") {
                 this.update_mouseup(ints, gpick)
             } else {
-                console.log("route_interaction: kind", kind, "not understood")
+                console.log(`route: kind=${kind} not understood`)
             }
-        } else {
-            this.sprite.position.set(1000, 1000, 1000)
         }
     }
 
-    finalize_mouseover() {
+    normalize_mouse_coords(ex, ey, px, py) {
         /*"""
-        finalize_mouseover
+        normalize_mouse_coords
+        ------------------------
+        From event coordinates and a bounding box,
+        compute normalized mouse coordinates such
+        that x, y in [-1., 1.]
+
+        Args:
+            ex (int): event.clientX
+            ey (int): event.clientY
+            px (float): bounding box x
+            py (float): bounding box y
+
+        */
+        this.mouse.x =  ((ex - px) / this.w) * 2 - 1
+        this.mouse.y = -((ey - py) / this.h) * 2 + 1
+        this.gpuse.x =  (this.mouse.x + 1) / 2 * this.w
+        this.gpuse.y =  (this.mouse.y + 1) / 2 * this.h
+        console.log("================================")
+        if (false) {
+            console.log("nmc pos   ", px, py)
+            console.log("nmc event ", ex, ey)
+            console.log("nmc mouse ", this.mouse.x, this.mouse.y)
+            console.log("nmc gpuse ", this.gpuse.x, this.gpuse.y)
+        }
+    }
+
+    finalize_interactive() {
+        /*"""
+        finalize_interactive
         ------------------------
         Register event listeners to allow for user
         interaction with the THREE.js scene.
@@ -413,21 +501,29 @@ class NewApp3D {
         */
         let that = this
         // Display the object's name in the HUD
-        this.view.el.addEventListener("mousemove", function(event) {
-            event.preventDefault()
-            let pos = this.getBoundingClientRect()
-            that.mouse.x =  ((event.clientX - pos.x) / that.w) * 2 - 1
-            that.mouse.y = -((event.clientY - pos.y) / that.h) * 2 + 1
-            that.route_interaction("mousemove")
-        }, false)
-        // Select objects in the scene for comparisons
-        this.view.el.addEventListener("mouseup", function(event) {
-            event.preventDefault()
-            let pos = this.getBoundingClientRect()
-            that.mouse.x =  ((event.clientX - pos.x) / that.w) * 2 - 1
-            that.mouse.y = -((event.clientY - pos.y) / that.h) * 2 + 1
-            that.route_interaction("mouseup")
-        }, false)
+        this.view.el.addEventListener(
+            "mousemove",
+            function(event) {
+                event.preventDefault()
+                let pos = this.getBoundingClientRect()
+                that.normalize_mouse_coords(
+                    event.clientX, event.clientY, pos.x, pos.y)
+                that.route_interaction("mousemove")
+            }, 
+            false
+        )
+        // Select objects in the scene for inspection
+        this.view.el.addEventListener(
+            "mouseup",
+            function(event) {
+                event.preventDefault()
+                let pos = this.getBoundingClientRect()
+                that.normalize_mouse_coords(
+                    event.clientX, event.clientY, pos.x, pos.y)
+                that.route_interaction("mouseup")
+            },
+            false
+        )
     }
 
     animate() {
@@ -445,7 +541,6 @@ class NewApp3D {
         this.hudcamera.updateMatrix()
         this.controls.handleResize()
         this.controls.update()
-        this.gpicker.needsUpdate = true
         this.render()
     }
 
@@ -462,8 +557,7 @@ class NewApp3D {
         this.renderer.clearDepth()
         this.renderer.render(this.scene, this.camera)
         this.renderer.render(this.hudscene, this.hudcamera)
-        // this.gpicker.needUpdate = true
-        this.gpicker.update()
+        // this.gpicker.update()
         if (this.recording) {
             console.log("saving the renderer")
             this.view.send({
@@ -628,7 +722,7 @@ class NewApp3D {
                 })
             )
             mesh.position.set(0, 0, -3)
-            mesh.name = "Icosahedron 1"
+            mesh.base_name = "Icosahedron 1"
             let omesh = new THREE.Mesh(
                 new THREE.IcosahedronGeometry(2, 1),
                 new THREE.MeshBasicMaterial({
@@ -637,7 +731,7 @@ class NewApp3D {
                 })
             )
             omesh.position.set(0, 0, 3)
-            omesh.name = "Icosahedron 2"
+            omesh.base_name = "Icosahedron 2"
             this.meshes["test"] = [mesh, omesh]
             console.log("adding test meshes")
             this.add_meshes("test")
@@ -693,8 +787,8 @@ class NewApp3D {
         */
         let geometry = new THREE.BufferGeometry()
         let material = new THREE.ShaderMaterial({
-            vertexShader: NewApp3D.vertex_shader, //vertexShader,
-            fragmentShader: NewApp3D.point_frag_shader, //fragmentShader,
+            vertexShader: NewApp3D.vertexShader, //vertexShader,
+            fragmentShader: NewApp3D.fragmentShader, //fragmentShader,
             transparent: true,
             opacity: 1.0,
             fog: true
@@ -708,7 +802,7 @@ class NewApp3D {
         geometry.attributes.color.dynamic = true
         geometry.addAttribute("size", new THREE.BufferAttribute(r, 1))
         let point_cloud = new THREE.Points(geometry, material)
-        point_cloud.name = "Hello World!"
+        point_cloud.base_name = "Atoms"
         return [point_cloud]
     }
 
@@ -751,7 +845,7 @@ class NewApp3D {
             }
             let mesh = new THREE.Mesh(geoms[color], mats[color])
             if (l[i] != "") {
-                mesh.name = l[i]
+                mesh.base_name = l[i]
             }
             mesh.position.set(xyz[i3], xyz[i3+1], xyz[i3+2])
             meshes.push(mesh)
@@ -1107,7 +1201,7 @@ class NewApp3D {
                 geometry.faces[l].vertexColors[0] =
             };*/
             var mesh = new THREE.Mesh(geometry, mat.clone());
-            mesh.name = (length * 0.52918).toFixed(4) + "\u212B";
+            mesh.base_name = (length * 0.52918).toFixed(4) + "\u212B";
             mesh.position.set(center.x, center.y, center.z);
             mesh.lookAt(vector1);
             ////mesh.label = "bond";
@@ -1246,38 +1340,6 @@ class NewApp3D {
 //    }\
 //";
 
-NewApp3D.vertexShader = [
-    "attribute float id;",
-    "",
-    "uniform float size;",
-    "uniform float scale;",
-    "uniform float baseId;",
-    "",
-    "varying vec4 worldId;",
-    "",
-    "void main() {",
-    "  vec4 mvPosition = modelViewMatrix * vec4( position, 1.0 );",
-    "  gl_PointSize = size * ( scale / length( mvPosition.xyz ) );",
-    "  float i = baseId + id;",
-    "  vec3 a = fract(vec3(1.0/255.0, 1.0/(255.0*255.0), 1.0/(255.0*255.0*255.0)) * i);",
-    "  a -= a.xxy * vec3(0.0, 1.0/255.0, 1.0/255.0);",
-    "  worldId = vec4(a,1);",
-    "  gl_Position = projectionMatrix * modelViewMatrix * vec4( position, 1.0 );",
-    "}"
-].join("\n")
-
-NewApp3D.fragmentShader = [
-    "#ifdef GL_ES\n",
-    "precision highp float;\n",
-    "#endif\n",
-    "",
-    "varying vec4 worldId;",
-    "",
-    "void main() {",
-    "  gl_FragColor = worldId;",
-    "}"
-].join("\n")
-
 NewApp3D.vertex_shader = "\
     attribute float size;\
     attribute vec3 color;\
@@ -1290,6 +1352,46 @@ NewApp3D.vertex_shader = "\
         gl_Position = projectionMatrix * mvPosition;\
     }\
 ";
+
+NewApp3D.vertexShader = [
+    "attribute float id;",
+    "attribute vec3 color;",
+    "attribute float size;",
+    "varying vec3 vColor;",
+    "",
+    // "uniform float size;",
+    "uniform float scale;",
+    "uniform float baseId;",
+    "",
+    "varying vec4 worldId;",
+    "",
+    "void main() {",
+    "  vColor = color;",
+    "  vec4 mvPosition = modelViewMatrix * vec4( position, 1.0 );",
+    "  gl_PointSize = size * ( 2000.0 / length( mvPosition.xyz ) );",
+    "  float i = baseId + id;",
+    "  vec3 a = fract(vec3(1.0/255.0, 1.0/(255.0*255.0), 1.0/(255.0*255.0*255.0)) * i);",
+    "  a -= a.xxy * vec3(0.0, 1.0/255.0, 1.0/255.0);",
+    "  worldId = vec4(a,1);",
+    "  gl_Position = projectionMatrix * mvPosition;", //modelViewMatrix * vec4( position, 1.0 );",
+    "}"
+].join("\n")
+
+NewApp3D.fragmentShader = [
+    "#ifdef GL_ES\n",
+    "precision highp float;\n",
+    "#endif\n",
+    "",
+    "varying vec3 vColor;",
+    "varying vec4 worldId;",
+    "",
+    "void main() {",
+    "  if (length(gl_PointCoord * 2.0 - 1.0) > 1.0)",
+    "    discard;",
+    "  gl_FragColor = vec4(vColor, 1.0);", // worldId;",
+    "}"
+].join("\n")
+
 
 //NewApp3D.vertex_shader = "\
 //    attribute float size;\

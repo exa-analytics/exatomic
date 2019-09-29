@@ -43,12 +43,6 @@ let linspace = (min, max, n) => {
         array[i] = min + i * step
     }
     return array
-    // let array = [min]
-    // for (let i=0; i<n1; i++) {
-    //     min += step
-    //     array.push(min)
-    // }
-    // return new Float32Array(array)
 }
 
 
@@ -348,141 +342,117 @@ These were computed using the python side:
 exatomic.algorithms.basis.solid_harmonics
 */
 let Harmonic = (l, m) => {
-    let sh
-    if ((l == 0) && (m == 0)) {
-        sh = (x, y, z) => { return 1 }
-    } else if ((l == 1) && (m == -1)) {
-        sh = (x, y, z) => { return y }
-    } else if ((l == 1) && (m == 0)) {
-        sh = (x, y, z) => { return z }
-    } else if ((l == 1) && (m == 1)) {
-        sh = (x, y, z) => { return x }
-    } else if ((l == 2) && (m == -2)) {
-        sh = (x, y, z) => { return (t3*x*y) }
-    } else if ((l == 2) && (m == -1)) {
-        sh = (x, y, z) => { return (t3*y*z) }
-    } else if ((l == 2) && (m == 0)) {
-        sh = (x, y, z) => { return (-x*x/2 - y*y/2 + z*z) }
-    } else if ((l == 2) && (m == 1)) {
-        sh = (x, y, z) => { return (t3*x*z) }
-    } else if ((l == 2) && (m == 2)) {
-        sh = (x, y, z) => { return (t3/2*(x*x - y*y)) }
-    } else if ((l == 3) && (m == -3)) {
-        sh = (x, y, z) => { return (t10/4*y*(3*x*x - y*y)) }
-    } else if ((l == 3) && (m == -2)) {
-        sh = (x, y, z) => { return (t15*x*y*z) }
-    } else if ((l == 3) && (m == -1)) {
-        sh = (x, y, z) => { return (t6/4*y*(-x*x - y*y + 4*z*z)) }
-    } else if ((l == 3) && (m == 0)) {
-        sh = (x, y, z) => { return (z/2*(-3*x*x - 3*y*y + 2*z*z)) }
-    } else if ((l == 3) && (m == 1)) {
-        sh = (x, y, z) => { return (t6/4*x*(-x*x -y*y + 4*z*z)) }
-    } else if ((l == 3) && (m == 2)) {
-        sh = (x, y, z) => { return (t15/2*z*(x*x - y*y)) }
-    } else if ((l == 3) && (m == 3)) {
-        sh = (x, y, z) => { return (t10/4*x*(x*x - 3*y*y)) } 
-    } else if ((l == 4) && (m == -4)) {
-        sh = (x, y, z) => { return (t35/2*x*y*(x*x -y*y)) }
-    } else if ((l == 4) && (m == -3)) {
-        sh = (x, y, z) => { return (t70/4*y*z*(3*x*x - y*y)) }
-    } else if ((l == 4) && (m == -2)) {
-        sh = (x, y, z) => { return (t5/2*x*y*(-x*x - y*y +6*z*z)) }
-    } else if ((l == 4) && (m == -1)) {
-        sh = (x, y, z) => { return (t10/4*y*z*(-3*x*x - 3*y*y + 4*z*z)) }
-    } else if ((l == 4) && (m == 0)) {
-        sh = (x, y, z) => { return (3*r4(x)/8 + 3*x*x*y*y/4 - 3*x*x*z*z + 3*r4(y)/8 - 3*y*y*z*z + r4(z)) }
-    } else if ((l == 4) && (m == 1)) {
-        sh = (x, y, z) => { return (t10/4*x*z*(-3*x*x - 3*y*y + 4*z*z)) }
-    } else if ((l == 4) && (m == 2)) {
-        sh = (x, y, z) => { return (t5/4*(x*x - y*y)*(-x*x - y*y + 6*z*z)) }
-    } else if ((l == 4) && (m == 3)) {
-        sh = (x, y, z) => { return (t70/4*x*z*(x*x - 3*y*y)) }
-    } else if ((l == 4) && (m == 4)) {
-        sh = (x, y, z) => { return (t35/8*(r4(x) - 6*x*x*y*y + r4(y))) }
-    } else if ((l == 5) && (m == -5)) {
-        sh = (x, y, z) => { return (3/16*t14*y*(5*r4(x) - 10*x*x*y*y + r4(y))) }
-    } else if ((l == 5) && (m == -4)) {
-        sh = (x, y, z) => { return (3/2*t35*x*y*z*(x*x - y*y)) }
-    } else if ((l == 5) && (m == -3)) {
-        sh = (x, y, z) => { return (t70/16*y*(3*x*x - y*y)*(-x*x - y*y + 8*z*z)) }
-    } else if ((l == 5) && (m == -2)) {
-        sh = (x, y, z) => { return (t105/4*z*(x*x - y*y)*(-x*x - y*y + 2*z*z)) }
-    } else if ((l == 5) && (m == -1)) {
-        sh = (x, y, z) => { return (t15/8*y*(r4(x) + 2*x*x*y*y - 12*x*x*z*z + r4(y) - 12*y*y*z*z + 8*r4(z))) }
-    } else if ((l == 5) && (m == 0)) {
-        sh = (x, y, z) => { return (z/8*(15*r4(x) + 30*x*x*y*y - 40*x*x*z*z + 15*r4(y) - 40*y*y*z*z + 8*r4(z))) }
-    } else if ((l == 5) && (m == 1)) {
-        sh = (x, y, z) => { return (t15/8*x*(r4(x) + 2*x*x*y*y - 12*x*x*z*z + r4(y) - 12*y*y*z*z + 8*r4(z))) }
-    } else if ((l == 5) && (m == 2)) {
-        sh = (x, y, z) => { return (t105/4*z*(x*x - y*y)*(-x*x - y*y + 2*z*z)) }
-    } else if ((l == 5) && (m == 3)) {
-        sh = (x, y, z) => { return (t70/16*x*(9*z*z*(x*x - 3*y*y) + (-x*x + 3*y*y)*(x*x + y*y + z*z))) }
-    } else if ((l == 5) && (m == 4)) {
-        sh = (x, y, z) => { return (3/8*t35*z*(r4(x) - 6*x*x*y*y + r4(y))) }
-    } else if ((l == 5) && (m == 5)) {
-        sh = (x, y, z) => { return (3/16*t14*x*(r4(x) - 10*x*x*y*y + 5*r4(y))) }
-    } else if ((l == 6) && (m == -6)) {
-        sh = (x, y, z) => { return (t462/16*x*y*(3*r4(x) -10*x*x*y*y + 3*r4(y))) }
-    } else if ((l == 6) && (m == -5)) {
-        sh = (x, y, z) => { return (3*t154*y*z*(5*r4(x) - 10*x*x*y*y + r4(y))/16) }
-    } else if ((l == 6) && (m == -4)) {
-        sh = (x, y, z) => { return (3*t7*x*y*(x*x - y*y)*(-x*x - y*y + 10*z*z)/4) }
-    } else if ((l == 6) && (m == -3)) {
-        sh = (x, y, z) => { return (t210/16*y*z*(3*x*x - y*y)*(-3*x*x - 3*y*y + 8*z*z)) }
-    } else if ((l == 6) && (m == -2)) {
-        sh = (x, y, z) => { return (t210*x*y*(r4(x) + 2*x*x*y*y - 16*x*x*z*z + r4(y) - 16*y*y*z*z + 16*r4(z))/16) }
-    } else if ((l == 6) && (m == -1)) {
-        sh = (x, y, z) => { return (t21*y*z*(5*r4(x) + 10*x*x*y*y - 20*x*x*z*z + 5*r4(y) - 20*y*y*z*z + 8*r4(z))/8) }
-    } else if ((l == 6) && (m == 0)) {
-        sh = (x, y, z) => { return (-5*r6(x)/16 - 15*r4(x)*y*y/16 + 45*r4(x)*z*z/8 - 15*x*x*r4(y)/16 + 45*x*x*y*y*z*z/4 - 15*x*x*r4(z)/2 - 5*r6(y)/16 + 45*r4(y)*z*z/8 - 15*y*y*r4(z)/2 + r6(z)) }
-    } else if ((l == 6) && (m == 1)) {
-        sh = (x, y, z) => { return (t21*x*z*(5*r4(x) + 10*x*x*y*y - 20*x*x*z*z + 5*r4(y) - 20*y*y*z*z + 8*r4(z))/8) }
-    } else if ((l == 6) && (m == 2)) {
-        sh = (x, y, z) => { return (-t210/32*(x*x - y*y)*(11*z*z*(x*x + y*y - 2*z*z) - (x*x + y*y - 6*z*z)*(x*x + y*y + z*z))) }
-    } else if ((l == 6) && (m == 3)) {
-        sh = (x, y, z) => { return (t210/16*x*z*(-x*x + 3*y*y)*(3*x*x + 3*y*y - 8*z*z)) }
-    } else if ((l == 6) && (m == 4)) {
-        sh = (x, y, z) => { return (3*t7/16*(-r6(x) + 5*r4(x)*y*y + 10*r4(x)*z*z + 5*x*x*r4(y) - 60*x*x*y*y*z*z - r6(y) + 10*r4(y)*z*z)) }
-    } else if ((l == 6) && (m == 5)) {
-        sh = (x, y, z) => { return (3/16*t154*x*z*(r4(x) - 10*x*x*y*y + 5*r4(y))) }
-    } else if ((l == 6) && (m == 6)) {
-        sh = (x, y, z) => { return (t462/32*(r6(x) - 15*r4(x)*y*y + 15*x*x*r4(y) - r6(y))) }
-    } else if ((l == 7) && (m == -7)) {
-        sh = (x, y, z) => { return (t429/32*y*(7*r6(x) - 35*r4(x)*y*y + 21*x*x*r4(y) - r6(y))) }
-    } else if ((l == 7) && (m == -6)) {
-        sh = (x, y, z) => { return (t6006/16*x*y*z*(3*r4(x) - 10*x*x*y*y + 3*r4(y))) }
-    } else if ((l == 7) && (m == -5)) {
-        sh = (x, y, z) => { return (t231/32*y*(-x*x - y*y + 12*z*z)*(-x*x*(-x*x + 3*y*y) + 4*x*x*(x*x - y*y) - y*y*(3*x*x - y*y))) }
-    } else if ((l == 7) && (m == -4)) {
-        sh = (x, y, z) => { return (t231/4*x*y*z*(x*x - y*y)*(-3*x*x - 3*y*y + 10*z*z)) }
-    } else if ((l == 7) && (m == -3)) {
-        sh = (x, y, z) => { return (t21/32*y*(3*x*x - y*y)*(z*z*(-39*x*x - 39*y*y + 104*z*z) - 3*(-x*x - y*y + 8*z*z)*(x*x + y*y + z*z))) }
-    } else if ((l == 7) && (m == -2)) {
-        sh = (x, y, z) => { return (t42/16*x*y*z*(15*r4(x) + 30*x*x*y*y - 80*x*x*z*z + 15*r4(y) - 80*y*y*z*z + 48*r4(z))) }
-    } else if ((l == 7) && (m == -1)) {
-        sh = (x, y, z) => { return (t7/32*y*(-5*r6(x) - 15*r4(x)*y*y + 120*r4(x)*z*z - 15*x*x*r4(y) + 240*x*x*y*y*z*z - 240*x*x*r4(z) - 5*r6(y) + 120*r4(y)*z*z - 240*y*y*r4(z) + 64*r6(z))) }
-    } else if ((l == 7) && (m == 0)) {
-        sh = (x, y, z) => { return (z/16*(-35*r6(x) - 105*r4(x)*y*y + 210*r4(x)*z*z - 105*x*x*r4(y) + 420*x*x*y*y*z*z - 168*x*x*r4(z) - 35*r6(y) + 210*r4(y)*z*z - 168*y*y*r4(z) + 16*r6(z))) }
-    } else if ((l == 7) && (m == 1)) {
-        sh = (x, y, z) => { return (t7/32*x*(-5*r6(x) - 15*r4(x)*y*y + 120*r4(x)*z*z - 15*x*x*r4(y) + 240*x*x*y*y*z*z - 240*x*x*r4(z) - 5*r6(y) + 120*r4(y)*z*z - 240*y*y*r4(z) + 64*r6(z))) }
-    } else if ((l == 7) && (m == 2)) {
-        sh = (x, y, z) => { return (t42/32*z*(15*r6(x) + 15*r4(x)*y*y - 80*r4(x)*z*z - 15*x*x*r4(y) + 48*x*x*r4(z) - 15*r6(y) + 80*r4(y)*z*z - 48*y*y*r4(z))) }
-    } else if ((l == 7) && (m == 3)) {
-        sh = (x, y, z) => { return (t21/32*x*(-x*x + 3*y*y)*(z*z*(39*x*x + 39*y*y - 104*z*z) + 3*(-x*x - y*y + 8*z*z)*(x*x + y*y + z*z))) }
-    } else if ((l == 7) && (m == 4)) {
-        sh = (x, y, z) => { return (t231/16*z*(-3*r6(x) + 15*r4(x)*y*y + 10*r4(x)*z*z + 15*x*x*r4(y) - 60*x*x*y*y*z*z - 3*r6(y) + 10*r4(y)*z*z)) }
-    } else if ((l == 7) && (m == 5)) {
-        sh = (x, y, z) => { return (t231/32*x*(-r6(x) + 9*r4(x)*y*y + 12*r4(x)*z*z + 5*x*x*r4(y) - 120*x*x*y*y*z*z - 5*r6(y) + 60*r4(y)*z*z)) }
-    } else if ((l == 7) && (m == 6)) {
-        sh = (x, y, z) => { return (t6006/32*z*(r6(x) - 15*r4(x)*y*y + 15*x*x*r4(y) - r6(y))) }
-    } else if ((l == 7) && (m == 7)) {
-        sh = (x, y, z) => { return (t429/32*x*(r6(x) - 21*r4(x)*y*y + 305*x*x*r4(y) -7*r6(y))) }
-    } else {
-        console.log("not implemented")
+    let sh = {
+        "0": { "0": function(x, y, z) { return 1; },},
+        "1": {"-1": function(x, y, z) { return y; },
+               "0": function(x, y, z) { return z; },
+               "1": function(x, y , z) { return x; }},
+        "2": {"-2": function(x, y, z) { return t3*x*y; },
+              "-1": function(x, y, z) { return t3*y*z; },
+               "0": function(x, y, z) { return -x*x/2 - y*y/2 + z*z; },
+               "1": function(x, y, z) { return t3*x*z; },
+               "2": function(x, y, z) { return t3/2*(x*x - y*y); }},
+        "3": {"-3": function(x, y, z) { return t10/4*y*(3*x*x - y*y); },
+              "-2": function(x, y, z) { return t15*x*y*z; },
+              "-1": function(x, y, z) { return t6/4*y*(-x*x - y*y + 4*z*z); },
+               "0": function(x, y, z) { return z/2*(-3*x*x - 3*y*y + 2*z*z); },
+               "1": function(x, y, z) { return t6/4*x*(-x*x -y*y + 4*z*z); },
+               "2": function(x, y, z) { return t15/2*z*(x*x - y*y); },
+               "3": function(x, y, z) { return t10/4*x*(x*x - 3*y*y); }},
+        "4": {"-4": function(x, y, z) { return t35/2*x*y*(x*x -y*y); },
+              "-3": function(x, y, z) { return t70/4*y*z*(3*x*x - y*y); },
+              "-2": function(x, y, z) { return t5/2*x*y*(-x*x - y*y +6*z*z); },
+              "-1": function(x, y, z) { return t10/4*y*z*(-3*x*x - 3*y*y + 4*z*z); },
+               "0": function(x, y, z) { return 3*r4(x)/8 + 3*x*x*y*y/4 - 3*x*x*z*z + 3*r4(y)/8 - 3*y*y*z*z + r4(z); },
+               "1": function(x, y, z) { return t10/4*x*z*(-3*x*x - 3*y*y + 4*z*z); },
+               "2": function(x, y, z) { return t5/4*(x*x - y*y)*(-x*x - y*y + 6*z*z); },
+               "3": function(x, y, z) { return t70/4*x*z*(x*x - 3*y*y); },
+               "4": function(x, y, z) { return t35/8*(r4(x) - 6*x*x*y*y + r4(y)); }},
+        "5": {"-5": function(x, y, z) {
+                  return 3/16*t14*y*(5*r4(x) - 10*x*x*y*y + r4(y)); },
+              "-4": function(x, y, z) {
+                  return 3/2*t35*x*y*z*(x*x - y*y); },
+              "-3": function(x, y, z) {
+                  return t70/16*y*(3*x*x - y*y)*(-x*x - y*y + 8*z*z); },
+              "-2": function(x, y, z) {
+                  return t105/4*z*(x*x - y*y)*(-x*x - y*y + 2*z*z); },
+              "-1": function(x, y, z) {
+                  return t15/8*y*(r4(x) + 2*x*x*y*y - 12*x*x*z*z + r4(y) - 12*y*y*z*z + 8*r4(z)); },
+               "0": function(x, y, z) {
+                  return z/8*(15*r4(x) + 30*x*x*y*y - 40*x*x*z*z + 15*r4(y) - 40*y*y*z*z + 8*r4(z)); },
+               "1": function(x, y, z) {
+                  return t15/8*x*(r4(x) + 2*x*x*y*y - 12*x*x*z*z + r4(y) - 12*y*y*z*z + 8*r4(z)); },
+               "2": function(x, y, z) {
+                  return t105/4*z*(x*x - y*y)*(-x*x - y*y + 2*z*z); },
+               "3": function(x, y, z) {
+                  return t70/16*x*(9*z*z*(x*x - 3*y*y) + (-x*x + 3*y*y)*(x*x + y*y + z*z)); },
+               "4": function(x, y, z) {
+                  return 3/8*t35*z*(r4(x) - 6*x*x*y*y + r4(y)); },
+               "5": function(x, y, z) {
+                  return 3/16*t14*x*(r4(x) - 10*x*x*y*y + 5*r4(y)); }},
+        "6": {"-6": function(x, y, z) {
+                  return t462/16*x*y*(3*r4(x) -10*x*x*y*y + 3*r4(y)); },
+              "-5": function(x, y, z) {
+                  return 3*t154*y*z*(5*r4(x) - 10*x*x*y*y + r4(y))/16; },
+              "-4": function(x, y, z) {
+                  return 3*t7*x*y*(x*x - y*y)*(-x*x - y*y + 10*z*z)/4; },
+              "-3": function(x, y, z) {
+                  return t210/16*y*z*(3*x*x - y*y)*(-3*x*x - 3*y*y + 8*z*z); },
+              "-2": function(x, y, z) {
+                  return t210*x*y*(r4(x) + 2*x*x*y*y - 16*x*x*z*z + r4(y) - 16*y*y*z*z + 16*r4(z))/16; },
+              "-1": function(x, y, z) {
+                  return t21*y*z*(5*r4(x) + 10*x*x*y*y - 20*x*x*z*z + 5*r4(y) - 20*y*y*z*z + 8*r4(z))/8; },
+               "0": function(x, y, z) {
+                  return -5*r6(x)/16 - 15*r4(x)*y*y/16 + 45*r4(x)*z*z/8 - 15*x*x*r4(y)/16 + 45*x*x*y*y*z*z/4 - 15*x*x*r4(z)/2 - 5*r6(y)/16 + 45*r4(y)*z*z/8 - 15*y*y*r4(z)/2 + r6(z); },
+               "1": function(x, y, z) {
+                  return t21*x*z*(5*r4(x) + 10*x*x*y*y - 20*x*x*z*z + 5*r4(y) - 20*y*y*z*z + 8*r4(z))/8; },
+               "2": function(x, y, z) {
+                  return -t210/32*(x*x - y*y)*(11*z*z*(x*x + y*y - 2*z*z) - (x*x + y*y - 6*z*z)*(x*x + y*y + z*z)); },
+               "3": function(x, y, z) {
+                  return t210/16*x*z*(-x*x + 3*y*y)*(3*x*x + 3*y*y - 8*z*z); },
+               "4": function(x, y, z) {
+                  return 3*t7/16*(-r6(x) + 5*r4(x)*y*y + 10*r4(x)*z*z + 5*x*x*r4(y) - 60*x*x*y*y*z*z - r6(y) + 10*r4(y)*z*z); },
+               "5": function(x, y, z) {
+                  return 3/16*t154*x*z*(r4(x) - 10*x*x*y*y + 5*r4(y)); },
+               "6": function(x, y, z) {
+                  return t462/32*(r6(x) - 15*r4(x)*y*y + 15*x*x*r4(y) - r6(y)); }},
+        "7": {"-7": function(x, y, z) {
+                  return t429/32*y*(7*r6(x) - 35*r4(x)*y*y + 21*x*x*r4(y) - r6(y)); },
+              "-6": function(x, y, z) {
+                  return t6006/16*x*y*z*(3*r4(x) - 10*x*x*y*y + 3*r4(y)); },
+              "-5": function(x, y, z) {
+                  return t231/32*y*(-x*x - y*y + 12*z*z)*(-x*x*(-x*x + 3*y*y) + 4*x*x*(x*x - y*y) - y*y*(3*x*x - y*y)); },
+              "-4": function(x, y, z) {
+                  return t231/4*x*y*z*(x*x - y*y)*(-3*x*x - 3*y*y + 10*z*z); },
+              "-3": function(x, y, z) {
+                  return t21/32*y*(3*x*x - y*y)*(z*z*(-39*x*x - 39*y*y + 104*z*z) - 3*(-x*x - y*y + 8*z*z)*(x*x + y*y + z*z)); },
+              "-2": function(x, y, z) {
+                  return t42/16*x*y*z*(15*r4(x) + 30*x*x*y*y - 80*x*x*z*z + 15*r4(y) - 80*y*y*z*z + 48*r4(z)); },
+              "-1": function(x, y, z) {
+                  return t7/32*y*(-5*r6(x) - 15*r4(x)*y*y + 120*r4(x)*z*z - 15*x*x*r4(y) + 240*x*x*y*y*z*z - 240*x*x*r4(z) - 5*r6(y) + 120*r4(y)*z*z - 240*y*y*r4(z) + 64*r6(z)); },
+               "0": function(x, y, z) {
+                  return z/16*(-35*r6(x) - 105*r4(x)*y*y + 210*r4(x)*z*z - 105*x*x*r4(y) + 420*x*x*y*y*z*z - 168*x*x*r4(z) - 35*r6(y) + 210*r4(y)*z*z - 168*y*y*r4(z) + 16*r6(z)); },
+               "1": function(x, y, z) {
+                  return t7/32*x*(-5*r6(x) - 15*r4(x)*y*y + 120*r4(x)*z*z - 15*x*x*r4(y) + 240*x*x*y*y*z*z - 240*x*x*r4(z) - 5*r6(y) + 120*r4(y)*z*z - 240*y*y*r4(z) + 64*r6(z)); },
+               "2": function(x, y, z) {
+                  return t42/32*z*(15*r6(x) + 15*r4(x)*y*y - 80*r4(x)*z*z - 15*x*x*r4(y) + 48*x*x*r4(z) - 15*r6(y) + 80*r4(y)*z*z - 48*y*y*r4(z)); },
+               "3": function(x, y, z) {
+                  return t21/32*x*(-x*x + 3*y*y)*(z*z*(39*x*x + 39*y*y - 104*z*z) + 3*(-x*x - y*y + 8*z*z)*(x*x + y*y + z*z)); },
+               "4": function(x, y, z) {
+                  return t231/16*z*(-3*r6(x) + 15*r4(x)*y*y + 10*r4(x)*z*z + 15*x*x*r4(y) - 60*x*x*y*y*z*z - 3*r6(y) + 10*r4(y)*z*z); },
+               "5": function(x, y, z) {
+                  return t231/32*x*(-r6(x) + 9*r4(x)*y*y + 12*r4(x)*z*z + 5*x*x*r4(y) - 120*x*x*y*y*z*z - 5*r6(y) + 60*r4(y)*z*z); },
+               "6": function(x, y, z) {
+                  return t6006/32*z*(r6(x) - 15*r4(x)*y*y + 15*x*x*r4(y) - r6(y)); },
+               "7": function(x, y, z) {
+                  return t429/32*x*(r6(x) - 21*r4(x)*y*y + 35*x*x*r4(y) -7*r6(y)); }}
     }
+
+    let f = sh[l][m]
+
     let func = (x, y, z) => {
         let r2 = x * x + y * y + z * z
-        return sh(x, y, z) * Math.exp(-Math.sqrt(r2));
+        return f(x, y, z) * Math.exp(-Math.sqrt(r2));
     }
     return func
 }
