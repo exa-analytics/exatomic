@@ -159,14 +159,6 @@ class BasisSet(DataFrame):
         self._set_categories()
         return ret.astype(int)
 
-    #def __init__(self, *args, **kwargs):
-        #spherical = kwargs.pop("spherical", True)
-        #gaussian = kwargs.pop("gaussian", True)
-        #super(BasisSet, self).__init__(*args, **kwargs)
-        #self._metadata = ['spherical', 'gaussian']
-        #self.spherical = spherical
-        #self.gaussian = gaussian
-
 
 def deduplicate_basis_sets(sets, sp=False):
     """Deduplicate identical basis sets on different centers.
