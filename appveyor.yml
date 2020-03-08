@@ -10,14 +10,23 @@ environment:
   matrix:
     # Note: Because we have to separate the py2 and py3 components due to compiler version, we have a race condition for non-python packages.
     # Not sure how to resolve this, but maybe we should be tracking the VS version in the build string anyway?
-    - TARGET_ARCH: "x64"
-      CONDA_PY: "2.7"
-      PY_CONDITION: "python >=2.7,<3"
+    - TARGET_ARCH: "x86"
+      CONDA_PY: "3.5"
+      PY_CONDITION: "python >=3.5,<3.6"
+    - TARGET_ARCH: "x86"
+      CONDA_PY: "3.6"
+      PY_CONDITION: "python >=3.6,<3.7"
+    - TARGET_ARCH: "x86"
+      CONDA_PY: "3.7"
+      PY_CONDITION: "python >=3.6"
     - TARGET_ARCH: "x64"
       CONDA_PY: "3.5"
       PY_CONDITION: "python >=3.5,<3.6"
     - TARGET_ARCH: "x64"
       CONDA_PY: "3.6"
+      PY_CONDITION: "python >=3.6,<3.7"
+    - TARGET_ARCH: "x64"
+      CONDA_PY: "3.7"
       PY_CONDITION: "python >=3.6"
 
 platform:
@@ -41,21 +50,20 @@ install:
           {$root = "C:\Miniconda-x64"}
         $env:path="$root;$root\Scripts;$root\Library\bin;$($env:path)"
 
-  # numba JIT is not disable here
   - cmd: conda config --set show_channel_urls true
   - cmd: conda config --set always_yes yes --set changeps1 no
-  - cmd: conda update -n base conda
+  - cmd: conda update -y -n base conda
   - cmd: conda create -n test python=%CONDA_PY%
   - cmd: activate test
   - cmd: conda update -q -y --all
-  - cmd: conda install -q -c conda-forge numpy scipy matplotlib networkx pandas
-  - cmd: conda install -q -c conda-forge numba six pytest pytables sympy seaborn
-  - cmd: conda install -q -c conda-forge psutil numexpr nodejs ipywidgets
+  - cmd: conda install -q -y -c conda-forge numpy scipy seaborn networkx pandas
+  - cmd: conda install -q -y -c conda-forge pytest pytables six numba sympy pyyaml
+  - cmd: conda install -q -y -c conda-forge psutil numexpr nodejs ipywidgets bokeh
+# - cmd: conda install -q -y -c exaanalytics exa
+# - cmd: pip install exa
   - cmd: git clone https://github.com/exa-analytics/exa.git
-  - cmd: cd exa
+  - cmd: pip install -e exa/
   - cmd: pip install .
-  - cmd: cd ../
-  - cmd: pip install -e .
 
 build: false
 

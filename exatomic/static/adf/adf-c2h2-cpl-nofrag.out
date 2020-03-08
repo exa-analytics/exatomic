@@ -1,0 +1,760 @@
+ nmrcoupling
+ dso
+ pso
+ sd
+ scf convergence 1e-7
+ nuclei 1 2 3 4
+ nuclei 3 4
+ end
+ endinput
+
+ *******************************************************************************
+ *                                                                             *
+ *  -------------------------------------                                      *
+ *   Amsterdam Density Functional  (ADF)         2017                          *
+ *  -------------------------------------                                      *
+ *                                               r65426 2018-05-03             *
+ *                                                                             *
+ *                                                                             *
+ *                              =================                              *
+ *                              |               |                              *
+ *                              |     C P L     |                              *
+ *                              |               |                              *
+ *                              =================                              *
+ *                                                                             *
+ *                                                                             *
+ *   Online information and documentation:  https://www.scm.com/support/       *
+ *   E-mail:  support@scm.com   info@scm.com                                   *
+ *                                                                             *
+ *   Scientific publications using ADF results must be properly referenced     *
+ *   See the User Manuals (or the web site) for recommended citations          *
+ *   The terms and conditions of the End User License Agreement apply to       *
+ *   the use of ADF, https://www.scm.com/license-terms/                        *
+ *                                                                             *
+ **********************  x86_64_linux_intel / intelmpi  ************************
+ 
+ Licensed to: Dr. Jochen Autschbach / University at Buffalo / Buffalo / NY / USA
+ SCM User ID: u7467
+  
+ CPL 2017  RunTime: Jun06-2019 13:53:54  Nodes: 1  Procs: 1
+
+ Temporary files are created in /projects/academic/jochena/herbertl/projects/adf_stuff/CPL_C2H2/kid_0.KIvQtl
+
+ hello from rdinp, dbg=            0
+   
+   
+  ****************************************  
+     *************************************  
+     **                                 **  
+     **     ######  ######   ##         **  
+     **    #######  ##   ##  ##         **  
+     **   ##        ######   ##         **  
+     **   ##        ##       ##         **  
+     **    #######  ##       #######    **  
+     **     ######  ##       #######    **  
+     **                                 **  
+     *************************************  
+  ****************************************  
+   
+  CPL was written by                  
+   
+  Jochen Autschbach               
+  SUNY Buffalo                  
+   
+  Original development of CPL took     
+  place in the research group of       
+  Tom Ziegler                 
+  University of Calgary          
+  Alberta, Canada              
+   
+  Further developments done by 
+  JA's research group at SUNY Buffalo 
+   
+  Please cite this work using       
+  some or all of Refs. [1-4]        
+   
+  Refs. [1,2]: original implementation    
+  Ref. [3]: NBO analysis, 
+  Ref. [4]: hybrid functionals and rewrite
+  Recommended references: [2,4]       
+   
+  Nonrelativistic code for the       
+  DSO term and a few other things     
+  based on the Dickson & Ziegler      
+  program, Refs. [5,6]            
+   
+  References: 
+  =========== 
+   
+  [1] J. Autschbach and T. Ziegler,      
+      J. Chem. Phys. 113 (2000), 936     
+   
+  [2] J. Autschbach and T. Ziegler,      
+      J. Chem. Phys. 113 (2000), 9410    
+   
+  [3] J. Autschbach,                     
+      J. Chem. Phys. 128 (2008), 164112  
+   
+  [4] J. Autschbach,                     
+      J. Chem. Phys. 129 (2008), 094105  
+   
+  [5] R. M. Dickson and T. Ziegler,      
+      J. Phys. Chem. 100 (1996), 5286    
+   
+  [6] J. Khandogin and T. Ziegler,       
+      Spectrochim. Acta A55 (1999), 607  
+   
+  ****************************************  
+   
+
+
+
+                 ***********************************
+                 *   J O B  I N F O R M A T I O N  *
+                 ***********************************
+  
+
+
+
+ ===============================
+ General information from TAPE21
+ ===============================
+  
+  TITLE:      C2H2 nrel                                         
+  JOB ID:     ADF 2017  RunTime: Jun06-2019 13:53:49  Nodes: 1  
+  NONLXC:     Becke88 Perdew86                                  
+  SYMMETRY:   NOSYM                                             
+   
+  IOPREL:       0
+  ------>     non-rel. (Re MOs)
+
+
+
+ ==========================================
+ Nuclear Coordinates and internal numbering
+ ==========================================
+  
+  C  (  1):       0.0000      0.0000      0.0000
+  C  (  2):       0.0000      0.0000      1.2069
+  H  (  3):       0.0000      0.0000      2.2667
+  H  (  4):       0.0000      0.0000     -1.0598
+
+
+
+ =======
+ Numbers
+ =======
+  
+  number of valence electrons:     14.00
+ 
+  ---   AOs   ---          ---   MOs   ---
+  ncor =      0            nocc =      7
+  nval =     84            nvir =     67
+  nbas =     84            nmo  =     74
+  naos =     84            nsot =     74
+
+
+
+ ===================
+ Fragments and Basis
+ ===================
+  
+   
+  --------------------------
+  ATOM TYPE:  C                                                 
+  --------------------------
+  === BASIS
+    1S    7.68     VALENCE
+    1S    5.00     VALENCE
+    2S    1.28     VALENCE
+    2S    2.10     VALENCE
+    2S    4.60     VALENCE
+    2P    0.82     VALENCE
+    2P    1.48     VALENCE
+    2P    2.94     VALENCE
+    3D    2.20     VALENCE
+    4F    3.30     VALENCE
+   
+  --------------------------
+  ATOM TYPE:  H                                                 
+  --------------------------
+  === BASIS
+    1S    0.69     VALENCE
+    1S    0.92     VALENCE
+    1S    1.58     VALENCE
+    2P    1.25     VALENCE
+    3D    2.50     VALENCE
+
+
+
+ =================================
+ TAPE10 info, TAPE21 compatibility
+ =================================
+  
+  ---> TAPE10 present
+ 
+  ---> TAPE21 present
+ 
+  ---> Potential is already on TAPE10.
+       It will not be re-calculated.
+
+
+
+ ==========================================
+ Settings for the NMR couplings computation
+ ==========================================
+  
+  Compute...
+  FC  Term    YES             (*     default *)
+  SD  Term    YES             (* not default *)
+  PSO Term    YES             (* not default *)
+  DSO Term    YES             (* not default *)
+ 
+  Max. no. of SCF iterations:                25
+  Convergence criterion for SCF cycle:       0.000000100
+
+  Nuclei numbering in the output refers to the
+  INTERNAL atom ordering of ADF.
+  This ordering is usually different from the order
+  that has been specified in the ADF input that pro-
+  duced the TAPE21 being used here.
+
+  NOTE: Computation involving the SD term utilizes
+  the ZORA spinorbit code in scalar or nonrelativistic
+  computations and is therefore rather slow
+
+
+
+
+ ===========================
+ L I N E A R   S C A L I N G
+ ===========================
+  
+
+ Overlap cut-off criterion AO matrix elements:     0.1000000000E-07
+
+
+
+
+ Test of Precision of the Numerical Integration Grid
+ ===================================================
+
+ Integral of the Total Core Density:                   0.00000000000000
+
+
+
+                 ***********************************************
+                 *  NMR spin spin coupling tensor calculation  *
+                 ***********************************************
+  
+
+ Nuclear magnetogyric ratios / 1E7 radians/(s T):
+ C  (  1):     6.728
+ C  (  2):     6.728
+ H  (  3):    26.752
+ H  (  4):    26.752
+
+ Performing the following coupling computations:
+ Nucleus   1 (C ) perturbing 
+           2 (C ) responding
+           3 (H ) responding
+           4 (H ) responding
+ Nucleus   3 (H ) perturbing 
+           4 (H ) responding
+
+
+
+ =======================================
+ Computation for perturbing nucleus 1(C)
+ =======================================
+  
+ 
+ *** running ZDSO calculation
+ *** running ZSO and/or ZPSO calculation
+     computing
+     ... basis integrals for perturbing nucleus   1
+     ... basis integrals for responding nucleus   2
+     ... basis integrals for responding nucleus   3
+     ... basis integrals for responding nucleus   4
+     transforming
+     ... basis integrals for perturbing nucleus   1
+     ... basis integrals for responding nucleus   2
+     ... basis integrals for responding nucleus   3
+     ... basis integrals for responding nucleus   4
+
+
+
+ ==================================
+ SCF routine for spin-spin coupling  ***  Version 11/07 (spinorbit)  ***
+ ==================================
+  
+ Using new AO based algorithms for CPKS
+    using first order VWN potential for LDA kernel
+ 
+    Will use LDA kernel
+ 
+ iter.  1 V(1) measurement   0.3914447E+01  0.3914447E+01  0.3674301E+01
+ iter.  2 V(1) measurement   0.6597376E+01  0.6597376E+01  0.5285296E+01
+        2            delta   0.2682929E+01  0.2682929E+01  0.1610994E+01
+ iter.  3 V(1) measurement   0.6986710E+01  0.6986710E+01  0.5504462E+01
+        3            delta   0.3893338E+00  0.3893338E+00  0.2191663E+00
+ iter.  4 V(1) measurement   0.6989434E+01  0.6989434E+01  0.5506639E+01
+        4            delta   0.2724057E-02  0.2724057E-02  0.2177653E-02
+ iter.  5 V(1) measurement   0.6990514E+01  0.6990514E+01  0.5507199E+01
+        5            delta   0.1080387E-02  0.1080387E-02  0.5593243E-03
+ iter.  6 V(1) measurement   0.6990495E+01  0.6990495E+01  0.5507196E+01
+        6            delta   0.1938959E-04  0.1938959E-04  0.2525256E-05
+ iter.  7 V(1) measurement   0.6990495E+01  0.6990495E+01  0.5507196E+01
+        7            delta   0.1178647E-06  0.1178647E-06  0.1562606E-06
+ *** convergence reached
+
+
+
+                 *******************
+                 *  R E S U L T S  *
+                 *******************
+  
+
+
+
+ =======================================
+  Nucleus 1 (C) perturbing nucleus 2 (C)
+ =======================================
+  
+ Internal CPL numbering of atoms:  C(1) perturbing  C(2)
+ Atom input numbers in the ADF calculation:  C(1) perturbing  C(2)
+  
+ ---------------------------------
+   Cartesian Axis Representation  
+ ---------------------------------
+
+ ----- k (10^19 kg m-2 s-2 A-2) ----         ------------- j (hz) -------------
+
+ diamagnetic orbital contribution:                                       
+  isotropic    k=       0.008                              j=       0.006
+      -2.979       0.000       0.000             -2.263       0.000       0.000
+       0.000      -2.979       0.000              0.000      -2.263       0.000
+       0.000      -0.000       5.980              0.000      -0.000       4.544
+
+ paramagnetic orbital contribution:                                      
+  isotropic    k=       7.718                              j=       5.864
+     -18.041       0.000      -0.000            -13.708       0.000      -0.000
+       0.000     -18.041      -0.000              0.000     -13.708      -0.000
+       0.000       0.000      59.237              0.000       0.000      45.009
+
+ fermi-contact + spin-dipolar contribution                               
+  isotropic    k=     275.967                              j=     209.683
+     277.017      -0.000       0.000            210.481      -0.000       0.000
+      -0.000     277.017       0.000             -0.000     210.481       0.000
+       0.000       0.000     273.866              0.000       0.000     208.087
+
+ total calculated spin-spin coupling:                                    
+  isotropic    k=     283.692                              j=     215.553
+     255.997      -0.000       0.000            194.510      -0.000       0.000
+      -0.000     255.997       0.000             -0.000     194.510       0.000
+       0.000       0.000     339.083              0.000       0.000     257.640
+ 
+ ---------------------------------
+   Principal Axis Representation  
+ ---------------------------------
+
+ ----- k (10^19 kg m-2 s-2 A-2) ----         ------------- j (hz) -------------
+
+ diamagnetic orbital contribution:                                       
+  isotropic    k=       0.008                              j=       0.006
+      -2.979      -0.000       0.000             -2.263      -0.000       0.000
+      -0.000      -2.979      -0.000             -0.000      -2.263      -0.000
+       0.000      -0.000       5.980              0.000      -0.000       4.544
+
+ paramagnetic orbital contribution:                                      
+  isotropic    k=       7.718                              j=       5.864
+     -18.041      -0.000       0.000            -13.708      -0.000       0.000
+      -0.000     -18.041      -0.000             -0.000     -13.708      -0.000
+      -0.000       0.000      59.237             -0.000       0.000      45.009
+
+ fermi-contact + spin-dipolar contribution                               
+  isotropic    k=     275.967                              j=     209.683
+     277.017       0.000      -0.000            210.481       0.000      -0.000
+       0.000     277.017       0.000              0.000     210.481       0.000
+      -0.000       0.000     273.866             -0.000       0.000     208.087
+
+ total calculated spin-spin coupling:                                    
+  isotropic    k=     283.692                              j=     215.553
+     255.997      -0.000       0.000            194.510      -0.000       0.000
+      -0.000     255.997      -0.000             -0.000     194.510      -0.000
+      -0.000       0.000     339.083             -0.000       0.000     257.640
+ 
+ Principal Axis System (u,v,w) expressed in Cartesians:
+ (taken as eigenvectors of the symmetric part of the coupling tensor,
+  sorted in ascending order of eigenvalues = principal values)
+        u         v         w
+       -0.383     0.924     0.000
+       -0.924    -0.383     0.000
+        0.000    -0.000     1.000
+
+
+
+ =======================================
+  Nucleus 1 (C) perturbing nucleus 3 (H)
+ =======================================
+  
+ Internal CPL numbering of atoms:  C(1) perturbing  H(3)
+ Atom input numbers in the ADF calculation:  C(1) perturbing  H(3)
+  
+ ---------------------------------
+   Cartesian Axis Representation  
+ ---------------------------------
+
+ ----- k (10^19 kg m-2 s-2 A-2) ----         ------------- j (hz) -------------
+
+ diamagnetic orbital contribution:                                       
+  isotropic    k=      -0.445                              j=      -1.345
+      -0.958       0.000       0.000             -2.893       0.000       0.000
+       0.000      -0.958       0.000              0.000      -2.893       0.000
+       0.000       0.000       0.580              0.000       0.000       1.752
+
+ paramagnetic orbital contribution:                                      
+  isotropic    k=       1.805                              j=       5.453
+       0.556      -0.000      -0.000              1.680      -0.000      -0.000
+      -0.000       0.556      -0.000             -0.000       1.680      -0.000
+      -0.000      -0.000       4.303             -0.000      -0.000      12.999
+
+ fermi-contact + spin-dipolar contribution                               
+  isotropic    k=      15.209                              j=      45.946
+      13.936       0.000       0.000             42.102       0.000       0.000
+       0.000      13.936       0.000              0.000      42.102       0.000
+      -0.000      -0.000      17.754             -0.000      -0.000      53.634
+
+ total calculated spin-spin coupling:                                    
+  isotropic    k=      16.569                              j=      50.055
+      13.535       0.000       0.000             40.890       0.000       0.000
+       0.000      13.535       0.000              0.000      40.890       0.000
+      -0.000      -0.000      22.636             -0.000      -0.000      68.385
+ 
+ ---------------------------------
+   Principal Axis Representation  
+ ---------------------------------
+
+ ----- k (10^19 kg m-2 s-2 A-2) ----         ------------- j (hz) -------------
+
+ diamagnetic orbital contribution:                                       
+  isotropic    k=      -0.445                              j=      -1.345
+      -0.958       0.000       0.000             -2.893       0.000       0.000
+       0.000      -0.958      -0.000              0.000      -2.893      -0.000
+       0.000      -0.000       0.580              0.000      -0.000       1.752
+
+ paramagnetic orbital contribution:                                      
+  isotropic    k=       1.805                              j=       5.453
+       0.556      -0.000      -0.000              1.680      -0.000      -0.000
+      -0.000       0.556      -0.000             -0.000       1.680      -0.000
+      -0.000       0.000       4.303             -0.000       0.000      12.999
+
+ fermi-contact + spin-dipolar contribution                               
+  isotropic    k=      15.209                              j=      45.946
+      13.936       0.000      -0.000             42.102       0.000      -0.000
+       0.000      13.936      -0.000              0.000      42.102      -0.000
+       0.000       0.000      17.754              0.000       0.000      53.634
+
+ total calculated spin-spin coupling:                                    
+  isotropic    k=      16.569                              j=      50.055
+      13.535       0.000      -0.000             40.890       0.000      -0.000
+      -0.000      13.535      -0.000             -0.000      40.890      -0.000
+       0.000       0.000      22.636              0.000       0.000      68.385
+ 
+ Principal Axis System (u,v,w) expressed in Cartesians:
+ (taken as eigenvectors of the symmetric part of the coupling tensor,
+  sorted in ascending order of eigenvalues = principal values)
+        u         v         w
+        0.528    -0.850    -0.000
+       -0.850    -0.528    -0.000
+        0.000    -0.000     1.000
+
+
+
+ =======================================
+  Nucleus 1 (C) perturbing nucleus 4 (H)
+ =======================================
+  
+ Internal CPL numbering of atoms:  C(1) perturbing  H(4)
+ Atom input numbers in the ADF calculation:  C(1) perturbing  H(4)
+  
+ ---------------------------------
+   Cartesian Axis Representation  
+ ---------------------------------
+
+ ----- k (10^19 kg m-2 s-2 A-2) ----         ------------- j (hz) -------------
+
+ diamagnetic orbital contribution:                                       
+  isotropic    k=       0.109                              j=       0.329
+      -2.204       0.000      -0.000             -6.658       0.000      -0.000
+       0.000      -2.204      -0.000              0.000      -6.658      -0.000
+       0.000      -0.000       4.735              0.000      -0.000      14.305
+
+ paramagnetic orbital contribution:                                      
+  isotropic    k=      -0.028                              j=      -0.085
+       2.526       0.000       0.000              7.631       0.000       0.000
+       0.000       2.526       0.000              0.000       7.631       0.000
+       0.000       0.000      -5.136              0.000       0.000     -15.517
+
+ fermi-contact + spin-dipolar contribution                               
+  isotropic    k=      87.442                              j=     264.167
+      92.420      -0.000       0.000            279.204      -0.000       0.000
+      -0.000      92.420       0.000             -0.000     279.204       0.000
+       0.000       0.000      77.487              0.000       0.000     234.093
+
+ total calculated spin-spin coupling:                                    
+  isotropic    k=      87.523                              j=     264.411
+      92.742      -0.000       0.000            280.177      -0.000       0.000
+      -0.000      92.742       0.000             -0.000     280.177       0.000
+       0.000       0.000      77.086              0.000       0.000     232.881
+ 
+ ---------------------------------
+   Principal Axis Representation  
+ ---------------------------------
+
+ ----- k (10^19 kg m-2 s-2 A-2) ----         ------------- j (hz) -------------
+
+ diamagnetic orbital contribution:                                       
+  isotropic    k=       0.109                              j=       0.329
+       4.735      -0.000      -0.000             14.305      -0.000      -0.000
+      -0.000      -2.204       0.000             -0.000      -6.658       0.000
+      -0.000       0.000      -2.204             -0.000       0.000      -6.658
+
+ paramagnetic orbital contribution:                                      
+  isotropic    k=      -0.028                              j=      -0.085
+      -5.136       0.000       0.000            -15.517       0.000       0.000
+       0.000       2.526       0.000              0.000       7.631       0.000
+       0.000       0.000       2.526              0.000       0.000       7.631
+
+ fermi-contact + spin-dipolar contribution                               
+  isotropic    k=      87.442                              j=     264.167
+      77.487       0.000      -0.000            234.093       0.000      -0.000
+      -0.000      92.420      -0.000             -0.000     279.204      -0.000
+       0.000      -0.000      92.420              0.000      -0.000     279.204
+
+ total calculated spin-spin coupling:                                    
+  isotropic    k=      87.523                              j=     264.411
+      77.086       0.000      -0.000            232.881       0.000      -0.000
+      -0.000      92.742      -0.000             -0.000     280.177      -0.000
+       0.000      -0.000      92.742              0.000      -0.000     280.177
+ 
+ Principal Axis System (u,v,w) expressed in Cartesians:
+ (taken as eigenvectors of the symmetric part of the coupling tensor,
+  sorted in ascending order of eigenvalues = principal values)
+        u         v         w
+       -0.000    -0.244    -0.970
+       -0.000    -0.970     0.244
+        1.000    -0.000    -0.000
+
+
+
+ =======================================
+ Computation for perturbing nucleus 3(H)
+ =======================================
+  
+ 
+ *** running ZDSO calculation
+ *** running ZSO and/or ZPSO calculation
+     computing
+     ... basis integrals for perturbing nucleus   3
+     ... basis integrals for responding nucleus   4
+     transforming
+     ... basis integrals for perturbing nucleus   3
+     ... basis integrals for responding nucleus   4
+
+
+
+ ==================================
+ SCF routine for spin-spin coupling  ***  Version 11/07 (spinorbit)  ***
+ ==================================
+  
+ Using new AO based algorithms for CPKS
+    using first order VWN potential for LDA kernel
+ 
+    Will use LDA kernel
+ 
+ iter.  1 V(1) measurement   0.1097152E+01  0.1097152E+01  0.9868491E+00
+ iter.  2 V(1) measurement   0.1600056E+01  0.1600056E+01  0.1367958E+01
+        2            delta   0.5029038E+00  0.5029038E+00  0.3811093E+00
+ iter.  3 V(1) measurement   0.1660676E+01  0.1660676E+01  0.1410449E+01
+        3            delta   0.6062044E-01  0.6062044E-01  0.4249100E-01
+ iter.  4 V(1) measurement   0.1662604E+01  0.1662604E+01  0.1412020E+01
+        4            delta   0.1927270E-02  0.1927270E-02  0.1570542E-02
+ iter.  5 V(1) measurement   0.1662557E+01  0.1662557E+01  0.1411962E+01
+        5            delta   0.4642702E-04  0.4642702E-04  0.5845691E-04
+ iter.  6 V(1) measurement   0.1662558E+01  0.1662558E+01  0.1411963E+01
+        6            delta   0.7646263E-06  0.7646263E-06  0.1085221E-05
+ iter.  7 V(1) measurement   0.1662558E+01  0.1662558E+01  0.1411963E+01
+        7            delta   0.3983892E-06  0.3983892E-06  0.2896230E-06
+ iter.  8 V(1) measurement   0.1662558E+01  0.1662558E+01  0.1411963E+01
+        8            delta   0.2183010E-07  0.2183010E-07  0.1998670E-07
+ *** convergence reached
+
+
+
+                 *******************
+                 *  R E S U L T S  *
+                 *******************
+  
+
+
+
+ =======================================
+  Nucleus 3 (H) perturbing nucleus 4 (H)
+ =======================================
+  
+ Internal CPL numbering of atoms:  H(3) perturbing  H(4)
+ Atom input numbers in the ADF calculation:  H(3) perturbing  H(4)
+  
+ ---------------------------------
+   Cartesian Axis Representation  
+ ---------------------------------
+
+ ----- k (10^19 kg m-2 s-2 A-2) ----         ------------- j (hz) -------------
+
+ diamagnetic orbital contribution:                                       
+  isotropic    k=      -0.299                              j=      -3.586
+      -0.478       0.000       0.000             -5.743       0.000       0.000
+       0.000      -0.478      -0.000              0.000      -5.743      -0.000
+       0.000       0.000       0.061              0.000       0.000       0.729
+
+ paramagnetic orbital contribution:                                      
+  isotropic    k=       0.358                              j=       4.297
+       0.380       0.000      -0.000              4.566       0.000      -0.000
+       0.000       0.380      -0.000              0.000       4.566      -0.000
+       0.000       0.000       0.313              0.000       0.000       3.760
+
+ fermi-contact + spin-dipolar contribution                               
+  isotropic    k=       0.443                              j=       5.319
+       0.420       0.000       0.000              5.045       0.000       0.000
+       0.000       0.420      -0.000              0.000       5.045      -0.000
+       0.000      -0.000       0.489              0.000      -0.000       5.868
+
+ total calculated spin-spin coupling:                                    
+  isotropic    k=       0.502                              j=       6.031
+       0.322       0.000      -0.000              3.867       0.000      -0.000
+       0.000       0.322      -0.000              0.000       3.867      -0.000
+       0.000      -0.000       0.862              0.000      -0.000      10.357
+ 
+ ---------------------------------
+   Principal Axis Representation  
+ ---------------------------------
+
+ ----- k (10^19 kg m-2 s-2 A-2) ----         ------------- j (hz) -------------
+
+ diamagnetic orbital contribution:                                       
+  isotropic    k=      -0.299                              j=      -3.586
+      -0.478      -0.000       0.000             -5.743      -0.000       0.000
+      -0.000      -0.478      -0.000             -0.000      -5.743      -0.000
+       0.000      -0.000       0.061              0.000      -0.000       0.729
+
+ paramagnetic orbital contribution:                                      
+  isotropic    k=       0.358                              j=       4.297
+       0.380      -0.000      -0.000              4.566      -0.000      -0.000
+      -0.000       0.380       0.000             -0.000       4.566       0.000
+       0.000      -0.000       0.313              0.000      -0.000       3.760
+
+ fermi-contact + spin-dipolar contribution                               
+  isotropic    k=       0.443                              j=       5.319
+       0.420       0.000       0.000              5.045       0.000       0.000
+       0.000       0.420       0.000              0.000       5.045       0.000
+       0.000       0.000       0.489              0.000       0.000       5.868
+
+ total calculated spin-spin coupling:                                    
+  isotropic    k=       0.502                              j=       6.031
+       0.322       0.000      -0.000              3.867       0.000      -0.000
+      -0.000       0.322       0.000             -0.000       3.867       0.000
+       0.000      -0.000       0.862              0.000      -0.000      10.357
+ 
+ Principal Axis System (u,v,w) expressed in Cartesians:
+ (taken as eigenvectors of the symmetric part of the coupling tensor,
+  sorted in ascending order of eigenvalues = principal values)
+        u         v         w
+        0.939    -0.345    -0.000
+       -0.345    -0.939    -0.000
+        0.000    -0.000     1.000
+ *******************************************************************************
+
+                             N M R   E X I T
+ NORMAL TERMINATION
+
+
+
+ =================
+ Timing Statistics
+ =================
+  
+ Total Used :                     CPU=       14.34      System=        0.29     Elapsed=       15.88
+
+ Calls  Section                     ( Mean, Percentage )
+ ---------------------------------------------------------------------------------------------------
+     3  ><      ................      0.00    0.03             0.00    0.28             0.01    0.18
+     2  ODIA    ................      0.06    0.86             0.02   13.77             0.22    2.82
+     6  CALBSO  ................      0.17    7.01             0.00    1.61             0.18    6.89
+     6  CALPSO  ................      0.12    5.00             0.00    1.52             0.13    4.85
+     6  TRBSO   ................      0.00    0.12             0.00    2.76             0.03    1.03
+     6  TRZPSO  ................      0.00    0.05             0.00    0.69             0.01    0.43
+     6  TRAOMO  ................      0.00    0.00             0.00    0.00             0.00    0.00
+     2  SOPT1   ................      6.23   86.93             0.11   78.32             6.63   83.56
+     1  SOCPL   ................      0.00    0.00             0.00    0.16             0.01    0.04
+     1  EXIT PROCEDURE .........      0.00    0.00             0.00    0.88             0.03    0.20
+
+
+ Currently Open Files (EXIT00)
+ ====================
+
+ Unit    Access Format  Status   Type       Ident (file)
+ -------------------------------------------------------
+   3      SEQ    FORM   TRANSP  NORMAL      LOGFILE
+                                          ( logfile )
+
+
+ Buffered I/O statistics
+ =======================
+ Memory available:                     67108864
+ Number of records fitting in memory:     16131
+ Input :   4.7% of                       211613  *4k bytes
+ Output:  72.7% of                        12042  *4k bytes
+ Records from serial files evicted:           0
+                    others evicted:           0
+ Hash table lookups:     569184 with          0 conflicts (  0.00%)
+
+ ***************************************************************************************************
+ (LOGFILE)
+ <Jun06-2019> <13:53:54>  CPL 2017  RunTime: Jun06-2019 13:53:54  Nodes: 1  Procs: 1
+ <Jun06-2019> <13:53:54>  >>>> SOCPL
+ <Jun06-2019> <13:53:54>  Computation for perturbing nucleus 1(C)
+ <Jun06-2019> <13:53:54>  >>>> ODIA
+ <Jun06-2019> <13:53:54>  >>>> RDEIGX
+ <Jun06-2019> <13:53:54>  >>>> INTEGRALS
+ <Jun06-2019> <13:53:56>  >>>> INTTRAFO
+ <Jun06-2019> <13:53:56>  >>>> SOPT1
+ <Jun06-2019> <13:53:57>     1 V(1)  0.39144E+01  0.39144E+01  0.36743E+01
+ <Jun06-2019> <13:53:58>     2 V(1)  0.65974E+01  0.65974E+01  0.52853E+01
+ <Jun06-2019> <13:53:59>     3 V(1)  0.69867E+01  0.69867E+01  0.55045E+01
+ <Jun06-2019> <13:54:00>     4 V(1)  0.69894E+01  0.69894E+01  0.55066E+01
+ <Jun06-2019> <13:54:01>     5 V(1)  0.69905E+01  0.69905E+01  0.55072E+01
+ <Jun06-2019> <13:54:02>     6 V(1)  0.69905E+01  0.69905E+01  0.55072E+01
+ <Jun06-2019> <13:54:03>     7 V(1)  0.69905E+01  0.69905E+01  0.55072E+01
+ <Jun06-2019> <13:54:03>   convergence reached
+ <Jun06-2019> <13:54:03>  C  ( 1) - C  ( 2) : k=     283.692 , j=     215.553
+ <Jun06-2019> <13:54:03>  C  ( 1) - H  ( 3) : k=      16.569 , j=      50.055
+ <Jun06-2019> <13:54:03>  C  ( 1) - H  ( 4) : k=      87.523 , j=     264.411
+ <Jun06-2019> <13:54:03>  Computation for perturbing nucleus 3(H)
+ <Jun06-2019> <13:54:03>  >>>> ODIA
+ <Jun06-2019> <13:54:03>  >>>> RDEIGX
+ <Jun06-2019> <13:54:03>  >>>> INTEGRALS
+ <Jun06-2019> <13:54:03>  >>>> INTTRAFO
+ <Jun06-2019> <13:54:03>  >>>> SOPT1
+ <Jun06-2019> <13:54:04>     1 V(1)  0.10972E+01  0.10972E+01  0.98685E+00
+ <Jun06-2019> <13:54:05>     2 V(1)  0.16001E+01  0.16001E+01  0.13680E+01
+ <Jun06-2019> <13:54:05>     3 V(1)  0.16607E+01  0.16607E+01  0.14104E+01
+ <Jun06-2019> <13:54:06>     4 V(1)  0.16626E+01  0.16626E+01  0.14120E+01
+ <Jun06-2019> <13:54:07>     5 V(1)  0.16626E+01  0.16626E+01  0.14120E+01
+ <Jun06-2019> <13:54:08>     6 V(1)  0.16626E+01  0.16626E+01  0.14120E+01
+ <Jun06-2019> <13:54:09>     7 V(1)  0.16626E+01  0.16626E+01  0.14120E+01
+ <Jun06-2019> <13:54:09>     8 V(1)  0.16626E+01  0.16626E+01  0.14120E+01
+ <Jun06-2019> <13:54:10>   convergence reached
+ <Jun06-2019> <13:54:10>  H  ( 3) - H  ( 4) : k=       0.502 , j=       6.031
+ <Jun06-2019> <13:54:10>  NORMAL TERMINATION
+ <Jun06-2019> <13:54:10>  END

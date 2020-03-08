@@ -22,6 +22,7 @@ class App3D {
                           "atom": [],   "two": []};
         this.ACTIVE = null;
         this.set_dims();
+        this.selected = new Array();
     };
 
     save() {
@@ -220,15 +221,18 @@ class App3D {
     };
 
     highlight_active(intersects) {
+        // New uuid in the if's allows so the already chosen objects won't be highlighted.
+        // All others act as they used to.
+        var uuid = this.selected.map(function(obj) {return obj.uuid;}, false);
         if (intersects.length > 0) {
             if (this.ACTIVE != intersects[0].object) {
                 if (this.ACTIVE != null) {
-                    if (this.ACTIVE.material.color) {
+                    if (this.ACTIVE.material.color && !uuid.includes(this.ACTIVE.uuid)) {
                         this.ACTIVE.material.color.setHex(this.ACTIVE.currentHex);
                     };
                 };
                 this.ACTIVE = intersects[0].object;
-                if (this.ACTIVE.material.color) {
+                if (this.ACTIVE.material.color && !uuid.includes(this.ACTIVE.uuid)) {
                     this.ACTIVE.currentHex = this.ACTIVE.material.color.getHex();
                     var newHex = this.lighten_color(this.ACTIVE.currentHex);
                     this.ACTIVE.material.color.setHex(newHex);
@@ -238,13 +242,19 @@ class App3D {
             };
         } else {
             if (this.ACTIVE != null) {
-                if (this.ACTIVE.material.color) {
+                if (this.ACTIVE.material.color && !uuid.includes(this.ACTIVE.uuid)) {
                     this.ACTIVE.material.color.setHex(this.ACTIVE.currentHex);
                 };
             };
             this.ACTIVE = null;
             this.unset_hud();
         };
+    };
+
+    reset_colors() {
+        for ( var obj in this.selected ) {
+            this.selected[obj].material.color.setHex(this.selected[obj].currentHex)
+        }
     };
 
     finalize_mouseover() {
@@ -260,6 +270,58 @@ class App3D {
             that.raycaster.setFromCamera(that.mouse, that.camera);
             var intersects = that.raycaster.intersectObjects(that.scene.children);
             that.highlight_active(intersects);
+        }, false);
+        this.view.el.addEventListener('mouseup',
+        function(event) {
+            event.preventDefault();
+            var pos = this.getBoundingClientRect();
+            that.mouse.x =  ((event.clientX - pos.x) / that.w) * 2 - 1;
+            that.mouse.y = -((event.clientY - pos.y) / that.h) * 2 + 1;
+            that.raycaster.setFromCamera(that.mouse, that.camera);
+            var intersects = that.raycaster.intersectObjects(that.scene.children);
+            if ( intersects.length > 0 ) {
+                if ( intersects[0].object.name === "" ) {
+                    return;
+                } else if ( intersects[0].object.geometry.type === "CylinderGeometry" ) {
+                    return;
+                } else if (intersects[0].object.geometry.type === "TensorGeometry" ) {
+                    // Temporary Block until a full description table is implemented
+                    return;
+                };
+                // Initialize array
+                if ( that.selected.length - 1  < 0 ) {
+                    that.selected.push(intersects[0].object);
+                    // Can probably put this code block in a function
+                    var n = that.selected.length - 1;
+                    that.selected[n].currentHex = that.ACTIVE.currentHex;
+                    var newHex = that.lighten_color(that.selected[n].currentHex);
+                    that.selected[n].material.color.setHex(newHex);
+                } else {
+                    // Make new array from uuid's
+                    var uuid = that.selected.map(function(obj) {return obj.uuid;}, false);
+                    // Check for already existing objects
+                    if ( !uuid.includes(intersects[0].object['uuid']) ) {
+                        if ( uuid.length < 10 ) {
+                            // Append new object into array
+                            that.selected.push(intersects[0].object);
+                        } else {
+                            // Remove the first entry to make room for a new one
+                            that.selected[0].material.color.setHex(that.selected[0].currentHex);
+                            that.selected.shift();
+                            that.selected.push(intersects[0].object);
+                        };
+                        var n = that.selected.length - 1;
+                        that.selected[n].currentHex = that.ACTIVE.currentHex;
+                        var newHex = that.lighten_color(that.selected[n].currentHex);
+                        that.selected[n].material.color.setHex(newHex);
+                    } else {
+                        // Deselects a certain object and deletes it from array
+                        var sdx = uuid.indexOf(intersects[0].object['uuid']);
+                        that.selected[sdx].material.color.setHex(that.selected[sdx].currentHex);
+                        that.selected.splice(sdx, 1);
+                    };
+                };
+            };
         }, false);
     };
 
@@ -369,9 +431,9 @@ class App3D {
         return [psurf, nsurf];
     };
 
-    add_tensor_surface( tensor , colors , atom_x = 0 , atom_y = 0 , atom_z = 0 , 
-                        scaling = 1 , label = 'tensor') {
-        var tensor_mult = function( x , y , z , scaling ) {
+    add_tensor_surface(tensor, colors, atom_x=0, atom_y=0, atom_z=0, scaling=1, label='tensor') {
+
+        var tensor_mult = function(x, y, z, scaling) {
             return (x * x * tensor[0][0] +
                    y * y * tensor[1][1] +
                    z * z * tensor[2][2] +
@@ -379,7 +441,8 @@ class App3D {
                    x * z * (tensor[2][0] + tensor[0][2]) +
                    y * z * (tensor[1][2] + tensor[2][1]) ) * scaling;
         };
-        var func = function( ou , ov ) {
+
+        var func = function(ou, ov) {
             var u = 2 * Math.PI * ou;
             var v = 2 * Math.PI * ov;
             var x = Math.cos(u) * Math.sin(v);
@@ -396,16 +459,16 @@ class App3D {
             z = g * Math.cos(v) + atom_z;
             return [new THREE.Vector3(x, y, z),col];
         };
-        var t0 = performance.now();
+
         var geometry = new THREE.Geometry();
         var geo = new THREE.Geometry();
         var slices = 50, stacks = 50;
         var sliceCount = slices+1
         var cArray = new Array();
         var ou, ov, p;
-        for ( var i = 0 ; i <= slices ; i++ ) {
+        for (var i = 0; i <= slices; i++) {
             ov = i / slices; 
-            for ( var j = 0 ; j <= stacks ; j++ ) {
+            for (var j = 0; j <= stacks; j++) {
                 ou = j / stacks;
                 p = func(ou, ov);
                 geometry.vertices.push(p[0]);
@@ -415,8 +478,8 @@ class App3D {
         }
         var a,b,c,d;
         var mix,red,green,blue;
-        for ( var i = 0 ; i < slices ; i++ ) {
-            for ( var j = 0 ; j < stacks ; j++ ) {
+        for (var i = 0; i < slices; i++) {
+            for (var j = 0; j < stacks; j++) {
                 a = i * sliceCount + j;
                 b = i * sliceCount + j + 1;
                 c = ( i + 1 ) * sliceCount + j + 1;
@@ -441,6 +504,7 @@ class App3D {
         geometry.mergeVertices();
         geometry.computeFaceNormals();
         geometry.computeVertexNormals();
+        geometry.type = "TensorGeometry"
         var pmat = new THREE.MeshPhongMaterial({color:'white',
                                                 shading: THREE.FlatShading,
                                                 side: THREE.DoubleSide,
@@ -456,8 +520,6 @@ class App3D {
         var nsurf = new THREE.LineSegments( edges,mat );
         psurf.add( nsurf );
         psurf.name = label;
-        var t1 = performance.now()
-//      console.log("Tensor plot took "+(t1-t0)+" milliseconds");
         return [psurf];
     };
 
@@ -1138,13 +1200,14 @@ class App3D {
             });
             var mesh = new THREE.Mesh(geometries[color], material);
             if (l[i] != "") { mesh.name = l[i] };
+            //mesh.label = "atom";
             mesh.position.set(xyz[i3], xyz[i3+1], xyz[i3+2]);
             meshes.push(mesh);
         };
         return meshes;
     };
 
-    add_cylinders(v0, v1, x, y, z, colors) {
+    add_cylinders(v0, v1, x, y, z, colors, r) {
         /*"""
         add_cylinders
         ------------
@@ -1157,11 +1220,12 @@ class App3D {
             y (array): Position in y of vertices
             z (array): Position in z of vertices
             colors (array): Colors of vertices
+            r (float): radius of cylinders
 
         Returns:
             linesegs (THREE.LineSegments): Line segment objects
         */
-        var r = 0.05;
+        var r = r || 0.15;
         var mat = new THREE.MeshPhongMaterial({
             vertexColors: THREE.VertexColors,
             color: 0x606060,
@@ -1194,10 +1258,112 @@ class App3D {
             mesh.name = (length * 0.52918).toFixed(4) + "\u212B";
             mesh.position.set(center.x, center.y, center.z);
             mesh.lookAt(vector1);
+            ////mesh.label = "bond";
             meshes.push(mesh);
         };
         return meshes;
     };
+
+// Not yet ready
+//    add_stick(v0, v1, x, y, z, colors, r) {
+//        /*"""
+//        add_stick
+//        ------------
+//        Add cylinders between atoms with the same radii as the atoms. All have been
+//        made to be of the same radius.
+//
+//        Args:
+//            v0 (array): Array of first vertex in pair
+//            v1 (array): Array of second vertex
+//            x (array): Position in x of vertices
+//            y (array): Position in y of vertices
+//            z (array): Position in z of vertices
+//            colors (array): Colors of vertices
+//            r (float): radius of the cylinder
+//
+//        Returns:
+//            linesegs (THREE.LineSegments): Line segment objects
+//        */
+//        var r = r || 0.05;
+//        var meshes = [];
+//        var n = v0.length;
+//        for (var i=0; i<n; i++) {
+//            var j = v0[i];
+//            var k = v1[i];
+//            var vector0 = new THREE.Vector3(x[j], y[j], z[j]);
+//            var vector1 = new THREE.Vector3(x[k], y[k], z[k]);
+//            var direction = new THREE.Vector3().subVectors(vector0, vector1);
+//            var center = new THREE.Vector3().addVectors(vector0, vector1);
+//            center.divideScalar(2.0);
+//            var center_0 = new THREE.Vector3().addVectors(vector0, center);
+//            center_0.divideScalar(2.0);
+//            var center_1 = new THREE.Vector3().addVectors(vector1, center);
+//            center_1.divideScalar(2.0);
+//            var length = 0.5*direction.length();
+//            var geometry = new THREE.CylinderGeometry(r, r, length);
+//            geometry.openEnded = true;
+//            geometry.applyMatrix(new THREE.Matrix4().makeRotationX( Math.PI / 2));
+//            /*var nn = geometry.faces.length;
+//            var color0 = new THREE.Color(colors[j]);
+//            var color1 = new THREE.Color(colors[k]);
+//            geometry.colors.push(color0.clone());
+//            geometry.colors.push(color1.clone());
+//            for (var l=0; l<nn; l++) {
+//                geometry.faces[l].vertexColors[0] =
+//            };*/
+//            var mat_0 = new THREE.MeshPhongMaterial({
+//                vertexColors: THREE.VertexColors,
+//                color: colors[j],
+//                //specular: 0x606060,
+//                reflectivity: 0.8,
+//                shininess: 5
+//            });
+//            var mat_1 = new THREE.MeshPhongMaterial({
+//                vertexColors: THREE.VertexColors,
+//                color: colors[k],
+//                //specular: 0x606060,
+//                reflectivity: 0.8,
+//                shininess: 5
+//            });
+//            //var mesh = new THREE.SceneUtils.createMultiMaterialObject(geometry, [mat_0, mat_1]);
+//            //mesh.position.set(center.x, center.y, center.z);
+//            //mesh.lookAt(vector1);
+//            //mesh.name = (length * 0.52918).toFixed(4) + "\u212B";
+//            //meshes.push(mesh);
+//            var singlebond = new THREE.Geometry();
+//            var mesh_0 = new THREE.Mesh(geometry, mat_0);
+//            var mesh_1 = new THREE.Mesh(geometry, mat_1);
+//            mesh_0.name = (length * 0.52918).toFixed(4) + "\u212B";
+//            mesh_0.position.set(center_0.x, center_0.y, center_0.z);
+//            mesh_0.lookAt(vector1);
+//            mesh_1.name = (length * 0.52918).toFixed(4) + "\u212B";
+//            mesh_1.position.set(center_1.x, center_1.y, center_1.z);
+//            mesh_1.lookAt(vector1);
+//            //mesh_0.updateMatrix();
+//            //mesh_1.updateMatrix();
+//            //singlebond.merge(mesh_0.geometry, mesh_0.matrix);
+//            //singlebond.merge(mesh_1.geometry, mesh_1.matrix);
+//            for ( var face in mesh_0.geometry.faces ) {
+//                mesh_0.geometry.faces[face].materialIndex = 0;
+//            }
+//            for ( var face in mesh_1.geometry.faces ) {
+//                mesh_1.geometry.faces[face].materialIndex = 0;
+//            }
+//            singlebond.merge(mesh_0.geometry, mesh_0.matrix);
+//            singlebond.merge(mesh_1.geometry, mesh_1.matrix, 1);
+//            var material = new THREE.MeshFaceMaterial([mesh_0.material, mesh_1.material]);
+//            var mesh = new THREE.Mesh(singlebond, material);
+//            mesh.position.set(center.x, center.y, center.z);
+//            mesh.lookAt(vector1);
+//            //for ( var face in singlebond.faces) { console.log(singlebond.faces[face].materialIndex); }
+//            meshes.push(mesh);
+//            console.log(material);
+//            //meshes.push(mesh_0);
+//            //meshes.push(mesh_1);
+//        };
+//        console.log(meshes);
+//        return meshes;
+//    };
 
     add_wireframe(vertices, color, opac) {
         /*"""

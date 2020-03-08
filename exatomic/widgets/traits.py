@@ -40,15 +40,19 @@ def atom_traits(df, atomcolors=None, atomradii=None, atomlabels=None):
     symmap = {i: v for i, v in enumerate(df['symbol'].cat.categories)
               if v in df.unique_atoms}
     unq = df['symbol'].astype(str).unique()
-    radii = {k: sym2radius[k] for k in unq}
+#    radii = {k: sym2radius[k][1] for k in unq}
+    cov_radii = {k: sym2radius[k][0] for k in unq}
+    van_radii = {k: sym2radius[k][1] for k in unq}
     colors = {k: sym2color[k] for k in unq}
     labels = symmap
     colors.update(atomcolors)
-    radii.update(atomradii)
+#    radii.update(atomradii)
+    cov_radii.update(atomradii)
+    van_radii.update(atomradii)
     labels.update(atomlabels)
     traits['atom_s'] = syms.to_json(orient='values')
-    # TODO : This multiplication by 0.5 is in a bad place
-    traits['atom_r'] = {i: 0.5 * radii[v] for i, v in symmap.items()}
+    traits['atom_cr'] = {i: cov_radii[v] for i, v in symmap.items()}
+    traits['atom_vr'] = {i: van_radii[v] for i, v in symmap.items()}
     traits['atom_c'] = {i: colors[v] for i, v in symmap.items()}
     traits['atom_l'] = labels
     return traits
@@ -114,10 +118,17 @@ def tensor_traits(uni):
     except: idxs = [list(grp.index) for i, grp in grps]
     return {'tensor_d': grps.apply(lambda x: x.T.to_dict()).to_dict(), 'tensor_i': idxs}
 
+#def freq_traits(uni):
+#    grps = uni.frequency.groupby('frequency')
+#    try: idxs = list(grps.groups.keys())
+#    except: idxs = [list(grp.index) for i, grp in grps]
+#    #print(idxs)
+#    return {'freq_d': grps.apply(lambda x: x.T.to_dict()).to_dict(), 'freq_i': idxs}
 
 def uni_traits(uni, atomcolors=None, atomradii=None, atomlabels=None):
     """Get Universe traits."""
     unargs = {}
+#    fields, tensors, freq = [], None, None
     fields, tensors = [], None
     if hasattr(uni, 'frame'):
         unargs.update(frame_traits(uni))
@@ -131,4 +142,8 @@ def uni_traits(uni, atomcolors=None, atomradii=None, atomlabels=None):
     if hasattr(uni, 'tensor'):
         unargs.update(tensor_traits(uni))
         tensors = unargs['tensor_i'][0]
+#    if hasattr(uni, 'frequency'):
+#        unargs.update(freq_traits(uni))
+#        freq = unargs['freq_i']
+#    return unargs, fields, tensors, freq
     return unargs, fields, tensors

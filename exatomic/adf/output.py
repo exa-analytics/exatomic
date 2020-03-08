@@ -20,9 +20,11 @@ from exa import TypedMeta
 from exatomic.base import sym2z
 from exatomic.algorithms.basis import lmap, enum_cartesian
 from exatomic.algorithms.numerical import dfac21
-from ..core.atom import Atom
+from exatomic.core.atom import Atom, Frequency
+from exatomic.core.gradient import Gradient
 from exatomic.core.basis import BasisSet, BasisSetOrder
-from ..core.orbital import Orbital, Excitation, MOMatrix
+from exatomic.core.orbital import Orbital, Excitation, MOMatrix
+from exatomic.core.tensor import NMRShielding, JCoupling
 from .editor import Editor
 
 
@@ -35,21 +37,81 @@ class OutMeta(TypedMeta):
     excitation = Excitation
     momatrix = MOMatrix
     sphr_momatrix = MOMatrix
-
+    gradient = Gradient
+    frequency = Frequency
+    nmr_shielding = NMRShielding
+    j_coupling = JCoupling
 
 class Output(six.with_metaclass(OutMeta, Editor)):
     """The ADF output parser."""
     def parse_atom(self):
         # TODO : only supports single frame, gets last atomic positions
-        _re_atom_00 = 'Atoms in this Fragment     Cart. coord.s (Angstrom)'
-        start = stop = self.find(_re_atom_00, keys_only=True)[0] + 2
-        while self[stop].strip(): stop += 1
-        atom = self.pandas_dataframe(start, stop, 7)
-        atom.drop([0, 2, 3], axis=1, inplace=True)
-        atom.columns = ['symbol', 'x', 'y', 'z']
-        for c in ['x', 'y', 'z']: atom[c] *= Length['Angstrom', 'au']
-        atom['Z'] = atom['symbol'].map(sym2z)
-        atom['frame'] = 0
+        #        this will actually get the very first coordinates
+        #_re_atom_00 = 'Atoms in this Fragment     Cart. coord.s (Angstrom)'
+        _re_atom_00 = 'ATOMS'
+        found1 = self.find(_re_atom_00, keys_only=True)
+        # use the regex instead of find because we have a similar search string in an nmr and
+        # cpl calculation for the nuclear coordinates
+        _reatom = "(?i)NUCLEAR COORDINATES"
+        found2 = self.regex(_reatom, keys_only=True)
+        # to find the optimized frames
+        _reopt = "Coordinates (Cartesian)"
+        found_opt = self.find(_reopt, keys_only=True)
+        if found_opt:
+            starts = np.array(found_opt) + 6
+            stop = starts[0]
+            while '------' not in self[stop]: stop += 1
+            stops = starts + stop - starts[0]
+            dfs = []
+            for idx, (start, stop) in enumerate(zip(starts, stops)):
+                # parse everything as they may be useful in the future
+                df = self.pandas_dataframe(start, stop, ncol=11)
+                # drop everything
+                df.drop(list(range(5, 11)), axis='columns', inplace=True)
+                # we read the coordinates in bohr so no need to convrt
+                df.columns = ['set', 'symbol', 'x', 'y', 'z']
+                df['set'] = df['set'].astype(int)
+                df['Z'] = df['symbol'].map(sym2z)
+                df['frame'] = idx
+                df['set'] -= 1
+                dfs.append(df)
+            atom = pd.concat(dfs, ignore_index=True)
+        elif found1:
+            start = stop = found1[-1] + 4
+            while self[stop].strip(): stop += 1
+            atom = self.pandas_dataframe(start, stop, ncol=8)
+            atom.drop(list(range(5,8)), axis='columns', inplace=True)
+            atom.columns = ['set', 'symbol', 'x', 'y', 'z']
+            for c in ['x', 'y', 'z']: atom[c] *= Length['Angstrom', 'au']
+            atom['Z'] = atom['symbol'].map(sym2z)
+            atom['set'] -= 1
+            atom['frame'] = 0
+        elif found2:
+            #if len(found) > 1:
+            #    raise NotImplementedError("We can only parse outputs from a single NMR calculation")
+            atom = []
+            for idx, val in enumerate(found2):
+                start = val + 3
+                stop = start
+                while self[stop].strip(): stop += 1
+                # a bit of a hack to make sure that there is no formatting change depending on the
+                # number of atoms in the molecule as the index is right justified so if there are
+                # more than 100 atoms it will fill the alloted space for the atom index and change the
+                # delimitter and therefore the number of columns
+                self[start:stop] = map(lambda x: x.replace('(', ''), self[start:stop])
+                df = self.pandas_dataframe(start, stop, ncol=5)
+                df.columns = ['symbol', 'set', 'x', 'y', 'z']
+                for c in ['x', 'y', 'z']: df[c] *= Length['Angstrom', 'au']
+                df['Z'] = df['symbol'].map(sym2z)
+                df['frame'] = idx
+                # remove the trailing chracters from the index
+                df['set'] = list(map(lambda x: x.replace('):', ''), df['set']))
+                df['set'] = df['set'].astype(int) - 1
+                atom.append(df)
+            atom = pd.concat(atom)
+        else:
+            raise NotImplementedError("We could not find the atom table in this output. Please submit "+ \
+                                      "an issue ticket so we can add it in.")
         self.atom = atom
 
 
@@ -315,6 +377,150 @@ class Output(six.with_metaclass(OutMeta, Editor)):
         momatrix['frame'] = self.atom['frame'].unique()[-1]
         self.sphr_momatrix = momatrix
 
+    def parse_gradient(self):
+        _regrad = "Energy gradients wrt nuclear displacements"
+        found = self.find(_regrad, keys_only=True)
+        if not found:
+            return
+        starts = np.array(found) + 6
+        stop = starts[0]
+        while '----' not in self[stop]: stop += 1
+        stops = starts + (stop - starts[0])
+        dfs = []
+        for i, (start, stop) in enumerate(zip(starts, stops)):
+            df = self.pandas_dataframe(start, stop, ncol=5)
+            df.columns = ['atom', 'symbol', 'fx', 'fy', 'fz']
+            df['frame'] = i
+            df['atom'] -= 1
+            dfs.append(df)
+        grad = pd.concat(dfs, ignore_index=True)
+        grad['Z'] = grad['symbol'].map(sym2z)
+        grad = grad[['atom', 'Z', 'fx', 'fy', 'fz', 'symbol', 'frame']]
+        for u in ['fx', 'fy', 'fz']: grad[u] *= 1./Length['Angstrom', 'au']
+        self.gradient = grad
+
+    def parse_frequency(self):
+        _renorm = "Vibrations and Normal Modes"
+        _refreq = "List of All Frequencies:"
+        found = self.find(_refreq, keys_only=True)
+        if not found:
+            return
+        elif len(found) > 1:
+            raise NotImplementedError("We cannot parse more than one frequency calculation in a single output")
+        found = self.find(_refreq, _renorm, keys_only=True)
+        start = found[_refreq][0] + 9
+        stop = start
+        while self[stop]: stop += 1
+        df = self.pandas_dataframe(start, stop, ncol=3)
+        freqs = df[0].values
+        n = int(np.ceil(freqs.shape[0]/3))
+        start = found[_renorm][0] + 9
+        stop = start
+        while self[stop]: stop += 1
+        natoms = stop - start
+        dfs = []
+        fdx = 0
+        for i in range(n):
+            if i == 0:
+                start = found[_renorm][0] + 9
+            else:
+                start = stop + 4
+            stop = start + natoms
+            freqs = list(map(lambda x: float(x), self[start-2].split()))
+            ncol = len(freqs)
+            df = self.pandas_dataframe(start, stop, ncol=1+3*ncol)
+            tmp = list(map(lambda x: x.split('.'), df[0]))
+            index, symbol = list(map(list, zip(*tmp)))
+            slices = [list(range(1+i, 1+3*ncol, 3)) for i in range(ncol)]
+            dx, dy, dz = [df[i].unstack().values for i in slices]
+            freqdx = np.repeat(list(range(fdx, ncol+fdx)), natoms)
+            zs = pd.Series(symbol).map(sym2z)
+            freqs = np.repeat(freqs, natoms)
+            stacked = pd.DataFrame.from_dict({'Z': np.tile(zs, ncol), 'label': np.tile(index, ncol), 'dx': dx,
+                                              'dy': dy, 'dz': dz, 'frequency': freqs, 'freqdx': freqdx})
+            stacked['ir_int'] = 0.0
+            stacked['symbol'] = np.tile(symbol, ncol)
+            dfs.append(stacked)
+            fdx += ncol
+        frequency = pd.concat(dfs, ignore_index=True)
+        frequency['frame'] = 0
+        # TODO: check units of the normal modes
+        self.frequency = frequency
+
+    def parse_nmr_shielding(self):
+        _reatom = "N U C L E U S :"
+        _reshield = "==== total shielding tensor"
+        _renatom = "NUCLEAR COORDINATES (ANGSTROMS)"
+        found = self.find(_reatom, keys_only=True)
+        if not found:
+            #raise NotImplementedError("Could not find {} in output".format(_reatom))
+            return
+        ncalc = self.find(_renatom, keys_only=True)
+        ncalc.append(len(self))
+        ndx = 0
+        dfs = []
+        for start in found:
+            try:
+                ndx = ndx if start > ncalc[ndx] and start < ncalc[ndx+1] else ndx+1
+            except IndexError:
+                raise IndexError("It seems that there was an issue with determining which NMR calculation we are in")
+            start_shield = self.find(_reshield, keys_only=True, start=start)[0] + start + 2
+            end_shield = start_shield + 3
+            symbol, index = self[start].split()[-1].split('(')
+            index = int(index.replace(')', ''))
+            isotropic = float(self[start_shield+4].split()[-1])
+            df = self.pandas_dataframe(start_shield, end_shield, ncol=3)
+            cols = ['xx', 'xy', 'xz', 'yx', 'yy', 'yz', 'zx', 'zy', 'zz']
+            df = pd.DataFrame(df.unstack().values.reshape(1,9), columns=cols)
+            df['isotropic'] = isotropic
+            df['atom'] = index - 1
+            df['symbol'] = symbol
+            df['label'] = 'nmr shielding'
+            df['frame'] = ndx
+            dfs.append(df)
+        shielding = pd.concat(dfs, ignore_index=True)
+        self.nmr_shielding = shielding
+
+    def parse_j_coupling(self):
+        _recoupl = "total calculated spin-spin coupling:"
+        _reatom = "Internal CPL numbering of atoms:"
+        found = self.find(_reatom, keys_only=True)
+        if not found:
+            return
+        found = self.find(_reatom, _recoupl, keys_only=True)
+        # we grab the tensors inside the principal axis representation
+        # for the cartesian axis representation we start the list at 0 and grab every other instance
+        start_coupl = found[_recoupl][1::2]
+        start_pert = np.array(found[_reatom]) - 3
+        dfs = []
+        # grab atoms
+        cols = ['xx', 'xy', 'xz', 'yx', 'yy', 'yz', 'zx', 'zy', 'zz']
+        for ln, start in zip(start_pert, start_coupl):
+            line = self[ln].split()
+            # we just replace all of the () in the strings
+            pert_nucl = list(map(lambda x: x.replace('(', '').replace(')', ''), line[5:]))
+            nucl = list(map(lambda x: x.replace('(', '').replace(')', ''), line[1:3]))
+            # grab both tensors
+            df = self.pandas_dataframe(start+2, start+5, ncol=6)
+            # this will grab the iso value and tensor elements for the j coupling in hz
+            df.drop(range(3), axis='columns', inplace=True)
+            df = pd.DataFrame(df.unstack().values.reshape(1,9), columns=cols)
+            iso = self[start+1].split()[-1]
+            # place all of the dataframe columns
+            df['isotropic'] = float(iso)
+            df['atom'] = int(nucl[0])
+            df['symbol'] = nucl[1]
+            df['pt_atom'] = int(pert_nucl[0])
+            df['pt_symbol'] = pert_nucl[1]
+            df['label'] = 'j coupling'
+            df['frame'] = 0
+            dfs.append(df)
+        # put everything together
+        j_coupling = pd.concat(dfs, ignore_index=True)
+        j_coupling['atom'] -= 1
+        j_coupling['pt_atom'] -= 1
+        self.j_coupling = j_coupling
 
     def __init__(self, *args, **kwargs):
         super(Output, self).__init__(*args, **kwargs)
+

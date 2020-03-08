@@ -34,6 +34,7 @@ package-lock.json
 *.py[cod]
 *.nb[ci]
 *.so
+docs/source/*.txt
 
 # IDE and misc
 *.manifest
