@@ -268,11 +268,10 @@ var ExatomicSceneView = widgets.DOMWidgetView.extend({
 });
 
 
-
-
 module.exports = {
     ExatomicSceneModel: ExatomicSceneModel,
     ExatomicSceneView: ExatomicSceneView,
     ExatomicBoxModel: ExatomicBoxModel,
     ExatomicBoxView: ExatomicBoxView
 }
+

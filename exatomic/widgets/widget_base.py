@@ -182,7 +182,9 @@ class UniverseScene(ExatomicScene):
     atom_z = Unicode().tag(sync=True)
     atom_l = Dict().tag(sync=True)
     atom_s = Unicode().tag(sync=True)
-    atom_r = Dict().tag(sync=True)
+#    atom_r = Dict().tag(sync=True)
+    atom_vr = Dict().tag(sync=True)
+    atom_cr = Dict().tag(sync=True)
     atom_c = Dict().tag(sync=True)
     atom_3d = Bool(False).tag(sync=True)
     # Two traits
@@ -200,8 +202,6 @@ class UniverseScene(ExatomicScene):
     cont_num = Int(10).tag(sync=True)
     cont_lim = List([-8, -1]).tag(sync=True)
     cont_val = Float(0.0).tag(sync=True)
-    # Tensor traits
-    tensor_d = Dict().tag(sync=True)
     # Frame traits
     frame__a = Float(0.0).tag(sync=True)
     # Tensor traits
@@ -209,6 +209,17 @@ class UniverseScene(ExatomicScene):
     tensor_d = Dict().tag(sync=True)
     scale = Float(1.).tag(sync=True)
     tidx = Int(0).tag(sync=True)
+    # View traits
+    fill_idx = Int(0).tag(sync=True)
+    bond_r = Float(-1).tag(sync=True)
+    selected = Dict().tag(sync=True)
+    clear_selected = Bool(False).tag(sync=True)
+
+    # This block works to print out changes from javascript
+    #@observe('selected')
+    #def _observe_selected(self, change):
+    #    print(change['old'])
+    #    print(change['new'])
 
 
 @register
@@ -307,8 +318,8 @@ class ExatomicBox(Box):
     def _field_folder(self, **kwargs):
         """Folder that houses controls for viewing scalar fields."""
         uni = kwargs.pop('uni', False)
-        test = kwargs.pop('test', True)
-        fdict = gui_field_widgets(uni, test)
+        #test = kwargs.pop('test', True)
+        fdict = gui_field_widgets(uni)#, test)
 
         def _iso(c):
             for scn in self.active():
@@ -359,7 +370,7 @@ class ExatomicBox(Box):
     def __init__(self, *objs, **kwargs):
         objs = (1,) if not objs else objs
         scenekwargs = kwargs.pop('scenekwargs', {})
-        test = kwargs.pop('test', False)
+        #test = kwargs.pop('test', False)
         uni = kwargs.pop('uni', False)
         typ = kwargs.pop('typ', ExatomicScene)
         mh = kwargs.pop('min_height', None)
@@ -367,12 +378,12 @@ class ExatomicBox(Box):
         nframes = kwargs.pop('nframes', None)
         fields = kwargs.pop('fields', None)
         tensors = kwargs.pop('tensors', None)
-        self.scenes, scenes = _scene_grid(objs, mh, mw, test,
+        self.scenes, scenes = _scene_grid(objs, mh, mw,# test,
                                           uni, typ, scenekwargs)
         self._controls = self._init_gui(nframes=nframes,
                                         fields=fields,
                                         tensors=tensors,
-                                        test=test,
+                                        #test=test,
                                         uni=uni)
         for _, obj in self._controls.items():
             if not hasattr(obj, 'active'): obj.active = True
@@ -385,7 +396,8 @@ class ExatomicBox(Box):
                 **kwargs)
 
 
-def _scene_grid(objs, mh, mw, test, uni, typ, scenekwargs):
+#def _scene_grid(objs, mh, mw, test, uni, typ, scenekwargs):
+def _scene_grid(objs, mh, mw, uni, typ, scenekwargs):
     """Auxiliary function to lay out multiple scenes."""
     n = objs[0] if isinstance(objs[0], int) else len(objs)
     if n > 9: raise NotImplementedError('Too many scenes')

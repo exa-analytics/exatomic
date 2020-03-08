@@ -14,13 +14,16 @@ from six import StringIO
 from collections import defaultdict
 from exa import TypedMeta
 from exa.util.units import Length
+from exatomic.base import sym2z
 from exatomic.core.frame import compute_frame_from_atom
 from exatomic.algorithms.numerical import _square_indices
 from exatomic.algorithms.basis import lmap
 from exatomic.core.frame import Frame
-from exatomic.core.atom import Atom
+from exatomic.core.atom import Atom, Frequency
 from exatomic.core.basis import BasisSet, BasisSetOrder
 from exatomic.core.orbital import Orbital, MOMatrix
+from exatomic.core.tensor import Polarizability
+from exatomic.core.gradient import Gradient
 from .editor import Editor
 from .basis import cartesian_ordering_function, spherical_ordering_function
 
@@ -32,6 +35,9 @@ class OutMeta(TypedMeta):
     basis_set = BasisSet
     basis_set_order = BasisSetOrder
     frame = Frame
+    roa = Polarizability
+    gradient = Gradient
+    frequency = Frequency
 
 class Output(six.with_metaclass(OutMeta, Editor)):
     """Editor for NWChem calculation output file (stdout)."""
@@ -256,6 +262,175 @@ class Output(six.with_metaclass(OutMeta, Editor)):
                 cache[cen][L][ml] += 1
         bso['shell'] = shls
         self.basis_set_order = bso
+
+    def parse_roa(self):
+        """
+        Parse the :class:`~exatomic.core.tensor.Polarizability` dataframe. This will parse the
+        output from the Raman Optical Activity outputs.
+
+        Note:
+            We generate a 3D tensor with the 2D tensor code. 3D tensors will have 3 rows labeled
+            with the same name.
+        """
+        _reroa = 'roa begin'
+        _reare = 'alpha real'
+        _reaim = 'alpha im'
+#        _reombre = 'beta real'
+#        _reombim = 'beta im'
+        _reombre = 'omega beta(real)'
+        _reombim = 'omega beta(imag)'
+        _redqre = 'dipole-quadrupole real (Cartesian)'
+        _redqim = 'dipole-quadrupole imag (Cartesian)'
+
+        if not self.find(_reroa):
+            return
+        found_2d = self.find(_reare, _reaim, _reombre, _reombim, keys_only=True)
+        found_3d = self.find(_redqre, _redqim, keys_only=True)
+        data = {}
+        start = np.array(list(found_2d.values())).reshape(4,) + 1
+        end = np.array(list(found_2d.values())).reshape(4,) + 10
+        columns = ['x', 'val']
+        data = [self.pandas_dataframe(s, e, columns) for s, e in zip(start, end)]
+        df = pd.concat([dat for dat in data]).reset_index(drop=True)
+        df['grp'] = [i for i in range(4) for j in range(9)]
+        df = df[['val', 'grp']]
+        df = pd.DataFrame(df.groupby('grp').apply(lambda x:
+                        x.unstack().values[:-9]).values.tolist(),
+                        columns=['xx', 'xy', 'xz','yx','yy','yz','zx','zy','zz'])
+        # find the electric dipole-quadrupole polarizability
+        # NWChem gives this as a list of 18 values assuming the matrix to be symmetric
+        # for our implementation we need to extend it to 27 elements
+        # TODO: check that NWChem does assume that the 3D tensors are symmetric
+        start = np.sort(np.array(list(found_3d.values())).reshape(2,)) + 1
+        end = np.sort(np.array(list(found_3d.values())).reshape(2,)) + 19
+        data = [self.pandas_dataframe(s, e, columns) for s, e in zip(start, end)]
+        df3 = pd.concat([dat for dat in data]).reset_index(drop=True)
+        vals = df3['val'].values.reshape(2,3,6)
+        adx = np.triu_indices(3)
+        mat = np.zeros((2,3,3,3))
+        for i in range(2):
+            for j in range(3):
+                mat[i][j][adx] = vals[i][j]
+                mat[i][j] = mat[i][j] + np.transpose(mat[i][j]) - np.identity(3)*mat[i][j]
+        mat = mat.reshape(18,3)
+        df3 = pd.DataFrame(mat, columns=['x', 'y', 'z'])
+        df3['grp1'] = [i for i in range(2) for j in range(9)]
+        df3['grp2'] = [j for i in range(2) for j in range(3) for n in range(3)]
+        df3 = pd.DataFrame(df3.groupby(['grp1','grp2']).apply(lambda x:
+                                x.unstack().values[:-6]).values.tolist(),
+                                columns=['xx', 'xy', 'xz', 'yx', 'yy', 'yz', 'zx', 'zy', 'zz'],
+                                index=['Ax_real','Ay_real','Az_real','Ax_imag','Ay_imag','Az_imag'])
+        split_label = np.transpose([i.split('_') for i in df3.index.values])
+        label = split_label[0]
+        types = split_label[1]
+        df['label'] = found_2d.keys()
+        df['label'].replace([_reare, _reombre, _reaim, _reombim],
+                                ['alpha-real', 'g_prime-real', 'alpha-imag', 'g_prime-imag'], inplace=True)
+        df['type'] = [i.split('-')[-1] for i in df['label'].values]
+        df['label'] = [i.split('-')[0] for i in df['label'].values]
+        df['frame'] = np.repeat([0], len(df.index))
+        df3['label'] = label
+        df3['type'] = types
+        df3['frame'] = np.repeat([0], len(df3.index))
+        self.roa = pd.concat([df, df3], ignore_index=True)
+
+    def parse_frequency(self):
+        """
+        Parse the :class:`~exatomic.core.atom.Frequency` dataframe.
+
+        Note:
+            This code removes all negative frequencies.
+        """
+        _remeth = "NORMAL MODE EIGENVECTORS IN CARTESIAN COORDINATES"
+        _refreq = "Frequency"
+        _renat = "Atom information"
+
+        found = self.find(_remeth)
+        fnat = self.find(_renat)
+        if not found and not fnat:
+            return
+        # get atom information
+        start = fnat[0][0]+3
+        stop = start
+        while '----' not in self[stop]: stop += 1
+        # we assume that there is only one instance of where _renat is found
+        columns = ['symbol', 'atom', 'x', 'y', 'z', 'mass']
+        atom = self.pandas_dataframe(start, stop, columns)
+        atom['atom'] -= 1
+        nat = len(atom)
+        # find bounds where the calculated frequencies are
+        start = found[0][0]
+        stop = found[1][0]
+        # get the data
+        found = self.find(_refreq, start=start, stop=stop)
+        dfs = []
+        fdx = 0
+        # get frequencies
+        for lno, ln in found:
+            # get the frequency values
+            tmp = ln.split()[1:]
+            freq = np.asarray([float(i) for i in tmp])
+            ## TODO: here we remove all negative frequencies
+            ##       need to find out if this is ok to do
+            # set start and end points for the calculated normal modes
+            staf = lno+start+1
+            stof = lno+start+nat*3+2
+            nm = self.pandas_dataframe(staf, stof, ncol=len(freq)).reset_index(drop=True)
+            # generate boolean array that shows False for negative frequencies
+            neg = [not f < 0 for f in freq]
+            # remove negative frequencies
+            nm.drop(columns=[idx for idx, val in enumerate(neg) if not val], inplace=True)
+            freq = freq[neg]
+            # get normal modes in the x, y, z directions
+            nm = nm.stack().values
+            nfreq = len(freq)
+            dx = nm[::3]
+            dy = nm[1::3]
+            dz = nm[2::3]
+            # assemble dataframe
+            symbol = np.tile(atom['symbol'], nfreq)
+            adx = np.tile(atom['atom'], nfreq)
+            freq = np.repeat(freq, nat)
+            freqdx = np.repeat([i for i in range(fdx, fdx + nfreq)], nfreq)
+            frames = np.repeat([0], nfreq*nat)
+            fdx += nfreq
+            stacked = pd.DataFrame.from_dict({'symbol': symbol, 'atom': adx, 'dx': dx, 'dy': dy,
+                                              'dz': dz, 'freq': freq, 'freqdx': freqdx,
+                                              'frames': frames})
+            dfs.append(stacked)
+        frequency = pd.concat(dfs).reset_index(drop=True)
+        self.frequency = frequency
+
+    def parse_gradient(self):
+        """
+        Parse :class:`exatomic.core.gradient.Gradient` dataframe.
+        """
+        _regrad = "DFT ENERGY GRADIENTS"
+
+        found = self.find(_regrad)
+        if not found:
+            return
+        found = self.find(_regrad, keys_only=True)
+        # find start and stop points
+        starts = np.array(found) + 4
+        stop = starts[0]
+        while '----' not in self[stop]: stop += 1
+        # backtrack one line as the line after the needed info is empty
+        stop -= 1
+        stops = starts + (stop - starts[0])
+        dfs = []
+        # generate dataframe array
+        columns = ['atom', 'symbol', 'x', 'y', 'z', 'fx', 'fy', 'fz']
+        for i, (start, stop) in enumerate(zip(starts, stops)):
+            gradient = self.pandas_dataframe(start, stop, columns)
+            gradient['frame'] = i
+            dfs.append(gradient[['atom', 'symbol', 'fx', 'fy', 'fz', 'frame']])
+        # construct the dataframe
+        gradient = pd.concat(dfs).reset_index(drop=True)
+        gradient['Z'] = gradient['symbol'].map(sym2z)
+        # want to keep more or less the same order across dataframes
+        # or at least try
+        self.gradient = gradient[['Z', 'atom', 'fx', 'fy', 'fz', 'symbol', 'frame']]
 
     def parse_frame(self):
         """

@@ -1,5 +1,5 @@
 {% set name = "exatomic" %}
-{% set version = "0.4.0" %}
+{% set version = "0.4.1" %}
 
 package:
   name: {{ name }}
@@ -24,6 +24,7 @@ requirements:
     - exa
     - sympy
     - symengine
+    - pyyaml
 
 test:
   imports:

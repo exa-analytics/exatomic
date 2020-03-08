@@ -16,6 +16,7 @@ from exatomic.base import sym2z, sym2mass
 from exatomic.algorithms.distance import modv
 from exatomic.core.error import PeriodicUniverseError
 from exatomic.algorithms.geometry import make_small_molecule
+from exatomic import plotter
 
 
 class Atom(DataFrame):
@@ -84,6 +85,85 @@ class Atom(DataFrame):
             else: frame[r] = frame[r] + np.abs(center[r])
         return frame
 
+    def rotate(self, theta, axis=None, frame=None, degrees=True):
+        """
+        Return a copy of a single frame of the atom table rotated
+        around the specified rotation axis by the specified angle.
+        As we have the rotation axis and the rotation angle we are
+        able to use the Rodrigues' formula to get the rotated
+        vectors.
+
+        Args:
+            theta (float): The angle that you wish to rotate by
+            axis (list): The axis of rotation
+            frame (int): The frame that you wish to rotate
+            degrees (bool): If true convert from degrees to radians
+
+        Returns:
+            frame (:class:`exatomic.Universe.atom`): Atom frame
+        """
+        if axis is None: axis = [0, 0, 1]
+        if frame is None: frame = self.last_frame.copy()
+        else: frame = self[self.frame == frame].copy()
+        # as we have the rotation axis and the angle we will rotate over
+        # we implement the Rodrigues' rotation formula
+        # v_rot = v*np.cos(theta) + (np.cross(k,v))*np.sin(theta) + k*(np.dot(k,v))*(1-np.cos(theta))
+
+        # convert units if not degrees
+        if degrees: theta = theta*np.pi/180.
+
+        # normalize rotation axis vector
+        norm = np.linalg.norm(axis)
+        axis /= norm
+        # get the coordinates
+        coords = frame[['x', 'y', 'z']].values
+        # generate the first term in rodrigues formula
+        a = coords * np.cos(theta)
+        # generate second term in rodrigures formula
+        # this creates a matrix of size coords.shape[0]
+        b = np.cross(axis, coords) * np.sin(theta)
+        # generate the last term in rodrigues formula
+        # we use np.outer to make a dyadic productof the result from the dot product vector
+        # and the axis vector
+        c = np.outer(np.dot(coords, axis), axis) * (1-np.cos(theta))
+        rotated = a + b + c
+        frame[['x', 'y', 'z']] = rotated
+        return frame
+
+    def translate(self, dx=0, dy=0, dz=0, vector=None, frame=None, units='au'):
+        """
+        Return a copy of a single frame of the atom table translated by
+        some specified distance.
+
+        Note:
+            Vector can be used instead of dx, dy, dz as it will be decomposed
+            into those components. If vector and any of the others are
+            specified the values in vector will be used.
+
+        Args:
+            dx (float): Displacement distance in x
+            dy (float): Displacement distance in y
+            dz (float): Displacement distance in z
+            vector (list): Displacement vector
+            units (str): Units that are used for the displacement
+
+        Returns:
+            frame (:class:`exatomic.Universe.atom`): Atom frame
+        """
+        if frame is None: frame = self.last_frame.copy()
+        else: frame = self[self.frame == frame].copy()
+        # check if vector is specified
+        if vector is not None:
+            # convert vector units to au
+            vector = [i * Length[units, 'au'] for i in vector]
+            dx = vector[0]
+            dy = vector[1]
+            dz = vector[2]
+        # add the values to each respective coordinate
+        frame['x'] += dx
+        frame['y'] += dy
+        frame['z'] += dz
+        return frame
 
     def to_xyz(self, tag='symbol', header=False, comments='', columns=None,
                frame=None, units='Angstrom'):
@@ -268,11 +348,17 @@ class Frequency(DataFrame):
     +-------------------+----------+-------------------------------------------+
     | dz                | float    | atomic displacement in z direction (req.) |
     +-------------------+----------+-------------------------------------------+
+    | ir_int            | float    | ir intensity of the vibrational mode      |
+    +-------------------+----------+-------------------------------------------+
     | symbol            | str      | atomic symbol (req.)                      |
     +-------------------+----------+-------------------------------------------+
     | label             | int      | atomic identifier                         |
     +-------------------+----------+-------------------------------------------+
     """
+    _index = 'frequency'
+    _cardinal = ('frame', np.int64)
+    _categories = {'symbol': str, 'label': np.int64}
+    _columns = ['dx', 'dy', 'dz', 'symbol', 'frequency', 'freqdx', 'ir_int']
     #@property
     #def _constructor(self):
     #    return Frequency
@@ -280,6 +366,65 @@ class Frequency(DataFrame):
     def displacement(self, freqdx):
         return self[self['freqdx'] == freqdx][['dx', 'dy', 'dz', 'symbol']]
 
+    def ir_spectra(self, fwhm=15, lineshape='gaussian', xrange=None, res=None, invert_x=False, **kwargs):
+        '''
+        Generate an IR spectra with the plotter classes. We can define a gaussian or lorentzian
+        lineshape functions. For the most part we pass all of the kwargs directly into the
+        plotter.Plot class.
+
+        Args:
+            fwhm (float): Full-width at half-maximum
+            lineshape (str): Switch between the different lineshape functions available
+            xrange (list): X-bounds for the plot
+            res (float): Resolution for the plot line
+            invert_x (bool): Invert x-axis
+        '''
+        # define the lineshape and store the function call in the line variable
+        try:
+            line = getattr(plotter, lineshape)
+        except AttributeError:
+            raise NotImplementedError("Sorry we have not yet implemented the lineshape {}.".format(lineshape))
+        # define a default parameter for the plot width
+        # we did this for a full-screen jupyter notebook on a 1920x1080 monitor
+        if not "plot_width" in kwargs:
+            kwargs.update(plot_width=900)
+        # define xbounds
+        xrange = [0, 4000] if xrange is None else xrange
+        # deal with inverted bounds
+        if xrange[0] > xrange[1]:
+            xrange = sorted(xrange)
+            invert_x = True
+        # define the resolution
+        res = fwhm/50 if res is None else res
+        # define the class
+        plot = plotter.Plot(**kwargs)
+        # this is designed for a single frame
+        if self['frame'].unique().shape[0] != 1:
+            raise NotImplementedError("We have not yet expanded to include multiple frames")
+        # grab the locations of the peaks between the bounds
+        freqdx = self['freqdx'].drop_duplicates().index
+        freq = self.loc[freqdx, 'frequency']
+        freq = freq[freq.between(*xrange)]
+        # grab the ir intensity data
+        # we use the frequency indexes instead of drop duplicates as we may have similar intensities
+        inten = self.loc[freq.index, 'ir_int'].astype(np.float64).values
+        # change to using the values instead as we no longer need the index data
+        # we could also use jit for the lineshape functions as we only deal with numpy arrays
+        freq = freq.values
+        x_data = np.arange(*xrange, res)
+        # get the y data by calling the lineshape function generator
+        y_data = line(freq=freq, x=x_data, fwhm=fwhm, inten=inten)
+        # plot the lineshape data
+        plot.fig.line(x_data, y_data)
+        # plot the points on the plot to show were the frequency values are
+        # more useful when we have nearly degenerate vibrations
+        plot.fig.scatter(freq, line(freq=freq, x=freq, fwhm=fwhm, inten=inten))
+        if invert_x:
+            plot.set_xrange(xmin=xrange[1], xmax=xrange[0])
+        else:
+            plot.set_xrange(xmin=xrange[0], xmax=xrange[1])
+        # display the figure with our generated method
+        plot.show()
 
 def add_vibrational_mode(uni, freqdx):
     displacements = uni.frequency.displacements(freqdx)
@@ -301,3 +446,4 @@ def add_vibrational_mode(uni, freqdx):
     movie['frame'] = np.repeat(range(len(factor)), len(uni.atom))
     uni.frame = pd.concat(frames).reset_index()
     uni.atom = movie
+

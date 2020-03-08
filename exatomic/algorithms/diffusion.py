@@ -37,6 +37,6 @@ def einstein_relation(universe, input_time='ps', input_length='au',
         The default units of the diffusion coefficient are :math:`\\frac{cm^{2}}{s}`.
     """
     msd = absolute_squared_displacement(universe).mean(axis=1)
-    t = universe.frame['time'] / Time[input_time, time]
+    t = universe.frame['time'] * Time[input_time, time]
     msd *= Length[input_length, length]**2
     return msd/(6*t)
