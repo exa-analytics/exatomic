@@ -1,5 +1,5 @@
 numpy
-pandas==0.25
+pandas
 numba==0.37
 seaborn
 ipywidgets
