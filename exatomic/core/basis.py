@@ -136,22 +136,28 @@ class BasisSet(DataFrame):
     def functions(self, spherical):
         """Return a series of n functions per (set, L).
         This does include degenerate functions."""
+        self._revert_categories()
         if spherical:
             mapper = lambda x: spher_lml_count[x]
         else:
             mapper = lambda x: cart_lml_count[x]
         n = self.functions_by_shell()
-        return n * n.index.get_level_values('L').map(mapper)
+        ret = n * n.index.get_level_values('L').map(mapper)
+        self._set_categories()
+        return ret.astype(int)
 
     def primitives(self, spherical):
         """Return a series of n primitives per (set, L).
         This does include degenerate primitives."""
+        self._revert_categories()
         if spherical:
             mapper = lambda x: spher_lml_count[x]
         else:
             mapper = lambda x: cart_lml_count[x]
         n = self.primitives_by_shell()
-        return n * n.index.get_level_values('L').map(mapper)
+        ret = n * n.index.get_level_values('L').map(mapper)
+        self._set_categories()
+        return ret.astype(int)
 
     #def __init__(self, *args, **kwargs):
         #spherical = kwargs.pop("spherical", True)
@@ -202,15 +208,15 @@ def _expand_sp(unique):
             expand.append(seht)
             continue
         sps = seht[2][~np.isnan(seht[2])].index
-        shls = len(seht.ix[sps]['shell'].unique())
-        dupl = seht.ix[sps[0]:sps[-1]].copy()
+        shls = len(seht.loc[sps]['shell'].unique())
+        dupl = seht.loc[sps[0]:sps[-1]].copy()
         dupl[1] = dupl[2]
         dupl['L'] = 1
         dupl['shell'] += shls
-        last = seht.ix[sps[-1] + 1:].copy()
+        last = seht.loc[sps[-1] + 1:].copy()
         last['shell'] += shls
-        expand.append(pd.concat([seht.ix[:sps[0] - 1],
-                                 seht.ix[sps[0]:sps[-1]],
+        expand.append(pd.concat([seht.loc[:sps[0] - 1],
+                                 seht.loc[sps[0]:sps[-1]],
                                  dupl, last]))
     return expand
 

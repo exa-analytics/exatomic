@@ -176,10 +176,10 @@ class Universe(six.with_metaclass(Meta, Container)):
         bset = self.basis_set
         mapr = self.atom.set.map
         self.basis_dims = {
-            'npc': mapr(bset.primitives(False).groupby('set').sum()).sum(),
-            'nps': mapr(bset.primitives(True).groupby('set').sum()).sum(),
-            'ncc': mapr(bset.functions(False).groupby('set').sum()).sum(),
-            'ncs': mapr(bset.functions(True).groupby('set').sum()).sum(),
+            'npc': mapr(bset.primitives(False).groupby('set').sum()).astype(int).sum(),
+            'nps': mapr(bset.primitives(True).groupby('set').sum()).astype(int).sum(),
+            'ncc': mapr(bset.functions(False).groupby('set').sum()).astype(int).sum(),
+            'ncs': mapr(bset.functions(True).groupby('set').sum()).astype(int).sum(),
             'sets': bset.functions_by_shell()}
 
     def compute_basis_functions(self, **kwargs):

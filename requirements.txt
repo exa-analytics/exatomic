@@ -1,6 +1,6 @@
 numpy
-pandas
-numba
+pandas==0.25
+numba==0.37
 seaborn
 ipywidgets
 sympy
