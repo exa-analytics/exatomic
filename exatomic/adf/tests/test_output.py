@@ -69,7 +69,7 @@ class TestADFOutput(TestCase):
     def test_parse_orbital(self):
         self.lu.parse_orbital()
         self.assertEqual(self.lu.orbital.shape[0], 20)
-        cols = set(self.lu.orbital._columns)
+        cols = list(set(self.lu.orbital._columns))
         test = pd.DataFrame(self.lu.orbital[cols])
         self.assertTrue(np.all(pd.notnull(test)))
 

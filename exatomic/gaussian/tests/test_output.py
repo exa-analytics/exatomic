@@ -154,7 +154,7 @@ class TestOutput(TestCase):
         self.assertTrue(np.all(pd.notnull(pd.DataFrame(self.uo2.basis_set))))
         self.mam3.parse_basis_set()
         self.assertEqual(self.mam3.basis_set.shape[0], 32)
-        cols = set(self.mam3.basis_set._columns)
+        cols = list(set(self.mam3.basis_set._columns))
         test = pd.DataFrame(self.mam3.basis_set[cols])
         self.assertTrue(np.all(pd.notnull(test)))
         self.mam4.parse_basis_set()
