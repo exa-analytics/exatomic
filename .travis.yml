@@ -25,7 +25,7 @@ install:
     - conda create -y -n test python=$PYTHONVER
     - source activate test
     - conda update -q -y --all
-    - conda install -q -y -c conda-forge six numpy pandas pytables numba==0.38 pyyaml
+    - conda install -q -y -c conda-forge six numpy pandas pytables numba==0.39 pyyaml
     - conda install -q -y -c conda-forge sphinx sphinx_rtd_theme ply sympy
     - conda install -q -y -c conda-forge pandoc pypandoc nbsphinx ipython seaborn
     - conda install -q -y -c conda-forge coveralls coverage pytest pytest-cov
