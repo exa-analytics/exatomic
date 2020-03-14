@@ -36,8 +36,9 @@ class TestAtom(TestCase):
         # for h2 it is the same as center of nuclear charge
         centered = self.h2.atom.center(to='Mass')
         self.assertTrue(np.allclose(centered[self.cols].values, center_nc))
-        center_mass = np.array([[ 0.00018759,  0.00011283, -0.0001942 ]])
+        center_mass = np.array([[ 0.00018765,  0.00011287, -0.00019444 ]])
         centered = self.znpor.atom.center(to='Mass')
+        print(centered.head(1)[self.cols].values)
         self.assertTrue(np.allclose(centered.head(1)[self.cols].values, center_mass))
         # make sure we raise an error when a centering method that has not been implemented
         # is given
