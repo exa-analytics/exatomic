@@ -105,12 +105,12 @@ class Atom(DataFrame):
             center = frame.iloc[idx]
         elif to == 'NuclChrg':
             try:
-                Z = frame['Z'].values
+                Z = frame['Z'].astype(int).values
             except KeyError:
-                Z = frame['symbol'].map(sym2z).values
+                Z = frame['symbol'].map(sym2z).astype(int).values
             center = self._determine_center(attr=Z, coords=frame[['x', 'y', 'z']].values)
         elif to == 'Mass':
-            mass = frame['symbol'].map(sym2mass).values
+            mass = frame['symbol'].map(sym2mass).astype(int).values
             center = self._determine_center(attr=mass, coords=frame[['x', 'y', 'z']].values)
         else:
             raise NotImplementedError("Sorry the centering option {} is not available".format(to))
