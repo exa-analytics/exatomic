@@ -318,7 +318,10 @@ class Output(six.with_metaclass(OutMeta, Editor)):
         df['L'] = df['type'].str[1].map(lmap)
         df['ml'] = df['type'].str[2:]
         df['ml'].update(df['ml'].map({'': 0, 'x': 1, 'y': -1, 'z': 0}))
-        df['ml'].update(df['ml'].str[::-1])
+        try:
+            df['ml'].update(df['ml'].str[::-1])
+        except Exception:
+            pass
         df['ml'] = df['ml'].astype(np.int64)
         # Seward and gateway may each print basis info.
         # See if this happened and if so, keep only the first half.

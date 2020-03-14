@@ -258,8 +258,8 @@ def _compute_bonds(atom, atom_two, bond_extra=0.45, **radii):
     atom['symbol'] = atom['symbol'].astype('category')
     radmap = {sym: sym2radius[sym][0] for sym in atom['symbol'].cat.categories}
     radmap.update(radii)
-    maxdr = (atom_two['atom0'].map(atom['symbol']).map(radmap) +
-             atom_two['atom1'].map(atom['symbol']).map(radmap) + bond_extra)
+    maxdr = (atom_two['atom0'].map(atom['symbol']).map(radmap).astype(float) +
+             atom_two['atom1'].map(atom['symbol']).map(radmap).astype(float) + bond_extra)
     atom_two['bond'] = np.where(atom_two['dr'] <= maxdr, True, False)
 
 

@@ -79,7 +79,7 @@ class Atom(DataFrame):
         centered around a specific atom index."""
         if frame is None: frame = self.last_frame.copy()
         else: frame = self[self.frame == frame].copy()
-        center = frame.ix[idx]
+        center = frame.loc[idx]
         for r in ['x', 'y', 'z']:
             if center[r] > 0: frame[r] = frame[r] - center[r]
             else: frame[r] = frame[r] + np.abs(center[r])
@@ -314,8 +314,8 @@ class VisualAtom(SparseDataFrame):
         if universe.frame.is_periodic():
             atom = universe.atom[['x', 'y', 'z']].copy()
             atom.update(universe.unit_atom)
-            bonded = universe.atom_two.ix[universe.atom_two['bond'] == True, 'atom1'].astype(np.int64)
-            prjd = universe.projected_atom.ix[bonded.index].to_dense()
+            bonded = universe.atom_two.loc[universe.atom_two['bond'] == True, 'atom1'].astype(np.int64)
+            prjd = universe.projected_atom.loc[bonded.index].to_dense()
             prjd['atom'] = bonded
             prjd.drop_duplicates('atom', inplace=True)
             prjd.set_index('atom', inplace=True)
