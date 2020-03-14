@@ -74,17 +74,17 @@ class TestAtom(TestCase):
         rotated = self.h2o.atom.rotate(theta=0)
         self.assertTrue(np.allclose(rotated[self.cols].values, self.h2o.atom.last_frame[self.cols]))
 
-    def test_align(self):
+    def test_align_to_axis(self):
         # align to x axis
         align_data = np.array([[ 0.          , 0.          , 0.          ],
                                [ 1.8712970607, 0.          ,-0.          ],
                                [-0.4688643421,-1.1790804580, 1.3754088998]])
-        aligned = self.h2o.atom.align(adx0=0, adx1=1, axis=[1,0,0])
+        aligned = self.h2o.atom.align_to_axis(adx0=0, adx1=1, axis=[1,0,0])
         self.assertTrue(np.allclose(aligned[self.cols].values, align_data))
         # test aligning alog z axis and centering to the cnc
         align_nc = np.array([[0., 0., -0.668966999],
                              [0., 0.,  0.668966999]])
-        aligned = self.h2.atom.align(adx0=0, adx1=1, axis=[0, 0, 1], center_to='NuclChrg')
+        aligned = self.h2.atom.align_to_axis(adx0=0, adx1=1, axis=[0, 0, 1], center_to='NuclChrg')
         self.assertTrue(np.allclose(aligned[self.cols].values, align_nc))
 
 
