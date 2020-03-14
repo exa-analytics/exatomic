@@ -43,9 +43,9 @@ class TestAtom(TestCase):
         # make sure we raise an error when a centering method that has not been implemented
         # is given
         with self.assertRaises(NotImplementedError):
-           self.h2.atom.center(idx=0, to='UnknownCenteringMethod')
+            self.h2.atom.center(idx=0, to='UnknownCenteringMethod')
         with self.assertRaises(TypeError):
-           self.h2.atom.center()
+            self.h2.atom.center()
 
     def test_translate(self):
         # displace in each coordinate direction by 0.1 Bohr
