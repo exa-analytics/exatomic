@@ -74,16 +74,50 @@ class Atom(DataFrame):
         """Return unique atom symbols of the last frame."""
         return self.last_frame.symbol.unique()
 
-    def center(self, idx, frame=None):
-        """Return a copy of a single frame of the atom table
-        centered around a specific atom index."""
+    @staticmethod
+    def _determine_center(attr, coords):
+        """Determine the center of the molecule with respect to
+        the given attribute data. Used for the center of nuclear
+        charge and center of mass."""
+        center = 1/np.sum(attr)*np.sum(np.multiply(np.transpose(coords), attr), axis=1)
+        center = pd.Series(center, index=['x', 'y', 'z'])
+        return center
+
+    def center(self, idx=None, frame=None, to=None):
+        """
+        Return a copy of a single frame of the atom table
+        centered around a specific atom index. There is also
+        the ability to center the molecule to the center of
+        nuclear charge (NuclChrg) or center of mass (Mass).
+
+        Args:
+            idx (int): Atom index in the atom table
+            frame (int): Frame to perform the operation on
+            to (str): Tells the program which centering algorithm to use
+
+        Returs:
+            frame (:class:`exatomic.Universe.atom`): Atom frame
+        """
         if frame is None: frame = self.last_frame.copy()
         else: frame = self[self.frame == frame].copy()
-        center = frame.loc[idx]
+        if to is None:
+            if idx is None: raise TypeError("Must provide an atom to center to")
+            center = frame.iloc[idx]
+        elif to == 'NuclChrg':
+            try:
+                Z = frame['Z'].astype(int).values
+            except KeyError:
+                Z = frame['symbol'].map(sym2z).astype(int).values
+            center = self._determine_center(attr=Z, coords=frame[['x', 'y', 'z']].values)
+        elif to == 'Mass':
+            mass = frame['symbol'].map(sym2mass).astype(int).values
+            center = self._determine_center(attr=mass, coords=frame[['x', 'y', 'z']].values)
+        else:
+            raise NotImplementedError("Sorry the centering option {} is not available".format(to))
         for r in ['x', 'y', 'z']:
             if center[r] > 0: frame[r] = frame[r] - center[r]
             else: frame[r] = frame[r] + np.abs(center[r])
-        return frame
+        return Atom(frame)
 
     def rotate(self, theta, axis=None, frame=None, degrees=True):
         """
@@ -105,6 +139,8 @@ class Atom(DataFrame):
         if axis is None: axis = [0, 0, 1]
         if frame is None: frame = self.last_frame.copy()
         else: frame = self[self.frame == frame].copy()
+
+        if all(map(lambda x: x == 0., axis)) or theta == 0.: return frame
         # as we have the rotation axis and the angle we will rotate over
         # we implement the Rodrigues' rotation formula
         # v_rot = v*np.cos(theta) + (np.cross(k,v))*np.sin(theta) + k*(np.dot(k,v))*(1-np.cos(theta))
@@ -114,7 +150,10 @@ class Atom(DataFrame):
 
         # normalize rotation axis vector
         norm = np.linalg.norm(axis)
-        axis /= norm
+        try:
+            axis /= norm
+        except ZeroDivisionError:
+            raise ZeroDivisionError("Trying to normalize axis {} by a 0 value".format(axis))
         # get the coordinates
         coords = frame[['x', 'y', 'z']].values
         # generate the first term in rodrigues formula
@@ -128,7 +167,7 @@ class Atom(DataFrame):
         c = np.outer(np.dot(coords, axis), axis) * (1-np.cos(theta))
         rotated = a + b + c
         frame[['x', 'y', 'z']] = rotated
-        return frame
+        return Atom(frame)
 
     def translate(self, dx=0, dy=0, dz=0, vector=None, frame=None, units='au'):
         """
@@ -163,7 +202,37 @@ class Atom(DataFrame):
         frame['x'] += dx
         frame['y'] += dy
         frame['z'] += dz
-        return frame
+        return Atom(frame)
+
+    def align_to_axis(self, adx0, adx1, axis=None, frame=None, center_to=None):
+        '''
+        This a short method to center and align the molecule along some defined axis.
+
+        Args:
+            adx0 (int): Atom to place at the origin
+            adx1 (int): Atom to align along the axis
+            axis (list): Axis that the vector adx0-adx1 will align to
+            frame (int): Frame to align
+
+        Returns:
+            aligned (:class:`exatomic.Universe.atom`): Aligned atom frame
+        '''
+        if frame is None: atom = self.last_frame.copy()
+        else: atom = self[self.frame == frame].copy()
+        cols = ['x', 'y', 'z']
+        # define the original vector
+        v0 = atom.iloc[adx1][cols].values.astype(np.float64) - atom.iloc[adx0][cols].values.astype(np.float64)
+        # get the vector to align with and normalize
+        v1 = axis/np.linalg.norm(axis)
+        # find the normal vector to rotate around
+        n = np.cross(v0, v1)
+        # find the angle to rotate the vector
+        theta = np.arccos(np.dot(v0, v1) / (np.linalg.norm(v0)*np.linalg.norm(v1)))
+        # use the center method to center the molecule
+        centered = Atom(atom).center(adx0, frame=frame, to=center_to)
+        # rotate the molecule around the normal vector
+        aligned = centered.rotate(theta=theta, axis=n, degrees=False)
+        return Atom(aligned)
 
     def to_xyz(self, tag='symbol', header=False, comments='', columns=None,
                frame=None, units='Angstrom'):
