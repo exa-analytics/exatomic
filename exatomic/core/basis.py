@@ -136,30 +136,28 @@ class BasisSet(DataFrame):
     def functions(self, spherical):
         """Return a series of n functions per (set, L).
         This does include degenerate functions."""
+        self._revert_categories()
         if spherical:
             mapper = lambda x: spher_lml_count[x]
         else:
             mapper = lambda x: cart_lml_count[x]
         n = self.functions_by_shell()
-        return n * n.index.get_level_values('L').map(mapper).astype(np.int64)
+        ret = n * n.index.get_level_values('L').map(mapper)
+        self._set_categories()
+        return ret.astype(int)
 
     def primitives(self, spherical):
         """Return a series of n primitives per (set, L).
         This does include degenerate primitives."""
+        self._revert_categories()
         if spherical:
             mapper = lambda x: spher_lml_count[x]
         else:
             mapper = lambda x: cart_lml_count[x]
         n = self.primitives_by_shell()
-        return n * n.index.get_level_values('L').map(mapper).astype(np.int64)
-
-    #def __init__(self, *args, **kwargs):
-        #spherical = kwargs.pop("spherical", True)
-        #gaussian = kwargs.pop("gaussian", True)
-        #super(BasisSet, self).__init__(*args, **kwargs)
-        #self._metadata = ['spherical', 'gaussian']
-        #self.spherical = spherical
-        #self.gaussian = gaussian
+        ret = n * n.index.get_level_values('L').map(mapper)
+        self._set_categories()
+        return ret.astype(int)
 
 
 def deduplicate_basis_sets(sets, sp=False):
