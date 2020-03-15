@@ -47,9 +47,11 @@ class TestBasisSet(TestCase):
         mfa = pd.MultiIndex.from_arrays
         self.assertTrue((self.bs.functions_by_shell() ==
             pd.Series([1], index=mfp([[0], [0]], names=n))).all())
-        self.assertTrue((self.mbs.functions_by_shell() ==
+        s = self.mbs.functions_by_shell()
+        self.assertTrue((s[s != 0] ==
             pd.Series([1, 1, 1], index=mfa([[0, 0, 1], [0, 1, 0]], names=n))).all())
-        self.assertTrue((self.lbs.functions_by_shell() ==
+        s = self.lbs.functions_by_shell()
+        self.assertTrue((s[s != 0] ==
             pd.Series([1, 1, 1, 1, 1], index=mfa([[0, 0, 0, 1, 1],
                                                   [0, 1, 2, 0, 1]], names=n))).all())
 
@@ -59,9 +61,11 @@ class TestBasisSet(TestCase):
         mfa = pd.MultiIndex.from_arrays
         self.assertTrue((self.bs.primitives_by_shell() ==
             pd.Series([1], index=mfp([[0], [0]], names=n))).all())
-        self.assertTrue((self.mbs.primitives_by_shell() ==
+        s = self.mbs.primitives_by_shell()
+        self.assertTrue((s[s != 0] ==
             pd.Series([1, 1, 1], index=mfa([[0, 0, 1], [0, 1, 0]], names=n))).all())
-        self.assertTrue((self.lbs.primitives_by_shell() ==
+        s = self.lbs.primitives_by_shell()
+        self.assertTrue((s[s != 0] ==
             pd.Series([3, 2, 1, 2, 1], index=mfa([[0, 0, 0, 1, 1],
                                                   [0, 1, 2, 0, 1]], names=n))).all())
 
