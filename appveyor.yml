@@ -56,8 +56,9 @@ install:
   - cmd: conda create -n test python=%CONDA_PY%
   - cmd: activate test
   - cmd: conda update -q -y --all
+  - cmd: conda install -q -y -c conda-forge numba"<0.47"
   - cmd: conda install -q -y -c conda-forge numpy scipy seaborn networkx pandas hdf5
-  - cmd: conda install -q -y -c conda-forge pytest pytables six numba='<0.47' sympy pyyaml
+  - cmd: conda install -q -y -c conda-forge pytest pytables six sympy pyyaml
   - cmd: conda install -q -y -c conda-forge psutil numexpr nodejs ipywidgets bokeh
   - cmd: git clone https://github.com/exa-analytics/exa.git
   - cmd: pip install -e exa/
@@ -66,4 +67,4 @@ install:
 build: false
 
 test_script:
-  - cmd: python -m pytest
+  - cmd: pytest
