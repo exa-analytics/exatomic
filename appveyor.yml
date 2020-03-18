@@ -66,4 +66,4 @@ install:
 build: false
 
 test_script:
-  - cmd: py.test
+  - cmd: python -m pytest

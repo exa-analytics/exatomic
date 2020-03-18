@@ -62,7 +62,7 @@ var ExatomicBoxView = control.BoxView.extend({
                 for (var i = 0; i < p.length; i++) {
                     p[i].resize();
                 }
-            })
+            });
         });
     },
 
@@ -273,5 +273,4 @@ module.exports = {
     ExatomicSceneView: ExatomicSceneView,
     ExatomicBoxModel: ExatomicBoxModel,
     ExatomicBoxView: ExatomicBoxView
-}
-
+};

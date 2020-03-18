@@ -91,4 +91,4 @@ module.exports = {
     TensorSceneView: TensorSceneView,
     TensorContainerModel: TensorContainerModel,
     TensorContainerView: TensorContainerView
-}
+};

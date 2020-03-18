@@ -18,7 +18,7 @@ var SmallverseSceneModel = base.ExatomicSceneModel.extend({
             frame: null,
             atom: null,
             two: null
-        })
+        });
     }
 
 },  {
@@ -161,4 +161,4 @@ module.exports = {
     FieldWidgetView: FieldWidgetView,
     TwoWidgetModel: TwoWidgetModel,
     TwoWidgetView: TwoWidgetView
-}
+};
