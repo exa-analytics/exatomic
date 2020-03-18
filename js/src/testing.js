@@ -48,12 +48,13 @@ var SmallverseSceneView = base.ExatomicSceneView.extend({
         var s = this.model.get("atom").attributes.s;
         var c = utils.mapper(s, this.model.get("atom").attributes.c);
         var r = utils.mapper(s, this.model.get("atom").attributes.r);
+        var atom, bond;
         if (this.model.get("atom_spheres")) {
-            var atom = this.app3d.add_spheres;
-            var bond = this.app3d.add_cylinders;
+            atom = this.app3d.add_spheres;
+            bond = this.app3d.add_cylinders;
         } else {
-            var atom = this.app3d.add_points;
-            var bond = this.app3d.add_lines;
+            atom = this.app3d.add_points;
+            bond = this.app3d.add_lines;
         }
         this.meshes["atom"] = atom(this.model.get("atom").attributes.x,
                                    this.model.get("atom").attributes.y,
@@ -66,7 +67,7 @@ var SmallverseSceneView = base.ExatomicSceneView.extend({
                                       this.model.get("atom").attributes.y,
                                       this.model.get("atom").attributes.z,
                                       c);
-        };
+        }
         this.add_meshes();
     },
 

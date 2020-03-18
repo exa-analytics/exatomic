@@ -14,7 +14,7 @@ from unittest import TestCase
 from exatomic.base import resource
 from exatomic import nwchem, molcas
 from ..basis import (cart_lml_count, spher_lml_count, solid_harmonics,
-                     enum_cartesian, car2sph, BasisFunctions)
+                     enum_cartesian, car2sph)
 
 
 class TestCartesianToSpherical(TestCase):

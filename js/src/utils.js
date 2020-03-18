@@ -311,7 +311,7 @@ var Hydrogenic = function(dims, which) {
                 ybody = x * y / r2;
                 ret = ynorm * ybody * rnorm * rbody;
                 break;
-        };
+        }
         return ret;
     };
     return scalar_field(dims, func);

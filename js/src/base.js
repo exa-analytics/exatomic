@@ -239,7 +239,7 @@ var ExatomicSceneView = widgets.DOMWidgetView.extend({
     },
 
     _handle_custom_msg: function(msg, clbk) {
-        if (msg["type"] === "close") { this.app3d.close() };
+        if (msg["type"] === "close") { this.app3d.close() }
         if (msg["type"] === "camera") {
             this.app3d.set_camera_from_camera(msg["content"]);
         };
@@ -255,7 +255,7 @@ var ExatomicSceneView = widgets.DOMWidgetView.extend({
         // Field stuff
         if (!this.model.get("uni")) {
             this.listenTo(this.model, "change:field", this.add_field);
-        };
+        }
         this.listenTo(this.model, "change:field_kind", this.add_field);
         this.listenTo(this.model, "change:field_ml", this.add_field);
         this.listenTo(this.model, "change:field_o", this.update_field);

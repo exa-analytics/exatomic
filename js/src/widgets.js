@@ -196,7 +196,7 @@ var UniverseSceneView = base.ExatomicSceneView.extend({
         if (this.model.get("axis")) {
             this.app3d.meshes["generic"] = this.app3d.add_unit_axis(
                 this.model.get("atom_3d"));
-        };
+        }
         this.app3d.add_meshes("generic");
     },
 
