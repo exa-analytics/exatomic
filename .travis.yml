@@ -1,3 +1,5 @@
+language: python
+
 matrix:
     include:
         - os: linux
@@ -16,17 +18,17 @@ matrix:
           env: PYTHONVER=3.7
 
         - os: osx
-          language: python
+          language: generic
           python: 3.5
           env: PYTHONVER=3.5
 
         - os: osx
-          language: python
+          language: generic
           python: 3.6
           env: PYTHONVER=3.6
 
         - os: osx
-          language: python
+          language: generic
           python: 3.7
           env: PYTHONVER=3.7
 
