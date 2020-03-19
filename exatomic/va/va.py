@@ -10,6 +10,7 @@ import numpy as np
 import pandas as pd
 import glob
 import re
+import os
 from exa.util.constants import (speed_of_light_in_vacuum as C, Planck_constant as H,
                                Boltzmann_constant as boltzmann)
 from exa.util.units import Length, Energy, Mass, Time
@@ -50,7 +51,7 @@ def get_data(path, attr, soft, f_end='', f_start='', sort_index=None):
     files = glob.glob(path)
     array = []
     for file in files:
-        if file.split('/')[-1].endswith(f_end) and file.split('/')[-1].startswith(f_start):
+        if file.split(os.sep)[-1].endswith(f_end) and file.split(os.sep)[-1].startswith(f_start):
             ed = soft(file)
             try:
                 df = getattr(ed, attr)
@@ -58,10 +59,10 @@ def get_data(path, attr, soft, f_end='', f_start='', sort_index=None):
                 print("The property {} cannot be found in output {}".format(attr, file))
                 continue
             # We assume that the file identifier is an integer
-            fdx = list(map(int, re.findall('\d+', file.split('/')[-1].replace(
+            fdx = list(map(int, re.findall('\d+', file.split(os.sep)[-1].replace(
                                                                    f_start, '').replace(f_end, ''))))
             #fdx = float(file.split(os.sep)[-1].replace(f_start, '').replace(f_end, ''))
-            df['file'] = np.tile(fdx, len(df))
+            df['file'] = fdx[0]
         else:
             continue
         array.append(df)
