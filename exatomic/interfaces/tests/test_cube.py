@@ -53,6 +53,6 @@ class TestCube(TestCase):
         self.assertEqual(len(self.uni.field.field_values), 2)
         rot = self.uni.field.rotate(0, 1, np.pi / 4)
         self.assertEqual(rot.shape[0], 2)
-        if not (platform == 'win32' or platform == 'cygwin'):
+        if "win" not in platform.casefold():
             f = Cube.from_universe(self.uni, 1)
             self.assertEqual(len(f), 874)
