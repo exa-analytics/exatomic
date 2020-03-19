@@ -10,7 +10,7 @@ forces, velocities, symbols, etc. (all data associated with atoms as points).
 from numbers import Integral
 import numpy as np
 import pandas as pd
-from exa import DataFrame, SparseDataFrame, Series
+from exa import DataFrame, Series
 from exa.util.units import Length
 from exatomic.base import sym2z, sym2mass
 from exatomic.algorithms.distance import modv
@@ -322,7 +322,7 @@ class Atom(DataFrame):
                                        axis=axis, domains=domains, unit=unit))
 
 
-class UnitAtom(SparseDataFrame):
+class UnitAtom(DataFrame):
     """
     In unit cell coordinates (sparse) for periodic systems. These coordinates
     are used to update the corresponding :class:`~exatomic.atom.Atom` object
@@ -350,7 +350,7 @@ class UnitAtom(SparseDataFrame):
         raise PeriodicUniverseError()
 
 
-class ProjectedAtom(SparseDataFrame):
+class ProjectedAtom(DataFrame):
     """
     Projected atom coordinates (e.g. on 3x3x3 supercell). These coordinates are
     typically associated with their corresponding indices in another dataframe.
@@ -370,7 +370,7 @@ class ProjectedAtom(SparseDataFrame):
     #    return ProjectedAtom
 
 
-class VisualAtom(SparseDataFrame):
+class VisualAtom(DataFrame):
     """
     """
     _index = 'atom'
