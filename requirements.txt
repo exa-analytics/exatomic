@@ -1,6 +1,6 @@
 numpy
 pandas
-numba<=0.46
+numba
 seaborn
 ipywidgets
 sympy

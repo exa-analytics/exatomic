@@ -12,7 +12,8 @@ from IPython.display import display_html
 
 # For numba compiled functions
 sysname= system().lower()
-nbpll = "linux" in sysname
+#nbpll = "linux" in sysname
+nbpll = False
 nbtgt = "parallel" if nbpll else "cpu"
 nbche = not nbtgt
 

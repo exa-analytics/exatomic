@@ -17,9 +17,10 @@ import numpy as np
 import numba as nb
 from exa import Editor
 from exa.util.units import Length
+from exatomic.base import nbpll
 
 
-@nb.jit(nopython=True, nogil=True, parallel=True)
+@nb.jit(nopython=True, nogil=True, parallel=nbpll)
 def construct_fdx(fdxs, size):
     n = len(fdxs)*size
     frame = np.empty((n, ), dtype=np.int64)

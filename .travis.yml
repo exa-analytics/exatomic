@@ -1,3 +1,5 @@
+language: python
+
 matrix:
     include:
         - os: linux
@@ -12,6 +14,21 @@ matrix:
 
         - os: linux
           language: python
+          python: 3.7
+          env: PYTHONVER=3.7
+
+        - os: osx
+          language: generic
+          python: 3.5
+          env: PYTHONVER=3.5
+
+        - os: osx
+          language: generic
+          python: 3.6
+          env: PYTHONVER=3.6
+
+        - os: osx
+          language: generic
           python: 3.7
           env: PYTHONVER=3.7
 
@@ -30,11 +47,12 @@ install:
     - conda create -y -n test python=$PYTHONVER
     - source activate test
     - conda update -q -y --all
-    - conda install -q -y -c conda-forge six numpy pandas pytables numba='<0.47' pyyaml
+    - conda install -q -y -c conda-forge six numpy pandas pytables pyyaml
     - conda install -q -y -c conda-forge sphinx sphinx_rtd_theme ply sympy
     - conda install -q -y -c conda-forge pandoc pypandoc nbsphinx ipython seaborn
     - conda install -q -y -c conda-forge coveralls coverage pytest pytest-cov
     - conda install -q -y -c conda-forge numexpr nodejs ipywidgets bokeh
+    - conda install -q -y -c conda-forge numba
     - pip install travis-sphinx codacy-coverage
     - git clone https://github.com/exa-analytics/exa.git
     - pip install -e exa/
