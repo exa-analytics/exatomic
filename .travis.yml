@@ -50,7 +50,7 @@ install:
     - conda install -q -y -c conda-forge six numpy pandas pytables pyyaml
     - conda install -q -y -c conda-forge sphinx sphinx_rtd_theme ply sympy
     - conda install -q -y -c conda-forge pandoc pypandoc nbsphinx ipython seaborn
-    - conda install -q -y -c conda-forge coveralls coverage pytest pytest-cov
+    - conda install -q -y -c conda-forge coveralls coverage'<=4.5.4' pytest pytest-cov
     - conda install -q -y -c conda-forge numexpr nodejs ipywidgets bokeh
     - conda install -q -y -c conda-forge numba
     - pip install travis-sphinx codacy-coverage
