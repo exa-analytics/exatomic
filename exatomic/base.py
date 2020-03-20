@@ -109,27 +109,39 @@ def sym2isomass(symbol, isotope=None):
     # TODO: if isotopes is passed we need a way to make sure that
     #       we determine if the isotopes are the same and differentiate
     #       between them
-    symbol = list(set(symbol))
     if isotope is not None:
         if isinstance(isotope, int) or isinstance(isotope, float):
             isotope = [int(isotope)]
-        else:
-            isotope = list(set(symbol)) # since we do it for the symbols
-    # determine the most abundant isotopes
     if isotope is None:
-        # needs to be sorted because of the groupby method
         symbol = sorted(symbol)
         # TODO: maybe condense to one line
-        filtered = isomass.groupby('symbol').filter(lambda x: x['symbol'].unique() in symbol)
-        isotope = filtered.groupby('symbol').apply(lambda x:
+        filtered = isomass.groupby('symbol', sort=False).filter(lambda x: x['symbol'].unique() in symbol)
+        isotope = filtered.groupby('symbol', sort=False).apply(lambda x:
                                                         x.loc[x['abundance'].idxmax(), 'isotope'])
-    # this is old but may be a good idea to consider
-    #elif len(symbol) != len(isotope):
-    #    raise AttributeError("Length mismatch between symbol input " \
-    #                         + "{} and isotope input {}".format(len(symbol), len(isotope)))
+    # make a dataframe to handle data better
+    # we use the upper case of symbols to avoid possible duplicates different
+    # by the case
+    df = DataFrame.from_dict({'symbol': list(map(lambda x: x.upper(), symbol)), 'isotope': isotope})
+    df.reset_index(drop=True, inplace=True)
+    print(df.to_string())
+    # check that duplicates have the same isotope passed
+    for sym, dat in df.groupby('symbol'):
+        print(dat)
+        if not all(list(map(lambda x: abs(x - dat.iloc[0]['isotope']) < 1e-6, dat['isotope']))):
+            raise NotImplementedError("We do not currently support getting multiple isotopic " \
+                                      + "masses for the same element.")
+    # drop the duplicates
+    df = df.loc[df['symbol'].drop_duplicates().index]
+    # change the case of the symbols to the chemical names
+    tmp = []
+    for symb in df['symbol']:
+        if len(symb) > 1: tmp.append(symb[0]+symb[1:].lower())
+        else: tmp.append(symb)
+    df['symbol'] = tmp
+    print(df.to_string())
     # we will return a mapping dictionary
     masses = {}
-    for i, (sym, iso) in enumerate(zip(symbol, isotope)):
+    for i, (sym, iso) in enumerate(zip(*df.T.values)):
         # TODO: make sure that we do not change the isotope and symbols relationship when
         #       sorting/eliminating duplicates
         try:
@@ -139,3 +151,4 @@ def sym2isomass(symbol, isotope=None):
             raise KeyError("An invalid symbol or isotope was given " \
                            "currently {}, {}".format(sym, iso))
     return masses
+
