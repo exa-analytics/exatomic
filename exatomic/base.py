@@ -131,7 +131,6 @@ def sym2isomass(symbol, isotope=None):
     # by the case
     df = DataFrame.from_dict({'symbol': list(map(lambda x: x.upper(), symbol)), 'isotope': isotope})
     df.reset_index(drop=True, inplace=True)
-    print(df.to_string())
     # check that duplicates have the same isotope passed
     for sym, dat in df.groupby('symbol'):
         print(dat)
@@ -146,12 +145,16 @@ def sym2isomass(symbol, isotope=None):
         if len(symb) > 1: tmp.append(symb[0]+symb[1:].lower())
         else: tmp.append(symb)
     df['symbol'] = tmp
-    print(df.to_string())
     # we will return a mapping dictionary
     masses = {}
-    for i, (sym, iso) in enumerate(zip(*df.T.values)):
-        # TODO: make sure that we do not change the isotope and symbols relationship when
-        #       sorting/eliminating duplicates
+    for sym, iso in zip(*df.T.values):
+        # just checking the types
+        if not isinstance(sym, str):
+            raise TypeError("Symbols were have changed type somehow currently, " \
+                            +"{}, expected, {}".format(type(sym), 'str'))
+        if not isinstance(iso, int):
+            raise TypeError("Symbols were have changed type somehow currently, " \
+                            +"{}, expected, {}".format(type(iso), "'int'"))
         try:
             mass = isomass.groupby(['symbol', 'isotope']).get_group((sym, iso))['mass'].values[0]
             masses[sym] = mass
