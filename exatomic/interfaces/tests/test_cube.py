@@ -9,6 +9,7 @@ import numpy as np
 from unittest import TestCase
 from exatomic.base import resource, staticdir
 from exatomic.interfaces.cube import Cube, uni_from_cubes
+from sys import platform
 
 
 class TestCube(TestCase):
@@ -52,5 +53,6 @@ class TestCube(TestCase):
         self.assertEqual(len(self.uni.field.field_values), 2)
         rot = self.uni.field.rotate(0, 1, np.pi / 4)
         self.assertEqual(rot.shape[0], 2)
-        f = Cube.from_universe(self.uni, 1)
-        self.assertEqual(len(f), 874)
+        if "win" not in platform.casefold():
+            f = Cube.from_universe(self.uni, 1)
+            self.assertEqual(len(f), 874)

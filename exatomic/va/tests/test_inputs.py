@@ -2,11 +2,13 @@ import numpy as np
 from unittest import TestCase
 from exatomic.va import GenInput as gi, gen_delta
 from exatomic.gaussian import Fchk
+from exatomic.adf import Output
 from exatomic.base import resource
 
 class TestGenInput(TestCase):
     def setUp(self):
         self.h2o2 = Fchk(resource('g16-h2o2-def2tzvp-freq.fchk'))
+        self.ch4 = Output(resource('adf-ch4-opt-freq.out'))
 
     def test_delta_small(self):
         delta_0 = np.array([[0.10591816, 0.],
@@ -52,6 +54,11 @@ class TestGenInput(TestCase):
         self.assertEqual(all_freq.disp.shape[0], 52)
         self.assertTrue(np.allclose(np.concatenate([[0.], self.h2o2.frequency_ext['freq'].values]),
                                                 all_freq.disp['modes'].drop_duplicates().values))
+
+        self.ch4.parse_atom()
+        self.ch4.parse_frequency()
+        inputs = gi(uni=self.ch4, delta_type=2)
+        self.assertEqual(inputs.disp.shape[0], 95)
 
     def test_select_freq(self):
         self.h2o2.parse_atom()

@@ -81,7 +81,7 @@ def two_traits(uni):
         raise AttributeError("for the catcher")
     if "frame" not in uni.atom_two.columns:
         uni.atom_two['frame'] = uni.atom_two['atom0'].map(uni.atom['frame'])
-    lbls = uni.atom.get_atom_labels()
+    lbls = uni.atom.get_atom_labels().astype(int)
     df = uni.atom_two
     bonded = df.loc[df['bond'] == True, ['atom0', 'atom1', 'frame']]
     lbl0 = bonded['atom0'].map(lbls)
