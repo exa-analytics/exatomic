@@ -127,18 +127,22 @@ def sym2isomass(symbol, isotope=None):
     # TODO: if isotopes is passed we need a way to make sure that
     #       we determine if the isotopes are the same and differentiate
     #       between them
+    print(symbol)
+    print(isotope)
     if isotope is not None:
         if isinstance(isotope, int) or isinstance(isotope, float):
             isotope = [int(isotope)]
     if isotope is None:
         symbol = sorted(symbol)
         # TODO: maybe condense to one line
-        filtered = isomass.groupby('symbol', sort=False).filter(lambda x: x['symbol'].unique() in symbol)
-        isotope = filtered.groupby('symbol', sort=False).apply(lambda x:
-                                                        x.loc[x['abundance'].idxmax(), 'isotope'])
+        filtered = isomass.groupby('symbol').filter(lambda x: x['symbol'].unique() in symbol)
+        isotope = filtered.groupby('symbol').apply(lambda x:
+                                                        x.loc[x['abundance'].idxmax(), 'isotope']).values
     # make a dataframe to handle data better
     # we use the upper case of symbols to avoid possible duplicates different
     # by the case
+    print(symbol)
+    print(isotope)
     df = DataFrame.from_dict({'symbol': list(map(lambda x: x.upper(), symbol)), 'isotope': isotope})
     df.reset_index(drop=True, inplace=True)
     # check that duplicates have the same isotope passed
@@ -156,7 +160,11 @@ def sym2isomass(symbol, isotope=None):
     df['symbol'] = tmp
     # we will return a mapping dictionary
     masses = {}
+    print(df['symbol'].to_string())
+    print(df['isotope'].to_string())
+    print(df.to_string())
     for sym, iso in zip(df['symbol'], df['isotope']):
+        print(sym, iso)
         # just checking the types
         if not isinstance(sym, str):
             raise TypeError("Symbols were have changed type somehow currently, " \
