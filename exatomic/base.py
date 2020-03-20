@@ -94,7 +94,8 @@ def display_side_by_side(*args):
 
 def sym2isomass(symbol, isotope=None):
     """
-    Function to get a mapper dictionary based on isotopes
+    Function to get a mapper dictionary to get isotopic masses rather than
+    isotopically weigthed atomic masses.
 
     Args:
         symbol (list or iterable): Elements of interest
@@ -102,6 +103,13 @@ def sym2isomass(symbol, isotope=None):
 
     Returns:
         masses (dict): Dictionary that can be used inplace of sym2mass
+
+    Raises:
+        NotImplementedError: Do not currently support multiple isotopes
+                             with same element label
+        KeyError: When the given element does not have the isotope index
+        TypeError: When either the symbol or isotope values have changed
+                   from the expected types of `str` or `int`, respectively
     """
     # take care of right type but not iterable object
     if isinstance(symbol, str): symbol = [symbol]
