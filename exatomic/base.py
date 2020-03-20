@@ -156,7 +156,7 @@ def sym2isomass(symbol, isotope=None):
     df['symbol'] = tmp
     # we will return a mapping dictionary
     masses = {}
-    for sym, iso in zip(*df.T.values):
+    for sym, iso in zip(df['symbol'], df['isotope']):
         # just checking the types
         if not isinstance(sym, str):
             raise TypeError("Symbols were have changed type somehow currently, " \
