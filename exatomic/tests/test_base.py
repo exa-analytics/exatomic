@@ -13,7 +13,6 @@ def test_sym2isomass(symbol, isotope, expected):
     dict = sym2isomass(symbol, isotope)
     close = []
     for symb, exp in zip(symbol, expected):
-        print(dict[symb] - exp)
         close.append(abs(dict[symb] - exp) < 1e-6)
     assert all(close)
 
