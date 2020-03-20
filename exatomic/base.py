@@ -97,6 +97,16 @@ def sym2isomass(symbol, isotope=None):
     Function to get a mapper dictionary to get isotopic masses rather than
     isotopically weigthed atomic masses.
 
+    .. code-block:: python
+
+        >>> sym2isomass('Ni', None)
+        {'Ni': 57.9353429}
+        >>> sym2isomass(['Ni', 'H', 'C'], None)
+        {'C': 12.0, 'H': 1.0078250321, 'Ni': 57.9353429}
+        >>> sym2isomass(['Ni', 'H', 'C'], [64, 2, 13])
+        {'Ni': 63.927966, 'H': 2.0141017778, 'C': 13.0033548378}
+
+
     Args:
         symbol (list or iterable): Elements of interest
         isotope (list or iterable): Isotopes of interest
@@ -133,7 +143,6 @@ def sym2isomass(symbol, isotope=None):
     df.reset_index(drop=True, inplace=True)
     # check that duplicates have the same isotope passed
     for sym, dat in df.groupby('symbol'):
-        print(dat)
         if not all(list(map(lambda x: abs(x - dat.iloc[0]['isotope']) < 1e-6, dat['isotope']))):
             raise NotImplementedError("We do not currently support getting multiple isotopic " \
                                       + "masses for the same element.")
