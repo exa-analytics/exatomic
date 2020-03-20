@@ -19,6 +19,7 @@ method to get started with visualization is through the `Jupyter notebook`_.
     :caption: Sitemap
 
     install.rst
+    started.rst
     contrib.rst
 
 .. _api-label:
