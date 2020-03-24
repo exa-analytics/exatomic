@@ -9,7 +9,6 @@ import os
 from exa.util import isotopes
 from platform import system
 from IPython.display import display_html
-from pandas import DataFrame, concat
 
 # For numba compiled functions
 sysname= system().lower()
