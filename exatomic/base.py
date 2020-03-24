@@ -83,6 +83,14 @@ def sym2isomass(symbol):
     Function to get a mapper dictionary to get isotopic masses rather than
     isotopically weigthed atomic masses.
 
+    .. code-block:: python
+
+        >>> sym2isomass('Ni')
+        {'Ni': 57.9353429}
+        >>> sym2isomass(['Ni', 'H', 'C'])
+        {'C': 12.0, 'H': 1.0078250321, 'Ni': 57.9353429}
+
+
     Args:
         symbol (list or iterable): Elements of interest
 
@@ -90,6 +98,7 @@ def sym2isomass(symbol):
         masses (dict): Dictionary that can be used inplace of sym2mass
 
     """
+    if isinstance(symbol, str): symbol = [symbol]
     # remove duplicates
     symbol = list(dict.fromkeys(symbol))
     # get a dataframe made up of the given symbols
