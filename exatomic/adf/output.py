@@ -202,9 +202,36 @@ class Output(six.with_metaclass(OutMeta, Editor)):
             _re_orb_00: ['symmetry', 'vector', 'spin', 'occupation', 'energy', 'eV'],
             _re_orb_01: ['vector', 'occupation', 'energy', 'eV', 'dE']}
         key = _re_orb_00 if found[_re_orb_00] else _re_orb_01
-        start = stop = found[key][-1] + 5
-        while self[stop].strip(): stop += 1
-        df = self.pandas_dataframe(start, stop, cols[key])
+        start = stop = found[key][-1] + 4
+        starts = []
+        stops = []
+        irreps = []
+        while True:
+            try:
+                if self[stop].strip() == '':
+                    stops.append(stop-1)
+                    break
+                _ = int(self[stop].strip()[0])
+                stop += 1
+            except ValueError:
+                stops.append(stop-1)
+                irreps.append(self[stop])
+                if not (self[stop].strip() == ''):
+                    stop += 1
+                    starts.append(stop)
+                else:
+                    break
+        stops = stops[1:]
+        #print(starts, stops, irreps)
+        dfs = []
+        for start, stop, irrep in zip(starts, stops, irreps):
+            #print(self[start])
+            #print(self[stop])
+            #print(irrep)
+            df = self.pandas_dataframe(start, stop, cols[key])
+            df['irrep'] = irrep
+            dfs.append(df)
+        df = pd.concat(dfs, ignore_index=True)
         df['vector'] -= 1
         if 'spin' in cols[key]:
             df['spin'] = df.spin.map({'A': 0, 'B': 1})
