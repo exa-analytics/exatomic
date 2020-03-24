@@ -18,30 +18,17 @@ nbpll = False
 nbtgt = "parallel" if nbpll else "cpu"
 nbche = not nbtgt
 
-isotopedf = isotopes.as_df()
+isotopedf = isotopes.as_df().dropna(how='any', axis=0)
 sym2z = isotopedf.drop_duplicates("symbol").set_index("symbol")["Z"].to_dict()
 z2sym = {v: k for k, v in sym2z.items()}
 sym2mass = {}
 sym2radius = {}
 sym2color = {}
-dfs = []
 for k, v in vars(isotopes).items():
     if isinstance(v, isotopes.Element):
         sym2mass[k] = v.mass
         sym2radius[k] = [v.cov_radius, v.van_radius]
         sym2color[k] = '#' + v.color[-2:] + v.color[3:5] + v.color[1:3]
-        abds = list(map(lambda x: x.af, v.isotopes))
-        masses = list(map(lambda x: x.mass, v.isotopes))
-        isos = list(map(lambda x: x.A, v.isotopes))
-        z = list(map(lambda x: x.Z, v.isotopes))
-        symbol = list(map(lambda x: x.symbol, v.isotopes))
-        df = DataFrame.from_dict({'abundance': abds, 'mass': masses, 'isotope': isos, 'Z': z,
-                                  'symbol': symbol})
-        dfs.append(df)
-isomass = concat(dfs)
-isomass.dropna(how='any', inplace=True)
-isomass.reset_index(drop=True, inplace=True)
-
 
 def staticdir():
     """Return the location of the static data directory."""
