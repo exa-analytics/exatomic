@@ -17,7 +17,7 @@ nbpll = False
 nbtgt = "parallel" if nbpll else "cpu"
 nbche = not nbtgt
 
-isotopedf = isotopes.as_df().dropna(how='any', axis=0)
+isotopedf = isotopes.as_df()
 sym2z = isotopedf.drop_duplicates("symbol").set_index("symbol")["Z"].to_dict()
 z2sym = {v: k for k, v in sym2z.items()}
 sym2mass = {}
