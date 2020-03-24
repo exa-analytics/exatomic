@@ -98,6 +98,12 @@ def sym2isomass(symbol):
         masses (dict): Dictionary that can be used inplace of sym2mass
 
     """
+    # TODO: generalize so we can get the isotopic mass of any isotope
+    #       not only the most abundant
+    #       this may have to work in concert with the atom parsers to get the
+    #       isotope in the quantum codes
+    # side note: this may not have much use as we generally only deal with the
+    #            most abundant isotopes
     if isinstance(symbol, str): symbol = [symbol]
     # remove duplicates
     symbol = list(dict.fromkeys(symbol))
@@ -106,7 +112,6 @@ def sym2isomass(symbol):
     # sort it by the abundance and get the first entry in each element
     df = tmp.sort_values(by=['af'], ascending=False).groupby('symbol').head(1)
     # convert to a dict
-    df.index = df['symbol']
-    masses = df['mass'].to_dict()
+    masses = df.set_index('symbol')['mass'].to_dict()
     return masses
 
