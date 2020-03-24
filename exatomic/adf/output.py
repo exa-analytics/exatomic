@@ -209,12 +209,12 @@ class Output(six.with_metaclass(OutMeta, Editor)):
         while True:
             try:
                 if self[stop].strip() == '':
-                    stops.append(stop-1)
+                    stops.append(stop)
                     break
                 _ = int(self[stop].strip()[0])
                 stop += 1
             except ValueError:
-                stops.append(stop-1)
+                stops.append(stop)
                 irreps.append(self[stop])
                 if not (self[stop].strip() == ''):
                     stop += 1
@@ -229,7 +229,7 @@ class Output(six.with_metaclass(OutMeta, Editor)):
             #print(self[stop])
             #print(irrep)
             df = self.pandas_dataframe(start, stop, cols[key])
-            df['irrep'] = irrep
+            df['irrep'] = irrep.strip()
             dfs.append(df)
         df = pd.concat(dfs, ignore_index=True)
         df['vector'] -= 1
