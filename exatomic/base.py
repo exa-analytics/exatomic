@@ -79,83 +79,26 @@ def display_side_by_side(*args):
     display_html(html_str.replace('table','table style=\"display:inline\"'),
                  raw=True)
 
-def sym2isomass(symbol, isotope=None):
+def sym2isomass(symbol):
     """
     Function to get a mapper dictionary to get isotopic masses rather than
     isotopically weigthed atomic masses.
 
-    .. code-block:: python
-
-        >>> sym2isomass('Ni', None)
-        {'Ni': 57.9353429}
-        >>> sym2isomass(['Ni', 'H', 'C'], None)
-        {'C': 12.0, 'H': 1.0078250321, 'Ni': 57.9353429}
-        >>> sym2isomass(['Ni', 'H', 'C'], [64, 2, 13])
-        {'Ni': 63.927966, 'H': 2.0141017778, 'C': 13.0033548378}
-
-
     Args:
         symbol (list or iterable): Elements of interest
-        isotope (list or iterable): Isotopes of interest
 
     Returns:
         masses (dict): Dictionary that can be used inplace of sym2mass
 
-    Raises:
-        NotImplementedError: Do not currently support multiple isotopes
-                             with same element label
-        KeyError: When the given element does not have the isotope index
-        TypeError: When either the symbol or isotope values have changed
-                   from the expected types of `str` or `int`, respectively
     """
-    # take care of right type but not iterable object
-    if isinstance(symbol, str): symbol = [symbol]
-    # take care of duplicates
-    # TODO: if isotopes is passed we need a way to make sure that
-    #       we determine if the isotopes are the same and differentiate
-    #       between them
-    if isotope is not None:
-        if isinstance(isotope, int) or isinstance(isotope, float):
-            isotope = [int(isotope)]
-    if isotope is None:
-        symbol = sorted(symbol)
-        # TODO: maybe condense to one line
-        filtered = isomass.groupby('symbol').filter(lambda x: x['symbol'].unique() in symbol)
-        isotope = filtered.groupby('symbol').apply(lambda x:
-                                                        x.loc[x['abundance'].idxmax(), 'isotope']).values
-    # make a dataframe to handle data better
-    # we use the upper case of symbols to avoid possible duplicates different
-    # by the case
-    df = DataFrame.from_dict({'symbol': list(map(lambda x: x.upper(), symbol)), 'isotope': isotope})
-    df.reset_index(drop=True, inplace=True)
-    # check that duplicates have the same isotope passed
-    for sym, dat in df.groupby('symbol'):
-        if not all(list(map(lambda x: abs(x - dat.iloc[0]['isotope']) < 1e-6, dat['isotope']))):
-            raise NotImplementedError("We do not currently support getting multiple isotopic " \
-                                      + "masses for the same element.")
-    # drop the duplicates
-    df = df.loc[df['symbol'].drop_duplicates().index]
-    # change the case of the symbols to the chemical names
-    tmp = []
-    for symb in df['symbol']:
-        if len(symb) > 1: tmp.append(symb[0]+symb[1:].lower())
-        else: tmp.append(symb)
-    df['symbol'] = tmp
-    # we will return a mapping dictionary
-    masses = {}
-    for sym, iso in zip(df['symbol'], df['isotope']):
-        # just checking the types
-        if not isinstance(sym, str):
-            raise TypeError("Symbols were have changed type somehow currently, " \
-                            +"{}, expected, {}".format(type(sym), 'str'))
-        if not isinstance(iso, int):
-            raise TypeError("Symbols were have changed type somehow currently, " \
-                            +"{}, expected, {}".format(type(iso), "'int'"))
-        try:
-            mass = isomass.groupby(['symbol', 'isotope']).get_group((sym, iso))['mass'].values[0]
-            masses[sym] = mass
-        except KeyError:
-            raise KeyError("An invalid symbol or isotope was given " \
-                           "currently {}, {}".format(sym, iso))
+    # remove duplicates
+    symbol = list(dict.fromkeys(symbol))
+    # get a dataframe made up of the given symbols
+    tmp = isotopedf.groupby('symbol').filter(lambda x: x['symbol'].unique() in symbol)
+    # sort it by the abundance and get the first entry in each element
+    df = tmp.sort_values(by=['af'], ascending=False).groupby('symbol').head(1)
+    # convert to a dict
+    df.index = df['symbol']
+    masses = df['mass'].to_dict()
     return masses
 
