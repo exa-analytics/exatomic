@@ -144,7 +144,7 @@ class GenInput(metaclass = GenMeta):
             freq_g = freq.copy()
         else:
             freq_g = freq.groupby('freqdx').filter(lambda x: fdx in
-                                                    x['freqdx'].drop_duplicates().values+1).copy()
+                                                    x['freqdx'].drop_duplicates().values).copy()
         disp = freq_g[['dx','dy','dz']].values
         mdx = freq_g['freqdx'].drop_duplicates().index
         modes = freq_g.loc[mdx, 'frequency'].values
@@ -160,7 +160,7 @@ class GenInput(metaclass = GenMeta):
                 delta = self.delta['delta'].values
             elif -1 not in fdx:
                 delta = self.delta.groupby('freqdx').filter(lambda x:
-                                      fdx in x['freqdx'].drop_duplicates().values+1)['delta'].values
+                                      fdx in x['freqdx'].drop_duplicates().values)['delta'].values
             else:
                 raise TypeError("fdx must be a list of integers or a single integer")
             #if len(delta) != tnmodes:
