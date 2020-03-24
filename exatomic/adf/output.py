@@ -222,12 +222,8 @@ class Output(six.with_metaclass(OutMeta, Editor)):
                 else:
                     break
         stops = stops[1:]
-        #print(starts, stops, irreps)
         dfs = []
         for start, stop, irrep in zip(starts, stops, irreps):
-            #print(self[start])
-            #print(self[stop])
-            #print(irrep)
             df = self.pandas_dataframe(start, stop, cols[key])
             df['irrep'] = irrep.strip()
             dfs.append(df)
