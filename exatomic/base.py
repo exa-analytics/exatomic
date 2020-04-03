@@ -26,10 +26,8 @@ sym2color = {}
 for k, v in vars(isotopes).items():
     if isinstance(v, isotopes.Element):
         sym2mass[k] = v.mass
-#        sym2radius[k] = v.radius
         sym2radius[k] = [v.cov_radius, v.van_radius]
         sym2color[k] = '#' + v.color[-2:] + v.color[3:5] + v.color[1:3]
-
 
 def staticdir():
     """Return the location of the static data directory."""
@@ -79,3 +77,41 @@ def display_side_by_side(*args):
     html_str = ''.join([df.to_html() for df in args])
     display_html(html_str.replace('table','table style=\"display:inline\"'),
                  raw=True)
+
+def sym2isomass(symbol):
+    """
+    Function to get a mapper dictionary to get isotopic masses rather than
+    isotopically weigthed atomic masses.
+
+    .. code-block:: python
+
+        >>> sym2isomass('Ni')
+        {'Ni': 57.9353429}
+        >>> sym2isomass(['Ni', 'H', 'C'])
+        {'C': 12.0, 'H': 1.0078250321, 'Ni': 57.9353429}
+
+
+    Args:
+        symbol (list or iterable): Elements of interest
+
+    Returns:
+        masses (dict): Dictionary that can be used inplace of sym2mass
+
+    """
+    # TODO: generalize so we can get the isotopic mass of any isotope
+    #       not only the most abundant
+    #       this may have to work in concert with the atom parsers to get the
+    #       isotope in the quantum codes
+    # side note: this may not have much use as we generally only deal with the
+    #            most abundant isotopes
+    if isinstance(symbol, str): symbol = [symbol]
+    # remove duplicates
+    symbol = list(dict.fromkeys(symbol))
+    # get a dataframe made up of the given symbols
+    tmp = isotopedf.groupby('symbol').filter(lambda x: x['symbol'].unique() in symbol)
+    # sort it by the abundance and get the first entry in each element
+    df = tmp.sort_values(by=['af'], ascending=False).groupby('symbol').head(1)
+    # convert to a dict
+    masses = df.set_index('symbol')['mass'].to_dict()
+    return masses
+
