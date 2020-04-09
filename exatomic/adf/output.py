@@ -202,7 +202,7 @@ class Output(six.with_metaclass(OutMeta, Editor)):
             _re_orb_00: ['symmetry', 'vector', 'spin', 'occupation', 'energy', 'eV'],
             _re_orb_01: ['vector', 'occupation', 'energy', 'eV', 'dE']}
         key = _re_orb_00 if found[_re_orb_00] else _re_orb_01
-        start = stop = found[key][-1] + 4
+        ldx = found[key][-1] + 4
         starts = []
         stops = []
         irreps = []
@@ -211,14 +211,14 @@ class Output(six.with_metaclass(OutMeta, Editor)):
                 if self[stop].strip() == '':
                     stops.append(stop)
                     break
-                _ = int(self[stop].strip()[0])
-                stop += 1
+                _ = int(self[ldx].strip()[0])
+                ldx += 1
             except ValueError:
-                stops.append(stop)
-                irreps.append(self[stop])
-                if not (self[stop].strip() == ''):
-                    stop += 1
-                    starts.append(stop)
+                stops.append(ldx)
+                irreps.append(self[ldx])
+                if not (self[ldx].strip() == ''):
+                    ldx += 1
+                    starts.append(ldx)
                 else:
                     break
         stops = stops[1:]
