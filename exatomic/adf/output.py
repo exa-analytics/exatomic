@@ -206,11 +206,8 @@ class Output(six.with_metaclass(OutMeta, Editor)):
         starts = []
         stops = []
         irreps = []
-        while True:
+        while self[ldx].strip() != '':
             try:
-                if self[stop].strip() == '':
-                    stops.append(stop)
-                    break
                 _ = int(self[ldx].strip()[0])
                 ldx += 1
             except ValueError:
@@ -221,6 +218,8 @@ class Output(six.with_metaclass(OutMeta, Editor)):
                     starts.append(ldx)
                 else:
                     break
+        else:
+            stops.append(ldx)
         stops = stops[1:]
         dfs = []
         for start, stop, irrep in zip(starts, stops, irreps):
