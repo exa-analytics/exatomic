@@ -207,20 +207,26 @@ class Output(six.with_metaclass(OutMeta, Editor)):
         stops = []
         irreps = []
         while self[ldx].strip() != '':
+            # error catching for when we have a symmetry label
             try:
                 _ = int(self[ldx].strip()[0])
                 ldx += 1
             except ValueError:
                 stops.append(ldx)
                 irreps.append(self[ldx])
+                # to ensure that we do not skip over the blank line
+                # and exdecute an infinite while loop
                 if not (self[ldx].strip() == ''):
                     ldx += 1
                     starts.append(ldx)
                 else:
                     break
         else:
+            # to get the bottom of the table
             stops.append(ldx)
+        # the first entry is actually the very beginning of the table
         stops = stops[1:]
+        # put everything together
         dfs = []
         for start, stop, irrep in zip(starts, stops, irreps):
             df = self.pandas_dataframe(start, stop, cols[key])
