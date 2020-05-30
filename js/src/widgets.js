@@ -36,7 +36,7 @@ var UniverseSceneView = base.ExatomicSceneView.extend({
         this.promises = Promise.all([utils.fparse(this, "atom_x"),
             utils.fparse(this, "atom_y"), utils.fparse(this, "atom_z"),
             utils.fparse(this, "atom_s"), utils.mesolv(this, "atom_cr"),
-            utils.mesolv(this, "atom_vr"),
+            utils.mesolv(this, "atom_vr"), utils.mesolv(this, "freq_d"),
             utils.mesolv(this, "atom_c"), utils.mesolv(this, "atom_l"),
             utils.fparse(this, "two_b0"), utils.fparse(this, "two_b1"),
             utils.mesolv(this, "field_i"), utils.mesolv(this, "field_p"),
@@ -246,6 +246,30 @@ var UniverseSceneView = base.ExatomicSceneView.extend({
         //if (this.model.get("tens")) {this.color_tensor();}
     },
 
+    visualize_freq: function() {
+        var freqdx = this.model.get("freq_idx");
+        var fdx = this.model.get("frame_idx");
+        console.log(this.freq_d[freqdx]);
+        for ( var property in this.freq_d[freqdx] ) {
+            var dx = this.freq_d[freqdx][property]["dx"]
+            var dy = this.freq_d[freqdx][property]["dy"]
+            var dz = this.freq_d[freqdx][property]["dz"]
+            var adx = this.freq_d[freqdx][property]["label"]
+            this.app3d.clear_meshes("normmode"+adx);
+            var atom_x = this.atom_x[fdx][adx]
+            var atom_y = this.atom_y[fdx][adx]
+            var atom_z = this.atom_z[fdx][adx]
+            this.app3d.meshes["normmode"+adx] = this.app3d.add_freq_disp(freqdx, dx, dy,
+                                                                         dz, atom_x, atom_y,
+                                                                         atom_z);
+            this.app3d.add_meshes("normmode"+adx);
+            //console.log(dx, dy, dz, property, atom_x, atom_y, atom_z, adx);
+        }
+        //console.log(this.app3d.meshes("normmode0"));
+        console.log("Inside frequency shit");
+        console.log(freqdx);
+    },
+
     events: {
         "click": "handleClick"
     },
@@ -286,6 +310,8 @@ var UniverseSceneView = base.ExatomicSceneView.extend({
         this.listenTo(this.model, "change:fill_idx", this.add_atom);
         this.listenTo(this.model, "change:bond_r", this.add_atom);
         this.listenTo(this.model, "change:clear_selected", this.clearSelected);
+        this.listenTo(this.model, "change:freq", this.visualize_freq);
+        this.listenTo(this.model, "change:freq_idx", this.visualize_freq);
     }
 
 });
