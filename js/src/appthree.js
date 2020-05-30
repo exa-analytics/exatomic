@@ -597,11 +597,22 @@ class App3D {
         var r = 0.05;
         var scale = 5.
         var length = scale*Math.sqrt(dx*dx + dy*dy + dz*dz)
+        //var length = 10
         var origin = new THREE.Vector3(atom_x, atom_y, atom_z);
         var disp = new THREE.Vector3(dx, dy, dz);
         var norm_mode = new THREE.Vector3().addVectors(disp, origin);
         var color = 0xFF0000
         var bar = new THREE.ArrowHelper(disp, origin, length, color);
+        //var center = new THREE.Vector3().addVectors(disp, origin);
+        //var g = new THREE.CylinderGeometry(r, r, length);
+        //g.applyMatrix(new THREE.Matrix4().makeRotationX(Math.PI / 2));
+        //var mat = new THREE.MeshPhongMaterial({vertexColors: THREE.VertexColors,
+        //                                        color: color, specular: color,
+        //                                        shininess: 5});
+        //var bar = new THREE.Mesh(g, mat);
+        //bar.position.set(origin.x, origin.y, origin.z);
+        //bar.lookAt(norm_mode);
+        //bar.name = freqdx + " disp";
         return [bar];
     };
 
