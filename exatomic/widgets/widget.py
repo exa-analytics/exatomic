@@ -588,7 +588,6 @@ class UniverseWidget(ExatomicBox):
         if tensors is not None:
             mainopts.update([('tensor', self._tensor_folder())])
 
-        print(freq)
         if freq is not None:
             mainopts.update([('frequency', self._frequency_folder(freq))])
 
