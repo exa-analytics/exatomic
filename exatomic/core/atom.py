@@ -424,7 +424,7 @@ class Frequency(DataFrame):
     | label             | int      | atomic identifier                         |
     +-------------------+----------+-------------------------------------------+
     """
-    _index = 'frequency'
+    #_index = 'frequency'
     _cardinal = ('frame', np.int64)
     _categories = {'symbol': str, 'label': np.int64}
     _columns = ['dx', 'dy', 'dz', 'symbol', 'frequency', 'freqdx', 'ir_int']
@@ -435,7 +435,8 @@ class Frequency(DataFrame):
     def displacement(self, freqdx):
         return self[self['freqdx'] == freqdx][['dx', 'dy', 'dz', 'symbol']]
 
-    def ir_spectra(self, fwhm=15, lineshape='gaussian', xrange=None, res=None, invert_x=False, **kwargs):
+    def ir_spectra(self, fwhm=15, lineshape='gaussian', xrange=None, res=None, invert_x=False,
+                   **kwargs):
         '''
         Generate an IR spectra with the plotter classes. We can define a gaussian or lorentzian
         lineshape functions. For the most part we pass all of the kwargs directly into the
@@ -448,6 +449,7 @@ class Frequency(DataFrame):
             res (float): Resolution for the plot line
             invert_x (bool): Invert x-axis
         '''
+        raise DeprecationWarning("This method is to be re-formatted")
         # define the lineshape and store the function call in the line variable
         try:
             line = getattr(plotter, lineshape)
