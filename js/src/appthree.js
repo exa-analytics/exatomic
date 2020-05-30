@@ -271,58 +271,58 @@ class App3D {
             var intersects = that.raycaster.intersectObjects(that.scene.children);
             that.highlight_active(intersects);
         }, false);
-        this.view.el.addEventListener('mouseup',
-        function(event) {
-            event.preventDefault();
-            var pos = this.getBoundingClientRect();
-            that.mouse.x =  ((event.clientX - pos.x) / that.w) * 2 - 1;
-            that.mouse.y = -((event.clientY - pos.y) / that.h) * 2 + 1;
-            that.raycaster.setFromCamera(that.mouse, that.camera);
-            var intersects = that.raycaster.intersectObjects(that.scene.children);
-            if ( intersects.length > 0 ) {
-                if ( intersects[0].object.name === "" ) {
-                    return;
-                } else if ( intersects[0].object.geometry.type === "CylinderGeometry" ) {
-                    return;
-                } else if (intersects[0].object.geometry.type === "TensorGeometry" ) {
-                    // Temporary Block until a full description table is implemented
-                    return;
-                };
-                // Initialize array
-                if ( that.selected.length - 1  < 0 ) {
-                    that.selected.push(intersects[0].object);
-                    // Can probably put this code block in a function
-                    var n = that.selected.length - 1;
-                    that.selected[n].currentHex = that.ACTIVE.currentHex;
-                    var newHex = that.lighten_color(that.selected[n].currentHex);
-                    that.selected[n].material.color.setHex(newHex);
-                } else {
-                    // Make new array from uuid's
-                    var uuid = that.selected.map(function(obj) {return obj.uuid;}, false);
-                    // Check for already existing objects
-                    if ( !uuid.includes(intersects[0].object['uuid']) ) {
-                        if ( uuid.length < 10 ) {
-                            // Append new object into array
-                            that.selected.push(intersects[0].object);
-                        } else {
-                            // Remove the first entry to make room for a new one
-                            that.selected[0].material.color.setHex(that.selected[0].currentHex);
-                            that.selected.shift();
-                            that.selected.push(intersects[0].object);
-                        };
-                        var n = that.selected.length - 1;
-                        that.selected[n].currentHex = that.ACTIVE.currentHex;
-                        var newHex = that.lighten_color(that.selected[n].currentHex);
-                        that.selected[n].material.color.setHex(newHex);
-                    } else {
-                        // Deselects a certain object and deletes it from array
-                        var sdx = uuid.indexOf(intersects[0].object['uuid']);
-                        that.selected[sdx].material.color.setHex(that.selected[sdx].currentHex);
-                        that.selected.splice(sdx, 1);
-                    };
-                };
-            };
-        }, false);
+        //this.view.el.addEventListener('mouseup',
+        //function(event) {
+        //    event.preventDefault();
+        //    var pos = this.getBoundingClientRect();
+        //    that.mouse.x =  ((event.clientX - pos.x) / that.w) * 2 - 1;
+        //    that.mouse.y = -((event.clientY - pos.y) / that.h) * 2 + 1;
+        //    that.raycaster.setFromCamera(that.mouse, that.camera);
+        //    var intersects = that.raycaster.intersectObjects(that.scene.children);
+        //    if ( intersects.length > 0 ) {
+        //        if ( intersects[0].object.name === "" ) {
+        //            return;
+        //        } else if ( intersects[0].object.geometry.type === "CylinderGeometry" ) {
+        //            return;
+        //        } else if (intersects[0].object.geometry.type === "TensorGeometry" ) {
+        //            // Temporary Block until a full description table is implemented
+        //            return;
+        //        };
+        //        // Initialize array
+        //        if ( that.selected.length - 1  < 0 ) {
+        //            that.selected.push(intersects[0].object);
+        //            // Can probably put this code block in a function
+        //            var n = that.selected.length - 1;
+        //            that.selected[n].currentHex = that.ACTIVE.currentHex;
+        //            var newHex = that.lighten_color(that.selected[n].currentHex);
+        //            that.selected[n].material.color.setHex(newHex);
+        //        } else {
+        //            // Make new array from uuid's
+        //            var uuid = that.selected.map(function(obj) {return obj.uuid;}, false);
+        //            // Check for already existing objects
+        //            if ( !uuid.includes(intersects[0].object['uuid']) ) {
+        //                if ( uuid.length < 10 ) {
+        //                    // Append new object into array
+        //                    that.selected.push(intersects[0].object);
+        //                } else {
+        //                    // Remove the first entry to make room for a new one
+        //                    that.selected[0].material.color.setHex(that.selected[0].currentHex);
+        //                    that.selected.shift();
+        //                    that.selected.push(intersects[0].object);
+        //                };
+        //                var n = that.selected.length - 1;
+        //                that.selected[n].currentHex = that.ACTIVE.currentHex;
+        //                var newHex = that.lighten_color(that.selected[n].currentHex);
+        //                that.selected[n].material.color.setHex(newHex);
+        //            } else {
+        //                // Deselects a certain object and deletes it from array
+        //                var sdx = uuid.indexOf(intersects[0].object['uuid']);
+        //                that.selected[sdx].material.color.setHex(that.selected[sdx].currentHex);
+        //                that.selected.splice(sdx, 1);
+        //            };
+        //        };
+        //    };
+        //}, false);
     };
 
     init_promise() {
