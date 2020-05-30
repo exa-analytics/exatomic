@@ -249,6 +249,7 @@ var UniverseSceneView = base.ExatomicSceneView.extend({
     visualize_freq: function() {
         var freqdx = this.model.get("freq_idx");
         var fdx = this.model.get("frame_idx");
+        var scale = this.model.get("freq_scale");
         console.log(this.freq_d[freqdx]);
         for ( var property in this.freq_d[freqdx] ) {
             var dx = this.freq_d[freqdx][property]["dx"]
@@ -261,7 +262,7 @@ var UniverseSceneView = base.ExatomicSceneView.extend({
             var atom_z = this.atom_z[fdx][adx]
             this.app3d.meshes["normmode"+adx] = this.app3d.add_freq_disp(freqdx, dx, dy,
                                                                          dz, atom_x, atom_y,
-                                                                         atom_z);
+                                                                         atom_z, scale);
             this.app3d.add_meshes("normmode"+adx);
             //console.log(dx, dy, dz, property, atom_x, atom_y, atom_z, adx);
         }
@@ -312,6 +313,7 @@ var UniverseSceneView = base.ExatomicSceneView.extend({
         this.listenTo(this.model, "change:clear_selected", this.clearSelected);
         this.listenTo(this.model, "change:freq", this.visualize_freq);
         this.listenTo(this.model, "change:freq_idx", this.visualize_freq);
+        this.listenTo(this.model, "change:freq_scale", this.visualize_freq);
     }
 
 });

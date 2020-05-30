@@ -417,7 +417,7 @@ class UniverseWidget(ExatomicBox):
     def _tensor_folder(self):
         alo = Layout(width='70px')
         rlo = Layout(width='220px')
-        scale =  FloatSlider(max=10.0, step=0.001, readout=True, value=1.0)
+        scale = FloatSlider(max=10.0, step=0.001, readout=True, value=1.0)
         tens = Button(description=' Tensor', icon='bank')
         def _tens(c):
             for scn in self.active():
@@ -461,16 +461,24 @@ class UniverseWidget(ExatomicBox):
 
     def _frequency_folder(self, freqdx):
         frequency = Button(description='Freq', layout=_wlo)
-        freqdxs = Dropdown(options=freqdx, value=freqdx[0], layout=_wlo)
+        freqdxs = Dropdown(options=freqdx, value=freqdx[0], layout=_wlo,
+                           description='Freq. Index')
+        scale = FloatSlider(max=10.0, step=0.1, readout=True, value=1.0,
+                            description='Amplitude', layout=_wlo)
         def _freqdx(c):
             for scn in self.active():
                 scn.freq_idx = c.new
         def _freq(c):
             for scn in self.active():
                 scn.freq = not scn.freq
+        def _scale(c):
+            for scn in self.active():
+                scn.freq_scale = c.new
         frequency.on_click(_freq)
         freqdxs.observe(_freqdx, names='value')
-        content = _ListDict([('freqdx', freqdxs)])
+        scale.observe(_scale, names='value')
+        content = _ListDict([('freqdx', freqdxs),
+                             ('scale', scale)])
         return Folder(frequency, content)
 
     def _update_output(self, out):

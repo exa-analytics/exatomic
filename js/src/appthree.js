@@ -593,11 +593,9 @@ class App3D {
         return meshes;
     };
 
-    add_freq_disp(freqdx, dx, dy, dz, atom_x, atom_y, atom_z) {
+    add_freq_disp(freqdx, dx, dy, dz, atom_x, atom_y, atom_z, scale) {
         var r = 0.05;
-        var scale = 5.
         var length = scale*Math.sqrt(dx*dx + dy*dy + dz*dz)
-        //var length = 10
         var origin = new THREE.Vector3(atom_x, atom_y, atom_z);
         var disp = new THREE.Vector3(dx, dy, dz);
         var norm_mode = new THREE.Vector3().addVectors(disp, origin);
