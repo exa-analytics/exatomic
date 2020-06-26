@@ -351,7 +351,7 @@ def basis_function_contributions(universe, mo, mocoefs='coef',
         raise NotImplementedError("not clever enough for that.")
 
 
-def to_cube(universe,file_name='output',field_number=0)
+def to_cube(uni,file_name='output',field_number=0)
     """
     Provided a universe with atom and field attributes, write to a file 
     in cube format for a single 3D scalar field.
@@ -367,7 +367,6 @@ def to_cube(universe,file_name='output',field_number=0)
     Returns:
         None
     """
-    uni = universe
     n = field_number
     if os.path.isfile(file_name+'.cube'):
         raise FileExistsError('File '+file_name+'.cube '+'exists.')
@@ -405,3 +404,4 @@ def to_cube(universe,file_name='output',field_number=0)
                 if k%6 == 5:
                     f_out.write('\n')
             f_out.write('\n')
+    f_out.close()
