@@ -319,10 +319,12 @@ class Universe(six.with_metaclass(Meta, Container)):
         Returns:
             None
         """
+        import os
+        from exatomic.interfaces.cube import Cube 
         if os.path.isfile(file_name+'.cube'):
             raise FileExistsError('File '+file_name+'.cube '+'exists.')
-        cube_edi = exatomic.Cube.from_universe(self,field_number)
-        cube_edi = write(file_name+'.cube')
+        cube_edi = Cube.from_universe(self,field_number)
+        cube_edi.write(file_name+'.cube')
         
     def __len__(self):
         return len(self.frame)
