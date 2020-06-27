@@ -303,6 +303,61 @@ class Universe(six.with_metaclass(Meta, Container)):
                                       inplace=inplace, verbose=verbose,
                                       irrep=irrep)
 
+    def to_cube(self, file_name='output', field_number=0)
+        """
+        Write to a file in cube format for a single 3D scalar field in universe object.
+
+        .. code-block:: python
+
+            uni.add_molecular_orbitals()                  # Default around (HOMO-5, LUMO+7)
+            uni.to_cube('cubefile', 0)                    # write to cubefile.cube for HOMO-5
+
+        Args:
+            file_name (str): name of the output file without file extension
+            field_number (int): number of the single field starting with 0
+
+        Returns:
+            None
+        """
+        n = field_number
+        if os.path.isfile(file_name+'.cube'):
+            raise FileExistsError('File '+file_name+'.cube '+'exists.')
+        else:
+            f_out = open(file_name+'.cube','w')
+        f_out.write('EXATOMIC GENERATED FIELD VALUES TO CUBE FILE\n')
+        f_out.write('OUTER LOOP: X, MIDDLE LOOP: Y, INNER LOOP: Z\n')
+        f_out.write('{:4}{:12.6f}{:12.6f}{:12.6f}\n'.format(len(self.atom),
+                                                     self.field['ox'][n], self.field['oy'][n], 
+                                                     self.field['oz'][n]))
+        NX = self.field['nx'][n]
+        f_out.write('{:4}{:12.6f}{:12.6f}{:12.6f}\n'.format(NX,
+                                                     self.field['dxi'][n], self.field['dxj'][n], 
+                                                     self.field['dxk'][n]))
+        NY = self.field['ny'][n]
+        f_out.write('{:4}{:12.6f}{:12.6f}{:12.6f}\n'.format(NY,
+                                                     self.field['dyi'][n], self.field['dyj'][n], 
+                                                     self.field['dyk'][n]))
+        NZ = self.field['nz'][n]
+        f_out.write('{:4}{:12.6f}{:12.6f}{:12.6f}\n'.format(NZ,
+                                                     self.field['dzi'][n], self.field['dzj'][n], 
+                                                     self.field['dzk'][n]))
+        for index, row in self.atom.iterrows():
+            a = row['Z']
+            #Nuclear charge on atom a, this ought to deviate from the atomic number such as when
+            #an ECP is used, assumed here a is equal to atomic number Z
+            #future developments might change this definition.
+            f_out.write('{:4}{:12.6f}{:12.6f}{:12.6f}{:12.6f}\n'.format(row['Z'],
+                                                                        a, row['x'],
+                                                                        row['y'], row['z']))
+        for i in range(NX):
+            for j in range(NY):
+                for k in range(NZ):
+                    f_out.write(f'{self.field.field_values[n][i*NY*NZ+j*NZ+k]:13E} ')
+                    if k%6 == 5:
+                        f_out.write('\n')
+                f_out.write('\n')
+        f_out.close()
+
     def __len__(self):
         return len(self.frame)
 
