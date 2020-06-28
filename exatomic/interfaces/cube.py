@@ -32,7 +32,7 @@ class Cube(six.with_metaclass(Meta, Editor)):
         cube = Cube('my.cube')
         cube.atom                # Displays the atom dataframe
         cube.field               # Displays the field dataframe
-        cube.field_values        # Displays the list of field values
+        cube.field.field_values  # Displays the list of field values
         uni = cube.to_universe() # Converts the cube file editor to a universe
         UniverseWidget(uni)      # Renders the cube file
 
