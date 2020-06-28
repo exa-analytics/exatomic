@@ -303,14 +303,14 @@ class Universe(six.with_metaclass(Meta, Container)):
                                       inplace=inplace, verbose=verbose,
                                       irrep=irrep)
 
-    def to_cube(self, file_name='output', field_number=0):
+    def write_cube(self, file_name='output', field_number=0):
         """
         Write to a file in cube format for a single 3D scalar field in universe object.
 
         .. code-block:: python
 
             uni.add_molecular_orbitals()                  # Default around (HOMO-5, LUMO+7)
-            uni.to_cube('cubefile', 0)                    # write to cubefile.cube for HOMO-5
+            uni.write_cube('cubefile', 0)                    # write to cubefile.cube for HOMO-5
 
         Args:
             file_name (str): name of the output file without file extension
