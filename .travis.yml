@@ -4,11 +4,6 @@ matrix:
     include:
         - os: linux
           language: python
-          python: 3.5
-          env: PYTHONVER=3.5
-
-        - os: linux
-          language: python
           python: 3.6
           env: PYTHONVER=3.6
 
@@ -21,11 +16,6 @@ matrix:
           language: python
           python: 3.8
           env: PYTHONVER=3.8
-
-        - os: osx
-          language: generic
-          python: 3.5
-          env: PYTHONVER=3.5
 
         - os: osx
           language: generic
