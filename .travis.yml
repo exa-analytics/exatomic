@@ -54,7 +54,8 @@ install:
     - conda install -q -y -c conda-forge numba
     - pip install travis-sphinx codacy-coverage
     - git clone https://github.com/exa-analytics/exa.git
-    - pip install -e exa/
+    - pip install exa/
+    - rm -r exa
     - pip install .
 
 script:
