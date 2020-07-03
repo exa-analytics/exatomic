@@ -11,5 +11,5 @@ The version can be checked using the following command:
     exa.version_info
     exa.__verion__
 """
-version_info = (0, 4, 1)
+version_info = (0, 5, 0)
 __version__ = ".".join(map(str, version_info))
