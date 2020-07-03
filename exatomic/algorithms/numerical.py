@@ -10,7 +10,10 @@ import numpy as np
 import pandas as pd
 from numba import (jit, deferred_type,
                    optional, int64, float64, boolean)
-from numba.experimental import jitclass
+try:
+    from numba.experimental import jitclass
+except ImportError:
+    from numba import jitclass
 from exatomic.base import nbche
 
 #################
