@@ -24,35 +24,35 @@ class TestADFOutput(TestCase):
     def test_parse_atom(self):
         self.lu.parse_atom()
         self.assertEqual(self.lu.atom.shape[0], 1)
-        self.assertTrue(np.all(pd.notnull(pd.DataFrame(self.lu.atom))).all())
+        self.assertTrue(np.all(pd.notnull(pd.DataFrame(self.lu.atom))))
         self.pf3.parse_atom()
         self.assertEqual(self.pf3.atom.shape[0], 4)
-        self.assertTrue(np.all(pd.notnull(pd.DataFrame(self.pf3.atom))).all())
+        self.assertTrue(np.all(pd.notnull(pd.DataFrame(self.pf3.atom))))
         self.c2h2.parse_atom()
         self.assertEqual(self.c2h2.atom.shape[0], 4)
-        self.assertTrue(np.all(pd.notnull(pd.DataFrame(self.c2h2.atom))).all())
+        self.assertTrue(np.all(pd.notnull(pd.DataFrame(self.c2h2.atom))))
         self.c2h2_nofrag.parse_atom()
         self.assertEqual(self.c2h2.atom.shape[0], 4)
-        self.assertTrue(np.all(pd.notnull(pd.DataFrame(self.c2h2.atom))).all())
+        self.assertTrue(np.all(pd.notnull(pd.DataFrame(self.c2h2.atom))))
         self.c2h3i.parse_atom()
         self.assertEqual(self.c2h3i.atom.shape[0], 66)
-        self.assertTrue(np.all(pd.notnull(pd.DataFrame(self.c2h3i.atom))).all())
+        self.assertTrue(np.all(pd.notnull(pd.DataFrame(self.c2h3i.atom))))
         self.nico4.parse_atom()
         self.assertEqual(self.nico4.atom.shape[0], 9)
-        self.assertTrue(np.all(pd.notnull(pd.DataFrame(self.nico4.atom))).all())
+        self.assertTrue(np.all(pd.notnull(pd.DataFrame(self.nico4.atom))))
         self.ch4.parse_atom()
         self.assertEqual(self.ch4.atom.shape[0], 15)
-        self.assertTrue(np.all(pd.notnull(pd.DataFrame(self.ch4.atom))).all())
+        self.assertTrue(np.all(pd.notnull(pd.DataFrame(self.ch4.atom))))
 
     def test_parse_basis_set(self):
         self.lu.parse_basis_set()
         self.assertEqual(self.lu.basis_set.shape[0], 32)
-        self.assertTrue(np.all(pd.notnull(pd.DataFrame(self.lu.basis_set))).all())
+        self.assertTrue(np.all(pd.notnull(pd.DataFrame(self.lu.basis_set))))
 
     def test_parse_basis_set_order(self):
         self.lu.parse_basis_set_order()
         self.assertEqual(self.lu.basis_set_order.shape[0], 109)
-        self.assertTrue(np.all(pd.notnull(pd.DataFrame(self.lu.basis_set_order))).all())
+        self.assertTrue(np.all(pd.notnull(pd.DataFrame(self.lu.basis_set_order))))
 
     def test_parse_momatrix_and_to_universe(self):
         self.lu.parse_momatrix()
@@ -64,34 +64,34 @@ class TestADFOutput(TestCase):
     def test_parse_contribution(self):
         self.lu.parse_contribution()
         self.assertEqual(self.lu.contribution.shape[0], 78)
-        self.assertTrue(np.all(pd.notnull(pd.DataFrame(self.lu.contribution))).all())
+        self.assertTrue(np.all(pd.notnull(pd.DataFrame(self.lu.contribution))))
 
     def test_parse_orbital(self):
         self.lu.parse_orbital()
         self.assertEqual(self.lu.orbital.shape[0], 20)
         cols = list(set(self.lu.orbital._columns))
         test = pd.DataFrame(self.lu.orbital[cols])
-        self.assertTrue(np.all(pd.notnull(pd.DataFrame(test))).all())
+        self.assertTrue(np.all(pd.notnull(pd.DataFrame(test))))
 
     def test_parse_nmr_shielding(self):
         self.pf3.parse_nmr_shielding()
         self.assertEqual(self.pf3.nmr_shielding.shape[0], 4)
-        self.assertTrue(np.all(pd.notnull(pd.DataFrame(pd.DataFrame(self.pf3.nmr_shielding)))).all())
+        self.assertTrue(np.all(pd.notnull(pd.DataFrame(pd.DataFrame(self.pf3.nmr_shielding)))))
 
     def test_parse_j_coupling(self):
         self.c2h2.parse_j_coupling()
         self.assertEqual(self.c2h2.j_coupling.shape[0], 4)
-        self.assertTrue(np.all(pd.notnull(pd.DataFrame(self.c2h2.j_coupling))).all())
+        self.assertTrue(np.all(pd.notnull(pd.DataFrame(self.c2h2.j_coupling))))
 
     def test_parse_frequency(self):
         self.ch4.parse_frequency()
         self.assertEqual(self.ch4.frequency.shape[0], 45)
-        self.assertTrue(np.all(pd.notnull(pd.DataFrame(self.ch4.frequency))).all())
+        self.assertTrue(np.all(pd.notnull(pd.DataFrame(self.ch4.frequency))))
 
     def test_parse_gradient(self):
         self.ch4.parse_gradient()
         self.assertEqual(self.ch4.gradient.shape[0], 15)
-        self.assertTrue(np.all(pd.notnull(pd.DataFrame(self.ch4.gradient))).all())
+        self.assertTrue(np.all(pd.notnull(pd.DataFrame(self.ch4.gradient))))
         self.c2h3i.parse_gradient()
         self.assertEqual(self.c2h3i.gradient.shape[0], 66)
-        self.assertTrue(np.all(pd.notnull(pd.DataFrame(self.c2h3i.gradient))).all())
+        self.assertTrue(np.all(pd.notnull(pd.DataFrame(self.c2h3i.gradient))))
