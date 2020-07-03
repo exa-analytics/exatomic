@@ -62,7 +62,7 @@ install:
   - cmd: conda install -q -c conda-forge -y numba
   - cmd: git clone https://github.com/exa-analytics/exa.git
   - cmd: pip install exa/
-  - cmd: rm -r exa
+  - cmd: rm -rf exa
   - cmd: pip install .
 
 build: false
