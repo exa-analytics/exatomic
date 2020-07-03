@@ -95,4 +95,3 @@ class TestADFOutput(TestCase):
         self.c2h3i.parse_gradient()
         self.assertEqual(self.c2h3i.gradient.shape[0], 66)
         self.assertTrue(np.all(pd.notnull(pd.DataFrame(self.c2h3i.gradient))))
-
