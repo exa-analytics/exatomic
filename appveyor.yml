@@ -60,6 +60,7 @@ install:
   - cmd: conda install -q -c conda-forge -y pytest pytables six sympy pyyaml
   - cmd: conda install -q -c conda-forge -y psutil numexpr nodejs ipywidgets bokeh
   - cmd: conda install -q -c conda-forge -y numba
+  - cmd: conda install -q -c anaconda h5py
   - cmd: git clone https://github.com/exa-analytics/exa.git
   - cmd: pip install exa/
   - cmd: rm -rf exa

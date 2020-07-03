@@ -52,6 +52,7 @@ install:
     - conda install -q -y -c conda-forge coveralls coverage'<=4.5.4' pytest pytest-cov
     - conda install -q -y -c conda-forge numexpr nodejs ipywidgets bokeh
     - conda install -q -y -c conda-forge numba
+    - conda install -q -y -c anaconda h5py
     - pip install travis-sphinx codacy-coverage
     - git clone https://github.com/exa-analytics/exa.git
     - pip install exa/
