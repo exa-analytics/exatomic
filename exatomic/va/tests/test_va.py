@@ -89,8 +89,8 @@ class TestVROA(TestCase):
                                 2.01524180e+02, 5.14500000e+02],
                                [3.59821746e+03, 5.00000000e+00, 1.60412161e+00, 5.19841596e+00,
                                 4.55091201e+02, 5.14500000e+02]])
-        scatter_data = scatter_data.T
-        raman_data = raman_data.T
+        scatter_data = scatter_data.T.copy()
+        raman_data = raman_data.T.copy()
         # test all columns of the respective dataframe to get a better sense of what is broken
         self.assertTrue(np.allclose(va_corr.scatter['freq'].values,           scatter_data[0], rtol=5e-4))
         self.assertTrue(np.allclose(va_corr.scatter['freqdx'].values,         scatter_data[1], rtol=5e-4))
@@ -151,8 +151,8 @@ class TestVROA(TestCase):
                                 3.70791737e+01, 4.88900000e+02],
                                [1.44754882e+03, 1.50000000e+01, 5.36564516e-05, 1.07944901e+00,
                                 3.45520265e+01, 4.88900000e+02]])
-        scatter_data = scatter_data.T
-        raman_data = raman_data.T
+        scatter_data = scatter_data.T.copy()
+        raman_data = raman_data.T.copy()
 
         # test all columns of the respective dataframe to get a better sense of what is broken
         self.assertTrue(np.allclose(va_corr.scatter['freq'].values,           scatter_data[0], rtol=5e-4))
