@@ -18,7 +18,10 @@ environment:
       PY_CONDITION: "python >=3.6,<3.7"
     - TARGET_ARCH: "x86"
       CONDA_PY: "3.7"
-      PY_CONDITION: "python >=3.6"
+      PY_CONDITION: "python >=3.6,<3.8"
+    - TARGET_ARCH: "x86"
+      CONDA_PY: "3.8"
+      PY_CONDITION: "python >=3.7,<3.9"
     - TARGET_ARCH: "x64"
       CONDA_PY: "3.5"
       PY_CONDITION: "python >=3.5,<3.6"
@@ -27,7 +30,10 @@ environment:
       PY_CONDITION: "python >=3.6,<3.7"
     - TARGET_ARCH: "x64"
       CONDA_PY: "3.7"
-      PY_CONDITION: "python >=3.6"
+      PY_CONDITION: "python >=3.6,<3.8"
+    - TARGET_ARCH: "x64"
+      CONDA_PY: "3.8"
+      PY_CONDITION: "python >=3.7,<3.9"
 
 platform:
   - x64
