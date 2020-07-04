@@ -64,12 +64,12 @@ class TestGenInput(TestCase):
         self.h2o2.parse_atom()
         self.h2o2.parse_frequency()
         self.h2o2.parse_frequency_ext()
-        freq_2_3_4 = gi(uni=self.h2o2, delta_type=2, fdx=[2,3,4])
-        self.assertEqual(freq_2_3_4.disp.shape[0], 28)
+        freq_1_2_3 = gi(uni=self.h2o2, delta_type=2, fdx=[1,2,3])
+        self.assertEqual(freq_1_2_3.disp.shape[0], 28)
         self.assertTrue(np.allclose(np.concatenate([[0.], self.h2o2.frequency_ext.loc[[1,2,3],'freq'].values]),
-                                    freq_2_3_4.disp['modes'].drop_duplicates().values))
-        freq_5 = gi(uni=self.h2o2, delta_type=2, fdx=[5])
-        self.assertEqual(freq_5.disp.shape[0], 12)
+                                    freq_1_2_3.disp['modes'].drop_duplicates().values))
+        freq_4 = gi(uni=self.h2o2, delta_type=2, fdx=[4])
+        self.assertEqual(freq_4.disp.shape[0], 12)
         self.assertTrue(np.allclose(np.concatenate([[0.], [self.h2o2.frequency_ext.loc[4,'freq']]]),
-                                    freq_5.disp['modes'].drop_duplicates().values))
+                                    freq_4.disp['modes'].drop_duplicates().values))
 

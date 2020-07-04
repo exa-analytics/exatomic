@@ -1,9 +1,10 @@
 # -*- coding: utf-8 -*-
 # Copyright (c) 2015-2018, Exa Analytics Development Team
 # Distributed under the terms of the Apache License 2.0
+from unittest import TestCase
+import h5py
 import numpy as np
 import pandas as pd
-from unittest import TestCase
 from exatomic import Universe
 from exatomic.base import resource
 from exatomic.molcas.output import Output, Orb, HDF
@@ -155,48 +156,44 @@ class TestOrb(TestCase):
         self.assertTrue(np.all(pd.notnull(pd.DataFrame(mamsphr.momatrix))))
         self.assertTrue(np.all(pd.notnull(pd.DataFrame(mamsphr.orbital))))
 
-try:
-    import h5py
-    class TestHDF(TestCase):
 
-        def setUp(self):
-            self.nym = HDF(resource('mol-c2h6-nosym-scf.hdf5'))
-            self.sym = HDF(resource('mol-c2h6-sym-scf.hdf5'))
+class TestHDF(TestCase):
 
-        def test_parse_atom(self):
-            self.sym.parse_atom()
-            self.nym.parse_atom()
-            self.assertTrue(self.sym.atom.shape[0] == 8)
-            self.assertTrue(self.nym.atom.shape[0] == 8)
+    def setUp(self):
+        self.nym = HDF(resource('mol-c2h6-nosym-scf.hdf5'))
+        self.sym = HDF(resource('mol-c2h6-sym-scf.hdf5'))
 
-        def test_parse_basis_set_order(self):
-            self.sym.parse_basis_set_order()
-            self.nym.parse_basis_set_order()
-            self.assertTrue(self.sym.basis_set_order.shape[0] == 30)
-            self.assertTrue(self.nym.basis_set_order.shape[0] == 30)
+    def test_parse_atom(self):
+        self.sym.parse_atom()
+        self.nym.parse_atom()
+        self.assertTrue(self.sym.atom.shape[0] == 8)
+        self.assertTrue(self.nym.atom.shape[0] == 8)
 
-        def test_parse_orbital(self):
-            self.sym.parse_orbital()
-            self.nym.parse_orbital()
-            self.assertTrue(self.sym.orbital.shape[0] == 30)
-            self.assertTrue(self.nym.orbital.shape[0] == 30)
+    def test_parse_basis_set_order(self):
+        self.sym.parse_basis_set_order()
+        self.nym.parse_basis_set_order()
+        self.assertTrue(self.sym.basis_set_order.shape[0] == 30)
+        self.assertTrue(self.nym.basis_set_order.shape[0] == 30)
 
-        def test_parse_overlap(self):
-            self.sym.parse_overlap()
-            self.nym.parse_overlap()
-            self.assertTrue(self.sym.overlap.shape[0])
-            self.assertTrue(self.nym.overlap.shape[0])
+    def test_parse_orbital(self):
+        self.sym.parse_orbital()
+        self.nym.parse_orbital()
+        self.assertTrue(self.sym.orbital.shape[0] == 30)
+        self.assertTrue(self.nym.orbital.shape[0] == 30)
 
-        def test_parse_momatrix(self):
-            self.sym.parse_momatrix()
-            self.nym.parse_momatrix()
-            self.assertTrue(self.nym.momatrix.shape[0] == 900)
-            with self.assertRaises(AttributeError):
-                self.assertTrue(self.sym.momatrix)
+    def test_parse_overlap(self):
+        self.sym.parse_overlap()
+        self.nym.parse_overlap()
+        self.assertTrue(self.sym.overlap.shape[0])
+        self.assertTrue(self.nym.overlap.shape[0])
 
-        def test_to_universe(self):
-            self.sym.to_universe()
-            self.nym.to_universe()
+    def test_parse_momatrix(self):
+        self.sym.parse_momatrix()
+        self.nym.parse_momatrix()
+        self.assertTrue(self.nym.momatrix.shape[0] == 900)
+        with self.assertRaises(AttributeError):
+            self.assertTrue(self.sym.momatrix)
 
-except ImportError:
-    pass
+    def test_to_universe(self):
+        self.sym.to_universe()
+        self.nym.to_universe()

@@ -24,9 +24,9 @@ def atom_traits(df, atomcolors=None, atomradii=None, atomlabels=None):
 
     .. _Jmol: http://jmol.sourceforge.net/jscolors/
     """
-    atomlabels = pd.Series() if atomlabels is None else pd.Series(atomlabels)
-    atomcolors = pd.Series() if atomcolors is None else pd.Series(atomcolors)
-    atomradii = pd.Series() if atomradii is None else pd.Series(atomradii)
+    atomlabels = pd.Series(dtype=str) if atomlabels is None else pd.Series(atomlabels, dtype=str)
+    atomcolors = pd.Series(dtype=str) if atomcolors is None else pd.Series(atomcolors, dtype=str)
+    atomradii = pd.Series(dtype=float) if atomradii is None else pd.Series(atomradii, dtype=float)
     traits = {}
     cols = ['x', 'y', 'z']
     grps = df.groupby('frame')
@@ -40,13 +40,11 @@ def atom_traits(df, atomcolors=None, atomradii=None, atomlabels=None):
     symmap = {i: v for i, v in enumerate(df['symbol'].cat.categories)
               if v in df.unique_atoms}
     unq = df['symbol'].astype(str).unique()
-#    radii = {k: sym2radius[k][1] for k in unq}
     cov_radii = {k: sym2radius[k][0] for k in unq}
     van_radii = {k: sym2radius[k][1] for k in unq}
     colors = {k: sym2color[k] for k in unq}
     labels = symmap
     colors.update(atomcolors)
-#    radii.update(atomradii)
     cov_radii.update(atomradii)
     van_radii.update(atomradii)
     labels.update(atomlabels)
@@ -74,7 +72,6 @@ def field_traits(df):
             'field_i': idxs,
             'field_p': fps}
 
-#def two_traits(df, lbls):
 def two_traits(uni):
     """Get two table traitlets."""
     if not hasattr(uni, "atom_two"):

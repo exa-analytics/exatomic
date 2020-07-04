@@ -1,34 +1,33 @@
 import numpy as np
 from unittest import TestCase
 from os import sep, remove, rmdir
+from tempfile import mkdtemp
 from tarfile import open
 from glob import glob
-
-#from exatomic import va
 from exatomic.base import resource
 from exatomic.va import VA, get_data, gen_delta
 from exatomic.gaussian import Fchk, Output as gOutput
 from exatomic.nwchem import Output
 
+
+TMPDIR = mkdtemp()
+h2o2_freq = Fchk(resource('g16-h2o2-def2tzvp-freq.fchk'))
+methyloxirane_freq = Fchk(resource('g16-methyloxirane-def2tzvp-freq.fchk'))
+tar = open(resource('va-vroa-h2o2.tar.bz'), mode='r')
+tar.extractall(TMPDIR)
+tar.close()
+tar = open(resource('va-vroa-methyloxirane.tar.bz'), mode='r')
+tar.extractall(TMPDIR)
+tar.close()
+nitro_freq = gOutput(resource('g09-nitromalonamide-6-31++g-freq.out'))
+tar = open(resource('va-zpvc-nitro_nmr.tar.bz'), mode='r')
+tar.extractall(TMPDIR)
+tar.close()
+
+
 class TestGetData(TestCase):
-    def setUp(self):
-        tar = open(resource('va-vroa-h2o2.tar.bz'), mode='r')
-        tar.extractall()
-        tar.close()
-        tar = open(resource('va-vroa-methyloxirane.tar.bz'), mode='r')
-        tar.extractall()
-        tar.close()
-
-    def tearDown(self):
-        dirs = ['h2o2', 'methyloxirane']
-        for dir in dirs:
-            path = sep.join([dir, '*'])
-            for i in glob(path):
-                remove(i)
-            rmdir(dir)
-
     def test_getter_small(self):
-        path = sep.join(['h2o2', '*'])
+        path = sep.join([TMPDIR, 'h2o2', '*'])
         df = get_data(path=path, attr='roa', soft=Output, f_start='va-roa-h2o2-def2tzvp-514.5-',
                       f_end='.out')
         self.assertEqual(df.shape[0], 130)
@@ -37,7 +36,7 @@ class TestGetData(TestCase):
         self.assertEqual(df.shape[0], 52)
 
     def test_getter_large(self):
-        path = sep.join(['methyloxirane', '*'])
+        path = sep.join([TMPDIR, 'methyloxirane', '*'])
         df = get_data(path=path, attr='roa', soft=Output, f_start='va-roa-methyloxirane-def2tzvp-488.9-',
                       f_end='.out')
         self.assertEqual(df.shape[0], 160)
@@ -45,38 +44,21 @@ class TestGetData(TestCase):
                       f_end='.out')
         self.assertEqual(df.shape[0], 160)
 
+
 class TestVROA(TestCase):
-    def setUp(self):
-        self.h2o2_freq = Fchk(resource('g16-h2o2-def2tzvp-freq.fchk'))
-        self.methyloxirane_freq = Fchk(resource('g16-methyloxirane-def2tzvp-freq.fchk'))
-        tar = open(resource('va-vroa-h2o2.tar.bz'), mode='r')
-        tar.extractall()
-        tar.close()
-        tar = open(resource('va-vroa-methyloxirane.tar.bz'), mode='r')
-        tar.extractall()
-        tar.close()
-
-    def tearDown(self):
-        dirs = ['h2o2', 'methyloxirane']
-        for dir in dirs:
-            path = sep.join([dir, '*'])
-            for i in glob(path):
-                remove(i)
-            rmdir(dir)
-
     def test_vroa(self):
-        self.h2o2_freq.parse_frequency()
-        self.h2o2_freq.parse_frequency_ext()
-        delta = gen_delta(delta_type=2, freq=self.h2o2_freq.frequency.copy())
+        h2o2_freq.parse_frequency()
+        h2o2_freq.parse_frequency_ext()
+        delta = gen_delta(delta_type=2, freq=h2o2_freq.frequency.copy())
         va_corr = VA()
-        path = sep.join(['h2o2', '*'])
+        path = sep.join([TMPDIR, 'h2o2', '*'])
         va_corr.roa = get_data(path=path, attr='roa', soft=Output, f_start='va-roa-h2o2-def2tzvp-514.5-',
                                f_end='.out')
         va_corr.roa['exc_freq'] = np.tile(514.5, len(va_corr.roa))
         va_corr.gradient = get_data(path=path, attr='gradient', soft=Output,
                                     f_start='va-roa-h2o2-def2tzvp-514.5-', f_end='.out')
         va_corr.gradient['exc_freq'] = np.tile(514.5, len(va_corr.gradient))
-        va_corr.vroa(uni=self.h2o2_freq, delta=delta['delta'].values)
+        va_corr.vroa(uni=h2o2_freq, delta=delta['delta'].values)
         scatter_data = np.array([[ 3.47311779e+02,  0.00000000e+00, -3.27390198e+02,
                                   -8.44921542e+01, -4.22102267e-02, -3.41332079e-02,
                                   -3.91676006e-03,  5.14500000e+02],
@@ -107,8 +89,8 @@ class TestVROA(TestCase):
                                 2.01524180e+02, 5.14500000e+02],
                                [3.59821746e+03, 5.00000000e+00, 1.60412161e+00, 5.19841596e+00,
                                 4.55091201e+02, 5.14500000e+02]])
-        scatter_data = scatter_data.T
-        raman_data = raman_data.T
+        scatter_data = scatter_data.T.copy()
+        raman_data = raman_data.T.copy()
         # test all columns of the respective dataframe to get a better sense of what is broken
         self.assertTrue(np.allclose(va_corr.scatter['freq'].values,           scatter_data[0], rtol=5e-4))
         self.assertTrue(np.allclose(va_corr.scatter['freqdx'].values,         scatter_data[1], rtol=5e-4))
@@ -127,18 +109,18 @@ class TestVROA(TestCase):
         self.assertTrue(np.allclose(va_corr.raman['exc_freq'].values,      raman_data[5], rtol=5e-4))
 
     def test_select_freq(self):
-        self.methyloxirane_freq.parse_frequency()
-        self.methyloxirane_freq.parse_frequency_ext()
-        delta = gen_delta(delta_type=2, freq=self.methyloxirane_freq.frequency.copy())
+        methyloxirane_freq.parse_frequency()
+        methyloxirane_freq.parse_frequency_ext()
+        delta = gen_delta(delta_type=2, freq=methyloxirane_freq.frequency.copy())
         va_corr = VA()
-        path = sep.join(['methyloxirane', '*'])
+        path = sep.join([TMPDIR, 'methyloxirane', '*'])
         va_corr.roa = get_data(path=path, attr='roa', soft=Output,
                                f_start='va-roa-methyloxirane-def2tzvp-488.9-', f_end='.out')
         va_corr.roa['exc_freq'] = np.tile(488.9, len(va_corr.roa))
         va_corr.gradient = get_data(path=path, attr='gradient', soft=Output,
                                     f_start='va-roa-methyloxirane-def2tzvp-488.9-', f_end='.out')
         va_corr.gradient['exc_freq'] = np.tile(488.9, len(va_corr.gradient))
-        va_corr.vroa(uni=self.methyloxirane_freq, delta=delta['delta'].values)
+        va_corr.vroa(uni=methyloxirane_freq, delta=delta['delta'].values)
         scatter_data = np.array([[ 1.12639199e+03,  1.00000000e+01, -6.15736884e+01,
                                   -1.53103521e+01, -1.68892383e-01, -6.40100535e-03,
                                   -8.61815897e-04,  4.88900000e+02],
@@ -169,8 +151,8 @@ class TestVROA(TestCase):
                                 3.70791737e+01, 4.88900000e+02],
                                [1.44754882e+03, 1.50000000e+01, 5.36564516e-05, 1.07944901e+00,
                                 3.45520265e+01, 4.88900000e+02]])
-        scatter_data = scatter_data.T
-        raman_data = raman_data.T
+        scatter_data = scatter_data.T.copy()
+        raman_data = raman_data.T.copy()
 
         # test all columns of the respective dataframe to get a better sense of what is broken
         self.assertTrue(np.allclose(va_corr.scatter['freq'].values,           scatter_data[0], rtol=5e-4))
@@ -189,34 +171,20 @@ class TestVROA(TestCase):
         self.assertTrue(np.allclose(va_corr.raman['raman_int'].values,     raman_data[4], rtol=5e-4))
         self.assertTrue(np.allclose(va_corr.raman['exc_freq'].values,      raman_data[5], rtol=5e-4))
 
-class TestZPVC(TestCase):
-    def setUp(self):
-        self.nitro_freq = gOutput(resource('g09-nitromalonamide-6-31++g-freq.out'))
-        tar = open(resource('va-zpvc-nitro_nmr.tar.bz'), mode='r')
-        tar.extractall()
-        tar.close()
-
-    def tearDown(self):
-        dirs = ['nitromalonamide_nmr']
-        for dir in dirs:
-            path = sep.join([dir, '*'])
-            for i in glob(path):
-                remove(i)
-            rmdir(dir)
-
+#class TestZPVC(TestCase):
     def test_zpvc(self):
-        self.nitro_freq.parse_frequency()
-        self.nitro_freq.parse_frequency_ext()
-        path = sep.join(['nitromalonamide_nmr', '*'])
+        nitro_freq.parse_frequency()
+        nitro_freq.parse_frequency_ext()
+        path = sep.join([TMPDIR, 'nitromalonamide_nmr', '*'])
         va_corr = VA()
         va_corr.gradient = get_data(path=path, attr='gradient', soft=gOutput, f_start='nitromal_grad_',
                                     f_end='.out')
         va_corr.property = get_data(path=path, attr='nmr_shielding', soft=gOutput,
                                     f_start='nitromal_prop', f_end='.out').groupby(
                                     'atom').get_group(0)[['isotropic', 'file']].reset_index(drop=True)
-        delta = gen_delta(delta_type=2, freq=self.nitro_freq.frequency.copy())
+        delta = gen_delta(delta_type=2, freq=nitro_freq.frequency.copy())
 
-        va_corr.zpvc(uni=self.nitro_freq, delta=delta['delta'].values, temperature=[0, 200])
+        va_corr.zpvc(uni=nitro_freq, delta=delta['delta'].values, temperature=[0, 200])
         zpvc_results = np.array([[ 13.9329    ,  -1.80706136,  12.12583864,  -2.65173195,
           0.84467059,   0.        ],
        [ 13.9329    ,  -1.48913965,  12.44376035,  -2.39264653,
@@ -412,5 +380,4 @@ class TestZPVC(TestCase):
         va_corr.eff_coord['Z'] = va_corr.eff_coord['Z'].astype(int)
         self.assertTrue(np.allclose(va_corr.eff_coord[['Z','x','y','z']].values, eff_coord, atol=5e-5))
         cols = ['freq', 'freqdx', 'anharm', 'curva', 'sum', 'temp']
-        #self.assertTrue(np.allclose(va_corr.vib_average[cols].values, vib_average, rtol=5e-4))
-
+        self.assertTrue(np.allclose(va_corr.vib_average[cols].values, vib_average, rtol=5e-4))
