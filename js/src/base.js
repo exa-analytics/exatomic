@@ -11,11 +11,10 @@ for use within the Jupyter notebook interface.
 "use strict";
 var widgets = require("@jupyter-widgets/base")
 var control = require("@jupyter-widgets/controls")
-var _ = require("underscore")
 var three = require("./appthree")
 var utils = require("./utils")
 var semver = "^" + require("../package.json").version
-console.log("exatomic JS version: " + require("../package.json").version)
+console.log(`exatomic JS version: ${semver}`)
 
 
 export class ExatomicBoxModel extends control.BoxModel {
