@@ -113,7 +113,7 @@ def compute_molecule(universe):
         table in place!
     """
     nodes = universe.atom.index.values
-    bonded = universe.atom_two.ix[universe.atom_two['bond'] == True, ['atom0', 'atom1']]
+    bonded = universe.atom_two.loc[universe.atom_two['bond'] == True, ['atom0', 'atom1']]
     edges = zip(bonded['atom0'].astype(np.int64), bonded['atom1'].astype(np.int64))
     g = nx.Graph()
     g.add_nodes_from(nodes)
@@ -130,7 +130,7 @@ def compute_molecule(universe):
             mapper[adx] = i
         i += 1
     universe.atom['molecule'] = universe.atom.index.map(lambda x: mapper[x])
-    universe.atom['mass'] = universe.atom['symbol'].map(sym2mass)
+    universe.atom['mass'] = universe.atom['symbol'].map(sym2mass).astype(float)
     grps = universe.atom.groupby('molecule')
     molecule = grps['symbol'].value_counts().unstack().fillna(0).astype(np.int64)
     molecule.columns.name = None

@@ -72,6 +72,9 @@ class TestADFOutput(TestCase):
         cols = list(set(self.lu.orbital._columns))
         test = pd.DataFrame(self.lu.orbital[cols])
         self.assertTrue(np.all(pd.notnull(pd.DataFrame(test))))
+        self.nico4.parse_orbital()
+        self.assertEqual(self.nico4.orbital[cols].shape[0], 40)
+        self.assertTrue(np.all(pd.notnull(pd.DataFrame(self.nico4.orbital[cols]))))
 
     def test_parse_nmr_shielding(self):
         self.pf3.parse_nmr_shielding()
@@ -95,4 +98,3 @@ class TestADFOutput(TestCase):
         self.c2h3i.parse_gradient()
         self.assertEqual(self.c2h3i.gradient.shape[0], 66)
         self.assertTrue(np.all(pd.notnull(pd.DataFrame(self.c2h3i.gradient))))
-

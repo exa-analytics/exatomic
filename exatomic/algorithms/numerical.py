@@ -8,8 +8,12 @@ Everything in this module is implemented in numba.
 """
 import numpy as np
 import pandas as pd
-from numba import (jit, jitclass, deferred_type,
+from numba import (jit, deferred_type,
                    optional, int64, float64, boolean)
+try:
+    from numba.experimental import jitclass
+except ImportError:
+    from numba import jitclass
 from exatomic.base import nbche
 
 #################

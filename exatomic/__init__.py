@@ -37,7 +37,7 @@ below.
 .. _Quantum ESPRESSO: http://www.quantum-espresso.org/
 """
 from __future__ import absolute_import
-__js_version__ = "^0.4.7"
+__js_version__ = "^0.5.0"
 
 def _jupyter_nbextension_paths():
     """Jupyter notebook extension directory paths."""

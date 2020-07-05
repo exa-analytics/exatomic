@@ -4,11 +4,6 @@ matrix:
     include:
         - os: linux
           language: python
-          python: 3.5
-          env: PYTHONVER=3.5
-
-        - os: linux
-          language: python
           python: 3.6
           env: PYTHONVER=3.6
 
@@ -17,10 +12,10 @@ matrix:
           python: 3.7
           env: PYTHONVER=3.7
 
-        - os: osx
-          language: generic
-          python: 3.5
-          env: PYTHONVER=3.5
+        - os: linux
+          language: python
+          python: 3.8
+          env: PYTHONVER=3.8
 
         - os: osx
           language: generic
@@ -31,6 +26,11 @@ matrix:
           language: generic
           python: 3.7
           env: PYTHONVER=3.7
+
+        - os: osx
+          language: generic
+          python: 3.8
+          env: PYTHONVER=3.8
 
 install:
     - if [[ $TRAVIS_OS_NAME == "osx" ]]; then
@@ -40,7 +40,6 @@ install:
       fi;
       echo "DONE"
     - bash miniconda.sh -b -p $HOME/miniconda
-#   - export NUMBA_DISABLE_JIT=1
     - export PATH="$HOME/miniconda/bin:$PATH"
     - conda config --set always_yes yes --set changeps1 no
     - conda update -q -y --all
@@ -53,15 +52,17 @@ install:
     - conda install -q -y -c conda-forge coveralls coverage'<=4.5.4' pytest pytest-cov
     - conda install -q -y -c conda-forge numexpr nodejs ipywidgets bokeh
     - conda install -q -y -c conda-forge numba
+    - conda install -q -y -c anaconda h5py
     - pip install travis-sphinx codacy-coverage
     - git clone https://github.com/exa-analytics/exa.git
-    - pip install -e exa/
+    - pip install exa/
+    - rm -rf exa
     - pip install .
 
 script:
     - export PYTHONDONTWRITEBYTECODE=1
     - pytest --cov
-    - if [[ $TRAVIS_OS_NAME == "linux" ]] && [[ $PYTHONVER == 3.6 ]]; then
+    - if [[ $TRAVIS_OS_NAME == "linux" ]] && [[ $PYTHONVER == 3.8 ]]; then
           coverage run --source=exatomic setup.py test;
           rm -rf docs/source/*.txt;
           SPHINX_APIDOC_OPTIONS=members,undoc-members,show-inheritance sphinx-apidoc -eM -s txt -o docs/source/ exatomic *test*;
@@ -69,7 +70,7 @@ script:
       fi
 
 after_success:
-    - if [[ $TRAVIS_OS_NAME == "linux" ]] && [[ $PYTHONVER == 3.6 ]]; then
+    - if [[ $TRAVIS_OS_NAME == "linux" ]] && [[ $PYTHONVER == 3.8 ]]; then
           coveralls;
           python-codacy-coverage -r coverage.xml;
           travis-sphinx deploy;

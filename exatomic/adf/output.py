@@ -202,9 +202,37 @@ class Output(six.with_metaclass(OutMeta, Editor)):
             _re_orb_00: ['symmetry', 'vector', 'spin', 'occupation', 'energy', 'eV'],
             _re_orb_01: ['vector', 'occupation', 'energy', 'eV', 'dE']}
         key = _re_orb_00 if found[_re_orb_00] else _re_orb_01
-        start = stop = found[key][-1] + 5
-        while self[stop].strip(): stop += 1
-        df = self.pandas_dataframe(start, stop, cols[key])
+        ldx = found[key][-1] + 4
+        starts = []
+        stops = []
+        irreps = []
+        while self[ldx].strip() != '':
+            # error catching for when we have a symmetry label
+            try:
+                _ = int(self[ldx].strip()[0])
+                ldx += 1
+            except ValueError:
+                stops.append(ldx)
+                irreps.append(self[ldx])
+                # to ensure that we do not skip over the blank line
+                # and exdecute an infinite while loop
+                if not (self[ldx].strip() == ''):
+                    ldx += 1
+                    starts.append(ldx)
+                else:
+                    break
+        else:
+            # to get the bottom of the table
+            stops.append(ldx)
+        # the first entry is actually the very beginning of the table
+        stops = stops[1:]
+        # put everything together
+        dfs = []
+        for start, stop, irrep in zip(starts, stops, irreps):
+            df = self.pandas_dataframe(start, stop, cols[key])
+            df['irrep'] = irrep.strip()
+            dfs.append(df)
+        df = pd.concat(dfs, ignore_index=True)
         df['vector'] -= 1
         if 'spin' in cols[key]:
             df['spin'] = df.spin.map({'A': 0, 'B': 1})
