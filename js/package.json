@@ -22,7 +22,7 @@
     "clean": "rimraf dist/ && rimraf ../exatomic/static/js",
     "prepublish": "npm run clean && npm run build",
     "test": "echo \"Error: no test specified\" && exit 1",
-    "watch": "webpack --watch"
+    "watch": "webpack -d -w"
   },
   "devDependencies": {
     "rimraf": "^2.6.1",

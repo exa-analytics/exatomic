@@ -1,10 +1,18 @@
 var path = require("path");
 var version = require("./package.json").version;
 
+var mode = "production"
+var optimization = {
+    splitChunks: {
+        chunks: "all"
+    }
+}
 
 
 module.exports = [
     {// Notebook extension
+        mode: mode,
+//        optimization: optimization,
         entry: "./src/extension.js",
         output: {
             filename: "extension.js",
@@ -13,6 +21,8 @@ module.exports = [
         }
     },
     {// exatomic bundle for the classic notebook
+        mode: mode,
+//        optimization: optimization,
         entry: "./src/notebook.js",
         output: {
             filename: "index.js",
@@ -23,6 +33,8 @@ module.exports = [
         externals: ["@jupyter-widgets/base", "@jupyter-widgets/controls"]
     },
     {// exatomic bundle for unpkg
+        mode: mode,
+//        optimization: optimization,
         entry: "./src/embed.js",
         output: {
             filename: "index.js",
