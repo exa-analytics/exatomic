@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# Copyright (c) 2015-2018, Exa Analytics Development Team
+# Copyright (c) 2015-2020, Exa Analytics Development Team
 # Distributed under the terms of the Apache License 2.0
 """
 Basis Function Manipulation
@@ -18,10 +18,10 @@ import numpy as np
 import pandas as pd
 from numexpr import evaluate
 try:
-    from symengine import var, exp, cos, sin, Mul, Integer, Float
+    from symengine import var, exp, cos, sin, Integer, Float
 except ImportError:
     from sympy import symbols as var
-    from sympy import exp, cos, sin, Mul, Integer, Float
+    from sympy import exp, cos, sin, Integer, Float
 from exa import Series
 from exatomic.algorithms.overlap import _cartesian_shell_pairs, _iter_atom_shells
 from exatomic.algorithms.numerical import fac, _tri_indices, _triangle, _enum_spherical

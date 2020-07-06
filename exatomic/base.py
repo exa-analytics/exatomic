@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# Copyright (c) 2015-2018, Exa Analytics Development Team
+# Copyright (c) 2015-2020, Exa Analytics Development Team
 # Distributed under the terms of the Apache License 2.0
 """
 Base Functionality
@@ -67,7 +67,7 @@ def list_resources():
         resources (list): List of file names
     """
     files = []
-    for path, _, files_ in os.walk(staticdir()):
+    for _, _, files_ in os.walk(staticdir()):
         files.extend(files_)
     return files
 

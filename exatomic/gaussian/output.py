@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# Copyright (c) 2015-2018, Exa Analytics Development Team
+# Copyright (c) 2015-2020, Exa Analytics Development Team
 # Distributed under the terms of the Apache License 2.0
 """
 Gaussian Output Editor
@@ -415,7 +415,7 @@ class Output(six.with_metaclass(GauMeta, Editor)):
         starts = np.array(found) + start_read
         # get the location of the Atom labels in the frequency blocks
         # the line below this is where all of the normal mode displacement data begins
-        found_atom = np.array(self.regex('Atom', start=start_read, stop=stop_read, keys_only=True)) + start_read
+        #found_atom = np.array(self.regex('Atom', start=start_read, stop=stop_read, keys_only=True)) + start_read
         # Total lines per block minus the unnecessary ones
         #span = starts[1] - found_atom[0] - 3
         # get the number of other attributes included
@@ -712,7 +712,7 @@ class Fchk(six.with_metaclass(GauMeta, Editor)):
         contcoefs = self._dfme(found[_recontcoef], dim2)
         if found[_repcontcoef]: pcontcoefs = self._dfme(found[_repcontcoef], dim2)
         # Keep track of some things
-        ptr, prevatom, shell, sp = 0, 0, 0, False
+        ptr, prevatom, sp = 0, 0, False
         # Temporary storage of basis set data
         shldx = defaultdict(int)
         ddict = defaultdict(list)

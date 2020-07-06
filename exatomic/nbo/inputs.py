@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# Copyright (c) 2015-2018, Exa Analytics Development Team
+# Copyright (c) 2015-2020, Exa Analytics Development Team
 # Distributed under the terms of the Apache License 2.0
 """
 exnbo Input Generator and Parser
@@ -280,7 +280,7 @@ class Input(six.with_metaclass(InpMeta, Editor)):
             arr = arrs[key]
             nkey = key.strip('$').lower()
             if arr.shape[0] == nbas2:
-                    arrs[nkey] = arr
+                arrs[nkey] = arr
             else:
                 rpt = arr.shape[0] // (nbas2)
                 for i in range(rpt):

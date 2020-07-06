@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# Copyright (c) 2015-2018, Exa Analytics Development Team
+# Copyright (c) 2015-2020, Exa Analytics Development Team
 # Distributed under the terms of the Apache License 2.0
 """
 Delocalization
@@ -241,7 +241,7 @@ def tuning_results(adir, code='gaussian', ip=False, ea=False,
     together = [[fls[key] for key in keys] for func, fls in files.items()]
     data = np.empty((len(together),), dtype=dtype)
     for i, mix in enumerate(together):
-        comp, gam, alp, ion = mix[0].split(os.sep)[-1].split('-')
+        comp, gam, alp, _ = mix[0].split(os.sep)[-1].split('-')    # _ == ion
         tag = '-'.join([gam, alp])
         if debug: print(mix)
         outs = [codemap[code](m) for m in mix]

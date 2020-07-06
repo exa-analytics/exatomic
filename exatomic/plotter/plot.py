@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# Copyright (c) 2015-2019, Exa Analytics Development Team
+# Copyright (c) 2015-2020, Exa Analytics Development Team
 # Distributed under the terms of the Apache License 2.0
 '''
 Plotter
@@ -128,5 +128,5 @@ class Plot:
 #        lorentz = kwargs.pop('lorentz', True)
 #        self.fig = plt.figure(figsize=figsize, dpi=dpi)
 #        rc('font', size=font)
-        
- 
+
+

@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# Copyright (c) 2015-2018, Exa Analytics Development Team
+# Copyright (c) 2015-2020, Exa Analytics Development Team
 # Distributed under the terms of the Apache License 2.0
 """
 Atomic Positions Parser
@@ -30,7 +30,7 @@ Atomic Positions Parser
 #            length = "Angstrom"
 #        else:
 #            length = "au"
-#        if "end" in str(self[-2]).lower(): 
+#        if "end" in str(self[-2]).lower():
 #            slce = slice(self._int0, -2)
 #        else:
 #            slce = slice(self._int0, -1)

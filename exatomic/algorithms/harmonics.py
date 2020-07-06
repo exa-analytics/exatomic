@@ -29,7 +29,7 @@ def solid_harmonics(l, return_all=False, vectorize=False, standard_symbols=True)
         >>> solid_harmonics(0)
         {(0, 0): 1}
         >>> solid_harmonics(1, True)
-        {(0, 0): 1, (1, -1): y, (1, 0): z, (1, 1): x}
+        {(0, 0): 1, (1, 1): x, (1, -1): y, (1, 0): z}
 
     Args:
         l (int): Orbital angular moment

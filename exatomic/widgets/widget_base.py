@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# Copyright (c) 2015-2018, Exa Analytics Development Team
+# Copyright (c) 2015-2020, Exa Analytics Development Team
 # Distributed under the terms of the Apache License 2.0
 """
 Lower Level Widgets
@@ -18,10 +18,10 @@ from ipywidgets import (
     Box, VBox, HBox, IntSlider, Text, ToggleButton,
     DOMWidget, Layout, Button, Dropdown, register)
 
-from exatomic import Universe, __js_version__
+from exatomic import __js_version__
 #from .traits import uni_traits
 #from .widget_utils import (_glo, _flo, _wlo, _hboxlo,
-from .widget_utils import (_flo, _wlo, _hboxlo,
+from .widget_utils import (_wlo, _hboxlo,
                            _vboxlo, _bboxlo, _ListDict,
                            Folder, GUIBox, gui_field_widgets)
 
