@@ -2,36 +2,32 @@
 {% set version = "0.5.0" %}
 
 package:
-  name: {{ name }}
+  name: {{ name|lower }}
   version: {{ version }}
 
 source:
-  url: https://github.com/exa-analytics/{{ name }}/archive/v{{ version }}.tar.gz
+  url: dist/{{ name }}-{{ version }}.tar.gz
+
+build:
+  number: 0
+  script: python -m pip install . -vv
 
 requirements:
-  build:
+  host:
+    - pip
     - python
-    - setuptools
-
   run:
-    - numpy
-    - pandas
-    - numba
-    - seaborn
-    - ipywidgets
-    - sympy
-    - numexpr
+    - python
     - exa
-    - sympy
-    - symengine
-    - pyyaml
+    - ipywidgets>=7.0
+    - numexpr>=2.0
 
 test:
   imports:
-    - exatomic
+    - {{ name }}
 
 about:
-    home: https://exa-analytics.github.io/{{ name }}
+    home: https://github.com/exa-analytics/{{ name }}.git
     license: Apache-2.0
     license_file: LICENSE
     summary: A unified platform for theoretical and computational chemists
