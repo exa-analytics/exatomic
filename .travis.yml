@@ -47,7 +47,7 @@ install:
     - conda create -n test python=${PYTHONVER}
     - source activate test
     - conda update -q --all
-    - conda install -q -c exaanalytics exa
+    - conda install -q -c exaanalytics exa>=0.5.1
     - conda install -q -c conda-forge six>=1.0 numexpr>=2.0 ipywidgets>=7.0 bokeh scipy>=1.4
     - conda install -q -c conda-forge coveralls coverage pytest pytest-cov
     - conda install -q -c anaconda h5py
