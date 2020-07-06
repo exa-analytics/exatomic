@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# Copyright (c) 2015-2018, Exa Analytics Development Team
+# Copyright (c) 2015-2020, Exa Analytics Development Team
 # Distributed under the terms of the Apache License 2.0
 """
 Base Functionality
@@ -67,7 +67,7 @@ def list_resources():
         resources (list): List of file names
     """
     files = []
-    for path, _, files_ in os.walk(staticdir()):
+    for _, _, files_ in os.walk(staticdir()):
         files.extend(files_)
     return files
 
@@ -88,7 +88,7 @@ def sym2isomass(symbol):
         >>> sym2isomass('Ni')
         {'Ni': 57.9353429}
         >>> sym2isomass(['Ni', 'H', 'C'])
-        {'C': 12.0, 'H': 1.0078250321, 'Ni': 57.9353429}
+        {'H': 1.0078250321, 'C': 12.0, 'Ni': 57.9353429}
 
 
     Args:

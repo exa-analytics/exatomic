@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# Copyright (c) 2015-2018, Exa Analytics Development Team
+# Copyright (c) 2015-2020, Exa Analytics Development Team
 # Distributed under the terms of the Apache License 2.0
 """
 Interpolation
@@ -66,7 +66,7 @@ def _interpolate(df, x, y, z, method, kind, yfirst, dim, minimum):
         # Obtained from SO: http://stackoverflow.com/questions/22491628/extrapolate-values-in-pandas-dataframe
         # Function to curve fit to the data
         def func(x, a, b, c, d):
-                return a * (x ** 3) + b * (x ** 2) + c * x + d
+            return a * (x ** 3) + b * (x ** 2) + c * x + d
         # Initial parameter guess, just to kick off the optimization
         guess = (0.5, 0.5, 0.5, 0.5)
         # Create copy of data to remove NaNs for curve fitting

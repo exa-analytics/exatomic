@@ -2,7 +2,7 @@ import numpy as np
 from unittest import TestCase
 from os import sep, remove, rmdir
 from tempfile import mkdtemp
-from tarfile import open
+import tarfile
 from glob import glob
 from exatomic.base import resource
 from exatomic.va import VA, get_data, gen_delta
@@ -13,14 +13,14 @@ from exatomic.nwchem import Output
 TMPDIR = mkdtemp()
 h2o2_freq = Fchk(resource('g16-h2o2-def2tzvp-freq.fchk'))
 methyloxirane_freq = Fchk(resource('g16-methyloxirane-def2tzvp-freq.fchk'))
-tar = open(resource('va-vroa-h2o2.tar.bz'), mode='r')
+tar = tarfile.open(resource('va-vroa-h2o2.tar.bz'), mode='r')
 tar.extractall(TMPDIR)
 tar.close()
-tar = open(resource('va-vroa-methyloxirane.tar.bz'), mode='r')
+tar = tarfile.open(resource('va-vroa-methyloxirane.tar.bz'), mode='r')
 tar.extractall(TMPDIR)
 tar.close()
 nitro_freq = gOutput(resource('g09-nitromalonamide-6-31++g-freq.out'))
-tar = open(resource('va-zpvc-nitro_nmr.tar.bz'), mode='r')
+tar = tarfile.open(resource('va-zpvc-nitro_nmr.tar.bz'), mode='r')
 tar.extractall(TMPDIR)
 tar.close()
 

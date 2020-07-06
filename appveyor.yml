@@ -56,17 +56,13 @@ install:
   - cmd: conda create -n test python=%CONDA_PY%
   - cmd: activate test
   - cmd: conda update -q -y --all
-  - cmd: conda install -q -c conda-forge -y numpy scipy seaborn networkx pandas
-  - cmd: conda install -q -c conda-forge -y pytest pytables six sympy pyyaml
-  - cmd: conda install -q -c conda-forge -y psutil numexpr nodejs ipywidgets bokeh
-  - cmd: conda install -q -c conda-forge -y numba
+  - cmd: conda install -q -c exaanalytics exa>=0.5.1
+  - cmd: conda install -q -c conda-forge six>=1.0 numexpr>=2.0 ipywidgets>=7.0 bokeh scipy>=1.4
+  - cmd: conda install -q -c conda-forge pytest pytest-cov
   - cmd: conda install -q -c anaconda h5py
-  - cmd: git clone https://github.com/exa-analytics/exa.git
-  - cmd: pip install exa/
-  - cmd: rm -rf exa
-  - cmd: pip install .
+  - cmd: python setup.py install
 
 build: false
 
 test_script:
-  - cmd: pytest
+  - cmd: pytest -v
