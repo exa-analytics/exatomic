@@ -1,5 +1,5 @@
 {% set name = "exatomic" %}
-{% set version = "0.5.2" %}
+{% set version = "0.5.3" %}
 
 package:
   name: {{ name|lower }}
@@ -10,7 +10,6 @@ source:
 
 build:
   number: 0
-  script: python -m pip install . -vv
 
 requirements:
   host:
