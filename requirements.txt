@@ -1,9 +1,6 @@
-numpy>=1.0
-pandas>=1.0
-numba
-seaborn
-ipywidgets
-sympy
-numexpr
-pyyaml
+exa>=0.5.23
+six>=1.0
+numexpr>=2.0
+ipywidgets>=7.0
 bokeh
+scipy>=1.4
