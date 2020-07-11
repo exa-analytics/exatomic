@@ -70,6 +70,10 @@ script:
       fi
 
 after_success:
+    - conda install -q -c conda-forge nodejs
+    - echo "//registry.npmjs.org/:_authToken=\${NPM_TOKEN}" > ${HOME}/.npmrc
+    - echo "publishing JS=" python -c "import json; f = open('js/package.json', 'r'); print(json.loads(f.read())['version']); f.close()"
+    - cd js && npm publish
     - coveralls
     - bash <(curl -Ls https://coverage.codacy.com/get.sh) report --language Python -r coverage.xml
     - bash <(curl -Ls https://coverage.codacy.com/get.sh) final
