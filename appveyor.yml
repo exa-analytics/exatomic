@@ -58,7 +58,7 @@ install:
   - cmd: conda create -n test python=%CONDA_PY%
   - cmd: activate test
   - cmd: conda update -q -y --all
-  - cmd: conda install -q -c exaanalytics exa>=0.5.23
+  - cmd: conda install -q -c exaanalytics exa>=0.5.24
   - cmd: conda install -q -c conda-forge six>=1.0 numexpr>=2.0 ipywidgets>=7.0 bokeh scipy>=1.4
   - cmd: conda install -q -c conda-forge pytest pytest-cov
   - cmd: conda install -q -c anaconda h5py
