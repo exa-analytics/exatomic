@@ -17,9 +17,14 @@ class App3D {
     constructor(view) {
         console.log("Constructing THREEjs scene");
         this.view = view;
-        this.meshes = {"generic": [], "frame": [],
-                       "contour": [], "field": [],
-                          "atom": [],   "two": []};
+        this.meshes = {
+            "generic": [],
+            "frame": [],
+            "contour": [],
+            "field": [],
+            "atom": [],
+            "two": []
+        };
         this.ACTIVE = null;
         this.set_dims();
         this.selected = new Array();
