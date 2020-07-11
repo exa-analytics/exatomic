@@ -345,8 +345,7 @@ class UnitAtom(DataFrame):
             z = modv(universe.atom['z'].values, c)
             df = pd.DataFrame.from_dict({'x': x, 'y': y, 'z': z})
             df.index = universe.atom.index
-            df = df[universe.atom[['x', 'y', 'z']] != df].to_sparse()
-            return cls(df)
+            return cls(df[universe.atom[['x', 'y', 'z']] != df])
         raise PeriodicUniverseError()
 
 
@@ -389,8 +388,7 @@ class VisualAtom(DataFrame):
             prjd.drop_duplicates('atom', inplace=True)
             prjd.set_index('atom', inplace=True)
             atom.update(prjd)
-            atom = atom[atom != universe.atom[['x', 'y', 'z']]].to_sparse()
-            return cls(atom)
+            return cls(atom[atom != universe.atom[['x', 'y', 'z']]])
         raise PeriodicUniverseError()
 
     #@property
