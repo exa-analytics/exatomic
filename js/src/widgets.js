@@ -4,14 +4,14 @@
 =================
 widgets.js
 =================
-JavaScript "frontend" complement of exatomic's Container for use within
+JavaScript 'frontend' complement of exatomic's Container for use within
 the Jupyter notebook interface.
 */
 
-"use strict";
-var base = require("./base")
-var utils = require("./utils")
-var three = require("./appthree")
+'use strict';
+var base = require('./base')
+var utils = require('./utils')
+var three = require('./appthree')
 var _ = require('underscore')
 
 
@@ -20,8 +20,8 @@ export class UniverseSceneModel extends base.ExatomicSceneModel {
     defaults() {
         return {
             ...super.defaults(),
-            _model_name: "UniverseSceneModel",
-            _view_name: "UniverseSceneView"
+            _model_name: 'UniverseSceneModel',
+            _view_name: 'UniverseSceneView'
         }
     }
 
@@ -31,24 +31,24 @@ export class UniverseSceneModel extends base.ExatomicSceneModel {
 export class UniverseSceneView extends base.ExatomicSceneView {
 
     init() {
-        window.addEventListener("resize", this.resize.bind(this))
+        window.addEventListener('resize', this.resize.bind(this))
         this.app3d = new three.App3D(this)
         this.three_promises = this.app3d.init_promise()
         this.promises = Promise.all([
-            utils.fparse(this, "atom_x"),
-            utils.fparse(this, "atom_y"),
-            utils.fparse(this, "atom_z"),
-            utils.fparse(this, "atom_s"),
-            utils.mesolv(this, "atom_cr"),
-            utils.mesolv(this, "atom_vr"),
-            utils.mesolv(this, "atom_c"),
-            utils.mesolv(this, "atom_l"),
-            utils.fparse(this, "two_b0"),
-            utils.fparse(this, "two_b1"),
-            utils.mesolv(this, "field_i"),
-            utils.mesolv(this, "field_p"),
-            utils.mesolv(this, "field_v"),
-            utils.mesolv(this, "tensor_d")
+            utils.fparse(this, 'atom_x'),
+            utils.fparse(this, 'atom_y'),
+            utils.fparse(this, 'atom_z'),
+            utils.fparse(this, 'atom_s'),
+            utils.mesolv(this, 'atom_cr'),
+            utils.mesolv(this, 'atom_vr'),
+            utils.mesolv(this, 'atom_c'),
+            utils.mesolv(this, 'atom_l'),
+            utils.fparse(this, 'two_b0'),
+            utils.fparse(this, 'two_b1'),
+            utils.mesolv(this, 'field_i'),
+            utils.mesolv(this, 'field_p'),
+            utils.mesolv(this, 'field_v'),
+            utils.mesolv(this, 'tensor_d')
         ])
         this.three_promises = this.app3d.finalize(this.three_promises)
             .then(this.add_atom.bind(this))
@@ -61,14 +61,14 @@ export class UniverseSceneView extends base.ExatomicSceneView {
 
 
     add_atom() {
-        this.app3d.clear_meshes("atom")
-        this.app3d.clear_meshes("two")
-        let fdx = this.model.get("frame_idx")
+        this.app3d.clear_meshes('atom')
+        this.app3d.clear_meshes('two')
+        let fdx = this.model.get('frame_idx')
         let syms = this.atom_s[fdx]
         let colrs = utils.mapper(syms, this.atom_c)
-        let atom, bond, radii, r = ((this.model.get("bond_r") > 0) ? this.model.get("bond_r") : 0.15)
-        if (this.model.get("atom_3d")) {
-            switch (this.model.get("fill_idx")) {
+        let atom, bond, radii, r = ((this.model.get('bond_r') > 0) ? this.model.get('bond_r') : 0.15)
+        if (this.model.get('atom_3d')) {
+            switch (this.model.get('fill_idx')) {
                 case 0:
                     radii = utils.mapper(syms, this.atom_cr)
                                  .map((x) => { return x * 0.5 })
@@ -93,7 +93,7 @@ export class UniverseSceneView extends base.ExatomicSceneView {
                 //    break;
                 //case 4:
                 //    r = 0.6
-                //    radii = r+0.05;
+                //    radii = r + 0.05;
                 //    atom = this.app3d.add_spheres;
                 //    bond = this.app3d.add_cylinders;
                 //    break;
@@ -108,19 +108,19 @@ export class UniverseSceneView extends base.ExatomicSceneView {
             atom = this.app3d.add_points
             bond = this.app3d.add_lines
         }
-        var labels = utils.mapper(syms, this.atom_l)
-        var entry = labels.entries()
-        var a = []
+        let labels = utils.mapper(syms, this.atom_l)
+        let entry = labels.entries()
+        let a = []
         for ( let e of entry ) {
-            a.push(e[1]+e[0].toString())
+            a.push(e[1] + e[0].toString())
         }
         labels = a
-        this.app3d.meshes["atom"] = atom(
+        this.app3d.meshes['atom'] = atom(
             this.atom_x[fdx], this.atom_y[fdx],
             this.atom_z[fdx], colrs, radii, labels
         )
         if (this.two_b0.length !== 0) {
-            this.app3d.meshes["two"] = (bond != null) ? bond(
+            this.app3d.meshes['two'] = (bond != null) ? bond(
                 this.two_b0[fdx], this.two_b1[fdx],
                 this.atom_x[fdx], this.atom_y[fdx],
                 this.atom_z[fdx], colrs, r) : null
@@ -129,122 +129,122 @@ export class UniverseSceneView extends base.ExatomicSceneView {
     }
 
     add_field() {
-        this.app3d.clear_meshes("field")
-        var fldx = this.model.get("field_idx")
-        var fdx = this.model.get("frame_idx")
-        var fps = this.field_p[fdx][fldx]
-        if ((!this.model.get("field_show")) ||
-            (fldx === "null") ||
-            (typeof fps === "undefined")) { return }
-        var idx = this.field_i[fdx][fldx]
-        var that = this
-        if (typeof this.field_v[idx] === "string") {
+        this.app3d.clear_meshes('field')
+        let fldx = this.model.get('field_idx')
+        let fdx = this.model.get('frame_idx')
+        let fps = this.field_p[fdx][fldx]
+        if ((!this.model.get('field_show')) ||
+            (fldx === 'null') ||
+            (typeof fps === 'undefined')) { return }
+        let idx = this.field_i[fdx][fldx]
+        let that = this
+        if (typeof this.field_v[idx] === 'string') {
             utils.jsonparse(this.field_v[idx])
                 .then(function(values) {
                     that.field_v[idx] = values;
-                    that.app3d.meshes["field"] = that.app3d.add_scalar_field(
+                    that.app3d.meshes['field'] = that.app3d.add_scalar_field(
                         utils.scalar_field(
                             utils.gen_field_arrays(fps),
                             values),
-                    that.model.get("field_iso"),
-                    that.model.get("field_o"), 2,
+                    that.model.get('field_iso'),
+                    that.model.get('field_o'), 2,
                     that.colors());
-                    that.app3d.add_meshes("field")
+                    that.app3d.add_meshes('field')
                 })
         } else {
-            this.app3d.meshes["field"] = this.app3d.add_scalar_field(
+            this.app3d.meshes['field'] = this.app3d.add_scalar_field(
                 utils.scalar_field(
                     utils.gen_field_arrays(fps),
                     this.field_v[idx]),
-                this.model.get("field_iso"),
-                this.model.get("field_o"), 2,
+                this.model.get('field_iso'),
+                this.model.get('field_o'), 2,
                 this.colors());
-            this.app3d.add_meshes("field")
+            this.app3d.add_meshes('field')
         }
     }
 
     add_contour() {
-        this.app3d.clear_meshes("contour")
-        var fldx = this.model.get("field_idx")
+        this.app3d.clear_meshes('contour')
+        let fldx = this.model.get('field_idx')
         // Specifically test for string null
-        var fdx = this.model.get("frame_idx")
-        var idx = this.field_i[fdx][fldx]
-        var fps = this.field_p[fdx][fldx]
-        if ((!this.model.get("cont_show")) ||
-            (fldx === "null") ||
-            (typeof fps === "undefined")) { return }
-        var that = this
+        let fdx = this.model.get('frame_idx')
+        let idx = this.field_i[fdx][fldx]
+        let fps = this.field_p[fdx][fldx]
+        if ((!this.model.get('cont_show')) ||
+            (fldx === 'null') ||
+            (typeof fps === 'undefined')) { return }
+        let that = this
         if (typeof this.field_v[idx] === 'string') {
             utils.jsonparse(this.field_v[idx])
                 .then(function(values) {
                     that.field_v[idx] = values
-                    that.app3d.meshes["contour"] = that.app3d.add_contour(
+                    that.app3d.meshes['contour'] = that.app3d.add_contour(
                         utils.scalar_field(
                             utils.gen_field_arrays(fps),
                             values),
-                        that.model.get("cont_num"),
-                        that.model.get("cont_lim"),
-                        that.model.get("cont_axis"),
-                        that.model.get("cont_val"),
+                        that.model.get('cont_num'),
+                        that.model.get('cont_lim'),
+                        that.model.get('cont_axis'),
+                        that.model.get('cont_val'),
                         that.colors())
-                    that.app3d.add_meshes("contour")
+                    that.app3d.add_meshes('contour')
                 })
         } else {
-            this.app3d.meshes["contour"] = this.app3d.add_contour(
+            this.app3d.meshes['contour'] = this.app3d.add_contour(
                 utils.scalar_field(
                     utils.gen_field_arrays(fps),
                     this.field_v[idx]),
-                this.model.get("cont_num"),
-                this.model.get("cont_lim"),
-                this.model.get("cont_axis"),
-                this.model.get("cont_val"),
+                this.model.get('cont_num'),
+                this.model.get('cont_lim'),
+                this.model.get('cont_axis'),
+                this.model.get('cont_val'),
                 this.colors());
-            that.app3d.add_meshes("contour")
+            that.app3d.add_meshes('contour')
         }
     }
 
     add_axis() {
         // Additionally adds the unit cell
-        this.app3d.clear_meshes("generic")
-        if (this.model.get("axis")) {
-            this.app3d.meshes["generic"] = this.app3d.add_unit_axis(
-                this.model.get("atom_3d"))
+        this.app3d.clear_meshes('generic')
+        if (this.model.get('axis')) {
+            this.app3d.meshes['generic'] = this.app3d.add_unit_axis(
+                this.model.get('atom_3d'))
         }
-        this.app3d.add_meshes("generic")
+        this.app3d.add_meshes('generic')
     }
 
     get_tensor(fdx, tdx) {
-        var t = this.tensor_d[fdx][tdx]
-        return [[t["xx"], t["xy"], t["xz"]],
-                [t["yx"], t["yy"], t["yz"]],
-                [t["zx"], t["zy"], t["zz"]]]
+        let t = this.tensor_d[fdx][tdx]
+        return [[t['xx'], t['xy'], t['xz']],
+                [t['yx'], t['yy'], t['yz']],
+                [t['zx'], t['zy'], t['zz']]]
     }
 
     color_tensor() {
-        var tdx = this.model.get("tidx")
-        var fdx = this.model.get("frame_idx")
-        var color
-        for ( var property in this.tensor_d[fdx] ) {
+        let tdx = this.model.get('tidx')
+        let fdx = this.model.get('frame_idx')
+        let color
+        for ( let property in this.tensor_d[fdx] ) {
             if ( this.tensor_d[fdx].hasOwnProperty( property ) ) {
                 if ( parseInt(property) === tdx ) {
                     color = 0xafafaf
                 } else { color = 0x000000 }
-                if ( this.model.get("tens") ) {
-                    this.app3d.meshes["tensor"+property][0].children[0].material.color.setHex(color)
+                if ( this.model.get('tens') ) {
+                    this.app3d.meshes['tensor' + property][0].children[0].material.color.setHex(color)
                 }
             }
         }
     }
 
     add_tensor() {
-        var scaling = this.model.get("scale")
-        var fdx = this.model.get("frame_idx")
-        for ( var property in this.tensor_d[fdx] ) {
+        let scaling = this.model.get('scale')
+        let fdx = this.model.get('frame_idx')
+        for ( let property in this.tensor_d[fdx] ) {
             if ( this.tensor_d[fdx].hasOwnProperty( property ) ) {
-                this.app3d.clear_meshes("tensor"+property)
-                var adx = this.tensor_d[fdx][property]["atom"]
-                if ( this.model.get("tens") ) {
-                    this.app3d.meshes["tensor"+property] =
+                this.app3d.clear_meshes('tensor' + property)
+                let adx = this.tensor_d[fdx][property]['atom']
+                if ( this.model.get('tens') ) {
+                    this.app3d.meshes['tensor' + property] =
                                 this.app3d.add_tensor_surface(
                                     this.get_tensor(fdx, property),
                                     this.colors(),
@@ -252,56 +252,54 @@ export class UniverseSceneView extends base.ExatomicSceneView {
                                     this.atom_y[fdx][adx],
                                     this.atom_z[fdx][adx],
                                     scaling,
-                                    this.tensor_d[fdx][property]["label"]+" tensor "+property.toString())
+                                    this.tensor_d[fdx][property]['label'] + ' tensor ' + property.toString())
                 }
-                this.app3d.add_meshes("tensor"+property)
+                this.app3d.add_meshes('tensor' + property)
             }
         }
-        //if (this.model.get("tens")) {this.color_tensor();}
+        // if (this.model.get('tens')) {this.color_tensor();}
     }
 
-    //events: {
-    //    "click": "handleClick"
-    //},
+    // events: {
+    //     'click': 'handleClick'
+    // },
 
     handleClick(event) {
         // Handles click event to write data to a Python traitlet value
         event.preventDefault()
-        var idx = this.app3d.selected.map((obj) => {return obj.name})
-        var type = this.app3d.selected.map((obj) => {return obj.geometry.type})
-        this.model.set("selected", {idx, type}) //Types must match exactly
+        let idx = this.app3d.selected.map((obj) => { return obj.name })
+        let type = this.app3d.selected.map((obj) => { return obj.geometry.type })
+        this.model.set('selected', { idx, type }) // Types must match exactly
         this.touch()
     }
 
     clearSelected() {
         this.app3d.reset_colors()
         this.app3d.selected = []
-        this.model.set("selected", {})
+        this.model.set('selected', {})
         this.touch()
     }
 
     init_listeners() {
-        super.init_listeners();
-        // base.ExatomicSceneView.prototype.init_listeners.call(this);
-        this.listenTo(this.model, "change:frame_idx", this.add_atom);
-        this.listenTo(this.model, "change:atom_3d", this.add_atom);
-        this.listenTo(this.model, "change:field_idx", this.add_field);
-        this.listenTo(this.model, "change:field_show", this.add_field);
-        this.listenTo(this.model, "change:field_idx", this.add_contour);
-        this.listenTo(this.model, "change:cont_show", this.add_contour);
-        this.listenTo(this.model, "change:cont_axis", this.add_contour);
-        this.listenTo(this.model, "change:cont_num", this.add_contour);
-        this.listenTo(this.model, "change:cont_lim", this.add_contour);
-        this.listenTo(this.model, "change:cont_val", this.add_contour);
-        this.listenTo(this.model, "change:atom_3d", this.add_axis);
-        this.listenTo(this.model, "change:axis", this.add_axis);
-        this.listenTo(this.model, "change:tens", this.add_tensor);
-        this.listenTo(this.model, "change:scale", this.add_tensor);
-        this.listenTo(this.model, "change:tidx", this.color_tensor);
-        this.listenTo(this.model, "change:fill_idx", this.add_atom);
-        this.listenTo(this.model, "change:bond_r", this.add_atom);
-        this.listenTo(this.model, "change:clear_selected", this.clearSelected);
+        super.init_listeners()
+        // base.ExatomicSceneView.prototype.init_listeners.call(this)
+        this.listenTo(this.model, 'change:frame_idx', this.add_atom)
+        this.listenTo(this.model, 'change:atom_3d', this.add_atom)
+        this.listenTo(this.model, 'change:field_idx', this.add_field)
+        this.listenTo(this.model, 'change:field_show', this.add_field)
+        this.listenTo(this.model, 'change:field_idx', this.add_contour)
+        this.listenTo(this.model, 'change:cont_show', this.add_contour)
+        this.listenTo(this.model, 'change:cont_axis', this.add_contour)
+        this.listenTo(this.model, 'change:cont_num', this.add_contour)
+        this.listenTo(this.model, 'change:cont_lim', this.add_contour)
+        this.listenTo(this.model, 'change:cont_val', this.add_contour)
+        this.listenTo(this.model, 'change:atom_3d', this.add_axis)
+        this.listenTo(this.model, 'change:axis', this.add_axis)
+        this.listenTo(this.model, 'change:tens', this.add_tensor)
+        this.listenTo(this.model, 'change:scale', this.add_tensor)
+        this.listenTo(this.model, 'change:tidx', this.color_tensor)
+        this.listenTo(this.model, 'change:fill_idx', this.add_atom)
+        this.listenTo(this.model, 'change:bond_r', this.add_atom)
+        this.listenTo(this.model, 'change:clear_selected', this.clearSelected)
     }
-
 }
-
