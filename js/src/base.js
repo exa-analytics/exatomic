@@ -12,8 +12,10 @@ const widgets = require('@jupyter-widgets/base')
 const control = require('@jupyter-widgets/controls')
 const three = require('./appthree')
 const utils = require('./utils')
-const semver = `^${require('../package.json').version}`
+const ver = require('../package.json').version
 
+const semver = `^${ver}`
+// eslint-disable-next-line no-console
 console.log(`exatomic JS version: ${semver}`)
 
 export class ExatomicBoxModel extends control.BoxModel {
@@ -45,9 +47,9 @@ export class ExatomicBoxView extends control.BoxView {
                 const hboxs = vbox.children_views.views
                 const promises = Promise.all(hboxs).then((hbox) => {
                     const subpromises = []
-                    for (let i = 0; i < hbox.length; i++) {
+                    for (let i = 0; i < hbox.length; i += 1) {
                         const scns = hbox[i].children_views.views
-                        for (let j = 0; j < scns.length; j++) {
+                        for (let j = 0; j < scns.length; j += 1) {
                             subpromises.push(scns[j])
                         }
                     }
@@ -56,14 +58,14 @@ export class ExatomicBoxView extends control.BoxView {
                 return promises
             })
             that.scene_ps.then((p) => {
-                for (let i = 0; i < p.length; i++) {
+                for (let i = 0; i < p.length; i += 1) {
                     p[i].resize()
                 }
             })
         })
     }
 
-    link_controls() {
+    linkControls() {
         // TODO :: Instead of referencing the first camera object
         //      :: just set camera.rotation (and camera.zoom??) to
         //      :: copy original camera.
@@ -74,16 +76,16 @@ export class ExatomicBoxView extends control.BoxView {
         this.scene_ps.then((views) => {
             if (that.model.get('linked')) {
                 const idxs = that.model.get('active_scene_indices')
-                const { controls } = views[idxs[0]].app3d
+                // const { controls } = views[idxs[0]].app3d
                 const { camera } = views[idxs[0]].app3d
-                for (i = 1; i < idxs.length; i++) {
+                for (i = 1; i < idxs.length; i += 1) {
                     app = views[idxs[i]].app3d
                     app.camera = camera
                     app.controls = app.init_controls()
                     app.controls.addEventListener('change', app.render.bind(app))
                 }
             } else {
-                for (i = 0; i < views.length; i++) {
+                for (i = 0; i < views.length; i += 1) {
                     app = views[i].app3d
                     app.camera = app.camera.clone()
                     app.controls = app.init_controls()
@@ -94,7 +96,7 @@ export class ExatomicBoxView extends control.BoxView {
     }
 
     initListeners() {
-        this.listenTo(this.model, 'change:linked', this.link_controls)
+        this.listenTo(this.model, 'change:linked', this.linkControls)
     }
 }
 
@@ -125,9 +127,9 @@ export class ExatomicSceneView extends widgets.DOMWidgetView {
         this.app3d = new three.App3D(this)
         this.three_promises = this.app3d.init_promise()
         if (this.model.get('uni')) {
-            func = this.add_field
+            func = this.addField
         } else {
-            func = this.add_geometry
+            func = this.addGeometry
         }
         this.three_promises.then(func.bind(this))
             .then(this.app3d.set_camera.bind(this.app3d))
@@ -146,7 +148,7 @@ export class ExatomicSceneView extends widgets.DOMWidgetView {
         return this.app3d.finalize(this.three_promises)
     }
 
-    add_geometry(color) {
+    addGeometry() {
         this.app3d.clear_meshes('generic')
         if (this.model.get('geom')) {
             this.app3d.meshes.generic = this.app3d.test_mesh()
@@ -161,13 +163,13 @@ export class ExatomicSceneView extends widgets.DOMWidgetView {
         }
     }
 
-    add_field() {
+    addField() {
         this.app3d.clear_meshes('field')
         if (this.model.get('uni')) {
             let name; let tf
             const field = this.model.get('field')
             const kind = this.model.get('field_kind')
-            const ars = utils.gen_field_arrays(this.get_fps())
+            const ars = utils.gen_field_arrays(this.getFps())
             const func = utils[field]
             if (field === 'SolidHarmonic') {
                 const fml = this.model.get('field_ml')
@@ -182,13 +184,13 @@ export class ExatomicSceneView extends widgets.DOMWidgetView {
                 this.model.get('field_o'), 2,
                 this.colors(),
             )
-            for (let i = 0; i < this.app3d.meshes.field.length; i++) {
+            for (let i = 0; i < this.app3d.meshes.field.length; i += 1) {
                 this.app3d.meshes.field[i].name = name
             }
         } else {
             this.app3d.meshes.field = this.app3d.add_scalar_field(
                 utils.scalar_field(
-                    utils.gen_field_arrays(this.get_fps()),
+                    utils.gen_field_arrays(this.getFps()),
                     utils[this.model.get('field')],
                 ),
                 this.model.get('field_iso'),
@@ -199,16 +201,16 @@ export class ExatomicSceneView extends widgets.DOMWidgetView {
         this.app3d.add_meshes('field')
     }
 
-    update_field() {
+    updateField() {
         const meshes = this.app3d.meshes.field
-        for (let i = 0; i < meshes.length; i++) {
+        for (let i = 0; i < meshes.length; i += 1) {
             meshes[i].material.transparent = true
             meshes[i].material.opacity = this.model.get('field_o')
             meshes[i].material.needsUpdate = true
         }
     }
 
-    get_fps() {
+    getFps() {
         const fps = {
             ox: this.model.get('field_ox'),
             oy: this.model.get('field_oy'),
@@ -226,7 +228,7 @@ export class ExatomicSceneView extends widgets.DOMWidgetView {
         return fps
     }
 
-    clear_meshes() {
+    clearMeshes() {
         this.app3d.clear_meshes()
     }
 
@@ -234,11 +236,11 @@ export class ExatomicSceneView extends widgets.DOMWidgetView {
         this.send({ type: 'image', content: this.app3d.save() })
     }
 
-    save_camera() {
+    saveCamera() {
         this.send({ type: 'camera', content: this.app3d.camera.toJSON() })
     }
 
-    _handle_custom_msg(msg, clbk) {
+    handleCustomMsg(msg) {
         if (msg.type === 'close') { this.app3d.close() }
         if (msg.type === 'camera') {
             this.app3d.set_camera_from_camera(msg.content)
@@ -247,21 +249,21 @@ export class ExatomicSceneView extends widgets.DOMWidgetView {
 
     initListeners() {
         // The basics
-        this.listenTo(this.model, 'change:clear', this.clear_meshes)
+        this.listenTo(this.model, 'change:clear', this.clearMeshes)
         this.listenTo(this.model, 'change:save', this.save)
-        this.listenTo(this.model, 'change:save_cam', this.save_camera)
-        this.listenTo(this.model, 'msg:custom', this._handle_custom_msg)
-        this.listenTo(this.model, 'change:geom', this.add_geometry)
+        this.listenTo(this.model, 'change:save_cam', this.saveCamera)
+        this.listenTo(this.model, 'msg:custom', this.handleCustomMsg)
+        this.listenTo(this.model, 'change:geom', this.addGeometry)
         // Field stuff
         if (!this.model.get('uni')) {
-            this.listenTo(this.model, 'change:field', this.add_field)
+            this.listenTo(this.model, 'change:field', this.addField)
         }
-        this.listenTo(this.model, 'change:field_kind', this.add_field)
-        this.listenTo(this.model, 'change:field_ml', this.add_field)
-        this.listenTo(this.model, 'change:field_o', this.update_field)
-        this.listenTo(this.model, 'change:field_nx', this.add_field)
-        this.listenTo(this.model, 'change:field_ny', this.add_field)
-        this.listenTo(this.model, 'change:field_nz', this.add_field)
-        this.listenTo(this.model, 'change:field_iso', this.add_field)
+        this.listenTo(this.model, 'change:field_kind', this.addField)
+        this.listenTo(this.model, 'change:field_ml', this.addField)
+        this.listenTo(this.model, 'change:field_o', this.updateField)
+        this.listenTo(this.model, 'change:field_nx', this.addField)
+        this.listenTo(this.model, 'change:field_ny', this.addField)
+        this.listenTo(this.model, 'change:field_nz', this.addField)
+        this.listenTo(this.model, 'change:field_iso', this.addField)
     }
 }

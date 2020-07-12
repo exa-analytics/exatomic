@@ -6,14 +6,14 @@
 if (window.require) {
     window.require.config({
         map: {
-            "*" : {
-                "exatomic": "nbextensions/exatomic/index"
-            }
-        }
-    });
+            '*': {
+                exatomic: 'nbextensions/exatomic/index',
+            },
+        },
+    })
 }
 
 // Export the required load_ipython_extention
 module.exports = {
-    load_ipython_extension: function() {}
-};
+    load_ipython_extension() {},
+}

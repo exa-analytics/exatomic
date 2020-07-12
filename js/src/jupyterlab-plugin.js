@@ -1,19 +1,18 @@
 // Copright (c) 2015-2018, Exa Analytics Development Team
 // Distributed under the terms of the Apache License 2.0
 
-var exatomic = require("./index");
-
-var base = require("@jupyter-widgets/base");
+const base = require('@jupyter-widgets/base')
+const exatomic = require('./index')
 
 module.exports = {
-    id: "exatomic",
+    id: 'exatomic',
     requires: [base.IJupyterWidgetRegistry],
-    activate: function(app, widgets) {
+    activate(app, widgets) {
         widgets.registerWidget({
-            name: "exatomic",
+            name: 'exatomic',
             version: exatomic.version,
-            exports: exatomic
-        });
+            exports: exatomic,
+        })
     },
-    autoStart: true
-};
+    autoStart: true,
+}
