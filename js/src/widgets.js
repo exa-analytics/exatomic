@@ -106,11 +106,10 @@ export class UniverseSceneView extends base.ExatomicSceneView {
             bond = this.app3d.add_lines
         }
         let labels = utils.mapper(syms, this.atom_l)
-        const entry = labels.entries()
         const a = []
-        for (const e of entry) {
+        Object.entries(labels).forEach((e) => {
             a.push(e[1] + e[0].toString())
-        }
+        })
         labels = a
         this.app3d.meshes.atom = atom(
             this.atom_x[fdx], this.atom_y[fdx],
@@ -233,42 +232,37 @@ export class UniverseSceneView extends base.ExatomicSceneView {
         const tdx = this.model.get('tidx')
         const fdx = this.model.get('frame_idx')
         let color
-        for (const property in this.tensor_d[fdx]) {
-            if (this.tensor_d[fdx].hasOwnProperty(property)) {
-                if (parseInt(property) === tdx) {
-                    color = 0xafafaf
-                } else {
-                    color = 0x000000
-                }
-                if (this.model.get('tens')) {
-                    this.app3d.meshes[`tensor${property}`][0].children[0].material.color.setHex(color)
-                }
+        Object.keys(this.tensor_d[fdx]).forEach((tensor) => {
+            if (parseInt(tensor, 10) === tdx) {
+                color = 0xafafaf
+            } else {
+                color = 0x000000
             }
-        }
+            if (this.model.get('tens')) {
+                this.app3d.meshes[`tensor${tensor}`][0].children[0].material.color.setHex(color)
+            }
+        })
     }
 
     addTensor() {
         const scaling = this.model.get('scale')
         const fdx = this.model.get('frame_idx')
-        for (const property in this.tensor_d[fdx]) {
-            if (this.tensor_d[fdx].hasOwnProperty(property)) {
-                this.app3d.clear_meshes(`tensor${property}`)
-                const adx = this.tensor_d[fdx][property].atom
-                if (this.model.get('tens')) {
-                    this.app3d.meshes[`tensor${property}`] = this.app3d.add_tensor_surface(
-                        this.getTensor(fdx, property),
-                        this.colors(),
-                        this.atom_x[fdx][adx],
-                        this.atom_y[fdx][adx],
-                        this.atom_z[fdx][adx],
-                        scaling,
-                        `${this.tensor_d[fdx][property].label} tensor ${property.toString()}`,
-                    )
-                }
-                this.app3d.add_meshes(`tensor${property}`)
+        Object.keys(this.tensor_d[fdx]).forEach((tdx) => {
+            this.app3d.clear_meshes(`tensor${tdx}`)
+            const adx = this.tensor_d[fdx][tdx].atom
+            if (this.model.get('tens')) {
+                this.app3d.meshes[`tensor${tdx}`] = this.app3d.add_tensor_surface(
+                    this.getTensor(fdx, tdx),
+                    this.colors(),
+                    this.atom_x[fdx][adx],
+                    this.atom_y[fdx][adx],
+                    this.atom_z[fdx][adx],
+                    scaling,
+                    `${this.tensor_d[fdx][tdx].label} tensor ${tdx.toString()}`,
+                )
             }
-        }
-        // if (this.model.get('tens')) {this.color_tensor();}
+            this.app3d.add_meshes(`tensor${tdx}`)
+        })
     }
 
     // events: {
@@ -292,7 +286,7 @@ export class UniverseSceneView extends base.ExatomicSceneView {
     }
 
     initListeners() {
-        super.init_listeners()
+        super.initListeners()
         this.listenTo(this.model, 'change:frame_idx', this.addAtom)
         this.listenTo(this.model, 'change:atom_3d', this.addAtom)
         this.listenTo(this.model, 'change:field_idx', this.addField)
