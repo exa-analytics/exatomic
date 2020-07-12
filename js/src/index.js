@@ -8,9 +8,10 @@ const utils = require('./utils')
 const appthree = require('./appthree')
 const widgets = require('./widgets')
 const tensor = require('./tensor')
+const util = require('./util')
 
 const loaded = [
-    base, utils, appthree, widgets, tensor,
+    base, utils, appthree, widgets, tensor, util,
 ]
 
 Object.keys(loaded).forEach((key) => {
