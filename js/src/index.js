@@ -3,12 +3,14 @@
 // Export widget models and views, and the npm package version number.
 module.exports = {}
 
+const base = require('./base')
+const utils = require('./utils')
+const appthree = require('./appthree')
+const widgets = require('./widgets')
+const tensor = require('./tensor')
+
 const loaded = [
-    require('./base'),
-    require('./utils'),
-    require('./appthree'),
-    require('./widgets'),
-    require('./tensor'),
+    base, utils, appthree, widgets, tensor,
 ]
 
 Object.keys(loaded).forEach((key) => {
