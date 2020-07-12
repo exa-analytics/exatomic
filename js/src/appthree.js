@@ -51,6 +51,7 @@ class App3D {
         this.texture.dispose()
         this.renderer.forceContextLoss()
         this.renderer.dispose()
+        this.renderer = null
     }
 
     set_dims(w, h) {
@@ -145,7 +146,7 @@ class App3D {
     resize(w, h) {
         this.set_dims(w, h)
         this.set_hud()
-        this.renderer.setSize(this.w, this.h) // , false);
+        this.renderer.setSize(this.w, this.h)
         this.camera.aspect = this.w / this.h
         this.hudcamera.left = -this.w2
         this.hudcamera.right = this.w2
@@ -155,28 +156,22 @@ class App3D {
         this.hudcamera.updateProjectionMatrix()
         this.controls.handleResize()
         this.camera.updateMatrix()
-        // this.render();
     }
 
     animate() {
-        window.requestAnimationFrame(this.animate.bind(this))
-        this.resize()
-        this.controls.update()
-        this.render()
+        let id = window.requestAnimationFrame(this.animate.bind(this))
+        if (this.renderer !== null) {
+            this.resize()
+            this.controls.update()
+            this.render()
+        } else {
+            console.log("Cancelling animation frame.")
+            window.cancelAnimationFrame(id)
+        }
     }
 
     render() {
-        // renderfunc
         this.renderer.clear()
-        // this.renderer.render(this.cubescene, this.cubecamera);
-        // this.cubecamera.rotation.copy(this.camera.rotation);
-        // this.renderer.clearDepth();
-        // this.meshes["generic"][0].visible = false;
-        // this.acubecamera.updateCubeMap(this.renderer, this.scene);
-        // this.meshes["generic"][0].visible = true;
-        // this.meshes["generic"][1].visible = false;
-        // this.bcubecamera.updateCubeMap(this.renderer, this.scene);
-        // this.meshes["generic"][1].visible = true;
         this.renderer.render(this.scene, this.camera)
         this.renderer.clearDepth()
         this.renderer.render(this.hudscene, this.hudcamera)
