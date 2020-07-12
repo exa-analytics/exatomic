@@ -8,6 +8,7 @@ JavaScript "frontend" complement of exatomic"s Universe
 for use within the Jupyter notebook interface.
 */
 
+// eslint-disable-next-line
 import * as util from './util'
 
 const widgets = require('@jupyter-widgets/base')
