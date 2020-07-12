@@ -25,6 +25,10 @@
     "watch": "webpack -d -w"
   },
   "devDependencies": {
+    "babel-eslint": "^10.1.0",
+    "eslint": "^7.4.0",
+    "eslint-config-airbnb-base": "^14.2.0",
+    "eslint-plugin-import": "^2.22.0",
     "rimraf": "^2.6.1",
     "webpack": "^4.41.5",
     "webpack-cli": "^3.3.10"

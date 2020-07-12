@@ -43,7 +43,7 @@ export class ExatomicBoxView extends control.BoxView {
     }
 
     init() {
-        this.init_listeners()
+        this.initListeners()
         var that = this
         this.displayed.then(function() {
             that.scene_ps = that.children_views.views[1].then(function(vbox) {
@@ -97,7 +97,7 @@ export class ExatomicBoxView extends control.BoxView {
         })
     }
 
-    init_listeners() {
+    initListeners() {
         this.listenTo(this.model, "change:linked", this.link_controls)
     }
 
@@ -125,7 +125,7 @@ export class ExatomicSceneView extends widgets.DOMWidgetView {
 
     initialize(parameters) {
         super.initialize(parameters)
-        this.init_listeners()
+        this.initListeners()
         this.init()
     }
 
@@ -250,7 +250,7 @@ export class ExatomicSceneView extends widgets.DOMWidgetView {
         }
     }
 
-    init_listeners() {
+    initListeners() {
         // The basics
         this.listenTo(this.model, "change:clear", this.clear_meshes)
         this.listenTo(this.model, "change:save", this.save)
