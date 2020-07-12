@@ -15,7 +15,7 @@ var _ = require('underscore');
 // var App3D = require("./appthree.js").App3D;
 
 
-export TensorSceneModel extends base.ExatomicSceneModel {
+export class TensorSceneModel extends base.ExatomicSceneModel {
 
     defaults() {
         return {
@@ -33,7 +33,7 @@ export TensorSceneModel extends base.ExatomicSceneModel {
 
 
 
-export TensorSceneView extends base.ExatomicSceneView {
+export class TensorSceneView extends base.ExatomicSceneView {
 
     init() {
         super.init()
@@ -77,13 +77,15 @@ export TensorSceneView extends base.ExatomicSceneView {
 }
 
 
-class TensorContainerModel extends base.ExatomicBoxModel {
+export class TensorContainerModel extends base.ExatomicBoxModel {
     defaults() {
         return {
             ...super.defaults(),
             _model_name: "TensorContainerModel",
             _view_name: "TensorContainerView"
+        }
     }
 }
 
-class TensorContainerView extends base.ExatomicBoxView {}
+export class TensorContainerView extends base.ExatomicBoxView {
+}
