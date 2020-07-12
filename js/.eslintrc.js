@@ -12,6 +12,7 @@ module.exports = {
   },
   rules: {
       indent: ["error", 4],
-      semi: [2, "never"]
+      semi: [2, "never"],
+      'max-classes-per-file': ["error", 2]
   },
 };
