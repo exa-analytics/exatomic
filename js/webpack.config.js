@@ -1,7 +1,7 @@
 var path = require("path");
 var version = require("./package.json").version;
 
-var mode = "production"
+var mode = "development"
 var optimization = {
     splitChunks: {
         chunks: "all"
@@ -13,7 +13,7 @@ module.exports = [
     {// Notebook extension
         mode: mode,
 //        optimization: optimization,
-        entry: "./src/extension.js",
+        entry: "./lib/src/extension.js",
         output: {
             filename: "extension.js",
             path: path.resolve(__dirname, "..", "exatomic", "static", "js"),
@@ -23,7 +23,7 @@ module.exports = [
     {// exatomic bundle for the classic notebook
         mode: mode,
 //        optimization: optimization,
-        entry: "./src/notebook.js",
+        entry: "./lib/src/notebook.js",
         output: {
             filename: "index.js",
             path: path.resolve(__dirname, "..", "exatomic", "static", "js"),
@@ -35,7 +35,7 @@ module.exports = [
     {// exatomic bundle for unpkg
         mode: mode,
 //        optimization: optimization,
-        entry: "./src/embed.js",
+        entry: "./lib/src/embed.js",
         output: {
             filename: "index.js",
             path: path.resolve(__dirname, "dist"),
