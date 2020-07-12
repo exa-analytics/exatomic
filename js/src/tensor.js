@@ -37,7 +37,7 @@ export class TensorSceneView extends base.ExatomicSceneView {
         if (this.model.get('geom')) {
             this.app3d.meshes.generic = this.app3d.add_tensor_surface(
                 this.getTensor(),
-                this.colors()
+                this.colors(),
             )
         }
         this.app3d.add_meshes('generic')
