@@ -1,7 +1,7 @@
 var path = require("path");
 var version = require("./package.json").version;
 
-var mode = "development"
+var mode = "production"
 var optimization = {
     splitChunks: {
         chunks: "all"

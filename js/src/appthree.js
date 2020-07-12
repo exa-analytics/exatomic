@@ -1270,7 +1270,7 @@ class App3D {
             center.divideScalar(2.0)
             const length = direction.length()
             const geometry = new THREE.CylinderGeometry(r, r, length)
-            geometry.applyMatrix(new THREE.Matrix4().makeRotationX(Math.PI / 2))
+            geometry.applyMatrix4(new THREE.Matrix4().makeRotationX(Math.PI / 2))
             /* var nn = geometry.faces.length;
             var color0 = new THREE.Color(colors[j]);
             var color1 = new THREE.Color(colors[k]);
@@ -1327,7 +1327,7 @@ class App3D {
     //            var length = 0.5*direction.length();
     //            var geometry = new THREE.CylinderGeometry(r, r, length);
     //            geometry.openEnded = true;
-    //            geometry.applyMatrix(new THREE.Matrix4().makeRotationX( Math.PI / 2));
+    //            geometry.applyMatrix4(new THREE.Matrix4().makeRotationX( Math.PI / 2));
     //            /*var nn = geometry.faces.length;
     //            var color0 = new THREE.Color(colors[j]);
     //            var color1 = new THREE.Color(colors[k]);
