@@ -44,7 +44,7 @@ class App3D {
                     this.meshes[idx][sub].geometry.dispose()
                 }
                 if (this.meshes[idx][sub].material) {
-                    this.meshes[idx][sub].geometry.dispose()
+                    this.meshes[idx][sub].material.dispose()
                 }
             }
         }
