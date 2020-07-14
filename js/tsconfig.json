@@ -1,0 +1,19 @@
+{
+  "$schema": "http://json.schemastore.org/tsconfig",
+  "compilerOptions": {
+    "allowSyntheticDefaultImports": true,
+    "resolveJsonModule": true,
+    "esModuleInterop": true,
+    "moduleResolution": "node",
+    "module": "esnext",
+    "target": "es2017",
+    "outDir": "./lib",
+	"allowJs": true
+  },
+  "include": [
+      "./src/**/*"
+  ],
+  "files": [
+    "package.json"
+  ]
+}

@@ -1,4 +1,4 @@
-// Copright (c) 2015-2018, Exa Analytics Development Team
+// Copright (c) 2015-2020, Exa Analytics Development Team
 // Distributed under the terms of the Apache License 2.0
 /* """
 3D Visualization
@@ -51,6 +51,7 @@ class App3D {
         this.texture.dispose()
         this.renderer.forceContextLoss()
         this.renderer.dispose()
+        this.renderer = null
     }
 
     set_dims(w, h) {
@@ -101,8 +102,10 @@ class App3D {
         renderer.autoClear = false
         renderer.shadowMap.enabled = true
         renderer.shadowMap.type = THREE.PCFSoftShadowMap
-        renderer.gammaInput = true
-        renderer.gammaOutput = true
+        // TODO : renderer.gammaInput moved to Texture.encoding
+        // renderer.gammaInput = true
+        // TODO : gammaOutput is now outputEncoding
+        // renderer.gammaOutput = true
         return Promise.resolve(renderer)
     }
 
@@ -145,7 +148,7 @@ class App3D {
     resize(w, h) {
         this.set_dims(w, h)
         this.set_hud()
-        this.renderer.setSize(this.w, this.h) // , false);
+        this.renderer.setSize(this.w, this.h)
         this.camera.aspect = this.w / this.h
         this.hudcamera.left = -this.w2
         this.hudcamera.right = this.w2
@@ -155,28 +158,22 @@ class App3D {
         this.hudcamera.updateProjectionMatrix()
         this.controls.handleResize()
         this.camera.updateMatrix()
-        // this.render();
     }
 
     animate() {
-        window.requestAnimationFrame(this.animate.bind(this))
-        this.resize()
-        this.controls.update()
-        this.render()
+        let id = window.requestAnimationFrame(this.animate.bind(this))
+        if (this.renderer !== null) {
+            this.resize()
+            this.controls.update()
+            this.render()
+        } else {
+            console.log("Cancelling animation frame.")
+            window.cancelAnimationFrame(id)
+        }
     }
 
     render() {
-        // renderfunc
         this.renderer.clear()
-        // this.renderer.render(this.cubescene, this.cubecamera);
-        // this.cubecamera.rotation.copy(this.camera.rotation);
-        // this.renderer.clearDepth();
-        // this.meshes["generic"][0].visible = false;
-        // this.acubecamera.updateCubeMap(this.renderer, this.scene);
-        // this.meshes["generic"][0].visible = true;
-        // this.meshes["generic"][1].visible = false;
-        // this.bcubecamera.updateCubeMap(this.renderer, this.scene);
-        // this.meshes["generic"][1].visible = true;
         this.renderer.render(this.scene, this.camera)
         this.renderer.clearDepth()
         this.renderer.render(this.hudscene, this.hudcamera)
@@ -199,7 +196,8 @@ class App3D {
         this.context.textBaseline = 'left'
         this.context.font = '64px Arial'
         this.texture = new THREE.Texture(this.hudcanvas)
-        this.texture.anisotropy = this.renderer.getMaxAnisotropy()
+        // TODO : renderer.gammaInput moved to Texture.encoding
+        this.texture.anisotropy = this.renderer.capabilities.getMaxAnisotropy()
         this.texture.minFilter = THREE.NearestMipMapLinearFilter
         this.texture.magFilter = THREE.NearestFilter
         this.texture.needsUpdate = true
@@ -555,8 +553,8 @@ class App3D {
                 const clen = cdir.length()
                 const g = new THREE.CylinderGeometry(r, r, len)
                 const c = new THREE.CylinderGeometry(0, 3 * r, clen)
-                g.applyMatrix(new THREE.Matrix4().makeRotationX(Math.PI / 2))
-                c.applyMatrix(new THREE.Matrix4().makeRotationX(Math.PI / 2))
+                g.applyMatrix4(new THREE.Matrix4().makeRotationX(Math.PI / 2))
+                c.applyMatrix4(new THREE.Matrix4().makeRotationX(Math.PI / 2))
                 const mat = new THREE.MeshPhongMaterial({
                     vertexColors: THREE.VertexColors,
                     color: cols[i],
@@ -1128,9 +1126,9 @@ class App3D {
         })
         const xyz = utils.create_float_array_xyz(x, y, z)
         var n = Math.floor(xyz.length / 3)
-        geometry.addAttribute('position', new THREE.BufferAttribute(xyz, 3))
-        geometry.addAttribute('color', new THREE.BufferAttribute(c, 3))
-        geometry.addAttribute('size', new THREE.BufferAttribute(r, 1))
+        geometry.setAttribute('position', new THREE.BufferAttribute(xyz, 3))
+        geometry.setAttribute('color', new THREE.BufferAttribute(c, 3))
+        geometry.setAttribute('size', new THREE.BufferAttribute(r, 1))
         const points = new THREE.Points(geometry, material)
         return [points]
     }
@@ -1272,7 +1270,7 @@ class App3D {
             center.divideScalar(2.0)
             const length = direction.length()
             const geometry = new THREE.CylinderGeometry(r, r, length)
-            geometry.applyMatrix(new THREE.Matrix4().makeRotationX(Math.PI / 2))
+            geometry.applyMatrix4(new THREE.Matrix4().makeRotationX(Math.PI / 2))
             /* var nn = geometry.faces.length;
             var color0 = new THREE.Color(colors[j]);
             var color1 = new THREE.Color(colors[k]);
@@ -1329,7 +1327,7 @@ class App3D {
     //            var length = 0.5*direction.length();
     //            var geometry = new THREE.CylinderGeometry(r, r, length);
     //            geometry.openEnded = true;
-    //            geometry.applyMatrix(new THREE.Matrix4().makeRotationX( Math.PI / 2));
+    //            geometry.applyMatrix4(new THREE.Matrix4().makeRotationX( Math.PI / 2));
     //            /*var nn = geometry.faces.length;
     //            var color0 = new THREE.Color(colors[j]);
     //            var color1 = new THREE.Color(colors[k]);
