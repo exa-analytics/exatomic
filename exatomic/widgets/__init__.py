@@ -6,7 +6,7 @@ from .widget import TensorContainer, DemoContainer, DemoUniverse, UniverseWidget
 
 def exhibition_widget():
     """An exhibition widget from static resources
-    that contain enough data to demonstrate numerous pieces
+    that contains enough data to demonstrate numerous pieces
     of functionality in the UniverseWidget.
 
     Control each scene individually by selecting active
@@ -48,8 +48,8 @@ def exhibition_widget():
     import exatomic
     from exatomic import gaussian
 
-    orb_file = 'g09-ch3nh2-631g.out'
     trj_file = 'H2O.traj.xyz'
+    orb_file = 'g09-ch3nh2-631g.out'
     nmr_file = 'g16-nitromalonamide-6-31++g-nmr.out'
 
     trj = exatomic.XYZ(
