@@ -18,8 +18,8 @@ def exhibition_widget():
 
     Returns:
         UniverseWidget featuring the application.
-            scene 0: orbital isosurfaces (Fields, Contours tabs)
-            scene 1: trajectory animation (Animate tab)
+            scene 0: trajectory animation (Animate tab)
+            scene 1: orbital isosurfaces (Fields, Contours tabs)
             scene 2: NMR shielding tensor (Tensor tab)
 
     Note:
@@ -47,15 +47,15 @@ def exhibition_widget():
     trj_file = 'H2O.traj.xyz'
     nmr_file = 'g16-nitromalonamide-6-31++g-nmr.out'
 
+    trj = exatomic.XYZ(
+        exatomic.base.resource(trj_file)).to_universe()
+
     orb = gaussian.Output(
         exatomic.base.resource(orb_file)).to_universe()
     orb.add_molecular_orbitals()
-
-    trj = exatomic.XYZ(
-        exatomic.base.resource(trj_file)).to_universe()
 
     nmr = gaussian.Output(
         exatomic.base.resource(nmr_file)).to_universe()
     nmr.tensor = nmr.nmr_shielding
 
-    return exatomic.UniverseWidget(orb, trj, nmr)
+    return exatomic.UniverseWidget(trj, orb, nmr)
