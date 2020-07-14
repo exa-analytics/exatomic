@@ -574,6 +574,9 @@ class UniverseWidget(ExatomicBox):
 
         return mainopts
 
+    def __repr__(self):
+        return self.__class__.__name__ + f'({len(self.scenes)},closed)'
+
     def __init__(self, *unis, **kwargs):
         scenekwargs = kwargs.pop('scenekwargs', {})
         #scenekwargs.update({'uni': True, 'test': False})
