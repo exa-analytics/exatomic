@@ -5,7 +5,7 @@
 from .widget import TensorContainer, DemoContainer, DemoUniverse, UniverseWidget
 
 def exhibition_widget():
-    """Return a exhibition widget from static resources
+    """An exhibition widget from static resources
     that contain enough data to demonstrate numerous pieces
     of functionality in the UniverseWidget.
 
@@ -38,6 +38,11 @@ def exhibition_widget():
         a time-consuming manner). It may also serve to uncover
         python-related bugs related to a UniverseWidget housing
         multiple independent UniverseScenes.
+
+    Note:
+        The use of an entire tensor table is not well supported
+        by the application yet. The aim is to improve functionality
+        to be similar to the functionality for isosurfaces.
 
     """
     import exatomic
