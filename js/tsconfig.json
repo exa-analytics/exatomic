@@ -8,7 +8,10 @@
     "module": "esnext",
     "target": "es2017",
     "outDir": "./lib",
-	"allowJs": true
+    "allowJs": true,
+    "noImplicitAny": true,
+    "strictNullChecks": true,
+    "noEmitOnError": true
   },
   "include": [
       "./src/**/*"

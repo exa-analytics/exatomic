@@ -8,6 +8,8 @@ JavaScript 'frontend' complement of exatomic's Container for use within
 the Jupyter notebook interface.
 */
 
+import * as app from './app'
+
 const base = require('./base')
 const utils = require('./utils')
 const three = require('./appthree')
@@ -26,6 +28,8 @@ export class UniverseSceneView extends base.ExatomicSceneView {
     init() {
         window.addEventListener('resize', this.resize.bind(this))
         this.app3d = new three.App3D(this)
+        this.app = new app.App(this)
+        console.log(this.app)
         this.three_promises = this.app3d.init_promise()
         this.promises = Promise.all([
             utils.fparse(this, 'atom_x'),

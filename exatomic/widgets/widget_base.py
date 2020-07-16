@@ -25,6 +25,16 @@ from .widget_utils import (_wlo, _hboxlo,
                            _vboxlo, _bboxlo, _ListDict,
                            Folder, GUIBox, gui_field_widgets)
 
+@register
+class Scene(DOMWidget):
+    _model_module_version = Unicode(__js_version__).tag(sync=True)
+    _view_module_version = Unicode(__js_version__).tag(sync=True)
+    _view_module = Unicode('exatomic').tag(sync=True)
+    _model_module = Unicode('exatomic').tag(sync=True)
+    _model_name = Unicode('SceneModel').tag(sync=True)
+    _view_name = Unicode('SceneView').tag(sync=True)
+    flag = Bool(True).tag(sync=True)
+
 
 @register
 class ExatomicScene(DOMWidget):
