@@ -5,17 +5,27 @@ module.exports = {
     es2020: true,
   },
   extends: [
+    'eslint:recommended',
     'airbnb-base',
+    'plugin:@typescript-eslint/recommended',
   ],
   parserOptions: {
     ecmaVersion: 11,
     sourceType: 'module',
   },
   rules: {
-      indent: ["error", 4],
-      semi: [2, "never"],
-      'max-classes-per-file': ["error", 4]
+      indent: ['error', 4],
+      semi: [2, 'never'],
+      'max-classes-per-file': ['error', 4]
   },
+  // TODO : typescript indent checking is buggy
+  // '@typescript-eslint/indent': ['error', 4],
+  overrides: [{
+      'files': ['*.ts'],
+      'rules': {
+          indent: 'off',
+      }
+  }],
   settings: {
     'import/resolver': {
       node: {
@@ -24,4 +34,4 @@ module.exports = {
       }
     }
   }
-};
+}
