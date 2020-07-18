@@ -11,6 +11,8 @@ A 3D scene for exatomic
 import * as three from 'three'
 import * as TrackBallControls from 'three-trackballcontrols'
 
+import * as util from './util'
+
 import { DOMWidgetModel, DOMWidgetView } from '@jupyter-widgets/base'
 import { version } from '../package.json'
 
@@ -41,21 +43,30 @@ export class SceneView extends DOMWidgetView {
 
     controls: any // TrackBallControls
 
-    hudscene: three.Scene
-
-    hudcamera: three.OrthographicCamera
-
     raycaster: three.Raycaster
 
     mouse: three.Vector2
 
+    hudscene: three.Scene
+
+    hudcamera: three.OrthographicCamera
+
     hudcanvas: HTMLCanvasElement
 
+    hudcontext: CanvasRenderingContext2D | null
+
+    hudtexture: three.Texture
+
+    hudsprite: three.Sprite
+
     promises: Promise<any>
+
+    selected: three.Mesh[]
 
     initialize(parameters: any): void {
         super.initialize(parameters)
         this.initListeners()
+        this.selected = []
         this.promises = this.init()
         this.displayed.then(() => {
             this.resize()
@@ -71,9 +82,11 @@ export class SceneView extends DOMWidgetView {
             this.initHud(),
         ]).then(() => {
             this.initObj()
+            this.finalizeHudcanvas()
             this.finalizeMouseover()
-            // this.resize()
-            // this.setCameraFromScene()
+            this.finalizeMouseup()
+            // TODO: why this no fire?
+            window.dispatchEvent(new Event('resize'))
         })
     }
 
@@ -195,6 +208,26 @@ export class SceneView extends DOMWidgetView {
         this.listenTo(this.model, 'change:layout.height', this.resize)
     }
 
+    finalizeHudcanvas(): void {
+        if (this.renderer === null) { return }
+        this.hudcontext = this.hudcanvas.getContext('2d')
+        if (this.hudcontext !== null) {
+            this.hudcontext.textAlign = 'left'
+            this.hudcontext.textBaseline = 'bottom'
+            this.hudcontext.font = '64px Arial'
+        }
+        this.hudtexture = new three.Texture(this.hudcanvas)
+        this.hudtexture.anisotropy = this.renderer.capabilities.getMaxAnisotropy()
+        this.hudtexture.minFilter = three.NearestMipMapLinearFilter
+        this.hudtexture.magFilter = three.NearestFilter
+        this.hudtexture.needsUpdate = true
+        const material = new three.SpriteMaterial({ map: this.hudtexture })
+        this.hudsprite = new three.Sprite(material)
+        this.hudsprite.position.set(1000, 1000, 1000)
+        this.hudsprite.scale.set(256, 256, 1)
+        this.hudscene.add(this.hudsprite)
+    }
+
     updateFlag(): void {
         this.resize()
     }
@@ -205,9 +238,6 @@ export class SceneView extends DOMWidgetView {
         // hack canvas in el is 6 smaller than el
         if (h === this.el.offsetHeight) { h -= 6 }
         console.log('resize (w, h, el.w, el.h)', w, h, this.el.offsetWidth, this.el.offsetHeight)
-        console.log(this.el, this.model.get('layout'))
-        console.log(this.el.getBoundingClientRect())
-        console.log(this.el.canvas)
         if (this.renderer !== null) {
             this.renderer.setSize(w, h)
             this.camera.aspect = w / h
@@ -269,8 +299,52 @@ export class SceneView extends DOMWidgetView {
         }
     }
 
-    highlight_active(intersects: any[]): void {
-        console.log('highlighting active')
+    updateHud(intersects: any[]): void {
+        // update the hudscene with the label for the
+        // currently hovered over object.
+        // TODO : look into the tooltip machinery
+        if (this.hudcontext === null) { return }
+        // wipe the canvas
+        this.hudcontext.clearRect(0, 0,
+                                  this.hudcanvas.width,
+                                  this.hudcanvas.height)
+        // make sure we are hovering over an object
+        if (!intersects.length) {
+            this.hudsprite.position.set(1000, 1000, 1000)
+            return
+        }
+        const obj = intersects[0].object
+        if (!obj.name) { return }
+
+//        this.hudcontext.fillStyle = 'rgba(245,245,245,0.9)'
+//        let w = this.hudcontext.measureText(obj.name).width
+//        let h = 72
+//        console.log("fill rect (x, y, w, h)", 0, 0, w + 8, h)
+//        this.hudcontext.fillRect(0, 0, w + 8, 72)
+//        this.hudcontext.fillStyle = 'rgba(0,0,0,0.95)'
+//        console.log("fill text (w, 512, 512)", w, 0, 0)
+//        this.hudcontext.fillText(obj.name, 0, 0)
+//        w = this.el.offsetWidth
+//        h = this.el.offsetHeight - 6
+//        console.log("hudsprite position", 0, 0, 1)
+//        this.hudsprite.position.set(0, 0, 1)
+//        this.hudsprite.material.needsUpdate = true
+//        this.hudtexture.needsUpdate = true
+
+        // this is not quite aligned
+        this.hudcontext.fillStyle = 'rgba(245,245,245,0.9)'
+        let w = this.hudcontext.measureText(obj.name).width
+        console.log("fill rect (x, y, w, h)", 512 - 2, 512 - 60, w + 6, 72)
+        this.hudcontext.fillRect(512 - 2, 512 - 60, w + 6, 72)
+        this.hudcontext.fillStyle = 'rgba(0,0,0,0.95)'
+        console.log("fill text (w, 512, 512)", w, 512, 512)
+        this.hudcontext.fillText(obj.name, 512, 512)
+        w = this.el.offsetWidth
+        const h = this.el.offsetHeight - 6
+        console.log("hudsprite position", -w / 2 + 2, -h / 2 + 4, 1)
+        this.hudsprite.position.set(-w / 2 + 2, - h / 2 + 4, 1)
+        this.hudsprite.material.needsUpdate = true
+        this.hudtexture.needsUpdate = true
     }
 
     finalizeMouseover(): void {
@@ -280,16 +354,55 @@ export class SceneView extends DOMWidgetView {
             ((event: MouseEvent): void => {
                 event.preventDefault()
                 const pos = that.el.getBoundingClientRect()
-                const w: number = that.el.offsetWidth || this.model.get('width')
-                let h: number = that.el.offsetHeight || this.model.get('height')
+                const w: number = that.el.offsetWidth
+                const h: number = that.el.offsetHeight
                 that.mouse.x =  ((event.clientX - pos.x) / w) * 2 - 1
                 that.mouse.y = -((event.clientY - pos.y) / h) * 2 + 1
                 that.raycaster.setFromCamera(that.mouse, that.camera)
                 const intersects = that.raycaster.intersectObjects(that.scene.children)
-                if (intersects) {
-                    that.highlight_active(intersects)
-                }
+                that.updateHud(intersects)
+            }),
+            false
+        )
+    }
 
+    updateActive(intersects: any[]): void {
+        // if first element of intersects is not in selected,
+        // highlight it and add it to selected.
+        // otherwise, if first element of intersects is in
+        // selected, unhighlight it and remove it from
+        // selected
+        if (!intersects.length) { return }
+        const obj = intersects[0].object
+        const uuids = this.selected.map(obj => obj.uuid)
+        const uuid = obj.uuid
+        const idx = uuids.indexOf(uuid)
+        if (idx > -1) {
+            obj.material.color.setHex(obj.oldHex)
+            this.selected.splice(idx, 1)
+        } else {
+            obj.oldHex = obj.material.color.getHex()
+            let newHex = util.lightenColor(obj.oldHex)
+            obj.material.color.setHex(newHex)
+            this.selected.push(obj)
+        }
+    }
+
+    finalizeMouseup(): void {
+        const that = this
+        this.el.addEventListener(
+            'mouseup',
+            ((event: MouseEvent): void => {
+                event.preventDefault()
+                const pos = that.el.getBoundingClientRect()
+                const w: number = that.el.offsetWidth
+                const h: number = that.el.offsetHeight
+                that.mouse.x =  ((event.clientX - pos.x) / w) * 2 - 1
+                that.mouse.y = -((event.clientY - pos.y) / h) * 2 + 1
+                // console.log('pos, w, h, mouse', pos, w, h, that.mouse)
+                that.raycaster.setFromCamera(that.mouse, that.camera)
+                const intersects = that.raycaster.intersectObjects(that.scene.children)
+                that.updateActive(intersects)
             }),
             false
         )
