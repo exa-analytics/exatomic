@@ -16,7 +16,9 @@ module.exports = {
   rules: {
       indent: ['error', 4],
       semi: [2, 'never'],
-      'max-classes-per-file': ['error', 4]
+      'max-classes-per-file': ['error', 4],
+      'no-bitwise': ['error', { 'allow': ['>>', '<<', '&'] } ],
+      '@typescript-eslint/no-explicit-any': 'off',
   },
   // TODO : typescript indent checking is buggy
   // '@typescript-eslint/indent': ['error', 4],

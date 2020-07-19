@@ -8,13 +8,12 @@ A 3D scene for exatomic
 
 */
 
+import { DOMWidgetModel, DOMWidgetView } from '@jupyter-widgets/base'
+
 import * as three from 'three'
 import * as TrackBallControls from 'three-trackballcontrols'
-
-import * as util from './util'
-
-import { DOMWidgetModel, DOMWidgetView } from '@jupyter-widgets/base'
 import { version } from '../package.json'
+import * as util from './util'
 
 const semver = `^${version}`
 
@@ -69,7 +68,7 @@ export class SceneView extends DOMWidgetView {
         super.initialize(parameters)
         this.initListeners()
         this.selected = []
-        this.hudfontsize = 24
+        this.hudfontsize = 28
         this.promises = this.init()
         this.displayed.then(() => {
             this.resize()
@@ -95,11 +94,11 @@ export class SceneView extends DOMWidgetView {
         })
     }
 
-    initScene() {
+    initScene(): any {
         /* """
         initScene
         ---------------
-        An opinionated three.js Scene 
+        An opinionated three.js Scene
         */
         const scene = new three.Scene()
         const amlight = new three.AmbientLight(0xdddddd, 0.5)
@@ -112,7 +111,7 @@ export class SceneView extends DOMWidgetView {
         sunlight.shadow = new three.SpotLightShadow(shadowcam)
         //    camera: shadowcam,
         //    isSpotLightShadow: true,
-        //})
+        // })
         sunlight.shadow.bias = 0.0
         scene.add(amlight)
         scene.add(dlight0)
@@ -186,10 +185,10 @@ export class SceneView extends DOMWidgetView {
                  this.model.get('width') / 2,
                  this.model.get('height') / 2,
                 -this.model.get('height') / 2,
-                1, 1000,
+                1, 10,
             )).then((camera) => {
                 this.hudcamera = camera
-                this.hudcamera.position.z = 1000
+                this.hudcamera.position.z = 10
             }),
             Promise.resolve(new three.Vector2()).then((mouse) => {
                 this.mouse = mouse
@@ -199,12 +198,19 @@ export class SceneView extends DOMWidgetView {
             ).then((canvas) => {
                 this.hudcanvas = canvas
                 this.hudcanvas.width = 1024
-                this.hudcanvas.height = 512
+                this.hudcanvas.height = 1024
             }),
         ])
     }
 
     initObj(): void {
+        /* """
+        initObj
+        ------------
+        Create some test meshes to test hud and interactive
+        functionality.
+
+        */
         const geom = new three.IcosahedronGeometry(2, 1)
         const mat0 = new three.MeshBasicMaterial({
             color: 0x000000,
@@ -230,6 +236,14 @@ export class SceneView extends DOMWidgetView {
     }
 
     finalizeHudcanvas(): void {
+        /* """
+        finalizeHudcanvas
+        ------------------
+        Set up everything needed to write text to
+        the hudcanvas and display it in the same
+        renderer.
+
+        */
         if (this.renderer === null) { return }
         this.hudcontext = this.hudcanvas.getContext('2d')
         if (this.hudcontext !== null) {
@@ -255,6 +269,13 @@ export class SceneView extends DOMWidgetView {
     }
 
     resize(): void {
+        /* """
+        resize
+        -----------
+        Resizes the renderer and updates all cameras
+        and controls to respect the new renderer size.
+
+        */
         const w: number = this.el.offsetWidth || this.model.get('width')
         let h: number = this.el.offsetHeight || this.model.get('height')
         // hack canvas in el is 6 smaller than el
@@ -264,9 +285,9 @@ export class SceneView extends DOMWidgetView {
             this.camera.aspect = w / h
             this.camera.updateProjectionMatrix()
             this.camera.updateMatrix()
-            this.hudcamera.left   = -w / 2
-            this.hudcamera.right  =  w / 2
-            this.hudcamera.top    =  h / 2
+            this.hudcamera.left = -w / 2
+            this.hudcamera.right = w / 2
+            this.hudcamera.top = h / 2
             this.hudcamera.bottom = -h / 2
             this.hudcamera.updateProjectionMatrix()
             this.hudcamera.updateMatrix()
@@ -275,10 +296,23 @@ export class SceneView extends DOMWidgetView {
     }
 
     render(): any {
+        /* """
+        render
+        -----------
+        Return all promises
+
+        */
         return this.promises.then(this.animate.bind(this))
     }
 
     paint(): void {
+        /* """
+        paint
+        -----------
+        Update the renderer and render both the scene
+        and hudscene.
+
+        */
         if (this.renderer !== null) {
             // TODO : there must be a way to not call resize
             this.resize()
@@ -291,18 +325,32 @@ export class SceneView extends DOMWidgetView {
     }
 
     animate(): void {
+        /* """
+        animate
+        -----------
+        Turn on the animation loop.
+
+        */
         if (this.renderer !== null) {
             this.renderer.setAnimationLoop(this.paint.bind(this))
         }
     }
 
     setCameraFromScene(): void {
+        /* """
+        setCameraFromScene
+        --------------------
+        Find the "center-of-objects" of the scene and point the
+        camera towards it from a reasonable distance away from
+        all the objects in the scene.
+
+        */
         const bbox = new three.Box3().setFromObject(this.scene)
         const { min } = bbox
         const { max } = bbox
-        const ox = (max.x + min.x ) / 2
-        const oy = (max.y + min.y ) / 2
-        const oz = (max.z + min.z ) / 2
+        const ox = (max.x + min.x) / 2
+        const oy = (max.y + min.y) / 2
+        const oz = (max.z + min.z) / 2
         const px = Math.max(2 * max.x, 30)
         const py = Math.max(2 * max.y, 30)
         const pz = Math.max(2 * max.z, 30)
@@ -314,8 +362,14 @@ export class SceneView extends DOMWidgetView {
     }
 
     close(): void {
+        /* """
+        close
+        -----------
+        Garbage collect everything on this.
+
+        */
         if (this.renderer !== null) {
-            console.log('Disposing exatomic THREE objects.')
+            // console.log('Disposing exatomic THREE objects.')
             this.renderer.forceContextLoss()
             this.renderer.dispose()
             this.renderer.setAnimationLoop(null)
@@ -323,78 +377,159 @@ export class SceneView extends DOMWidgetView {
         }
     }
 
-    displaySelected(): void {
-        this.hudsprite.position.set(1000, 1000, 1000)
+    writeFromSelected(): void {
+        /* """
+        writeFromSelected
+        ---------------------
+        Based on the number (and kind) of objects selected,
+        when no other banner is being displayed, display the
+        calculable information based on what was selected.
+
+        For example, when two Meshes are selected with positions,
+        we can compute the distance between them and write out
+        the result when both objects are selected and no other
+        objects are hovered.
+
+        */
+
         // TODO: what to do when given things are selected
-        // how about compute distance between two objects?
-        if (this.selected.length == 2) {
+        if (this.selected.length === 2) {
             const obj0 = this.selected[0]
             const obj1 = this.selected[1]
             const dist = Math.sqrt(
-                (obj0.position.x - obj1.position.x) ** 2 +
-                (obj0.position.y - obj1.position.y) ** 2 +
-                (obj0.position.z - obj1.position.z) ** 2
+                (obj0.position.x - obj1.position.x) ** 2
+                + (obj0.position.y - obj1.position.y) ** 2
+                + (obj0.position.z - obj1.position.z) ** 2,
             )
-            this.writeBanner(`Distance = ${dist} units`)
+            this.writeHud(`Distance ${dist} units`)
         }
     }
 
-    writeBanner(banner: string): void {
+    writeHud(banner: string): void {
+        /* """
+        writeHud
+        ---------------
+        Write into a CanvasRenderingContext2D the given banner.
+        The hudcontext API generally accepts (x, y, w, h) and
+        has coordinates laid out as follows:
+
+                y=0
+            x=0 +---+ x=w -+ 1024
+                |   |      |
+                +---+      |
+                y=h        |
+                |          |
+                +----------+
+                1024
+
+        All based on the hudcanvas (1024x1024). By measuring
+        the text width and knowing the font size, construct a
+        bordered text box to frame the text banner. Then write
+        the text to the hudcontext. Currently only write one line
+        of text, as much that will fit into the full hudcanvas size
+        of 1024 pixels.
+
+        The hudcontext is where we do the drawing, but the sprite
+        displays the result. The hudcanvas (housing the hudcontext)
+        was the source for the three.Texture that is the material
+        the sprite renders.
+
+        The sprite is rendered in a hudscene using an orthographic
+        camera. Since we only write one line of text into an otherwise
+        square hudcanvas, the center of the sprite and the center of
+        the painted text are nowhere near each other.
+
+        Reassign the center of the sprite to be the top left corner
+        of the hudcontext using the following coordinate system:
+
+            y
+            1 - - - 1
+            |_____| |
+            |       |
+            0 - - - 1 x
+
+        So that the apparent "center" of the sprite will be closer
+        to the actual drawn text. Finally, position the sprite (in
+        orthographic coordinates [-w/2, w/2, -h/2, h/2]).
+        */
+
         if (this.hudcontext === null) {
             return
         }
-        this.hudcontext.clearRect(
-            0, 0,
-            this.hudcanvas.width,
-            this.hudcanvas.height
-        )
+        this.hudcontext.clearRect(0, 0, this.hudcanvas.width, this.hudcanvas.height)
+
+        // frame the text
         const pad = 8
         const textWidth = this.hudcontext.measureText(banner).width
 
-        this.hudcontext.fillStyle = 'rgba(245,245,245,0.9)'
-        this.hudcontext.fillRect(0, 0, textWidth + 2 * pad, this.hudfontsize + pad)
+        // with a black border
+        this.hudcontext.fillStyle = 'rgba(0,0,0,0.9)'
+        this.hudcontext.fillRect(0, 0, textWidth + 2 * pad, this.hudfontsize + 2 * pad)
 
+        // and light background
+        this.hudcontext.fillStyle = 'rgba(245,245,245,0.9)'
+        this.hudcontext.fillRect(
+            pad / 2, pad / 2, textWidth + pad, this.hudfontsize + pad,
+        )
+        // for easy to read black text
         this.hudcontext.fillStyle = 'rgba(0,0,0,0.95)'
-        this.hudcontext.fillText(banner, pad, this.hudfontsize + pad / 2)
+        this.hudcontext.fillText(banner, pad, this.hudfontsize + pad)
+
+        this.hudsprite.center.x = 0
+        this.hudsprite.center.y = 1
 
         const width = this.el.offsetWidth
-        const height = this.el.offsetHeight - 6
-
-        // nonsense values but they seem to work
-        this.hudsprite.position.set(-this.hudfontsize, - height + this.hudfontsize, 0)
+        const height = this.el.offsetHeight
+        this.hudsprite.position.set(-width / 2, -height / 2 + this.hudfontsize, 0)
         this.hudsprite.material.needsUpdate = true
         this.hudtexture.needsUpdate = true
-
     }
 
     updateSelected(intersects: any[]): void {
-        // if first element of intersects is not in selected,
-        // highlight it and add it to selected.
-        // otherwise, if first element of intersects is in
-        // selected, unhighlight it and remove it from
-        // selected
+        /* """
+        updateSelected
+        ----------------
+        If the first element of intersects is not selected,
+        highlight it and add it to selected objects.
+        Otherwise, if the first element of intersects is
+        selected, unhighlight it and remove it from
+        selected objects
+        */
         if (!intersects.length) { return }
         const obj = intersects[0].object
-        const uuids = this.selected.map(obj => obj.uuid)
-        const uuid = obj.uuid
+        const uuids = this.selected.map((o) => o.uuid)
+        const { uuid } = obj
         const idx = uuids.indexOf(uuid)
         if (idx > -1) {
             obj.material.color.setHex(obj.oldHex)
             this.selected.splice(idx, 1)
         } else {
             obj.oldHex = obj.material.color.getHex()
-            let newHex = util.lightenColor(obj.oldHex)
+            const newHex = util.lightenColor(obj.oldHex)
             obj.material.color.setHex(newHex)
             this.selected.push(obj)
         }
     }
 
-    handleMouseEvent(event: MouseEvent, kind: string) {
+    handleMouseEvent(event: MouseEvent, kind: string): void {
+        /* """
+        handleMouseEvent
+        ------------------
+        Compute the mouse position in 2D hovering over
+        the 3D scene. Cast a ray from that 2D position
+        into the 3D scene and get all intersecting objects.
+
+        There are two distinct interactions with the three.js
+        scene, hover-over and selection. The hover-over displays
+        information about the object (if provided) and the
+        selection allows to select multiple items and compute
+        values related to collections of objects in the scene.
+        */
         event.preventDefault()
         const pos = this.el.getBoundingClientRect()
         const w: number = this.el.offsetWidth
         const h: number = this.el.offsetHeight
-        this.mouse.x =  ((event.clientX - pos.x) / w) * 2 - 1
+        this.mouse.x = ((event.clientX - pos.x) / w) * 2 - 1
         this.mouse.y = -((event.clientY - pos.y) / h) * 2 + 1
         this.raycaster.setFromCamera(this.mouse, this.camera)
         const intersects = this.raycaster.intersectObjects(this.scene.children)
@@ -405,32 +540,36 @@ export class SceneView extends DOMWidgetView {
             // currently hovered over object.
             // fall back to banner based on selected
             if (!intersects.length) {
-                this.displaySelected()
+                this.writeFromSelected()
                 return
             }
             const obj = intersects[0].object
             // no name no banner
             if (!obj.name) { return }
-            this.writeBanner(obj.name)
+            this.writeHud(obj.name)
         }
     }
 
-
     finalizeInteractive(): void {
-        const that = this
+        /* """
+        finalizeInteractive
+        --------------------
+        Adds mouse interactivity event listeners
+
+        */
         this.el.addEventListener(
             'mousemove',
             ((event: MouseEvent): void => {
-                that.handleMouseEvent(event, 'mousemove')
+                this.handleMouseEvent(event, 'mousemove')
             }),
-            false
+            false,
         )
         this.el.addEventListener(
             'mouseup',
             ((event: MouseEvent): void => {
-                that.handleMouseEvent(event, 'mouseup')
+                this.handleMouseEvent(event, 'mouseup')
             }),
-            false
+            false,
         )
     }
 }

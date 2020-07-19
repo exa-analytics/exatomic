@@ -16,6 +16,13 @@ H 0.0 0.0 -0.35
 H 0.0 0.0  0.35
 '''
 
+class TestExhibitionWidget(TestCase):
+
+    def test_exhibition_widget(self):
+        import exatomic
+        w = exatomic.widgets.exhibition_widget()
+        assert len(w.scenes) == 3
+
 class TestDemoContainer(TestCase):
     def setUp(self):
         self.box = DemoContainer()
