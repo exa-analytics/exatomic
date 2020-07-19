@@ -232,6 +232,12 @@ export class SceneView extends DOMWidgetView {
     }
 
     initListeners(): void {
+        /* """
+        initListeners
+        ---------------
+        Register listeners to changes on model
+
+        */
         this.listenTo(this.model, 'change:flag', this.updateFlag)
     }
 
@@ -391,8 +397,7 @@ export class SceneView extends DOMWidgetView {
         objects are hovered.
 
         */
-
-        // TODO: what to do when given things are selected
+        this.hudsprite.position.set(1000, 1000, 1000)
         if (this.selected.length === 2) {
             const obj0 = this.selected[0]
             const obj1 = this.selected[1]
@@ -480,7 +485,7 @@ export class SceneView extends DOMWidgetView {
 
         const width = this.el.offsetWidth
         const height = this.el.offsetHeight
-        this.hudsprite.position.set(-width / 2, -height / 2 + this.hudfontsize, 0)
+        this.hudsprite.position.set(-width / 2, -height / 2 + this.hudfontsize - pad / 4, 0)
         this.hudsprite.material.needsUpdate = true
         this.hudtexture.needsUpdate = true
     }
@@ -521,7 +526,7 @@ export class SceneView extends DOMWidgetView {
 
         There are two distinct interactions with the three.js
         scene, hover-over and selection. The hover-over displays
-        information about the object (if provided) and the
+        information about the object (if available) and the
         selection allows to select multiple items and compute
         values related to collections of objects in the scene.
         */
@@ -536,17 +541,14 @@ export class SceneView extends DOMWidgetView {
         if (kind === 'mouseup') {
             this.updateSelected(intersects)
         } else if (kind === 'mousemove') {
-            // update the hudscene with the label for the
-            // currently hovered over object.
-            // fall back to banner based on selected
             if (!intersects.length) {
                 this.writeFromSelected()
                 return
             }
-            const obj = intersects[0].object
+            const { name } = intersects[0].object
             // no name no banner
-            if (!obj.name) { return }
-            this.writeHud(obj.name)
+            if (!name) { return }
+            this.writeHud(name)
         }
     }
 
