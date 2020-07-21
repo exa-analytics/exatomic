@@ -96,4 +96,7 @@ after_success:
           anaconda login --username ${anaconda_username} --password ${anaconda_password};
           anaconda upload --no-progress ${HOME}/miniconda/envs/test/conda-bld/linux-64/exatomic-${ver}-${pyver}_0.tar.bz2;
           for i in $(ls -d dist1/*/); do echo "${i}exatomic-${ver}-${pyver}_0.tar.bz2"; anaconda upload --no-progress ${i}exatomic-${ver}-${pyver}_0.tar.bz2; done;
+          conda install -q -c conda-forge nodejs;
+          echo "//registry.npmjs.org/:_authToken=\${NPM_TOKEN}" > ${HOME}/.npmrc;
+          cd js && npm publish
       fi
