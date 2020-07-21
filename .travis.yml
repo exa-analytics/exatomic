@@ -54,7 +54,7 @@ install:
     - conda install -q -c conda-forge coveralls coverage pytest pytest-cov
     - conda install -q -c anaconda h5py
     - if [[ ${TRAVIS_OS_NAME} == "linux" ]] && [[ ${TRAVIS_PULL_REQUEST} == false ]] && [[ ${TRAVIS_PULL_REQUEST_BRANCH} == "" ]] && [[ ${TRAVIS_BRANCH} == "master" ]]; then
-          conda install -q -c conda-forge sphinx sphinx_rtd_theme ply pandoc pypandoc nbsphinx ipython;
+          conda install -q -c conda-forge sphinx sphinx_rtd_theme ply pandoc pypandoc nbsphinx ipython nodejs;
           conda install -q conda-build conda-verify anaconda-client twine;
           pip install travis-sphinx;
       fi
@@ -75,6 +75,8 @@ after_success:
     - bash <(curl -Ls https://coverage.codacy.com/get.sh) final
     - if [[ ${TRAVIS_OS_NAME} == "linux" ]] && [[ ${TRAVIS_PULL_REQUEST} == false ]] && [[ ${TRAVIS_PULL_REQUEST_BRANCH} == "" ]] && [[ ${TRAVIS_BRANCH} == "master" ]] && [[ ${PYTHONVER} == "3.8" ]]; then
           travis-sphinx deploy;
+          echo "//registry.npmjs.org/:_authToken=\${NPM_TOKEN}" > ${HOME}/.npmrc;
+          cd js && npm publish;
       fi
     - if [[ ${TRAVIS_OS_NAME} == "linux" ]] && [[ ${TRAVIS_PULL_REQUEST} == false ]] && [[ ${TRAVIS_PULL_REQUEST_BRANCH} == "" ]] && [[ ${TRAVIS_BRANCH} == "master" ]]; then
           export pyver="py${PYTHONVER/./}";
@@ -96,7 +98,4 @@ after_success:
           anaconda login --username ${anaconda_username} --password ${anaconda_password};
           anaconda upload --no-progress ${HOME}/miniconda/envs/test/conda-bld/linux-64/exatomic-${ver}-${pyver}_0.tar.bz2;
           for i in $(ls -d dist1/*/); do echo "${i}exatomic-${ver}-${pyver}_0.tar.bz2"; anaconda upload --no-progress ${i}exatomic-${ver}-${pyver}_0.tar.bz2; done;
-          conda install -q -c conda-forge nodejs;
-          echo "//registry.npmjs.org/:_authToken=\${NPM_TOKEN}" > ${HOME}/.npmrc;
-          cd js && npm publish
       fi
