@@ -76,7 +76,7 @@ after_success:
     - if [[ ${TRAVIS_OS_NAME} == "linux" ]] && [[ ${TRAVIS_PULL_REQUEST} == false ]] && [[ ${TRAVIS_PULL_REQUEST_BRANCH} == "" ]] && [[ ${TRAVIS_BRANCH} == "master" ]] && [[ ${PYTHONVER} == "3.8" ]]; then
           travis-sphinx deploy;
           echo "//registry.npmjs.org/:_authToken=\${NPM_TOKEN}" > ${HOME}/.npmrc;
-          cd js && npm publish;
+          cd js; npm publish; cd ..
       fi
     - if [[ ${TRAVIS_OS_NAME} == "linux" ]] && [[ ${TRAVIS_PULL_REQUEST} == false ]] && [[ ${TRAVIS_PULL_REQUEST_BRANCH} == "" ]] && [[ ${TRAVIS_BRANCH} == "master" ]]; then
           export pyver="py${PYTHONVER/./}";
