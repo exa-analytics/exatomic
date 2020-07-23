@@ -43,6 +43,8 @@ interface Meshes {
     two: three.Mesh[],
 }
 
+// TODO : app interface to SceneView?
+
 export class SceneView extends DOMWidgetView {
     scene: three.Scene
 
@@ -70,6 +72,8 @@ export class SceneView extends DOMWidgetView {
 
     hudfontsize: number
 
+    hudcanvasdim: number
+
     promises: Promise<any>
 
     selected: three.Mesh[]
@@ -90,11 +94,8 @@ export class SceneView extends DOMWidgetView {
             two: [],
         }
         this.hudfontsize = 28
+        this.hudcanvasdim = 1024
         this.promises = this.init()
-        this.displayed.then(() => {
-            this.setCameraFromScene()
-            this.setLightsFromScene()
-        })
     }
 
     init(): Promise<any> {
@@ -102,137 +103,121 @@ export class SceneView extends DOMWidgetView {
         init
         ---------------
         Promise it will work
+
         */
-        window.addEventListener('resize', this.resize.bind(this))
-        return Promise.all([
-            this.initScene(),
-            this.initRenderer(),
-            this.initHud(),
-        // ]).then(() => {
-        //     this.initControls()
-        ]).then(() => {
+        return this.initRenderer().then(() => {
+            this.initControls()
+            this.initScene()
             this.initObj()
+            this.initHud()
             this.finalizeHudcanvas()
             this.finalizeInteractive()
+            this.setCameraFromScene()
         })
     }
 
-    initScene(): any {
+    initScene(): void {
         /* """
         initScene
         ---------------
-        An opinionated three.js Scene
+        A prepped three.js scene containing an ambient light,
+        a directional light, and a spot light for shadow creation.
+
         */
-        const scene = new three.Scene()
-        const ambLight = new three.AmbientLight(0xdddddd, 0.5)
-        const dirLight = new three.DirectionalLight(0xdddddd, 0.3)
-        const sunLight = new three.SpotLight(0xdddddd, 0.3, 0, Math.PI / 2)
+        const faraway = 1000
+        const smallnum = 0.3
+        const offwhite = 0xdddddd
+
+        this.scene = new three.Scene()
+        const ambLight = new three.AmbientLight(offwhite, smallnum)
+        const dirLight = new three.DirectionalLight(offwhite, smallnum)
+        const sunLight = new three.SpotLight(offwhite, smallnum, 0, Math.PI / 2)
         const shadowcam = new three.PerspectiveCamera(30, 1, 1500, 5000)
-        dirLight.position.set(-1000, -1000, -1000)
-        sunLight.position.set(1000, 1000, 1000)
+
+        dirLight.position.set(-faraway, -faraway, -faraway)
+        sunLight.position.set(faraway, faraway, faraway)
         sunLight.castShadow = true
         sunLight.shadow = new three.SpotLightShadow(shadowcam)
         sunLight.shadow.bias = 0.0
+
         this.meshes.scene.push(ambLight)
         this.meshes.scene.push(dirLight)
         this.meshes.scene.push(sunLight)
-        scene.add(ambLight)
-        scene.add(dirLight)
-        scene.add(sunLight)
-        return Promise.resolve(scene).then((scn) => {
-            this.scene = scn
-        })
+        this.scene.add(ambLight)
+        this.scene.add(dirLight)
+        this.scene.add(sunLight)
     }
 
-    initRenderer(): any {
+    initRenderer(): Promise<any> {
         /* """
         initRenderer
         ---------------
-        A WebGLRenderer, PerspectiveCamera and
-        TrackBallControls object.
+        Creates a WebGLRenderer and PerspectiveCamera.
+
         */
-        const fov = 5       // camera frustum vertical field of view
-        const near = 1      // camera frustum near plane
-        const far = 100000  // camera frustum far plane
-        const aspect = this.model.get('width') / this.model.get('height')
+        const fov = 5 // frustum vertical field of view
+        const near = 1 // frustum near plane
+        const far = 100000 // frustum far plane
+        const aspect = 1 // aspect ratio
 
-        const renderer = Promise.resolve(
-            new three.WebGLRenderer({
-                antialias: true,
-                alpha: true,
-            })
-        )
-        const camera = Promise.resolve(
-            new three.PerspectiveCamera(fov, aspect, near, far)
-        )
-
-        return Promise.all([renderer, camera]).then(([renderer, camera]) => {
-            this.renderer = renderer
+        const renderer = Promise.resolve(new three.WebGLRenderer({
+            antialias: true,
+            alpha: true,
+        }))
+        return renderer.then((ren) => {
+            this.renderer = ren
             this.renderer.autoClear = false
             this.renderer.shadowMap.enabled = true
             this.renderer.shadowMap.type = three.PCFSoftShadowMap
             this.el.appendChild(this.renderer.domElement)
-            this.camera = camera
-        }).then(() => {
-            this.initControls()
+            this.camera = new three.PerspectiveCamera(fov, aspect, near, far)
         })
     }
 
-    initControls(): any {
+    initControls(): void {
         /* """
         initControls
         ---------------
-        A TrackBallControls object
+        Provides mouse input control over the camera in
+        the scene by use of a TrackBallControls object.
+
         */
-        if (this.renderer !== null) {
-            return Promise.resolve(new TrackBallControls(
-                this.camera, this.renderer.domElement,
-            )).then((controls) => {
-                this.controls = controls
-                this.controls.rotateSpeed = 10.0
-                this.controls.zoomSpeed = 5.0
-                this.controls.panSpeed = 0.5
-                this.controls.noZoom = false
-                this.controls.noPan = false
-                this.controls.staticMoving = true
-                this.controls.dynamicDampingFactor = 0.3
-                this.controls.keys = [65, 83, 68]
-                this.controls.target = new three.Vector3(0.0, 0.0, 0.0)
-                this.controls.addEventListener('change', this.render.bind(this))
-            })
-        }
+        if (this.renderer === null) { return }
+        this.controls = new TrackBallControls(this.camera, this.renderer.domElement)
+        this.controls.rotateSpeed = 10.0
+        this.controls.zoomSpeed = 5.0
+        this.controls.panSpeed = 0.5
+        this.controls.noZoom = false
+        this.controls.noPan = false
+        this.controls.staticMoving = true
+        this.controls.dynamicDampingFactor = 0.3
+        this.controls.keys = [65, 83, 68]
+        this.controls.target = new three.Vector3(0.0, 0.0, 0.0)
+        this.controls.addEventListener('change', this.render.bind(this))
     }
 
-    initHud(): any {
+    initHud(): void {
         /* """
         initHud
         ---------------
         Everything needed to interact with the scene.
         A Raycaster, HUD Scene and OrthographicCamera,
         a mouse and an HTMLCanvas.
+
         */
-        const raycaster = Promise.resolve(new three.Raycaster())
-        const hudscene = Promise.resolve(new three.Scene())
-        const mouse = Promise.resolve(new three.Vector2())
-        const hudcamera = Promise.resolve(new three.OrthographicCamera(
-            -this.model.get('width') / 2, this.model.get('width') / 2,
-            this.model.get('height') / 2, -this.model.get('height') / 2,
-            1, 10,
-        ))
-        const hudcanvas = Promise.resolve(
-            <HTMLCanvasElement> document.createElement('canvas')
+        const w = 200
+        const h = 200
+        this.raycaster = new three.Raycaster()
+        this.hudscene = new three.Scene()
+        this.mouse = new three.Vector2()
+        this.hudcamera = new three.OrthographicCamera(
+            -w / 2, w / 2, h / 2, -h / 2, 1, 10,
         )
-        return Promise.all([raycaster, hudscene, mouse, hudcamera, hudcanvas]).then(
-                ([raycaster, hudscene, mouse, hudcamera, hudcanvas]) => {
-            this.raycaster = raycaster
-            this.hudscene = hudscene
-            this.mouse = mouse
-            this.hudcamera = hudcamera
-            this.hudcamera.position.z = 10
-            this.hudcanvas = hudcanvas
-            this.hudcanvas.width = 1024
-            this.hudcanvas.height = 1024
-        })
+        this.hudcamera.position.z = 10
+
+        this.hudcanvas = document.createElement('canvas')
+        this.hudcanvas.width = this.hudcanvasdim
+        this.hudcanvas.height = this.hudcanvasdim
     }
 
     initObj(): void {
@@ -249,15 +234,15 @@ export class SceneView extends DOMWidgetView {
             wireframe: true,
         })
         const mesh0 = new three.Mesh(geom, mat0)
-        mesh0.position.set(0, 0, -20)
-        mesh0.name = 'Icosahedron 0 Extra Long Name Probably a Problem And More Long Extra Description'
+        mesh0.position.set(0, 0, -5)
+        mesh0.name = 'Icosahedron 0 extra long label that will get cut off eventually around this location'
 
         const mat1 = new three.MeshBasicMaterial({
             color: 0xFF0000,
             wireframe: true,
         })
         const mesh1 = new three.Mesh(geom, mat1)
-        mesh1.position.set(0, 0, 20)
+        mesh1.position.set(0, 0, 5)
         mesh1.name = 'Icosahedron 1'
         this.scene.add(mesh0)
         this.scene.add(mesh1)
@@ -284,16 +269,17 @@ export class SceneView extends DOMWidgetView {
         */
         if (this.renderer === null) { return }
         this.hudcontext = this.hudcanvas.getContext('2d')
-        if (this.hudcontext !== null) {
-            this.hudcontext.textAlign = 'left'
-            this.hudcontext.textBaseline = 'bottom'
-            this.hudcontext.font = `${this.hudfontsize}px Arial`
-        }
+        if (this.hudcontext === null) { return }
+        this.hudcontext.textAlign = 'left'
+        this.hudcontext.textBaseline = 'bottom'
+        this.hudcontext.font = `${this.hudfontsize}px Arial`
+
         this.hudtexture = new three.Texture(this.hudcanvas)
         this.hudtexture.anisotropy = this.renderer.capabilities.getMaxAnisotropy()
         this.hudtexture.minFilter = three.NearestMipMapLinearFilter
         this.hudtexture.magFilter = three.NearestFilter
         this.hudtexture.needsUpdate = true
+
         const material = new three.SpriteMaterial({ map: this.hudtexture })
         this.hudsprite = new three.Sprite(material)
         this.hudsprite.position.set(1000, 1000, 1000)
@@ -303,6 +289,13 @@ export class SceneView extends DOMWidgetView {
     }
 
     updateFlag(): void {
+        /* """
+        updateFlag
+        -----------
+        Fired when widget.flag = not widget.flag in the
+        notebook. A debugging convenience.
+
+        */
         this.resize()
     }
 
@@ -351,15 +344,14 @@ export class SceneView extends DOMWidgetView {
         and hudscene.
 
         */
-        if (this.renderer !== null) {
-            // TODO : there must be a way to not call resize
-            this.resize()
-            this.controls.update()
-            this.renderer.clear()
-            this.renderer.render(this.scene, this.camera)
-            this.renderer.clearDepth()
-            this.renderer.render(this.hudscene, this.hudcamera)
-        }
+        if (this.renderer === null) { return }
+        // TODO : there must be a way to not call resize
+        this.resize()
+        this.controls.update()
+        this.renderer.clear()
+        this.renderer.render(this.scene, this.camera)
+        this.renderer.clearDepth()
+        this.renderer.render(this.hudscene, this.hudcamera)
     }
 
     animate(): void {
@@ -369,30 +361,8 @@ export class SceneView extends DOMWidgetView {
         Turn on the animation loop.
 
         */
-        if (this.renderer !== null) {
-            this.renderer.setAnimationLoop(this.paint.bind(this))
-        }
-    }
-
-    setLightsFromScene(): void {
-        /* """
-        setCameraFromScene
-        --------------------
-        Find the outer-most edges of the scene and ensure the
-        directional lights for the scene are far away from the
-        contents of the scene.
-        */
-        const dirLight = this.meshes.scene[1]
-        const sunLight = this.meshes.scene[2]
-        const bbox = new three.Box3().setFromObject(this.scene)
-        const { min } = bbox
-        const { max } = bbox
-        let mi = Math.min(min.x, Math.min(min.y, min.z))
-        let ma = Math.max(max.x, Math.max(max.y, max.z))
-        mi = Math.min(-1000, 2 * mi)
-        ma = Math.max(1000, 2 * ma)
-        dirLight.position.set(mi, mi, mi)
-        sunLight.position.set(ma, ma, ma)
+        if (this.renderer === null) { return }
+        this.renderer.setAnimationLoop(this.paint.bind(this))
     }
 
     setCameraFromScene(): void {
@@ -401,40 +371,48 @@ export class SceneView extends DOMWidgetView {
         --------------------
         Find the "center-of-objects" of the scene and point the
         camera towards it from a reasonable distance away from
-        all the objects in the scene.
+        all the objects in the scene. Also adjusts scene lighting
+        to fit the scene.
 
         */
+        const [, dirLight, sunLight] = this.meshes.scene
         const bbox = new three.Box3().setFromObject(this.scene)
-        const { min } = bbox
-        const { max } = bbox
+        const { min, max } = bbox
         const ox = (max.x + min.x) / 2
         const oy = (max.y + min.y) / 2
         const oz = (max.z + min.z) / 2
-        const px = Math.max(2 * max.x, 30)
-        const py = Math.max(2 * max.y, 30)
-        const pz = Math.max(2 * max.z, 30)
-        this.camera.position.set(px, py, pz)
+        const px = Math.max(2 * max.x, 60)
+        const py = Math.max(2 * max.y, 60)
+        const pz = Math.max(2 * max.z, 60)
+        const far = Math.max(px, Math.max(py, pz))
+        this.camera.position.set(far, far, far)
         this.controls.target.setX(ox)
         this.controls.target.setY(oy)
         this.controls.target.setZ(oz)
-        console.log(`camera at (${px}, ${py}, ${pz}) looking at (${ox}, ${oy}, ${oz})`)
         this.camera.lookAt(this.controls.target)
+        let mi = Math.min(min.x, Math.min(min.y, min.z))
+        let ma = Math.max(max.x, Math.max(max.y, max.z))
+        mi = Math.min(-1000, 2 * mi)
+        ma = Math.max(1000, 2 * ma)
+        dirLight.position.set(mi, mi, mi)
+        sunLight.position.set(ma, ma, ma)
     }
 
     close(): void {
         /* """
         close
         -----------
-        Garbage collect everything on this.
+        Garbage collect all three.js objects when widget
+        is closed.
 
         */
-        if (this.renderer !== null) {
-            // console.log('Disposing exatomic THREE objects.')
-            this.renderer.forceContextLoss()
-            this.renderer.dispose()
-            this.renderer.setAnimationLoop(null)
-            this.renderer = null
-        }
+        if (this.renderer === null) { return }
+        // TODO: clear meshes
+        //       and all top level attrs
+        this.renderer.forceContextLoss()
+        this.renderer.dispose()
+        this.renderer.setAnimationLoop(null)
+        this.renderer = null
     }
 
     writeFromSelected(): void {
@@ -496,7 +474,7 @@ export class SceneView extends DOMWidgetView {
         The sprite is rendered in a hudscene using an orthographic
         camera. Since we only write one line of text into an otherwise
         square hudcanvas, the center of the sprite and the center of
-        the painted text are nowhere near each other.
+        the drawn text are nowhere near each other.
 
         Reassign the center of the sprite to be the top left corner
         of the hudcontext using the following coordinate system:
@@ -570,6 +548,26 @@ export class SceneView extends DOMWidgetView {
         }
     }
 
+    updateHovered(intersects: any[]): void {
+        /* """
+        updateHovered
+        --------------
+        Update the HUD based on the current hover-over
+        logic. If hovering an object with label information,
+        display it. Otherwise fall back to selected
+        objects.
+        */
+        if (!intersects.length) {
+            this.writeFromSelected()
+            return
+        }
+        const { name } = intersects[0].object
+        // no name no banner
+        // TODO: a default "repr"?
+        if (!name) { return }
+        this.writeHud(name)
+    }
+
     handleMouseEvent(event: MouseEvent, kind: string): void {
         /* """
         handleMouseEvent
@@ -592,17 +590,10 @@ export class SceneView extends DOMWidgetView {
         this.mouse.y = -((event.clientY - pos.y) / h) * 2 + 1
         this.raycaster.setFromCamera(this.mouse, this.camera)
         const intersects = this.raycaster.intersectObjects(this.scene.children)
-        if (kind === 'mouseup') {
+        if (kind === 'mousemove') {
+            this.updateHovered(intersects)
+        } else if (kind === 'mouseup') {
             this.updateSelected(intersects)
-        } else if (kind === 'mousemove') {
-            if (!intersects.length) {
-                this.writeFromSelected()
-                return
-            }
-            const { name } = intersects[0].object
-            // no name no banner
-            if (!name) { return }
-            this.writeHud(name)
         }
     }
 
@@ -614,15 +605,13 @@ export class SceneView extends DOMWidgetView {
 
         */
         this.el.addEventListener(
-            'mousemove',
-            ((event: MouseEvent): void => {
+            'mousemove', ((event: MouseEvent): void => {
                 this.handleMouseEvent(event, 'mousemove')
             }),
             false,
         )
         this.el.addEventListener(
-            'mouseup',
-            ((event: MouseEvent): void => {
+            'mouseup', ((event: MouseEvent): void => {
                 this.handleMouseEvent(event, 'mouseup')
             }),
             false,
