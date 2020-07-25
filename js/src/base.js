@@ -8,9 +8,6 @@ JavaScript "frontend" complement of exatomic"s Universe
 for use within the Jupyter notebook interface.
 */
 
-// eslint-disable-next-line
-import * as util from './util'
-
 const widgets = require('@jupyter-widgets/base')
 const control = require('@jupyter-widgets/controls')
 const three = require('./appthree')
@@ -20,8 +17,6 @@ const ver = require('../package.json').version
 const semver = `^${ver}`
 // eslint-disable-next-line no-console
 console.log(`exatomic JS version: ${semver}`)
-// eslint-disable-next-line no-console
-console.log('typescript module', util)
 
 export class ExatomicBoxModel extends control.BoxModel {
     defaults() {
