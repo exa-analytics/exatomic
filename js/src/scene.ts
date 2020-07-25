@@ -21,14 +21,14 @@ export class SceneModel extends DOMWidgetModel {
     defaults(): any {
         return {
             ...super.defaults(),
-            // eslint-disable
+            // eslint-disable naming-convention
             _model_name: 'SceneModel',
             _view_name: 'SceneView',
             _model_module_version: semver,
             _view_module_version: semver,
             _model_module: 'exatomic',
             _view_module: 'exatomic',
-            // eslint-enable
+            // eslint-enable naming-convention
             width: 200,
             height: 200,
         }
@@ -106,10 +106,6 @@ export class SceneView extends DOMWidgetView {
         this.promises = this.init()
     }
 
-    inited(): void {
-        this.send({ type: 'init' })
-    }
-
     init(): Promise<any> {
         /* """
         init
@@ -125,7 +121,7 @@ export class SceneView extends DOMWidgetView {
             this.finalizeHudcanvas()
             this.finalizeInteractive()
             this.setCameraFromScene()
-            this.inited()
+            this.send({ type: 'init' })
         })
     }
 

@@ -29,16 +29,6 @@ from selenium.webdriver.support.wait import WebDriverWait
 
 from selenium.webdriver.chrome.options import Options
 
-options = Options()
-
-options.binary_location = os.getenv('BROWSER')
-options.add_argument('--no-sandbox')
-options.add_argument('--disable-extensions')
-options.add_argument('--disable-dev-shm-usage')
-
-token = os.getenv('NOTEBOOK_TOKEN')
-notebook = f'http://localhost:8888/?token={token}'
-
 
 def click_by_css(driver, wait, css):
     wait.until(
@@ -48,55 +38,77 @@ def click_by_css(driver, wait, css):
     obj.click()
 
 
-with webdriver.Chrome(options=options) as driver:
-    wait = WebDriverWait(driver, 10)
-    browser = driver.get(notebook)
+def run_notebook_widget():
+    options = Options()
 
-    # click on new notebook dropdown
-    click_by_css(driver, wait, '#new-dropdown-button')
-    # primary notebook server window
-    initial_handles = driver.window_handles
-    # spawns new notebook
-    click_by_css(driver, wait, '#kernel-python3 > a')
+    options.binary_location = os.getenv('BROWSER')
+    options.add_argument('--no-sandbox')
+    options.add_argument('--disable-extensions')
+    options.add_argument('--disable-dev-shm-usage')
 
-    # wait for new notebook
-    wait.until(
-        lambda driver: len(initial_handles) != len(driver.window_handles)
-    )
-    # switch to new notebook
-    driver.switch_to.window(driver.window_handles[1])
+    token = os.getenv('NOTEBOOK_TOKEN')
+    notebook = f'http://localhost:8888/?token={token}'
 
-    # select the first input cell
-    cell = '#notebook-container > div > div.input > div.inner_cell > div.input_area'
-    click_by_css(driver, wait, cell)
+    with webdriver.Chrome(options=options) as driver:
+        wait = WebDriverWait(driver, 10)
+        browser = driver.get(notebook)
 
-    # input some text
-    run = 'import exatomic; exatomic.widgets.widget_base.Scene()'
-    ActionChains(driver).send_keys(run).perform()
-    [cell] = driver.find_elements_by_css_selector(cell)
+        # click on new notebook dropdown
+        click_by_css(driver, wait, '#new-dropdown-button')
+        # primary notebook server window
+        initial_handles = driver.window_handles
+        # spawns new notebook
+        click_by_css(driver, wait, '#kernel-python3 > a')
 
-    # execute the cell
-    (ActionChains(driver).key_down(Keys.SHIFT).key_down(Keys.ENTER)
-                         .key_up(Keys.SHIFT).key_up(Keys.ENTER).perform())
-    print('should show widget now')
+        # wait for new notebook
+        wait.until(
+            lambda driver: len(initial_handles) != len(driver.window_handles)
+        )
+        # switch to new notebook
+        driver.switch_to.window(driver.window_handles[1])
 
-    # the rendered canvas
-    scene = ('#notebook-container > div.cell.code_cell.rendered.unselected > div.output_wrapper '
-             '> div.output > div > div.output_subarea.jupyter-widgets-view > div > canvas')
-    click_by_css(driver, wait, scene)
+        # select the first input cell
+        cell = '#notebook-container > div > div.input > div.inner_cell > div.input_area'
+        click_by_css(driver, wait, cell)
 
-    print('interacted with scene')
+        # input some text
+        run = 'import exatomic; exatomic.widgets.widget_base.Scene()'
+        ActionChains(driver).send_keys(run).perform()
+        [cell] = driver.find_elements_by_css_selector(cell)
 
-    # try to shut it down
-    menu = '#filelink'
-    click_by_css(driver, wait, menu)
-    print('clicked on file menu button')
+        # execute the cell
+        (ActionChains(driver).key_down(Keys.SHIFT).key_down(Keys.ENTER)
+                             .key_up(Keys.SHIFT).key_up(Keys.ENTER).perform())
+        print('should show widget now')
 
-    close = '#close_and_halt > a'
-    click_by_css(driver, wait, menu)
-    print('clicked on close and halt')
+        # the rendered canvas
+        scene = ('#notebook-container > div.cell.code_cell.rendered.unselected > div.output_wrapper '
+                 '> div.output > div > div.output_subarea.jupyter-widgets-view > div > canvas')
+        click_by_css(driver, wait, scene)
 
-    # may trigger "Leave without saving? alert"
-    wait.until(EC.alert_is_present())
-    driver.switch_to.alert.accept()
-    print("why it not close?!")
+        print('interacted with scene')
+
+        # try to shut it down
+        menu = '#filelink'
+        click_by_css(driver, wait, menu)
+        print('clicked on file menu button')
+
+        close = '#close_and_halt > a'
+        click_by_css(driver, wait, menu)
+        print('clicked on close and halt')
+
+        # may trigger "Leave without saving? alert"
+        wait.until(EC.alert_is_present())
+        driver.switch_to.alert.accept()
+        print("why it not close?!")
+
+
+if __name__ == '__main__':
+    print("""\
+Assumes the following environment:
+
+    export BROWSER=/path/to/chrome/executable
+    export NOTEBOOK_TOKEN=notebook_token_hash
+
+    pip install selenium""")
+    run_notebook_widget()
