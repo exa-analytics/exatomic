@@ -18,7 +18,7 @@ CHROME_WINDOWS_MAJOR_VER=84
 CHROME_SUFFIX="_${CHROME_WINDOWS_MAJOR_VER}"
 
 
-CHROME_DRIVER_VERSION=`curl -sS https://chromedriver.storage.googleapis.com/LATEST_RELEASE${CHROME_SUFFIX}`
+CHROME_DRIVER_VERSION=$(curl -sS https://chromedriver.storage.googleapis.com/LATEST_RELEASE${CHROME_SUFFIX})
 CHROME_DRIVER_ARTIFACT=chromedriver_linux64.zip
 CHROME_DRIVER_DEST=/usr/local/bin/chromedriver
 

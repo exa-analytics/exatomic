@@ -9,10 +9,10 @@ A 3D scene for exatomic
 */
 
 import { DOMWidgetModel, DOMWidgetView } from '@jupyter-widgets/base'
+import { version } from '../package.json'
 
 import * as three from 'three'
 import * as TrackBallControls from 'three-trackballcontrols'
-import { version } from '../package.json'
 import * as util from './util'
 
 const semver = `^${version}`
@@ -21,12 +21,14 @@ export class SceneModel extends DOMWidgetModel {
     defaults(): any {
         return {
             ...super.defaults(),
+            // eslint-disable
             _model_name: 'SceneModel',
             _view_name: 'SceneView',
             _model_module_version: semver,
             _view_module_version: semver,
             _model_module: 'exatomic',
             _view_module: 'exatomic',
+            // eslint-enable
             width: 200,
             height: 200,
         }
@@ -34,13 +36,13 @@ export class SceneModel extends DOMWidgetModel {
 }
 
 interface Meshes {
-    scene: any[],
-    contour: three.Mesh[],
-    frame: three.Mesh[],
-    field: three.Mesh[],
-    atom: three.Mesh[],
-    test: three.Mesh[],
-    two: three.Mesh[],
+    scene: any[]
+    contour: three.Mesh[]
+    frame: three.Mesh[]
+    field: three.Mesh[]
+    atom: three.Mesh[]
+    test: three.Mesh[]
+    two: three.Mesh[]
 }
 
 // TODO : app interface to SceneView?
