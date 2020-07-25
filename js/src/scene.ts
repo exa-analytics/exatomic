@@ -9,10 +9,10 @@ A 3D scene for exatomic
 */
 
 import { DOMWidgetModel, DOMWidgetView } from '@jupyter-widgets/base'
-import { version } from '../package.json'
 
 import * as three from 'three'
 import * as TrackBallControls from 'three-trackballcontrols'
+import { version } from '../package.json'
 import * as util from './util'
 
 const semver = `^${version}`
@@ -105,7 +105,7 @@ export class SceneView extends DOMWidgetView {
     }
 
     inited(): void {
-        this.send({type: 'init'})
+        this.send({ type: 'init' })
     }
 
     init(): Promise<any> {
@@ -341,12 +341,12 @@ export class SceneView extends DOMWidgetView {
         if (Math.abs(oldw - w) > 0) {
             this.prevwidth = w
         }
-        if ((oldw != this.prevwidth) || (oldh != this.prevheight)) {
+        if ((oldw !== this.prevwidth) || (oldh !== this.prevheight)) {
             w = this.prevwidth
             h = this.prevheight
             // el is destructed before renderer
             // so also check for deleted dims
-            if ((w != 0) || (h != -fudge)) {
+            if ((w !== 0) || (h !== -fudge)) {
                 this.renderer.setSize(w, h)
                 this.camera.aspect = w / h
                 this.camera.updateProjectionMatrix()
@@ -400,15 +400,14 @@ export class SceneView extends DOMWidgetView {
         this.renderer.setAnimationLoop(this.paint.bind(this))
     }
 
-    handleCustomMsg(msg: any) {
+    handleCustomMsg(msg: any): void {
         /* """
         handleCustomMsg
         -----------------
         Route a message from the kernel.
 
         */
-        if (msg.type === 'close') { this.close() }
-        else { console.log('received msg', msg) }
+        if (msg.type === 'close') { this.close() } else { console.log('received msg', msg) }
     }
 
     setCameraFromScene(): void {
