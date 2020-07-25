@@ -9,10 +9,10 @@ A 3D scene for exatomic
 */
 
 import { DOMWidgetModel, DOMWidgetView } from '@jupyter-widgets/base'
+import { version } from '../package.json'
 
 import * as three from 'three'
 import * as TrackBallControls from 'three-trackballcontrols'
-import { version } from '../package.json'
 import * as util from './util'
 
 const semver = `^${version}`
@@ -70,6 +70,10 @@ export class SceneView extends DOMWidgetView {
 
     hudsprite: three.Sprite
 
+    prevheight: number
+
+    prevwidth: number
+
     hudfontsize: number
 
     hudcanvasdim: number
@@ -93,9 +97,15 @@ export class SceneView extends DOMWidgetView {
             test: [],
             two: [],
         }
+        this.prevwidth = 0
+        this.prevheight = 0
         this.hudfontsize = 28
         this.hudcanvasdim = 1024
         this.promises = this.init()
+    }
+
+    inited(): void {
+        this.send({type: 'init'})
     }
 
     init(): Promise<any> {
@@ -113,6 +123,7 @@ export class SceneView extends DOMWidgetView {
             this.finalizeHudcanvas()
             this.finalizeInteractive()
             this.setCameraFromScene()
+            this.inited()
         })
     }
 
@@ -127,12 +138,16 @@ export class SceneView extends DOMWidgetView {
         const faraway = 1000
         const smallnum = 0.3
         const offwhite = 0xdddddd
+        const fov = 30
+        const aspect = 1
+        const near = 1500
+        const far = 5000
 
         this.scene = new three.Scene()
         const ambLight = new three.AmbientLight(offwhite, smallnum)
         const dirLight = new three.DirectionalLight(offwhite, smallnum)
         const sunLight = new three.SpotLight(offwhite, smallnum, 0, Math.PI / 2)
-        const shadowcam = new three.PerspectiveCamera(30, 1, 1500, 5000)
+        const shadowcam = new three.PerspectiveCamera(fov, aspect, near, far)
 
         dirLight.position.set(-faraway, -faraway, -faraway)
         sunLight.position.set(faraway, faraway, faraway)
@@ -256,6 +271,7 @@ export class SceneView extends DOMWidgetView {
 
         */
         this.listenTo(this.model, 'change:flag', this.updateFlag)
+        this.listenTo(this.model, 'msg:custom', this.handleCustomMsg)
     }
 
     finalizeHudcanvas(): void {
@@ -305,24 +321,44 @@ export class SceneView extends DOMWidgetView {
         -----------
         Resizes the renderer and updates all cameras
         and controls to respect the new renderer size.
+        Attempts this lazily by detecting changes to the
+        element dimensions and only applying resize
+        logic when sufficiently resized. Changes in width
+        are approximated with a fudge factor to account for
+        slight differences between the canvas and the renderer
+        as well as rounding error when dealing with pixels.
 
         */
-        const w: number = this.el.offsetWidth || this.model.get('width')
-        let h: number = this.el.offsetHeight || this.model.get('height')
-        // hack canvas in el is 6 smaller than el
-        if (h === this.el.offsetHeight) { h -= 6 }
-        if (this.renderer !== null) {
-            this.renderer.setSize(w, h)
-            this.camera.aspect = w / h
-            this.camera.updateProjectionMatrix()
-            this.camera.updateMatrix()
-            this.hudcamera.left = -w / 2
-            this.hudcamera.right = w / 2
-            this.hudcamera.top = h / 2
-            this.hudcamera.bottom = -h / 2
-            this.hudcamera.updateProjectionMatrix()
-            this.hudcamera.updateMatrix()
-            this.controls.handleResize()
+        if (this.renderer === null) { return }
+        const fudge = 6
+        const oldw = this.prevwidth
+        const oldh = this.prevheight
+        let w = this.el.offsetWidth
+        let h = this.el.offsetHeight
+        if (Math.abs(oldh - h) >= fudge) {
+            this.prevheight = h - fudge
+        }
+        if (Math.abs(oldw - w) > 0) {
+            this.prevwidth = w
+        }
+        if ((oldw != this.prevwidth) || (oldh != this.prevheight)) {
+            w = this.prevwidth
+            h = this.prevheight
+            // el is destructed before renderer
+            // so also check for deleted dims
+            if ((w != 0) || (h != -fudge)) {
+                this.renderer.setSize(w, h)
+                this.camera.aspect = w / h
+                this.camera.updateProjectionMatrix()
+                this.camera.updateMatrix()
+                this.hudcamera.left = -w / 2
+                this.hudcamera.right = w / 2
+                this.hudcamera.top = h / 2
+                this.hudcamera.bottom = -h / 2
+                this.hudcamera.updateProjectionMatrix()
+                this.hudcamera.updateMatrix()
+                this.controls.handleResize()
+            }
         }
     }
 
@@ -345,7 +381,6 @@ export class SceneView extends DOMWidgetView {
 
         */
         if (this.renderer === null) { return }
-        // TODO : there must be a way to not call resize
         this.resize()
         this.controls.update()
         this.renderer.clear()
@@ -363,6 +398,17 @@ export class SceneView extends DOMWidgetView {
         */
         if (this.renderer === null) { return }
         this.renderer.setAnimationLoop(this.paint.bind(this))
+    }
+
+    handleCustomMsg(msg: any) {
+        /* """
+        handleCustomMsg
+        -----------------
+        Route a message from the kernel.
+
+        */
+        if (msg.type === 'close') { this.close() }
+        else { console.log('received msg', msg) }
     }
 
     setCameraFromScene(): void {
@@ -407,8 +453,10 @@ export class SceneView extends DOMWidgetView {
 
         */
         if (this.renderer === null) { return }
+        console.log('disposing contents of Scene')
         // TODO: clear meshes
         //       and all top level attrs
+        this.hudtexture.dispose()
         this.renderer.forceContextLoss()
         this.renderer.dispose()
         this.renderer.setAnimationLoop(null)
@@ -438,7 +486,7 @@ export class SceneView extends DOMWidgetView {
                 + (obj0.position.y - obj1.position.y) ** 2
                 + (obj0.position.z - obj1.position.z) ** 2,
             )
-            this.writeHud(`Distance ${dist} units`)
+            this.writeHud(`Distance between selected ${dist} units`)
         }
     }
 
@@ -496,7 +544,7 @@ export class SceneView extends DOMWidgetView {
         this.hudcontext.clearRect(0, 0, this.hudcanvas.width, this.hudcanvas.height)
 
         // frame the text
-        const pad = 8
+        const pad = 6
         const textWidth = this.hudcontext.measureText(banner).width
 
         // with a black border

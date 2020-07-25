@@ -33,7 +33,17 @@ class Scene(DOMWidget):
     _model_module = Unicode('exatomic').tag(sync=True)
     _model_name = Unicode('SceneModel').tag(sync=True)
     _view_name = Unicode('SceneView').tag(sync=True)
+    _inited = Bool(False).tag(sync=True)
     flag = Bool(True).tag(sync=True)
+
+
+    def close(self):
+        self.send({'type': 'close'})
+        super().close()
+
+    def _handle_custom_msg(self, msg, callback):
+        if msg['type'] == 'init':
+            self._inited = True
 
 
 @register
