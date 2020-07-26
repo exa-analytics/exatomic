@@ -43,7 +43,8 @@ install:
       fi;
       echo "DONE"
 
-    - export CHROME_DRIVER_VERSION=$(google-chrome-stable --version | cut -d ' ' -f 3)
+    - CHROME_MAJOR_VERSION=$(google-chrome-stable --version | cut -d ' ' -f 3 | cut -d '.' -f 1)
+    - CHROME_DRIVER_VERSION=$(curl -sS https://chromedriver.storage.googleapis.com/LATEST_RELEASE_${CHROME_MAJOR_VERSION})
     - export BROWSER=$(where google-chrome-stable)
     - wget -N https://chromedriver.storage.googleapis.com/${CHROME_DRIVER_VERSION}/chromedriver_linux64.zip -d ./
     - unzip ./chromedriver_linux64.zip -d ./

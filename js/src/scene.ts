@@ -9,10 +9,11 @@ A 3D scene for exatomic
 */
 
 import { DOMWidgetModel, DOMWidgetView } from '@jupyter-widgets/base'
-import { version } from '../package.json'
 
 import * as three from 'three'
 import * as TrackBallControls from 'three-trackballcontrols'
+import { version } from '../package.json'
+// eslint-disable-next-line
 import * as util from './util'
 
 const semver = `^${version}`
