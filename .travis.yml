@@ -36,11 +36,7 @@ addons:
     chrome: stable
 
 before_install:
-    - if [[ $TRAVIS_OS_NAME == "osx" ]]; then
-          /Applications/Google\\ Chrome.app/Contents/MacOS/Google\\ Chrome --headless --disable-gpu --no-sandbox --remote-debugging-port=9222 http://localhost &;
-      else
-          google-chrome-stable --headless --disable-gpu --no-sandbox --remote-debugging-port=9222 http://localhost &;
-      fi;
+    - google-chrome-stable --headless --disable-gpu --no-sandbox --remote-debugging-port=9222 http://localhost &;
 
 install:
     - if [[ $TRAVIS_OS_NAME == "osx" ]]; then
