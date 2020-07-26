@@ -4,7 +4,6 @@
 Assumes the following environment:
 
     export BROWSER=/path/to/chrome/executable
-    export NOTEBOOK_TOKEN=notebook_token_hash
 
     pip install selenium
 
@@ -18,16 +17,31 @@ Note:
 
 """
 import os
+import uuid
+import shutil
+from time import sleep
+import subprocess as sp
 
 from selenium import webdriver
-
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.common.action_chains import ActionChains
 from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.support.wait import WebDriverWait
-
 from selenium.webdriver.chrome.options import Options
+
+
+PORT = 8889
+TOKEN = str(uuid.uuid4())
+
+
+def start_notebook_server():
+    os.makedirs(TOKEN, exist_ok=True)
+    return sp.Popen(['jupyter', 'notebook',
+                     f'--NotebookApp.port={PORT}',
+                     f'--NotebookApp.token={TOKEN}'],
+                     stdout=sp.PIPE, stderr=sp.PIPE,
+                     cwd=TOKEN)
 
 
 def click_by_css(driver, wait, css):
@@ -46,12 +60,21 @@ def run_notebook_widget():
     options.add_argument('--disable-extensions')
     options.add_argument('--disable-dev-shm-usage')
 
-    token = os.getenv('NOTEBOOK_TOKEN')
-    notebook = f'http://localhost:8888/?token={token}'
+    capabilities = {
+        'browserName': 'chrome',
+        'chromeOptions': {
+            'useAutomationExtension': False,
+            'args': ['--disable-extensions'],
+        }
+    }
 
-    with webdriver.Chrome(options=options) as driver:
+    notebook = f'http://localhost:{PORT}/?token={TOKEN}'
+
+    with webdriver.Chrome(options=options, desired_capabilities=capabilities) as driver:
         wait = WebDriverWait(driver, 10)
-        browser = driver.get(notebook)
+        driver.get(notebook)
+        print("hack to get around failed to load extension window")
+        ActionChains(driver).key_down(Keys.ENTER).key_up(Keys.ENTER).perform()
 
         # click on new notebook dropdown
         click_by_css(driver, wait, '#new-dropdown-button')
@@ -81,26 +104,40 @@ def run_notebook_widget():
                              .key_up(Keys.SHIFT).key_up(Keys.ENTER).perform())
         print('should show widget now')
 
-        # the rendered canvas
+        # touch the rendered canvas
         scene = ('#notebook-container > div.cell.code_cell.rendered.unselected > div.output_wrapper '
                  '> div.output > div > div.output_subarea.jupyter-widgets-view > div > canvas')
         click_by_css(driver, wait, scene)
 
         print('interacted with scene')
 
-        # try to shut it down
+        # shut down the new notebook
         menu = '#filelink'
         click_by_css(driver, wait, menu)
         print('clicked on file menu button')
 
+        current_handles = driver.window_handles
         close = '#close_and_halt > a'
-        click_by_css(driver, wait, menu)
+        click_by_css(driver, wait, close)
         print('clicked on close and halt')
 
         # may trigger "Leave without saving? alert"
         wait.until(EC.alert_is_present())
         driver.switch_to.alert.accept()
-        print("why it not close?!")
+        print('caught alert about unsaved notebook')
+
+        # wait until second notebook window is closed
+        wait.until(
+            lambda driver: len(current_handles) != len(driver.window_handles)
+        )
+
+        # switch back to server home window
+        driver.switch_to.window(driver.window_handles[0])
+        shutdown = '#shutdown'
+        print('closing notebook server down from UI')
+        click_by_css(driver, wait, shutdown)
+        driver.close()
+        print('closed server home window')
 
 
 if __name__ == '__main__':
@@ -108,7 +145,17 @@ if __name__ == '__main__':
 Assumes the following environment:
 
     export BROWSER=/path/to/chrome/executable
-    export NOTEBOOK_TOKEN=notebook_token_hash
 
-    pip install selenium""")
-    run_notebook_widget()
+    pip install selenium
+    
+May get a "Failed to load extension" pop-up when
+starting chrome via selenium. By hitting enter,
+the test will continue and should run to completion.
+""")
+    server = start_notebook_server()
+    try:
+        sleep(0.2)
+        run_notebook_widget()
+    finally:
+        server.kill()
+        shutil.rmtree(TOKEN)
