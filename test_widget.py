@@ -15,6 +15,10 @@ Note:
     and continue the test. Not sure why disable-extensions
     does not suppress that pop-up.
 
+Note:
+    Runs in headless mode by default for the CI server.
+    Comment out options.headless = True and watch selenium
+    work. Good for debugging.
 """
 import os
 import shutil
@@ -57,7 +61,7 @@ def click_by_css(driver, wait, css):
 def run_notebook_widget():
     options = Options()
 
-    options.binary_location = os.getenv('BROWSER', 'usr/bin/google-chrome-stable')
+    options.binary_location = os.getenv('BROWSER', '/usr/bin/google-chrome-stable')
     options.headless = True
     options.add_argument('--no-sandbox')
     options.add_argument('--disable-gpu')
@@ -162,5 +166,8 @@ Assumes the following environment:
 May get a "Failed to load extension" pop-up when
 starting chrome via selenium. By hitting enter,
 the test will continue and should run to completion.
+
+Runs in headless mode by default. Turn headless off
+to watch the automation script run.
 """)
     main()
