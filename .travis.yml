@@ -34,6 +34,9 @@ matrix:
 
 addons:
     chrome: stable
+    apt:
+        packages:
+          - chromium-chromedriver
 
 install:
     - if [[ $TRAVIS_OS_NAME == "osx" ]]; then
@@ -42,16 +45,6 @@ install:
           wget https://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh -O miniconda.sh;
       fi;
       echo "DONE"
-
-    - CHROME_MAJOR_VERSION=$(google-chrome-stable --version | cut -d ' ' -f 3 | cut -d '.' -f 1)
-    - CHROME_DRIVER_VERSION=$(curl -sS https://chromedriver.storage.googleapis.com/LATEST_RELEASE_${CHROME_MAJOR_VERSION})
-    - export BROWSER=$(which google-chrome-stable)
-    - wget -N https://chromedriver.storage.googleapis.com/${CHROME_DRIVER_VERSION}/chromedriver_linux64.zip -d ~/
-    - unzip ~/chromedriver_linux64.zip -d ~/
-    - rm ~/chromedriver_linux64.zip
-    - sudo mv -f ~/chromedriver /usr/local/share/
-    - sudo chmod +x /usr/local/share/chromedriver
-    - sudo ln -s /usr/local/share/chromedriver /usr/local/bin/chromedriver
 
     - bash miniconda.sh -b -p $HOME/miniconda
     - export PATH="$HOME/miniconda/bin:$PATH"
