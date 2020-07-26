@@ -17,8 +17,8 @@ Note:
 
 """
 import os
-import uuid
 import shutil
+from uuid import uuid4
 from time import sleep
 import subprocess as sp
 
@@ -32,12 +32,14 @@ from selenium.webdriver.chrome.options import Options
 
 
 PORT = 8889
-TOKEN = str(uuid.uuid4())
+CONSOLE_PORT = 9222
+TOKEN = str(uuid4())
+TIMEOUT = 30
 
 
 def start_notebook_server():
     os.makedirs(TOKEN, exist_ok=True)
-    return sp.Popen(['jupyter', 'notebook',
+    return sp.Popen(['jupyter', 'notebook', '--no-browser',
                      f'--NotebookApp.port={PORT}',
                      f'--NotebookApp.token={TOKEN}'],
                      stdout=sp.PIPE, stderr=sp.PIPE,
@@ -55,26 +57,20 @@ def click_by_css(driver, wait, css):
 def run_notebook_widget():
     options = Options()
 
-    options.binary_location = os.getenv('BROWSER')
+    options.binary_location = os.getenv('BROWSER', 'usr/bin/google-chrome-stable')
+    options.headless = True
     options.add_argument('--no-sandbox')
+    options.add_argument('--disable-gpu')
     options.add_argument('--disable-extensions')
     options.add_argument('--disable-dev-shm-usage')
-
-    capabilities = {
-        'browserName': 'chrome',
-        'chromeOptions': {
-            'useAutomationExtension': False,
-            'args': ['--disable-extensions'],
-        }
-    }
+    options.add_argument(f'--remote-debugging-port={CONSOLE_PORT}')
 
     notebook = f'http://localhost:{PORT}/?token={TOKEN}'
+    print(notebook)
 
-    with webdriver.Chrome(options=options, desired_capabilities=capabilities) as driver:
-        wait = WebDriverWait(driver, 10)
+    with webdriver.Chrome(options=options) as driver:
+        wait = WebDriverWait(driver, TIMEOUT)
         driver.get(notebook)
-        print("hack to get around failed to load extension window")
-        ActionChains(driver).key_down(Keys.ENTER).key_up(Keys.ENTER).perform()
 
         # click on new notebook dropdown
         click_by_css(driver, wait, '#new-dropdown-button')
@@ -108,6 +104,8 @@ def run_notebook_widget():
         scene = ('#notebook-container > div.cell.code_cell.rendered.unselected > div.output_wrapper '
                  '> div.output > div > div.output_subarea.jupyter-widgets-view > div > canvas')
         click_by_css(driver, wait, scene)
+
+        driver.get_screenshot_as_file(f'{TOKEN}/widget.png')
 
         print('interacted with scene')
 

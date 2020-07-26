@@ -32,6 +32,16 @@ matrix:
           python: 3.8
           env: PYTHONVER=3.8
 
+addons:
+    chrome: stable
+
+before_install:
+    - if [[ $TRAVIS_OS_NAME == "osx" ]]; then
+          "/Applications/Google\\ Chrome.app/Contents/MacOS/Google\\ Chrome --headless --disable-gpu --no-sandbox --remote-debugging-port=9222 http://localhost &";
+      else
+          google-chrome-stable --headless --disable-gpu --no-sandbox --remote-debugging-port=9222 http://localhost &;
+      fi;
+
 install:
     - if [[ $TRAVIS_OS_NAME == "osx" ]]; then
           wget https://repo.continuum.io/miniconda/Miniconda3-latest-MacOSX-x86_64.sh -O miniconda.sh;
@@ -52,7 +62,7 @@ install:
     - conda install -q -c exaanalytics exa>=0.5.24
     - conda install -q -c conda-forge six>=1.0 numexpr>=2.0 ipywidgets>=7.0 bokeh scipy>=1.4
     - conda install -q -c conda-forge coveralls coverage pytest pytest-cov
-    - conda install -q -c anaconda h5py
+    - conda install -q -c anaconda h5py selenium
     - if [[ ${TRAVIS_OS_NAME} == "linux" ]] && [[ ${TRAVIS_PULL_REQUEST} == false ]] && [[ ${TRAVIS_PULL_REQUEST_BRANCH} == "" ]] && [[ ${TRAVIS_BRANCH} == "master" ]]; then
           conda install -q -c conda-forge sphinx sphinx_rtd_theme ply pandoc pypandoc nbsphinx ipython;
           conda install -q conda-build conda-verify anaconda-client twine;
