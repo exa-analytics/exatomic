@@ -138,6 +138,19 @@ def run_notebook_widget():
         print('closed server home window')
 
 
+def test_selenium():
+    main()
+
+def main():
+    server = start_notebook_server()
+    try:
+        sleep(0.2)
+        run_notebook_widget()
+    finally:
+        server.kill()
+    #    shutil.rmtree(TOKEN)
+
+
 if __name__ == '__main__':
     print("""\
 Assumes the following environment:
@@ -150,10 +163,4 @@ May get a "Failed to load extension" pop-up when
 starting chrome via selenium. By hitting enter,
 the test will continue and should run to completion.
 """)
-    server = start_notebook_server()
-    try:
-        sleep(0.2)
-        run_notebook_widget()
-    finally:
-        server.kill()
-        shutil.rmtree(TOKEN)
+    main()
