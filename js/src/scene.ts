@@ -21,14 +21,14 @@ export class SceneModel extends DOMWidgetModel {
     defaults(): any {
         return {
             ...super.defaults(),
-            // eslint-disable
+            /* eslint-disable */
             _model_name: 'SceneModel',
             _view_name: 'SceneView',
             _model_module_version: semver,
             _view_module_version: semver,
             _model_module: 'exatomic',
             _view_module: 'exatomic',
-            // eslint-enable
+            /* eslint-enable */
             width: 200,
             height: 200,
         }

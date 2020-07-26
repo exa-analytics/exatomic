@@ -35,9 +35,6 @@ matrix:
 addons:
     chrome: stable
 
-before_install:
-    - google-chrome-stable --headless --disable-gpu --no-sandbox --remote-debugging-port=9222 http://localhost &;
-
 install:
     - if [[ $TRAVIS_OS_NAME == "osx" ]]; then
           wget https://repo.continuum.io/miniconda/Miniconda3-latest-MacOSX-x86_64.sh -O miniconda.sh;
@@ -45,6 +42,16 @@ install:
           wget https://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh -O miniconda.sh;
       fi;
       echo "DONE"
+
+    - export CHROME_DRIVER_VERSION=$(google-chrome-stable --version | cut -d ' ' -f 3)
+    - export BROWSER=$(where google-chrome-stable)
+    - wget -N https://chromedriver.storage.googleapis.com/${CHROME_DRIVER_VERSION}/chromedriver_linux64.zip -d ./
+    - unzip ./chromedriver_linux64.zip -d ./
+    - rm ./chromedriver_linux64.zip
+    - sudo mv -f ./chromedriver /usr/local/share/
+    - sudo chmod +x /usr/local/share/chromedriver
+    - sudo ln -s /usr/local/share/chromedriver /usr/local/bin/chromedriver
+
     - bash miniconda.sh -b -p $HOME/miniconda
     - export PATH="$HOME/miniconda/bin:$PATH"
     - conda config --add channels conda-forge
@@ -67,6 +74,8 @@ install:
     - python setup.py develop
 
 script:
+    - whereis google-chrome-stable
+    - whereis chromedriver
     - export PYTHONDONTWRITEBYTECODE=1
     - pytest --doctest-modules -v --cov coveralls --cov-report term --cov=exatomic --cov-report xml
     - if [[ ${TRAVIS_OS_NAME} == "linux" ]] && [[ ${TRAVIS_PULL_REQUEST} == false ]] && [[ ${TRAVIS_PULL_REQUEST_BRANCH} == "" ]] && [[ ${TRAVIS_BRANCH} == "master" ]] && [[ ${PYTHONVER} == "3.8" ]]; then
