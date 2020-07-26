@@ -149,7 +149,7 @@ def test_selenium():
 def main():
     server = start_notebook_server()
     try:
-        sleep(0.2)
+        sleep(2)
         run_notebook_widget()
     finally:
         server.kill()

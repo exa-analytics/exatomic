@@ -32,6 +32,9 @@ matrix:
           python: 3.8
           env: PYTHONVER=3.8
 
+services:
+    - xvfb
+
 addons:
     chrome: stable
 
