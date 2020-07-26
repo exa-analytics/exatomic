@@ -19,7 +19,7 @@ Note:
     export BROWSER=/mnt/c/Program\ Files\ \(x86\)/Google/Chrome/Application/chrome.exe
 """
 
-ON_WSL=1                     # 1 if on WSL
+ON_WSL=0                     # 1 if on WSL
 CHROME_WINDOWS_MAJOR_VER=84  # check your chrome version
 
 # ======
@@ -46,7 +46,7 @@ if [[ "${ON_WSL}" == 0 ]]; then
     CHROME_DRIVER_VERSION=$(google-chrome-stable --version | cut -d ' ' -f 3)
 else
     CHROME_SUFFIX="_${CHROME_WINDOWS_MAJOR_VER}"
-    CHROME_DRIVER_VERSION=$(curl -sS https://chromedriver.storage.googleapis.com/LATEST_RELEASE${CHROME_SUFFIX})
+    CHROME_DRIVER_VERSION=$(curl -sS https://chromedriver.storage.googleapis.com/LATEST_RELEASE_${CHROME_SUFFIX})
 fi
 
 # Install chromedriver
