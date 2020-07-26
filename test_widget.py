@@ -21,24 +21,25 @@ Note:
     work. Good for debugging.
 """
 import os
-import shutil
 from uuid import uuid4
 from time import sleep
+from shutil import rmtree
 import subprocess as sp
 
 from selenium import webdriver
-from selenium.webdriver.support import expected_conditions as EC
-from selenium.webdriver.common.action_chains import ActionChains
 from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
-from selenium.webdriver.support.wait import WebDriverWait
 from selenium.webdriver.chrome.options import Options
+from selenium.webdriver.support.wait import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
+from selenium.webdriver.common.action_chains import ActionChains
 
 
 PORT = 8889
 CONSOLE_PORT = 9222
 TOKEN = str(uuid4())
 TIMEOUT = 30
+CLEANUP = True
 
 
 def start_notebook_server():
@@ -152,7 +153,8 @@ def main():
         run_notebook_widget()
     finally:
         server.kill()
-    #    shutil.rmtree(TOKEN)
+        if CLEANUP:
+            rmtree(TOKEN)
 
 
 if __name__ == '__main__':
