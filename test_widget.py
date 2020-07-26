@@ -38,7 +38,7 @@ from selenium.webdriver.common.action_chains import ActionChains
 PORT = 8889
 CONSOLE_PORT = 9222
 TOKEN = str(uuid4())
-TIMEOUT = 30
+TIMEOUT = 120
 CLEANUP = True
 
 
