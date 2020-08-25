@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# Copyright (c) 2015-2018, Exa Analytics Development Team
+# Copyright (c) 2015-2020, Exa Analytics Development Team
 # Distributed under the terms of the Apache License 2.0
 """
 Universe trait functions
@@ -8,12 +8,9 @@ Universe trait functions
 ##########
 # traits #
 ##########
-import re
 import numpy as np
 import pandas as pd
-
 from exatomic.base import sym2radius, sym2color
-
 
 
 def atom_traits(df, atomcolors=None, atomradii=None, atomlabels=None):
@@ -55,6 +52,7 @@ def atom_traits(df, atomcolors=None, atomradii=None, atomlabels=None):
     traits['atom_l'] = labels
     return traits
 
+
 def field_traits(df):
     """Get field table traits."""
     df['frame'] = df['frame'].astype(int)
@@ -71,6 +69,7 @@ def field_traits(df):
                         double_precision=5) for f in df.field_values],
             'field_i': idxs,
             'field_p': fps}
+
 
 def two_traits(uni):
     """Get two table traitlets."""
@@ -109,6 +108,7 @@ def frame_traits(uni):
         return {'frame__a': uni.frame['xi'].max()}
     return {}
 
+
 def tensor_traits(uni):
     grps = uni.tensor.groupby('frame')
     try: idxs = list(map(list, grps.groups.values()))
@@ -121,6 +121,7 @@ def freq_traits(uni):
     except: idxs = [list(grp.index) for i, grp in grps]
     #print(idxs)
     return {'freq_d': grps.apply(lambda x: x.T.to_dict()).to_dict(), 'freq_i': idxs}
+
 
 def uni_traits(uni, atomcolors=None, atomradii=None, atomlabels=None):
     """Get Universe traits."""

@@ -1,6 +1,6 @@
 {
   "name": "exatomic",
-  "version": "0.5.0",
+  "version": "0.5.2",
   "description": "A unified platform for theoretical and computational chemists.",
   "author": "Thomas J. Duignan and Alex Marchenko",
   "license": "Apache-2.0",
@@ -18,23 +18,32 @@
     "visualization"
   ],
   "scripts": {
-    "build": "webpack",
-    "clean": "rimraf dist/ && rimraf ../exatomic/static/js",
+    "prestart": "npm run tsc",
+    "tsc": "tsc",
+    "build": "npm run build:src && webpack",
+    "build:src": "tsc --build",
+    "clean": "rimraf lib && rimraf dist && rimraf ../exatomic/static/js",
     "prepublish": "npm run clean && npm run build",
     "test": "echo \"Error: no test specified\" && exit 1",
     "watch": "webpack -d -w"
   },
   "devDependencies": {
+    "@typescript-eslint/parser": "^3.6.0",
+    "babel-eslint": "^10.1.0",
+    "eslint": "^7.4.0",
+    "eslint-config-airbnb-base": "^14.2.0",
+    "eslint-plugin-import": "^2.22.0",
     "rimraf": "^2.6.1",
+    "typescript": "^3.9.6",
     "webpack": "^4.41.5",
     "webpack-cli": "^3.3.10"
   },
   "dependencies": {
-    "@jupyter-widgets/base": "^1.0.0",
-    "@jupyter-widgets/controls": "^1.0.0",
-    "underscore": "^1.8.3",
-    "three": "^0.82.0",
-    "three-trackballcontrols": "^0.0.5"
+    "@jupyter-widgets/base": "^3.0.0",
+    "@jupyter-widgets/controls": "^2.0.0",
+    "three": "^0.118.0",
+    "three-trackballcontrols": "^0.0.8",
+    "underscore": "^1.8.3"
   },
   "jupyterlab": {
     "extension": "src/jupyterlab-plugin"

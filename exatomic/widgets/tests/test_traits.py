@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# Copyright (c) 2015-2018, Exa Analytics Development Team
+# Copyright (c) 2015-2020, Exa Analytics Development Team
 # Distributed under the terms of the Apache License 2.0
 from __future__ import absolute_import
 from __future__ import print_function
@@ -49,7 +49,7 @@ class TestTraits(TestCase):
         self.assertEqual(frame, {})
 
     def test_uni_traits(self):
-        unargs, flds, _ = uni_traits(self.uni)
+        unargs, _, _ = uni_traits(self.uni)
         for at in ['x', 'y', 'z', 's', 'cr', 'c']:
             self.assertTrue('atom_' + at in unargs)
         for b in ['b0', 'b1']:

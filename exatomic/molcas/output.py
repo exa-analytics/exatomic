@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# Copyright (c) 2015-2018, Exa Analytics Development Team
+# Copyright (c) 2015-2020, Exa Analytics Development Team
 # Distributed under the terms of the Apache License 2.0
 """
 Molcas Output Parser
@@ -341,13 +341,12 @@ class Output(six.with_metaclass(OutMeta, Editor)):
         self.basis_set_order = df
         shls = []
         grps = df.groupby(['irrep', 'center', 'L', 'ml'])
-        for (_, cen, L, ml), grp in grps:
+        for (_, _, L, ml), grp in grps:    # (? cen L, ml)
             shl = 0
             for _ in grp.index:
                 shls.append(shl)
                 shl += 1
         self.basis_set_order['shell'] = shls
-
 
 
     def parse_basis_set(self):

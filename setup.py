@@ -16,7 +16,6 @@ jsdir = "js"
 jsroot = os.path.abspath(jsdir)
 readme = "README.md"
 requirements = "requirements.txt"
-verfile = "_version.py"
 log.set_verbosity(log.DEBUG)
 root = os.path.dirname(os.path.abspath(__file__))
 node_modules = os.path.join(root, jsdir, "node_modules")
@@ -31,10 +30,8 @@ except ImportError:
         long_description = f.read()
 with open(requirements) as f:
     dependencies = f.read().splitlines()
-with open(os.path.join(root, name, verfile)) as f:
-    v = f.readlines()[-2]
-    v = v.split('=')[1].strip()[1:-1]
-    version = ".".join(v.replace(" ", "").split(","))
+with open(os.path.abspath(os.path.join(os.path.dirname(__file__), name, "static", "version.txt"))) as f:
+    __version__ = f.read().strip()
 
 
 def update_package_data(distribution):
@@ -118,7 +115,7 @@ class NPM(Command):
 
 setup_args = {
     'name': name,
-    'version': version,
+    'version': __version__,
     'description': description,
     'long_description': long_description,
     'package_data': {name: [staticdir + "/*"]},
@@ -143,8 +140,8 @@ setup_args = {
     'author': "Thomas J. Duignan, Alex Marchenko and contributors",
     'author_email': "exa.data.analytics@gmail.com",
     'maintainer_email': "exa.data.analytics@gmail.com",
-    'url': "https://exa-analytics.github.io/" + name,
-    'download_url': "https://github.com/exa-analytics/{}/archive/v{}.tar.gz".format(name, version),
+    'url': f"https://github.com/exa-analytics/{name}",
+    'download_url': f"https://pypi.io/packages/source/e/{name}/{name}-{__version__}.tar.gz",
     'keywords': ["quantum chemistry", "jupyter notebook", "visualization"],
     'classifiers': [
         "Development Status :: 4 - Beta",
@@ -152,7 +149,6 @@ setup_args = {
         "Intended Audience :: Developers",
         "Intended Audience :: Science/Research",
         "License :: OSI Approved :: Apache Software License",
-        "Programming Language :: Python :: 2",
         "Programming Language :: Python :: 3",
         "Natural Language :: English"
     ]

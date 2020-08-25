@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# Copyright (c) 2015-2018, Exa Analytics Development Team
+# Copyright (c) 2015-2020, Exa Analytics Development Team
 # Distributed under the terms of the Apache License 2.0
 """
 Gaussian Input Generator
@@ -191,7 +191,7 @@ IOP(3/76={b}{a})"""
 
 
 def functional_inputs(uni, name, mult, charge, basis,
-                      funcnames={'pbe': 'PBEPBE'}, nproc=4, mem=4,
+                      funcnames=None, nproc=4, mem=4,
                       field=None, writedir=None):
     """
     Provided a universe, generate input files to analyze the
@@ -206,6 +206,7 @@ def functional_inputs(uni, name, mult, charge, basis,
         mult (int): spin multiplicity
         charge (int): charge of the system
         basis (list): tuples of atomic symbol, string of basis name
+        funcnames (dict): Functional name aliases (default {"pbe": "PBEPBE"})
         gammas (iter): values of range separation parameter (omega)
         alphas (iter): fractions of Hartree-Fock in the short range
         route (list): strings or tuples of keyword, value pairs
@@ -229,9 +230,9 @@ def functional_inputs(uni, name, mult, charge, basis,
                       'IOP(3/75=5)', ('Pop', 'full')]
         for chgnm, chg, mul in zip(chgnms, chgs, mults):
             jobname = '-'.join([chgnm, chg, mul])
-            this_link = [('chk', jobname + '.chk')]
+            #this_link = [('chk', jobname + '.chk')]
             field = field if field is not None else ''
-            this_route = ['Charge'] if field else []
+            #this_route = ['Charge'] if field else []
             # opts unused?
             #opts = {'title': jobname, 'mult': mul, 'charge': chg,
             #        'link0': link_opts + this_link,
