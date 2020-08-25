@@ -4,11 +4,6 @@ matrix:
     include:
         - os: linux
           language: python
-          python: 3.5
-          env: PYTHONVER=3.5
-
-        - os: linux
-          language: python
           python: 3.6
           env: PYTHONVER=3.6
 
@@ -17,10 +12,10 @@ matrix:
           python: 3.7
           env: PYTHONVER=3.7
 
-        - os: osx
-          language: generic
-          python: 3.5
-          env: PYTHONVER=3.5
+        - os: linux
+          language: python
+          python: 3.8
+          env: PYTHONVER=3.8
 
         - os: osx
           language: generic
@@ -31,6 +26,11 @@ matrix:
           language: generic
           python: 3.7
           env: PYTHONVER=3.7
+
+        - os: osx
+          language: generic
+          python: 3.8
+          env: PYTHONVER=3.8
 
 install:
     - if [[ $TRAVIS_OS_NAME == "osx" ]]; then
@@ -40,37 +40,62 @@ install:
       fi;
       echo "DONE"
     - bash miniconda.sh -b -p $HOME/miniconda
-#   - export NUMBA_DISABLE_JIT=1
     - export PATH="$HOME/miniconda/bin:$PATH"
+    - conda config --add channels conda-forge
+    - conda config --add channels exaanalytics
+    - conda config --set show_channel_urls true
     - conda config --set always_yes yes --set changeps1 no
-    - conda update -q -y --all
-    - conda create -y -n test python=$PYTHONVER
+    - conda update -q --all
+    - conda create -n test python=${PYTHONVER}
     - source activate test
-    - conda update -q -y --all
-    - conda install -q -y -c conda-forge six numpy pandas pytables pyyaml
-    - conda install -q -y -c conda-forge sphinx sphinx_rtd_theme ply sympy
-    - conda install -q -y -c conda-forge pandoc pypandoc nbsphinx ipython seaborn
-    - conda install -q -y -c conda-forge coveralls coverage'<=4.5.4' pytest pytest-cov
-    - conda install -q -y -c conda-forge numexpr nodejs ipywidgets bokeh
-    - conda install -q -y -c conda-forge numba
-    - pip install travis-sphinx codacy-coverage
-    - git clone https://github.com/exa-analytics/exa.git
-    - pip install -e exa/
-    - pip install .
+    - conda update -q --all
+    - conda install -q -c exaanalytics exa>=0.5.24
+    - conda install -q -c conda-forge six>=1.0 numexpr>=2.0 ipywidgets>=7.0 bokeh scipy>=1.4
+    - conda install -q -c conda-forge coveralls coverage pytest pytest-cov
+    - conda install -q -c anaconda h5py
+    - if [[ ${TRAVIS_OS_NAME} == "linux" ]] && [[ ${TRAVIS_PULL_REQUEST} == false ]] && [[ ${TRAVIS_PULL_REQUEST_BRANCH} == "" ]] && [[ ${TRAVIS_BRANCH} == "master" ]]; then
+          conda install -q -c conda-forge sphinx sphinx_rtd_theme ply pandoc pypandoc nbsphinx ipython nodejs;
+          conda install -q conda-build conda-verify anaconda-client twine;
+          pip install travis-sphinx;
+      fi
+    - python setup.py develop
 
 script:
     - export PYTHONDONTWRITEBYTECODE=1
-    - pytest --cov
-    - if [[ $TRAVIS_OS_NAME == "linux" ]] && [[ $PYTHONVER == 3.6 ]]; then
-          coverage run --source=exatomic setup.py test;
+    - pytest --doctest-modules -v --cov coveralls --cov-report term --cov=exatomic --cov-report xml
+    - if [[ ${TRAVIS_OS_NAME} == "linux" ]] && [[ ${TRAVIS_PULL_REQUEST} == false ]] && [[ ${TRAVIS_PULL_REQUEST_BRANCH} == "" ]] && [[ ${TRAVIS_BRANCH} == "master" ]] && [[ ${PYTHONVER} == "3.8" ]]; then
           rm -rf docs/source/*.txt;
           SPHINX_APIDOC_OPTIONS=members,undoc-members,show-inheritance sphinx-apidoc -eM -s txt -o docs/source/ exatomic *test*;
           travis-sphinx build;
       fi
 
 after_success:
-    - if [[ $TRAVIS_OS_NAME == "linux" ]] && [[ $PYTHONVER == 3.6 ]]; then
-          coveralls;
-          python-codacy-coverage -r coverage.xml;
+    - coveralls
+    - bash <(curl -Ls https://coverage.codacy.com/get.sh) report --language Python -r coverage.xml
+    - bash <(curl -Ls https://coverage.codacy.com/get.sh) final
+    - if [[ ${TRAVIS_OS_NAME} == "linux" ]] && [[ ${TRAVIS_PULL_REQUEST} == false ]] && [[ ${TRAVIS_PULL_REQUEST_BRANCH} == "" ]] && [[ ${TRAVIS_BRANCH} == "master" ]] && [[ ${PYTHONVER} == "3.8" ]]; then
           travis-sphinx deploy;
+          echo "//registry.npmjs.org/:_authToken=${NPM_TOKEN}" > ${HOME}/.npmrc;
+          cd js; npm publish; cd ..;
+      fi
+    - if [[ ${TRAVIS_OS_NAME} == "linux" ]] && [[ ${TRAVIS_PULL_REQUEST} == false ]] && [[ ${TRAVIS_PULL_REQUEST_BRANCH} == "" ]] && [[ ${TRAVIS_BRANCH} == "master" ]]; then
+          export pyver="py${PYTHONVER/./}";
+          export ver=`cat exatomic/static/version.txt`;
+          git remote set-url origin https://${GH_TOKEN}@github.com/exa-analytics/exatomic.git;
+          git tag ${ver};
+          git push --tags;
+          sed -i "s/version = .* /version = \"${ver}\"/" meta.yaml;
+          cat meta.yaml;
+          printf "[distutils]\nindex-servers =\n    pypi\n    testpypi\n\n[pypi]\nrepository = https://upload.pypi.org/legacy/\nusername = __token__\npassword = ${pypi}\n\n[testpypi]\nrepository = https://test.pypi.org/legacy/\nusername = __token__\npassword = ${testpypi}" > ${HOME}/.pypirc;
+          python setup.py sdist;
+          python -m twine upload --repository pypi dist/*;
+          conda build --no-include-recipe .;
+          conda convert -f -p osx-64 ${HOME}/miniconda/envs/test/conda-bld/linux-64/exatomic-${ver}-${pyver}_0.tar.bz2 -o dist1/;
+          conda convert -f -p linux-32 ${HOME}/miniconda/envs/test/conda-bld/linux-64/exatomic-${ver}-${pyver}_0.tar.bz2 -o dist1/;
+          conda convert -f -p win-32 ${HOME}/miniconda/envs/test/conda-bld/linux-64/exatomic-${ver}-${pyver}_0.tar.bz2 -o dist1/;
+          conda convert -f -p win-64 ${HOME}/miniconda/envs/test/conda-bld/linux-64/exatomic-${ver}-${pyver}_0.tar.bz2 -o dist1/;
+          ls -lisah dist1;
+          anaconda login --username ${anaconda_username} --password ${anaconda_password};
+          anaconda upload --no-progress ${HOME}/miniconda/envs/test/conda-bld/linux-64/exatomic-${ver}-${pyver}_0.tar.bz2;
+          for i in $(ls -d dist1/*/); do echo "${i}exatomic-${ver}-${pyver}_0.tar.bz2"; anaconda upload --no-progress ${i}exatomic-${ver}-${pyver}_0.tar.bz2; done;
       fi

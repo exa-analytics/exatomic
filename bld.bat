@@ -1,3 +1,3 @@
-"%PYTHON%" setup.py install --single-version-externally-managed --record=record.txt
+"%PYTHON%" -m pip install . -vv
 jupyter nbextension enable exatomic --py --sys-prefix
 if errorlevel 1 exit 1

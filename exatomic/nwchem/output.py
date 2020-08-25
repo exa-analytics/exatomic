@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# Copyright (c) 2015-2016, Exa Analytics Development Team
+# Copyright (c) 2015-2020, Exa Analytics Development Team
 # Distributed under the terms of the Apache License 2.0
 """
 NWChem Output
@@ -478,13 +478,13 @@ class Ecce(six.with_metaclass(OutMeta, Editor)):
                         num, val = l.split('*')
                         num = int(num)
                         val = float(val)
-                        for i in range(num):
+                        for _ in range(num):
                             small.append(val)
                             if len(small) == ndim:
                                 vals.append(small)
                                 small = []
-                    except:
-                        print('something went wrong parsing ecce movecs')
+                    except Exception as e:
+                        print(f'something went wrong parsing ecce movecs: {str(e)}')
                         return
         vals = [chi for mo in vals for chi in mo]
         vals = pd.DataFrame(vals)
@@ -527,14 +527,14 @@ class Ecce(six.with_metaclass(OutMeta, Editor)):
                 self._rebmooccs = r'.*' + self._kind + '%begin%molecular orbital occupations'
                 self._reemooccs = r'.*' + self._kind + '%end%molecular orbital occupations'
         else:
-                try:
-                    self._rebmovecs = r'.*%begin%molecular orbital vectors'
-                    self._regex = self.regex(self._rebmovecs)
-                    self._reemovecs = r'.*%end%molecular orbital vectors'
-                    self._rebmooccs = r'.*%begin%molecular orbital occupations'
-                    self._reemooccs = r'.*%end%molecular orbital occupations'
-                except IndexError:
-                    print('could not find which movecs to parse, try specifying kind and/or spin')
+            try:
+                self._rebmovecs = r'.*%begin%molecular orbital vectors'
+                self._regex = self.regex(self._rebmovecs)
+                self._reemovecs = r'.*%end%molecular orbital vectors'
+                self._rebmooccs = r'.*%begin%molecular orbital occupations'
+                self._reemooccs = r'.*%end%molecular orbital occupations'
+            except IndexError:
+                print('could not find which movecs to parse, try specifying kind and/or spin')
 
         self._regex = self.regex(self._rebmovecs, self._reemovecs,
                                  self._rebmooccs, self._reemooccs)

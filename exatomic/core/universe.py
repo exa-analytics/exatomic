@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# Copyright (c) 2015-2018, Exa Analytics Development Team
+# Copyright (c) 2015-2020, Exa Analytics Development Team
 # Distributed under the terms of the Apache License 2.0
 """
 The Atomic Universe
@@ -302,6 +302,29 @@ class Universe(six.with_metaclass(Meta, Container)):
                                       frame=frame, replace=replace,
                                       inplace=inplace, verbose=verbose,
                                       irrep=irrep)
+
+    def write_cube(self, file_name='output', field_number=0):
+        """
+        Write to a file in cube format for a single 3D scalar field in universe object.
+
+        .. code-block:: python
+
+            uni.add_molecular_orbitals()                  # Default around (HOMO-5, LUMO+7)
+            uni.write_cube('cubefile', 0)                    # write to cubefile.cube for HOMO-5
+
+        Args:
+            file_name (str): name of the output file without file extension
+            field_number (int): number of the single field starting with 0
+
+        Returns:
+            None
+        """
+        import os
+        from exatomic.interfaces.cube import Cube
+        if os.path.isfile(file_name+'.cube'):
+            raise FileExistsError('File '+file_name+'.cube '+'exists.')
+        cube_edi = Cube.from_universe(self,field_number)
+        cube_edi.write(file_name+'.cube')
 
     def __len__(self):
         return len(self.frame)

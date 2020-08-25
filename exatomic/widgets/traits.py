@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# Copyright (c) 2015-2018, Exa Analytics Development Team
+# Copyright (c) 2015-2020, Exa Analytics Development Team
 # Distributed under the terms of the Apache License 2.0
 """
 Universe trait functions
@@ -8,12 +8,9 @@ Universe trait functions
 ##########
 # traits #
 ##########
-import re
 import numpy as np
 import pandas as pd
-
 from exatomic.base import sym2radius, sym2color
-
 
 
 def atom_traits(df, atomcolors=None, atomradii=None, atomlabels=None):
@@ -24,9 +21,9 @@ def atom_traits(df, atomcolors=None, atomradii=None, atomlabels=None):
 
     .. _Jmol: http://jmol.sourceforge.net/jscolors/
     """
-    atomlabels = pd.Series() if atomlabels is None else pd.Series(atomlabels)
-    atomcolors = pd.Series() if atomcolors is None else pd.Series(atomcolors)
-    atomradii = pd.Series() if atomradii is None else pd.Series(atomradii)
+    atomlabels = pd.Series(dtype=str) if atomlabels is None else pd.Series(atomlabels, dtype=str)
+    atomcolors = pd.Series(dtype=str) if atomcolors is None else pd.Series(atomcolors, dtype=str)
+    atomradii = pd.Series(dtype=float) if atomradii is None else pd.Series(atomradii, dtype=float)
     traits = {}
     cols = ['x', 'y', 'z']
     grps = df.groupby('frame')
@@ -40,13 +37,11 @@ def atom_traits(df, atomcolors=None, atomradii=None, atomlabels=None):
     symmap = {i: v for i, v in enumerate(df['symbol'].cat.categories)
               if v in df.unique_atoms}
     unq = df['symbol'].astype(str).unique()
-#    radii = {k: sym2radius[k][1] for k in unq}
     cov_radii = {k: sym2radius[k][0] for k in unq}
     van_radii = {k: sym2radius[k][1] for k in unq}
     colors = {k: sym2color[k] for k in unq}
     labels = symmap
     colors.update(atomcolors)
-#    radii.update(atomradii)
     cov_radii.update(atomradii)
     van_radii.update(atomradii)
     labels.update(atomlabels)
@@ -56,6 +51,7 @@ def atom_traits(df, atomcolors=None, atomradii=None, atomlabels=None):
     traits['atom_c'] = {i: colors[v] for i, v in symmap.items()}
     traits['atom_l'] = labels
     return traits
+
 
 def field_traits(df):
     """Get field table traits."""
@@ -74,7 +70,7 @@ def field_traits(df):
             'field_i': idxs,
             'field_p': fps}
 
-#def two_traits(df, lbls):
+
 def two_traits(uni):
     """Get two table traitlets."""
     if not hasattr(uni, "atom_two"):
@@ -112,11 +108,13 @@ def frame_traits(uni):
         return {'frame__a': uni.frame['xi'].max()}
     return {}
 
+
 def tensor_traits(uni):
     grps = uni.tensor.groupby('frame')
     try: idxs = list(map(list, grps.groups.values()))
     except: idxs = [list(grp.index) for i, grp in grps]
     return {'tensor_d': grps.apply(lambda x: x.T.to_dict()).to_dict(), 'tensor_i': idxs}
+
 
 #def freq_traits(uni):
 #    grps = uni.frequency.groupby('frequency')
@@ -124,6 +122,7 @@ def tensor_traits(uni):
 #    except: idxs = [list(grp.index) for i, grp in grps]
 #    #print(idxs)
 #    return {'freq_d': grps.apply(lambda x: x.T.to_dict()).to_dict(), 'freq_i': idxs}
+
 
 def uni_traits(uni, atomcolors=None, atomradii=None, atomlabels=None):
     """Get Universe traits."""

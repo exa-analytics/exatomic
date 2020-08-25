@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# Copyright (c) 2015-2018, Exa Analytics Development Team
+# Copyright (c) 2015-2020, Exa Analytics Development Team
 # Distributed under the terms of the Apache License 2.0
 """
 Input Generator and Parser
@@ -182,7 +182,7 @@ def _handle_arg(opt, info):
         return ret
     elif opt in type2:
         ret = ''
-        if type(info) != list:
+        if not isinstance(info, list):
             info = [info]
         for i, arg in enumerate(info):
             if i == len(info) - 1:
@@ -193,14 +193,14 @@ def _handle_arg(opt, info):
             return '\n{0}\n{1}\n{2}\n'.format(opt, ret, 'end')
         return ret
     else:
-        if type(info) is list:
+        if isinstance(info, list):
             return ' '.join([item for item in info])
         else:
             print('{} keyword not handled correctly with value {}'.format(opt, info))
 
 
 def tuning_inputs(uni, name, mult, charge, basis, gammas, alphas,
-                  route=[('Pop', 'full')], link0=None,
+                  route=None, link0=None,
                   field=None, writedir=None, deep=False):
     """
     Provided a universe, generate input files for functional tuning.
@@ -216,13 +216,15 @@ def tuning_inputs(uni, name, mult, charge, basis, gammas, alphas,
         basis (list): tuples of atomic symbol, string of basis name
         gammas (iter): values of range separation parameter (omega)
         alphas (iter): fractions of Hartree-Fock in the short range
-        route (list): strings or tuples of keyword, value pairs
+        route (list): strings or tuples of keyword, value pairs (default [("Pop", "full")])
         link0 (list): strings or tuples of keyword, value pairs
         writedir (str): directory path to write input files
 
     Returns
         editors (list): input files as exa.Editors
     """
+    if route is None:
+        route = [("Pop", "full")]
     fnstr = 'xcampbe96 1.0 cpbe96 1.0 HFexch 1.0\n'\
             ' cam {gam:.4f} cam_alpha {alp:.4f} cam_beta {bet:.4f}'.format
     jbnm = '{name}-{{gam:.2f}}-{{alp:.2f}}-{{chg}}'.format(name=name).format

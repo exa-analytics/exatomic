@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# Copyright (c) 2015-2018, Exa Analytics Development Team
+# Copyright (c) 2015-2020, Exa Analytics Development Team
 # Distributed under the terms of the Apache License 2.0
 """
 Numerical Orbital Functions
@@ -44,7 +44,7 @@ def _setup_orbital(uni, verbose, vector, fps, icoefs, log=None, jcoefs=None, irr
 def _compute_orbital(verbose, npts, bvs, vector, cmat, log=None):
     log = log or func_log(_compute_orbital)
     try: ovs = _compute_orbitals_numba(npts, bvs, vector, cmat)
-    except (ValueError, IndexError, AssertionError, TypingError) as e:
+    except (ValueError, IndexError, AssertionError, TypingError):
         if verbose: log.error('numba eval failed, falling back to numpy')
         ovs = _compute_orbitals_numpy(npts, bvs, vector, cmat)
     return ovs

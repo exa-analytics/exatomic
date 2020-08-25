@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# Copyright (c) 2015-2018, Exa Analytics Development Team
+# Copyright (c) 2015-2020, Exa Analytics Development Team
 # Distributed under the terms of the Apache License 2.0
 """
 Vibrational Averaging
@@ -603,9 +603,9 @@ class VA(metaclass=VAMeta):
         rmass = uni.frequency_ext['r_mass'].values*Mass['u', 'au_mass']
         if snmodes < nmodes:
             raise NotImplementedError("We do not currently have support to handle missing frequencies")
-            sel_delta = delta[select_freq]
-            sel_rmass = uni.frequency_ext['r_mass'].values[select_freq]*Mass['u', 'au_mass']
-            sel_freq = uni.frequency_ext['freq'].values[select_freq]*Energy['cm^-1','Ha']
+            #sel_delta = delta[select_freq]
+            #sel_rmass = uni.frequency_ext['r_mass'].values[select_freq]*Mass['u', 'au_mass']
+            #sel_freq = uni.frequency_ext['freq'].values[select_freq]*Energy['cm^-1','Ha']
         else:
             sel_delta = delta
             sel_rmass = rmass

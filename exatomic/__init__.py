@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# Copyright (c) 2015-2018, Exa Analytics Development Team
+# Copyright (c) 2015-2020, Exa Analytics Development Team
 # Distributed under the terms of the Apache License 2.0
 """
 A unified data anlaysis and visualization platform for computational and
@@ -37,7 +37,7 @@ below.
 .. _Quantum ESPRESSO: http://www.quantum-espresso.org/
 """
 from __future__ import absolute_import
-__js_version__ = "^0.4.7"
+__js_version__ = "^0.5.0"
 
 def _jupyter_nbextension_paths():
     """Jupyter notebook extension directory paths."""

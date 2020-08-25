@@ -1,5 +1,5 @@
  #-*- coding: utf-8 -*-
-# Copyright (c) 2015-2018, Exa Analytics Development Team
+# Copyright (c) 2015-2020, Exa Analytics Development Team
 # Distributed under the terms of the Apache License 2.0
 """
 Cube File Support
@@ -32,7 +32,7 @@ class Cube(six.with_metaclass(Meta, Editor)):
         cube = Cube('my.cube')
         cube.atom                # Displays the atom dataframe
         cube.field               # Displays the field dataframe
-        cube.field_values        # Displays the list of field values
+        cube.field.field_values  # Displays the list of field values
         uni = cube.to_universe() # Converts the cube file editor to a universe
         UniverseWidget(uni)      # Renders the cube file
 

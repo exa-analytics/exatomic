@@ -22,7 +22,6 @@ or [pypi](https://pypi.python.org/pypi).
 
 
 # Getting Started
-[![gitter](https://badges.gitter.im/exa-analytics/exatomic.svg)](https://gitter.im/exa-analytics/exatomic)  
 
 See [docs](https://exa-analytics.github.io/exatomic/) for usage. 
 
@@ -38,13 +37,15 @@ On Windows:
 
 
 # Contributing
-[![Travis-CI](https://travis-ci.org/exa-analytics/exatomic.svg?branch=master)](https://travis-ci.org/exa-analytics/exatomic)  
+ 
+[![Travis-CI](https://travis-ci.org/exa-analytics/exatomic.svg?branch=master)](https://travis-ci.org/exa-analytics/exatomic)
 
-[![AppVeyor](https://ci.appveyor.com/api/projects/status/5palls4vcdipkv00?svg=true)](https://ci.appveyor.com/project/avmarchenko/exatomic)
+[![AppVeyor](https://ci.appveyor.com/api/projects/status/0r60r3n1w52mi4mj?svg=true)](https://ci.appveyor.com/project/avmarchenko/exatomic)
 
-[![Coverage](https://coveralls.io/repos/github/exa-analytics/exatomic/badge.svg?branch=master)](https://coveralls.io/github/exa-analytics/exatomic?branch=master)  
+[![Codacy Badge](https://app.codacy.com/project/badge/Grade/5d09bae30d6746d1be212f881579bae3)](https://www.codacy.com/gh/exa-analytics/exatomic?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=exa-analytics/exatomic&amp;utm_campaign=Badge_Grade)
 
-[![Codacy Badge](https://api.codacy.com/project/badge/Grade/3928e76cd8084b9ba581a31d4db86561)](https://www.codacy.com/app/exa-analytics/exatomic-org?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=exa-analytics/exatomic&amp;utm_campaign=Badge_Grade)
+[![Coverage Status](https://coveralls.io/repos/github/exa-analytics/exatomic/badge.svg?branch=master)](https://coveralls.io/github/exa-analytics/exatomic?branch=master)
+
 
 For a development ready installation:
 
@@ -65,5 +66,5 @@ need to reinstall the package.
 
 # Legal
 [![Apache License 2.0](http://img.shields.io/:license-apache-blue.svg?style=flat-square)](http://www.apache.org/licenses/LICENSE-2.0)  
-Copyright (c) 2015-2018, Exa Analytics Development Team  
+Copyright (c) 2015-2020, Exa Analytics Development Team  
 Distributed under the terms of the Apache License 2.0  

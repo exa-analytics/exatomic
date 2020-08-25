@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# Copyright (c) 2015-2018, Exa Analytics Development Team
+# Copyright (c) 2015-2020, Exa Analytics Development Team
 # Distributed under the terms of the Apache License 2.0
 '''
 Molecular Orbital Utilities
@@ -295,14 +295,14 @@ def _compute_orbitals_numba(npts, bvs, vecs, cmat):
     """Compute orbitals from numerical basis functions."""
     ovs = np.empty((len(vecs), npts), dtype=np.float64)
     for i, vec in enumerate(vecs):
-        ovs[i] = np.dot(cmat[:, vec], bvs)
+        ovs[i] = np.dot(np.ascontiguousarray(cmat[:, vec]), bvs)
     return ovs
 
 def _compute_orbitals_numpy(npts, bvs, vecs, cmat):
     """Compute orbitals from numerical basis functions."""
     ovs = np.empty((len(vecs), npts), dtype=np.float64)
     for i, vec in enumerate(vecs):
-        ovs[i] = np.dot(cmat[:, vec], bvs)
+        ovs[i] = np.dot(np.ascontiguousarray(cmat[:, vec]), bvs)
     return ovs
 
 @jit(nopython=True, nogil=True, parallel=nbpll)
@@ -312,7 +312,7 @@ def _compute_density(ovs, occvec):
     dens = np.empty(npts, dtype=np.float64)
     for i in range(norb):
         ovs[i] *= ovs[i]
-    dens = np.dot(occvec, ovs)
+    dens = np.dot(np.ascontiguousarray(occvec), ovs)
     return dens
 
 

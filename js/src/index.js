@@ -1,32 +1,24 @@
-// Entry point for the notebook bundle containing custom model definitions.
-//
-// Setup notebook base URL
-//
-// Some static assets may be required by the custom widget javascript. The base
-// url for the notebook is not known at build time and is therefore computed
-// dynamically.
-// var __webpack_public_path__ = document.querySelector("body").getAttribute("data-base-url") + "nbextensions/exatomic/";
-
+// Copright (c) 2015-2020, Exa Analytics Development Team
+// Distributed under the terms of the Apache License 2.0
 // Export widget models and views, and the npm package version number.
-module.exports = {};
+module.exports = {}
 
-var loaded = [
-    require("./base"),
-    require("./utils"),
-    require("./appthree"),
-    require("./widgets"),
-    require("./tensor")
-];
+const base = require('./base')
+const utils = require('./utils')
+const appthree = require('./appthree')
+const widgets = require('./widgets')
+const tensor = require('./tensor')
+const util = require('./util')
 
-for (var m in loaded) {
-    if (loaded.hasOwnProperty(m)) {
-        var mod = loaded[m];
-        for (var item in mod) {
-            if (mod.hasOwnProperty(item)) {
-                module.exports[item] = mod[item];
-            }
-        }
-    }
-}
+const loaded = [
+    base, utils, appthree, widgets, tensor, util,
+]
 
-module.exports["version"] = require("../package.json").version;
+Object.keys(loaded).forEach((key) => {
+    const mod = loaded[key]
+    Object.keys(mod).forEach((obj) => {
+        module.exports[obj] = mod[obj]
+    })
+})
+
+module.exports.version = require('../package.json').version
