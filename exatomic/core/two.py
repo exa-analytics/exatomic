@@ -43,15 +43,24 @@ class AtomTwo(DataFrame):
     _index = "two"
     #_cardinal = ("frame", np.int64)
     _columns = ["atom0", "atom1", "dr"]
-    _categories = {'symbols': str, 'atom0': np.int64, 'atom1': np.int64}
+    _categories = {'symbols': str, 'atom0': np.int64, 'atom1': np.int64,
+                   'frame': np.int64}
 
 #    @property
 #    def _constructor(self):
 #        return AtomTwo
 
     @property
+    def nframes(self):
+        return np.int64(self.frame.cat.as_ordered().max() + 1)
+
+    @property
+    def last_frame(self):
+        return AtomTwo(self[self.frame == self.nframes - 1])
+
+    @property
     def bonded(self):
-        return self[self['bond'] == True]
+        return AtomTwo(self[self['bond'] == True])
 
 
 class MoleculeTwo(DataFrame):
@@ -138,8 +147,8 @@ def compute_pdist_nv(universe, dmax=8.0):
     drs = []
     atom0s = []
     atom1s = []
-    #for fdx, group in universe.atom.groupby("frame"):
-    for _, group in universe.atom.groupby("frame"):
+    frames = []
+    for fdx, group in universe.atom.groupby("frame"):
         if len(group) > 0:
             values = pdist_nv(group['x'].values.astype(float),
                               group['y'].values.astype(float),
@@ -148,10 +157,12 @@ def compute_pdist_nv(universe, dmax=8.0):
             drs.append(values[0])
             atom0s.append(values[1])
             atom1s.append(values[2])
+            frames.append(np.repeat(fdx, values[0].shape[0]))
     drs = np.concatenate(drs)
     atom0s = np.concatenate(atom0s)
     atom1s = np.concatenate(atom1s)
-    return AtomTwo.from_dict({'dr': drs, 'atom0': atom0s, 'atom1': atom1s})
+    frames = np.concatenate(frames)
+    return AtomTwo.from_dict({'dr': drs, 'atom0': atom0s, 'atom1': atom1s, 'frame': frames})
 
 
 def compute_pdist_ortho(universe, dmax=8.0):
