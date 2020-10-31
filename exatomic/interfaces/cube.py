@@ -117,7 +117,7 @@ class Cube(six.with_metaclass(Meta, Editor)):
         field = uni.field.loc[idx]
         volum = uni.field.field_values[idx]
         orig = len(frame.index), field.ox, field.oy, field.oz
-        nx, ny, nz = field.nx, field.ny, field.nz
+        nx, ny, nz = int(field.nx), int(field.ny), int(field.nz)
         xdim = nx, field.dxi, field.dxj, field.dxk
         ydim = ny, field.dyi, field.dyj, field.dyk
         zdim = nz, field.dzi, field.dzj, field.dzk
