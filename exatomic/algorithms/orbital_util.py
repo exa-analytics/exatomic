@@ -246,7 +246,7 @@ def _determine_vector(uni, vector, irrep=None):
         if homo < 5:
             return np.array(range(0, homo + 5))
         else:
-            return np.array(range(homo - 5, homo + 7))
+            return np.array(range(int(homo) - 5, int(homo) + 7))
     else:
         raise TypeError('Try specifying vector as a list or int')
 
