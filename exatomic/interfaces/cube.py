@@ -124,7 +124,7 @@ class Cube(six.with_metaclass(Meta, Editor)):
         atargs = {'float_format': '%12.6f',
                   'header': None, 'index': None,
                   'columns': ['Z', 'Zeff', 'x', 'y', 'z']}
-        chnk = ''.join(['{}' * 6 + '\n' for i in range(nz // 6)])
+        chnk = ''.join(['{}' * 6 + '\n' for i in range(int(nz) // 6)])
         if nz % 6: chnk += '{}' * (nz % 6) + '\n'
         return cls(hdr.format(name, __version__)
                   + flfmt(*orig) + flfmt(*xdim)
