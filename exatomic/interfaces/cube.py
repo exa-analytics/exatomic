@@ -117,14 +117,14 @@ class Cube(six.with_metaclass(Meta, Editor)):
         field = uni.field.loc[idx]
         volum = uni.field.field_values[idx]
         orig = len(frame.index), field.ox, field.oy, field.oz
-        nx, ny, nz = field.nx, field.ny, field.nz
+        nx, ny, nz = int(field.nx), int(field.ny), int(field.nz)
         xdim = nx, field.dxi, field.dxj, field.dxk
         ydim = ny, field.dyi, field.dyj, field.dyk
         zdim = nz, field.dzi, field.dzj, field.dzk
         atargs = {'float_format': '%12.6f',
                   'header': None, 'index': None,
                   'columns': ['Z', 'Zeff', 'x', 'y', 'z']}
-        chnk = ''.join(['{}' * 6 + '\n' for i in range(int(nz) // 6)])
+        chnk = ''.join(['{}' * 6 + '\n' for i in range(nz // 6)])
         if nz % 6: chnk += '{}' * (nz % 6) + '\n'
         return cls(hdr.format(name, __version__)
                   + flfmt(*orig) + flfmt(*xdim)
