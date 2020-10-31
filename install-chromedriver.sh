@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 echo """
-Installer script to set up chromedriver for selenium.
+Debian-based installer script to set up chromedriver for selenium.
 First installs some linux dependencies for this script.
 Then installs google-chrome-stable from google repository.
 Uses that version of chrome to install chromedriver into PATH.
@@ -24,33 +24,36 @@ CHROME_WINDOWS_MAJOR_VER=84  # check your chrome version
 
 # ======
 
-CHROME_DRIVER_ARTIFACT=chromedriver_linux64.zip
+CHROME_PUBKEY_URL=https://dl.google.com/linux/linux_signing_key.pub
+CHROME_STABLE_URL=https://dl.google.com/linux/direct
+CHROME_STABLE_DEB=google-chrome-stable_current_amd64.deb
+CHROME_DRIVER_URL=https://chromedriver.storage.googleapis.com
 CHROME_DRIVER_DEST=/usr/local/bin/chromedriver
-CHROME_DEB=google-chrome-stable_current_amd64.deb
+CHROME_DRIVER_ARTIFACT=chromedriver_linux64.zip
 
 # Clean workspace
-rm ./${CHROME_DRIVER_ARTIFACT}
-sudo rm ${CHROME_DRIVER_DEST}
-rm ./${CHROME_DEB}
+rm -f ./${CHROME_DRIVER_ARTIFACT}
+sudo rm -f ${CHROME_DRIVER_DEST}
+rm -f ./${CHROME_DEB}
 
 # Install dependencies
 sudo apt-get install -y openjdk-8-jre-headless xvfb libxi6 libgconf-2-4
 
 if [[ "${ON_WSL}" == 0 ]]; then
     # Download chrome if normal linux
-    wget -q -O - https://dl.google.com/linux/linux_signing_key.pub | sudo apt-key add -
-    wget https://dl.google.com/linux/direct/${CHROME_DEB}
+    wget -q -O - ${CHROME_PUBKEY_URL} | sudo apt-key add -
+    wget ${CHROME_STABLE_URL}/${CHROME_DEB}
     sudo dpkg -i ${CHROME_DEB}
     sudo apt -f install
     sudo dpkg -i ${CHROME_DEB}
-    CHROME_DRIVER_VERSION=$(google-chrome-stable --version | cut -d ' ' -f 3)
+    CHROME_SUFFIX=$(google-chrome-stable --version | cut -d ' ' -f 3 | cut -d '.' -f 1)
 else
-    CHROME_SUFFIX="_${CHROME_WINDOWS_MAJOR_VER}"
-    CHROME_DRIVER_VERSION=$(curl -sS https://chromedriver.storage.googleapis.com/LATEST_RELEASE_${CHROME_SUFFIX})
+    CHROME_SUFFIX="${CHROME_WINDOWS_MAJOR_VER}"
 fi
+CHROME_DRIVER_VERSION=$(curl -sS ${CHROME_DRIVER_URL}/LATEST_RELEASE_${CHROME_SUFFIX})
 
 # Install chromedriver
-wget -N https://chromedriver.storage.googleapis.com/${CHROME_DRIVER_VERSION}/${CHROME_DRIVER_ARTIFACT} -P ./
+wget -N ${CHROME_DRIVER_URL}/${CHROME_DRIVER_VERSION}/${CHROME_DRIVER_ARTIFACT} -P ./
 unzip ./${CHROME_DRIVER_ARTIFACT} -d ./
 rm ./${CHROME_DRIVER_ARTIFACT}
 sudo mv -f ./chromedriver ${CHROME_DRIVER_DEST}
