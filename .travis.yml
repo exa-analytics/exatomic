@@ -53,13 +53,12 @@ before_install:
       fi;
     - wget -N ${CHROME_DRIVER_BASE_URL}/${CHROME_DRIVER_VERSION}/${CHROME_ARTIFACT_NAME} -P ~/
     - unzip ~/${CHROME_ARTIFACT_NAME} -d ~/
-    - rm ~/${CHROME_ARTIFACT_NAME}
     - sudo mv -f ~/chromedriver ${CHROME_DRIVER_DST}
     - sudo chown root:root ${CHROME_DRIVER_DST}
     - sudo chmod 0755 ${CHROME_DRIVER_DST}
     - wget ${GECKO_DRIVER_BASE_URL}/${GECKO_DRIVER_VERSION}/${GECKO_ARTIFACT_NAME} -O ~/${GECKO_ARTIFACT_NAME}
     - tar -xzvf ~/${GECKO_ARTIFACT_NAME}
-    - rm ~/${GECKO_ARTIFACT_NAME}
+    - ls
     - sudo mv -f ~/geckodriver ${GECKO_DRIVER_DST}
     - sudo chown root:root ${GECKO_DRIVER_DST}
     - sudo chmod 0755 ${GECKO_DRIVER_DST}
