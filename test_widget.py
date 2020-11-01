@@ -40,6 +40,7 @@ from uuid import uuid4
 from time import sleep
 from shutil import rmtree, which
 from subprocess import Popen, PIPE
+from importlib import import_module
 
 from traitlets.config.application import Application
 from traitlets.config.configurable import Configurable
@@ -70,13 +71,10 @@ class Base:
             '.'.join(['test_widget', self.__class__.__name__]))
         return log
 
-    def _get_bool_env(self, var, default):
-        default = default.lower()
-        val = os.getenv(var, default).lower()
-        mahp = {'true': True, 'false': False}
-        fin = mahp.get(val, mahp.get(default))
-        self.log.debug(f"_get_bool_env:{var}={val}={fin}")
-        return fin
+    def clean_bool(self, val):
+        if isinstance(val, bool):
+            return val
+        return {'true': True, 'false': False}[val.lower()]
 
 
 class Selenium(Base, Configurable):
@@ -90,7 +88,7 @@ class Selenium(Base, Configurable):
     @default('vendor_type')
     def _default_vendor_type(self):
         val = os.getenv('VENDOR_TYPE', DEFAULT_VENDOR_TYPE)
-        self.log.debug(f"_default_vendor_type: {val}")
+        self.log.debug(f'_default_vendor_type: {val}')
         return val
 
     @default('browser_path')
@@ -102,17 +100,23 @@ class Selenium(Base, Configurable):
         for alias in aliases:
             try:
                 path = which(alias)
-                self.log.info(f"found browser path {path}")
+                self.log.info(f'found browser path: {path}')
                 break
             except Exception:
                 continue
         if path is None:
-            raise Exception(f"no browser path found for {self.vendor_type}")
+            raise Exception(f'browser executable not found for vendor_type={self.vendor_type}')
         return path
+
+    @validate('headless_run')
+    def _validate_headless_run(self, prop):
+        prop['value'] = self.clean_bool(prop['value'])
+        return prop['value']
 
     @default('headless_run')
     def _default_headless_run(self):
-        return self._get_bool_env('HEADLESS_RUN', DEFAULT_HEADLESS_RUN)
+        val = os.getenv('HEADLESS_RUN', DEFAULT_HEADLESS_RUN).lower()
+        return self.clean_bool(val)
 
     @staticmethod
     def click_by_css(driver, wait, css):
@@ -122,44 +126,53 @@ class Selenium(Base, Configurable):
         [obj] = driver.find_elements_by_css_selector(css)
         obj.click()
 
-    def get_firefox_options(self):
-        from selenium.webdriver.firefox.options import Options
-        options = Options()
-        options.binary = self.browser_path
-        self.log.info(f'adding firefox option headless={self.headless_run}')
-        if self.headless_run:
-            options.add_argument('-headless')
-        return options
+    def get_vendor_options(self):
+        mod = f'selenium.webdriver.{self.vendor_type}.options'
+        self.log.info(f'importing {mod}')
+        mod = import_module(mod)
+        options = mod.Options()
 
-    def get_chrome_options(self):
-        from selenium.webdriver.chrome.options import Options
-        options = Options()
-        options.binary_location = self.browser_path
-        self.log.info(f'adding chrome option headless={self.headless_run}')
-        options.headless = self.headless_run
+        # parametrize or apply vendor-specific config
+        if self.vendor_type == 'firefox':
+            self.log.info('no firefox-specific options')
+            headless_arg = '-headless'
+            binary_attr = 'binary'
+
+        elif self.vendor_type == 'chrome':
+            headless_arg = '--headless'
+            binary_attr = 'binary_location'
+            self.log.info('adding chrome-specific options')
+            options.add_argument('--no-sandbox')
+            options.add_argument('--disable-gpu')
+            options.add_argument('--disable-extensions')
+            options.add_argument('--disable-dev-shm-usage')
+            options.add_argument(f'--remote-debugging-port={self.console_port}')
+
+        else:
+            self.log.info('unfamiliar vendor_type {self.vendor_type}')
+            self.log.info('guessing chrome-like driver options')
+            headless_arg = '--headless'
+            binary_attr = 'binary_location'
+
+        # apply parametrized config
+        self.log.info(f'setting options.{binary_attr} to {self.browser_path}')
+        setattr(options, binary_attr, self.browser_path)
+        self.log.info(f'adding {headless_arg} flag {self.headless_run}')
         if self.headless_run:
-            options.add_argument('--headless')
-        options.add_argument('--no-sandbox')
-        options.add_argument('--disable-gpu')
-        options.add_argument('--disable-extensions')
-        options.add_argument('--disable-dev-shm-usage')
-        options.add_argument(f'--remote-debugging-port={self.console_port}')
+            options.add_argument(headless_arg)
         return options
 
     def init_webdriver(self, scratch):
         log_path = f'{scratch}/{self.vendor_type}driver.log'
-        cls = getattr(webdriver, self.vendor_type.title(), None)
+        proper = self.vendor_type.title()
+        cls = getattr(webdriver, proper, None)
         if cls is None:
-            raise Exception(f"no webdriver {self.vendor_type.title()} found")
-        func = f'get_{self.vendor_type}_options'
-        options = getattr(self, func, None)
-        if options is None:
-            raise Exception(f"no method {func} called")
-        return cls(options=options(), service_log_path=log_path)
+            raise Exception(f'no webdriver {proper} found')
+        return cls(options=self.get_vendor_options(), service_log_path=log_path)
 
     def create_and_goto_new_notebook(self, driver, wait):
         # click on new notebook dropdown
-        self.log.info("opening new notebook")
+        self.log.info('opening new notebook')
         self.click_by_css(driver, wait, '#new-dropdown-button')
         # primary notebook server window
         n_initial = len(driver.window_handles)
@@ -170,12 +183,12 @@ class Selenium(Base, Configurable):
             lambda driver: n_initial != len(driver.window_handles)
         )
         # switch to new notebook
-        self.log.info("navigating to new notebook")
+        self.log.info('navigating to new notebook')
         driver.switch_to.window(driver.window_handles[1])
 
     def insert_and_execute_first_cell(self, driver, wait, code_to_run):
         # select the first input cell
-        self.log.info("selecting first cell")
+        self.log.info('selecting first cell')
         cell = '#notebook-container > div > div.input > div.inner_cell > div.input_area'
         self.click_by_css(driver, wait, cell)
         # input some text
@@ -183,7 +196,7 @@ class Selenium(Base, Configurable):
         ActionChains(driver).send_keys(code_to_run).perform()
         [cell] = driver.find_elements_by_css_selector(cell)
         # execute the cell
-        self.log.info("executing first cell")
+        self.log.info('executing first cell')
         (ActionChains(driver).key_down(Keys.SHIFT)
                              .key_down(Keys.ENTER)
                              .key_up(Keys.SHIFT)
@@ -220,12 +233,12 @@ class Selenium(Base, Configurable):
         self.log.info('closing notebook server down from UI')
         self.click_by_css(driver, wait, '#shutdown')
 
-    def run_basic(self, url, scratch_dir):
+    def run_basic(self, server_url, scratch_dir):
 
         with self.init_webdriver(scratch_dir) as driver:
 
             wait = WebDriverWait(driver, self.driver_timeout)
-            driver.get(url)
+            driver.get(server_url)
 
             # spawn a notebook and render a widget
             self.create_and_goto_new_notebook(driver, wait)
@@ -261,14 +274,20 @@ class Notebook(Base, Configurable):
     def _default_server_url(self):
         return f'http://localhost:{self.server_port}/?token={self.server_token}'
 
+    @validate('cleanup_post')
+    def _validate_cleanup_post(self, prop):
+        prop['value'] = self.clean_bool(prop['value'])
+        return prop['value']
+
     @default('cleanup_post')
     def _default_cleanup_post(self):
-        return self._get_bool_env('CLEANUP_POST', DEFAULT_CLEANUP_POST)
+        val = os.getenv('CLEANUP_POST', DEFAULT_CLEANUP_POST).lower()
+        return self.clean_bool(val)
 
     def start_notebook_server(self):
-        self.log.info(f"making scratch dir {self.server_token}")
+        self.log.info(f'making scratch dir {self.server_token}')
         os.makedirs(self.server_token, exist_ok=True)
-        self.log.info(f"starting notebook server {self.server_url}")
+        self.log.info(f'starting notebook server {self.server_url}')
         command = [
             'jupyter', 'notebook', '--no-browser',
             f'--NotebookApp.port={self.server_port}',
@@ -281,7 +300,7 @@ class Notebook(Base, Configurable):
     def stop_notebook_server(self):
         proc = getattr(self, 'server_process')
         if proc is not None:
-            self.log.info(f"stopping notebook server")
+            self.log.info('stopping notebook server')
             proc.kill()
         if self.cleanup_post and os.path.isdir(self.server_token):
             rmtree(self.server_token)
@@ -297,7 +316,7 @@ class App(Base, Application):
         self.parse_command_line(argv)
         self.notebook = Notebook(config=self.config)
         self.selenium = Selenium(config=self.config)
-        self.log.info(f"custom config: {self.config}")
+        self.log.info(f'custom config: {self.config}')
 
     def run(self):
         nb = self.notebook
