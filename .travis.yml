@@ -32,9 +32,6 @@ matrix:
           python: 3.8
           env: PYTHONVER=3.8
 
-services:
-    - xvfb
-
 addons:
     chrome: stable
 
@@ -79,6 +76,7 @@ install:
 
 script:
     - export PYTHONDONTWRITEBYTECODE=1
+    - python test_widget.py --Selenium.vendor_type=chrome --Selenium.headless_run=true
     - pytest --doctest-modules -v --cov coveralls --cov-report term --cov=exatomic --cov-report xml
     - if [[ ${TRAVIS_OS_NAME} == "linux" ]] && [[ ${TRAVIS_PULL_REQUEST} == false ]] && [[ ${TRAVIS_PULL_REQUEST_BRANCH} == "" ]] && [[ ${TRAVIS_BRANCH} == "master" ]] && [[ ${PYTHONVER} == "3.8" ]]; then
           rm -rf docs/source/*.txt;
