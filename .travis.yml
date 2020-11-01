@@ -34,7 +34,7 @@ matrix:
 
 addons:
     chrome: stable
-    firefox: stable
+    firefox: latest
 
 before_install:
     - CHROME_MAJOR_VERSION=$(google-chrome-stable --version | cut -d ' ' -f 3 | cut -d '.' -f 1)
