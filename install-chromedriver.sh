@@ -34,7 +34,7 @@ CHROME_DRIVER_ARTIFACT=chromedriver_linux64.zip
 # Clean workspace
 rm -f ./${CHROME_DRIVER_ARTIFACT}
 sudo rm -f ${CHROME_DRIVER_DEST}
-rm -f ./${CHROME_DEB}
+rm -f ./${CHROME_STABLE_DEB}
 
 # Install dependencies
 sudo apt-get install -y openjdk-8-jre-headless xvfb libxi6 libgconf-2-4
@@ -42,10 +42,10 @@ sudo apt-get install -y openjdk-8-jre-headless xvfb libxi6 libgconf-2-4
 if [[ "${ON_WSL}" == 0 ]]; then
     # Download chrome if normal linux
     wget -q -O - ${CHROME_PUBKEY_URL} | sudo apt-key add -
-    wget ${CHROME_STABLE_URL}/${CHROME_DEB}
-    sudo dpkg -i ${CHROME_DEB}
+    wget ${CHROME_STABLE_URL}/${CHROME_STABLE_DEB}
+    sudo dpkg -i ${CHROME_STABLE_DEB}
     sudo apt -f install
-    sudo dpkg -i ${CHROME_DEB}
+    sudo dpkg -i ${CHROME_STABLE_DEB}
     CHROME_SUFFIX=$(google-chrome-stable --version | cut -d ' ' -f 3 | cut -d '.' -f 1)
 else
     CHROME_SUFFIX="${CHROME_WINDOWS_MAJOR_VER}"

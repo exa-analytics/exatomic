@@ -43,7 +43,7 @@ from subprocess import Popen, PIPE
 
 from traitlets.config.application import Application
 from traitlets.config.configurable import Configurable
-from traitlets import List, Int, Unicode, Bool, default, validate
+from traitlets import Int, Unicode, Bool, default, validate
 
 from selenium import webdriver
 from selenium.webdriver.common.by import By
@@ -89,7 +89,9 @@ class Selenium(Base, Configurable):
 
     @default('vendor_type')
     def _default_vendor_type(self):
-        return os.getenv('VENDOR_TYPE', DEFAULT_VENDOR_TYPE)
+        val = os.getenv('VENDOR_TYPE', DEFAULT_VENDOR_TYPE)
+        self.log.debug(f"_default_vendor_type: {val}")
+        return val
 
     @default('browser_path')
     def _default_browser_path(self):
@@ -102,7 +104,7 @@ class Selenium(Base, Configurable):
                 path = which(alias)
                 self.log.info(f"found browser path {path}")
                 break
-            except Exception as e:
+            except Exception:
                 continue
         if path is None:
             raise Exception(f"no browser path found for {self.vendor_type}")
