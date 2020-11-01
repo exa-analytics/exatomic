@@ -59,7 +59,7 @@ before_install:
     - wget ${GECKO_DRIVER_BASE_URL}/${GECKO_DRIVER_VERSION}/${GECKO_ARTIFACT_NAME} -O ~/${GECKO_ARTIFACT_NAME}
     - tar -xzvf ~/${GECKO_ARTIFACT_NAME}
     - ls
-    - sudo mv -f ~/geckodriver ${GECKO_DRIVER_DST}
+    - sudo mv -f geckodriver ${GECKO_DRIVER_DST}
     - sudo chown root:root ${GECKO_DRIVER_DST}
     - sudo chmod 0755 ${GECKO_DRIVER_DST}
 
