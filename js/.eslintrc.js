@@ -21,18 +21,18 @@ module.exports = {
         'no-bitwise': ['error', { allow: ['>>', '<<', '&'] }],
         '@typescript-eslint/no-explicit-any': 'off',
         '@typescript-eslint/member-delimiter-style': [
-	    'error', {
+            'error', {
                 multiline: {
-                    'delimiter': 'none'
+                    delimiter: 'none',
                 }
             }
-	],
+        ],
     },
     // TODO : typescript indent checking is buggy
     // '@typescript-eslint/indent': ['error', 4],
     overrides: [{
-        'files': ['*.ts'],
-        'rules': { indent: 'off' }
+        files: ['*.ts'],
+        rules: { indent: 'off' }
     }],
     settings: {
         'import/resolver': {

@@ -72,6 +72,7 @@ class Base:
         return log
 
     def clean_bool(self, val):
+        self.log.debug(f'cleaning {type(val)} {val} to bool')
         if isinstance(val, bool):
             return val
         return {'true': True, 'false': False}[val.lower()]
