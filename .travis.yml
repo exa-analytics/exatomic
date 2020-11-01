@@ -39,26 +39,30 @@ addons:
 before_install:
     - CHROME_MAJOR_VERSION=$(google-chrome-stable --version | cut -d ' ' -f 3 | cut -d '.' -f 1)
     - CHROME_DRIVER_VERSION=$(curl -sS https://chromedriver.storage.googleapis.com/LATEST_RELEASE_${CHROME_MAJOR_VERSION})
+    - CHROME_DRIVER_BASE_URL=https://chromedriver.storage.googleapis.com
+    - CHROME_DRIVER_DST=/usr/bin/chromedriver
     - GECKO_DRIVER_VERSION=v0.27.0
     - GECKO_DRIVER_BASE_URL=https://github.com/mozilla/geckodriver/releases/download
+    - GECKO_DRIVER_DST=/usr/bin/geckodriver
     - if [[ $TRAVIS_OS_NAME == "osx" ]]; then
           CHROME_ARTIFACT_NAME=chromedriver_mac64.zip;
-          FIREFOX_ARTIFACT_NAME=geckodriver-${GECKO_DRIVER_VERSION}-macos.tar.gz
+          GECKO_ARTIFACT_NAME=geckodriver-${GECKO_DRIVER_VERSION}-macos.tar.gz;
       else
           CHROME_ARTIFACT_NAME=chromedriver_linux64.zip;
-          FIREFOX_ARTIFACT_NAME=geckodriver-${GECKO_DRIVER_VERSION}-linux64.tar.gz
+          GECKO_ARTIFACT_NAME=geckodriver-${GECKO_DRIVER_VERSION}-linux64.tar.gz;
       fi;
-    - wget -N https://chromedriver.storage.googleapis.com/${CHROME_DRIVER_VERSION}/${CHROME_ARTIFACT_NAME} -P ~/
+    - wget -N ${CHROME_DRIVER_BASE_URL}/${CHROME_DRIVER_VERSION}/${CHROME_ARTIFACT_NAME} -P ~/
     - unzip ~/${CHROME_ARTIFACT_NAME} -d ~/
     - rm ~/${CHROME_ARTIFACT_NAME}
-    - sudo mv -f ~/chromedriver /usr/bin/chromedriver
-    - sudo chown root:root /usr/bin/chromedriver
-    - sudo chmod 0755 /usr/bin/chromedriver
-    - wget ${GECKO_DRIVER_BASE_URL}/${GECKO_DRIVER_VERSION}/${FIREFOX_ARTIFACT_NAME} -O ~/geckodriver.tar.gz
-    - tar -xzvf ~/geckodriver.tar.gz
-    - sudo mv -f ~/geckodriver /usr/bin/geckodriver
-    - sudo chown root:root /usr/bin/geckodriver
-    - sudo chmod 0755 /usr/bin/geckodriver
+    - sudo mv -f ~/chromedriver ${CHROME_DRIVER_DST}
+    - sudo chown root:root ${CHROME_DRIVER_DST}
+    - sudo chmod 0755 ${CHROME_DRIVER_DST}
+    - wget ${GECKO_DRIVER_BASE_URL}/${GECKO_DRIVER_VERSION}/${GECKO_ARTIFACT_NAME} -O ~/${GECKO_ARTIFACT_NAME}
+    - tar -xzvf ~/${GECKO_ARTIFACT_NAME}
+    - rm ~/${GECKO_ARTIFACT_NAME}
+    - sudo mv -f ~/geckodriver ${GECKO_DRIVER_DST}
+    - sudo chown root:root ${GECKO_DRIVER_DST}
+    - sudo chmod 0755 ${GECKO_DRIVER_DST}
 
 install:
     - if [[ $TRAVIS_OS_NAME == "osx" ]]; then
