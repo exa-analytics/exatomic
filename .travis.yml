@@ -38,12 +38,26 @@ addons:
 before_install:
     - CHROME_MAJOR_VERSION=$(google-chrome-stable --version | cut -d ' ' -f 3 | cut -d '.' -f 1)
     - CHROME_DRIVER_VERSION=$(curl -sS https://chromedriver.storage.googleapis.com/LATEST_RELEASE_${CHROME_MAJOR_VERSION})
-    - wget -N https://chromedriver.storage.googleapis.com/${CHROME_DRIVER_VERSION}/chromedriver_linux64.zip -P ~/
-    - unzip ~/chromedriver_linux64.zip -d ~/
-    - rm ~/chromedriver_linux64.zip
+    - GECKO_DRIVER_VERSION=v0.27.0
+    - GECKO_DRIVER_BASE_URL=https://github.com/mozilla/geckodriver/releases/download
+    - if [[ $TRAVIS_OS_NAME == "osx" ]]; then
+          CHROME_ARTIFACT_NAME=chromedriver_mac64.zip;
+          FIREFOX_ARTIFACT_NAME=geckodriver-${GECKO_DRIVER_VERSION}-macos.tar.gz
+      else
+          CHROME_ARTIFACT_NAME=chromedriver_linux64.zip;
+          FIREFOX_ARTIFACT_NAME=geckodriver-${GECKO_DRIVER_VERSION}-linux64.tar.gz
+      fi;
+    - wget -N https://chromedriver.storage.googleapis.com/${CHROME_DRIVER_VERSION}/${CHROME_ARTIFACT_NAME} -P ~/
+    - unzip ~/${CHROME_ARTIFACT_NAME} -d ~/
+    - rm ~/${CHROME_ARTIFACT_NAME}
     - sudo mv -f ~/chromedriver /usr/bin/chromedriver
     - sudo chown root:root /usr/bin/chromedriver
     - sudo chmod 0755 /usr/bin/chromedriver
+    - wget ${GECKO_DRIVER_BASE_URL}/${GECKO_DRIVER_VERSION}/${FIREFOX_ARTIFACT_NAME} -O ~/geckodriver.tar.gz
+    - tar -xzvf ~/geckodriver.tar.gz
+    - sudo mv -f ~/geckodriver /usr/bin/geckodriver
+    - sudo chown root:root /usr/bin/geckodriver
+    - sudo chmod 0755 /usr/bin/geckodriver
 
 install:
     - if [[ $TRAVIS_OS_NAME == "osx" ]]; then
@@ -76,7 +90,7 @@ install:
 
 script:
     - export PYTHONDONTWRITEBYTECODE=1
-    - python test_widget.py
+    - python test_widget.py --Selenium.vendor_type=firefox
     - pytest --doctest-modules -v --cov coveralls --cov-report term --cov=exatomic --cov-report xml
     - if [[ ${TRAVIS_OS_NAME} == "linux" ]] && [[ ${TRAVIS_PULL_REQUEST} == false ]] && [[ ${TRAVIS_PULL_REQUEST_BRANCH} == "" ]] && [[ ${TRAVIS_BRANCH} == "master" ]] && [[ ${PYTHONVER} == "3.8" ]]; then
           rm -rf docs/source/*.txt;

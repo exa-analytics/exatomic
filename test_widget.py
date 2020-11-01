@@ -57,7 +57,7 @@ from selenium.webdriver.common.action_chains import ActionChains
 logging.basicConfig()
 logging.getLogger('test_widget').setLevel(logging.INFO)
 DEFAULT_VENDOR_TYPE = 'chrome'
-DEFAULT_HEADLESS_RUN = 'true'
+DEFAULT_HEADLESS_RUN = 'false'
 DEFAULT_CLEANUP_POST = 'true'
 DEFAULT_CONSOLE_PORT = '9222'
 DEFAULT_DRIVER_TIMEOUT = 10
@@ -82,7 +82,7 @@ class Selenium(Base, Configurable):
     """A selenium interface for custom widgets in the jupyter notebook."""
     vendor_type = Unicode('').tag(config=True)
     browser_path = Unicode('').tag(config=True)
-    headless_run = Bool(True).tag(config=True)
+    headless_run = Bool(False).tag(config=True)
     console_port = Unicode(DEFAULT_CONSOLE_PORT).tag(config=True)
     driver_timeout = Int(DEFAULT_DRIVER_TIMEOUT).tag(config=True)
 
