@@ -243,6 +243,7 @@ def _determine_vector(uni, vector, irrep=None):
         else:
             uni.atom['Z'] = uni.atom['symbol'].map(sym2z)
             homo = uni.atom['Z'].sum() // 2
+        homo = int(homo)
         if homo < 5:
             return np.array(range(0, homo + 5))
         else:
