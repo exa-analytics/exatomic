@@ -599,13 +599,13 @@ class App3D {
     }
 
     add_freq_disp(freqdx, dx, dy, dz, atom_x, atom_y, atom_z, scale) {
-        var r = 0.05;
-        var length = scale*Math.sqrt(dx*dx + dy*dy + dz*dz)
-        var origin = new THREE.Vector3(atom_x, atom_y, atom_z);
-        var disp = new THREE.Vector3(dx, dy, dz);
-        var norm_mode = new THREE.Vector3().addVectors(disp, origin);
-        var color = 0xFF0000
-        var bar = new THREE.ArrowHelper(disp, origin, length, color);
+        const r = 0.05;
+        const length = scale*Math.sqrt(dx*dx + dy*dy + dz*dz)
+        const origin = new THREE.Vector3(atom_x, atom_y, atom_z);
+        const disp = new THREE.Vector3(dx, dy, dz);
+        const norm_mode = new THREE.Vector3().addVectors(disp, origin);
+        const color = 0xFF0000
+        const bar = new THREE.ArrowHelper(disp, origin, length, color);
         //var center = new THREE.Vector3().addVectors(disp, origin);
         //var g = new THREE.CylinderGeometry(r, r, length);
         //g.applyMatrix(new THREE.Matrix4().makeRotationX(Math.PI / 2));
