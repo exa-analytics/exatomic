@@ -270,6 +270,7 @@ export class UniverseSceneView extends base.ExatomicSceneView {
         const freqdx = this.model.get("freq_idx");
         const fdx = this.model.get("frame_idx");
         const scale = this.model.get("freq_scale");
+        const fill = this.model.get("atom_3d")
         console.log(this.freq_d[freqdx]);
         for ( const property in this.freq_d[freqdx] ) {
             const dx = this.freq_d[freqdx][property]["dx"]
@@ -282,7 +283,7 @@ export class UniverseSceneView extends base.ExatomicSceneView {
             const atom_z = this.atom_z[fdx][adx]
             this.app3d.meshes["normmode"+adx] = this.app3d.add_freq_disp(freqdx, dx, dy,
                                                                          dz, atom_x, atom_y,
-                                                                         atom_z, scale);
+                                                                         atom_z, scale, fill);
             this.app3d.add_meshes("normmode"+adx);
             //console.log(dx, dy, dz, property, atom_x, atom_y, atom_z, adx);
         }

@@ -598,24 +598,32 @@ class App3D {
         return meshes
     }
 
-    add_freq_disp(freqdx, dx, dy, dz, atom_x, atom_y, atom_z, scale) {
+    add_freq_disp(freqdx, dx, dy, dz, atom_x, atom_y, atom_z, scale, fill) {
         const r = 0.05;
         const length = scale*Math.sqrt(dx*dx + dy*dy + dz*dz)
         const origin = new THREE.Vector3(atom_x, atom_y, atom_z);
         const disp = new THREE.Vector3(dx, dy, dz);
         const norm_mode = new THREE.Vector3().addVectors(disp, origin);
-        const color = 0xFF0000
+        const color = 0x00BD00
         const bar = new THREE.ArrowHelper(disp, origin, length, color);
-        //var center = new THREE.Vector3().addVectors(disp, origin);
-        //var g = new THREE.CylinderGeometry(r, r, length);
+        // this is code that works to create cylinders that woul replace the
+        // ArrowHelper in a new PR
+        // Issues with it are that the arrow is centered around the atomic position
+        // rather than on the normal mode
+        //const tmp = new THREE.Vector3().addVectors(origin, disp.multiplyScalar(scale*0.5))
+        //const center = new THREE.Vector3().addVectors(disp, tmp);
+        //const g = new THREE.CylinderGeometry(r, r, length);
         //g.applyMatrix(new THREE.Matrix4().makeRotationX(Math.PI / 2));
-        //var mat = new THREE.MeshPhongMaterial({vertexColors: THREE.VertexColors,
+        //const mat = new THREE.MeshPhongMaterial({vertexColors: THREE.VertexColors,
         //                                        color: color, specular: color,
         //                                        shininess: 5});
-        //var bar = new THREE.Mesh(g, mat);
-        //bar.position.set(origin.x, origin.y, origin.z);
+        //const bar = new THREE.Mesh(g, mat);
+        //bar.position.set(center.x, center.y, center.z);
         //bar.lookAt(norm_mode);
         //bar.name = freqdx + " disp";
+        //if (fill) {
+        //} else {
+        //}
         return [bar];
     };
 
