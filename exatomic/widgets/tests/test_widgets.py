@@ -64,5 +64,4 @@ class TestUniverseWidget(TestCase):
         main = self.box._init_gui()
         self.assertListEqual(list(main.keys()),
                              ['close', 'clear', 'active', 'saves',
-                              'camera', 'atom_3d', 'axis', 'frame',
-                              'distance'])
+                              'camera', 'atom_3d', 'axis', 'frame'])

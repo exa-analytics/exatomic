@@ -49,7 +49,7 @@ class TestTraits(TestCase):
         self.assertEqual(frame, {})
 
     def test_uni_traits(self):
-        unargs, _, _ = uni_traits(self.uni)
+        unargs, _, _, _ = uni_traits(self.uni)
         for at in ['x', 'y', 'z', 's', 'cr', 'c']:
             self.assertTrue('atom_' + at in unargs)
         for b in ['b0', 'b1']:
