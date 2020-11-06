@@ -679,10 +679,12 @@ class Fchk(six.with_metaclass(GauMeta, Editor)):
         # Atomic positions
         pos = self._dfme(found[_reposition], nat * 3).reshape(nat, 3)
         frame = np.zeros(len(symbols), dtype=np.int64)
+        adx = range(len(symbols))
         self.atom = pd.DataFrame.from_dict({'symbol': symbols, 'Zeff': zeffs,
                                             'frame': frame, 'x': pos[:,0],
                                             'y': pos[:,1], 'z': pos[:,2],
-                                            'set': range(1, len(symbols) + 1)})
+                                            'set': range(1, len(symbols) + 1),
+                                            'adx': adx})
 
     def parse_basis_set(self):
         # Basis set regex
