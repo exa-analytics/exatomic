@@ -104,13 +104,14 @@ class Output(six.with_metaclass(GauMeta, Editor)):
         # Iterate over frames
         for i, (start, stop) in enumerate(zip(starts, stops)):
             atom = self.pandas_dataframe(start, stop, 6)
+            atom['adx'] = range(atom.shape[0])
             atom['frame'] = i
             dfs.append(atom)
         atom = pd.concat(dfs).reset_index(drop=True)
         # Drop the column of atomic type (whatever that is)
         atom.drop([2], axis=1, inplace=True)
         # Name the data
-        atom.columns = ['set', 'Z', 'x', 'y', 'z', 'frame']
+        atom.columns = ['set', 'Z', 'x', 'y', 'z', 'adx', 'frame']
         # Zero-based indexing
         atom['set'] -= 1
         # Convert to atomic units
