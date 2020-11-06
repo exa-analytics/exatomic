@@ -28,7 +28,6 @@ exatomic/static/nbextension
 exatomic/static/js/
 exatomic/static/*js
 exatomic/static/*js.map
-package-lock.json
 
 # Compiled
 *.py[cod]
