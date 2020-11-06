@@ -60,6 +60,7 @@ class XYZ(six.with_metaclass(Meta, Editor)):
         df = df[df.index.isin(indices)]
         df[['x', 'y', 'z']] = df[['x', 'y', 'z']].astype(np.float64)
         df['symbol'] = df['symbol'].astype('category')
+        df['adx'] = range(df.shape[0])
         df['frame'] = frame
         df['frame'] = df['frame'].astype('category')
         df.reset_index(drop=True, inplace=True)
