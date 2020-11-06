@@ -153,7 +153,7 @@ def compute_pdist_nv(universe, dmax=8.0):
             values = pdist_nv(group['x'].values.astype(float),
                               group['y'].values.astype(float),
                               group['z'].values.astype(float),
-                              group.index.values.astype(int), dmax)
+                              group['adx'].values.astype(int), dmax)
             drs.append(values[0])
             atom0s.append(values[1])
             atom1s.append(values[2])
