@@ -264,6 +264,8 @@ class Output(six.with_metaclass(OutMeta, Editor)):
             '([A-z]{1,})([0-9]*)', expand=False)[0].str.lower().str.title()
         atom['Z'] = atom['symbol'].map(sym2z).astype(np.int64)
         atom['center'] = range(atom.shape[0])
+        # TODO: can we eliminate one of these
+        atom['adx'] = range(atom.shape[0])
         atom['frame'] = 0
         self.atom = atom
         # Work-around for symmetrized calcs?
@@ -452,6 +454,7 @@ class HDF(six.with_metaclass(HDFMeta, object)):
                                             'y': xyzs[:, 1],
                                             'z': xyzs[:, 2],
                                             'center': range(len(Z)),
+                                            'adx': range(len(Z)),
                                             'symbol': Z.map(z2sym),
                                             'label': labs,
                                             'frame': 0})

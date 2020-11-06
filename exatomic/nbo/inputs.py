@@ -231,6 +231,7 @@ class Input(six.with_metaclass(InpMeta, Editor)):
         cols = ('Z', 'Zeff', 'x', 'y', 'z')
         atom = self.pandas_dataframe(start, stop, cols)
         atom['frame'] = 0
+        atom['adx'] = range(atom.shape[0])
         atom['symbol'] = atom['Z'].map(z2sym)
         self.atom = atom
 

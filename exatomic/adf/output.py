@@ -74,6 +74,7 @@ class Output(six.with_metaclass(OutMeta, Editor)):
                 df['Z'] = df['symbol'].map(sym2z)
                 df['frame'] = idx
                 df['set'] -= 1
+                df['adx'] = range(df.shape[0])
                 dfs.append(df)
             atom = pd.concat(dfs, ignore_index=True)
         elif found1:
@@ -85,6 +86,7 @@ class Output(six.with_metaclass(OutMeta, Editor)):
             for c in ['x', 'y', 'z']: atom[c] *= Length['Angstrom', 'au']
             atom['Z'] = atom['symbol'].map(sym2z)
             atom['set'] -= 1
+            atom['adx'] = range(atom.shape[0])
             atom['frame'] = 0
         elif found2:
             #if len(found) > 1:
@@ -107,6 +109,7 @@ class Output(six.with_metaclass(OutMeta, Editor)):
                 # remove the trailing chracters from the index
                 df['set'] = list(map(lambda x: x.replace('):', ''), df['set']))
                 df['set'] = df['set'].astype(int) - 1
+                df['adx'] = range(atom.shape[0])
                 atom.append(df)
             atom = pd.concat(atom)
         else:

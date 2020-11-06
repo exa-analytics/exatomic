@@ -71,6 +71,7 @@ class Output(six.with_metaclass(OutMeta, Editor)):
         atom['x'] *= Length[unit, 'au']
         atom['y'] *= Length[unit, 'au']
         atom['z'] *= Length[unit, 'au']
+        atom['adx'] = np.repeat(range(nat), nf)
         if atom['frame'].max() > 0:
             li = atom['frame'].max()
             atom = atom[~(atom['frame'] == li)]

@@ -48,6 +48,7 @@ class Cube(six.with_metaclass(Meta, Editor)):
         df = self.pandas_dataframe(6, nat + 6, names)
         df['symbol'] = df['Z'].map(z2sym).astype('category')
         df['label'] = range(nat)
+        df['adx'] = range(df.shape[0])
         df['frame'] = 0
         self.atom = Atom(df)
 

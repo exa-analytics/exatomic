@@ -47,6 +47,7 @@ class Output(six.with_metaclass(QMeta, Editor)):
         for i, (start, stop) in enumerate(zip(starts, stops)):
             atom = self.pandas_dataframe(start, stop, 5)
             atom['frame'] = i
+            atom['adx'] = range(atom.shape[0])
             dfs.append(atom)
         atom = pd.concat(dfs).reset_index(drop=True)
         atom.columns = ['set', 'symbol', 'x', 'y', 'z', 'frame']
