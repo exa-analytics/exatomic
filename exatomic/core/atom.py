@@ -48,11 +48,13 @@ class Atom(DataFrame):
     +-------------------+----------+-------------------------------------------+
     | vz                | float    | velocity in z                             |
     +-------------------+----------+-------------------------------------------+
+    | adx               | category | atomic index                              |
+    +-------------------+----------+-------------------------------------------+
     """
     _index = 'atom'
     _cardinal = ('frame', np.int64)
     _categories = {'symbol': str, 'set': np.int64, 'molecule': np.int64,
-                   'label': np.int64}
+                   'label': np.int64, 'adx': np.uint16}
     _columns = ['x', 'y', 'z', 'symbol']
 
     #@property
@@ -221,7 +223,8 @@ class Atom(DataFrame):
         else: atom = self[self.frame == frame].copy()
         cols = ['x', 'y', 'z']
         # define the original vector
-        v0 = atom.iloc[adx1][cols].values.astype(np.float64) - atom.iloc[adx0][cols].values.astype(np.float64)
+        v0 = atom.iloc[adx1][cols].values.astype(np.float64) \
+                - atom.iloc[adx0][cols].values.astype(np.float64)
         # get the vector to align with and normalize
         v1 = axis/np.linalg.norm(axis)
         # find the normal vector to rotate around

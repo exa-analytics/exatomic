@@ -32,17 +32,31 @@ import pandas as pd
 from IPython.display import display
 from ipywidgets import FloatProgress
 from exa import DataFrame
-#from exa.util.units import Length
+from exa.util.units import Length
 from exatomic.base import sym2radius
 from exatomic.algorithms.distance import (pdist_ortho, pdist_ortho_nv, pdist,
                                           pdist_nv)
 
 
 class AtomTwo(DataFrame):
-    """Interatomic distances."""
+    """
+    Interatomic distances.
+
+    +--------+----------+------------------------------------------------+
+    | Column | Type     | Description                                    |
+    +========+==========+================================================+
+    | dr     | float    | Distance between the atoms.                    |
+    +--------+----------+------------------------------------------------+
+    | atom0  | category | First atomic index.                            |
+    +--------+----------+------------------------------------------------+
+    | atom1  | category | Second atomic index.                           |
+    +--------+----------+------------------------------------------------+
+    | frame  | category | Frame index. Follows convention on atom table. |
+    +--------+----------+------------------------------------------------+
+    """
     _index = "two"
     #_cardinal = ("frame", np.int64)
-    _columns = ["atom0", "atom1", "dr"]
+    _columns = ["atom0", "atom1", "dr", "frame"]
     _categories = {'symbols': str, 'atom0': np.int64, 'atom1': np.int64,
                    'frame': np.int64}
 
@@ -62,6 +76,41 @@ class AtomTwo(DataFrame):
     def bonded(self):
         return AtomTwo(self[self['bond'] == True])
 
+    def compare_bond(self, atom0, atom1, unit='au'):
+        '''
+        Compare the distances between two selected atoms over the course of
+        the different frames available in the calculation.
+
+        Args:
+            atom0 (int): First atomic index for comparison. Used to reference
+                         the `atom0` column.
+            atom1 (int): Second atomic index for comparison. Used to reference
+                         the `atom1` column.
+            unit (string, optional): Units to return the distances in.
+                                     Defaults to 'au'.
+
+        Raises:
+            ValueError: When there is only one frame in the atom table. This
+                        applies mainly when not performing some kind of
+                        optimization.
+        '''
+        if self.nframes == 1:
+            raise ValueError("Could only find one frame in the atom table.")
+        dfs = []
+        for frame, data in self.groupby('frame'):
+            grouped = data.groupby(['atom0', 'atom1'])
+            df = grouped.get_group((atom0, atom1))
+            dfs.append(df)
+        bonds = pd.concat(dfs)
+        bonds.index = bonds['frame']
+        bonds.drop('frame', axis=1, inplace=True)
+        if unit != 'au':
+            bonds['dr'] *= Length['au', unit]
+        change = np.zeros(bonds.shape[0])
+        for idx in range(1, bonds.shape[0]):
+            change[idx] = bonds.loc[idx, 'dr'] - bonds.loc[idx-1, 'dr']
+        bonds['change'] = change
+        return bonds
 
 class MoleculeTwo(DataFrame):
     @property
