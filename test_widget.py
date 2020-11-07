@@ -57,7 +57,7 @@ from selenium.webdriver.common.action_chains import ActionChains
 logging.basicConfig()
 logging.getLogger('test_widget').setLevel(logging.INFO)
 DEFAULT_VENDOR_TYPE = 'chrome'
-DEFAULT_HEADLESS_RUN = 'false'
+DEFAULT_HEADLESS_RUN = 'true'
 DEFAULT_CLEANUP_POST = 'true'
 DEFAULT_CONSOLE_PORT = '9222'
 DEFAULT_DRIVER_TIMEOUT = 10
@@ -330,12 +330,32 @@ class App(Base, Application):
 
 
 def test_selenium():
+    """pytest flags seems to interfere with the
+    traitlets command-line system so use a work
+    around for now.
+    """
     app = App()
     app._initialize()
     app.run()
 
+def startup_info():
+    log = logging.getLogger('test_widget')
+    width = 12
+    spacer = f'{{:<{width}}}{{:>{width}}}'.format
+    header = spacer('env', 'val')
+    log.info(header)
+    log.info('-' * len(header))
+    for env in [
+            'VENDOR_TYPE',
+            'HEADLESS_RUN',
+            'CLEANUP_POST',
+            'MOZ_HEADLESS',
+    ]:
+        log.info(spacer(env, os.getenv(env, 'N/A')))
+
 
 if __name__ == '__main__':
+    startup_info()
     app = App()
     app.initialize(sys.argv)
     app.run()

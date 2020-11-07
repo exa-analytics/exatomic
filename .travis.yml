@@ -94,7 +94,7 @@ install:
 
 script:
     - export PYTHONDONTWRITEBYTECODE=1
-    - python test_widget.py --Selenium.vendor_type=firefox
+    - python test_widget.py
     - pytest --doctest-modules -v --cov coveralls --cov-report term --cov=exatomic --cov-report xml
     - if [[ ${TRAVIS_OS_NAME} == "linux" ]] && [[ ${TRAVIS_PULL_REQUEST} == false ]] && [[ ${TRAVIS_PULL_REQUEST_BRANCH} == "" ]] && [[ ${TRAVIS_BRANCH} == "master" ]] && [[ ${PYTHONVER} == "3.8" ]]; then
           rm -rf docs/source/*.txt;
