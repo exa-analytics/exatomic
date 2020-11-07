@@ -32,47 +32,54 @@ matrix:
           python: 3.8
           env: PYTHONVER=3.8
 
+services:
+    - xvfb
+
 addons:
     chrome: stable
     firefox: latest
 
 before_install:
-    - CHROME_MAJOR_VERSION=$(google-chrome --version | cut -d ' ' -f 3 | cut -d '.' -f 1)
+    - CHROME_DRIVER_BASE_URL=https://chromedriver.storage.googleapis.com
+    - GECKO__DRIVER_BASE_URL=https://github.com/mozilla/geckodriver/releases/download
+    - CHROME_DRIVER_DST=/usr/bin/chromedriver
+    - GECKO__DRIVER_DST=/usr/bin/geckodriver
+    - GECKO__DRIVER_VERSION=v0.27.0
+    - |
+      if [[ $TRAVIS_OS_NAME == "osx" ]]; then
+          CHROME_ARTIFACT_NAME=chromedriver_mac64.zip
+          GECKO__ARTIFACT_NAME=geckodriver-${GECKO__DRIVER_VERSION}-macos.tar.gz
+          CHROME_START_CMD="/Applications/Google\\ Chrome.app/Contents/MacOS/Google\\ Chrome"
+          CHROME_MAJOR_VERSION=$(${CHROME_START_CMD} --version | cut -d ' ' -f 3 | cut -d '.' -f 1)
+      else
+          CHROME_ARTIFACT_NAME=chromedriver_linux64.zip
+          GECKO__ARTIFACT_NAME=geckodriver-${GECKO__DRIVER_VERSION}-linux64.tar.gz
+          CHROME_START_CMD="google-chrome"
+      fi;
+    - CHROME_MAJOR_VERSION=$(${CHROME_START_CMD} --version | cut -d ' ' -f 3 | cut -d '.' -f 1)
     - echo "CHROME_MAJOR_VERSION=${CHROME_MAJOR_VERSION}"
     - CHROME_DRIVER_VERSION_CMD="curl -sS https://chromedriver.storage.googleapis.com/LATEST_RELEASE_${CHROME_MAJOR_VERSION}"
     - echo "CHROME_DRIVER_VERSION_CMD=${CHROME_DRIVER_VERSION_CMD}"
     - CHROME_DRIVER_VERSION=$(${CHROME_DRIVER_VERSION_CMD})
     - echo "CHROME_DRIVER_VERSION=${CHROME_DRIVER_VERSION}"
-    - CHROME_DRIVER_BASE_URL=https://chromedriver.storage.googleapis.com
-    - CHROME_DRIVER_DST=/usr/bin/chromedriver
-    - GECKO_DRIVER_VERSION=v0.27.0
-    - GECKO_DRIVER_BASE_URL=https://github.com/mozilla/geckodriver/releases/download
-    - GECKO_DRIVER_DST=/usr/bin/geckodriver
-    - |
-      if [[ $TRAVIS_OS_NAME == "osx" ]]; then
-          CHROME_ARTIFACT_NAME=chromedriver_mac64.zip
-          GECKO_ARTIFACT_NAME=geckodriver-${GECKO_DRIVER_VERSION}-macos.tar.gz
-          CHROME_START_CMD="/Applications/Google\\ Chrome.app/Contents/MacOS/Google\\ Chrome"
-      else
-          CHROME_ARTIFACT_NAME=chromedriver_linux64.zip
-          GECKO_ARTIFACT_NAME=geckodriver-${GECKO_DRIVER_VERSION}-linux64.tar.gz
-          CHROME_START_CMD="google-chrome"
-      fi;
     - echo ${CHROME_DRIVER_BASE_URL}/${CHROME_DRIVER_VERSION}/${CHROME_ARTIFACT_NAME}
+    - echo ${GECKO__DRIVER_BASE_URL}/${GECKO__DRIVER_VERSION}/${GECKO__ARTIFACT_NAME}
     - wget -q -N ${CHROME_DRIVER_BASE_URL}/${CHROME_DRIVER_VERSION}/${CHROME_ARTIFACT_NAME} -P ~/
+    - wget -q ${GECKO__DRIVER_BASE_URL}/${GECKO__DRIVER_VERSION}/${GECKO__ARTIFACT_NAME} -O ~/${GECKO__ARTIFACT_NAME}
     - unzip ~/${CHROME_ARTIFACT_NAME} -d ~/
+    - tar -xzvf ~/${GECKO__ARTIFACT_NAME}
     - sudo mv -f ~/chromedriver ${CHROME_DRIVER_DST}
+    - sudo mv -f geckodriver ${GECKO__DRIVER_DST}
     - sudo chown root:root ${CHROME_DRIVER_DST}
+    - sudo chown root:root ${GECKO__DRIVER_DST}
     - sudo chmod 0755 ${CHROME_DRIVER_DST}
-    - echo ${GECKO_DRIVER_BASE_URL}/${GECKO_DRIVER_VERSION}/${GECKO_ARTIFACT_NAME}
-    - wget -q ${GECKO_DRIVER_BASE_URL}/${GECKO_DRIVER_VERSION}/${GECKO_ARTIFACT_NAME} -O ~/${GECKO_ARTIFACT_NAME}
-    - tar -xzvf ~/${GECKO_ARTIFACT_NAME}
-    - sudo mv -f geckodriver ${GECKO_DRIVER_DST}
-    - sudo chown root:root ${GECKO_DRIVER_DST}
-    - sudo chmod 0755 ${GECKO_DRIVER_DST}
+    - sudo chmod 0755 ${GECKO__DRIVER_DST}
+    - "export DISPLAY=99:0"
+    - "sh -e /etc/init.d/xvfb start"
+    - sleep 3
     - echo "${CHROME_START_CMD} --headless --disable-gpu --remote-debugging-port=9222 http://localhost &"
     - ${CHROME_START_CMD} --headless --disable-gpu --remote-debugging-port=9222 http://localhost &
-    - sleep 2
+    - sleep 3
 
 install:
     - if [[ $TRAVIS_OS_NAME == "osx" ]]; then
