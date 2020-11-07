@@ -47,11 +47,11 @@ before_install:
     - if [[ $TRAVIS_OS_NAME == "osx" ]]; then
           CHROME_ARTIFACT_NAME=chromedriver_mac64.zip;
           GECKO_ARTIFACT_NAME=geckodriver-${GECKO_DRIVER_VERSION}-macos.tar.gz;
-          CHROME_START_CMD="/Applications/Google\\ Chrome.app/Contents/MacOS/Google\\ Chrome --headless --disable-gpu --remote-debugging-port=9222 http://localhost &"
+          CHROME_START_CMD="/Applications/Google\\ Chrome.app/Contents/MacOS/Google\\ Chrome --headless --disable-gpu --remote-debugging-port=9222 http://localhost \&"
       else
           CHROME_ARTIFACT_NAME=chromedriver_linux64.zip;
           GECKO_ARTIFACT_NAME=geckodriver-${GECKO_DRIVER_VERSION}-linux64.tar.gz;
-          CHROME_START_CMD="google-chrome-stable --headless --disable-gpu --remote-debugging-port=9222 http://localhost &"
+          CHROME_START_CMD="google-chrome-stable --headless --disable-gpu --remote-debugging-port=9222 http://localhost \&"
       fi;
     - echo ${CHROME_DRIVER_BASE_URL}/${CHROME_DRIVER_VERSION}/${CHROME_ARTIFACT_NAME}
     - wget -N ${CHROME_DRIVER_BASE_URL}/${CHROME_DRIVER_VERSION}/${CHROME_ARTIFACT_NAME} -P ~/
