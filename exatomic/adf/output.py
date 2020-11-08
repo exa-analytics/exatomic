@@ -109,7 +109,7 @@ class Output(six.with_metaclass(OutMeta, Editor)):
                 # remove the trailing chracters from the index
                 df['set'] = list(map(lambda x: x.replace('):', ''), df['set']))
                 df['set'] = df['set'].astype(int) - 1
-                df['adx'] = range(atom.shape[0])
+                df['adx'] = range(df.shape[0])
                 atom.append(df)
             atom = pd.concat(atom)
         else:
