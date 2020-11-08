@@ -76,9 +76,9 @@ class AtomTwo(DataFrame):
     def bonded(self):
         return AtomTwo(self[self['bond'] == True])
 
-    def compare_bond(self, atom0, atom1, unit='au'):
+    def get_bond(self, atom0, atom1, unit='au'):
         '''
-        Compare the distances between two selected atoms over the course of
+        Get the distances between two selected atoms over the course of
         the different frames available in the calculation.
 
         Args:
@@ -88,14 +88,7 @@ class AtomTwo(DataFrame):
                          the `atom1` column.
             unit (string, optional): Units to return the distances in.
                                      Defaults to 'au'.
-
-        Raises:
-            ValueError: When there is only one frame in the atom table. This
-                        applies mainly when not performing some kind of
-                        optimization.
         '''
-        if self.nframes == 1:
-            raise ValueError("Could only find one frame in the atom table.")
         dfs = []
         for frame, data in self.groupby('frame'):
             grouped = data.groupby(['atom0', 'atom1'])
