@@ -158,26 +158,30 @@ def compute_pdist(universe, dmax=8.0):
     drs = []
     atom0s = []
     atom1s = []
-    for _, group in universe.atom.groupby("frame"):
+    frames = []
+    for fdx, group in universe.atom.groupby("frame"):
         if len(group) > 0:
             values = pdist(group['x'].values.astype(float),
                            group['y'].values.astype(float),
                            group['z'].values.astype(float),
-                           group.index.values.astype(int), dmax)
+                           group['adx'].values.astype(int), dmax)
             dxs.append(values[0])
             dys.append(values[1])
             dzs.append(values[2])
             drs.append(values[3])
             atom0s.append(values[4])
             atom1s.append(values[5])
+            frames.append(np.repeat(fdx, values[0].shape[0]))
     dxs = np.concatenate(dxs)
     dys = np.concatenate(dys)
     dzs = np.concatenate(dzs)
     drs = np.concatenate(drs)
     atom0s = np.concatenate(atom0s)
     atom1s = np.concatenate(atom1s)
+    frames = np.concatenate(frames)
     return AtomTwo.from_dict({'dx': dxs, 'dy': dys, 'dz': dzs, 'dr': drs,
-                              'atom0': atom0s, 'atom1': atom1s})
+                              'atom0': atom0s, 'atom1': atom1s,
+                              'frames': frames})
 
 
 def compute_pdist_nv(universe, dmax=8.0):
