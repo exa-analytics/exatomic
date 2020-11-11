@@ -17,5 +17,5 @@ class TestTwo(TestCase):
         expected = [1.424108, 1.442680, 1.454052, 1.455723, 1.455893,
                     1.455827, 1.455813, 1.455824, 1.455838, 1.455841,
                     1.455839, 1.455837]
-        assert np.allclose(bonds['dr'].values, expected, atol=1e-6)
+        self.assertTrue(np.allclose(bonds['dr'].values, expected, atol=1e-6))
 
