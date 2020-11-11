@@ -90,7 +90,7 @@ class AtomTwo(DataFrame):
                                      Defaults to 'au'.
         '''
         dfs = []
-        for frame, data in self.groupby('frame'):
+        for _, data in self.groupby('frame'):
             grouped = data.groupby(['atom0', 'atom1'])
             df = grouped.get_group((atom0, atom1))
             dfs.append(df)
