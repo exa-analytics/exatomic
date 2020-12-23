@@ -44,21 +44,14 @@ before_install:
       if [[ $TRAVIS_OS_NAME == "osx" ]]; then
           CHROME_ARTIFACT_NAME=chromedriver_mac64.zip
           GECKO__ARTIFACT_NAME=geckodriver-${GECKO__DRIVER_VERSION}-macos.tar.gz
-          CHROME_START_CMD="/Applications/Google\\ Chrome.app/Contents/MacOS/Google\\ Chrome"
+          export BROWSER_PATH="/Applications/Google\\ Chrome.app/Contents/MacOS/Google\\ Chrome"
           CHROME_MAJOR_VERSION="LATEST_RELEASE"
       else
           CHROME_ARTIFACT_NAME=chromedriver_linux64.zip
           GECKO__ARTIFACT_NAME=geckodriver-${GECKO__DRIVER_VERSION}-linux64.tar.gz
-          CHROME_START_CMD="google-chrome-stable"
-          CHROME_MAJOR_VERSION="LATEST_RELEASE_$(${CHROME_START_CMD} --version | cut -d ' ' -f 3 | cut -d '.' -f 1)"
+          export BROWSER_PATH="google-chrome-stable"
+          CHROME_MAJOR_VERSION="LATEST_RELEASE_$(${$BROWSER_PATH} --version | cut -d ' ' -f 3 | cut -d '.' -f 1)"
       fi;
-    - echo "CHROME_MAJOR_VERSION=${CHROME_MAJOR_VERSION}"
-    - CHROME_DRIVER_VERSION_CMD="curl -sS https://chromedriver.storage.googleapis.com/${CHROME_MAJOR_VERSION}"
-    - echo "CHROME_DRIVER_VERSION_CMD=${CHROME_DRIVER_VERSION_CMD}"
-    - CHROME_DRIVER_VERSION=$(${CHROME_DRIVER_VERSION_CMD})
-    - echo "CHROME_DRIVER_VERSION=${CHROME_DRIVER_VERSION}"
-    - echo ${CHROME_DRIVER_BASE_URL}/${CHROME_DRIVER_VERSION}/${CHROME_ARTIFACT_NAME}
-    - echo ${GECKO__DRIVER_BASE_URL}/${GECKO__DRIVER_VERSION}/${GECKO__ARTIFACT_NAME}
     - wget -q -N ${CHROME_DRIVER_BASE_URL}/${CHROME_DRIVER_VERSION}/${CHROME_ARTIFACT_NAME} -P ~/
     - wget -q ${GECKO__DRIVER_BASE_URL}/${GECKO__DRIVER_VERSION}/${GECKO__ARTIFACT_NAME} -O ~/${GECKO__ARTIFACT_NAME}
     - mkdir -p $HOME/drivers
@@ -67,16 +60,9 @@ before_install:
     - sudo chmod 0755 $HOME/drivers/chromedriver
     - sudo chmod 0755 $HOME/drivers/geckodriver
     - export PATH="$HOME/drivers:$PATH"
-      #- mv geckodriver $HOME/drivers/geckodriver
-      #- sudo mv -f ~/chromedriver ${CHROME_DRIVER_DST}
-      #- sudo mv -f ~/geckodriver ${GECKO__DRIVER_DST}
-      #- sudo chown root:root ${CHROME_DRIVER_DST}
-      #- sudo chown root:root ${GECKO__DRIVER_DST}
-      #- sudo chmod 0755 ${CHROME_DRIVER_DST}
-      #- sudo chmod 0755 ${GECKO__DRIVER_DST}
-    - export BROWSER_PATH="${CHROME_START_CMD}"
-    - echo "${CHROME_START_CMD} --headless --disable-gpu --remote-debugging-port=9222 http://localhost &"
-    - ${CHROME_START_CMD} --headless --disable-gpu --remote-debugging-port=9222 http://localhost &
+      # TODO : answer the xvfb question (service not available on macOS)
+    - echo "${BROWSER_PATH} --headless --disable-gpu --remote-debugging-port=9222 http://localhost &"
+    - ${BROWSER_PATH} --headless --disable-gpu --remote-debugging-port=9222 http://localhost &
     - sleep 3
 
 install:

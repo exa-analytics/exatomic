@@ -109,7 +109,10 @@ class Selenium(Base, Configurable):
             base = ''
             for part in parts:
                 base = os.path.join(base, part)
-                self.log.info(f'path={base}, len={len(os.listdir(base))}')
+                try:
+                    self.log.info(f'path={base}, len={len(os.listdir(base))}')
+                except Exception as e:
+                    self.log.info(f'path={base}, {str(e)}')
         if path is not None:
             return path
         aliases = {
