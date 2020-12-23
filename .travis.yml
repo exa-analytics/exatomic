@@ -75,7 +75,7 @@ install:
       fi;
       echo "DONE"
 
-    - if [[ ! -d "$HOME/miniconda" ]];
+    - if [[ ! -d "$HOME/miniconda" ]]; then
           bash miniconda.sh -b -p $HOME/miniconda;
       fi;
     - export PATH="$HOME/miniconda/bin:$PATH"
