@@ -45,13 +45,11 @@ before_install:
           CHROME_ARTIFACT_NAME=chromedriver_mac64.zip
           GECKO__ARTIFACT_NAME=geckodriver-${GECKO__DRIVER_VERSION}-macos.tar.gz
           export BROWSER_PATH="/Applications/Google\\ Chrome.app/Contents/MacOS/Google\\ Chrome"
-          echo $BROWSER_PATH
           CHROME_MAJOR_VERSION="LATEST_RELEASE"
       else
           CHROME_ARTIFACT_NAME=chromedriver_linux64.zip
           GECKO__ARTIFACT_NAME=geckodriver-${GECKO__DRIVER_VERSION}-linux64.tar.gz
           export BROWSER_PATH=$(which google-chrome-stable)
-          echo $BROWSER_PATH
           CHROME_MAJOR_VERSION="LATEST_RELEASE_$(google-chrome-stable --version | cut -d ' ' -f 3 | cut -d '.' -f 1)"
       fi;
     - CHROME_DRIVER_VERSION_CMD="curl -sS https://chromedriver.storage.googleapis.com/${CHROME_MAJOR_VERSION}"
@@ -66,7 +64,7 @@ before_install:
     - export PATH="$HOME/drivers:$PATH"
       # TODO : answer the xvfb question (service not available on macOS)
     - echo "${BROWSER_PATH} --headless --disable-gpu --remote-debugging-port=9222 http://localhost &"
-    - ${BROWSER_PATH} --headless --disable-gpu --remote-debugging-port=9222 http://localhost &
+    - "${BROWSER_PATH} --headless --disable-gpu --remote-debugging-port=9222 http://localhost &"
     - sleep 3
 
 install:
