@@ -77,7 +77,9 @@ install:
       fi;
       echo "DONE"
 
-    - bash miniconda.sh -b -p $HOME/miniconda
+    - if [[ ! -d "$HOME/miniconda" ]];
+          bash miniconda.sh -b -p $HOME/miniconda;
+      fi;
     - export PATH="$HOME/miniconda/bin:$PATH"
     - conda config --add channels conda-forge
     - conda config --add channels exaanalytics
