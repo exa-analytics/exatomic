@@ -88,6 +88,7 @@ class Selenium(Base, Configurable):
     browser_path = Unicode('').tag(config=True)
     headless_run = Bool(False).tag(config=True)
     console_port = Unicode(DEFAULT_CONSOLE_PORT).tag(config=True)
+    driver_log = Unicode('driver.log').tag(config=True)
     driver_timeout = Int(DEFAULT_DRIVER_TIMEOUT).tag(config=True)
 
     @default('vendor_type')
@@ -170,7 +171,7 @@ class Selenium(Base, Configurable):
         return options
 
     def init_webdriver(self, scratch):
-        log_path = f'{scratch}/{self.vendor_type}driver.log'
+        log_path = f'{scratch}/{self.driver_log}'
         proper = self.vendor_type.title()
         cls = getattr(webdriver, proper, None)
         if cls is None:
@@ -329,16 +330,22 @@ class App(Base, Application):
         self.selenium = Selenium(config=self.config)
         self.log.info(f'custom config: {self.config}')
 
-    def run(self):
+    def run(self, verbose=True):
         nb = self.notebook
+        sl = self.selenium
         nb.start_notebook_server()
         try:
             sleep(2)
-            self.selenium.run_basic(nb.server_url, nb.server_token)
+            sl.run_basic(nb.server_url, nb.server_token)
         except DisabledConfiguration as e:
             self.log.info("this configuration is disabled")
             self.log.info(str(e))
         finally:
+            log = f'{nb.server_token}/{sl.driver_log}'
+            if verbose and os.path.isfile(log):
+                with open(log, 'r') as f:
+                    for ln in f:
+                        print(ln, end='')
             nb.stop_notebook_server()
 
 

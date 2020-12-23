@@ -50,15 +50,16 @@ before_install:
           CHROME_ARTIFACT_NAME=chromedriver_mac64.zip
           GECKO__ARTIFACT_NAME=geckodriver-${GECKO__DRIVER_VERSION}-macos.tar.gz
           CHROME_START_CMD="/Applications/Google\\ Chrome.app/Contents/MacOS/Google\\ Chrome"
-          CHROME_MAJOR_VERSION=$(${CHROME_START_CMD} --version | cut -d ' ' -f 3 | cut -d '.' -f 1)
+          CHROME_MAJOR_VERSION="LATEST_RELEASE"
+          # $(${CHROME_START_CMD} --version | cut -d ' ' -f 3 | cut -d '.' -f 1)
       else
           CHROME_ARTIFACT_NAME=chromedriver_linux64.zip
           GECKO__ARTIFACT_NAME=geckodriver-${GECKO__DRIVER_VERSION}-linux64.tar.gz
           CHROME_START_CMD="google-chrome"
+          CHROME_MAJOR_VERSION="LATEST_RELEASE_$(${CHROME_START_CMD} --version | cut -d ' ' -f 3 | cut -d '.' -f 1)"
       fi;
-    - CHROME_MAJOR_VERSION=$(${CHROME_START_CMD} --version | cut -d ' ' -f 3 | cut -d '.' -f 1)
     - echo "CHROME_MAJOR_VERSION=${CHROME_MAJOR_VERSION}"
-    - CHROME_DRIVER_VERSION_CMD="curl -sS https://chromedriver.storage.googleapis.com/LATEST_RELEASE_${CHROME_MAJOR_VERSION}"
+    - CHROME_DRIVER_VERSION_CMD="curl -sS https://chromedriver.storage.googleapis.com/${CHROME_MAJOR_VERSION}"
     - echo "CHROME_DRIVER_VERSION_CMD=${CHROME_DRIVER_VERSION_CMD}"
     - CHROME_DRIVER_VERSION=$(${CHROME_DRIVER_VERSION_CMD})
     - echo "CHROME_DRIVER_VERSION=${CHROME_DRIVER_VERSION}"
@@ -74,6 +75,9 @@ before_install:
     - sudo chown root:root ${GECKO__DRIVER_DST}
     - sudo chmod 0755 ${CHROME_DRIVER_DST}
     - sudo chmod 0755 ${GECKO__DRIVER_DST}
+    - "export DISPLAY=99:0"
+    - "sh -e /etc/init.d/xvfb start"
+    - sleep 5
     - echo "${CHROME_START_CMD} --headless --disable-gpu --remote-debugging-port=9222 http://localhost &"
     - ${CHROME_START_CMD} --headless --disable-gpu --remote-debugging-port=9222 http://localhost &
     - sleep 3
@@ -124,7 +128,7 @@ after_success:
     - if [[ ${TRAVIS_OS_NAME} == "linux" ]] && [[ ${TRAVIS_PULL_REQUEST} == false ]] && [[ ${TRAVIS_PULL_REQUEST_BRANCH} == "" ]] && [[ ${TRAVIS_BRANCH} == "master" ]] && [[ ${PYTHONVER} == "3.8" ]]; then
           travis-sphinx deploy;
           echo "//registry.npmjs.org/:_authToken=${NPM_TOKEN}" > ${HOME}/.npmrc;
-          cd js; npm publish; cd ..;
+          cd js; npm login; npm publish; cd ..;
       fi
     - if [[ ${TRAVIS_OS_NAME} == "linux" ]] && [[ ${TRAVIS_PULL_REQUEST} == false ]] && [[ ${TRAVIS_PULL_REQUEST_BRANCH} == "" ]] && [[ ${TRAVIS_BRANCH} == "master" ]]; then
           export pyver="py${PYTHONVER/./}";
