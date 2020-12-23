@@ -103,6 +103,7 @@ class Selenium(Base, Configurable):
     @default('browser_path')
     def _default_browser_path(self):
         path = os.getenv('BROWSER_PATH', DEFAULT_BROWSER_PATH)
+        path = path.replace('\\', '')
         if not os.path.isfile(path):
             self.log.info(f'path from environment={path} not found')
             parts = path.split(os.sep)
