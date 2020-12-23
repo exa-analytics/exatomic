@@ -11,6 +11,7 @@ strict validation.
 Configure the script by environment variables:
 
     VENDOR_TYPE = chrome OR firefox (default chrome)
+    BROWSER_PATH = /path/to/browser (optional)
     HEADLESS_RUN = true OR false (default true)
     CLEANUP_POST = true OR false (default true)
 
@@ -61,6 +62,7 @@ DEFAULT_VENDOR_TYPE = 'chrome'
 DEFAULT_HEADLESS_RUN = 'true'
 DEFAULT_CLEANUP_POST = 'true'
 DEFAULT_CONSOLE_PORT = '9222'
+DEFAULT_BROWSER_PATH = None
 DEFAULT_DRIVER_TIMEOUT = 10
 
 
@@ -99,6 +101,9 @@ class Selenium(Base, Configurable):
 
     @default('browser_path')
     def _default_browser_path(self):
+        path = os.getenv('BROWSER_PATH', DEFAULT_BROWSER_PATH)
+        if path is not None:
+            return path
         aliases = {
             'chrome': ['google-chrome-stable', 'google-chrome'],
         }.get(self.vendor_type, [self.vendor_type])

@@ -46,16 +46,11 @@ before_install:
           GECKO__ARTIFACT_NAME=geckodriver-${GECKO__DRIVER_VERSION}-macos.tar.gz
           CHROME_START_CMD="/Applications/Google\\ Chrome.app/Contents/MacOS/Google\\ Chrome"
           CHROME_MAJOR_VERSION="LATEST_RELEASE"
-          # CHROME_DRIVER_DST=/usr/local/bin/chromedriver
-          # GECKO__DRIVER_DST=/usr/local/bin/geckodriver
-          # $(${CHROME_START_CMD} --version | cut -d ' ' -f 3 | cut -d '.' -f 1)
       else
           CHROME_ARTIFACT_NAME=chromedriver_linux64.zip
           GECKO__ARTIFACT_NAME=geckodriver-${GECKO__DRIVER_VERSION}-linux64.tar.gz
           CHROME_START_CMD="google-chrome"
           CHROME_MAJOR_VERSION="LATEST_RELEASE_$(${CHROME_START_CMD} --version | cut -d ' ' -f 3 | cut -d '.' -f 1)"
-          # CHROME_DRIVER_DST=/usr/bin/chromedriver
-          # GECKO__DRIVER_DST=/usr/bin/geckodriver
       fi;
     - echo "CHROME_MAJOR_VERSION=${CHROME_MAJOR_VERSION}"
     - CHROME_DRIVER_VERSION_CMD="curl -sS https://chromedriver.storage.googleapis.com/${CHROME_MAJOR_VERSION}"
@@ -78,6 +73,7 @@ before_install:
       #- sudo chown root:root ${GECKO__DRIVER_DST}
       #- sudo chmod 0755 ${CHROME_DRIVER_DST}
       #- sudo chmod 0755 ${GECKO__DRIVER_DST}
+    - export BROWSER_PATH="${CHROME_START_CMD}"
     - echo "${CHROME_START_CMD} --headless --disable-gpu --remote-debugging-port=9222 http://localhost &"
     - ${CHROME_START_CMD} --headless --disable-gpu --remote-debugging-port=9222 http://localhost &
     - sleep 3
