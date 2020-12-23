@@ -320,32 +320,23 @@ export class SceneView extends DOMWidgetView {
         -----------
         Resizes the renderer and updates all cameras
         and controls to respect the new renderer size.
-        Attempts this lazily by detecting changes to the
-        element dimensions and only applying resize
-        logic when sufficiently resized. Changes in width
-        are approximated with a fudge factor to account for
-        slight differences between the canvas and the renderer
-        as well as rounding error when dealing with pixels.
+        Caches previous resize parameters to reduce
+        the call stack in the animation loop. Additionally,
+        the height of the DOMWidgetView.el element is
+        sporadic after a kernel interruption, so an
+        explicit check is made for the disconnected state.
 
         */
         if (this.renderer === null) { return }
-        const fudge = 6
-        const oldw = this.prevwidth
-        const oldh = this.prevheight
-        let w = this.el.offsetWidth
-        let h = this.el.offsetHeight
-        if (Math.abs(oldh - h) >= fudge) {
-            this.prevheight = h - fudge
-        }
-        if (Math.abs(oldw - w) > 0) {
-            this.prevwidth = w
-        }
-        if ((oldw !== this.prevwidth) || (oldh !== this.prevheight)) {
-            w = this.prevwidth
-            h = this.prevheight
-            // el is destructed before renderer
-            // so also check for deleted dims
-            if ((w !== 0) || (h !== -fudge)) {
+        let w, h
+        if (this.el.className.includes('disconnected')) {
+            w = this.prevwidth || this.model.get('width')
+            h = this.prevheight || this.model.get('height')
+        } else {
+            let pos = this.el.getBoundingClientRect()
+            w = Math.floor(pos.width)
+            h = Math.floor(pos.height - 5)
+            if ((w != this.prevwidth) || (h != this.prevheight)) {
                 this.renderer.setSize(w, h)
                 this.camera.aspect = w / h
                 this.camera.updateProjectionMatrix()
@@ -357,6 +348,8 @@ export class SceneView extends DOMWidgetView {
                 this.hudcamera.updateProjectionMatrix()
                 this.hudcamera.updateMatrix()
                 this.controls.handleResize()
+                this.prevheight = h
+                this.prevwidth = w
             }
         }
     }
