@@ -61,12 +61,13 @@ before_install:
     - echo ${GECKO__DRIVER_BASE_URL}/${GECKO__DRIVER_VERSION}/${GECKO__ARTIFACT_NAME}
     - wget -q -N ${CHROME_DRIVER_BASE_URL}/${CHROME_DRIVER_VERSION}/${CHROME_ARTIFACT_NAME} -P ~/
     - wget -q ${GECKO__DRIVER_BASE_URL}/${GECKO__DRIVER_VERSION}/${GECKO__ARTIFACT_NAME} -O ~/${GECKO__ARTIFACT_NAME}
-    - unzip ~/${CHROME_ARTIFACT_NAME} -d $HOME
-    - tar -xzvf ~/${GECKO__ARTIFACT_NAME}
-    - mv geckodriver $HOME/geckodriver
-    - sudo chmod 0755 $HOME/chromedriver
-    - sudo chmod 0755 $HOME/geckodriver
-    - export PATH=$HOME/chromedriver:$HOME/geckodriver:$PATH
+    - mkdir -p $HOME/drivers
+    - unzip ~/${CHROME_ARTIFACT_NAME} -d $HOME/drivers
+    - tar -xzvf ~/${GECKO__ARTIFACT_NAME} --directory $HOME/drivers
+    - sudo chmod 0755 $HOME/drivers/chromedriver
+    - sudo chmod 0755 $HOME/drivers/geckodriver
+    - export PATH="$HOME/drivers:$PATH"
+      #- mv geckodriver $HOME/drivers/geckodriver
       #- sudo mv -f ~/chromedriver ${CHROME_DRIVER_DST}
       #- sudo mv -f ~/geckodriver ${GECKO__DRIVER_DST}
       #- sudo chown root:root ${CHROME_DRIVER_DST}
