@@ -52,6 +52,7 @@ from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.support.wait import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.common.action_chains import ActionChains
+from selenium.common.exceptions import TimeoutException
 
 
 logging.basicConfig()
@@ -61,6 +62,9 @@ DEFAULT_HEADLESS_RUN = 'true'
 DEFAULT_CLEANUP_POST = 'true'
 DEFAULT_CONSOLE_PORT = '9222'
 DEFAULT_DRIVER_TIMEOUT = 10
+
+
+class DisabledConfiguration(Exception): pass
 
 
 class Base:
@@ -160,6 +164,8 @@ class Selenium(Base, Configurable):
         setattr(options, binary_attr, self.browser_path)
         self.log.info(f'adding {headless_arg} flag {self.headless_run}')
         if self.headless_run:
+            if self.vendor_type == 'firefox':
+                raise DisabledConfiguration("From firefox driver: WebGL warning: <Create>: Can't use WebGL in headless mode (https://bugzil.la/1375585).")
             options.add_argument(headless_arg)
         return options
 
@@ -230,7 +236,7 @@ class Selenium(Base, Configurable):
         # switch back to server home window
         driver.switch_to.window(driver.window_handles[0])
 
-    def shutdown_notebook_server(self, driver, wait):
+    def shutdown_notebook(self, driver, wait):
         self.log.info('closing notebook server down from UI')
         self.click_by_css(driver, wait, '#shutdown')
 
@@ -253,16 +259,20 @@ class Selenium(Base, Configurable):
                      'div.output_wrapper > div.output > div > '
                      'div.output_subarea.jupyter-widgets-view > '
                      'div > canvas')
-            self.click_by_css(driver, wait, scene)
+            try:
+                self.click_by_css(driver, wait, scene)
+                # download a PNG of the widget
+                self.log.info('screenshotting the widget')
+                driver.get_screenshot_as_file(f'{scratch_dir}/widget.png')
+            except TimeoutException:
+                self.log.info(f'failed to find css "{scene}", perhaps make it less specific')
+            finally:
+                # shut it down
+                self.close_and_leave_new_notebook(driver, wait)
+                self.shutdown_notebook(driver, wait)
+                driver.close()
 
-            # download a PNG of the widget
-            self.log.info('screenshotting the widget')
-            driver.get_screenshot_as_file(f'{scratch_dir}/widget.png')
 
-            # shut it down
-            self.close_and_leave_new_notebook(driver, wait)
-            self.shutdown_notebook_server(driver, wait)
-            driver.close()
 
 
 class Notebook(Base, Configurable):
@@ -325,6 +335,9 @@ class App(Base, Application):
         try:
             sleep(2)
             self.selenium.run_basic(nb.server_url, nb.server_token)
+        except DisabledConfiguration as e:
+            self.log.info("this configuration is disabled")
+            self.log.info(str(e))
         finally:
             nb.stop_notebook_server()
 
