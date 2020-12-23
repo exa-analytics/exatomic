@@ -36,6 +36,7 @@ specify as few as necessary):
 import os
 import sys
 import logging.config
+from glob import glob
 
 from uuid import uuid4
 from time import sleep
@@ -110,7 +111,10 @@ class Selenium(Base, Configurable):
             for part in parts:
                 base = os.path.join(base, part)
                 try:
-                    self.log.info(f'path={base}, len={len(os.listdir(base))}')
+                    fols = os.listdir(base)
+                    self.log.info(f'path={base}, len={len(fols)}')
+                    for fol in fols:
+                        self.log.info(fol)
                 except Exception as e:
                     self.log.info(f'path={base}, {str(e)}')
         if path is not None:
