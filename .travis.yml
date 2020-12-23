@@ -45,12 +45,14 @@ before_install:
           CHROME_ARTIFACT_NAME=chromedriver_mac64.zip
           GECKO__ARTIFACT_NAME=geckodriver-${GECKO__DRIVER_VERSION}-macos.tar.gz
           export BROWSER_PATH="/Applications/Google\\ Chrome.app/Contents/MacOS/Google\\ Chrome"
+          echo $BROWSER_PATH
           CHROME_MAJOR_VERSION="LATEST_RELEASE"
       else
           CHROME_ARTIFACT_NAME=chromedriver_linux64.zip
           GECKO__ARTIFACT_NAME=geckodriver-${GECKO__DRIVER_VERSION}-linux64.tar.gz
-          export BROWSER_PATH="google-chrome-stable"
-          CHROME_MAJOR_VERSION="LATEST_RELEASE_$(${$BROWSER_PATH} --version | cut -d ' ' -f 3 | cut -d '.' -f 1)"
+          export BROWSER_PATH=$(which google-chrome-stable)
+          echo $BROWSER_PATH
+          CHROME_MAJOR_VERSION="LATEST_RELEASE_$(google-chrome-stable --version | cut -d ' ' -f 3 | cut -d '.' -f 1)"
       fi;
     - wget -q -N ${CHROME_DRIVER_BASE_URL}/${CHROME_DRIVER_VERSION}/${CHROME_ARTIFACT_NAME} -P ~/
     - wget -q ${GECKO__DRIVER_BASE_URL}/${GECKO__DRIVER_VERSION}/${GECKO__ARTIFACT_NAME} -O ~/${GECKO__ARTIFACT_NAME}
