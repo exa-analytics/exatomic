@@ -54,6 +54,8 @@ before_install:
           echo $BROWSER_PATH
           CHROME_MAJOR_VERSION="LATEST_RELEASE_$(google-chrome-stable --version | cut -d ' ' -f 3 | cut -d '.' -f 1)"
       fi;
+    - CHROME_DRIVER_VERSION_CMD="curl -sS https://chromedriver.storage.googleapis.com/${CHROME_MAJOR_VERSION}"
+    - CHROME_DRIVER_VERSION=$(${CHROME_DRIVER_VERSION_CMD})
     - wget -q -N ${CHROME_DRIVER_BASE_URL}/${CHROME_DRIVER_VERSION}/${CHROME_ARTIFACT_NAME} -P ~/
     - wget -q ${GECKO__DRIVER_BASE_URL}/${GECKO__DRIVER_VERSION}/${GECKO__ARTIFACT_NAME} -O ~/${GECKO__ARTIFACT_NAME}
     - mkdir -p $HOME/drivers
