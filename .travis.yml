@@ -49,7 +49,7 @@ before_install:
       if [[ $TRAVIS_OS_NAME == "osx" ]]; then
           CHROME_ARTIFACT_NAME=chromedriver_mac64.zip
           GECKO__ARTIFACT_NAME=geckodriver-${GECKO__DRIVER_VERSION}-macos.tar.gz
-          CHROME_START_CMD="/Applications/Google\ Chrome.app/Contents/MacOS/Google\ Chrome"
+          CHROME_START_CMD="/Applications/Google\\ Chrome.app/Contents/MacOS/Google\\ Chrome"
           CHROME_MAJOR_VERSION=$(${CHROME_START_CMD} --version | cut -d ' ' -f 3 | cut -d '.' -f 1)
       else
           CHROME_ARTIFACT_NAME=chromedriver_linux64.zip

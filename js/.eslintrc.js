@@ -32,7 +32,7 @@ module.exports = {
     // '@typescript-eslint/indent': ['error', 4],
     overrides: [{
         files: ['*.ts'],
-        rules: { indent: 'off' }
+        rules: { indent: 'off' },
     }],
     settings: {
         'import/resolver': {

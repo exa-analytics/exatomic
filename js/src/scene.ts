@@ -328,15 +328,16 @@ export class SceneView extends DOMWidgetView {
 
         */
         if (this.renderer === null) { return }
-        let w, h
+        let w
+        let h
         if (this.el.className.includes('disconnected')) {
             w = this.prevwidth || this.model.get('width')
             h = this.prevheight || this.model.get('height')
         } else {
-            let pos = this.el.getBoundingClientRect()
+            const pos = this.el.getBoundingClientRect()
             w = Math.floor(pos.width)
             h = Math.floor(pos.height - 5)
-            if ((w != this.prevwidth) || (h != this.prevheight)) {
+            if ((w !== this.prevwidth) || (h !== this.prevheight)) {
                 this.renderer.setSize(w, h)
                 this.camera.aspect = w / h
                 this.camera.updateProjectionMatrix()
