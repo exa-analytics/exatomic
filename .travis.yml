@@ -98,6 +98,10 @@ install:
       fi
     - python setup.py develop
 
+cache:
+    directories:
+        - $HOME/miniconda
+
 script:
     - export PYTHONDONTWRITEBYTECODE=1
     - python test_widget.py
