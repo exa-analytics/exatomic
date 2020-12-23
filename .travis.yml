@@ -126,18 +126,13 @@ after_success:
     - |
       if ( [[ ${TRAVIS_OS_NAME} == "linux" ]] &&
            [[ ${TRAVIS_BRANCH} == "master" ]] &&
-           [[ ${PYTHONVER} == "3.8" ]] &&
            [[ ${TRAVIS_PULL_REQUEST} == false ]] &&
            [[ ${TRAVIS_PULL_REQUEST_BRANCH} == "" ]] ); then
-          travis-sphinx deploy
-          echo "//registry.npmjs.org/:_authToken=${NPM_TOKEN}" > ${HOME}/.npmrc
-          cd js; npm login; npm publish; cd ..
-      fi
-    - |
-      if ( [[ ${TRAVIS_OS_NAME} == "linux" ]] &&
-           [[ ${TRAVIS_BRANCH} == "master" ]] &&
-           [[ ${TRAVIS_PULL_REQUEST} == false ]] &&
-           [[ ${TRAVIS_PULL_REQUEST_BRANCH} == "" ]] ); then
+          if [[ ${PYTHONVER} == "3.8" ]]; then
+              travis-sphinx deploy
+              echo "//registry.npmjs.org/:_authToken=${NPM_TOKEN}" > ${HOME}/.npmrc
+              cd js; npm login; npm publish; cd ..
+          fi
           export pyver="py${PYTHONVER/./}"
           export ver=`cat exatomic/static/version.txt`
           git remote set-url origin https://${GH_TOKEN}@github.com/exa-analytics/exatomic.git
