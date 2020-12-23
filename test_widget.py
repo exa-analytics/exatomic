@@ -102,6 +102,14 @@ class Selenium(Base, Configurable):
     @default('browser_path')
     def _default_browser_path(self):
         path = os.getenv('BROWSER_PATH', DEFAULT_BROWSER_PATH)
+        if not os.path.isfile(path):
+            self.log.info(f'path from environment={path} not found')
+            parts = path.split(os.sep)
+            self.log.info(parts)
+            base = ''
+            for part in parts:
+                base = os.path.join(base, part)
+                self.log.info(f'path={base}, len={len(os.listdir(base))}')
         if path is not None:
             return path
         aliases = {
