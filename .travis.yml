@@ -32,9 +32,6 @@ matrix:
           python: 3.8
           env: PYTHONVER=3.8
 
-services:
-    - xvfb
-
 addons:
     chrome: stable
     firefox: latest
@@ -81,9 +78,6 @@ before_install:
       #- sudo chown root:root ${GECKO__DRIVER_DST}
       #- sudo chmod 0755 ${CHROME_DRIVER_DST}
       #- sudo chmod 0755 ${GECKO__DRIVER_DST}
-    - "export DISPLAY=99:0"
-    - "sh -e /etc/init.d/xvfb start"
-    - sleep 5
     - echo "${CHROME_START_CMD} --headless --disable-gpu --remote-debugging-port=9222 http://localhost &"
     - ${CHROME_START_CMD} --headless --disable-gpu --remote-debugging-port=9222 http://localhost &
     - sleep 3
