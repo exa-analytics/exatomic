@@ -36,6 +36,9 @@ addons:
     chrome: stable
     firefox: latest
 
+node_js:
+    - 14
+
 before_install:
     - CHROME_DRIVER_BASE_URL=https://chromedriver.storage.googleapis.com
     - GECKO__DRIVER_BASE_URL=https://github.com/mozilla/geckodriver/releases/download
