@@ -106,7 +106,7 @@ class Selenium(Base, Configurable):
             self.log.info(f'path from environment={path} not found')
             parts = path.split(os.sep)
             self.log.info(parts)
-            base = ''
+            base = '/'
             for part in parts:
                 base = os.path.join(base, part)
                 try:
