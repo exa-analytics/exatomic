@@ -320,6 +320,8 @@ class App(Base, Application):
         self.log.info(f'custom config: {self.config}')
 
     def run(self):
+        if os.uname == 'nt':
+            return
         nb = self.notebook
         nb.start_notebook_server()
         try:
