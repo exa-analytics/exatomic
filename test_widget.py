@@ -11,6 +11,7 @@ strict validation.
 Configure the script by environment variables:
 
     VENDOR_TYPE = chrome OR firefox (default chrome)
+    BROWSER_PATH = /path/to/browser (optional)
     HEADLESS_RUN = true OR false (default true)
     CLEANUP_POST = true OR false (default true)
 
@@ -35,6 +36,7 @@ specify as few as necessary):
 import os
 import sys
 import logging.config
+from glob import glob
 
 from uuid import uuid4
 from time import sleep
@@ -52,6 +54,7 @@ from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.support.wait import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.common.action_chains import ActionChains
+from selenium.common.exceptions import TimeoutException
 
 
 logging.basicConfig()
@@ -60,7 +63,11 @@ DEFAULT_VENDOR_TYPE = 'chrome'
 DEFAULT_HEADLESS_RUN = 'true'
 DEFAULT_CLEANUP_POST = 'true'
 DEFAULT_CONSOLE_PORT = '9222'
+DEFAULT_BROWSER_PATH = None
 DEFAULT_DRIVER_TIMEOUT = 10
+
+
+class DisabledConfiguration(Exception): pass
 
 
 class Base:
@@ -84,6 +91,7 @@ class Selenium(Base, Configurable):
     browser_path = Unicode('').tag(config=True)
     headless_run = Bool(False).tag(config=True)
     console_port = Unicode(DEFAULT_CONSOLE_PORT).tag(config=True)
+    driver_log = Unicode('driver.log').tag(config=True)
     driver_timeout = Int(DEFAULT_DRIVER_TIMEOUT).tag(config=True)
 
     @default('vendor_type')
@@ -94,6 +102,24 @@ class Selenium(Base, Configurable):
 
     @default('browser_path')
     def _default_browser_path(self):
+        path = os.getenv('BROWSER_PATH', DEFAULT_BROWSER_PATH)
+        path = path.replace('\\', '')
+        if not os.path.isfile(path):
+            self.log.info(f'path from environment={path} not found')
+            parts = path.split(os.sep)
+            self.log.info(parts)
+            base = '/'
+            for part in parts:
+                base = os.path.join(base, part)
+                try:
+                    fols = os.listdir(base)
+                    self.log.info(f'path={base}, len={len(fols)}')
+                    for fol in fols:
+                        self.log.info(fol)
+                except Exception as e:
+                    self.log.info(f'path={base}, {str(e)}')
+        if path is not None:
+            return path
         aliases = {
             'chrome': ['google-chrome-stable', 'google-chrome'],
         }.get(self.vendor_type, [self.vendor_type])
@@ -160,11 +186,13 @@ class Selenium(Base, Configurable):
         setattr(options, binary_attr, self.browser_path)
         self.log.info(f'adding {headless_arg} flag {self.headless_run}')
         if self.headless_run:
+            if self.vendor_type == 'firefox':
+                raise DisabledConfiguration("From firefox driver: WebGL warning: <Create>: Can't use WebGL in headless mode (https://bugzil.la/1375585).")
             options.add_argument(headless_arg)
         return options
 
     def init_webdriver(self, scratch):
-        log_path = f'{scratch}/{self.vendor_type}driver.log'
+        log_path = f'{scratch}/{self.driver_log}'
         proper = self.vendor_type.title()
         cls = getattr(webdriver, proper, None)
         if cls is None:
@@ -230,7 +258,7 @@ class Selenium(Base, Configurable):
         # switch back to server home window
         driver.switch_to.window(driver.window_handles[0])
 
-    def shutdown_notebook_server(self, driver, wait):
+    def shutdown_notebook(self, driver, wait):
         self.log.info('closing notebook server down from UI')
         self.click_by_css(driver, wait, '#shutdown')
 
@@ -253,16 +281,20 @@ class Selenium(Base, Configurable):
                      'div.output_wrapper > div.output > div > '
                      'div.output_subarea.jupyter-widgets-view > '
                      'div > canvas')
-            self.click_by_css(driver, wait, scene)
+            try:
+                self.click_by_css(driver, wait, scene)
+                # download a PNG of the widget
+                self.log.info('screenshotting the widget')
+                driver.get_screenshot_as_file(f'{scratch_dir}/widget.png')
+            except TimeoutException:
+                self.log.info(f'failed to find css "{scene}", perhaps make it less specific')
+            finally:
+                # shut it down
+                self.close_and_leave_new_notebook(driver, wait)
+                self.shutdown_notebook(driver, wait)
+                driver.close()
 
-            # download a PNG of the widget
-            self.log.info('screenshotting the widget')
-            driver.get_screenshot_as_file(f'{scratch_dir}/widget.png')
 
-            # shut it down
-            self.close_and_leave_new_notebook(driver, wait)
-            self.shutdown_notebook_server(driver, wait)
-            driver.close()
 
 
 class Notebook(Base, Configurable):
@@ -319,15 +351,25 @@ class App(Base, Application):
         self.selenium = Selenium(config=self.config)
         self.log.info(f'custom config: {self.config}')
 
-    def run(self):
+    def run(self, verbose=True):
         if os.uname == 'nt':
+            self.log.info("widget test is disabled on Windows")
             return
         nb = self.notebook
+        sl = self.selenium
         nb.start_notebook_server()
         try:
             sleep(2)
-            self.selenium.run_basic(nb.server_url, nb.server_token)
+            sl.run_basic(nb.server_url, nb.server_token)
+        except DisabledConfiguration as e:
+            self.log.info("this configuration is disabled")
+            self.log.info(str(e))
         finally:
+            log = f'{nb.server_token}/{sl.driver_log}'
+            if verbose and os.path.isfile(log):
+                with open(log, 'r') as f:
+                    for ln in f:
+                        print(ln, end='')
             nb.stop_notebook_server()
 
 
