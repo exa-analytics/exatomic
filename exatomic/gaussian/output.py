@@ -481,8 +481,16 @@ class Output(six.with_metaclass(GauMeta, Editor)):
         # get the location of the Atom labels in the frequency blocks
         # the line below this is where all of the normal mode displacement data begins
         found_atom = np.array(self.regex('Atom', start=start_read, stop=stop_read, keys_only=True)) + start_read
-        # Total lines per block minus the unnecessary ones
-        span = starts[1] - found_atom[0] - 3
+        try:
+            # Total lines per block minus the unnecessary ones
+            span = starts[1] - found_atom[0] - 3
+        except IndexError:
+            start = found_atom[0]+1
+            span = 0
+            while self[start].strip() and self[start].split()[0] != 'Harmonic':
+                #print(self[start])
+                span += 1
+                start += 1
         # get the number of other attributes included
         # this is done so we can have some flexibility in the code as there may be times that
         # the number of added attributes is not always the same and we get errors
@@ -499,11 +507,13 @@ class Output(six.with_metaclass(GauMeta, Editor)):
             # Get the frequencies first
             freqs = ln[freq_start:].split()
             # get the ir intensities
-            ir_int = self[lno+3][freq_start:].split()
+            ir_int = list(map(float, self[lno+3][freq_start:].split()))
+            r_mass = list(map(float, self[lno+1][freq_start:].split()))
             nfreqs = len(freqs)
             # Get just the atom displacement vectors
             start = lno + span_freq_vals
             stop = start + span
+            #print(lno, start, stop, self[start], self[stop])
             # we use the conditional parameters we set before to correctly splice all the data
             cols = range(extra_col + norm_mode * nfreqs)
             df = self.pandas_dataframe(start, stop, ncol=cols)
@@ -519,6 +529,7 @@ class Output(six.with_metaclass(GauMeta, Editor)):
                 freqdxs = np.repeat(range(fdx, fdx + nfreqs), int(df.shape[0]/3))
                 freqs = np.repeat(freqs, int(df.shape[0]/3))
                 ir_int = np.repeat(ir_int, int(df.shape[0]/3))
+                r_mass = np.repeat(r_mass, int(df.shape[0]/3))
             else:
                 # Split up the df and unstack it
                 slices = [list(range(2 + i, 2 + 3 * nfreqs, 3)) for i in range(nfreqs)]
@@ -529,13 +540,16 @@ class Output(six.with_metaclass(GauMeta, Editor)):
                 freqdxs = np.repeat(range(fdx, fdx + nfreqs), df.shape[0])
                 freqs = np.repeat(freqs, df.shape[0])
                 ir_int = np.repeat(ir_int, df.shape[0])
+                r_mass = np.repeat(r_mass, df.shape[0])
             fdx += nfreqs
             # Put it all together
             stacked = pd.DataFrame.from_dict({'Z': zs, 'label': labels,
                                     'dx': dx, 'dy': dy, 'dz': dz,
                                     'frequency': freqs, 'freqdx': freqdxs,
-                                    'ir_int': ir_int})
+                                    'ir_int': ir_int, 'r_mass': r_mass})
             stacked['symbol'] = stacked['Z'].map(z2sym)
+            #print(stacked.to_string())
+            #raise
             dfs.append(stacked)
         # Now put all our frequencies together
         frequency = pd.concat(dfs).reset_index(drop=True)
@@ -866,6 +880,7 @@ class Fchk(six.with_metaclass(GauMeta, Editor)):
         _renmode = 'Number of Normal Modes'
         _redisp = 'Vib-Modes'
         _refinfo = 'Vib-E2'
+        _remass = 'Vib-AtMass'
 
         found = self.find(_renmode)
         if not found:
@@ -887,6 +902,7 @@ class Fchk(six.with_metaclass(GauMeta, Editor)):
         # get frequency mode displacements
         disp = self._dfme(found[_redisp], nat * nmode * 3)
         disp[abs(disp) < self._tol] = 0
+        # get the 
         # unstack column vector to displacement along each cartesian direction
         dx = disp[::3]
         dy = disp[1::3]
