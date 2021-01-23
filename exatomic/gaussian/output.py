@@ -838,9 +838,7 @@ class Fchk(six.with_metaclass(GauMeta, Editor)):
         '''
         # Frequency regex
         _renmode = 'Number of Normal Modes'
-        _redisp = 'Vib-Modes'
         _refinfo = 'Vib-E2'
-        _remass = 'Vib-AtMass'
         # TODO: find out what these two values are useful for
         _rendim = 'Vib-NDim'
         _rendim0 = 'Vib-NDim0'
@@ -849,7 +847,7 @@ class Fchk(six.with_metaclass(GauMeta, Editor)):
         if not found:
             return
         else:
-            found = self.find(_renmode, _redisp, _refinfo, _remass, keys_only=True)
+            found = self.find(_renmode, _refinfo, keys_only=True)
         # find number of vibrational modes
         nmode = self._intme(found[_renmode])
         # get extended data (given by mapper array)
@@ -880,7 +878,6 @@ class Fchk(six.with_metaclass(GauMeta, Editor)):
         _renmode = 'Number of Normal Modes'
         _redisp = 'Vib-Modes'
         _refinfo = 'Vib-E2'
-        _remass = 'Vib-AtMass'
 
         found = self.find(_renmode)
         if not found:
@@ -902,7 +899,6 @@ class Fchk(six.with_metaclass(GauMeta, Editor)):
         # get frequency mode displacements
         disp = self._dfme(found[_redisp], nat * nmode * 3)
         disp[abs(disp) < self._tol] = 0
-        # get the 
         # unstack column vector to displacement along each cartesian direction
         dx = disp[::3]
         dy = disp[1::3]
@@ -916,13 +912,14 @@ class Fchk(six.with_metaclass(GauMeta, Editor)):
         label = np.tile(label, nmode)
         symbols = list(map(lambda x: z2sym[x], znums))
         ir_int = np.repeat(self.frequency_ext['ir_int'].values, nat)
+        r_mass = np.repeat(self.frequency_ext['r_mass'].values, nat)
         # just to have the same table as the one generated for normal output parser
         frame = np.zeros(len(znums)).astype(np.int)
         # build frequency table
         self.frequency = pd.DataFrame.from_dict({"Z": znums, "label": label, "dx": dx,
                                                  "dy": dy, "dz": dz, "frequency": freq,
                                                  "freqdx": freqdx, "symbol": symbols,
-                                                 "ir_int": ir_int,
+                                                 "ir_int": ir_int, "r_mass": r_mass,
                                                  "frame": frame})
         self.frequency.reset_index(drop=True, inplace=True)
         # convert atomic displacements to atomic units
