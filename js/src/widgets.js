@@ -271,25 +271,25 @@ export class UniverseSceneView extends base.ExatomicSceneView {
         const fdx = this.model.get("frame_idx");
         const scale = this.model.get("freq_scale");
         const fill = this.model.get("atom_3d")
-        console.log(this.freq_d[freqdx]);
+        //console.log(this.freq_d[freqdx]);
         for ( const property in this.freq_d[freqdx] ) {
             const dx = this.freq_d[freqdx][property]["dx"]
             const dy = this.freq_d[freqdx][property]["dy"]
             const dz = this.freq_d[freqdx][property]["dz"]
             const adx = this.freq_d[freqdx][property]["label"]
-            this.app3d.clear_meshes("normmode"+adx);
+            this.app3d.clear_meshes("normmode_"+adx);
             const atom_x = this.atom_x[fdx][adx]
             const atom_y = this.atom_y[fdx][adx]
             const atom_z = this.atom_z[fdx][adx]
-            this.app3d.meshes["normmode"+adx] = this.app3d.add_freq_disp(freqdx, dx, dy,
-                                                                         dz, atom_x, atom_y,
-                                                                         atom_z, scale, fill);
-            this.app3d.add_meshes("normmode"+adx);
+            this.app3d.meshes["normmode_"+adx] = this.app3d.add_freq_disp(freqdx, dx, dy,
+                                                                     dz, atom_x, atom_y,
+                                                                     atom_z, scale, fill);
+            this.app3d.add_meshes("normmode_"+adx);
             //console.log(dx, dy, dz, property, atom_x, atom_y, atom_z, adx);
         }
         //console.log(this.app3d.meshes("normmode0"));
-        console.log("Inside frequency shit");
-        console.log(freqdx);
+        //console.log("Inside frequency shit");
+        //console.log(freqdx);
     }
     // events: {
     //     'click': 'handleClick'

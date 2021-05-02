@@ -600,12 +600,18 @@ class App3D {
 
     add_freq_disp(freqdx, dx, dy, dz, atom_x, atom_y, atom_z, scale, fill) {
         const r = 0.05;
-        const length = scale*Math.sqrt(dx*dx + dy*dy + dz*dz)
+        // Multiply by a constant factor of 5 as most of the input normal
+        // modes are normalized
+        const length = 5*scale*Math.sqrt(dx*dx + dy*dy + dz*dz);
         const origin = new THREE.Vector3(atom_x, atom_y, atom_z);
         const disp = new THREE.Vector3(dx, dy, dz);
         const norm_mode = new THREE.Vector3().addVectors(disp, origin);
-        const color = 0x00BD00
-        const bar = new THREE.ArrowHelper(disp, origin, length, color);
+        // green color
+        const color = 0x00BD00;
+        const headLength = 0.2*length
+        const headWidth = 0.75*headLength
+        const bar = new THREE.ArrowHelper(disp, origin, length, color,
+                                          headLength, headWidth);
         // this is code that works to create cylinders that woul replace the
         // ArrowHelper in a new PR
         // Issues with it are that the arrow is centered around the atomic position
