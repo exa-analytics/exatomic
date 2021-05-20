@@ -10,6 +10,7 @@ from __future__ import absolute_import
 from __future__ import print_function
 from __future__ import division
 import os
+import re
 import six
 import pandas as pd
 from pandas.io.parsers import ParserError
@@ -18,7 +19,7 @@ from six import StringIO
 from exa import TypedMeta
 import exatomic
 from .editor import Editor
-from exatomic import Atom
+from exatomic.core import Atom, Gradient
 from exatomic.algorithms.numerical import _flat_square_to_triangle, _square_indices
 from exatomic.algorithms.basis import lmap, spher_lml_count
 from exatomic.core.basis import (Overlap, BasisSet, BasisSetOrder,
@@ -145,6 +146,7 @@ class Orb(six.with_metaclass(OrbMeta, Editor)):
 
 class OutMeta(TypedMeta):
     atom = Atom
+    gradient = Gradient
     basis_set = BasisSet
     basis_set_order = BasisSetOrder
 
@@ -232,51 +234,104 @@ class Output(six.with_metaclass(OutMeta, Editor)):
         return atom
 
 
-    def parse_atom(self):
+    def parse_atom(self, seward=True):
         """Parses the atom list generated in SEWARD."""
-        _re_atom0 = 'Label   Cartesian Coordinates'
-        _re_atom1 = 'Center  Label'
-        found = self.find(_re_atom0, _re_atom1, keys_only=True)
-        if found[_re_atom0]:
-            accurate = True
-            starts = [i + 2 for i in found[_re_atom0]]
+        if seward:
+            _re_atom0 = 'Label   Cartesian Coordinates'
+            _re_atom1 = 'Center  Label'
+            found = self.find(_re_atom0, _re_atom1, keys_only=True)
+            if found[_re_atom0]:
+                accurate = True
+                starts = [i + 2 for i in found[_re_atom0]]
+            else:
+                accurate = False
+                starts = [i + 1 for i in found[_re_atom1]]
+            stops = starts[:]    # Copy the list
+            for i in range(len(stops)):
+                while len(self[stops[i]].strip().split()) > 3:
+                    stops[i] += 1
+                    if not self[stops[i]].strip(): break
+                stops[i] -= 1
+            if accurate:
+                lns = StringIO('\n'.join([self._lines[i] for j in (range(i, j + 1)
+                                         for i, j in zip(starts, stops)) for i in j]))
+                cols = ['tag', 'x', 'y', 'z']
+            else:
+                lns = StringIO('\n'.join(self[starts[0]:stops[0] + 1]))
+                cols = ['center', 'tag', 'x', 'y', 'z', 'xa', 'ya', 'za']
+            atom = pd.read_csv(lns, delim_whitespace=True,
+                               names=cols)
+            if len(cols) == 8:
+                atom.drop(['xa', 'ya', 'za'], axis=1, inplace=True)
+            atom['symbol'] = atom['tag'].str.extract(
+                '([A-z]{1,})([0-9]*)', expand=False)[0].str.lower().str.title()
+            atom['Z'] = atom['symbol'].map(sym2z).astype(np.int64)
+            atom['center'] = range(atom.shape[0])
+            atom['frame'] = 0
+            self.atom = atom
+            # Work-around for symmetrized calcs?
+            allatom = self._check_atom_sym()
+            self.meta['symmetrized'] = False
+            if allatom.shape[0] > self.atom.shape[0]:
+                self.atom = allatom
+                self.meta['symmetrized'] = True
+                try:
+                    self.atom['utag'] = _add_unique_tags(self.atom)
+                except ValueError:
+                    pass
         else:
-            accurate = False
-            starts = [i + 1 for i in found[_re_atom1]]
-        stops = starts[:]    # Copy the list
-        for i in range(len(stops)):
-            while len(self[stops[i]].strip().split()) > 3:
-                stops[i] += 1
-                if not self[stops[i]].strip(): break
-            stops[i] -= 1
-        if accurate:
-            lns = StringIO('\n'.join([self._lines[i] for j in (range(i, j + 1)
-                                     for i, j in zip(starts, stops)) for i in j]))
-            cols = ['tag', 'x', 'y', 'z']
-        else:
-            lns = StringIO('\n'.join(self[starts[0]:stops[0] + 1]))
-            cols = ['center', 'tag', 'x', 'y', 'z', 'xa', 'ya', 'za']
-        atom = pd.read_csv(lns, delim_whitespace=True,
-                           names=cols)
-        if len(cols) == 8:
-            atom.drop(['xa', 'ya', 'za'], axis=1, inplace=True)
-        atom['symbol'] = atom['tag'].str.extract(
-            '([A-z]{1,})([0-9]*)', expand=False)[0].str.lower().str.title()
-        atom['Z'] = atom['symbol'].map(sym2z).astype(np.int64)
-        atom['center'] = range(atom.shape[0])
-        atom['frame'] = 0
-        self.atom = atom
-        # Work-around for symmetrized calcs?
-        allatom = self._check_atom_sym()
-        self.meta['symmetrized'] = False
-        if allatom.shape[0] > self.atom.shape[0]:
-            self.atom = allatom
-            self.meta['symmetrized'] = True
-            try:
-                self.atom['utag'] = _add_unique_tags(self.atom)
-            except ValueError:
-                pass
+            _reatom = "Cartesian coordinates:"
+            found = self.find(_reatom, keys_only=True)
+            starts = np.array(found)[:-1]+6
+            stop = starts[0]
+            while self[stop].strip()[:2] != '--': stop += 1
+            stops = starts + (stop - starts[0])
+            dfs = []
+            for idx, (start, stop) in enumerate(zip(starts, stops)):
+                df = self.pandas_dataframe(start, stop, ncol=5)
+                cols = ['set', 'symbol', 'x', 'y', 'z']
+                df.columns = cols
+                label = np.concatenate(list(map(lambda x: re.findall(r'\D+', x),
+                                                df['symbol'])))
+                if label.shape[0] > df.shape[0]:
+                    text = "There was an issue with interpreting the labels " \
+                           +"of the atom table. Expected {} labels but " \
+                           +"interpreted {}"
+                    raise ValueError(text.format(df.shape[0], label.shape[0]))
+                df['symbol'] = label
+                df['set'] -= 1
+                df['frame'] = idx
+                dfs.append(df)
+            atom = pd.concat(dfs, ignore_index=True)
+            self.atom = atom
 
+    def parse_gradient(self, alaska=True):
+        if alaska:
+            _regrad = "Molecular gradients"
+            _reirr = "Irreducible representation:"
+            found = self.find(_regrad, _reirr, keys_only=True)
+            if len(found[_regrad]) != len(found[_reirr]):
+                text = "Do not have support for multiple irreducible " \
+                       +"representations yet."
+                raise NotImplementedError(text)
+            starts = np.array(found[_regrad]) + 8
+            stop = starts[0]
+            while self[stop].strip()[:2] != '--': stop += 1
+            stops = starts + (stop - starts[0])
+            dfs = []
+            for idx, (start, stop) in enumerate(zip(starts, stops)):
+                df = self.pandas_dataframe(start, stop, ncol=4)
+                cols = ['symbol', 'fx', 'fy', 'fz']
+                df.columns = cols
+                label = np.concatenate(list(map(lambda x: re.findall(r'\D+', x),
+                                                df['symbol'])))
+                df['symbol'] = label
+                df['atom'] = range(df.shape[0])
+                df['frame'] = idx
+                df['Z'] = df['symbol'].map(sym2z)
+                dfs.append(df)
+            grad = pd.concat(dfs, ignore_index=True)
+            self.gradient = grad
 
     def parse_basis_set_order(self):
         """
