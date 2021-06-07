@@ -19,7 +19,7 @@ from six import StringIO
 from exa import TypedMeta
 import exatomic
 from .editor import Editor
-from exatomic.core import Atom, Gradient
+from exatomic.core import Atom, Gradient, Frequency
 from exatomic.algorithms.numerical import _flat_square_to_triangle, _square_indices
 from exatomic.algorithms.basis import lmap, spher_lml_count
 from exatomic.core.basis import (Overlap, BasisSet, BasisSetOrder,
@@ -149,6 +149,7 @@ class OutMeta(TypedMeta):
     gradient = Gradient
     basis_set = BasisSet
     basis_set_order = BasisSetOrder
+    frequency = Frequency
 
 
 class Output(six.with_metaclass(OutMeta, Editor)):
@@ -332,6 +333,89 @@ class Output(six.with_metaclass(OutMeta, Editor)):
                 dfs.append(df)
             grad = pd.concat(dfs, ignore_index=True)
             self.gradient = grad
+
+    def parse_frequency(self):
+        _refreq = "Frequency:"
+        _reint = "Intensity:"
+        _remass = "Red. mass:"
+        _rerot = "Note that rotational and translational degrees " \
+                 +"have been automatically removed,"
+        found = self.find(_refreq, _reint, _rerot, _remass)
+        if not found[_refreq]:
+            return
+        start = found[_remass][-1][0] + 2
+        stop = found[_remass][-1][0] + 2
+        while self[stop].strip(): stop += 1
+        lines = stop - start
+        dfs = []
+        count = 0
+        arr = zip(found[_refreq], found[_reint], found[_remass])
+        for idx, ((_, freq), (_, inten), (ldx, mass)) in enumerate(arr):
+            if not found[_rerot] and idx == 0:
+                print("Found rotational modes in the calculation")
+                continue
+            # parse the normal modes
+            start = ldx + 2
+            stop = start + lines
+            arr = self.pandas_dataframe(start, stop, ncol=8)
+            arr.dropna(how='all', axis=1, inplace=True)
+            # extract the atomic symbols
+            symbols = arr[0].drop_duplicates()
+            symbols = list(map(lambda x: re.findall(r'\D+', x)[0], symbols))
+            nat = len(symbols)
+            # set the columns where the normal modes are on the table
+            cols = range(2, arr.columns.max()+1)
+            arr.drop([0], axis=1, inplace=True)
+            # re-organize the normal mode data
+            tmp = arr.groupby(1).apply(lambda x: x[cols].values.flatten())
+            df = pd.DataFrame(tmp.to_dict())
+            df.columns = ['dx', 'dy', 'dz']
+            errortext = "Something went wrong when trying to turn the {} " \
+                        +"into floating point numbers."
+            # get the frequencies
+            # skip the first element as it is the table label
+            freqs = freq.split()[1:]
+            # replace all imaginary signs with '-'
+            freqs = list(map(lambda x: x.replace('i', '-'), freqs))
+            # turn them into floats
+            try:
+                freqs = list(map(float, freqs))
+            except ValueError:
+                print(freqs)
+                raise ValueError(errortext.format('frequencies'))
+            # get the reduced masses
+            # skip the first element as it is the table label
+            rmass = mass.split()[2:]
+            # turn them into floats
+            try:
+                rmass = list(map(float, rmass))
+            except ValueError:
+                print(rmass)
+                raise ValueError(errortext.format('reduced masses'))
+            # get the IR intensities
+            # skip the first element as it is the table label
+            irint = inten.split()[1:]
+            # turn them into floats
+            try:
+                irint = list(map(float, irint))
+            except ValueError:
+                print(irint)
+                raise ValueError(errortext.format('IR intensities'))
+            # put everything together
+            df['symbol'] = np.tile(symbols, len(cols))
+            df['label'] = np.tile(range(nat), len(cols))
+            df['Z'] = df['symbol'].map(sym2z)
+            df['frequency'] = np.repeat(freqs, nat)
+            df['r_mass'] = np.repeat(rmass, nat)
+            df['ir_int'] = np.repeat(irint, nat)
+            df.loc[df['ir_int'].abs() < 1e-9, 'ir_int'] = 0
+            df['freqdx'] = np.repeat(range(count*6, (count+1)*6), nat)
+            df['frame'] = 0
+            dfs.append(df)
+        df = pd.concat(dfs, ignore_index=True)
+        cols = ['Z', 'label', 'dx', 'dy', 'dz', 'frequency', 'freqdx',
+                'ir_int', 'r_mass', 'symbol', 'frame']
+        self.frequency = df[cols]
 
     def parse_basis_set_order(self):
         """
