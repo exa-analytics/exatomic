@@ -281,16 +281,16 @@ class Output(six.with_metaclass(OutMeta, Editor)):
                 except ValueError:
                     pass
         else:
-            _reatom = "Cartesian coordinates:"
+            _reatom = "Nuclear coordinates for the next iteration / Bohr"
             found = self.find(_reatom, keys_only=True)
-            starts = np.array(found)[:-1]+6
+            starts = np.array(found)[:-1]+3
             stop = starts[0]
-            while self[stop].strip()[:2] != '--': stop += 1
+            while self[stop].strip(): stop += 1
             stops = starts + (stop - starts[0])
             dfs = []
             for idx, (start, stop) in enumerate(zip(starts, stops)):
-                df = self.pandas_dataframe(start, stop, ncol=5)
-                cols = ['set', 'symbol', 'x', 'y', 'z']
+                df = self.pandas_dataframe(start, stop, ncol=4)
+                cols = ['symbol', 'x', 'y', 'z']
                 df.columns = cols
                 label = np.concatenate(list(map(lambda x: re.findall(r'\D+', x),
                                                 df['symbol'])))
@@ -300,7 +300,8 @@ class Output(six.with_metaclass(OutMeta, Editor)):
                            +"interpreted {}"
                     raise ValueError(text.format(df.shape[0], label.shape[0]))
                 df['symbol'] = label
-                df['set'] -= 1
+                df['Z'] = df['symbol'].map(sym2z)
+                df['set'] = range(df.shape[0])
                 df['frame'] = idx
                 dfs.append(df)
             atom = pd.concat(dfs, ignore_index=True)
@@ -334,7 +335,7 @@ class Output(six.with_metaclass(OutMeta, Editor)):
             grad = pd.concat(dfs, ignore_index=True)
             self.gradient = grad
 
-    def parse_frequency(self):
+    def parse_frequency(self, linear=False):
         _refreq = "Frequency:"
         _reint = "Intensity:"
         _remass = "Red. mass:"
@@ -351,9 +352,6 @@ class Output(six.with_metaclass(OutMeta, Editor)):
         count = 0
         arr = zip(found[_refreq], found[_reint], found[_remass])
         for idx, ((_, freq), (_, inten), (ldx, mass)) in enumerate(arr):
-            if not found[_rerot] and idx == 0:
-                print("Found rotational modes in the calculation")
-                continue
             # parse the normal modes
             start = ldx + 2
             stop = start + lines
@@ -363,11 +361,16 @@ class Output(six.with_metaclass(OutMeta, Editor)):
             symbols = arr[0].drop_duplicates()
             symbols = list(map(lambda x: re.findall(r'\D+', x)[0], symbols))
             nat = len(symbols)
+            if linear and idx == 0 and found[_rerot]:
+                arr.drop([2, 3, 4, 5, 6], axis=1, inplace=True)
+            elif not found[_rerot] and idx == 0 and not linear:
+                print("Found rotational modes in the calculation")
+                continue
             # set the columns where the normal modes are on the table
             cols = range(2, arr.columns.max()+1)
             arr.drop([0], axis=1, inplace=True)
             # re-organize the normal mode data
-            tmp = arr.groupby(1).apply(lambda x: x[cols].values.flatten())
+            tmp = arr.groupby(1).apply(lambda x: x[cols].values.T.flatten())
             df = pd.DataFrame(tmp.to_dict())
             df.columns = ['dx', 'dy', 'dz']
             errortext = "Something went wrong when trying to turn the {} " \
@@ -409,8 +412,10 @@ class Output(six.with_metaclass(OutMeta, Editor)):
             df['r_mass'] = np.repeat(rmass, nat)
             df['ir_int'] = np.repeat(irint, nat)
             df.loc[df['ir_int'].abs() < 1e-9, 'ir_int'] = 0
-            df['freqdx'] = np.repeat(range(count*6, (count+1)*6), nat)
+            df['freqdx'] = np.repeat(range(count*6, (count+1)*len(cols)), nat)
+            count += 1
             df['frame'] = 0
+            df[['dx', 'dy', 'dz']] *= np.sqrt(df['r_mass'].values.reshape(-1,1))
             dfs.append(df)
         df = pd.concat(dfs, ignore_index=True)
         cols = ['Z', 'label', 'dx', 'dy', 'dz', 'frequency', 'freqdx',
