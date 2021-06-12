@@ -43,6 +43,10 @@ export class UniverseSceneView extends base.ExatomicSceneView {
             utils.mesolv(this, 'field_v'),
             utils.mesolv(this, 'tensor_d'),
             utils.mesolv(this, 'freq_d'),
+            utils.fparse(this, 'freq_x'),
+            utils.fparse(this, 'freq_y'),
+            utils.fparse(this, 'freq_z'),
+            utils.fparse(this, 'freq_s'),
         ])
         this.three_promises = this.app3d.finalize(this.three_promises)
             .then(this.addAtom.bind(this))
@@ -266,7 +270,7 @@ export class UniverseSceneView extends base.ExatomicSceneView {
         })
     }
 
-    visualize_freq() {
+    add_freq_arrows() {
         const freqdx = this.model.get("freq_idx");
         const fdx = this.model.get("frame_idx");
         const scale = this.model.get("freq_scale");
@@ -285,6 +289,83 @@ export class UniverseSceneView extends base.ExatomicSceneView {
                                                                      atom_z, scale, fill);
             this.app3d.add_meshes("normmode_"+adx);
         }
+    }
+
+    visualize_freq() {
+        this.app3d.clear_meshes('atom')
+        this.app3d.clear_meshes('two')
+        const fdx = this.model.get('freq_frame')
+        const freqdx = this.model.get("freq_idx")
+        const syms = this.freq_s[freqdx*20+fdx]
+        const colrs = utils.mapper(syms, this.atom_c)
+        let atom; let bond; let radii; const
+            r = ((this.model.get('bond_r') > 0) ? this.model.get('bond_r') : 0.15)
+        if (this.model.get('atom_3d')) {
+            switch (this.model.get('fill_idx')) {
+            case 0:
+                radii = utils.mapper(syms, this.atom_cr).map((x) => x * 0.5)
+                atom = this.app3d.add_spheres
+                bond = this.app3d.add_cylinders
+                break
+            case 1:
+                radii = utils.mapper(syms, this.atom_vr)
+                atom = this.app3d.add_spheres
+                bond = null
+                break
+            case 2:
+                radii = utils.mapper(syms, this.atom_cr)
+                atom = this.app3d.add_spheres
+                bond = this.app3d.add_cylinders
+                break
+                // case 3:
+                //    radii = utils.mapper(syms, this.atom_cr)
+                //                    .map(function(x) { return x * 0.5; });
+                //    atom = this.app3d.add_points;
+                //    bond = this.app3d.add_lines;
+                //    break;
+                // case 4:
+                //    r = 0.6
+                //    radii = r + 0.05;
+                //    atom = this.app3d.add_spheres;
+                //    bond = this.app3d.add_cylinders;
+                //    break;
+                // TODO : default case
+            default:
+                radii = utils.mapper(syms, this.atom_cr)
+                atom = this.app3d.add_points
+                bond = null
+                break
+            }
+        } else {
+            if (this.app3d.selected.length > 0) {
+                this.clearSelected()
+            }
+            radii = utils.mapper(syms, this.atom_cr)
+                .map((x) => x * 0.5)
+            atom = this.app3d.add_points
+            bond = this.app3d.add_lines
+        }
+        if (this.app3d.selected.length > 0) {
+            this.clearSelected()
+        }
+        let labels = utils.mapper(syms, this.atom_l)
+        const a = []
+        Object.entries(labels).forEach((e) => {
+            a.push(e[1] + e[0].toString())
+        })
+        labels = a
+        this.app3d.meshes.atom = atom(
+            this.freq_x[freqdx*20+fdx], this.freq_y[freqdx*20+fdx],
+            this.freq_z[freqdx*20+fdx], colrs, radii, labels,
+        )
+        //if (this.two_b0.length !== 0) {
+        //    this.app3d.meshes.two = (bond != null) ? bond(
+        //        this.two_b0[fdx], this.two_b1[fdx],
+        //        this.freq_x[freqdx*20+fdx], this.freq_y[freqdx*20+fdx],
+        //        this.freq_z[freqdx*20+fdx], colrs, r,
+        //    ) : null
+        //}
+        this.app3d.add_meshes()
     }
     // events: {
     //     'click': 'handleClick'
@@ -326,8 +407,9 @@ export class UniverseSceneView extends base.ExatomicSceneView {
         this.listenTo(this.model, 'change:fill_idx', this.addAtom)
         this.listenTo(this.model, 'change:bond_r', this.addAtom)
         this.listenTo(this.model, 'change:clear_selected', this.clearSelected)
-        this.listenTo(this.model, "change:freq", this.visualize_freq);
-        this.listenTo(this.model, "change:freq_idx", this.visualize_freq);
-        this.listenTo(this.model, "change:freq_scale", this.visualize_freq);
+        this.listenTo(this.model, "change:freq", this.add_freq_arrows);
+        this.listenTo(this.model, "change:freq_idx", this.add_freq_arrows);
+        this.listenTo(this.model, "change:freq_scale", this.add_freq_arrows);
+        this.listenTo(this.model, "change:freq_frame", this.visualize_freq);
     }
 }
