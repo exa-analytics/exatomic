@@ -214,6 +214,11 @@ class UniverseScene(ExatomicScene):
     freq_d = Dict().tag(sync=True)
     freq_idx = Int(0).tag(sync=True)
     freq_scale = Float(1.0).tag(sync=True)
+    freq_frame = Int(0).tag(sync=True)
+    freq_x = Unicode().tag(sync=True)
+    freq_y = Unicode().tag(sync=True)
+    freq_z = Unicode().tag(sync=True)
+    freq_s = Unicode().tag(sync=True)
     # View traits
     fill_idx = Int(0).tag(sync=True)
     bond_r = Float(-1).tag(sync=True)

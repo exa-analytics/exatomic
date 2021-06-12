@@ -465,6 +465,12 @@ class UniverseWidget(ExatomicBox):
                            description='Freq. Index')
         scale = FloatSlider(max=10.0, step=0.1, readout=True, value=1.0,
                             description='Amplitude', layout=_wlo)
+        playable = bool(19 <= 1)
+        flims = dict(min=0, max=19, step=1, value=0)
+        control = Button(description=' Animate', icon='play')
+        anim_content = _ListDict([
+            ('playing', Play(disabled=playable, **flims)),
+            ('scn_frame', IntSlider(description='Frame', **flims))])
         def _freqdx(c):
             for scn in self.active():
                 scn.freq_idx = c.new
@@ -474,11 +480,19 @@ class UniverseWidget(ExatomicBox):
         def _scale(c):
             for scn in self.active():
                 scn.freq_scale = c.new
+        def _scn_frame(c):
+            for scn in self.active():
+                scn.freq_frame = c.new
         frequency.on_click(_freq)
         freqdxs.observe(_freqdx, names='value')
         scale.observe(_scale, names='value')
+        anim_content['scn_frame'].observe(_scn_frame, names='value')
+        anim_content['playing'].active = False
+        jslink((anim_content['playing'], 'value'),
+               (anim_content['scn_frame'], 'value'))
         content = _ListDict([('freqdx', freqdxs),
-                             ('scale', scale)])
+                             ('scale', scale),
+                             ('anim', Folder(control, anim_content))])
         return Folder(frequency, content)
 
     def _update_output(self, out):

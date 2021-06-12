@@ -119,8 +119,55 @@ def freq_traits(uni):
     grps = uni.frequency.groupby('freqdx')
     try: idxs = list(grps.groups.keys())
     except: idxs = [list(grp.index) for i, grp in grps]
-    #print(idxs)
-    return {'freq_d': grps.apply(lambda x: x.T.to_dict()).to_dict(), 'freq_i': idxs}
+    atoms = uni.atom.last_frame
+    cols = [['x', 'y', 'z'],
+            ['dx', 'dy', 'dz']]
+    # use a max of 50% of the normal mode
+    max_mult = 5
+    freq_x = []
+    freq_y = []
+    freq_z = []
+    freq_s = []
+    for fdx, data in grps:
+        # generate a list that goes from 0% to 50% to -50% to 0% of the normal mode
+        # movement this will generate a 'smooth' movement
+        mults = np.concatenate([range(0, max_mult), range(max_mult, -max_mult, -1),
+                                range(-max_mult, 0)])
+        dfs = []
+        for idx, mult in enumerate(mults):
+            df = atoms.copy()
+            # distort the molecule by a percentage of the normal modes
+            df[cols[0]] += mult/10 * data[cols[1]].values
+            df['frame'] = idx
+            dfs.append(df)
+        df = pd.concat(dfs, ignore_index=True)
+        grps = df.groupby('frame')
+        traits = {}
+        for col in cols[0]:
+            traits['freq_'+col] = grps.apply(
+                    lambda y: y[col].to_json(
+                    orient='values', double_precision=3)
+                    ).to_json(orient="values").replace('"', '')
+        freq_x.append(traits['freq_x'])
+        freq_y.append(traits['freq_y'])
+        freq_z.append(traits['freq_z'])
+        syms = grps.apply(lambda g: g['symbol'].cat.codes.values)
+        freq_s.append(syms.to_json(orient='values'))
+    traits = {}
+    # put together the vibrational normal modes
+    traits['freq_d'] = grps.apply(lambda x: x.T.to_dict()).to_dict()
+    # put together the vibrational frequency indexes
+    traits['freq_i'] = idxs
+    # put together the atomic positions for animating the normal modes
+    # we use the replace function as when the values are appended together
+    # they are strings and not lists so you cannot use the
+    # np.concatenate function
+    traits['freq_x'] = ''.join(freq_x).replace(']][[', '],[')
+    traits['freq_y'] = ''.join(freq_y).replace(']][[', '],[')
+    traits['freq_z'] = ''.join(freq_z).replace(']][[', '],[')
+    # the atomic symbols
+    traits['freq_s'] = ''.join(freq_s).replace(']][[', '],[')
+    return traits
 
 
 def uni_traits(uni, atomcolors=None, atomradii=None, atomlabels=None):
