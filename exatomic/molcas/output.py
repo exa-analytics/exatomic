@@ -415,8 +415,10 @@ class Output(six.with_metaclass(OutMeta, Editor)):
             df['freqdx'] = np.repeat(range(count*6, (count+1)*len(cols)), nat)
             count += 1
             df['frame'] = 0
-            if normalize:
+            if normalize and found[_rerot]:
                 df[['dx', 'dy', 'dz']] *= np.sqrt(df['r_mass'].values.reshape(-1,1))
+            elif normalize and not found[_rerot]:
+                pass
             dfs.append(df)
         df = pd.concat(dfs, ignore_index=True)
         cols = ['Z', 'label', 'dx', 'dy', 'dz', 'frequency', 'freqdx',
