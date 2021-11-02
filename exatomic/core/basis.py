@@ -72,6 +72,7 @@ class BasisSet(DataFrame):
     _cardinal = ('frame', np.int64)
     _index = 'function'
     _categories = {'L': np.int64, 'set': np.int64, 'frame': np.int64, 'norm': str}
+    _indexes = ['set', 'L']
 
     @property
     def lmax(self):
@@ -103,13 +104,12 @@ class BasisSet(DataFrame):
             return Shell(piv.values.flatten(), alphas, nprim, ncont, df.L.values[0],
                          df.norm.values[0], gaussian, df.r.values, df.n.values)
         self.spherical_by_shell(program, spherical)
-        names = ['set', 'L']
         if gaussian:
-            obj = self.groupby(names).apply(_shell_gau)
-            obj.index.set_names(names, inplace=True)
+            obj = self.groupby(self._indexes).apply(_shell_gau)
+            obj.index.set_names(self._indexes, inplace=True)
             return obj.reset_index()
-        obj = self.groupby(names).apply(_shell_sto)
-        obj.index.set_names(names, inplace=True)
+        obj = self.groupby(self._indexes).apply(_shell_sto)
+        obj.index.set_names(self._indexes, inplace=True)
         return obj.reset_index()
 
     def spherical_by_shell(self, program, spherical=True):
@@ -129,17 +129,15 @@ class BasisSet(DataFrame):
     def functions_by_shell(self):
         """Return a series of n functions per (set, L).
         This does not include degenerate functions."""
-        names = ['set', 'L']
-        obj = self.groupby(names)['shell'].nunique()
-        obj.index.set_names(names, inplace=True)
+        obj = self.groupby(self._indexes)['shell'].nunique()
+        obj.index.set_names(self._indexes, inplace=True)
         return obj
 
     def primitives_by_shell(self):
         """Return a series of n primitives per (set, L).
         This does not include degenerate primitives."""
-        names = ['set', 'L']
-        obj = self.groupby(names)['alpha'].nunique()
-        obj.index.set_names(names, inplace=True)
+        obj = self.groupby(self._indexes)['alpha'].nunique()
+        obj.index.set_names(self._indexes, inplace=True)
         return obj
 
     def functions(self, spherical):
