@@ -91,23 +91,26 @@ class BasisSet(DataFrame):
             srs (pd.Series): multi-indexed by set and L
         """
         def _shell_gau(df):
-            col = ('alpha', 'shell', 'd')
             alphas = df.alpha.unique()
-            piv = df.pivot(*col).loc[alphas].fillna(0.)
+            piv = df.pivot_table(index='alpha', columns='shell', values='d').loc[alphas].fillna(0.)
             nprim, ncont = piv.shape
             return Shell(piv.values.flatten(), alphas, nprim, ncont, df.L.values[0],
                          df.norm.values[0], gaussian, None, None)
         def _shell_sto(df):
-            col = ('alpha', 'shell', 'd')
             alphas = df.alpha.unique()
-            piv = df.pivot(*col).loc[alphas].fillna(0.)
+            piv = df.pivot_table(index='alpha', columns='shell', values='d').loc[alphas].fillna(0.)
             nprim, ncont = piv.shape
             return Shell(piv.values.flatten(), alphas, nprim, ncont, df.L.values[0],
                          df.norm.values[0], gaussian, df.r.values, df.n.values)
         self.spherical_by_shell(program, spherical)
+        names = ['set', 'L']
         if gaussian:
-            return self.groupby(['set', 'L']).apply(_shell_gau).reset_index()
-        return self.groupby(['set', 'L']).apply(_shell_sto).reset_index()
+            obj = self.groupby(names).apply(_shell_gau)
+            obj.index.set_names(names, inplace=True)
+            return obj.reset_index()
+        obj = self.groupby(names).apply(_shell_sto)
+        obj.index.set_names(names, inplace=True)
+        return obj.reset_index()
 
     def spherical_by_shell(self, program, spherical=True):
         """Allows for some flexibility in treating shells either as
@@ -126,12 +129,18 @@ class BasisSet(DataFrame):
     def functions_by_shell(self):
         """Return a series of n functions per (set, L).
         This does not include degenerate functions."""
-        return self.groupby(['set', 'L'])['shell'].nunique()
+        names = ['set', 'L']
+        obj = self.groupby(names)['shell'].nunique()
+        obj.index.set_names(names, inplace=True)
+        return obj
 
     def primitives_by_shell(self):
         """Return a series of n primitives per (set, L).
         This does not include degenerate primitives."""
-        return self.groupby(['set', 'L'])['alpha'].nunique()
+        names = ['set', 'L']
+        obj = self.groupby(names)['alpha'].nunique()
+        obj.index.set_names(names, inplace=True)
+        return obj
 
     def functions(self, spherical):
         """Return a series of n functions per (set, L).

@@ -392,8 +392,8 @@ class MOMatrix(DataFrame):
                 return pd.DataFrame(cmat, index=pd.Index(range(nchi), name='chi'),
                                     columns=pd.Index(range(norb), name='orbital'))
             return self.groupby('irrep').get_group(irrep
-                        ).pivot('chi', 'orbital', mocoefs)
-        return self.pivot('chi', 'orbital', mocoefs)
+                        ).pivot_table(index='chi', columns='orbital', values=mocoefs)
+        return self.pivot_table(index='chi', columns='orbital', values=mocoefs)
 
 
 class DensityMatrix(DataFrame):

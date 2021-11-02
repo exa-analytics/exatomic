@@ -83,6 +83,7 @@ def two_traits(uni):
     lbl0 = bonded['atom0'].map(lbls)
     lbl1 = bonded['atom1'].map(lbls)
     lbl = pd.concat((lbl0, lbl1), axis=1)
+    lbl.columns = ['atom0', 'atom1']
     lbl['frame'] = bonded['frame']
     bond_grps = lbl.groupby('frame')
     frames = df['frame'].unique().astype(np.int64)
