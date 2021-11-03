@@ -12,7 +12,6 @@ from __future__ import division
 import os
 import six
 import pandas as pd
-from pandas.io.parsers import ParserError
 import numpy as np
 from six import StringIO
 from exa import TypedMeta
@@ -199,7 +198,7 @@ class Output(six.with_metaclass(OutMeta, Editor)):
     def add_overlap(self, path):
         try: # If it's an ASCII text file
             self.overlap = Overlap.from_column(path)
-        except ParserError: # If it's an HDF5 file
+        except Exception: # If it's an HDF5 file
             hdf = HDF(path)
             if 'DESYM_CENTER_CHARGES' not in hdf._hdf:
                 self.overlap = hdf.overlap
