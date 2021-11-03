@@ -38,7 +38,6 @@ jobs:
         run: |
           conda install -q -c exaanalytics exa>=${{ env.EXA_VERSION }}
           conda install -q -c conda-forge `cat requirements.txt`
-          conda install -q -c anaconda h5py
           conda install -q -c conda-forge `cat requirements.dev.txt`
           python setup.py develop
 
@@ -48,7 +47,6 @@ jobs:
         run: |
           conda install -q -c exaanalytics exa>=${{ env.EXA_VERSION }}
           conda install -q -c conda-forge `cat requirements.txt`
-          conda install -q -c anaconda h5py
           conda install -q -c conda-forge `cat requirements.dev.txt`
           python setup.py develop
 
