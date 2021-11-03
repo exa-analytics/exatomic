@@ -1,0 +1,41 @@
+name: Branch
+
+on:
+  push:
+    branches-ignore:
+      - 'master'
+
+env:
+  EXA_VERSION=0.5.24
+
+jobs:
+
+  run_tests:
+    name: Test (${{ matrix.python-version }}, ${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: ["ubuntu-latest", "macos-latest", "windows-latest"]
+        python-version: ["3.6", "3.7", "3.8"]
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v2
+
+      - name: Set Up Python
+        uses: conda-incubator/setup-miniconda@v2
+        with:
+          auto-update-conda: true
+          python-version: ${{ matrix.python-version }}
+          channels: conda-forge,exaanalytics
+
+      - name: Install Dependencies (Nix)
+        shell: bash -l {0}
+        run: conda install -q -c exaanalytics exa>=${{ env.EXA_VERSION }}
+
+      - name: Install Dependencies (Win)
+        shell: pwsh
+        run: conda install -q -c exaanalytics exa>=${{ env.EXA_VERSION }}
+
+
