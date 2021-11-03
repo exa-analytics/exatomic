@@ -6,7 +6,7 @@ on:
       - 'master'
 
 env:
-  EXA_VERSION=0.5.24
+  EXA_VERSION: 0.5.24
 
 jobs:
 
