@@ -34,7 +34,7 @@ jobs:
 
       - name: Install Dependencies (Nix)
         shell: bash -l {0}
-        if: runner.os == "Linux" || runner.os == "macOS"
+        if: ${{ runner.os == "Linux" || runner.os == "macOS" }}
         run: |
           conda install -q -c exaanalytics exa>=${{ env.EXA_VERSION }}
           conda install -q -c conda-forge `cat requirements.txt`
@@ -44,7 +44,7 @@ jobs:
 
       - name: Install Dependencies (Win)
         shell: pwsh
-        if: runner.os == "Windows"
+        if: ${{ runner.os == "Windows" }}
         run: |
           conda install -q -c exaanalytics exa>=${{ env.EXA_VERSION }}
           conda install -q -c conda-forge `cat requirements.txt`
@@ -54,17 +54,17 @@ jobs:
 
       - name: Run tests
         shell: bash -l {0}
-        if: runner.os == "Linux" || runner.os == "macOS"
+        if: ${{ runner.os == "Linux" || runner.os == "macOS" }}
         run: pytest --doctest-modules -v --cov coveralls --cov-report term --cov=exatomic --cov-report xml
 
       - name: Run tests
         shell: pwsh
-        if: runner.os == "Windows"
+        if: ${{ runner.os == "Windows" }}
         run: pytest --doctest-modules -v --cov coveralls --cov-report term --cov=exatomic --cov-report xml
 
       - name: Publish coverage
         shell: bash -l {0}
-        if: runner.os == env.REFERENCE_OS && matrix.python-version == env.REFERENCE_PY
+        if: ${{ runner.os == env.REFERENCE_OS && matrix.python-version == env.REFERENCE_PY }}
         run: bash <(curl -Ls https://coverage.codacy.com/get.sh) report --language Python -r coverage.xml
 
 
