@@ -7,6 +7,8 @@ on:
 
 env:
   EXA_VERSION: 0.5.24
+  REFERENCE_OS: Linux
+  REFERENCE_PY: "3.8"
 
 jobs:
 
@@ -32,10 +34,37 @@ jobs:
 
       - name: Install Dependencies (Nix)
         shell: bash -l {0}
-        run: conda install -q -c exaanalytics exa>=${{ env.EXA_VERSION }}
+        if: runner.os == "Linux" || runner.os == "macOS"
+        run: |
+          conda install -q -c exaanalytics exa>=${{ env.EXA_VERSION }}
+          conda install -q -c conda-forge `cat requirements.txt`
+          conda install -q -c anaconda h5py
+          conda install -q -c conda-forge `cat requirements.dev.txt`
+          python setup.py develop
 
       - name: Install Dependencies (Win)
         shell: pwsh
-        run: conda install -q -c exaanalytics exa>=${{ env.EXA_VERSION }}
+        if: runner.os == "Windows"
+        run: |
+          conda install -q -c exaanalytics exa>=${{ env.EXA_VERSION }}
+          conda install -q -c conda-forge `cat requirements.txt`
+          conda install -q -c anaconda h5py
+          conda install -q -c conda-forge `cat requirements.dev.txt`
+          python setup.py develop
+
+      - name: Run tests
+        shell: bash -l {0}
+        if: runner.os == "Linux" || runner.os == "macOS"
+        run: pytest --doctest-modules -v --cov coveralls --cov-report term --cov=exatomic --cov-report xml
+
+      - name: Run tests
+        shell: pwsh
+        if: runner.os == "Windows"
+        run: pytest --doctest-modules -v --cov coveralls --cov-report term --cov=exatomic --cov-report xml
+
+      - name: Publish coverage
+        shell: bash -l {0}
+        if: runner.os == env.REFERENCE_OS && matrix.python-version == env.REFERENCE_PY
+        run: bash <(curl -Ls https://coverage.codacy.com/get.sh) report --language Python -r coverage.xml
 
 
