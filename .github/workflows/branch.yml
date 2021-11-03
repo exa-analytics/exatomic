@@ -60,7 +60,7 @@ jobs:
       - name: Run Tests (Win)
         shell: pwsh
         if: runner.os == 'Windows'
-        run: pytest --doctest-modules -v --cov coveralls --cov-report term --cov=exatomic --cov-report xml
+        run: pytest --doctest-modules -v
 
 #      - name: Publish coverage
 #        shell: bash -l {0}
