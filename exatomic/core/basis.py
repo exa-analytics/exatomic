@@ -91,26 +91,16 @@ class BasisSet(DataFrame):
         Returns:
             srs (pd.Series): multi-indexed by set and L
         """
-        def _shell_gau(df):
-            alphas = df.alpha.unique()
-            piv = df.pivot_table(index='alpha', columns='shell', values='d').loc[alphas].fillna(0.)
-            nprim, ncont = piv.shape
-            return Shell(piv.values.flatten(), alphas, nprim, ncont, df.L.values[0],
-                         df.norm.values[0], gaussian, None, None)
-        def _shell_sto(df):
-            alphas = df.alpha.unique()
-            piv = df.pivot_table(index='alpha', columns='shell', values='d').loc[alphas].fillna(0.)
-            nprim, ncont = piv.shape
-            return Shell(piv.values.flatten(), alphas, nprim, ncont, df.L.values[0],
-                         df.norm.values[0], gaussian, df.r.values, df.n.values)
         self.spherical_by_shell(program, spherical)
-        if gaussian:
-            obj = self.groupby(self._indexes).apply(_shell_gau)
-            obj.index.set_names(self._indexes, inplace=True)
-            return obj.reset_index()
-        obj = self.groupby(self._indexes).apply(_shell_sto)
-        obj.index.set_names(self._indexes, inplace=True)
-        return obj.reset_index()
+        grps = self.groupby(self._indexes)
+        shells = []
+        for (seht, L), grp in grps:
+            alphas = grp['alpha'].unique()
+            piv = grp.pivot_table(index='alpha', columns='shell', values='d').loc[alphas].fillna(0.)
+            args = piv.values.flatten(), alphas, *piv.shape, L, grp['norm'].values[0], gaussian
+            shell = Shell(*args, None, None) if gaussian else Shell(*args, grp['r'].values, grp['n'].values)
+            shells.append((seht, L, shell))
+        return pd.DataFrame(shells, columns=self._indexes + [0])
 
     def spherical_by_shell(self, program, spherical=True):
         """Allows for some flexibility in treating shells either as
