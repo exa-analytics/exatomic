@@ -1,5 +1,5 @@
 ## -*- coding: utf-8 -*-
-## Copyright (c) 2015-2020, Exa Analytics Development Team
+## Copyright (c) 2015-2021, Exa Analytics Development Team
 ## Distributed under the terms of the Apache License 2.0
 #"""
 #Parser for ADF Output
@@ -7,7 +7,7 @@
 #Parser for the output of the DIRAC program (part of the ADF suite).
 #"""
 #import pandas as pd
-#from exa import Parser, Matches, Typed
+#from exatomic.exa import Parser, Matches, Typed
 #from .scf import SCF
 #from .geometry import Geometry
 #from exatomic.core import Atom

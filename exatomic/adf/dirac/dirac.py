@@ -1,12 +1,12 @@
 ## -*- coding: utf-8 -*-
-## Copyright (c) 2015-2020, Exa Analytics Development Team
+## Copyright (c) 2015-2021, Exa Analytics Development Team
 ## Distributed under the terms of the Apache License 2.0
 #"""
 #ADF Dirac Parser
 ##########################
 #Parser for the output of the DIRAC program (part of the ADF suite).
 #"""
-#from exa import Parser, Matches
+#from exatomic.exa import Parser, Matches
 #
 #
 #class DIRAC(Parser):
