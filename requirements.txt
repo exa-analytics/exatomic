@@ -4,3 +4,4 @@ numexpr>=2.0
 ipywidgets>=7.0
 bokeh
 scipy>=1.4
+h5py>=3.4.0
