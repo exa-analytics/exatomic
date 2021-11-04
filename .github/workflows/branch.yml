@@ -48,8 +48,8 @@ jobs:
         if: runner.os == 'Windows'
         run: |
           conda install -q -c exaanalytics exa>=${{ env.EXA_VERSION }}
-          conda install -q -c conda-forge `cat requirements.txt`
-          conda install -q -c conda-forge `cat requirements.dev.txt`
+          conda install -q -c conda-forge $(Get-Content requirements.txt)
+          conda install -q -c conda-forge $(Get-Content requirements.dev.txt)
           python setup.py develop
 
       - name: Run Tests (Nix)
@@ -62,7 +62,9 @@ jobs:
         if: runner.os == 'Windows'
         run: pytest --doctest-modules -v
 
-#      - name: Publish coverage
-#        shell: bash -l {0}
-#        if: (${{ runner.os == 'Linux' }} && ${{ matrix.python-version == '3.8' }})
-#        run: bash <(curl -Ls https://coverage.codacy.com/get.sh) report --language Python -r coverage.xml
+      - name: Publish coverage
+        shell: bash -l {0}
+        env:
+          CODACY_PROJECT_TOKEN: ${{ secrets.CODACY_PROJECT_TOKEN }}
+        if: (${{ runner.os == 'Linux' }} && ${{ matrix.python-version == '3.8' }})
+        run: bash <(curl -Ls https://coverage.codacy.com/get.sh) report --language Python -r coverage.xml
