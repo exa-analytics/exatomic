@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# Copyright (c) 2015-2020, Exa Analytics Development Team
+# Copyright (c) 2015-2021, Exa Analytics Development Team
 # Distributed under the terms of the Apache License 2.0
 """
 Unit Conversions
@@ -10,7 +10,7 @@ see the example below.
 
 .. code-block:: python
 
-    from exa.util.units import Energy
+    from exatomic.exa.util.units import Energy
     Energy["eV"]         # Value of eV in SI units
     Energy["eV", "J"]    # Same as above
     Energy["eV", "Ha"]   # Conversion factor between eV and Ha (Hartree atomic unit)

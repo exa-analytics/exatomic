@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
-# Copyright (c) 2015-2020, Exa Analytics Development Team
+# Copyright (c) 2015-2021, Exa Analytics Development Team
 # Distributed under the terms of the Apache License 2.0
 """
-Tests for :mod:`~exa.core.editor`
+Tests for :mod:`~exatomic.exa.core.editor`
 ##################################
 """
 import io
@@ -11,7 +11,7 @@ from tempfile import mkdtemp
 from unittest import TestCase
 from contextlib import redirect_stdout
 import pandas as pd
-from exa import Editor
+from exatomic.exa import Editor
 
 
 
@@ -19,8 +19,8 @@ class TestEditor(TestCase):
     @classmethod
     def setUpClass(cls):
         """
-        Generate the file path to the exa.core.editor module (which will be used as
-        the test for the :class:`~exa.core.editor.Editor` class that it provides).
+        Generate the file path to the exatomic.exa.core.editor module (which will be used as
+        the test for the :class:`~exatomic.exa.core.editor.Editor` class that it provides).
         """
         cls.path = os.path.abspath(os.path.join(os.path.abspath(__file__),
                                                 "..", "..", "editor.py"))

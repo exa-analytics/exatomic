@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# Copyright (c) 2015-2020, Exa Analytics Development Team
+# Copyright (c) 2015-2021, Exa Analytics Development Team
 # Distributed under the terms of the Apache License 2.0
 """
 Exceptions
@@ -20,7 +20,7 @@ class ExaException(Exception):
 
 class RequiredColumnError(ExaException):
     """
-    :class:`~exa.core.numerical.DataFrame` column error.
+    :class:`~exatomic.exa.core.numerical.DataFrame` column error.
     """
     _msg = 'Missing required column(s), {0}, for creation of class {1} object.'
 

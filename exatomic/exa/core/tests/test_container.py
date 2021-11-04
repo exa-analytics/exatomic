@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
-# Copyright (c) 2015-2020, Exa Analytics Development Team
+# Copyright (c) 2015-2021, Exa Analytics Development Team
 # Distributed under the terms of the Apache License 2.0
 """
-Tests for :mod:`~exa.core.container`
+Tests for :mod:`~exatomic.exa.core.container`
 #######################################
 """
 import sys
@@ -11,7 +11,7 @@ from unittest import TestCase
 from tempfile import mkdtemp
 import pandas as pd
 from pandas.core.dtypes.dtypes import CategoricalDtype
-from exa import Container, TypedMeta, DataFrame, Series, Field
+from exatomic.exa import Container, TypedMeta, DataFrame, Series, Field
 
 
 class DummyDataFrame(DataFrame):

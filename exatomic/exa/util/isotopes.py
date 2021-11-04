@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# Copyright (c) 2015-2020, Exa Analytics Development Team
+# Copyright (c) 2015-2021, Exa Analytics Development Team
 # Distributed under the terms of the Apache License 2.0
 """
 Periodic Table of Elements and Isotopes
@@ -12,7 +12,7 @@ versa).
 
 .. code-block:: python
 
-    from exa.util import isotopes
+    from exatomic.exa.util import isotopes
     isotopes.H            # Hydrogen element
     isotopes.H[2]         # Hydrogen isotopes 2 (deuterium)
     isotopes.H.cov_radius # Empirical covalent radius (a.u. - Bohr)
@@ -39,7 +39,7 @@ import os as _os
 import sys as _sys
 import bz2 as _bz2
 from pandas import read_json as _rj
-from exa.static import resource as _resource
+from exatomic.exa.static import resource as _resource
 if not hasattr(_bz2, "open"):
     _bz2.open = _bz2.BZ2File
 
@@ -50,7 +50,7 @@ class Element(object):
 
     .. code-block:: python
 
-        from exa.util import isotopes
+        from exatomic.exa.util import isotopes
         H = isotopes.H         # Hydrogen element (isotope averaged)
         D = isotopes.H['2']    # Deuterium (2H, a specific isotope)
         isotopes.H.isotopes    # List of available isotopes
@@ -87,7 +87,7 @@ class Isotope(object):
 
     .. code-block:: python
 
-        from exa.util import isotopes
+        from exatomic.exa.util import isotopes
         isotopes.U['235'].mass    # Mass of 235-U
     """
     @property

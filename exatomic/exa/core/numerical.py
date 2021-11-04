@@ -1,13 +1,13 @@
 # -*- coding: utf-8 -*-
-# Copyright (c) 2015-2020, Exa Analytics Development Team
+# Copyright (c) 2015-2021, Exa Analytics Development Team
 # Distributed under the terms of the Apache License 2.0
 """
 Data Objects
 ###################################
 Data objects are used to store typed data coming from an external source (for
 example a file on disk). There are three primary data objects provided by
-this module, :class:`~exa.core.numerical.Series`, :class:`~exa.core.numerical.DataFrame`,
-and :class:`~exa.core.numerical.Field`. The purpose of these objects is to facilitate
+this module, :class:`~exatomic.exa.core.numerical.Series`, :class:`~exatomic.exa.core.numerical.DataFrame`,
+and :class:`~exatomic.exa.core.numerical.Field`. The purpose of these objects is to facilitate
 conversion of data into "traits" used in visualization and enforce relationships
 between data objects in a given container. Any of the objects provided by this
 module may be extended.
@@ -16,13 +16,13 @@ import logging
 import warnings
 import numpy as np
 import pandas as pd
-from exa.core.error import RequiredColumnError
+from exatomic.exa.core.error import RequiredColumnError
 
 
 class Numerical(object):
     """
-    Base class for :class:`~exa.core.numerical.Series`,
-    :class:`~exa.core.numerical.DataFrame`, and :class:`~exa.numerical.Field`
+    Base class for :class:`~exatomic.exa.core.numerical.Series`,
+    :class:`~exatomic.exa.core.numerical.DataFrame`, and :class:`~exatomic.exa.numerical.Field`
     objects, providing default trait functionality and clean representations
     when present as part of containers.
     """
@@ -140,7 +140,7 @@ class Series(BaseSeries, pd.Series):
 
     .. code-block:: Python
 
-        class MySeries(exa.core.numerical.Series):
+        class MySeries(exatomic.exa.core.numerical.Series):
             _sname = 'data'        # series default name
             _iname = 'data_index'  # series default index name
 
@@ -169,7 +169,7 @@ class DataFrame(BaseDataFrame, pd.DataFrame):
 
     .. code-block:: Python
 
-        class MyDF(exa.core.numerical.DataFrame):
+        class MyDF(exatomic.exa.core.numerical.DataFrame):
             _cardinal = ('cardinal', int)
             _index = 'mydf_index'
             _columns = ['x', 'y', 'z', 'symbol']
@@ -242,7 +242,7 @@ class Field(DataFrame):
         generated x, y, then z and scalar field values are a series object
         ordered looping first over x then y, then z).
 
-    In addition to the :class:`~exa.core.numerical.DataFrame` attributes, this object
+    In addition to the :class:`~exatomic.exa.core.numerical.DataFrame` attributes, this object
     has the following:
     """
     @property
@@ -367,7 +367,7 @@ class Field3D(Field):
         slowest.
 
     See Also:
-        :class:`~exa.core.numerical.Field`
+        :class:`~exatomic.exa.core.numerical.Field`
     """
     _columns = ['nx', 'ny', 'nz', 'ox', 'oy', 'oz', 'xi', 'xj', 'xk',
                 'yi', 'yj', 'yk', 'zi', 'zj', 'zk']

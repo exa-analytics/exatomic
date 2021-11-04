@@ -1,17 +1,17 @@
 # -*- coding: utf-8 -*-
-# Copyright (c) 2015-2020, Exa Analytics Development Team
+# Copyright (c) 2015-2021, Exa Analytics Development Team
 # Distributed under the terms of the Apache License 2.0
 """
-Tests for :mod:`~exa.static`
+Tests for :mod:`~exatomic.exa.static`
 #############################################
 """
 import os
 from unittest import TestCase
-from exa import static
+from exatomic.exa import static
 
 
 def test_static_dir():
-    """Test :func:`~exa.static.staticdir`."""
+    """Test :func:`~exatomic.exa.static.staticdir`."""
     assert os.path.isdir(static.staticdir())
     return True
 

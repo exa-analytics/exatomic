@@ -1,15 +1,15 @@
 # -*- coding: utf-8 -*-
-# Copyright (c) 2015-2020, Exa Analytics Development Team
+# Copyright (c) 2015-2021, Exa Analytics Development Team
 # Distributed under the terms of the Apache License 2.0
 """
 Tests for Strong Typing
 ########################
-See :mod:`~exa.typed` for more details on how typing works.
+See :mod:`~exatomic.exa.typed` for more details on how typing works.
 """
 import six
 from itertools import product
 import pytest
-from exa.typed import Typed, typed, TypedClass, TypedMeta, yield_typed
+from exatomic.exa.typed import Typed, typed, TypedClass, TypedMeta, yield_typed
 
 
 @typed

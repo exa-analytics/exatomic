@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# Copyright (c) 2015-2020, Exa Analytics Development Team
+# Copyright (c) 2015-2021, Exa Analytics Development Team
 # Distributed under the terms of the Apache License 2.0
 """
 Editor
@@ -24,7 +24,7 @@ class Editor(object):
 
     Text lines are stored in memory; no files remain open. This class does not
     strive to be a fully fledged text editor rather a base class for converting
-    input and output data from text on disk to some type of (exa framework)
+    input and output data from text on disk to some type of (exatomic framework)
     container object (and vice versa).
 
     >>> template = "Hello World!\\nHello {user}"
@@ -52,7 +52,7 @@ class Editor(object):
         description (str): Data/file/misc description
         meta (dict): Additional metadata as key, value pairs
         nrpint (int): Number of lines to display when printing
-        cursor (int): Line number position of the cusor (see :func:`~exa.core.editor.Editor.find_next`)
+        cursor (int): Line number position of the cusor (see :func:`~exatomic.exa.core.editor.Editor.find_next`)
     """
     _getter_prefix = 'parse'
     _fmt = '{0}: {1}\n'.format   # Format for printing lines (see __repr__)
@@ -142,8 +142,8 @@ class Editor(object):
         Insert lines into the editor.
 
         Note:
-            To insert before the first line, use :func:`~exa.core.editor.Editor.preappend`
-            (or key 0); to insert after the last line use :func:`~exa.core.editor.Editor.append`.
+            To insert before the first line, use :func:`~exatomic.exa.core.editor.Editor.preappend`
+            (or key 0); to insert after the last line use :func:`~exatomic.exa.core.editor.Editor.append`.
 
         Args:
             lines (dict): Dictionary of lines of form (lineno, string) pairs
