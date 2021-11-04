@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# Copyright (c) 2015-2020, Exa Analytics Development Team
+# Copyright (c) 2015-2021, Exa Analytics Development Team
 # Distributed under the terms of the Apache License 2.0
 """
 Pair Correlation Functions
@@ -9,7 +9,7 @@ import numpy as np
 import pandas as pd
 from IPython.display import display
 from ipywidgets import FloatProgress
-from exa.util.units import Length
+from exatomic.exa.util.units import Length
 from exatomic.core.universe import Universe
 
 

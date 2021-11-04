@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# Copyright (c) 2015-2020, Exa Analytics Development Team
+# Copyright (c) 2015-2021, Exa Analytics Development Team
 # Distributed under the terms of the Apache License 2.0
 """
 Delocalization
@@ -14,8 +14,8 @@ import os
 import numpy as np
 import pandas as pd
 import seaborn as sns
-from exa.util.mpl import _gen_figure
-from exa.util.units import Energy
+from exatomic.exa.util.mpl import _gen_figure
+from exatomic.exa.util.units import Energy
 from exatomic import gaussian, nwchem
 #from exatomic.mpl import plot_j2_surface, plot_j2_contour
 

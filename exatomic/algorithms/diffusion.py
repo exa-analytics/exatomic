@@ -1,12 +1,12 @@
 # -*- coding: utf-8 -*-
-# Copyright (c) 2015-2020, Exa Analytics Development Team
+# Copyright (c) 2015-2021, Exa Analytics Development Team
 # Distributed under the terms of the Apache License 2.0
 """
 Diffusion Coefficients
 ##########################
 Various algorithms for computing diffusion coefficients are coded here.
 """
-from exa.util.units import Length, Time
+from extomic.exa.util.units import Length, Time
 from exatomic.algorithms.displacement import absolute_squared_displacement
 
 
