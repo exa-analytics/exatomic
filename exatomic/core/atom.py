@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# Copyright (c) 2015-2020, Exa Analytics Development Team
+# Copyright (c) 2015-2021, Exa Analytics Development Team
 # Distributed under the terms of the Apache License 2.0
 """
 Atomic Position Data
@@ -10,8 +10,8 @@ forces, velocities, symbols, etc. (all data associated with atoms as points).
 from numbers import Integral
 import numpy as np
 import pandas as pd
-from exa import DataFrame, Series
-from exa.util.units import Length
+from exatomic.exa import DataFrame, Series
+from exatomic.exa.util.units import Length
 from exatomic.base import sym2z, sym2mass
 from exatomic.algorithms.distance import modv
 from exatomic.core.error import PeriodicUniverseError
@@ -288,7 +288,7 @@ class Atom(DataFrame):
         Compute and return enumerated atoms.
 
         Returns:
-            labels (:class:`~exa.core.numerical.Series`): Enumerated atom labels (of type int)
+            labels (:class:`~exatomic.exa.core.numerical.Series`): Enumerated atom labels (of type int)
         """
         nats = self.cardinal_groupby().size().values
         labels = Series([i for nat in nats for i in range(nat)], dtype='category')

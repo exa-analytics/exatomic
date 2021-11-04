@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# Copyright (c) 2015-2020, Exa Analytics Development Team
+# Copyright (c) 2015-2021, Exa Analytics Development Team
 # Distributed under the terms of the Apache License 2.0
 import numpy as np
 from unittest import TestCase
@@ -96,8 +96,8 @@ class TestAtom(TestCase):
 #"""
 #import numpy as np
 #from unittest import TestCase
-#from exa import units
-#from exa.core.dataframe import ColumnError
+#from exatomic.exa import units
+#from exatomic.exa.core.dataframe import ColumnError
 #from exatomic.atom import Atom
 #
 #

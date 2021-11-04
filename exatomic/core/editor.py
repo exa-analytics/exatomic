@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# Copyright (c) 2015-2020, Exa Analytics Development Team
+# Copyright (c) 2015-2021, Exa Analytics Development Team
 # Distributed under the terms of the Apache License 2.0
 """
 Atomic Editor
@@ -9,8 +9,8 @@ found file formats directly into :class:`~exatomic.container.Universe` objects.
 """
 import six
 import pandas as pd
-from exa import Editor as _Editor
-from exa import TypedMeta
+from exatomic.exa import Editor as _Editor
+from exatomic.exa import TypedMeta
 from .universe import Universe
 from .frame import compute_frame_from_atom
 

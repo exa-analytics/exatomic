@@ -30,7 +30,7 @@ def einstein_relation(universe, input_time='ps', input_length='au',
         time (str): Sting unit name of output time unit
 
     Returns:
-        d (:class:`~exa.core.numerical.DataFrame`): Diffussion coefficient as a function of time
+        d (:class:`~exatomic.exa.core.numerical.DataFrame`): Diffussion coefficient as a function of time
 
     Note:
         The asymptotic value of the returned variable is the diffusion coefficient.

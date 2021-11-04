@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# Copyright (c) 2015-2020, Exa Analytics Development Team
+# Copyright (c) 2015-2021, Exa Analytics Development Team
 # Distributed under the terms of the Apache License 2.0
 """
 Basis Set Representations
@@ -18,7 +18,7 @@ import numpy as np
 import pandas as pd
 from io import StringIO
 
-from exa import DataFrame
+from exatomic.exa import DataFrame
 from exatomic.algorithms.basis import cart_lml_count, spher_lml_count
 from exatomic.algorithms.numerical import _tri_indices, _square, Shell
 

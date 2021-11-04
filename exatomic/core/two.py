@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# Copyright (c) 2015-2020, Exa Analytics Development Team
+# Copyright (c) 2015-2021, Exa Analytics Development Team
 # Distributed under the terms of the Apache License 2.0
 """
 Atomic Two Body
@@ -31,8 +31,8 @@ import numpy as np
 import pandas as pd
 from IPython.display import display
 from ipywidgets import FloatProgress
-from exa import DataFrame
-#from exa.util.units import Length
+from exatomic.exa import DataFrame
+#from exatomic.exa.util.units import Length
 from exatomic.base import sym2radius
 from exatomic.algorithms.distance import (pdist_ortho, pdist_ortho_nv, pdist,
                                           pdist_nv)
