@@ -1,14 +1,14 @@
 # -*- coding: utf-8 -*-
-# Copyright (c) 2015-2020, Exa Analytics Development Team
+# Copyright (c) 2015-2021, Exa Analytics Development Team
 # Distributed under the terms of the Apache License 2.0
 """
 Base Functionality
 ############################
 """
 import os
-from exa.util import isotopes
 from platform import system
 from IPython.display import display_html
+from exatomic. exa.util import isotopes
 
 # For numba compiled functions
 sysname= system().lower()
