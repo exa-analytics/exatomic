@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# Copyright (c) 2015-2020, Exa Analytics Development Team
+# Copyright (c) 2015-2021, Exa Analytics Development Team
 # Distributed under the terms of the Apache License 2.0
 """
 exnbo Input Generator and Parser
@@ -8,7 +8,7 @@ exnbo Input Generator and Parser
 import six
 import numpy as np
 import pandas as pd
-from exa import TypedMeta
+from exatomic.exa import TypedMeta
 from exatomic import __version__
 from exatomic.base import z2sym
 from .editor import Editor
