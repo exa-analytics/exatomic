@@ -66,5 +66,5 @@ jobs:
         shell: bash -l {0}
         env:
           CODACY_PROJECT_TOKEN: ${{ secrets.CODACY_PROJECT_TOKEN }}
-        if: (${{ runner.os == 'Linux' }} && ${{ matrix.python-version == '3.8' }})
+        if: (runner.os == 'Linux') && (matrix.python-version == '3.8')
         run: bash <(curl -Ls https://coverage.codacy.com/get.sh) report --language Python -r coverage.xml
