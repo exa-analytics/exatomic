@@ -1,5 +1,5 @@
  #-*- coding: utf-8 -*-
-# Copyright (c) 2015-2020, Exa Analytics Development Team
+# Copyright (c) 2015-2021, Exa Analytics Development Team
 # Distributed under the terms of the Apache License 2.0
 """
 Cube File Support
@@ -12,7 +12,7 @@ import six
 import numpy as np
 import pandas as pd
 from glob import glob
-from exa import Series, TypedMeta
+from exatomic.exa import Series, TypedMeta
 from exatomic import __version__, Atom, Editor, AtomicField, Frame, Universe
 from exatomic.base import z2sym, sym2z
 
