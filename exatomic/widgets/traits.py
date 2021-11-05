@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# Copyright (c) 2015-2020, Exa Analytics Development Team
+# Copyright (c) 2015-2021, Exa Analytics Development Team
 # Distributed under the terms of the Apache License 2.0
 """
 Universe trait functions
@@ -17,7 +17,7 @@ def atom_traits(df, atomcolors=None, atomradii=None, atomlabels=None):
     """
     Get atom table traits. Atomic size (using the covalent radius) and atom
     colors (using the common `Jmol`_ color scheme) are packed as dicts and
-    obtained from the static data in exa.
+    obtained from the static data in exatomic.exa.
 
     .. _Jmol: http://jmol.sourceforge.net/jscolors/
     """

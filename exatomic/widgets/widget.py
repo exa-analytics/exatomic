@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# Copyright (c) 2015-2020, Exa Analytics Development Team
+# Copyright (c) 2015-2021, Exa Analytics Development Team
 # Distributed under the terms of the Apache License 2.0
 """
 Universe Notebook Widget
@@ -26,7 +26,7 @@ from .widget_utils import _wlo, _ListDict, Folder
 from .traits import uni_traits
 from exatomic.core.tensor import Tensor
 from IPython.display import display_html
-from exa.util.units import Length
+from exatomic.exa.util.units import Length
 import pandas as pd
 from numpy import sqrt
 
