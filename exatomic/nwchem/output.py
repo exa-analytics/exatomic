@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# Copyright (c) 2015-2020, Exa Analytics Development Team
+# Copyright (c) 2015-2021, Exa Analytics Development Team
 # Distributed under the terms of the Apache License 2.0
 """
 NWChem Output
@@ -12,8 +12,8 @@ import numpy as np
 import pandas as pd
 from six import StringIO
 from collections import defaultdict
-from exa import TypedMeta
-from exa.util.units import Length
+from exatomic.exa import TypedMeta
+from exatomic.exa.util.units import Length
 from exatomic.base import sym2z
 from exatomic.core.frame import compute_frame_from_atom
 from exatomic.algorithms.numerical import _square_indices

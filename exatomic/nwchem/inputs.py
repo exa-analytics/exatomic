@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# Copyright (c) 2015-2020, Exa Analytics Development Team
+# Copyright (c) 2015-2021, Exa Analytics Development Team
 # Distributed under the terms of the Apache License 2.0
 """
 Input Generator and Parser
@@ -31,7 +31,7 @@ from __future__ import division
 #import pandas as pd
 #import numpy as np
 from .editor import Editor
-#from exa.util.units import Length as L
+#from exatomic.exa.util.units import Length as L
 #from exatomic import Universe
 
 
@@ -221,7 +221,7 @@ def tuning_inputs(uni, name, mult, charge, basis, gammas, alphas,
         writedir (str): directory path to write input files
 
     Returns
-        editors (list): input files as exa.Editors
+        editors (list): input files as exatomic.exa.Editors
     """
     if route is None:
         route = [("Pop", "full")]
