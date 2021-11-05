@@ -1,12 +1,12 @@
-## -*- coding: utf-8 -*-
-## Copyright (c) 2015-2020, Exa Analytics Development Team
-## Distributed under the terms of the Apache License 2.0
+# -*- coding: utf-8 -*-
+# Copyright (c) 2015-2021, Exa Analytics Development Team
+# Distributed under the terms of the Apache License 2.0
 #"""
 #PW SCF Iteration Parser
 ##############################
 #"""
-#from exa.typed import TypedProperty
-#from exa.core.parser import Sections, Parser
+#from exatomic.exa.typed import TypedProperty
+#from exatomic.exa.core.parser import Sections, Parser
 #
 #
 #class Iterations(Parser):
