@@ -22,7 +22,7 @@ try:
 except ImportError:
     from sympy import symbols as var
     from sympy import exp, cos, sin, Integer, Float
-from extomic.exa import Series
+from exatomic.exa import Series
 from exatomic.algorithms.overlap import _cartesian_shell_pairs, _iter_atom_shells
 from exatomic.algorithms.numerical import fac, _tri_indices, _triangle, _enum_spherical
 

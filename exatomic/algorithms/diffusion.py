@@ -6,7 +6,7 @@ Diffusion Coefficients
 ##########################
 Various algorithms for computing diffusion coefficients are coded here.
 """
-from extomic.exa.util.units import Length, Time
+from eaxtomic.exa.util.units import Length, Time
 from exatomic.algorithms.displacement import absolute_squared_displacement
 
 
