@@ -42,7 +42,8 @@ jobs:
         with:
           requirements: requirements.txt,requirements.dev.txt
           conda-channel: conda-forge
-      - run: python setup.py develop
+      - run: which python
+      - run: python -m pip install -e .
       - name: Run Tests
         uses: ./.github/workflows/run-tests
 
