@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# Copyright (c) 2015-2021, Exa Analytics Development Team
+# Copyright (c) 2015-2022, Exa Analytics Development Team
 # Distributed under the terms of the Apache License 2.0
 from os import path
 from tempfile import mkdtemp
@@ -9,7 +9,7 @@ from exatomic.exa.util.utility import datetime_header, mkp, convert_bytes, get_i
 def test_get_internal_modules():
     lst = get_internal_modules()
     assert len(lst) > 0
-    assert lst[0].__name__.startswith("exa")
+    assert lst[0].__name__.startswith("exatomic")
 
 
 def test_convert_bytes():

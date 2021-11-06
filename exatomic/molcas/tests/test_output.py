@@ -1,9 +1,10 @@
 # -*- coding: utf-8 -*-
-# Copyright (c) 2015-2021, Exa Analytics Development Team
+# Copyright (c) 2015-2022, Exa Analytics Development Team
 # Distributed under the terms of the Apache License 2.0
 from unittest import TestCase
 import numpy as np
 import pandas as pd
+import h5py
 from exatomic import Universe
 from exatomic.base import resource
 from exatomic.molcas.output import Output, Orb, HDF

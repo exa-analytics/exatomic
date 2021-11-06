@@ -9,9 +9,6 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
   cancel-in-progress: true
 
-env:
-  EXA_VERSION: 0.5.24
-
 jobs:
 
   run_tests:
@@ -38,8 +35,7 @@ jobs:
         shell: bash -l {0}
         if: (runner.os == 'Linux') || (runner.os == 'macOS')
         run: |
-          conda install -q -c exaanalytics exa>=${{ env.EXA_VERSION }}
-          conda install -q -c conda-forge `cat requirements.txt`
+          conda install -q -c conda-forge `cat requirements.txt | sed 's/tables>/pytables>/'`
           conda install -q -c conda-forge `cat requirements.dev.txt`
           python setup.py develop
 
@@ -47,8 +43,7 @@ jobs:
         shell: pwsh
         if: runner.os == 'Windows'
         run: |
-          conda install -q -c exaanalytics exa>=${{ env.EXA_VERSION }}
-          conda install -q -c conda-forge $(Get-Content requirements.txt)
+          conda install -q -c conda-forge $(Get-Content requirements.txt).replace("tables>", "pytables>")
           conda install -q -c conda-forge $(Get-Content requirements.dev.txt)
           python setup.py develop
 
