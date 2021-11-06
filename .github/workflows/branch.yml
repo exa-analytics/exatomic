@@ -37,6 +37,8 @@ jobs:
           auto-update-conda: true
           python-version: ${{ matrix.python-version }}
           channels: conda-forge
+      - run: conda activate test
+      - run: which python
       - name: Install Dependencies
         uses: ./.github/workflows/install-dependencies
         with:
