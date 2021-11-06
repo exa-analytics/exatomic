@@ -16,13 +16,15 @@ runs:
       shell: bash -l {0}
       if: (runner.os == 'Linux') || (runner.os == 'macOS')
       run: |
-        for req in ${${{ inputs.requirements }}//,/ }; do
+        deps=${{ inputs.requirements }}
+        for req in ${deps//,/ }; do
           conda install -c ${{ inputs.conda-channel }} `cat ${req} | sed 's/tables>/pytables>/'`
         done
     - name: Install Dependencies (Win)
       shell: pwsh
       if: runner.os == 'Windows'
       run: |
-        ${{ inputs.requirements }}.split(",") | ForEach {
+        Set-Variable -name deps ${{ inputs.requirements }}
+        $deps.split(",") | ForEach {
           conda install -c ${{ inputs.conda-channel }} $(Get-Content $_).replace("tables>", "pytables>")
         }
