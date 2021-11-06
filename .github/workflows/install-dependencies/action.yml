@@ -23,6 +23,6 @@ runs:
       shell: pwsh
       if: runner.os == 'Windows'
       run: |
-        ${{ input.requirements }}.split(",") | ForEach {
+        ${{ inputs.requirements }}.split(",") | ForEach {
           conda install -c ${{ inputs.conda-channel }} $(Get-Content $_).replace("tables>", "pytables>")
-        } 
+        }
