@@ -51,10 +51,10 @@ jobs:
     name: codacy-coverage-reporter
     steps:
       - run: |
-        ref="${{ github.ref }}"
-        echo $ref
+        ref=${{ github.ref }}
+        echo "$ref"
         ref="${ref////-}"
-        echo $ref
+        echo "$ref"
         echo "::set-env name=ref::$ref"
       - name: Download Coverage Report
         uses: actions/download-artifact@v2
