@@ -1,0 +1,141 @@
+name: Master
+
+on:
+  push:
+    branches:
+      master
+
+concurrency:
+  group: ${{ github.workflow }}
+  cancel-in-progress: true
+
+jobs:
+
+  support-matrix:
+    runs-on: ubuntu-latest
+    outputs:
+      matrix: ${{ steps.set-matrix.outputs.matrix }}
+    steps:
+      - uses: actions/checkout@v2
+      - id: set-matrix
+        run: |
+          MATRIX=$(python ${{ github.action_path }}/matrix.py)
+          echo "::set-output name=matrix::$MATRIX"
+
+  run-tests:
+    needs: support-matrix
+    name: Test Python ${{ matrix.python-version }} on ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: ${{ fromJson(needs.support-matrix.outputs.matrix).os }}
+        python-version: ${{ fromJson(needs.support-matrix.outputs.matrix).python-version }}
+    steps:
+      - uses: actions/checkout@v2
+      - name: Set Up Conda
+        uses: conda-incubator/setup-miniconda@v2
+        with:
+          auto-update-conda: true
+          python-version: ${{ matrix.python-version }}
+          channels: conda-forge,exaanalytics
+      - name: Install Exa
+        uses: ./.github/workflows/install-dependencies
+        with:
+          requirements: requirements.exa.txt
+          conda-channel: exaanalytics
+      - name: Install Dependencies
+        uses: ./.github/workflows/install-dependencies
+        with:
+          requirements: requirements.txt,requirements.dev.txt
+          conda-channel: conda-forge
+      - run: python setup.py develop
+      - name: Run Tests
+        uses: ./.github/workflows/run-tests
+
+      # --- Split steps below into separate jobs once caching is implemented
+
+      # --- job: publish-docs
+      - name: Install Doc Dependencies
+        uses: ./.github/workflows/install-dependencies
+        if: (runner.os == 'Linux') && (matrix.python-version == '3.8')
+        with:
+          requirements: requirements.publish.txt
+          conda-channel: conda-forge
+      - name: Publish Docs
+        shell: bash -l {0}
+        if: (runner.os == 'Linux') && (matrix.python-version == '3.8')
+        run: |
+          pip install travis-sphinx
+          rm -rf docs/source/*.txt
+          SPHINX_APIDOC_OPTIONS=members,undoc-members,show-inheritance sphinx-apidoc -eM -s txt -o docs/source/ exatomic *test*
+          travis-sphinx build
+          travis-sphinx deploy
+
+      # --- job: publish-artifacts (maybe separate github / conda)
+      # --- need the following secrets from the project
+      # ------ secrets.GITHUB_TOKEN
+      # ------ secrets.PYPI_PASSWORD
+      # ------ secrets.ANACONDA_USERNAME
+      # ------ secrets.ANACONDA_PASSWORD
+      - name: Install Publish Dependencies
+        uses: ./.github/workflows/install-dependencies
+        with:
+          requirements: requirements.release.txt
+          conda-channel: defaults
+      - name: Publish Artifacts
+        if: runner.os == 'Linux'
+        run: |
+          export PYTHONVER="${{ matrix.python-version }}"
+          export pyver="${PYTHONVER/./}"
+          export exver=`cat exatomic/static/version.txt`
+          git remote set-url origin https://${{ secrets.GITHUB_TOKEN }}@github.com/exa-analytics/exatomic.git
+          git tag ${exver}
+          git push --tags
+          sed -i "s/version = .* /version = \"${exver}\"/" meta.yaml
+          cat meta.yaml
+          printf "[distutils]\nindex-servers =\n    pypi\n    testpypi\n\n[pypi]\nrepository = https://upload.pypi.org/legacy/\nusername = __token__\npassword = ${pypi}\n\n[testpypi]\nrepository = https://test.pypi.org/legacy/\nusername = __token__\npassword = ${{ secrets.PYPI_PASSWORD }}" > ${HOME}/.pypirc;
+          python setup.py sdist
+          python -m twine upload --repository pypi dist/*
+          conda build --no-include-recipe .
+          conda convert -f -p osx-64 ${HOME}/miniconda/envs/test/conda-bld/linux-64/exatomic-${exver}-${pyver}_0.tar.bz2 -o dist1/
+          conda convert -f -p linux-32 ${HOME}/miniconda/envs/test/conda-bld/linux-64/exatomic-${exver}-${pyver}_0.tar.bz2 -o dist1/
+          conda convert -f -p win-32 ${HOME}/miniconda/envs/test/conda-bld/linux-64/exatomic-${exver}-${pyver}_0.tar.bz2 -o dist1/
+          conda convert -f -p win-64 ${HOME}/miniconda/envs/test/conda-bld/linux-64/exatomic-${exver}-${pyver}_0.tar.bz2 -o dist1/
+          ls -lisah dist1
+          anaconda login --username ${{ secrets.ANACONDA_USERNAME }} --password ${{ secrets.ANACONDA_PASSWORD }}
+          anaconda upload --no-progress ${HOME}/miniconda/envs/test/conda-bld/linux-64/exatomic-${exver}-${pyver}_0.tar.bz2
+          for pkg in $(ls -d dist1/*/); do
+            echo "${pkg}exatomic-${ver}-${pyver}_0.tar.bz2"
+            anaconda upload --no-progress ${pkg}exatomic-${ver}-${pyver}_0.tar.bz2
+          done
+
+  codacy-coverage-reporter:
+    runs-on: ubuntu-latest
+    needs: run-tests
+    name: codacy-coverage-reporter
+    steps:
+      - name: Download Coverage Report
+        uses: actions/download-artifact@v2
+        with:
+          name: code-coverage-report-${{ github.ref }}
+      - name: Run codacy-coverage-reporter
+        uses: codacy/codacy-coverage-reporter-action@v1
+        with:
+          project-token: ${{ secrets.CODACY_PROJECT_TOKEN }}
+          coverage-reports: coverage.xml
+
+  # --- need the following secrets from the project
+  # ------ secrets.NPM_TOKEN
+  publish-to-npm:
+    runs-on: ubuntu-latest
+    needs: run-tests
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-node@v2
+        with:
+          node-version: '16'
+      - name: Publish NPM Package
+        run: |
+          echo "//registry.npmjs.org/:_authToken=${{ secrets.NPM_TOKEN }}" > ${HOME}/.npmrc
+          cd js; npm publish; cd ..

@@ -1,0 +1,28 @@
+name: Install Dependencies
+description: Install dependencies into a conda env
+inputs:
+  requirements:
+    description: 'Comma delimited requirements files to use'
+    required: true
+    default: 'requirements.txt'
+  conda-channel:
+    description: 'Conda channel to use for requirements'
+    required: true
+    default: 'conda-forge'
+runs:
+  using: "composite"
+  steps:
+    - name: Install Dependencies (Nix)
+      shell: bash -l {0}
+      if: (runner.os == 'Linux') || (runner.os == 'macOS')
+      run: |
+        for req in ${${{ inputs.requirements }}//,/ }; do
+          conda install -c ${{ inputs.conda-channel }} `cat ${req} | sed 's/tables>/pytables>/'`
+        done
+    - name: Install Dependencies (Win)
+      shell: pwsh
+      if: runner.os == 'Windows'
+      run: |
+        ${{ input.requirements }}.split(",") | ForEach {
+          conda install -c ${{ inputs.conda-channel }} $(Get-Content $_).replace("tables>", "pytables>")
+        } 

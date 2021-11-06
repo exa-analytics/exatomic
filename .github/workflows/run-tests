@@ -1,0 +1,24 @@
+name: Run Tests
+description: Run the tests
+runs:
+  using: "composite"
+  steps:
+
+    - name: Run Tests (Nix)
+      shell: bash -l {0}
+      if: (runner.os == 'Linux') || (runner.os == 'macOS')
+      run: pytest --doctest-modules -v --cov coveralls --cov-report term --cov=exatomic --cov-report xml
+
+    - name: Run Tests (Win)
+      shell: pwsh
+      if: runner.os == 'Windows'
+      run: pytest --doctest-modules -v
+
+    - name: Upload Coverage
+      if: (runner.os == 'Linux') && (matrix.python-version == '3.8')
+      uses: actions/upload-artifact@v2
+      with:
+        name: code-coverage-report-${{ github.ref }}
+        path: coverage.xml
+        retention-days: 1
+        
