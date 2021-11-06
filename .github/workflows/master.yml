@@ -31,25 +31,21 @@ jobs:
         python-version: ${{ fromJson(needs.support-matrix.outputs.matrix).python-version }}
     steps:
       - uses: actions/checkout@v2
-      - name: Set Up Conda
-        uses: conda-incubator/setup-miniconda@v2
+      - uses: actions/setup-python@v2
         with:
-          auto-update-conda: true
           python-version: ${{ matrix.python-version }}
-          channels: conda-forge,exaanalytics
-      - name: Install Exa
-        uses: ./.github/workflows/install-dependencies
+      - uses: actions/cache@v2
         with:
-          requirements: requirements.exa.txt
-          conda-channel: exaanalytics
+          path: ${{ env.pythonLocation }}
+          key: ${{ runner.os }}-${{ matrix.python-version }}-${{ hashFiles('requirements.txt') }}-${{ hashFiles('requirements.dev.txt') }}
       - name: Install Dependencies
-        uses: ./.github/workflows/install-dependencies
-        with:
-          requirements: requirements.txt,requirements.dev.txt
-          conda-channel: conda-forge
-      - run: python setup.py develop
+        run: |
+          pip install --upgrade --upgrade-strategy eager -r requirements.txt -r requirements.dev.txt -e .
       - name: Run Tests
         uses: ./.github/workflows/run-tests
+        with:
+          coverage-artifact-name: ${{ github.workflow }}
+
 
       # --- Split steps below into separate jobs once caching is implemented
 
@@ -116,7 +112,7 @@ jobs:
       - name: Download Coverage Report
         uses: actions/download-artifact@v2
         with:
-          name: code-coverage-report-${{ github.ref }}
+          name: code-coverage-report-${{ github.workflow }}
       - name: Run codacy-coverage-reporter
         uses: codacy/codacy-coverage-reporter-action@v1
         with:

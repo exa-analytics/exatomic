@@ -19,15 +19,6 @@ runs:
       if: runner.os == 'Windows'
       run: pytest --doctest-modules -v
 
-    - name: Get Artifact Name
-      shell: bash -l {0}
-      if: (runner.os == 'Linux') && (matrix.python-version == '3.8')
-      run: |
-        ref=${{ github.ref }}
-        echo "$ref"
-        ref="${ref////-}"
-        echo "$ref"
-        echo "::set-env name=ref::$ref"
     - name: Upload Coverage
       if: (runner.os == 'Linux') && (matrix.python-version == '3.8')
       uses: actions/upload-artifact@v2
