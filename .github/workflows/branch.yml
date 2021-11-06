@@ -50,7 +50,9 @@ jobs:
     if: ${{ always() }}
     name: codacy-coverage-reporter
     steps:
-      - run: |
+      - name: Get Artifact Name
+        shell: bash -l {0}
+        run: |
           ref=${{ github.ref }}
           echo "$ref"
           ref="${ref////-}"
