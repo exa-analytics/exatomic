@@ -18,9 +18,7 @@ jobs:
     steps:
       - uses: actions/checkout@v2
       - id: set-matrix
-        run: |
-          MATRIX=$(python ${{ github.action_path }}/matrix.py)
-          echo "::set-output name=matrix::$MATRIX"
+        run: echo "::set-output name=matrix::$(python matrix.py)"
 
   run-tests:
     needs: support-matrix
