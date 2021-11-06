@@ -1,4 +1,4 @@
-// Copright (c) 2015-2020, Exa Analytics Development Team
+// Copright (c) 2015-2021, Exa Analytics Development Team
 // Distributed under the terms of the Apache License 2.0
 // This file contains the javascript that is run when the notebook is loaded.
 // It contains some requirejs configuration and the `load_ipython_extension`

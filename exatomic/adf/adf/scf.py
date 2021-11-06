@@ -1,12 +1,12 @@
 ## -*- coding: utf-8 -*-
-## Copyright (c) 2015-2020, Exa Analytics Development Team
+## Copyright (c) 2015-2022, Exa Analytics Development Team
 ## Distributed under the terms of the Apache License 2.0
 #"""
 #Parser for ADF's SCF Section
 ################################
 #Parses the 'S C F' section of an ADF block output.
 #"""
-#from exa import Parser, Matches, Match
+#from exatomic.exa import Parser, Matches, Match
 #
 #
 #class SCF(Parser):

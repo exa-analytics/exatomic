@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# Copyright (c) 2015-2020, Exa Analytics Development Team
+# Copyright (c) 2015-2022, Exa Analytics Development Team
 # Distributed under the terms of the Apache License 2.0
 """
 Orbital DataFrame
@@ -23,8 +23,8 @@ from __future__ import print_function
 from __future__ import division
 import numpy as np
 import pandas as pd
-from exa import DataFrame
-from exa.util.units import Energy
+from exatomic.exa import DataFrame
+from exatomic.exa.util.units import Energy
 from exatomic.algorithms.numerical import (density_from_momatrix,
                                            density_as_square)
                                            #momatrix_as_square)

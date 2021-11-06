@@ -1,12 +1,12 @@
 # -*- coding: utf-8 -*-
-# Copyright (c) 2015-2020, Exa Analytics Development Team
+# Copyright (c) 2015-2022, Exa Analytics Development Team
 # Distributed under the terms of the Apache License 2.0
 import pandas as pd
 import numpy as np
-#from exa.util.utility import mkp
-from exa.util.units import Length, Energy, Mass
+#from exatomic.exa.util.utility import mkp
+from exatomic.exa.util.units import Length, Energy, Mass
 from exatomic.core import Atom
-from exa import TypedMeta
+from exatomic.exa import TypedMeta
 
 def gen_delta(freq, delta_type, disp=None):
     # TODO: we need better descriptions here

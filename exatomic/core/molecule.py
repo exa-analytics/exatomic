@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# Copyright (c) 2015-2020, Exa Analytics Development Team
+# Copyright (c) 2015-2022, Exa Analytics Development Team
 # Distributed under the terms of the Apache License 2.0
 """
 Molecule Table
@@ -10,7 +10,7 @@ import pandas as pd
 import networkx as nx
 import warnings
 from networkx.algorithms.components import connected_components
-from exa import DataFrame
+from exatomic.exa import DataFrame
 from exatomic.base import sym2mass
 from exatomic.formula import string_to_dict, dict_to_string
 

@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# Copyright (c) 2015-2020, Exa Analytics Development Team
+# Copyright (c) 2015-2022, Exa Analytics Development Team
 # Distributed under the terms of the Apache License 2.0
 """
 QE cp.x Molecular Dynamics
@@ -7,7 +7,7 @@ QE cp.x Molecular Dynamics
 Functionality related to parsing inputs and outputs generated when running QE's
 cp.x module. Data files that come from dynamics include evp, for, pos, etc.
 Since these files are CSV-like files, and typically large, CSV reading functions,
-rather than :class:`~exa.core.editor.Editor` objects are used to parse in the
+rather than :class:`~exatomic.exa.core.editor.Editor` objects are used to parse in the
 data.
 """
 import re, bz2
@@ -15,8 +15,8 @@ from six import StringIO
 import pandas as pd
 import numpy as np
 import numba as nb
-from exa import Editor
-from exa.util.units import Length
+from exatomic.exa import Editor
+from exatomic.exa.util.units import Length
 from exatomic.base import nbpll
 
 
