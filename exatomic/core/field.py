@@ -1,17 +1,17 @@
 # -*- coding: utf-8 -*-
-# Copyright (c) 2015-2020, Exa Analytics Development Team
+# Copyright (c) 2015-2022, Exa Analytics Development Team
 # Distributed under the terms of the Apache License 2.0
 """
 Atomic Field
 #####################
-Essentially a :class:`~exa.numerical.Field3D` used for storing cube file data
+Essentially a :class:`~exatomic.exa.numerical.Field3D` used for storing cube file data
 (see :mod:`~exatomic.filetypes.cube`). Cube files values are written in a
 csv-like structure with the outer loop going over the x dimension, the middle
 loop going over the y dimension, and the inner loop going over the z dimension.
 """
 import numpy as np
 import pandas as pd
-from exa import Field, Series
+from exatomic.exa import Field, Series
 
 
 class AtomicField(Field):

@@ -1,16 +1,16 @@
 # -*- coding: utf-8 -*-
-# Copyright (c) 2015-2020, Exa Analytics Development Team
+# Copyright (c) 2015-2022, Exa Analytics Development Team
 # Distributed under the terms of the Apache License 2.0
 """
 Container
 ########################
-The :class:`~exa.core.container.Container` class is the primary object for
+The :class:`~exatomic.exa.core.container.Container` class is the primary object for
 data processing, analysis, and visualization. In brief, containers are composed
 of data objects whose contents are used for 2D and 3D visualization. Containers
 also provide some content management and data relationship features.
 
 See Also:
-    For a description of data objects see :mod:`~exa.core.numerical`.
+    For a description of data objects see :mod:`~exatomic.exa.core.numerical`.
 """
 import os
 import logging
@@ -23,8 +23,8 @@ import pandas as pd
 from pandas.core.dtypes.dtypes import CategoricalDtype
 import networkx as nx
 import matplotlib.pyplot as plt
-from exa.util.utility import convert_bytes
-from exa.util import mpl
+from exatomic.exa.util.utility import convert_bytes
+from exatomic.exa.util import mpl
 from .numerical import check_key, Field, Series, DataFrame
 
 
@@ -63,7 +63,7 @@ class Container(object):
         a single container object.
 
         See Also:
-            For argument description, see :func:`~exa.core.container.concat`.
+            For argument description, see :func:`~exatomic.exa.core.container.concat`.
         """
         raise NotImplementedError()
 
@@ -108,7 +108,7 @@ class Container(object):
 
         Warning:
             This function does not make a copy (if possible): to ensure a new
-            object is created (a copy) use :func:`~exa.core.container.Container.copy`
+            object is created (a copy) use :func:`~exatomic.exa.core.container.Container.copy`
             after slicing.
 
             .. code-block:: Python
@@ -116,9 +116,9 @@ class Container(object):
                 myslice = mycontainer[::2].copy()
 
         See Also:
-            For data network generation, see :func:`~exa.core.container.Container.network`.
+            For data network generation, see :func:`~exatomic.exa.core.container.Container.network`.
             For information about relationships between data objects see
-            :mod:`~exa.core.numerical`.
+            :mod:`~exatomic.exa.core.numerical`.
         """
         if self._cardinal:
             cls = self.__class__
@@ -229,7 +229,7 @@ class Container(object):
             string (bool): Human readable string (default false)
 
         See Also:
-            :func:`~exa.core.container.Container.info`
+            :func:`~exatomic.exa.core.container.Container.info`
         """
         if string:
             n = getsizeof(self)
@@ -393,7 +393,7 @@ class Container(object):
         return path
 
     def to_hdf(self, *args, **kwargs):
-        """Alias of :func:`~exa.core.container.Container`."""
+        """Alias of :func:`~exatomic.exa.core.container.Container`."""
         self.save(*args, **kwargs)
 
     @classmethod
@@ -431,7 +431,7 @@ class Container(object):
 
     @classmethod
     def from_hdf(cls, *args, **kwargs):
-        """Alias for :func:`~exa.core.container.Container`."""
+        """Alias for :func:`~exatomic.exa.core.container.Container`."""
         return cls.load(*args, **kwargs)
 
     def _rel(self, copy=False):
@@ -587,7 +587,7 @@ class TypedMeta(type):
         """
         Modification of the class definition occurs here; we iterate over all
         statically typed attributes and attach their property (see
-        :func:`~exa.container.TypedMeta.create_property`) definition, returning
+        :func:`~exatomic.exa.container.TypedMeta.create_property`) definition, returning
         the new class definition.
         """
         for k, v in vars(mcs).items():

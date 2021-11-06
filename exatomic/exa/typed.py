@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# Copyright (c) 2015-2020, Exa Analytics Development Team
+# Copyright (c) 2015-2022, Exa Analytics Development Team
 # Distributed under the terms of the Apache License 2.0
 """
 Strongly Typed Class Attributes
@@ -34,7 +34,7 @@ is executed (i.e. imported).
                     raise TypeError("Cannot convert value") from e
             self._bar = value
 
-The :class:`~exa.typed.Typed` object additionally provides mechanisms for
+The :class:`~exatomic.exa.typed.Typed` object additionally provides mechanisms for
 triggering function calls before and after get, set, and delete, and attempts
 automatic conversion (as shown above) for all types supported for a given
 attribute.
@@ -46,10 +46,10 @@ import warnings
 def _typed_from_items(items):
     """
     Construct strongly typed attributes (properties) from a dictionary of
-    name and :class:`~exa.typed.Typed` object pairs.
+    name and :class:`~exatomic.exa.typed.Typed` object pairs.
 
     See Also:
-        :func:`~exa.typed.typed`
+        :func:`~exatomic.exa.typed.typed`
     """
     dct = {}
     for name, attr in items:
@@ -64,7 +64,7 @@ def typed(cls):
     property attributes.
 
     See Also:
-        If the class will be inherited, use :class:`~exa.typed.TypedClass`.
+        If the class will be inherited, use :class:`~exatomic.exa.typed.TypedClass`.
     """
     for name, attr in _typed_from_items(vars(cls).items()).items():
         setattr(cls, name, attr)
@@ -254,7 +254,7 @@ class TypedMeta(type):
             bar = Typed(int, doc="Always an int")
 
     See Also:
-        :func:`~exa.typed.typed` and :mod:`~exa.core.data`
+        :func:`~exatomic.exa.typed.typed` and :mod:`~exatomic.exa.core.data`
     """
     def __new__(mcs, name, bases, namespace):
         namespace.update(_typed_from_items(namespace.items()))
@@ -272,7 +272,7 @@ class TypedClass(metaclass=TypedMeta):
             bar = Typed(int, doc="Still an int")
 
     See Also:
-        :func:`~exa.typed.typed`
+        :func:`~exatomic.exa.typed.typed`
     """
     pass
 

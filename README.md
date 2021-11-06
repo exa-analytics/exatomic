@@ -66,5 +66,5 @@ need to reinstall the package.
 
 # Legal
 [![Apache License 2.0](http://img.shields.io/:license-apache-blue.svg?style=flat-square)](http://www.apache.org/licenses/LICENSE-2.0)  
-Copyright (c) 2015-2020, Exa Analytics Development Team  
+Copyright (c) 2015-2022, Exa Analytics Development Team  
 Distributed under the terms of the Apache License 2.0  

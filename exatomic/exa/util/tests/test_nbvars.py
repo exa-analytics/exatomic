@@ -1,10 +1,10 @@
 # -*- coding: utf-8 -*-
-# Copyright (c) 2015-2020, Exa Analytics Development Team
+# Copyright (c) 2015-2022, Exa Analytics Development Team
 # Distributed under the terms of the Apache License 2.0
 """
-Tests for :mod:`~exa.util.nbvars`
+Tests for :mod:`~exatomic.exa.util.nbvars`
 ##################################
-Test that :func:`~exa.util.nbvars.numbafy` supports strings, and sympy
+Test that :func:`~exatomic.exa.util.nbvars.numbafy` supports strings, and sympy
 and symengine expressions.
 """
 import os
@@ -16,7 +16,7 @@ try:
     from numba.core.errors import TypingError
 except ImportError:
     from numba.errors import TypingError
-from exa.util.nbvars import numbafy
+from exatomic.exa.util.nbvars import numbafy
 
 
 NUMBA_DISABLE_JIT = os.environ.get("NUMBA_DISABLE_JIT", 0) == 1 or platform.system() == "Windows"

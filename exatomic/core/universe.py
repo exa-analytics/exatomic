@@ -1,11 +1,11 @@
 # -*- coding: utf-8 -*-
-# Copyright (c) 2015-2020, Exa Analytics Development Team
+# Copyright (c) 2015-2022, Exa Analytics Development Team
 # Distributed under the terms of the Apache License 2.0
 """
 The Atomic Universe
 #########################
 The :class:`~exatomic.container.Universe` object is a subclass of
-:class:`~exa.container.Container` that stores data coming from computational
+:class:`~exatomic.exa.container.Container` that stores data coming from computational
 chemistry experiments in a unified and systematic way. Data is organized into
 "frames". A frame is an axis that can represent time (e.g. molecular dynamics
 simulations), step number (e.g. geometry optimization), or an arbitrary index
@@ -14,7 +14,7 @@ simulations), step number (e.g. geometry optimization), or an arbitrary index
 import six
 import numpy as np
 import pandas as pd
-from exa import DataFrame, Container, TypedMeta
+from exatomic.exa import DataFrame, Container, TypedMeta
 from .frame import Frame, compute_frame_from_atom
 from .atom import Atom, UnitAtom, ProjectedAtom, VisualAtom, Frequency
 from .two import (AtomTwo, MoleculeTwo, compute_atom_two,

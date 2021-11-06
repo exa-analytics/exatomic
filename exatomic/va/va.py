@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# Copyright (c) 2015-2020, Exa Analytics Development Team
+# Copyright (c) 2015-2022, Exa Analytics Development Team
 # Distributed under the terms of the Apache License 2.0
 """
 Vibrational Averaging
@@ -11,12 +11,12 @@ import pandas as pd
 import glob
 import re
 import os
-from exa.util.constants import (speed_of_light_in_vacuum as C, Planck_constant as H,
+from exatomic.exa.util.constants import (speed_of_light_in_vacuum as C, Planck_constant as H,
                                Boltzmann_constant as boltzmann)
-from exa.util.units import Length, Energy, Mass, Time
+from exatomic.exa.util.units import Length, Energy, Mass, Time
 from exatomic.core import Atom, Gradient, Polarizability
 from exatomic.base import sym2z
-from exa import TypedMeta
+from exatomic.exa import TypedMeta
 from .vroa_funcs import _sum, _make_derivatives, _forwscat, _backscat
 import warnings
 warnings.simplefilter("default")
