@@ -1,3 +1,6 @@
+"""
+Dynamic support matrix builder for CICD
+"""
 import json
 
 systems = [
