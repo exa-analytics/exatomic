@@ -15,11 +15,11 @@ runs:
       run: pytest --doctest-modules -v
 
     - run: |
-      ref=${{ github.ref }}
-      echo "$ref"
-      ref="${ref////-}"
-      echo "$ref"
-      echo "::set-env name=ref::$ref"
+        ref=${{ github.ref }}
+        echo "$ref"
+        ref="${ref////-}"
+        echo "$ref"
+        echo "::set-env name=ref::$ref"
 
     - name: Upload Coverage
       if: (runner.os == 'Linux') && (matrix.python-version == '3.8')
