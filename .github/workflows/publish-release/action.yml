@@ -17,7 +17,7 @@ runs:
     - name: Version Bump
     - name: Publish Releases
       run: |
-        export pkgver=`cat exatomic/static/version.txt`
+        pkgver=`cat exatomic/static/version.txt`
         git remote set-url origin https://${{ inputs.github-token }}@github.com/exa-analytics/exatomic.git
         git tag ${pkgver}
         git push --tags

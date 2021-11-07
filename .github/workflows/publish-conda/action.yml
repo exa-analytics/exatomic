@@ -26,7 +26,9 @@ runs:
       run: conda install `cat requirements.release.txt`
     - name: Publish To Conda
       run: |
-        export pkgver=`cat exatomic/static/version.txt`
+        PYTHONVER=${{ inputs.python-version }}
+        pyver="py${PYTHONVER/./}"
+        pkgver=`cat exatomic/static/version.txt`
         sed -i "s/version = .* /version = \"${pkgver}\"/" meta.yaml
         cat meta.yaml
         conda build --no-include-recipe .
