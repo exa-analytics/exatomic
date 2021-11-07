@@ -23,8 +23,10 @@ runs:
         python-version: ${{ inputs.python-version }}
         channels: conda-forge
     - name: Install Release Dependencies
+      shell: bash -l {0}
       run: conda install `cat requirements.release.txt`
     - name: Publish To Conda
+      shell: bash -l {0}
       run: |
         PYTHONVER=${{ inputs.python-version }}
         pyver="py${PYTHONVER/./}"

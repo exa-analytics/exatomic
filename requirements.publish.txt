@@ -1,7 +1,6 @@
 sphinx
 sphinx_rtd_theme
 ply
-pandoc
 pypandoc
 nbsphinx
 ipython
