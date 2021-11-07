@@ -148,4 +148,4 @@ jobs:
         shell: bash -l {0}
         run: |
           echo "//registry.npmjs.org/:_authToken=${{ secrets.NPM_TOKEN }}" > ${HOME}/.npmrc
-          cd js && npm publish
+          cd js && npm publish || echo "this version has likely been published, see above logs"
