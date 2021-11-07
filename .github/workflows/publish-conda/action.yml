@@ -34,14 +34,14 @@ runs:
         sed -i "s/version = .* /version = \"${pkgver}\"/" meta.yaml
         cat meta.yaml
         conda build --no-include-recipe .
-        basedir=${HOME}/miniconda/envs/test/conda-bld/linux-64
+        basedir=/usr/share/miniconda/envs/test/conda-bld/linux-64
         conda convert -f -p osx-64 ${basedir}/exatomic-${pkgver}-${pyver}_0.tar.bz2 -o dist1/
         conda convert -f -p linux-32 ${basedir}/exatomic-${pkgver}-${pyver}_0.tar.bz2 -o dist1/
         conda convert -f -p win-32 ${basedir}/exatomic-${pkgver}-${pyver}_0.tar.bz2 -o dist1/
         conda convert -f -p win-64 ${basedir}/exatomic-${pkgver}-${pyver}_0.tar.bz2 -o dist1/
         ls -lisah dist1
         anaconda login --username ${{ inputs.conda-username }} --password ${{ inputs.conda-password }}
-        anaconda upload --no-progress ${HOME}/miniconda/envs/test/conda-bld/linux-64/exatomic-${pkgver}-${pyver}_0.tar.bz2
+        anaconda upload --no-progress ${basedir}/exatomic-${pkgver}-${pyver}_0.tar.bz2
         for pkg in $(ls -d dist1/*/); do
           echo "${pkg}exatomic-${ver}-${pyver}_0.tar.bz2"
           anaconda upload --no-progress ${pkg}exatomic-${ver}-${pyver}_0.tar.bz2
