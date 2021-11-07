@@ -106,14 +106,6 @@ jobs:
         python-version: ${{ fromJson(needs.support-matrix.outputs.matrix).python-version }}
     steps:
       - uses: actions/checkout@v2
-      - uses: actions/setup-python@v2
-        with:
-          python-version: ${{ matrix.python-version }}
-      - uses: actions/cache@v2
-        with:
-          path: ${{ env.pythonLocation }}
-          key: ${{ runner.os }}-${{ matrix.python-version }}-${{ hashFiles('requirements.txt') }}-${{ hashFiles('requirements.dev.txt') }}-${{ hashFiles('requirements.release.txt') }}
-          restore-keys: ${{ runner.os }}-${{ matrix.python-version }}-${{ hashFiles('requirements.txt') }}-${{ hashFiles('requirements.dev.txt') }}
       - name: Publish Conda Release
         uses: ./.github/workflows/publish-conda
         with:
