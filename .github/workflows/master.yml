@@ -18,7 +18,7 @@ jobs:
     steps:
       - uses: actions/checkout@v2
       - id: set-matrix
-        run: echo "::set-output name=matrix::$(python matrix.py)"
+        run: echo "::set-output name=matrix::$(python cicd-matrix.py)"
 
   run-tests:
     needs: support-matrix
@@ -70,9 +70,6 @@ jobs:
           SPHINX_APIDOC_OPTIONS=members,undoc-members,show-inheritance sphinx-apidoc -eM -s txt -o docs/source/ exatomic *test*
           travis-sphinx build
           travis-sphinx deploy
-
-  # ------ secrets.ANACONDA_USERNAME
-  # ------ secrets.ANACONDA_PASSWORD
 
   # keep github release and pypi upload together
   publish-release:
