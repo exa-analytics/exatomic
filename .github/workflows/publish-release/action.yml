@@ -22,7 +22,7 @@ runs:
         git remote set-url origin https://${{ inputs.github-token }}@github.com/exa-analytics/exatomic.git
         git tag ${pkgver}
         git push --tags
-        pypicfg = "
+        pypicfg="
         [distutils]
         index-servers =
             pypi
@@ -31,12 +31,15 @@ runs:
         [pypi]
         repository = https://upload.pypi.org/legacy/
         username = __token__
-        password = ${pypi}
+        password = REPLACEME
         
         [testpypi]
         repository = https://test.pypi.org/legacy/
         username = __token__
-        password = ${{ inputs.pypi-token }}"
+        password = REPLACEME"
         printf "${pypicfg}" > ${HOME}/.pypirc
+        cat ${HOME}/.pypirc
+        sed -i "s/REPLACEME/${{ inputs.pypi-token }}/" ${HOME}/.pypirc
         python setup.py sdist
         python -m twine upload --repository pypi dist/*
+        ls dist/*
