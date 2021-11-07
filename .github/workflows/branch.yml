@@ -14,11 +14,11 @@ jobs:
   support-matrix:
     runs-on: ubuntu-latest
     outputs:
-      matrix: ${{ steps.set-matrix.outputs.matrix }}
+      os: ${{ steps.set-matrix.outputs.os }}
+      python-version: ${{ steps.set-matrix.outputs.python-version }}
     steps:
       - uses: actions/checkout@v2
-      - id: set-matrix
-        run: echo "::set-output name=matrix::$(python cicd-matrix.py)"
+      - uses: ./.github/workflows/support-matrix
 
   coverage-artifact-name:
     runs-on: ubuntu-latest

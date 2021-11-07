@@ -15,11 +15,11 @@ jobs:
     runs-on: ubuntu-latest
     name: CICD Matrix
     outputs:
-      matrix: ${{ steps.set-matrix.outputs.matrix }}
+      os: ${{ steps.set-matrix.outputs.os }}
+      python-version: ${{ steps.set-matrix.outputs.python-version }}
     steps:
       - uses: actions/checkout@v2
-      - id: set-matrix
-        run: echo "::set-output name=matrix::$(python cicd-matrix.py)"
+      - uses: ./.github/workflows/support-matrix
 
   run-tests:
     needs: support-matrix
@@ -106,14 +106,6 @@ jobs:
         python-version: ${{ fromJson(needs.support-matrix.outputs.matrix).python-version }}
     steps:
       - uses: actions/checkout@v2
-      - uses: actions/setup-python@v2
-        with:
-          python-version: ${{ matrix.python-version }}
-      - uses: actions/cache@v2
-        with:
-          path: ${{ env.pythonLocation }}
-          key: ${{ runner.os }}-${{ matrix.python-version }}-${{ hashFiles('requirements.txt') }}-${{ hashFiles('requirements.dev.txt') }}-${{ hashFiles('requirements.release.txt') }}
-          restore-keys: ${{ runner.os }}-${{ matrix.python-version }}-${{ hashFiles('requirements.txt') }}-${{ hashFiles('requirements.dev.txt') }}
       - name: Publish Conda Release
         uses: ./.github/workflows/publish-conda
         with:
