@@ -1,0 +1,41 @@
+name: Publish Python Releases
+description: Publish tagged releases to github and PyPI
+inputs:
+  github-token:
+    description: 'Github access token'
+    required: true
+    default: 'secret'
+  pypi-token:
+    description: 'PyPI upload token'
+    required: true
+    default: 'secret'
+runs:
+  using: 'composite'
+  steps:
+    - name: Install Twine
+      run: pip install twine
+    - name: Version Bump
+    - name: Publish Releases
+      run: |
+        pkgver=`cat exatomic/static/version.txt`
+        git remote set-url origin https://${{ inputs.github-token }}@github.com/exa-analytics/exatomic.git
+        git tag ${pkgver}
+        git push --tags
+        pypicfg = "
+        [distutils]
+        index-servers =
+            pypi
+            testpypi
+
+        [pypi]
+        repository = https://upload.pypi.org/legacy/
+        username = __token__
+        password = ${pypi}
+        
+        [testpypi]
+        repository = https://test.pypi.org/legacy/
+        username = __token__
+        password = ${{ inputs.pypi-token }}"
+        printf "${pypicfg}" > ${HOME}/.pypirc
+        python setup.py sdist
+        python -m twine upload --repository pypi dist/*

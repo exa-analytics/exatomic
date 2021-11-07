@@ -1,0 +1,145 @@
+name: Master
+
+on:
+  push:
+    branches:
+      master
+
+concurrency:
+  group: ${{ github.workflow }}
+  cancel-in-progress: true
+
+jobs:
+
+  support-matrix:
+    runs-on: ubuntu-latest
+    outputs:
+      matrix: ${{ steps.set-matrix.outputs.matrix }}
+    steps:
+      - uses: actions/checkout@v2
+      - id: set-matrix
+        run: echo "::set-output name=matrix::$(python cicd-matrix.py)"
+
+  run-tests:
+    needs: support-matrix
+    name: Test Python ${{ matrix.python-version }} on ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: ${{ fromJson(needs.support-matrix.outputs.matrix).os }}
+        python-version: ${{ fromJson(needs.support-matrix.outputs.matrix).python-version }}
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-python@v2
+        with:
+          python-version: ${{ matrix.python-version }}
+      - uses: actions/cache@v2
+        with:
+          path: ${{ env.pythonLocation }}
+          key: ${{ runner.os }}-${{ matrix.python-version }}-${{ hashFiles('requirements.txt') }}-${{ hashFiles('requirements.dev.txt') }}
+      - name: Install Dependencies
+        run: |
+          pip install --upgrade --upgrade-strategy eager -r requirements.txt -r requirements.dev.txt -e .
+      - name: Run Tests
+        uses: ./.github/workflows/run-tests
+        with:
+          coverage-artifact-name: ${{ github.workflow }}
+
+  publish-docs:
+    needs: run-tests
+    runs-on: ubuntu-latest
+    name: Publish Docs
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-python@v2
+        with:
+          python-version: 3.8
+      - uses: actions/cache@v2
+        with:
+          path: ${{ env.pythonLocation }}
+          key: ${{ runner.os }}-3.8-${{ hashFiles('requirements.txt') }}-${{ hashFiles('requirements.dev.txt') }}-${{ hashFiles('requirements.publish.txt') }}
+          restore-keys: ${{ runner.os }}-3.8-${{ hashFiles('requirements.txt') }}-${{ hashFiles('requirements.dev.txt') }}
+      - name: Install Doc Dependencies
+        run: |
+          pip install --upgrade --upgrade-strategy eager -r requirements.publish.txt
+      - name: Publish Docs
+        run: |
+          pip install travis-sphinx
+          rm -rf docs/source/*.txt
+          SPHINX_APIDOC_OPTIONS=members,undoc-members,show-inheritance sphinx-apidoc -eM -s txt -o docs/source/ exatomic *test*
+          travis-sphinx build
+          travis-sphinx deploy
+
+  # keep github release and pypi upload together
+  publish-release:
+    needs: [ run-tests, support-matrix ]
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ${{ fromJson(needs.support-matrix.outputs.matrix).python-version }}
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-python@v2
+        with:
+          python-version: ${{ matrix.python-version }}
+      - uses: actions/cache@v2
+        with:
+          path: ${{ env.pythonLocation }}
+          key: ${{ runner.os }}-${{ matrix.python-version }}-${{ hashFiles('requirements.txt') }}-${{ hashFiles('requirements.dev.txt') }}
+      - name: Publish Github + PyPI Release
+        uses: ./.github/workflows/publish-release
+        with:
+          github-token: ${{ secrets.REPOSITORY_TOKEN }}
+          pypi-token: ${{ secrets.PYPI_TOKEN }}
+
+  publish-conda:
+    needs: [ run-tests, support-matrix ]
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ${{ fromJson(needs.support-matrix.outputs.matrix).python-version }}
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-python@v2
+        with:
+          python-version: ${{ matrix.python-version }}
+      - uses: actions/cache@v2
+        with:
+          path: ${{ env.pythonLocation }}
+          key: ${{ runner.os }}-${{ matrix.python-version }}-${{ hashFiles('requirements.txt') }}-${{ hashFiles('requirements.dev.txt') }}-${{ hashFiles('requirements.release.txt') }}
+          restore-keys: ${{ runner.os }}-${{ matrix.python-version }}-${{ hashFiles('requirements.txt') }}-${{ hashFiles('requirements.dev.txt') }}
+      - name: Publish Conda Release
+        uses: ./.github/workflows/publish-conda
+        with:
+          python-version: ${{ matrix.python-version }}
+          conda-username: ${{ secrets.CONDA_USERNAME }}
+          conda-password: ${{ secrets.CONDA_PASSWORD }}
+
+  codacy-coverage-reporter:
+    runs-on: ubuntu-latest
+    needs: run-tests
+    name: codacy-coverage-reporter
+    steps:
+      - name: Download Coverage Report
+        uses: actions/download-artifact@v2
+        with:
+          name: code-coverage-report-${{ github.workflow }}
+      - name: Run codacy-coverage-reporter
+        uses: codacy/codacy-coverage-reporter-action@v1
+        with:
+          project-token: ${{ secrets.CODACY_PROJECT_TOKEN }}
+          coverage-reports: coverage.xml
+
+  publish-to-npm:
+    runs-on: ubuntu-latest
+    needs: run-tests
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-node@v2
+        with:
+          node-version: '16'
+      - name: Publish NPM Package
+        run: |
+          echo "//registry.npmjs.org/:_authToken=${{ secrets.NPM_TOKEN }}" > ${HOME}/.npmrc
+          cd js && npm publish
