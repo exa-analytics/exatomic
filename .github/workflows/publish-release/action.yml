@@ -41,3 +41,9 @@ runs:
         python setup.py sdist
         python -m twine upload --repository pypi dist/*
         ls dist/*
+    - name: Upload Artifact
+      uses: actions/upload-artifact@v2
+      with:
+        name: project-artifact
+        path: dist/
+        retention-days: 1

@@ -25,9 +25,14 @@ runs:
     - name: Install Release Dependencies
       shell: bash -l {0}
       run: conda install `cat requirements.release.txt`
+    - name: Download Artifact
+      uses: actions/download-artifact@v2
+      with:
+        name: project-artifact
     - name: Publish To Conda
       shell: bash -l {0}
       run: |
+        ls dist/*
         PYTHONVER=${{ inputs.python-version }}
         pyver="py${PYTHONVER/./}"
         pkgver=`cat exatomic/static/version.txt`
