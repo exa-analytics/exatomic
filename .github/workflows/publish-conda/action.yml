@@ -28,6 +28,7 @@ runs:
         conda install `cat requirements.txt | sed "s/tables/pytables/"`
         conda install `cat requirements.dev.txt`
         conda install `cat requirements.release.txt`
+        pip install -e .
     - name: Download Artifact
       uses: actions/download-artifact@v2
       with:
