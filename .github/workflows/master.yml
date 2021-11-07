@@ -20,6 +20,7 @@ jobs:
     steps:
       - uses: actions/checkout@v2
       - uses: ./.github/workflows/support-matrix
+        id: set-matrix
 
   run-tests:
     needs: support-matrix
