@@ -97,7 +97,7 @@ jobs:
           pypi-token: ${{ secrets.PYPI_TOKEN }}
 
   publish-conda:
-    needs: [ run-tests, support-matrix ]
+    needs: [ run-tests, support-matrix, publish-release ]
     runs-on: ubuntu-latest
     name: Publish Artifacts to Conda
     strategy:
@@ -148,4 +148,4 @@ jobs:
         shell: bash -l {0}
         run: |
           echo "//registry.npmjs.org/:_authToken=${{ secrets.NPM_TOKEN }}" > ${HOME}/.npmrc
-          cd js && npm publish
+          cd js && npm publish || echo "this version has likely been published, see above logs"
