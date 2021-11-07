@@ -24,7 +24,10 @@ runs:
         channels: conda-forge
     - name: Install Release Dependencies
       shell: bash -l {0}
-      run: conda install `cat requirements.release.txt`
+      run: |
+        conda install `cat requirements.txt`
+        conda install `cat requirements.dev.txt`
+        conda install `cat requirements.release.txt`
     - name: Download Artifact
       uses: actions/download-artifact@v2
       with:
