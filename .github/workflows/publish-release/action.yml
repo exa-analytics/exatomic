@@ -1,6 +1,10 @@
 name: Publish Python Releases
 description: Publish tagged releases to github and PyPI
 inputs:
+  python-version:
+    description: 'Python version for artifact'
+    required: true
+    default: '3.8'
   github-token:
     description: 'Github access token'
     required: true
@@ -44,6 +48,6 @@ runs:
     - name: Upload Artifact
       uses: actions/upload-artifact@v2
       with:
-        name: project-artifact
-        path: dist/
+        name: project-artifact-${{ inputs.python-version }}
+        path: dist/*
         retention-days: 1

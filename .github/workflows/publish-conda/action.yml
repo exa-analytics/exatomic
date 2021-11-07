@@ -28,7 +28,8 @@ runs:
     - name: Download Artifact
       uses: actions/download-artifact@v2
       with:
-        name: project-artifact
+        name: project-artifact-${{ inputs.python-version }}
+        path: dist/
     - name: Publish To Conda
       shell: bash -l {0}
       run: |

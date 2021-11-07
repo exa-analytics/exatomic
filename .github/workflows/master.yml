@@ -93,6 +93,7 @@ jobs:
       - name: Publish Github + PyPI Release
         uses: ./.github/workflows/publish-release
         with:
+          python-version: ${{ matrix.python-version }}
           github-token: ${{ secrets.REPOSITORY_TOKEN }}
           pypi-token: ${{ secrets.PYPI_TOKEN }}
 
