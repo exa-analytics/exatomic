@@ -13,9 +13,10 @@ runs:
   using: 'composite'
   steps:
     - name: Install Twine
+      shell: bash -l {0}
       run: pip install twine
-    - name: Version Bump
     - name: Publish Releases
+      shell: bash -l {0}
       run: |
         pkgver=`cat exatomic/static/version.txt`
         git remote set-url origin https://${{ inputs.github-token }}@github.com/exa-analytics/exatomic.git

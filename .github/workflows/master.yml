@@ -60,12 +60,13 @@ jobs:
           path: ${{ env.pythonLocation }}
           key: ${{ runner.os }}-3.8-${{ hashFiles('requirements.txt') }}-${{ hashFiles('requirements.dev.txt') }}-${{ hashFiles('requirements.publish.txt') }}
           restore-keys: ${{ runner.os }}-3.8-${{ hashFiles('requirements.txt') }}-${{ hashFiles('requirements.dev.txt') }}
+      - name: Install Pandoc
+        run: sudo apt-get install -y pandoc
       - name: Install Doc Dependencies
         run: |
           pip install --upgrade --upgrade-strategy eager -r requirements.publish.txt
       - name: Publish Docs
         run: |
-          pip install travis-sphinx
           rm -rf docs/source/*.txt
           SPHINX_APIDOC_OPTIONS=members,undoc-members,show-inheritance sphinx-apidoc -eM -s txt -o docs/source/ exatomic *test*
           travis-sphinx build
