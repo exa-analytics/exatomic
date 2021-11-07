@@ -5,4 +5,4 @@ pandoc
 pypandoc
 nbsphinx
 ipython
-nodejs
+travis-sphinx
