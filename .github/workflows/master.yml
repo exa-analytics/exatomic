@@ -97,7 +97,7 @@ jobs:
           pypi-token: ${{ secrets.PYPI_TOKEN }}
 
   publish-conda:
-    needs: [ run-tests, support-matrix ]
+    needs: [ run-tests, support-matrix, publish-release ]
     runs-on: ubuntu-latest
     name: Publish Artifacts to Conda
     strategy:

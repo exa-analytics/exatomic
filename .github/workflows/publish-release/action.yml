@@ -31,15 +31,13 @@ runs:
         [pypi]
         repository = https://upload.pypi.org/legacy/
         username = __token__
-        password = REPLACEME
+        password = ${{ inputs.pypi-token }}
         
         [testpypi]
         repository = https://test.pypi.org/legacy/
         username = __token__
-        password = REPLACEME"
+        password = ${{ inputs.pypi-token }}"
         printf "${pypicfg}" > ${HOME}/.pypirc
-        cat ${HOME}/.pypirc
-        sed -i "s/REPLACEME/${{ inputs.pypi-token }}/" ${HOME}/.pypirc
         python setup.py sdist
         python -m twine upload --repository pypi dist/*
         ls dist/*
