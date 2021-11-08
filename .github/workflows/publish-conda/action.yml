@@ -53,6 +53,6 @@ runs:
         anaconda login --username ${{ inputs.conda-username }} --password ${{ inputs.conda-password }}
         anaconda upload --no-progress ${basedir}/exatomic-${pkgver}-${pyver}_0.tar.bz2
         for pkg in $(ls -d dist1/*/); do
-          echo "${pkg}exatomic-${ver}-${pyver}_0.tar.bz2"
-          anaconda upload --no-progress ${pkg}exatomic-${ver}-${pyver}_0.tar.bz2
+          echo "${pkg}exatomic-${pkgver}-${pyver}_0.tar.bz2"
+          anaconda upload --no-progress ${pkg}exatomic-${pkgver}-${pyver}_0.tar.bz2
         done
