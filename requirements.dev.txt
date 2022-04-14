@@ -1,0 +1,6 @@
+coveralls
+coverage
+pytest
+pytest-cov
+black
+isort

@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# Copyright (c) 2015-2020, Exa Analytics Development Team
+# Copyright (c) 2015-2022, Exa Analytics Development Team
 # Distributed under the terms of the Apache License 2.0
 """
 Molcas Output Parser
@@ -12,10 +12,9 @@ from __future__ import division
 import os
 import six
 import pandas as pd
-from pandas.io.parsers import ParserError
 import numpy as np
 from six import StringIO
-from exa import TypedMeta
+from exatomic.exa import TypedMeta
 import exatomic
 from .editor import Editor
 from exatomic import Atom
@@ -199,7 +198,7 @@ class Output(six.with_metaclass(OutMeta, Editor)):
     def add_overlap(self, path):
         try: # If it's an ASCII text file
             self.overlap = Overlap.from_column(path)
-        except ParserError: # If it's an HDF5 file
+        except Exception: # If it's an HDF5 file
             hdf = HDF(path)
             if 'DESYM_CENTER_CHARGES' not in hdf._hdf:
                 self.overlap = hdf.overlap

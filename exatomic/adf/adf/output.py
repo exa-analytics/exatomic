@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# Copyright (c) 2015-2020, Exa Analytics Development Team
+# Copyright (c) 2015-2022, Exa Analytics Development Team
 # Distributed under the terms of the Apache License 2.0
 """
 Parser for 'A D F' Calculations
@@ -15,10 +15,10 @@ parser, specific to a given piece of data.
 #from __future__ import division
 #import re
 #try:
-#    from exa import Parser, Typed
+#    from exatomic.exa import Parser, Typed
 #except ImportError:
-#    from exa import TypedMeta as Typed
-#    from exa import Editor as Parser
+#    from exatomic.exa import TypedMeta as Typed
+#    from exatomic.exa import Editor as Parser
 #
 #
 #

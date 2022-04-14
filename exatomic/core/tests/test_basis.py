@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# Copyright (c) 2015-2020, Exa Analytics Development Team
+# Copyright (c) 2015-2022, Exa Analytics Development Team
 # Distributed under the terms of the Apache License 2.0
 import numpy as np
 import pandas as pd
@@ -45,29 +45,48 @@ class TestBasisSet(TestCase):
         n = ['set', 'L']
         mfp = pd.MultiIndex.from_product
         mfa = pd.MultiIndex.from_arrays
-        self.assertTrue((self.bs.functions_by_shell() ==
-            pd.Series([1], index=mfp([[0], [0]], names=n))).all())
+        self.assertTrue(
+            pd.Series([1], index=mfp([[0], [0]], names=n)).equals(
+                pd.Series(self.bs.functions_by_shell())
+            )
+        )
         s = self.mbs.functions_by_shell()
-        self.assertTrue((s[s != 0] ==
-            pd.Series([1, 1, 1], index=mfa([[0, 0, 1], [0, 1, 0]], names=n))).all())
+        self.assertTrue(
+            pd.Series([1, 1, 1], index=mfa([[0, 0, 1], [0, 1, 0]], names=n)).equals(
+                pd.Series(s[s != 0])
+            )
+        )
         s = self.lbs.functions_by_shell()
-        self.assertTrue((s[s != 0] ==
+        self.assertTrue(
             pd.Series([1, 1, 1, 1, 1], index=mfa([[0, 0, 0, 1, 1],
-                                                  [0, 1, 2, 0, 1]], names=n))).all())
+                                                  [0, 1, 2, 0, 1]], names=n)).equals(
+                pd.Series(s[s != 0])
+            )
+        )
 
     def test_primitives_by_shell(self):
         n = ['set', 'L']
         mfp = pd.MultiIndex.from_product
         mfa = pd.MultiIndex.from_arrays
-        self.assertTrue((self.bs.primitives_by_shell() ==
-            pd.Series([1], index=mfp([[0], [0]], names=n))).all())
+        self.assertTrue(
+            pd.Series([1], index=mfp([[0], [0]], names=n)).equals(
+                pd.Series(self.bs.primitives_by_shell())
+            )
+        )
         s = self.mbs.primitives_by_shell()
-        self.assertTrue((s[s != 0] ==
-            pd.Series([1, 1, 1], index=mfa([[0, 0, 1], [0, 1, 0]], names=n))).all())
+        self.assertTrue(
+            pd.Series([1, 1, 1], index=mfa([[0, 0, 1], [0, 1, 0]], names=n)).equals(
+                pd.Series(s[s != 0])
+            )
+        )
         s = self.lbs.primitives_by_shell()
-        self.assertTrue((s[s != 0] ==
+        self.assertTrue(
             pd.Series([3, 2, 1, 2, 1], index=mfa([[0, 0, 0, 1, 1],
-                                                  [0, 1, 2, 0, 1]], names=n))).all())
+                                                  [0, 1, 2, 0, 1]], names=n)).equals(
+
+                pd.Series(s[s != 0])
+            )
+        )
 
     def test_functions(self):
         n = ['set', 'L']

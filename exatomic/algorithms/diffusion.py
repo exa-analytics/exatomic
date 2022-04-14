@@ -1,12 +1,12 @@
 # -*- coding: utf-8 -*-
-# Copyright (c) 2015-2020, Exa Analytics Development Team
+# Copyright (c) 2015-2022, Exa Analytics Development Team
 # Distributed under the terms of the Apache License 2.0
 """
 Diffusion Coefficients
 ##########################
 Various algorithms for computing diffusion coefficients are coded here.
 """
-from exa.util.units import Length, Time
+from exatomic.exa.util.units import Length, Time
 from exatomic.algorithms.displacement import absolute_squared_displacement
 
 
@@ -30,7 +30,7 @@ def einstein_relation(universe, input_time='ps', input_length='au',
         time (str): Sting unit name of output time unit
 
     Returns:
-        d (:class:`~exa.core.numerical.DataFrame`): Diffussion coefficient as a function of time
+        d (:class:`~exatomic.exa.core.numerical.DataFrame`): Diffussion coefficient as a function of time
 
     Note:
         The asymptotic value of the returned variable is the diffusion coefficient.

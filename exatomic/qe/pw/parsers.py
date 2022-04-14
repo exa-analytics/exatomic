@@ -1,17 +1,19 @@
 # -*- coding: utf-8 -*-
+# Copyright (c) 2015-2022, Exa Analytics Development Team
+# Distributed under the terms of the Apache License 2.0
 #'''
 #QE pw.x Parsers
 #=======================================
 #Parsers for pw.x inputs and outputs
 #'''
 #from io import StringIO
-#from exa import _pd as pd
-#from exa import _np as np
-#from exa.config import Config
+#from exatomic.exa import _pd as pd
+#from exatomic.exa import _np as np
+#from exatomic.exa.config import Config
 #if Config.numba:
-#    from exa.jitted.indexing import idxs_from_starts_and_counts
+#    from exatomic.exa.jitted.indexing import idxs_from_starts_and_counts
 #else:
-#    from exa.algorithms.indexing import idxs_from_starts_and_counts
+#    from exatomic.exa.algorithms.indexing import idxs_from_starts_and_counts
 #from atomic import Length
 #from atomic.atom import Atom
 #from atomic.frame import _min_frame_from_atom, Frame

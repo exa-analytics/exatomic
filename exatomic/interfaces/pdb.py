@@ -1,5 +1,5 @@
 ## -*- coding: utf-8 -*-
-## Copyright (c) 2015-2020, Exa Analytics Development Team
+## Copyright (c) 2015-2022, Exa Analytics Development Team
 ## Distributed under the terms of the Apache License 2.0
 #"""
 #PDB File I/O
@@ -10,7 +10,7 @@
 #from io import StringIO
 #from requests import get as _get
 #
-#from exa._config import config
+#from exatomic.exa._config import config
 #from exatomic import Editor, Length
 #
 #base = config['dynamic']['exatomic_pkgdir']
@@ -43,7 +43,7 @@
 #
 ##from warnings import warn as _warn
 ##
-##from exa.utils import mkpath
+##from exatomic.exa.utils import mkpath
 ##from exatomic import _os as os
 ##from exatomic import _pd as pd
 ##from exatomic import _np as np
@@ -71,7 +71,7 @@
 ##    Args
 ##        path (str): file path (local) or PDB identifier (remote)
 ##        metadata (dict): metadata as key, value pairs
-##        **kwargs: only if using with exa content management system
+##        **kwargs: only if using with exatomic.exa content management system
 ##
 ##    Return
 ##        unikws (dict): dataframes containing 'frame', 'one' body and 'meta' data

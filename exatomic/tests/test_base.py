@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# Copyright (c) 2015-2020, Exa Analytics Development Team
+# Copyright (c) 2015-2022, Exa Analytics Development Team
 # Distributed under the terms of the Apache License 2.0
 from exatomic.base import sym2isomass
 from unittest import TestCase
@@ -20,7 +20,7 @@ class TestBase(TestCase):
         for symb, exp in zip(symbol, expected):
             close.append(abs(dict[symb] - exp) < 1e-6)
         self.assertTrue(all(close))
-        
+
 #import pytest
 #
 #params = [(['Ni'], [57.93534241]),

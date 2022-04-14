@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# Copyright (c) 2015-2020, Exa Analytics Development Team
+# Copyright (c) 2015-2022, Exa Analytics Development Team
 # Distributed under the terms of the Apache License 2.0
 """
 Interface to `cclib`_
@@ -8,7 +8,7 @@ Interface to `cclib`_
 .. _cclib: https://cclib.github.io/
 """
 from ast import literal_eval
-from exa.util.units import Length, Energy
+from exatomic.exa.util.units import Length, Energy
 from exatomic.algorithms.basis import lmap
 from exatomic.base import z2sym
 

@@ -1,4 +1,4 @@
-[![exatomic logo](../docs/source/_static/logo.png)](https://exa-analytics.github.io)  
+[![exatomic logo](../docs/source/_static/logo.png)](https://exa-analytics.github.io)
 JavaScript package that enables atomic visualization in the [Jupyter](https://jupyter.org) notebook.
 
 

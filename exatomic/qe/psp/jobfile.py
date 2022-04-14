@@ -1,6 +1,6 @@
-## -*- coding: utf-8 -*-
-## Copyright (c) 2015-2020, Exa Analytics Development Team
-## Distributed under the terms of the Apache License 2.0
+# -*- coding: utf-8 -*-
+# Copyright (c) 2015-2022, Exa Analytics Development Team
+# Distributed under the terms of the Apache License 2.0
 #"""
 #PSLibrary Job File
 ######################
@@ -16,7 +16,7 @@
 #import re
 #import numpy as np
 #import pandas as pd
-#from exa import isotopes, Sections, Parser, TypedProperty, DataFrame
+#from exatomic.exa import isotopes, Sections, Parser, TypedProperty, DataFrame
 #
 #
 #class Element(Parser):

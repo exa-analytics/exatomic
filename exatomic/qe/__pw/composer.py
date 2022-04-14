@@ -1,12 +1,12 @@
-## -*- coding: utf-8 -*-
-## Copyright (c) 2015-2020, Exa Analytics Development Team
-## Distributed under the terms of the Apache License 2.0
+# -*- coding: utf-8 -*-
+# Copyright (c) 2015-2022, Exa Analytics Development Team
+# Distributed under the terms of the Apache License 2.0
 #"""
 #PW Input Composer
 ###########################
 #
 #"""
-#from exa import TypedProperty
+#from exatomic.exa import TypedProperty
 #from exatomic.qe.base_composer import PWCPComposer
 #
 #
