@@ -185,7 +185,7 @@ class Output(six.with_metaclass(OutMeta, Editor)):
                         data['n'].append(n)
                         data['r'].append(r)
         data['set'] = data.pop('seht')
-        data['frame'] = 0
+        data['frame'] = [0]*len(data['set'])
         self.basis_set_order = pd.DataFrame.from_dict(data)
         self.basis_set_order['prefac'] = (self.basis_set_order['L'].apply(dfac21) /
                                           (self.basis_set_order['l'].apply(dfac21) *
