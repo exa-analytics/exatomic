@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
-# Copyright (c) 2015-2020, Exa Analytics Development Team
+# Copyright (c) 2015-2022, Exa Analytics Development Team
 # Distributed under the terms of the Apache License 2.0
 
-from exa import DataFrame
+from exatomic.exa import DataFrame
 import numpy as np
 import pandas as pd
 from exatomic import plotter

@@ -1,9 +1,11 @@
 # -*- coding: utf-8 -*-
-# Copyright (c) 2015-2020, Exa Analytics Development Team
+# Copyright (c) 2015-2022, Exa Analytics Development Team
 # Distributed under the terms of the Apache License 2.0
 
+import os
 from unittest import TestCase
 
+import pytest
 from exatomic import XYZ
 
 from ..widget import DemoContainer, DemoUniverse, UniverseWidget
@@ -31,6 +33,7 @@ class TestDemoContainer(TestCase):
                              ['close', 'clear', 'active', 'saves', 'camera', 'geom', 'field'])
 
 
+@pytest.mark.skipif(os.name == "nt", reason="Add better windows support")
 class TestDemoUniverse(TestCase):
     def setUp(self):
         self.box = DemoUniverse()
@@ -48,6 +51,7 @@ class TestDemoUniverse(TestCase):
                              ['close', 'clear', 'active', 'saves', 'camera', 'field'])
 
 
+@pytest.mark.skipif(os.name == "nt", reason="Add better windows support")
 class TestUniverseWidget(TestCase):
     def setUp(self):
         xyz = XYZ(h2)

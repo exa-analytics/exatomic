@@ -1,11 +1,13 @@
 # -*- coding: utf-8 -*-
+# Copyright (c) 2015-2022, Exa Analytics Development Team
+# Distributed under the terms of the Apache License 2.0
 #'''
 #PW Module Input File Editor
 #====================================
 #
 #'''
 #import numpy as np
-#from exa import DataFrame
+#from exatomic.exa import DataFrame
 #from exatomic import Length, Frame, Atom
 #from exqe.input import QEInput
 #from exqe.types import lengths

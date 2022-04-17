@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# Copyright (c) 2015-2020, Exa Analytics Development Team
+# Copyright (c) 2015-2022, Exa Analytics Development Team
 # Distributed under the terms of the Apache License 2.0
 """
 Universe trait functions
@@ -17,7 +17,7 @@ def atom_traits(df, atomcolors=None, atomradii=None, atomlabels=None):
     """
     Get atom table traits. Atomic size (using the covalent radius) and atom
     colors (using the common `Jmol`_ color scheme) are packed as dicts and
-    obtained from the static data in exa.
+    obtained from the static data in exatomic.exa.
 
     .. _Jmol: http://jmol.sourceforge.net/jscolors/
     """
@@ -83,6 +83,7 @@ def two_traits(uni):
     lbl0 = bonded['atom0'].map(lbls)
     lbl1 = bonded['atom1'].map(lbls)
     lbl = pd.concat((lbl0, lbl1), axis=1)
+    lbl.columns = ['atom0', 'atom1']
     lbl['frame'] = bonded['frame']
     bond_grps = lbl.groupby('frame')
     frames = df['frame'].unique().astype(np.int64)

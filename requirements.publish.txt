@@ -1,0 +1,7 @@
+sphinx
+sphinx_rtd_theme
+ply
+pypandoc
+nbsphinx
+ipython
+travis-sphinx

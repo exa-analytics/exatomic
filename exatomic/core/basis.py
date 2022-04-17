@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# Copyright (c) 2015-2020, Exa Analytics Development Team
+# Copyright (c) 2015-2022, Exa Analytics Development Team
 # Distributed under the terms of the Apache License 2.0
 """
 Basis Set Representations
@@ -18,7 +18,7 @@ import numpy as np
 import pandas as pd
 from io import StringIO
 
-from exa import DataFrame
+from exatomic.exa import DataFrame
 from exatomic.algorithms.basis import cart_lml_count, spher_lml_count
 from exatomic.algorithms.numerical import _tri_indices, _square, Shell
 
@@ -72,6 +72,7 @@ class BasisSet(DataFrame):
     _cardinal = ('frame', np.int64)
     _index = 'function'
     _categories = {'L': np.int64, 'set': np.int64, 'frame': np.int64, 'norm': str}
+    _indexes = ['set', 'L']
 
     @property
     def lmax(self):
@@ -90,24 +91,16 @@ class BasisSet(DataFrame):
         Returns:
             srs (pd.Series): multi-indexed by set and L
         """
-        def _shell_gau(df):
-            col = ('alpha', 'shell', 'd')
-            alphas = df.alpha.unique()
-            piv = df.pivot(*col).loc[alphas].fillna(0.)
-            nprim, ncont = piv.shape
-            return Shell(piv.values.flatten(), alphas, nprim, ncont, df.L.values[0],
-                         df.norm.values[0], gaussian, None, None)
-        def _shell_sto(df):
-            col = ('alpha', 'shell', 'd')
-            alphas = df.alpha.unique()
-            piv = df.pivot(*col).loc[alphas].fillna(0.)
-            nprim, ncont = piv.shape
-            return Shell(piv.values.flatten(), alphas, nprim, ncont, df.L.values[0],
-                         df.norm.values[0], gaussian, df.r.values, df.n.values)
         self.spherical_by_shell(program, spherical)
-        if gaussian:
-            return self.groupby(['set', 'L']).apply(_shell_gau).reset_index()
-        return self.groupby(['set', 'L']).apply(_shell_sto).reset_index()
+        grps = self.groupby(self._indexes)
+        shells = []
+        for (seht, L), grp in grps:
+            alphas = grp['alpha'].unique()
+            piv = grp.pivot_table(index='alpha', columns='shell', values='d').loc[alphas].fillna(0.)
+            args = piv.values.flatten(), alphas, *piv.shape, L, grp['norm'].values[0], gaussian
+            shell = Shell(*args, None, None) if gaussian else Shell(*args, grp['r'].values, grp['n'].values)
+            shells.append((seht, L, shell))
+        return pd.DataFrame(shells, columns=self._indexes + [0])
 
     def spherical_by_shell(self, program, spherical=True):
         """Allows for some flexibility in treating shells either as
@@ -126,12 +119,16 @@ class BasisSet(DataFrame):
     def functions_by_shell(self):
         """Return a series of n functions per (set, L).
         This does not include degenerate functions."""
-        return self.groupby(['set', 'L'])['shell'].nunique()
+        obj = self.groupby(self._indexes)['shell'].nunique()
+        obj.index.set_names(self._indexes, inplace=True)
+        return obj
 
     def primitives_by_shell(self):
         """Return a series of n primitives per (set, L).
         This does not include degenerate primitives."""
-        return self.groupby(['set', 'L'])['alpha'].nunique()
+        obj = self.groupby(self._indexes)['alpha'].nunique()
+        obj.index.set_names(self._indexes, inplace=True)
+        return obj
 
     def functions(self, spherical):
         """Return a series of n functions per (set, L).

@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# Copyright (c) 2015-2020, Exa Analytics Development Team
+# Copyright (c) 2015-2022, Exa Analytics Development Team
 # Distributed under the terms of the Apache License 2.0
 """
 XYZ File Editor
@@ -12,9 +12,9 @@ import six
 import csv
 import numpy as np
 import pandas as pd
-from exa import TypedMeta
-from exa.util.units import Length
-from exa.util.utility import mkp
+from exatomic.exa import TypedMeta
+from exatomic.exa.util.units import Length
+from exatomic.exa.util.utility import mkp
 from exatomic.core.editor import Editor
 from exatomic.core.frame import compute_frame_from_atom, Frame
 from exatomic.core.atom import Atom

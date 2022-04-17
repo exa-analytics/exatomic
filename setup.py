@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-# -*- coding: utf-8 -*-
 import os, sys, platform
 from distutils import log
 from subprocess import check_call

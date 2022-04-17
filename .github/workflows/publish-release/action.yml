@@ -1,0 +1,53 @@
+name: Publish Python Releases
+description: Publish tagged releases to github and PyPI
+inputs:
+  python-version:
+    description: 'Python version for artifact'
+    required: true
+    default: '3.8'
+  github-token:
+    description: 'Github access token'
+    required: true
+    default: 'secret'
+  pypi-token:
+    description: 'PyPI upload token'
+    required: true
+    default: 'secret'
+runs:
+  using: 'composite'
+  steps:
+    - name: Install Twine
+      shell: bash -l {0}
+      run: pip install twine
+    - name: Publish Releases
+      shell: bash -l {0}
+      run: |
+        pkgver=`cat exatomic/static/version.txt`
+        git remote set-url origin https://${{ inputs.github-token }}@github.com/exa-analytics/exatomic.git
+        git tag ${pkgver}
+        git push --tags
+        pypicfg="
+        [distutils]
+        index-servers =
+            pypi
+            testpypi
+
+        [pypi]
+        repository = https://upload.pypi.org/legacy/
+        username = __token__
+        password = ${{ inputs.pypi-token }}
+        
+        [testpypi]
+        repository = https://test.pypi.org/legacy/
+        username = __token__
+        password = ${{ inputs.pypi-token }}"
+        printf "${pypicfg}" > ${HOME}/.pypirc
+        python setup.py sdist
+        python -m twine upload --repository pypi dist/*
+        ls dist/*
+    - name: Upload Artifact
+      uses: actions/upload-artifact@v2
+      with:
+        name: project-artifact-${{ inputs.python-version }}
+        path: dist/*
+        retention-days: 1
