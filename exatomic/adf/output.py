@@ -552,3 +552,93 @@ class Output(six.with_metaclass(OutMeta, Editor)):
     def __init__(self, *args, **kwargs):
         super(Output, self).__init__(*args, **kwargs)
 
+class ADF2021(six.with_metaclass(OutMeta, Editor)):
+    """The ADF output parser for versions newer than 2019"""
+    def parse_atom(self):
+        # TODO: current implementation is only for the AMS driver
+        _re_atom_00 = 'Atoms'
+        found = self.find(_re_atom_00, keys_only=True)
+        if not found:
+            raise ValueError("Could not find atomic positions.")
+        starts = np.array(found)[:-1] + 2
+        stop = starts[0]
+        while self[stop].strip(): stop += 1
+        stops = starts + (stop - starts[0])
+        dfs = []
+        for idx, (start, stop) in enumerate(zip(starts, stops)):
+            df = self.pandas_dataframe(start, stop, ncol=5)
+            df.columns = ['set', 'symbol', 'x', 'y', 'z']
+            df[['x', 'y', 'z']] *= [Length['Angstrom', 'au']]*3
+            df['Z'] = df['symbol'].map(sym2z)
+            df['frame'] = idx
+            df['set'] -= 1
+            dfs.append(df)
+        atom = pd.concat(dfs, ignore_index=True)
+        self.atom = atom
+
+    def parse_frequency(self):
+        _refreq = "Frequency (cm-1)"
+        found = self.find(_refreq, keys_only=True)
+        found = found[1:]
+        if not found:
+            return
+        starts = np.array(found) + 2
+        stop = starts[0]
+        while self[stop].strip(): stop += 1
+        stops = starts + (stop - starts[0])
+        natoms = stop - starts[0]
+        if not hasattr(self, 'atom'):
+            self.parse_atom()
+        if natoms != self.atom.last_frame.shape[0]:
+            raise ValueError("Issue with determining the number of atoms.")
+        arr = zip(found, zip(starts, stops))
+        dfs = []
+        for idx, (ldx, (start, stop)) in enumerate(arr):
+            line = self[ldx]
+            d = line.split()
+            df = self.pandas_dataframe(start, stop, ncol=5)
+            df.columns = ['label', 'symbol', 'dx', 'dy', 'dz']
+            df['label'] -= 1
+            df['frequency'] = d[4]
+            df['ir_int'] = d[7]
+            df['freqdx'] = idx
+            df['frame'] = 0
+            dfs.append(df)
+        freq = pd.concat(dfs, ignore_index=True)
+        self.frequency = freq
+
+    def parse_gradient(self):
+        # TODO: check if the first search string is used in all
+        #       ams driver engines
+        _regrad = "Energy gradients wrt nuclear displacements"
+        # other gradient matrix search string
+        _regradfinal = "Gradients (hartree/bohr)"
+        found = self.find(_regrad, _regradfinal, keys_only=True)
+        if not found[_regrad]:
+            return
+        starts = np.array(found[_regrad]) + 6
+        stop = starts[0]
+        while '---' not in self[stop]: stop += 1
+        stops = starts + (stop - starts[0])
+        dfs = []
+        for idx, (start, stop) in enumerate(zip(starts, stops)):
+            df = self.pandas_dataframe(start, stop, ncol=5)
+            df.columns = ['atom', 'symbol', 'fx', 'fy', 'fz']
+            df['Z'] = df['symbol'].map(sym2z)
+            df['frame'] = idx
+            df[['fx', 'fy', 'fz']] /= [Length['Angstrom', 'au']]*3
+            df['atom'] -= 1
+            dfs.append(df)
+        # get the last gradient matrix as it has more sig figs
+        start = found[_regradfinal][0] + 2
+        stop = start
+        while self[stop].strip(): stop += 1
+        df = self.pandas_dataframe(start, stop, ncol=5)
+        df.columns = ['atom', 'symbol', 'fx', 'fy', 'fz']
+        df['Z'] = df['symbol'].map(sym2z)
+        df['frame'] = dfs[-1]['frame'] + 1
+        df['atom'] -= 1
+        dfs.append(df)
+        grad = pd.concat(dfs, ignore_index=True)
+        self.gradient = grad
+
