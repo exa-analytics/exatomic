@@ -11,7 +11,7 @@ units provided by `NIST`_ and they are listed by a hardcoded acronym value.
 .. code-block:: python
     >>> from exatomic.util import conversions
     >>> conversions.Ha2eV
-    27.211386245988002
+    27.211386245988
     >>> conversions.Ha2eV.error
     5.3e-11
     >>> conversions.Ha2inv_m
