@@ -257,7 +257,7 @@ def _determine_fps(uni, fps, nvec):
     if fps is None:
         if hasattr(uni, 'field'):
             return make_fps(nrfps=nvec, **uni.field.loc[0])
-        desc = uni.atom.describe()
+        desc = uni.atom.describe(include='all')
         kwargs = {'xmin': desc['x']['min'] - 5,
                   'xmax': desc['x']['max'] + 5,
                   'ymin': desc['y']['min'] - 5,
