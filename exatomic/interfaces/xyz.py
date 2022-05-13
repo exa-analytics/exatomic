@@ -20,6 +20,8 @@ from exatomic.core.frame import compute_frame_from_atom, Frame
 from exatomic.core.atom import Atom
 from exatomic.algorithms.indexing import starts_counts
 
+class InputError(Exception):
+    pass
 
 class Meta(TypedMeta):
     atom = Atom
@@ -50,8 +52,20 @@ class XYZ(six.with_metaclass(Meta, Editor)):
         starts = []
         nats = []
         for idx, line in enumerate(self):
+            if not line.strip(): continue
             try:
                 nat = int(line.split()[0])
+                if len(starts) != 0:
+                    # check if the detected integer is in the comment line
+                    if idx-1 == starts[-1]:
+                        continue
+                    # error out if what we expect to be the atomic position
+                    # matrix has an integer instead of a string symbol
+                    elif idx-2 == starts[-1]:
+                        msg = "The XYZ file could not be parsed due to an error " \
+                              +"with the atomic symbols. Interpreted as an " \
+                              +"integer instead of a string."
+                        raise InputError(msg)
                 starts.append(idx)
                 nats.append(nat)
             except ValueError:
