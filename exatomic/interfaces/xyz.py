@@ -45,19 +45,39 @@ class XYZ(six.with_metaclass(Meta, Editor)):
         Args:
             unit (str): Default xyz unit of length is the Angstrom
         """
+        # find where we have the number of atoms and where each
+        # frame starts
+        starts = []
+        nats = []
+        for idx, line in enumerate(self):
+            try:
+                nat = int(line.split()[0])
+                starts.append(idx)
+                nats.append(nat)
+            except ValueError:
+                continue
+        # set the rows that we want to skip
+        # this would be the number of atoms and comment
+        to_skip = np.concatenate((starts, np.array(starts)+1))
+        comments = [self[i+1] for i in starts]
         df = pd.read_csv(six.StringIO(six.u(str(self))), delim_whitespace=True,
                                       names=names, header=None,
-                                      skip_blank_lines=False)
-        # The following algorithm works for both trajectory files and single xyz files
-        nats = pd.Series(df[df[['y', 'z']].isnull().all(axis=1)].index)
-        nats = nats[nats.diff() != 1].values
-        comments = nats + 1
-        nats = df.loc[nats, 'symbol']
-        comments = df.loc[comments, :].dropna(how='all').index
-        initials = nats.index.values.astype(np.int64) + 2
-        counts = nats.values.astype(np.int64)
-        frame, _, indices = starts_counts(initials, counts)
-        df = df[df.index.isin(indices)]
+                                      skip_blank_lines=False,
+                                      skiprows=to_skip)
+        # get where the data will actually start
+        initial = []
+        for idx, val in enumerate(starts):
+            initial.append(val-(2*idx))
+        frame, _, indices = starts_counts(np.array(initial),
+                                          np.array(nats))
+        # some error checking
+        bins = np.bincount(frame)
+        for idx in np.unique(frame):
+            count = bins[idx]
+            if count != nats[idx]:
+                raise ValueError("We had an issue with determining the number of " \
+                                 +"times a frame appeared.")
+        # arrange everything nicely
         df[['x', 'y', 'z']] = df[['x', 'y', 'z']].astype(np.float64)
         df['symbol'] = df['symbol'].astype('category')
         df['frame'] = frame
@@ -67,10 +87,11 @@ class XYZ(six.with_metaclass(Meta, Editor)):
         df['x'] *= Length[unit, 'au']
         df['y'] *= Length[unit, 'au']
         df['z'] *= Length[unit, 'au']
+        # add comments
         if self.meta is not None:
-            self.meta['comments'] = {line: self._lines[line] for line in comments}
+            self.meta['comments'] = {line: line for line in comments}
         else:
-            self.meta = {'comments': {line: self._lines[line] for line in comments}}
+            self.meta = {'comments': {line: line for line in comments}}
         self.atom = df
 
     def write(self, path, trajectory=True, float_format='%    .8f'):
