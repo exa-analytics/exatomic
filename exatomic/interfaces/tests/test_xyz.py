@@ -8,13 +8,15 @@ Tests for :mod:`~exatomic.xyz`
 from unittest import TestCase
 from exatomic.base import resource
 from exatomic import XYZ
+from exatomic.interfaces.xyz import InputError
 
 
 check = {'H2O.xyz': 3, 'H2.xyz': 2, 'O2.xyz': 2, 'UCl6.xyz': 7,
          'UO2.xyz': 3, 'ZnPorphyrin.xyz': 77, 'ZrO2.xyz': 3,
          'H2O.traj.xyz': 225600, 'benzene.xyz': 12, 'CH3NH2.xyz': 7,
          'methyl_134_triazole.xyz': 11, 'kaolinite.xyz': 26,
-         'magnesite.xyz': 60, 'zabuyelite.xyz': 24}
+         'magnesite.xyz': 60, 'zabuyelite.xyz': 24,
+         'comments.xyz': 19}
 
 
 class TestXYZ(TestCase):
@@ -27,3 +29,8 @@ class TestXYZ(TestCase):
             xyz = XYZ(resource(name))
             xyz.parse_atom()
             self.assertEqual(xyz.atom.shape[0], size)
+
+    def test_error(self):
+        xyz = XYZ(resource('error.xyz'))
+        self.assertRaises(InputError, xyz.parse_atom)
+
