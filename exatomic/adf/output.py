@@ -710,3 +710,26 @@ class AMS(six.with_metaclass(OutMeta, Editor)):
                 tdm = new_df.copy()
         self.electric_dipole = tdm
 
+    def parse_magnetic_dipole(self):
+        _retrans = "magnetic transition dipole vectors m in a.u."
+        _revel = "(using dipole velocity formula for mu)"
+        found = self.find(_retrans, _revel, keys_only=True)
+        if not found[_retrans]:
+            return
+        velocity = True if found[_revel] else False
+        # grab the information with the transition dipole moments
+        start = found[_retrans][0] + 4
+        stop = start
+        while self[stop].strip(): stop += 1
+        tdm = self.pandas_dataframe(start, stop, ncol=10)
+        tdm.dropna(axis=1, how='all', inplace=True)
+        if tdm.shape[1] == 8:
+            spinorbit=True
+            tdm.columns = ['excitation', 'rot', 'rem_x' ,'rem_y', 'rem_z',
+                           'imm_x', 'imm_y', 'imm_z']
+        else:
+            tdm.columns = ['excitation', 'energy_ev', 'osc', 'mu_x' ,'mu_y', 'mu_z']
+            spinorbit=False
+        tdm['excitation'] -= 1
+        self.magnetic_dipole = tdm
+
