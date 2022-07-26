@@ -127,6 +127,8 @@ class TestOutput(TestCase):
         self.nitro_nmr = Output(resource('g16-nitromalonamide-6-31++g-nmr.out'))
         # to test having both a geometry optimization and frequencies calculation
         self.meth_opt_freq_hp = Output(resource('g16-methyloxirane-def2tzvp-opt-freq.out'))
+        # edge case of frequency with HPModes
+        self.h2o_freq = Output(resource('g16-h2o-321g-freq.out'))
 
     def test_parse_atom(self):
         self.uo2.parse_atom()
@@ -234,6 +236,9 @@ class TestOutput(TestCase):
         self.meth_opt_freq_hp.parse_frequency()
         self.assertEqual(self.meth_opt_freq_hp.frequency.shape[0], 240)
         self.assertTrue(np.all(pd.notnull(pd.DataFrame(self.meth_opt_freq_hp.frequency))))
+        self.h2o_freq.parse_frequency()
+        self.assertEqual(self.h2o_freq.frequency.shape[0], 9)
+        self.assertTrue(np.all(pd.notnull(pd.DataFrame(self.h2o_freq.frequency))))
 
     def test_parse_excitation(self):
         self.nap_tddft.parse_excitation()

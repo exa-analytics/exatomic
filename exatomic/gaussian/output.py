@@ -488,7 +488,6 @@ class Output(six.with_metaclass(GauMeta, Editor)):
             start = found_atom[0]+1
             span = 0
             while self[start].strip() and self[start].split()[0] != 'Harmonic':
-                #print(self[start])
                 span += 1
                 start += 1
         # get the number of other attributes included
@@ -513,7 +512,6 @@ class Output(six.with_metaclass(GauMeta, Editor)):
             # Get just the atom displacement vectors
             start = lno + span_freq_vals
             stop = start + span
-            #print(lno, start, stop, self[start], self[stop])
             # we use the conditional parameters we set before to correctly splice all the data
             cols = range(extra_col + norm_mode * nfreqs)
             df = self.pandas_dataframe(start, stop, ncol=cols)
@@ -548,8 +546,6 @@ class Output(six.with_metaclass(GauMeta, Editor)):
                                     'frequency': freqs, 'freqdx': freqdxs,
                                     'ir_int': ir_int, 'r_mass': r_mass})
             stacked['symbol'] = stacked['Z'].map(z2sym)
-            #print(stacked.to_string())
-            #raise
             dfs.append(stacked)
         # Now put all our frequencies together
         frequency = pd.concat(dfs).reset_index(drop=True)
@@ -582,7 +578,6 @@ class Output(six.with_metaclass(GauMeta, Editor)):
         atom = self.atom['set'].drop_duplicates().values
         nat = len(atom)
         symbols = self.atom.groupby('frame').get_group(0)['symbol']
-        #print(found)
         df = []
         for f in found:
             # get line value +1 for the tensors
@@ -1012,11 +1007,6 @@ class Fchk(six.with_metaclass(GauMeta, Editor)):
             vals.sort()
             iso[idx] = np.average(vals, axis=-1)
             aniso[idx] = vals[2] - (vals[0] + vals[1])/2
-            # for debugging
-            #conv = 1e6/18778.86
-            #print("====================={}=====================".format(i+1))
-            #print("Eigenvalues:\t{}\t{}\t{}".format(vals[0]*conv, vals[1]*conv, vals[2]*conv))
-            #print("Isotropic:\t{}\nAnisotropy:\t{}".format(iso[i]*conv, aniso[i]*conv))
         matrix = matrix.reshape(len(matrix)*3, -1)
         df = pd.DataFrame(matrix, columns=['x', 'y', 'z'])
         label = 'nmr shielding'
