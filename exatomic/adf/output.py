@@ -42,7 +42,36 @@ class OutMeta(TypedMeta):
     nmr_shielding = NMRShielding
     j_coupling = JCoupling
 
-class Output(six.with_metaclass(OutMeta, Editor)):
+class NMR(six.with_metaclass(OutMeta, Editor)):
+    def parse_atom(self):
+        #if len(found) > 1:
+        #    raise NotImplementedError("We can only parse outputs from a single NMR calculation")
+        atom = []
+        for idx, val in enumerate(found):
+            start = val + 3
+            stop = start
+            while self[stop].strip(): stop += 1
+            # a bit of a hack to make sure that there is no formatting change depending on the
+            # number of atoms in the molecule as the index is right justified so if there are
+            # more than 100 atoms it will fill the alloted space for the atom index and change the
+            # delimitter and therefore the number of columns
+            self[start:stop] = map(lambda x: x.replace('(', ''), self[start:stop])
+            df = self.pandas_dataframe(start, stop, ncol=5)
+            df.columns = ['symbol', 'set', 'x', 'y', 'z']
+            df[['x', 'y', 'z']] *= [Length['Angstrom', 'au']]*3
+            df['Z'] = df['symbol'].map(sym2z)
+            df['frame'] = idx
+            # remove the trailing chracters from the index
+            df['set'] = list(map(lambda x: x.replace('):', ''), df['set']))
+            df['set'] = df['set'].astype(int) - 1
+            atom.append(df)
+        atom = pd.concat(atom)
+        self.atom = atom
+
+    def __init__(self, file):
+        super().__init__(file)
+
+class ADF(six.with_metaclass(OutMeta, Editor)):
     """The ADF output parser."""
     def parse_atom(self):
         # TODO : only supports single frame, gets last atomic positions
@@ -549,8 +578,8 @@ class Output(six.with_metaclass(OutMeta, Editor)):
         j_coupling['pt_atom'] -= 1
         self.j_coupling = j_coupling
 
-    def __init__(self, *args, **kwargs):
-        super(Output, self).__init__(*args, **kwargs)
+    def __init__(self, file):
+        super().__init__(file)
 
 class AMS(six.with_metaclass(OutMeta, Editor)):
     """The ADF output parser for versions newer than 2019"""
@@ -732,4 +761,21 @@ class AMS(six.with_metaclass(OutMeta, Editor)):
             spinorbit=False
         tdm['excitation'] -= 1
         self.magnetic_dipole = tdm
+
+    def __init__(self, file):
+        super().__init__(file)
+
+class Output(ADF, NMR, AMS):
+    def __init__(self, file):
+        ed = Editor(file)
+        _readf = "A D F"
+        _renmr = "N M R"
+        _reams = "A M S"
+        found = ed.find(_readf, _renmr, _reams, keys_only=True)
+        if found[_renmr]:
+            super(NMR, self).__init__(file)
+        elif found[_readf]:
+            super(ADF, self).__init__(file)
+        elif found[_reams]:
+            super(AMS, self).__init__(file)
 
