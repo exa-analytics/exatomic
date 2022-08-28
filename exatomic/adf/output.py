@@ -749,8 +749,20 @@ class Output(ADF, NMR, AMS):
         found = ed.find(_readf, _renmr, _reams, keys_only=True)
         if found[_renmr]:
             super(NMR, self).__init__(file)
+            attrs = [attr for attr in dir(NMR)
+                        if 'parse_' in attr and not attr == 'parse_frame']
+            for attr in attrs:
+                setattr(self.__class__, attr, getattr(NMR, attr))
         elif found[_readf]:
             super(ADF, self).__init__(file)
+            attrs = [attr for attr in dir(ADF)
+                        if 'parse_' in attr and not attr == 'parse_frame']
+            for attr in attrs:
+                setattr(self.__class__, attr, getattr(ADF, attr))
         elif found[_reams]:
             super(AMS, self).__init__(file)
+            attrs = [attr for attr in dir(AMS)
+                        if 'parse_' in attr and not attr == 'parse_frame']
+            for attr in attrs:
+                setattr(self.__class__, attr, getattr(AMS, attr))
 
