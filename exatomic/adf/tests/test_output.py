@@ -50,6 +50,7 @@ class TestAMSOutput(TestCase):
         self.ams_form_opt = AMS(resource('ams-formaldehyde-opt.out'))
         self.ams_form_freq = AMS(resource('ams-formaldehyde-freq.out'))
         self.ams_pf3 = AMS(resource('ams-pf3-nmr.out'))
+        self.ams_h2o2 = AMS(resource('ams-h2o2-so-vel-exc.out'))
 
     def test_parse_atom(self):
         self.ams_form_opt.parse_atom()
@@ -72,12 +73,28 @@ class TestAMSOutput(TestCase):
         self.assertEqual(self.ams_form_opt.gradient.shape[0], 24)
         self.assertTrue(np.all(pd.notnull(pd.DataFrame(self.ams_form_opt.gradient))))
 
+    def test_parse_excitation(self):
+        self.ams_h2o2.parse_excitation()
+        self.assertEqual(self.ams_h2o2.excitation.shape[0], 50)
+        self.assertTrue(np.all(pd.notnull(pd.DataFrame(self.ams_h2o2.excitation))))
+
+    def test_parse_electric_dipole(self):
+        self.ams_h2o2.parse_electric_dipole()
+        self.assertEqual(self.ams_h2o2.electric_dipole.shape[0], 50)
+        self.assertTrue(np.all(pd.notnull(pd.DataFrame(self.ams_h2o2.electric_dipole))))
+
+    def test_parse_magnetic_dipole(self):
+        self.ams_h2o2.parse_magnetic_dipole()
+        self.assertEqual(self.ams_h2o2.magnetic_dipole.shape[0], 50)
+        self.assertTrue(np.all(pd.notnull(pd.DataFrame(self.ams_h2o2.magnetic_dipole))))
+
 class TestADFOutput(TestCase):
     def setUp(self):
-        self.lu = Output(resource('adf-lu.out'))
-        self.ch4 = Output(resource('adf-ch4-opt-freq.out'))
-        self.c2h3i = Output(resource('adf-c2h3i-opt.out'))
-        self.nico4 = Output(resource('adf-nico4.out'))
+        self.lu = ADF(resource('adf-lu.out'))
+        self.ch4 = ADF(resource('adf-ch4-opt-freq.out'))
+        self.c2h3i = ADF(resource('adf-c2h3i-opt.out'))
+        self.nico4 = ADF(resource('adf-nico4.out'))
+        self.h2o2 = ADF(resource('adf-h2o2-so-vel-exc.out'))
 
     def test_parse_atom(self):
         self.lu.parse_atom()
@@ -135,6 +152,11 @@ class TestADFOutput(TestCase):
         self.c2h3i.parse_gradient()
         self.assertEqual(self.c2h3i.gradient.shape[0], 66)
         self.assertTrue(np.all(pd.notnull(pd.DataFrame(self.c2h3i.gradient))))
+
+    def test_parse_excitation(self):
+        self.h2o2.parse_excitation()
+        self.assertEqual(self.h2o2.excitation.shape[0], 50)
+        self.assertTrue(np.all(pd.notnull(pd.DataFrame(self.h2o2.excitation))))
 
 class TestSCMOutput(TestCase):
     """Test the ADF output file editor."""
