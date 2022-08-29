@@ -146,6 +146,9 @@ class NMR(six.with_metaclass(OutMeta, Editor)):
         j_coupling['pt_atom'] -= 1
         self.j_coupling = j_coupling
 
+    def __init__(self, *args, **kwargs):
+        super(NMR, self).__init__(*args, **kwargs)
+
 class ADF(six.with_metaclass(OutMeta, Editor)):
     """The ADF output parser."""
     def parse_atom(self):
@@ -552,6 +555,9 @@ class ADF(six.with_metaclass(OutMeta, Editor)):
         # TODO: check units of the normal modes
         self.frequency = frequency
 
+    def __init__(self, *args, **kwargs):
+        super(ADF, self).__init__(*args, **kwargs)
+
 class AMS(six.with_metaclass(OutMeta, Editor)):
     """The ADF output parser for versions newer than 2019"""
     def parse_atom(self):
@@ -733,6 +739,9 @@ class AMS(six.with_metaclass(OutMeta, Editor)):
         tdm['excitation'] -= 1
         self.magnetic_dipole = tdm
 
+    def __init__(self, *args, **kwargs):
+        super(AMS, self).__init__(*args, **kwargs)
+
 class Output(six.with_metaclass(OutMeta, Editor)):
     def _parse_data(self, attr):
         try:
@@ -784,19 +793,17 @@ class Output(six.with_metaclass(OutMeta, Editor)):
     def parse_magnetic_dipole(self):
         self._parse_data('parse_magnetic_dipole')
 
-    def __init__(self, file):
+    def __init__(self, file, *args, **kwargs):
         ed = _Editor(file)
         _readf = "A D F"
         _renmr = "N M R"
         _reams = "A M S"
         found = ed.find(_readf, _renmr, _reams, keys_only=True)
+        super(Output, self).__init__(file, *args, **kwargs)
         if found[_renmr]:
-            super().__init__(file)
             self.meta.update({'program': NMR})
         elif found[_readf]:
-            super().__init__(file)
             self.meta.update({'program': ADF})
         elif found[_reams]:
-            super().__init__(file)
             self.meta.update({'program': AMS})
 
