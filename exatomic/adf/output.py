@@ -16,7 +16,7 @@ import numpy as np
 import pandas as pd
 from io import StringIO
 from exatomic.exa.util.units import Length
-from exatomic.exa import TypedMeta
+from exatomic.exa import TypedMeta, Editor as _Editor
 from exatomic.base import sym2z
 from exatomic.algorithms.basis import lmap, enum_cartesian
 from exatomic.algorithms.numerical import dfac21
@@ -41,6 +41,8 @@ class OutMeta(TypedMeta):
     frequency = Frequency
     nmr_shielding = NMRShielding
     j_coupling = JCoupling
+    electric_dipole = pd.DataFrame
+    magnetic_dipole = pd.DataFrame
 
 class NMR(six.with_metaclass(OutMeta, Editor)):
     def parse_atom(self):
@@ -143,9 +145,6 @@ class NMR(six.with_metaclass(OutMeta, Editor)):
         j_coupling['atom'] -= 1
         j_coupling['pt_atom'] -= 1
         self.j_coupling = j_coupling
-
-    def __init__(self, file):
-        super().__init__(file)
 
 class ADF(six.with_metaclass(OutMeta, Editor)):
     """The ADF output parser."""
@@ -553,9 +552,6 @@ class ADF(six.with_metaclass(OutMeta, Editor)):
         # TODO: check units of the normal modes
         self.frequency = frequency
 
-    def __init__(self, file):
-        super().__init__(file)
-
 class AMS(six.with_metaclass(OutMeta, Editor)):
     """The ADF output parser for versions newer than 2019"""
     def parse_atom(self):
@@ -737,32 +733,70 @@ class AMS(six.with_metaclass(OutMeta, Editor)):
         tdm['excitation'] -= 1
         self.magnetic_dipole = tdm
 
-    def __init__(self, file):
-        super().__init__(file)
+class Output(six.with_metaclass(OutMeta, Editor)):
+    def _parse_data(self, attr):
+        try:
+            parser = getattr(self.meta['program'], attr)
+        except AttributeError as e:
+            if str(e).endswith("'"+attr+"'"):
+                return
+        parser(self)
 
-class Output(ADF, NMR, AMS):
+    def parse_atom(self):
+        self._parse_data('parse_atom')
+
+    def parse_basis_set(self):
+        self._parse_data('parse_basis_set')
+
+    def parse_basis_set_order(self):
+        self._parse_data('parse_basis_set_order')
+
+    def parse_orbital(self):
+        self._parse_data('parse_orbital')
+
+    def parse_contribution(self):
+        self._parse_data('parse_contribution')
+
+    def parse_excitation(self):
+        self._parse_data('parse_excitation')
+
+    def parse_momatrix(self):
+        self._parse_data('parse_momatrix')
+
+    def parse_sphr_momatrix(self):
+        self._parse_data('parse_sphr_momatrix')
+
+    def parse_gradient(self):
+        self._parse_data('parse_gradient')
+
+    def parse_frequency(self):
+        self._parse_data('parse_frequency')
+
+    def parse_nmr_shielding(self):
+        self._parse_data('parse_nmr_shielding')
+
+    def parse_j_coupling(self):
+        self._parse_data('parse_j_coupling')
+
+    def parse_electric_dipole(self):
+        self._parse_data('parse_electric_dipole')
+
+    def parse_magnetic_dipole(self):
+        self._parse_data('parse_magnetic_dipole')
+
     def __init__(self, file):
-        ed = Editor(file)
+        ed = _Editor(file)
         _readf = "A D F"
         _renmr = "N M R"
         _reams = "A M S"
         found = ed.find(_readf, _renmr, _reams, keys_only=True)
         if found[_renmr]:
-            super(NMR, self).__init__(file)
-            attrs = [attr for attr in dir(NMR)
-                        if 'parse_' in attr and not attr == 'parse_frame']
-            for attr in attrs:
-                setattr(self.__class__, attr, getattr(NMR, attr))
+            super().__init__(file)
+            self.meta.update({'program': NMR})
         elif found[_readf]:
-            super(ADF, self).__init__(file)
-            attrs = [attr for attr in dir(ADF)
-                        if 'parse_' in attr and not attr == 'parse_frame']
-            for attr in attrs:
-                setattr(self.__class__, attr, getattr(ADF, attr))
+            super().__init__(file)
+            self.meta.update({'program': ADF})
         elif found[_reams]:
-            super(AMS, self).__init__(file)
-            attrs = [attr for attr in dir(AMS)
-                        if 'parse_' in attr and not attr == 'parse_frame']
-            for attr in attrs:
-                setattr(self.__class__, attr, getattr(AMS, attr))
+            super().__init__(file)
+            self.meta.update({'program': AMS})
 
