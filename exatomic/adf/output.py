@@ -566,7 +566,10 @@ class AMS(six.with_metaclass(OutMeta, Editor)):
         found = self.find(_re_atom_00, keys_only=True)
         if not found:
             raise ValueError("Could not find atomic positions.")
-        starts = np.array(found)[:-1] + 2
+        if len(found) == 2:
+            starts = np.array(found)[:-1] + 2
+        else:
+            starts = np.array(found)[:-2] + 2
         stop = starts[0]
         while self[stop].strip(): stop += 1
         stops = starts + (stop - starts[0])
@@ -622,19 +625,25 @@ class AMS(six.with_metaclass(OutMeta, Editor)):
         found = self.find(_regrad, _regradfinal, keys_only=True)
         if not found[_regrad]:
             return
-        starts = np.array(found[_regrad]) + 6
-        stop = starts[0]
-        while '---' not in self[stop]: stop += 1
-        stops = starts + (stop - starts[0])
+        if not hasattr(self, 'atom'):
+            self.parse_atom()
         dfs = []
-        for idx, (start, stop) in enumerate(zip(starts, stops)):
-            df = self.pandas_dataframe(start, stop, ncol=5)
-            df.columns = ['atom', 'symbol', 'fx', 'fy', 'fz']
-            df['Z'] = df['symbol'].map(sym2z)
-            df['frame'] = idx
-            df[['fx', 'fy', 'fz']] /= [Length['Angstrom', 'au']]*3
-            df['atom'] -= 1
-            dfs.append(df)
+        if self.atom.nframes > 1:
+            starts = np.array(found[_regrad])[:-2] + 6
+            stop = starts[0]
+            while '---' not in self[stop]: stop += 1
+            stops = starts + (stop - starts[0])
+            for idx, (start, stop) in enumerate(zip(starts, stops)):
+                df = self.pandas_dataframe(start, stop, ncol=5)
+                df.columns = ['atom', 'symbol', 'fx', 'fy', 'fz']
+                df['Z'] = df['symbol'].map(sym2z)
+                df['frame'] = idx
+                df[['fx', 'fy', 'fz']] /= [Length['Angstrom', 'au']]*3
+                df['atom'] -= 1
+                dfs.append(df)
+            frame = dfs[-1]['frame'][0]
+        else:
+            frame = -1
         # get the last gradient matrix as it has more sig figs
         start = found[_regradfinal][0] + 2
         stop = start
@@ -642,7 +651,7 @@ class AMS(six.with_metaclass(OutMeta, Editor)):
         df = self.pandas_dataframe(start, stop, ncol=5)
         df.columns = ['atom', 'symbol', 'fx', 'fy', 'fz']
         df['Z'] = df['symbol'].map(sym2z)
-        df['frame'] = dfs[-1]['frame'] + 1
+        df['frame'] = frame + 1
         df['atom'] -= 1
         dfs.append(df)
         grad = pd.concat(dfs, ignore_index=True)
@@ -745,7 +754,7 @@ class AMS(six.with_metaclass(OutMeta, Editor)):
 class Output(six.with_metaclass(OutMeta, Editor)):
     def _parse_data(self, attr):
         try:
-            parser = getattr(self.meta['program'], attr)
+            parser = getattr(self.meta['module'], attr)
         except AttributeError as e:
             if str(e).endswith("'"+attr+"'"):
                 return
@@ -801,9 +810,11 @@ class Output(six.with_metaclass(OutMeta, Editor)):
         found = ed.find(_readf, _renmr, _reams, keys_only=True)
         super(Output, self).__init__(file, *args, **kwargs)
         if found[_renmr]:
-            self.meta.update({'program': NMR})
+            self.meta.update({'module': NMR})
         elif found[_readf]:
-            self.meta.update({'program': ADF})
+            self.meta.update({'module': ADF})
         elif found[_reams]:
-            self.meta.update({'program': AMS})
+            self.meta.update({'module': AMS})
+        else:
+            raise ValueError("Could not identify program from SCM")
 
