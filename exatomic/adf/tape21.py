@@ -20,6 +20,9 @@ import pandas as pd
 import six
 import warnings
 
+class MissingSection(Exception):
+    pass
+
 class Tape21Meta(TypedMeta):
     atom = Atom
     frequency = Frequency
@@ -285,27 +288,40 @@ class Tape21(six.with_metaclass(Tape21Meta, Editor)):
                                      'z': z, 'Z': Z, 'frame': 0})
         self.atom = df
 
-    def parse_gradient(self):
+    def parse_gradient(self, input_order=False):
         ''' Parse the gradients in the input order. '''
         # search flags
         _reinpgrad = "Gradients_InputOrder"
         _refrggrad = "Gradients_CART"
+        _reinporder = "atom order index"
         found = self.find(_reinpgrad, _refrggrad, keys_only=True)
-        if not found[_reinpgrad]:
-            raise NotImplementedError("Have not implemented reading the re-ordered gradients.")
+        if not found[_refrggrad]:
+            return
+        if input_order:
+            if found[_reinpgrad]:
+                _regrad = _reinpgrad
+            else:
+                msg = "Could not find the 'Gradients_InputOrder'" \
+                      +"section."
+                raise MissingSection(msg)
+        else:
+            _regrad = _refrggrad
+        # get the atom frame with the selected input_order flag
+        # will overwrite what was previously parsed
+        self.parse_atom(input_order=input_order)
+        symbol = self.atom.last_frame['symbol'].values
+        Z = self.atom.last_frame['Z'].values.astype(int)
+        nat = self.atom.last_frame.shape[0]
         # get the gradients
-        ngrad = self._intme(np.array(found[_reinpgrad]))
-        grad = self._dfme(np.array(found[_reinpgrad]), ngrad)
+        ngrad = self._intme(np.array(found[_regrad]))
+        grad = self._dfme(np.array(found[_regrad]), ngrad)
         x = grad[::3]
         y = grad[1::3]
         z = grad[2::3]
-        if not hasattr(self, 'atom'):
-            self.parse_atom(input_order=True)
-        symbol = self.atom['symbol'].values
-        Z = self.atom['Z'].values.astype(int)
         atom = list(range(len(x)))
-        df = pd.DataFrame.from_dict({'Z': Z, 'atom': atom, 'fx': x, 'fy': y, 'fz': z,
-                                     'symbol': symbol, 'frame': 0})
+        df = pd.DataFrame.from_dict({'Z': Z, 'atom': atom, 'fx': x,
+                                     'fy': y, 'fz': z, 'symbol': symbol,
+                                     'frame': 0})
         df = df[['atom', 'Z', 'fx', 'fy', 'fz', 'symbol', 'frame']]
         #for u in ['fx', 'fy', 'fz']: df[u] *= 1./Length['Angstrom', 'au']
         self.gradient = df

@@ -44,3 +44,13 @@ class TestTape21(TestCase):
         self.assertEqual(self.formald.frequency.shape[0], 24)
         self.assertTrue(np.all(pd.notnull(pd.DataFrame(self.formald.frequency))))
 
+    def test_parse_gradient(self):
+        self.m1nb.parse_gradient(input_order=True)
+        self.assertEqual(self.m1nb.gradient.shape[0], 36)
+        self.assertTrue(np.all(pd.notnull(pd.DataFrame(self.m1nb.gradient))))
+        self.formald.parse_gradient(input_order=False)
+        self.assertEqual(self.formald.gradient.shape[0], 4)
+        self.assertTrue(np.all(pd.notnull(pd.DataFrame(self.formald.gradient))))
+        self.assertRaises(MissingSection, self.formald.parse_gradient,
+                          input_order=True)
+
