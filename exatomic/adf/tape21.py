@@ -226,8 +226,8 @@ class Tape21(six.with_metaclass(Tape21Meta, Editor)):
         Parse the atom table.
 
         Args:
-            input_order (:obj:`bool`, optional): Parse the atom table in the input order format.
-                                                 Defaults to :code:`False`.
+            input_order (:obj:`bool`, optional): Parse the atom table
+                in the input order format. Defaults to :code:`False`.
         '''
         # search flags
         _reinpatom = "xyz InputOrder"
@@ -238,12 +238,17 @@ class Tape21(six.with_metaclass(Tape21Meta, Editor)):
         _renqptr = "nqptr"
         _reinporder = "atom order index"
         _remass = "mass"
-        found = self.find(_reinpatom, _reordatom, _reqtch, _rentyp, _renqptr, _reinporder,# _regeom,
-                          _remass, keys_only=True)
-        if input_order: _reatom = _reinpatom
-        else: _reatom = _reordatom
-        ncoords = self._intme(found[_reatom])
-        coords = self._dfme(found[_reatom], ncoords)
+        found = self.find(_reinpatom, _reordatom, _reqtch, _rentyp,
+                          _renqptr, _reinporder, _remass, keys_only=True)
+        if input_order:
+            _reatom = found[_reinpatom]
+        else:
+            idx = 0
+            tmp = found[_reordatom]
+            while self[tmp[idx]-1].strip() != 'Geometry': idx += 1
+            _reatom = [tmp[idx]]
+        ncoords = self._intme(_reatom)
+        coords = self._dfme(_reatom, ncoords)
         x = coords[::3]
         y = coords[1::3]
         z = coords[2::3]
@@ -262,8 +267,10 @@ class Tape21(six.with_metaclass(Tape21Meta, Editor)):
         if input_order:
             # convert to the input structure
             zinput = np.zeros(nat)
-            input_order = self._dfme(found[_reinporder], nat*2).reshape(2, nat).astype(int) - 1
-            # iterate over the input order array as this gives the location of each atom type after
+            input_order = self._dfme(found[_reinporder],
+                                     nat*2).reshape(2, nat).astype(int) - 1
+            # iterate over the input order array as this gives the
+            # location of each atom type after
             # the re-ordering done in adf
             for od, inp in zip(input_order[0], range(nat)):
                 zinput[inp] = zordered[od]
@@ -273,7 +280,8 @@ class Tape21(six.with_metaclass(Tape21Meta, Editor)):
         set = np.array(list(range(nat)))
         symbol = pd.Series(Z).map(z2sym)
         # put it all together
-        df = pd.DataFrame.from_dict({'symbol': symbol, 'set': set, 'label': set, 'x': x, 'y': y,
+        df = pd.DataFrame.from_dict({'symbol': symbol, 'set': set,
+                                     'label': set, 'x': x, 'y': y,
                                      'z': z, 'Z': Z, 'frame': 0})
         self.atom = df
 
