@@ -23,6 +23,12 @@ import warnings
 class MissingSection(Exception):
     pass
 
+def _get_isomass(symbol):
+    mapper = sym2isomass(symbol)
+    mass = list(map(mapper.get, symbol))
+    mass = np.repeat(mass, 3).astype(float)
+    return mass
+
 class Tape21Meta(TypedMeta):
     atom = Atom
     frequency = Frequency
@@ -65,9 +71,7 @@ class Tape21(six.with_metaclass(Tape21Meta, Editor)):
                                              masses.
         '''
         cols = ['dx', 'dy', 'dz']
-        mapper = sym2isomass(symbol)
-        mass = list(map(mapper.get, symbol))
-        mass = np.repeat(mass, 3).astype(float)
+        mass = _get_isomass(symbol)
         mass = mass.reshape(data[cols].shape)
         disps = data[cols].values
         r_mass = np.sum(np.square(disps)/mass)
@@ -98,10 +102,7 @@ class Tape21(six.with_metaclass(Tape21Meta, Editor)):
         '''
         cols = ['dx', 'dy', 'dz']
         # get the isotopic masses of the unique atoms
-        mapper = sym2isomass(symbol)
-        # get a list of the isotopic masses
-        mass = list(map(mapper.get, symbol))
-        mass = np.repeat(mass, 3).astype(float)
+        mass = _get_isomass(symbol)
         mass = mass.reshape(data[cols].shape)
         disps = data[cols].values
         norms = np.linalg.norm(disps*np.sqrt(mass))
@@ -175,14 +176,15 @@ class Tape21(six.with_metaclass(Tape21Meta, Editor)):
             # get the mass-weighted normal modes
             ndisps = int(self[found[_renorm][0]+1].split()[0])
             normalmodes = self._dfme(np.array(found[_renorm]), ndisps, idx=0)
-            calc_rmass = True
         elif found[_recartnorm] and cart:
             # get the non-mass-weighted normal modes and toss warning
             ndisps = int(self[found[_recartnorm][0]+1].split()[0])
             normalmodes = self._dfme(np.array(found[_recartnorm]), ndisps, idx=0)
-            calc_rmass = True
         else:
-            raise Exception("Something went wrong")
+            raise MissingSection("There was an issue reading the file. Could " \
+                                 +"not find the secions 'NormalModes_RAW', " \
+                                 +"or 'Normalmodes'. Contents of what was " \
+                                 +"found in the file {}".format(found))
         # get the vibrational modes in the three cartesian directions
         # the loop is neede in case there are any negative modes
         # because then the normal mode displacements for the negative mode
@@ -202,10 +204,8 @@ class Tape21(six.with_metaclass(Tape21Meta, Editor)):
         label = np.tile(self.atom['label'], nmodes)
         symbol = self.atom['symbol']
         # get the isotopic masses
-        mapper = sym2isomass(symbol)
-        mass = symbol.map(mapper).astype(float).values
+        mass = _get_isomass(symbol)
         symbol = np.tile(self.atom['symbol'], nmodes)
-        mass = np.repeat(mass, 3)
         # put the data together
         df = pd.DataFrame({'dx': dx, 'dy': dy, 'dz': dz, 'frequency': freq,
                            'freqdx': freqdx})
