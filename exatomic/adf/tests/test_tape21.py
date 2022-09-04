@@ -16,6 +16,7 @@ class TestTape21(TestCase):
         self.pf3_one = Tape21(resource('ams-pf3-nmr-one.t21.ascii'))
         self.pf3_two = Tape21(resource('ams-pf3-nmr-two.t21.ascii'))
         self.pf3_all = Tape21(resource('ams-pf3-nmr-all.t21.ascii'))
+        self.c2h2 = Tape21(resource('ams-c2h2-cpl.t21.ascii'))
 
     def test_parse_atom(self):
         totest = ['x', 'y', 'z']
@@ -77,4 +78,9 @@ class TestTape21(TestCase):
         self.assertEqual(self.pf3_all.nmr_shielding.shape[0], 4)
         self.assertTrue(np.all(self.pf3_all.nmr_shielding['atom'].values == list(range(4))))
         self.assertTrue(np.all(pd.notnull(pd.DataFrame(self.pf3_all.nmr_shielding))))
+
+    def test_parse_j_coupling(self):
+        self.c2h2.parse_j_coupling()
+        self.assertEqual(self.c2h2.j_coupling.shape[0], 4)
+        self.assertTrue(np.all(pd.notnull(pd.DataFrame(self.c2h2.j_coupling))))
 

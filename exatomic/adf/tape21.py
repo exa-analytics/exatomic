@@ -355,6 +355,7 @@ class Tape21(six.with_metaclass(Tape21Meta, Editor)):
         self.nmr_shielding = df
 
     def parse_j_coupling(self):
+        ''' Parse the J Coupling in the Cartesian representation. '''
         _reiso = "NMR Coupling J const InputOrder"
         _retensor = "NMR Coupling J tens InputOrder"
         found = self.find(_reiso, _retensor, keys_only=True)
@@ -380,7 +381,7 @@ class Tape21(six.with_metaclass(Tape21Meta, Editor)):
         df['symbol'] = list(map(lambda x: symbols[x], df['atom'].values))
         df['pt_atom'] = atoms[1].astype(int)
         df['pt_symbol'] = list(map(lambda x: symbols[x], df['pt_atom'].values))
-        df['label'] = 'j_coupling'
+        df['label'] = 'j coupling'
         df['frame'] = 0
         self.j_coupling = df
 
