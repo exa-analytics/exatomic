@@ -12,6 +12,7 @@ class TestTape21(TestCase):
     def setUp(self):
         self.formald = Tape21(resource('adf-formald-freq.t21.ascii'))
         self.m1nb = Tape21(resource('adf-m1-nb.t21.ascii'))
+        self.nico4 = Tape21(resource('adf-nico4.t21.ascii'))
         self.pf3_one = Tape21(resource('ams-pf3-nmr-one.t21.ascii'))
         self.pf3_two = Tape21(resource('ams-pf3-nmr-two.t21.ascii'))
         self.pf3_all = Tape21(resource('ams-pf3-nmr-all.t21.ascii'))
@@ -41,6 +42,9 @@ class TestTape21(TestCase):
         self.formald.parse_atom()
         self.assertEqual(self.formald.atom.shape[0], 4)
         self.assertTrue(np.all(pd.notnull(pd.DataFrame(self.formald.atom))))
+        self.nico4.parse_atom()
+        self.assertEqual(self.nico4.atom.shape[0], 9)
+        self.assertTrue(np.all(pd.notnull(pd.DataFrame(self.nico4.atom))))
 
     def test_parse_frequency(self):
         self.formald.parse_frequency()
