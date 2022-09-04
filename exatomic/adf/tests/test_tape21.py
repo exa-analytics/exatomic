@@ -12,6 +12,9 @@ class TestTape21(TestCase):
     def setUp(self):
         self.formald = Tape21(resource('adf-formald-freq.t21.ascii'))
         self.m1nb = Tape21(resource('adf-m1-nb.t21.ascii'))
+        self.pf3_one = Tape21(resource('ams-pf3-nmr-one.t21.ascii'))
+        self.pf3_two = Tape21(resource('ams-pf3-nmr-two.t21.ascii'))
+        self.pf3_all = Tape21(resource('ams-pf3-nmr-all.t21.ascii'))
 
     def test_parse_atom(self):
         totest = ['x', 'y', 'z']
@@ -53,4 +56,21 @@ class TestTape21(TestCase):
         self.assertTrue(np.all(pd.notnull(pd.DataFrame(self.formald.gradient))))
         self.assertRaises(MissingSection, self.formald.parse_gradient,
                           input_order=True)
+
+    def test_parse_nmr_shielding(self):
+        # testing for only one NMR nucleus
+        self.pf3_one.parse_nmr_shielding()
+        self.assertEqual(self.pf3_one.nmr_shielding.shape[0], 1)
+        self.assertTrue(np.all(self.pf3_one.nmr_shielding['atom'].values == [0]))
+        self.assertTrue(np.all(pd.notnull(pd.DataFrame(self.pf3_one.nmr_shielding))))
+        # testing for only two NMR nuclei
+        self.pf3_two.parse_nmr_shielding()
+        self.assertEqual(self.pf3_two.nmr_shielding.shape[0], 2)
+        self.assertTrue(np.all(self.pf3_two.nmr_shielding['atom'].values == [0,2]))
+        self.assertTrue(np.all(pd.notnull(pd.DataFrame(self.pf3_two.nmr_shielding))))
+        # testing for all NMR nuclei
+        self.pf3_all.parse_nmr_shielding()
+        self.assertEqual(self.pf3_all.nmr_shielding.shape[0], 4)
+        self.assertTrue(np.all(self.pf3_all.nmr_shielding['atom'].values == list(range(4))))
+        self.assertTrue(np.all(pd.notnull(pd.DataFrame(self.pf3_all.nmr_shielding))))
 
