@@ -75,12 +75,13 @@ class NMR(six.with_metaclass(OutMeta, Editor)):
 
     def parse_nmr_shielding(self):
         ''' Parse the NMR shielding in the cartesian axis represntation. '''
+        # TODO: Figure out what units the pricipal axis is printed in
+        #       and add a keyword argument to parse them.
         _reatom = "N U C L E U S :"
         _reshield = "==== total shielding tensor"
         _renatom = "NUCLEAR COORDINATES (ANGSTROMS)"
         found = self.find(_reatom, keys_only=True)
         if not found:
-            #raise NotImplementedError("Could not find {} in output".format(_reatom))
             return
         ncalc = self.find(_renatom, keys_only=True)
         ncalc.append(len(self))
@@ -110,7 +111,16 @@ class NMR(six.with_metaclass(OutMeta, Editor)):
         shielding = pd.concat(dfs, ignore_index=True)
         self.nmr_shielding = shielding
 
-    def parse_j_coupling(self):
+    def parse_j_coupling(self, cartesian=False):
+        '''
+        Parse the J Coupling matrices.
+
+        Args:
+            cartesian (:obj:`bool`, optional): Parameter to parse the
+                tensors in the Cartesian axis reprentation. Set to
+                `False` for the pricipal axis representation.
+                Defaults to `True`.
+        '''
         _recoupl = "total calculated spin-spin coupling:"
         _reatom = "Internal CPL numbering of atoms:"
         found = self.find(_reatom, keys_only=True)
@@ -118,8 +128,12 @@ class NMR(six.with_metaclass(OutMeta, Editor)):
             return
         found = self.find(_reatom, _recoupl, keys_only=True)
         # we grab the tensors inside the principal axis representation
-        # for the cartesian axis representation we start the list at 0 and grab every other instance
-        start_coupl = found[_recoupl][1::2]
+        # for the cartesian axis representation we start the list at
+        # 0 and grab every other instance
+        if cartesian:
+            start_coupl = found[_recoupl][::2]
+        else:
+            start_coupl = found[_recoupl][1::2]
         start_pert = np.array(found[_reatom]) - 3
         dfs = []
         # grab atoms
@@ -367,42 +381,26 @@ class ADF(six.with_metaclass(OutMeta, Editor)):
 
 
     def parse_excitation(self):
-        # Excitation
-        _re_exc_00 = '(sum=1) transition dipole moment'
-        _re_exc_01 = ' no.     E/a.u.        E/eV      f           Symmetry'
-        found = self.find_next(_re_exc_00, keys_only=True)
-        if not found: return
-        # First table of interest here
-        start = found + 4
-        stop = self.find_next(_re_exc_01, keys_only=True) - 3
-        os = len(self[start].split()) == 9
-        todrop = ['occ:', 'virt:']
-        cols = ['excitation', 'occ', 'drop', 'virt', 'weight', 'TDMx', 'TDMy', 'TDMz']
-        if os: cols.insert(1, 'spin')
-        if os: todrop = ['occ', 'virt']
-        adf = self.pandas_dataframe(start, stop, cols)
-        adf.drop('drop', axis=1, inplace=True)
-        s1 = set(adf[cols[1]][adf[cols[1]] == 'NTO'].index)
-        s2 = set(adf['excitation'][adf['excitation'].isin(todrop)].index)
-        adf.drop(s1 | s2, axis=0, inplace=True)
-        adf['excitation'] = adf['excitation'].str[:-1].astype(np.int64) - 1
-        if os: adf['spin'] = adf['spin'].map({'Alph': 0, 'Beta': 1})
-        adf[['occ', 'occsym']] = adf['occ'].str.extract('([0-9]*)(.*)', expand=True)
-        adf[['virt', 'virtsym']] = adf['virt'].str.extract('([0-9]*)(.*)', expand=True)
-        adf['occ'] = adf['occ'].astype(np.int64) - 1
-        adf['virt'] = adf['virt'].astype(np.int64) - 1
-        # Second one here
-        start = stop + 5
+        _reexc = "no.     E/a.u.        E/eV      f"
+        found = self.find(_reexc, keys_only=True)
+        if not found:
+            return
+        # there should only be one in the entire output
+        start = found[0] + 2
         stop = start
         while self[stop].strip(): stop += 1
-        cols = _re_exc_01.split()
-        df = self.pandas_dataframe(start, stop + 1, cols)
-        df.drop(cols[0], axis=1, inplace=True)
-        df.columns = ['energy', 'eV', 'osc', 'symmetry']
-        # Expand the second table to fit the original
-        for col in df.columns: adf[col] = adf.excitation.map(df[col])
-        adf['frame'] = adf['group'] = 0
-        self.excitation = adf
+        df = self.pandas_dataframe(start, stop, ncol=6)
+        df.columns = ['excitation', 'energy', 'energy_ev', 'osc', 'tau', 'symmetry']
+        nan = np.where(list(map(lambda x: any(x), df.isna().values)))[0]
+        df.loc[nan, 'symmetry'] = df.loc[nan, 'tau'].copy()
+        df.loc[nan, 'tau'] = 0.0
+        df['tau'] = df['tau'].astype(float)
+        df['excitation'] = [int(x[:-1]) for x in df['excitation'].values]
+        df.index = df['excitation'] - 1
+        df.drop('excitation', axis=1, inplace=True)
+        df['frame'] = 0
+        df['group'] = 0
+        self.excitation = df
 
 
     def parse_momatrix(self):
@@ -756,55 +754,55 @@ class AMS(six.with_metaclass(OutMeta, Editor)):
         super(AMS, self).__init__(*args, **kwargs)
 
 class Output(six.with_metaclass(OutMeta, Editor)):
-    def _parse_data(self, attr):
+    def _parse_data(self, attr, **kwargs):
         try:
             parser = getattr(self.meta['module'], attr)
         except AttributeError as e:
             if str(e).endswith("'"+attr+"'"):
                 return
-        parser(self)
+        parser(self, **kwargs)
 
-    def parse_atom(self):
-        self._parse_data('parse_atom')
+    def parse_atom(self, **kwargs):
+        self._parse_data('parse_atom', **kwargs)
 
-    def parse_basis_set(self):
-        self._parse_data('parse_basis_set')
+    def parse_basis_set(self, **kwargs):
+        self._parse_data('parse_basis_set', **kwargs)
 
-    def parse_basis_set_order(self):
-        self._parse_data('parse_basis_set_order')
+    def parse_basis_set_order(self, **kwargs):
+        self._parse_data('parse_basis_set_order', **kwargs)
 
-    def parse_orbital(self):
-        self._parse_data('parse_orbital')
+    def parse_orbital(self, **kwargs):
+        self._parse_data('parse_orbital', **kwargs)
 
-    def parse_contribution(self):
-        self._parse_data('parse_contribution')
+    def parse_contribution(self, **kwargs):
+        self._parse_data('parse_contribution', **kwargs)
 
-    def parse_excitation(self):
-        self._parse_data('parse_excitation')
+    def parse_excitation(self, **kwargs):
+        self._parse_data('parse_excitation', **kwargs)
 
-    def parse_momatrix(self):
-        self._parse_data('parse_momatrix')
+    def parse_momatrix(self, **kwargs):
+        self._parse_data('parse_momatrix', **kwargs)
 
-    def parse_sphr_momatrix(self):
-        self._parse_data('parse_sphr_momatrix')
+    def parse_sphr_momatrix(self, **kwargs):
+        self._parse_data('parse_sphr_momatrix', **kwargs)
 
-    def parse_gradient(self):
-        self._parse_data('parse_gradient')
+    def parse_gradient(self, **kwargs):
+        self._parse_data('parse_gradient', **kwargs)
 
-    def parse_frequency(self):
-        self._parse_data('parse_frequency')
+    def parse_frequency(self, **kwargs):
+        self._parse_data('parse_frequency', **kwargs)
 
-    def parse_nmr_shielding(self):
-        self._parse_data('parse_nmr_shielding')
+    def parse_nmr_shielding(self, **kwargs):
+        self._parse_data('parse_nmr_shielding', **kwargs)
 
-    def parse_j_coupling(self):
-        self._parse_data('parse_j_coupling')
+    def parse_j_coupling(self, **kwargs):
+        self._parse_data('parse_j_coupling', **kwargs)
 
-    def parse_electric_dipole(self):
-        self._parse_data('parse_electric_dipole')
+    def parse_electric_dipole(self, **kwargs):
+        self._parse_data('parse_electric_dipole', **kwargs)
 
-    def parse_magnetic_dipole(self):
-        self._parse_data('parse_magnetic_dipole')
+    def parse_magnetic_dipole(self, **kwargs):
+        self._parse_data('parse_magnetic_dipole', **kwargs)
 
     def __init__(self, file, *args, **kwargs):
         ed = _Editor(file)

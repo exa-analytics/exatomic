@@ -14,6 +14,7 @@ class TestNMROutput(TestCase):
         self.c2h2_nofrag = NMR(resource('adf-c2h2-cpl-nofrag.out'))
         self.pf3 = NMR(resource('adf-pf3-nmr.out'))
         self.ams_pf3 = NMR(resource('ams-pf3-nmr.out'))
+        self.ams_c2h2 = Output(resource('ams-c2h2-cpl-reord.out'))
 
     def test_parse_atom(self):
         self.pf3.parse_atom()
@@ -44,6 +45,20 @@ class TestNMROutput(TestCase):
         self.c2h2_nofrag.parse_j_coupling()
         self.assertEqual(self.c2h2_nofrag.j_coupling.shape[0], 4)
         self.assertTrue(np.all(pd.notnull(pd.DataFrame(self.c2h2_nofrag.j_coupling))))
+        self.ams_c2h2.parse_j_coupling(cartesian=True)
+        self.assertEqual(self.ams_c2h2.j_coupling.shape[0], 4)
+        self.assertTrue(np.all(pd.notnull(pd.DataFrame(self.ams_c2h2.j_coupling))))
+        vals = [3.610,-0.000,-0.000,0.000,9.277,0.000,-0.000,0.000,3.610]
+        coords = ['x', 'y', 'z']
+        cols = [i+j for i in coords for j in coords]
+        self.assertTrue(np.all(self.ams_c2h2.j_coupling.loc[3, cols].values == vals))
+        self.ams_c2h2.parse_j_coupling(cartesian=False)
+        self.assertEqual(self.ams_c2h2.j_coupling.shape[0], 4)
+        self.assertTrue(np.all(pd.notnull(pd.DataFrame(self.ams_c2h2.j_coupling))))
+        vals = [3.610,-0.000,-0.000,0.000,3.610,0.000,-0.000,0.000,9.277]
+        coords = ['x', 'y', 'z']
+        cols = [i+j for i in coords for j in coords]
+        self.assertTrue(np.all(self.ams_c2h2.j_coupling.loc[3, cols].values == vals))
 
 class TestAMSOutput(TestCase):
     def setUp(self):
@@ -173,6 +188,7 @@ class TestSCMOutput(TestCase):
         self.ams_form_opt = Output(resource('ams-formaldehyde-opt.out'))
         self.ams_form_freq = Output(resource('ams-formaldehyde-freq.out'))
         self.ams_pf3 = Output(resource('ams-pf3-nmr.out'))
+        self.ams_c2h2 = Output(resource('ams-c2h2-cpl-reord.out'))
 
     def test_parse_atom(self):
         self.lu.parse_atom()
@@ -244,6 +260,20 @@ class TestSCMOutput(TestCase):
         self.c2h2.parse_j_coupling()
         self.assertEqual(self.c2h2.j_coupling.shape[0], 4)
         self.assertTrue(np.all(pd.notnull(pd.DataFrame(self.c2h2.j_coupling))))
+        self.ams_c2h2.parse_j_coupling(cartesian=True)
+        self.assertEqual(self.ams_c2h2.j_coupling.shape[0], 4)
+        self.assertTrue(np.all(pd.notnull(pd.DataFrame(self.ams_c2h2.j_coupling))))
+        vals = [3.610,-0.000,-0.000,0.000,9.277,0.000,-0.000,0.000,3.610]
+        coords = ['x', 'y', 'z']
+        cols = [i+j for i in coords for j in coords]
+        self.assertTrue(np.all(self.ams_c2h2.j_coupling.loc[3, cols].values == vals))
+        self.ams_c2h2.parse_j_coupling(cartesian=False)
+        self.assertEqual(self.ams_c2h2.j_coupling.shape[0], 4)
+        self.assertTrue(np.all(pd.notnull(pd.DataFrame(self.ams_c2h2.j_coupling))))
+        vals = [3.610,-0.000,-0.000,0.000,3.610,0.000,-0.000,0.000,9.277]
+        coords = ['x', 'y', 'z']
+        cols = [i+j for i in coords for j in coords]
+        self.assertTrue(np.all(self.ams_c2h2.j_coupling.loc[3, cols].values == vals))
 
     def test_parse_frequency(self):
         self.ch4.parse_frequency()
