@@ -58,6 +58,7 @@ class GauMeta(TypedMeta):
     gradient = Gradient
     nmr_shielding = NMRShielding
     frequency_ext = pd.DataFrame
+    hessian = pd.DataFrame
 
 class Output(six.with_metaclass(GauMeta, Editor)):
     def _parse_triangular_matrix(self, regex, column='coef', values_only=False):
@@ -84,14 +85,17 @@ class Output(six.with_metaclass(GauMeta, Editor)):
                                       'frame': idxs[:,2],
                                        column: matrix})
 
-    def parse_atom(self):
+    def parse_atom(self, std_or=True):
         # Atom flags
         _regeom01 = 'Input orientation'
         _regeom02 = 'Standard orientation'
         # Find our data
         found = self.find(_regeom01, _regeom02, keys_only=True)
         # Check if nosymm was specified
-        key = _regeom02 if found[_regeom02] else _regeom01
+        if found[_regeom02] and std_or:
+            key = _regeom02
+        else:
+            key = _regeom01
         starts = np.array(found[key]) + 5
         # Prints converged geometry twice but only need it once
         starts = starts[:-1] if len(starts) > 1 else starts
@@ -615,6 +619,9 @@ class Output(six.with_metaclass(GauMeta, Editor)):
         found = self.find(_regradient, keys_only=True)
         if not found:
             return
+        # Gaussian prints the gradients in the
+        # input orientation
+        self.parse_atom(std_or=False)
         # set start point
         starts = np.array(found) + 3
         stop = starts[0]
@@ -648,6 +655,43 @@ class Output(six.with_metaclass(GauMeta, Editor)):
             mltpl['ix2'] = self._parse_triangular_matrix(_reixn.format(2), 'ix2', True)
             mltpl['ix3'] = self._parse_triangular_matrix(_reixn.format(3), 'ix3', True)
             self.multipole = mltpl
+
+    def parse_hessian(self):
+        '''
+        Parse the Hessian from the Gaussian stdout. This
+        is printed as a lower triangular matrix. We convert
+        this to a square matrix internally.
+        '''
+        _rehess = 'Force constants in Cartesian coordinates:'
+        found = self.find(_rehess, keys_only=True)
+        if not found:
+            return
+        # Gaussian prints the hessian in the
+        # input orientation
+        self.parse_atom(std_or=False)
+        ldx = found[0] + 1
+        dfs = []
+        while self[ldx].split()[0] != 'FormGI':
+            d = self[ldx].split()
+            if 'D' not in d[1]:
+                ncols = len(d)
+                cols = list(map(lambda x: int(x)-1, d))
+                if cols[0] != 0:
+                    dfs.append(pd.concat(srs, axis=1).T)
+                srs = []
+            else:
+                arr = np.zeros(ncols)
+                d = [x.replace('D', 'E') for x in d]
+                arr[range(len(d)-1)] = list(map(float, d[1:]))
+                sr = pd.Series(arr, index=cols, name=int(d[0])-1)
+                srs.append(sr)
+            ldx += 1
+        else:
+            dfs.append(pd.concat(srs, axis=1).T)
+        df = pd.concat(dfs, axis=1)
+        df.fillna(0, inplace=True)
+        df = df + (df.T - np.eye(df.shape[0])*df)
+        self.hessian = df
 
     def __init__(self, *args, **kwargs):
         super(Output, self).__init__(*args, **kwargs)
@@ -1049,6 +1093,28 @@ class Fchk(six.with_metaclass(GauMeta, Editor)):
         os = nbas != len(ens)
         self.orbital = Orbital.from_energies(ens, ae, be, os=os)
 
+    def parse_hessian(self):
+        '''
+        Parse the Hessian from the Gaussian stdout. This
+        is printed as a lower triangular matrix. We convert
+        this to a square matrix internally.
+        '''
+        _rehess = 'Cartesian Force Constants'
+        found = self.find(_rehess, keys_only=True)
+        if not found:
+            return
+        if not hasattr(self, 'atom'):
+            self.parse_atom()
+        nelem = self._intme(found)
+        hess_elem = self._dfme(found, nelem)
+        nat = self.atom.shape[0]
+        arr = np.zeros((3*nat, 3*nat))
+        tril_idx = np.tril_indices_from(arr, k=0)
+        for idx, (i, j) in enumerate(zip(*tril_idx)):
+            arr[i][j] = hess_elem[idx]
+        arr = arr + (arr.T - np.eye(3*nat)*arr)
+        df = pd.DataFrame(arr)
+        self.hessian = df
 
     def __init__(self, *args, **kwargs):
         super(Fchk, self).__init__(*args, **kwargs)
