@@ -890,7 +890,6 @@ class Fchk(six.with_metaclass(GauMeta, Editor)):
         cols = list(map(lambda x: 'unk' not in x and 'freq' not in x,
                             ext_params.columns))
         cols = ext_params.columns[cols]
-        print(ext_params[cols])
         for col in cols:
             df[col] = np.repeat(ext_params[col].values, nat)
         self.frequency = df
