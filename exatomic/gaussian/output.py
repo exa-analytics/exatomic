@@ -384,76 +384,6 @@ class Output(six.with_metaclass(GauMeta, Editor)):
         conts['frame'] = conts['group'] = 0
         self.excitation = conts
 
-    #######################################################################
-    # this is a copy-paste of the parse_frequency method
-    # the to_universe seems to be having issues with creating more than one
-    # class attribute in one method
-    #######################################################################
-    def parse_frequency_ext(self):
-        # check to see if HPModes is being used in the input
-        _rehpmodes = 'HPModes'
-        _reharm = 'Harmonic frequencies'
-        found_hp = self.regex(_rehpmodes, ignore_case=True)
-        # TODO: look into effect of the next huge assumption
-        #       test with an ROA calculation
-        found_ha = self.regex(_reharm, keys_only=True)
-        if not found_ha: return
-        # if it is found then we get the location of the _reharm labels
-        # this gives us the location of the different precision data types
-        start_read = found_ha[0]
-        if found_hp:
-            print("Parsing frequency normal modes from HPModes output")
-            hpmodes = True
-            stop_read = found_ha[1]
-        else:
-            stop_read=None
-            hpmodes = False
-
-        # Frequency flags
-        _refreq = 'Frequencies'
-        # we set the start and stop condition because HPModes will print the displacement
-        # data twice, once with high precision and once with normal precision
-        found = self.regex(_refreq, start=start_read, stop=stop_read, keys_only=True)
-        if not found: return
-        # set the start point where the matches were found and add the starting point
-        starts = np.array(found) + start_read
-        # get the location of the Atom labels in the frequency blocks
-        # the line below this is where all of the normal mode displacement data begins
-        #found_atom = np.array(self.regex('Atom', start=start_read, stop=stop_read, keys_only=True)) + start_read
-        # Total lines per block minus the unnecessary ones
-        #span = starts[1] - found_atom[0] - 3
-        # get the number of other attributes included
-        # this is done so we can have some flexibility in the code as there may be times that
-        # the number of added attributes is not always the same and we get errors
-        fdx = 0
-        # set a bunch of conditional parameters if hpmodes is activated
-        # saves us from putting if statements in the for loop
-        freq_start = 24 if hpmodes else 15
-        #mapper = ["freq", "r_mass", "f_const", "ir_int"]
-        ext_dfs = []
-        # Iterate over what we found
-        for lno in starts:
-            ln = self[lno]
-            # Get the frequencies first
-            freqs = ln[freq_start:].split()
-            # get the reduced mass
-            r_mass = self[lno+1][freq_start:].split()
-            # get the force constants
-            f_const = self[lno+2][freq_start:].split()
-            # get the ir intensities
-            ir_int = self[lno+3][freq_start:].split()
-            nfreqs = len(freqs)
-            # TODO: are these always present?
-            ext_dfs.append(pd.DataFrame.from_dict({'freq': freqs, 'r_mass': r_mass, 'f_const': f_const,
-                                           'ir_int': ir_int, 'freqdx': [i for i in range(fdx, fdx + nfreqs)]}))
-            fdx += nfreqs
-        freq_ext = pd.concat(ext_dfs, ignore_index=True)
-        freq_ext = freq_ext.astype(np.float64)
-        freq_ext['freqdx'] = freq_ext['freqdx'].astype(np.int64)
-        # TODO: we are having issues with the to_universe() in that it only seems to set the
-        #       class attribute corresponding to the method
-        self.frequency_ext = freq_ext
-
     def parse_frequency(self):
         # check to see if HPModes is being used in the input
         _rehpmodes = 'HPModes'
@@ -510,8 +440,9 @@ class Output(six.with_metaclass(GauMeta, Editor)):
             # Get the frequencies first
             freqs = ln[freq_start:].split()
             # get the ir intensities
-            ir_int = list(map(float, self[lno+3][freq_start:].split()))
             r_mass = list(map(float, self[lno+1][freq_start:].split()))
+            f_cons = list(map(float, self[lno+2][freq_start:].split()))
+            ir_int = list(map(float, self[lno+3][freq_start:].split()))
             nfreqs = len(freqs)
             # Get just the atom displacement vectors
             start = lno + span_freq_vals
@@ -532,6 +463,7 @@ class Output(six.with_metaclass(GauMeta, Editor)):
                 freqs = np.repeat(freqs, int(df.shape[0]/3))
                 ir_int = np.repeat(ir_int, int(df.shape[0]/3))
                 r_mass = np.repeat(r_mass, int(df.shape[0]/3))
+                f_cons = np.repeat(f_cons, int(df.shape[0]/3))
             else:
                 # Split up the df and unstack it
                 slices = [list(range(2 + i, 2 + 3 * nfreqs, 3)) for i in range(nfreqs)]
@@ -543,12 +475,14 @@ class Output(six.with_metaclass(GauMeta, Editor)):
                 freqs = np.repeat(freqs, df.shape[0])
                 ir_int = np.repeat(ir_int, df.shape[0])
                 r_mass = np.repeat(r_mass, df.shape[0])
+                f_cons = np.repeat(f_cons, df.shape[0])
             fdx += nfreqs
             # Put it all together
             stacked = pd.DataFrame.from_dict({'Z': zs, 'label': labels,
                                     'dx': dx, 'dy': dy, 'dz': dz,
                                     'frequency': freqs, 'freqdx': freqdxs,
-                                    'ir_int': ir_int, 'r_mass': r_mass})
+                                    'ir_int': ir_int, 'r_mass': r_mass,
+                                    'f_const': f_cons})
             stacked['symbol'] = stacked['Z'].map(z2sym)
             dfs.append(stacked)
         # Now put all our frequencies together
@@ -712,6 +646,41 @@ class Fchk(six.with_metaclass(GauMeta, Editor)):
         stop = np.ceil(start + dim / col).astype(np.int64)
         return self.pandas_dataframe(start, stop, col).stack().values
 
+    def _frequency_ext(self):
+        '''
+        Parses extended frequency data present in FChk file
+
+        Note:
+            Requires Freq(SaveNormalModes) in input
+        '''
+        # Frequency regex
+        _renmode = 'Number of Normal Modes'
+        _refinfo = 'Vib-E2'
+        # TODO: find out what these two values are useful for
+        _rendim = 'Vib-NDim'
+        _rendim0 = 'Vib-NDim0'
+
+        found = self.find(_renmode)
+        if not found:
+            return
+        else:
+            found = self.find(_renmode, _refinfo, keys_only=True)
+        # find number of vibrational modes
+        nmode = self._intme(found[_renmode])
+        # get extended data (given by mapper array)
+        all_info = self._dfme(found[_refinfo], nmode * 14)
+        all_info[abs(all_info) < self._tol] = 0
+        freqdx = [i for i in range(nmode)]
+        # mapper array to filter through all of the values printed on the fchk file
+        # TODO: have to find labels of unknown columns
+        mapper = ["freq", "r_mass", "f_const", "ir_int", "raman_activity", "depol_plane", "depol_unpol",
+                  "dipole_s", "rot_s", "unk4", "unk5", "unk6", "unk7", "em_angle"]
+        # build extended frequency table
+        df = pd.DataFrame.from_dict({mapper[int(i/nmode)]: all_info[i:i+nmode]
+                                            for i in range(0, nmode*14-1, nmode)})
+        df['freqdx'] = freqdx
+        return df
+
     def parse_atom(self):
         # Atom regex
         _renat = 'Number of atoms'
@@ -869,44 +838,6 @@ class Fchk(six.with_metaclass(GauMeta, Editor)):
         if bcoefs is not None:
             self.momatrix['coef1'] = bcoefs
 
-    def parse_frequency_ext(self):
-        '''
-        Parses extended frequency data present in FChk file
-
-        Note:
-            Requires Freq(SaveNormalModes) in input
-        '''
-        # Frequency regex
-        _renmode = 'Number of Normal Modes'
-        _refinfo = 'Vib-E2'
-        # TODO: find out what these two values are useful for
-        _rendim = 'Vib-NDim'
-        _rendim0 = 'Vib-NDim0'
-
-        found = self.find(_renmode)
-        if not found:
-            return
-        else:
-            found = self.find(_renmode, _refinfo, keys_only=True)
-        # find number of vibrational modes
-        nmode = self._intme(found[_renmode])
-        # get extended data (given by mapper array)
-        all_info = self._dfme(found[_refinfo], nmode * 14)
-        all_info[abs(all_info) < self._tol] = 0
-        freqdx = [i for i in range(nmode)]
-        # mapper array to filter through all of the values printed on the fchk file
-        # TODO: have to find labels of unknown columns
-        mapper = ["freq", "r_mass", "f_const", "ir_int", "raman_activity", "depol_plane", "depol_unpol",
-                  "dipole_s", "rot_s", "unk4", "unk5", "unk6", "unk7", "em_angle"]
-        # build extended frequency table
-        self.frequency_ext = pd.DataFrame.from_dict({mapper[int(i/nmode)]: all_info[i:i+nmode]
-                                                     for i in range(0, nmode*14-1, nmode)})
-        self.frequency_ext['freqdx'] = freqdx
-        # convert from atomic mass units to atomic units
-        #self.frequency_ext['r_mass'] *= Mass['u', 'au_mass']
-        ## convert from cm^{-1} to Ha
-        #self.frequency_ext['freq'] *= Energy['cm^-1', 'Ha']
-
     def parse_frequency(self):
         '''
         Parses frequency data from FChk file
@@ -918,14 +849,12 @@ class Fchk(six.with_metaclass(GauMeta, Editor)):
         _renmode = 'Number of Normal Modes'
         _redisp = 'Vib-Modes'
         _refinfo = 'Vib-E2'
-
         found = self.find(_renmode)
         if not found:
             return
         else:
             found = self.find(_renmode, _refinfo, _redisp, keys_only=True)
-        if not hasattr(self, 'frequency_ext'):
-            self.parse_frequency_ext()
+        ext_params = self._frequency_ext()
         # get atomic numbers
         znums = self.atom['Zeff'].values
         # get number of atoms
@@ -951,30 +880,26 @@ class Fchk(six.with_metaclass(GauMeta, Editor)):
         znums = np.tile(znums, nmode)
         label = np.tile(label, nmode)
         symbols = list(map(lambda x: z2sym[x], znums))
-        ir_int = np.repeat(self.frequency_ext['ir_int'].values, nat)
-        r_mass = np.repeat(self.frequency_ext['r_mass'].values, nat)
         # just to have the same table as the one generated for normal output parser
         frame = np.zeros(len(znums)).astype(np.int)
         # build frequency table
-        self.frequency = pd.DataFrame.from_dict({"Z": znums, "label": label, "dx": dx,
-                                                 "dy": dy, "dz": dz, "frequency": freq,
-                                                 "freqdx": freqdx, "symbol": symbols,
-                                                 "ir_int": ir_int, "r_mass": r_mass,
-                                                 "frame": frame})
-        self.frequency.reset_index(drop=True, inplace=True)
-        # convert atomic displacements to atomic units
-        # TODO: Make absolutely sure what units gaussian reports the displacements in
-        #       bohr instead of angstroms
-        #self.frequency['dx'] *= Length['Angstrom', 'au']
-        #self.frequency['dy'] *= Length['Angstrom', 'au']
-        #self.frequency['dz'] *= Length['Angstrom', 'au']
+        df = pd.DataFrame.from_dict({"Z": znums, "label": label, "dx": dx,
+                                     "dy": dy, "dz": dz, "frequency": freq,
+                                     "freqdx": freqdx, "symbol": symbols,
+                                     "frame": frame})
+        cols = list(map(lambda x: 'unk' not in x and 'freq' not in x,
+                            ext_params.columns))
+        cols = ext_params.columns[cols]
+        print(ext_params[cols])
+        for col in cols:
+            df[col] = np.repeat(ext_params[col].values, nat)
+        self.frequency = df
 
     def parse_gradient(self):
         # gradient regex
         _regrad = 'Cartesian Gradient'
         _reznums = 'Atomic numbers'
         _renat = 'Number of atoms'
-
         found = self.find(_regrad)
         if not found:
             return
@@ -1015,7 +940,6 @@ class Fchk(six.with_metaclass(GauMeta, Editor)):
         # base properties
         _renat = 'Number of atoms'
         _reznums = 'Atomic numbers'
-
         found = self.find(_renmr)
         if not found:
             return

@@ -74,14 +74,6 @@ class TestFchk(TestCase):
         self.assertEqual(self.mam4.frequency.shape[0], 24)
         self.assertTrue(np.all(pd.notnull(pd.DataFrame(self.mam4.frequency))))
 
-    def test_parse_frequency_ext(self):
-        self.mam3.parse_frequency_ext()
-        self.assertEqual(self.mam3.frequency_ext.shape[0], 24)
-        self.assertTrue(np.all(pd.notnull(pd.DataFrame(self.mam3.frequency_ext))))
-        self.mam4.parse_frequency_ext()
-        self.assertEqual(self.mam4.frequency_ext.shape[0], 6)
-        self.assertTrue(np.all(pd.notnull(pd.DataFrame(self.mam4.frequency_ext))))
-
     def test_parse_gradient(self):
         self.mam3.parse_gradient()
         self.assertEqual(self.mam3.gradient.shape[0], 10)
@@ -226,16 +218,6 @@ class TestOutput(TestCase):
         self.nap_opt.parse_frame()
         self.assertEqual(self.nap_opt.frame.shape[0], 26)
         self.assertTrue(np.all(pd.notnull(pd.DataFrame(self.nap_opt.frame))))
-
-    def test_parse_frequency_ext(self):
-        self.meth_freq.parse_frequency_ext()
-        self.assertEqual(self.meth_freq.frequency_ext.shape[0], 24)
-        self.assertEqual(self.meth_freq.frequency_ext.shape[1], 5)
-        self.assertTrue(np.all(pd.notnull(pd.DataFrame(self.meth_freq.frequency_ext))))
-        self.meth_opt_freq_hp.parse_frequency_ext()
-        self.assertEqual(self.meth_opt_freq_hp.frequency_ext.shape[0], 24)
-        self.assertEqual(self.meth_opt_freq_hp.frequency_ext.shape[1], 5)
-        self.assertTrue(np.all(pd.notnull(pd.DataFrame(self.meth_opt_freq_hp.frequency_ext))))
 
     def test_parse_frequency(self):
         self.meth_freq.parse_frequency()
