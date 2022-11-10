@@ -671,22 +671,23 @@ class Output(six.with_metaclass(GauMeta, Editor)):
         self.parse_atom(std_or=False)
         ldx = found[0] + 1
         dfs = []
-        while self[ldx].split()[0] != 'FormGI':
-            d = self[ldx].split()
-            if 'D' not in d[1]:
-                ncols = len(d)
-                cols = list(map(lambda x: int(x)-1, d))
-                if cols[0] != 0:
-                    dfs.append(pd.concat(srs, axis=1).T)
-                srs = []
-            else:
-                arr = np.zeros(ncols)
-                d = [x.replace('D', 'E') for x in d]
-                arr[range(len(d)-1)] = list(map(float, d[1:]))
-                sr = pd.Series(arr, index=cols, name=int(d[0])-1)
-                srs.append(sr)
-            ldx += 1
-        else:
+        try:
+            while float(self[ldx].split()[0]):
+                d = self[ldx].split()
+                if 'D' not in d[1]:
+                    ncols = len(d)
+                    cols = list(map(lambda x: int(x)-1, d))
+                    if cols[0] != 0:
+                        dfs.append(pd.concat(srs, axis=1).T)
+                    srs = []
+                else:
+                    arr = np.zeros(ncols)
+                    d = [x.replace('D', 'E') for x in d]
+                    arr[range(len(d)-1)] = list(map(float, d[1:]))
+                    sr = pd.Series(arr, index=cols, name=int(d[0])-1)
+                    srs.append(sr)
+                ldx += 1
+        except ValueError:
             dfs.append(pd.concat(srs, axis=1).T)
         df = pd.concat(dfs, axis=1)
         df.fillna(0, inplace=True)

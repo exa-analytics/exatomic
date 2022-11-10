@@ -90,6 +90,14 @@ class TestFchk(TestCase):
         self.assertEqual(self.mam4.gradient.shape[0], 4)
         self.assertTrue(np.all(pd.notnull(pd.DataFrame(self.mam4.gradient))))
 
+    def test_parse_hessian(self):
+        self.mam3.parse_hessian()
+        self.assertEqual(self.mam3.hessian.shape, (30,30))
+        self.assertTrue(np.all(pd.notnull(pd.DataFrame(self.mam3.hessian))))
+        self.mam4.parse_hessian()
+        self.assertEqual(self.mam4.hessian.shape, (12,12))
+        self.assertTrue(np.all(pd.notnull(pd.DataFrame(self.mam4.hessian))))
+
     def test_shielding_tensor(self):
         self.nitro_nmr.parse_nmr_shielding()
         self.assertEqual(self.nitro_nmr.nmr_shielding.shape[0], 15)
@@ -257,9 +265,20 @@ class TestOutput(TestCase):
         self.meth_opt.parse_gradient()
         self.assertEqual(self.meth_opt.gradient.shape[0], 120)
         self.assertTrue(np.all(pd.notnull(pd.DataFrame(self.meth_opt.gradient))))
+        self.meth_freq.parse_gradient()
+        self.assertEqual(self.meth_freq.gradient.shape[0], 10)
+        self.assertTrue(np.all(pd.notnull(pd.DataFrame(self.meth_freq.gradient))))
         self.nap_opt.parse_gradient()
         self.assertEqual(self.nap_opt.gradient.shape[0], 806)
         self.assertTrue(np.all(pd.notnull(pd.DataFrame(self.nap_opt.gradient))))
+
+    def test_hessian(self):
+        self.meth_freq.parse_hessian()
+        self.assertEqual(self.meth_freq.hessian.shape, (30,30))
+        self.assertTrue(np.all(pd.notnull(pd.DataFrame(self.meth_freq.hessian))))
+        self.h2o_freq.parse_hessian()
+        self.assertEqual(self.h2o_freq.hessian.shape, (9,9))
+        self.assertTrue(np.all(pd.notnull(pd.DataFrame(self.h2o_freq.hessian))))
 
     def test_to_universe(self):
         """Test the to_universe method."""
