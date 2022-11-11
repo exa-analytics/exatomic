@@ -59,6 +59,10 @@ class GauMeta(TypedMeta):
     nmr_shielding = NMRShielding
     frequency_ext = pd.DataFrame
     hessian = pd.DataFrame
+    elec_dipole = pd.DataFrame
+    elec_quadrupole = pd.DataFrame
+    mag_dipole = pd.DataFrame
+    spec_prop = pd.DataFrame
 
 class Output(six.with_metaclass(GauMeta, Editor)):
     def _parse_triangular_matrix(self, regex, column='coef', values_only=False):
@@ -84,6 +88,20 @@ class Output(six.with_metaclass(GauMeta, Editor)):
                                        'chi1': idxs[:,1],
                                       'frame': idxs[:,2],
                                        column: matrix})
+
+    def _get_dipole(self, length=True):
+        _relen = "Ground to excited state transition electric dipole moments"
+        _revel = "Ground to excited state transition velocity dipole moments"
+        found = self.find(_relen, _revel, keys_only=True)
+        if not found[_relen]: return
+        key = _relen if length else _revel
+        start = found[key][0] + 2
+        stop = start
+        while self[stop].split()[0] != 'Ground': stop += 1
+        df = self.pandas_dataframe(start, stop, ncol=6)
+        df.drop(0, axis=1, inplace=True)
+        df.columns = ['x', 'y', 'z', 'dipstr', 'oscilstr']
+        return df
 
     def parse_atom(self, std_or=True):
         # Atom flags
@@ -353,8 +371,6 @@ class Output(six.with_metaclass(GauMeta, Editor)):
         # TDDFT flags
         _retddft = 'TD'
         _reexcst = 'Excited State'
-        # removing stop condition for similar reasons as in parse_frequency
-        #chk = self.find(_retddft, stop=1000, keys_only=True)
         chk = self.find(_retddft, keys_only=True)
         if not chk: return
         # Find the data
@@ -384,6 +400,72 @@ class Output(six.with_metaclass(GauMeta, Editor)):
         conts['frame'] = conts['group'] = 0
         self.excitation = conts
 
+    def parse_elec_dipole(self, length=True):
+        '''
+        Parse the electric dipole moment.
+
+        Args:
+            length (bool, optional): Parse the dipoles in the
+                length formalism. Defaults to `True`.
+        '''
+        df = self._get_dipole(length=length)
+        self.elec_dipole = df
+
+    def parse_elec_quadrupole(self):
+        ''' Parse the transition velocity quadrupole moment. '''
+        _requad = "Ground to excited state transition velocity quadrupole moments"
+        found = self.find(_requad, keys_only=True)
+        if not found: return
+        start = found[0] + 2
+        stop = start
+        while self[stop].split()[0] != r'<0|del|b>': stop += 1
+        df = self.pandas_dataframe(start, stop, ncol=7)
+        df.drop(0, axis=1, inplace=True)
+        cols = ['xx', 'yy', 'zz', 'xy', 'xz', 'yz']
+        df.columns = cols
+        self.elec_quadrupole = df
+
+    def parse_mag_dipole(self):
+        ''' Parse the magnetic dipole moment. '''
+        _remag = "Ground to excited state transition magnetic dipole moments"
+        found = self.find(_remag, keys_only=True)
+        if not found: return
+        start = found[0] + 2
+        stop = start
+        while self[stop].split()[0] != 'Ground': stop += 1
+        df = self.pandas_dataframe(start, stop, ncol=4)
+        df.drop(0, axis=1, inplace=True)
+        df.columns = ['x', 'y', 'z']
+        self.mag_dipole = df
+
+    def parse_spec_prop(self):
+        ''' Parse the spectral properties. '''
+        _rerotstr = r"Rotatory Strengths (R) in cgs (10**-40 erg-esu-cm/Gauss)"
+        found = self.find(_rerotstr, keys_only=True)
+        if not found: return
+        starts = np.array(found) + 2
+        stop = starts[0]
+        while self[stop].split()[0] != r'1/2[<0|r|b>*<b|rxdel|0>': stop += 1
+        stops = starts + (stop - starts[0])
+        srs = []
+        for idx, (start, stop) in enumerate(zip(starts, stops)):
+            df = self.pandas_dataframe(start, stop, ncol=6)
+            name = 'rotstr_len' if idx == 1 else 'rotstr_vel'
+            sr = pd.Series(df[4].values, name=name)
+            srs.append(sr)
+        df = self._get_dipole(True)
+        dip_len = pd.Series(df['dipstr'].values, name='dipstr_len')
+        df = self._get_dipole(False)
+        dip_vel = pd.Series(df['dipstr'].values, name='dipstr_vel')
+        srs.append(dip_len)
+        srs.append(dip_vel)
+        if not hasattr(self, 'excitation'):
+            self.parse_excitation()
+        exc = self.excitation.groupby('map').apply(lambda x: x.iloc[0]['energy'])
+        exc = pd.Series(exc.values, name='energy_au')
+        df = pd.concat([exc]+srs, axis=1)
+        self.spec_prop = df
+
     def parse_frequency(self):
         # check to see if HPModes is being used in the input
         _rehpmodes = 'HPModes'
@@ -403,7 +485,6 @@ class Output(six.with_metaclass(GauMeta, Editor)):
         else:
             stop_read = None
             hpmodes = False
-
         # Frequency flags
         _refreq = 'Frequencies'
         # we set the start and stop condition because HPModes will print the displacement
@@ -488,15 +569,6 @@ class Output(six.with_metaclass(GauMeta, Editor)):
         # Now put all our frequencies together
         frequency = pd.concat(dfs).reset_index(drop=True)
         frequency['frequency'] = frequency['frequency'].astype(np.float64)
-        #freq_ext = pd.concat(ext_dfs, ignore_index=True)
-        # Pretty sure displacements are in cartesian angstroms
-        # TODO: Make absolutely sure what units gaussian reports the displacements as
-        # TODO: verify with an external program that vibrational
-        #       modes look the same as the ones generated with
-        #       this methodology.
-        #frequency['dx'] *= Length['Angstrom', 'au']
-        #frequency['dy'] *= Length['Angstrom', 'au']
-        #frequency['dz'] *= Length['Angstrom', 'au']
         # Frame not really implemented here either
         frequency['frame'] = 0
         # generate the frequency and extended frequency dataframes
@@ -508,10 +580,8 @@ class Output(six.with_metaclass(GauMeta, Editor)):
         _renmr = "SCF GIAO Magnetic shielding tensor (ppm):"
         _reiso = "Isotropic"
         found = self.find(_renmr)
-        if not found:
-            return
-        else:
-            found = self.find(_reiso)
+        if not found: return
+        found = self.find(_reiso)
         # base properties
         atom = self.atom['set'].drop_duplicates().values
         nat = len(atom)

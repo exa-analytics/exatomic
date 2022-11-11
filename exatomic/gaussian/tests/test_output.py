@@ -238,7 +238,7 @@ class TestOutput(TestCase):
         self.assertEqual(self.h2o2_tddft.excitation.shape[0], 32)
         self.assertTrue(np.all(pd.notnull(pd.DataFrame(self.h2o2_tddft.excitation))))
 
-    def test_shielding_tensor(self):
+    def test_parse_nmr_shielding(self):
         self.nitro_nmr.parse_nmr_shielding()
         self.assertEqual(self.nitro_nmr.nmr_shielding.shape[0], 15)
         self.assertTrue(np.all(pd.notnull(pd.DataFrame(self.nitro_nmr.nmr_shielding))))
@@ -254,13 +254,46 @@ class TestOutput(TestCase):
         self.assertEqual(self.nap_opt.gradient.shape[0], 806)
         self.assertTrue(np.all(pd.notnull(pd.DataFrame(self.nap_opt.gradient))))
 
-    def test_hessian(self):
+    def test_parse_hessian(self):
         self.meth_freq.parse_hessian()
         self.assertEqual(self.meth_freq.hessian.shape, (30,30))
         self.assertTrue(np.all(pd.notnull(pd.DataFrame(self.meth_freq.hessian))))
         self.h2o_freq.parse_hessian()
         self.assertEqual(self.h2o_freq.hessian.shape, (9,9))
         self.assertTrue(np.all(pd.notnull(pd.DataFrame(self.h2o_freq.hessian))))
+
+    def test_parse_elec_dipole(self):
+        # naproxen example
+        self.nap_tddft.parse_elec_dipole(length=True)
+        self.assertEqual(self.nap_tddft.elec_dipole.shape[0], 5)
+        self.assertTrue(np.all(pd.notnull(pd.DataFrame(self.nap_tddft.elec_dipole))))
+        actual = [ 0.4478,-0.6177, 0.0607, 0.5858, 0.0500]
+        self.assertTrue(np.allclose(self.nap_tddft.elec_dipole.loc[0].values, actual))
+        self.nap_tddft.parse_elec_dipole(length=False)
+        self.assertEqual(self.nap_tddft.elec_dipole.shape[0], 5)
+        self.assertTrue(np.all(pd.notnull(pd.DataFrame(self.nap_tddft.elec_dipole))))
+        actual = [-0.0572, 0.0797,-0.0077, 0.0097, 0.0504]
+        self.assertTrue(np.allclose(self.nap_tddft.elec_dipole.loc[0].values, actual))
+
+    def test_parse_mag_dipole(self):
+        # naproxen example
+        self.nap_tddft.parse_mag_dipole()
+        self.assertEqual(self.nap_tddft.mag_dipole.shape[0], 5)
+        self.assertTrue(np.all(pd.notnull(pd.DataFrame(self.nap_tddft.mag_dipole))))
+
+    def test_parse_elec_quadrupole(self):
+        # naproxen example
+        self.nap_tddft.parse_elec_quadrupole()
+        self.assertEqual(self.nap_tddft.elec_quadrupole.shape[0], 5)
+        self.assertTrue(np.all(pd.notnull(pd.DataFrame(self.nap_tddft.elec_quadrupole))))
+
+    def test_parse_spec_prop(self):
+        # naproxen example
+        self.nap_tddft.parse_spec_prop()
+        self.assertEqual(self.nap_tddft.spec_prop.shape[0], 5)
+        self.assertTrue(np.all(pd.notnull(pd.DataFrame(self.nap_tddft.spec_prop))))
+        actual = [0.128024,-8.2309,-8.1542,0.5858,0.0097]
+        self.assertTrue(np.allclose(self.nap_tddft.spec_prop.loc[0].values, actual))
 
     def test_to_universe(self):
         """Test the to_universe method."""
