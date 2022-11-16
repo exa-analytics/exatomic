@@ -103,17 +103,38 @@ class Output(six.with_metaclass(GauMeta, Editor)):
         df.columns = ['x', 'y', 'z', 'dipstr', 'oscilstr']
         return df
 
-    def parse_atom(self, std_or=True):
+    def parse_atom(self, orientation=None):
+        '''
+        Parse the atom tables.
+
+        Args:
+            orientation (str, optional): Specify which orientation
+                to parse. Will only accept `'input'` or `'standard'`.
+                Defaults to `None` (will determine orientation to
+                parse internally).
+        '''
         # Atom flags
         _regeom01 = 'Input orientation'
         _regeom02 = 'Standard orientation'
         # Find our data
         found = self.find(_regeom01, _regeom02, keys_only=True)
-        # Check if nosymm was specified
-        if found[_regeom02] and std_or:
-            key = _regeom02
+        if orientation is None:
+            key = _regeom02 if found[_regeom02] else _regeom01
         else:
-            key = _regeom01
+            if orienatation.lower() == 'input':
+                key = _regeom01
+            elif orientation.lower() == 'standard':
+                if not found[_regeom02]:
+                    msg = "Parsing of the standard orientation was " \
+                          +"requested, but there were no atom tables " \
+                          +"found. Will parse the input orientations."
+                    warnings.warn(msg, Warning)
+                    key = _regeom01
+                else:
+                    key = _regeom02
+            else:
+                raise ValueError("Could not understand the requested " \
+                                 +"orientation to parse.")
         starts = np.array(found[key]) + 5
         # Prints converged geometry twice but only need it once
         starts = starts[:-1] if len(starts) > 1 else starts
@@ -625,7 +646,7 @@ class Output(six.with_metaclass(GauMeta, Editor)):
             return
         # Gaussian prints the gradients in the
         # input orientation
-        self.parse_atom(std_or=False)
+        self.parse_atom(orientation='input')
         # set start point
         starts = np.array(found) + 3
         stop = starts[0]
@@ -672,7 +693,7 @@ class Output(six.with_metaclass(GauMeta, Editor)):
             return
         # Gaussian prints the hessian in the
         # input orientation
-        self.parse_atom(std_or=False)
+        self.parse_atom(orientation='input')
         ldx = found[0] + 1
         dfs = []
         try:
