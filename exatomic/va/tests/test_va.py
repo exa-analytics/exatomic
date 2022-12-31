@@ -51,7 +51,6 @@ class TestGetData(TestCase):
 class TestVROA(TestCase):
     def test_vroa(self):
         h2o2_freq.parse_frequency()
-        h2o2_freq.parse_frequency_ext()
         delta = gen_delta(delta_type=2, freq=h2o2_freq.frequency.copy())
         va_corr = VA()
         path = sep.join([TMPDIR, 'h2o2', '*'])
@@ -113,7 +112,6 @@ class TestVROA(TestCase):
 
     def test_select_freq(self):
         methyloxirane_freq.parse_frequency()
-        methyloxirane_freq.parse_frequency_ext()
         delta = gen_delta(delta_type=2, freq=methyloxirane_freq.frequency.copy())
         va_corr = VA()
         path = sep.join([TMPDIR, 'methyloxirane', '*'])
@@ -177,7 +175,6 @@ class TestVROA(TestCase):
 #class TestZPVC(TestCase):
     def test_zpvc(self):
         nitro_freq.parse_frequency()
-        nitro_freq.parse_frequency_ext()
         path = sep.join([TMPDIR, 'nitromalonamide_nmr', '*'])
         va_corr = VA()
         va_corr.gradient = get_data(path=path, attr='gradient', soft=gOutput, f_start='nitromal_grad_',
