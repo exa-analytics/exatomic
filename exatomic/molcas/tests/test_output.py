@@ -19,6 +19,7 @@ class TestOutput(TestCase):
         self.mamcart = Output(resource('mol-ch3nh2-631g.out'))
         self.mamsphr = Output(resource('mol-ch3nh2-anovdzp.out'))
         self.c2h6 = Output(resource('mol-c2h6-basis.out'))
+        self.formald = Output(resource('mol-formald-rassi.out'))
 
     def test_add_orb(self):
         """Test adding orbital file functionality."""
@@ -91,6 +92,28 @@ class TestOutput(TestCase):
         self.assertTrue(np.all(pd.notnull(pd.DataFrame(self.mamsphr.basis_set))))
         self.c2h6.parse_basis_set()
         self.assertTrue(hasattr(self.c2h6, 'basis_set'))
+
+    def test_parse_sf_dipole_moment(self):
+        # test the parser
+        self.formald.parse_sf_dipole_moment()
+        self.assertEqual(self.formald.sf_dipole_moment.shape[0], 30)
+        self.assertTrue(np.all(pd.notnull(pd.DataFrame(self.formald.sf_dipole_moment))))
+
+    def test_parse_sf_quadrupole_moment(self):
+        # test the parser
+        self.formald.parse_sf_quadrupole_moment()
+        self.assertEqual(self.formald.sf_quadrupole_moment.shape[0], 60)
+        self.assertTrue(np.all(pd.notnull(pd.DataFrame(self.formald.sf_quadrupole_moment))))
+
+    def test_parse_sf_angmom(self):
+        # test the parser
+        self.cdz.parse_sf_angmom()
+        self.assertEqual(self.cdz.sf_angmom.shape[0], 24)
+        self.assertTrue(np.all(pd.notnull(pd.DataFrame(self.cdz.sf_angmom))))
+        # test the parser
+        self.formald.parse_sf_angmom()
+        self.assertEqual(self.formald.sf_angmom.shape[0], 30)
+        self.assertTrue(np.all(pd.notnull(pd.DataFrame(self.formald.sf_angmom))))
 
     def test_to_universe(self):
         """Test that the Outputs can be converted to universes."""
