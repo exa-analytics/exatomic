@@ -20,6 +20,7 @@ class TestOutput(TestCase):
         self.mamsphr = Output(resource('mol-ch3nh2-anovdzp.out'))
         self.c2h6 = Output(resource('mol-c2h6-basis.out'))
         self.formald = Output(resource('mol-formald-rassi.out'))
+        self.formald_al = Output(resource('mol-formald-alaska.out'))
 
     def test_add_orb(self):
         """Test adding orbital file functionality."""
@@ -60,6 +61,9 @@ class TestOutput(TestCase):
         self.mamsphr.parse_atom()
         self.assertEqual(self.mamsphr.atom.shape[0], 7)
         self.assertTrue(np.all(pd.notnull(pd.DataFrame(self.mamsphr.atom))))
+        self.formald_al.parse_atom(seward=False)
+        self.assertEqual(self.formald_al.atom.shape[0], 32)
+        self.assertTrue(np.all(pd.notnull(pd.DataFrame(self.formald_al.atom))))
 
     def test_parse_basis_set_order(self):
         """Test the basis set order table parser."""
@@ -143,6 +147,16 @@ class TestOutput(TestCase):
         self.formald.parse_so_energy()
         self.assertEqual(self.formald.so_energy.shape[0], 10)
         self.assertTrue(np.all(pd.notnull(pd.DataFrame(self.formald.so_energy))))
+
+    def test_parse_frequency(self):
+        self.formald_al.parse_frequency()
+        self.assertEqual(self.formald_al.frequency.shape[0], 24)
+        self.assertTrue(np.all(pd.notnull(pd.DataFrame(self.formald_al.frequency))))
+
+    def test_parse_gradient(self):
+        self.formald_al.parse_gradient()
+        self.assertEqual(self.formald_al.gradient.shape[0], 32)
+        self.assertTrue(np.all(pd.notnull(pd.DataFrame(self.formald_al.gradient))))
 
     def test_to_universe(self):
         """Test that the Outputs can be converted to universes."""

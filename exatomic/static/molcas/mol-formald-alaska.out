@@ -1,0 +1,1661 @@
+++    Basis set information:
+      ----------------------
+
+
+      Basis set label: C.ANO-RCC...2S1P.
+
+      Electronic valence basis set:
+      ------------------
+      Associated Effective Charge   6.000000 au
+      Associated Actual Charge      6.000000 au
+      Nuclear Model: Point charge
+
+      Shell  nPrim  nBasis  Cartesian Spherical Contaminant
+         s      14       2        X                  
+         p       9       1        X                  
+
+       Label   Cartesian Coordinates / Bohr
+
+ C1                 0.0000000000        0.0000000000       -0.9778217757
+
+
+      Basis set label: O.ANO-RCC...2S1P.
+
+      Electronic valence basis set:
+      ------------------
+      Associated Effective Charge   8.000000 au
+      Associated Actual Charge      8.000000 au
+      Nuclear Model: Point charge
+
+      Shell  nPrim  nBasis  Cartesian Spherical Contaminant
+         s      14       2        X                  
+         p       9       1        X                  
+
+       Label   Cartesian Coordinates / Bohr
+
+ O1                 0.0000000000        0.0000000000        1.2508021630
+
+
+      Basis set label: H.ANO-RCC...1S.
+
+      Electronic valence basis set:
+      ------------------
+      Associated Effective Charge   1.000000 au
+      Associated Actual Charge      1.000000 au
+      Nuclear Model: Point charge
+
+      Shell  nPrim  nBasis  Cartesian Spherical Contaminant
+         s       8       1        X                  
+
+       Label   Cartesian Coordinates / Bohr
+
+ H1                 0.3779452249       -1.7534145101       -2.0697433250
+ H2                 0.3779452249        1.7534145101       -2.0697433250
+--
+
+++    Primitive basis info:
+      ---------------------
+
+
+                    *****************************************************
+                    ******** Primitive Basis Functions (Valence) ********
+                    *****************************************************
+
+
+ Basis set:C.ANO-RCC...2S1P.                                                               
+
+                  Type         
+                   s
+           No.      Exponent    Contraction Coefficients
+            1  0.505575010D+05   0.000113  -0.000025
+            2  0.752478560D+04   0.000530  -0.000118
+            3  0.169432760D+04   0.002450  -0.000546
+            4  0.472822790D+03   0.010054  -0.002245
+            5  0.151710750D+03   0.035454  -0.008043
+            6  0.539187460D+02   0.104407  -0.024426
+            7  0.206593110D+02   0.241289  -0.061368
+            8  0.838397600D+01   0.383423  -0.117777
+            9  0.357701500D+01   0.307851  -0.155049
+           10  0.154711800D+01   0.068724  -0.019333
+           11  0.613013000D+00   0.000222   0.399693
+           12  0.246068000D+00   0.001977   0.558942
+           13  0.990870000D-01   0.002058   0.171120
+           14  0.346800000D-01   0.000418   0.007456
+
+                  Type         
+                   p
+           No.      Exponent    Contraction Coefficients
+           15  0.833331550D+02   0.001345
+           16  0.195576110D+02   0.010236
+           17  0.608036500D+01   0.045201
+           18  0.217931700D+01   0.141076
+           19  0.865150000D+00   0.304739
+           20  0.361944000D+00   0.399528
+           21  0.154740000D+00   0.271916
+           22  0.654290000D-01   0.058577
+           23  0.229000000D-01  -0.000126
+
+
+ Basis set:O.ANO-RCC...2S1P.                                                               
+
+                  Type         
+                   s
+           No.      Exponent    Contraction Coefficients
+           24  0.105374950D+06   0.000124  -0.000028
+           25  0.156792400D+05   0.000512  -0.000116
+           26  0.353454470D+04   0.002153  -0.000491
+           27  0.987365160D+03   0.008528  -0.001946
+           28  0.315978750D+03   0.030180  -0.007005
+           29  0.111654280D+03   0.090997  -0.021678
+           30  0.426994510D+02   0.217794  -0.056412
+           31  0.173955960D+02   0.368625  -0.112705
+           32  0.743830900D+01   0.336671  -0.158912
+           33  0.322286200D+01   0.096576  -0.033551
+           34  0.125387700D+01   0.002145   0.353190
+           35  0.495155000D+00   0.001194   0.553420
+           36  0.191665000D+00   0.000539   0.230184
+           37  0.670830000D-01   0.000210   0.011273
+
+                  Type         
+                   p
+           No.      Exponent    Contraction Coefficients
+           38  0.200000000D+03   0.000917
+           39  0.465333670D+02   0.007377
+           40  0.146218090D+02   0.034835
+           41  0.531306400D+01   0.114440
+           42  0.210252500D+01   0.255497
+           43  0.850223000D+00   0.372256
+           44  0.337597000D+00   0.332331
+           45  0.128892000D+00   0.140085
+           46  0.451120000D-01   0.023958
+
+
+ Basis set:H.ANO-RCC...1S.                                                                 
+
+                  Type         
+                   s
+           No.      Exponent    Contraction Coefficients
+           47  0.188614450D+03   0.000964
+           48  0.282765960D+02   0.007492
+           49  0.642483000D+01   0.037595
+           50  0.181504100D+01   0.143395
+           51  0.591063000D+00   0.348636
+           52  0.212149000D+00   0.438297
+           53  0.798910000D-01   0.165107
+           54  0.279620000D-01   0.021023
+
+  Number of primitives                                   98
+  Number of basis functions                              12
+
+--
+
+            Nuclear Potential Energy             31.77715457 au
+
+--- Stop Module: gateway at Fri Jun 11 13:19:19 2021 /rc=_RC_ALL_IS_WELL_ ---
+--- Start Module: alaska at Fri Jun 11 13:19:20 2021 ---
+
+()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()
+
+                                              &ALASKA
+
+                                   only a single process is used
+                       available to each process: 2.0 GB of memory, 1 thread?
+                                             pid: 10259
+()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()
+
+
+                     Threshold for contributions to the gradient: 0.100E-06
+
+
+                    ********************************************
+                    * Symmetry Adapted Cartesian Displacements *
+                    ********************************************
+
+
+           Irreducible representation : a  
+           Basis function(s) of irrep: x, y, xy, Rz, z, xz, Ry, yz, Rx, I                                              
+
+ Basis Label        Type   Center Phase
+   1   C1           x         1     1
+   2   C1           y         1     1
+   3   C1           z         1     1
+   4   O1           x         2     1
+   5   O1           y         2     1
+   6   O1           z         2     1
+   7   H1           x         3     1
+   8   H1           y         3     1
+   9   H1           z         3     1
+  10   H2           x         4     1
+  11   H2           y         4     1
+  12   H2           z         4     1
+
+                     No automatic utilization of translational and rotational invariance of the energy is employed.
+
+ Conventional ERI gradients!
+
+ Wavefunction type: State average CASSCF
+
+
+ **************************************************
+ *                                                *
+ *              Molecular gradients               *
+ *                                                *
+ **************************************************
+
+  Irreducible representation: a  
+ ------------------------------------------------------------------------------------------
+                              X                       Y                       Z
+ ------------------------------------------------------------------------------------------
+  C1                1.38889711622510E-02    9.42093625333484E-14    4.88894812998431E-01
+  O1               -2.89241098193106E-03    3.02913076566380E-14   -5.03624298355733E-01
+  H1               -5.49828009015307E-03    2.40928888509393E-02    7.36474267873755E-03
+  H2               -5.49828009016684E-03   -2.40928888510648E-02    7.36474267856702E-03
+ ------------------------------------------------------------------------------------------
+
+
+++ Geometry section
+
+********************************************************************************
+  Geometrical information of the new structure
+********************************************************************************
+
+
+ *********************************************************
+ * Nuclear coordinates for the next iteration / Bohr     *
+ *********************************************************
+  ATOM              X               Y               Z     
+  C1              -0.002254        0.000000       -1.034805
+  O1              -0.010303        0.000000        1.404855
+  H1               0.384224       -1.768935       -2.118278
+  H2               0.384224        1.768935       -2.118278
+
+
+ *********************************************************
+ * Nuclear coordinates for the next iteration / Angstrom *
+ *********************************************************
+  ATOM              X               Y               Z     
+  C1              -0.001193        0.000000       -0.547595
+  O1              -0.005452        0.000000        0.743417
+  H1               0.203322       -0.936080       -1.120945
+  H2               0.203322        0.936080       -1.120945
+
+
+
+--- Start Module: alaska at Fri Jun 11 13:19:23 2021 ---
+
+()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()
+
+                                              &ALASKA
+
+                                   only a single process is used
+                       available to each process: 2.0 GB of memory, 1 thread?
+                                             pid: 10283
+()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()
+
+
+                     Threshold for contributions to the gradient: 0.100E-06
+
+
+                    ********************************************
+                    * Symmetry Adapted Cartesian Displacements *
+                    ********************************************
+
+
+           Irreducible representation : a  
+           Basis function(s) of irrep: x, y, xy, Rz, z, xz, Ry, yz, Rx, I                                              
+
+ Basis Label        Type   Center Phase
+   1   C1           x         1     1
+   2   C1           y         1     1
+   3   C1           z         1     1
+   4   O1           x         2     1
+   5   O1           y         2     1
+   6   O1           z         2     1
+   7   H1           x         3     1
+   8   H1           y         3     1
+   9   H1           z         3     1
+  10   H2           x         4     1
+  11   H2           y         4     1
+  12   H2           z         4     1
+
+                     No automatic utilization of translational and rotational invariance of the energy is employed.
+
+ Conventional ERI gradients!
+
+ Wavefunction type: State average CASSCF
+
+
+ **************************************************
+ *                                                *
+ *              Molecular gradients               *
+ *                                                *
+ **************************************************
+
+  Irreducible representation: a  
+ ------------------------------------------------------------------------------------------
+                              X                       Y                       Z
+ ------------------------------------------------------------------------------------------
+  C1                9.31305705870467E-03    1.17121590204050E-13    2.49420825632209E-01
+  O1               -2.03099276539846E-03   -7.79081660295944E-14   -2.51781270567536E-01
+  H1               -3.64103214663974E-03    1.99233389435798E-02    1.18022246763139E-03
+  H2               -3.64103214666606E-03   -1.99233389436164E-02    1.18022246768534E-03
+ ------------------------------------------------------------------------------------------
+
+
+++ Geometry section
+
+********************************************************************************
+  Geometrical information of the new structure
+********************************************************************************
+
+
+ *********************************************************
+ * Nuclear coordinates for the next iteration / Bohr     *
+ *********************************************************
+  ATOM              X               Y               Z     
+  C1              -0.013748       -0.000000       -1.126526
+  O1              -0.009306        0.000000        1.517405
+  H1               0.389472       -1.851069       -2.128693
+  H2               0.389472        1.851069       -2.128693
+
+
+ *********************************************************
+ * Nuclear coordinates for the next iteration / Angstrom *
+ *********************************************************
+  ATOM              X               Y               Z     
+  C1              -0.007275       -0.000000       -0.596132
+  O1              -0.004925        0.000000        0.802976
+  H1               0.206100       -0.979543       -1.126456
+  H2               0.206100        0.979543       -1.126456
+
+
+                    *************************************** 
+                    *    InterNuclear Distances / Bohr    * 
+                    *************************************** 
+
+               1 C1            2 O1            3 H1            4 H2    
+    1 C1       0.000000
+    2 O1       2.643935        0.000000
+    3 H1       2.143217        4.108468        0.000000
+    4 H2       2.143217        4.108468        3.702138        0.000000
+
+                    ******************************************* 
+                    *    InterNuclear Distances / Angstrom    * 
+                    ******************************************* 
+
+               1 C1            2 O1            3 H1            4 H2    
+    1 C1       0.000000
+    2 O1       1.399110        0.000000
+    3 H1       1.134142        2.174108        0.000000
+    4 H2       1.134142        2.174108        1.959087        0.000000
+
+                    ************************************** 
+                    *    Valence Bond Angles / Degree    * 
+                    ************************************** 
+                          Atom centers                 Phi
+                      2 O1       1 C1       3 H1       117.86
+                      2 O1       1 C1       4 H2       117.86
+                      3 H1       1 C1       4 H2       119.47
+--
+--- Stop Module: slapaf at Fri Jun 11 13:19:23 2021 /rc=_RC_CONTINUE_LOOP_ ---
+*** files: formald.geo.molden formald.slapaf.h5 formald.structure formald.Opt.xyz xmldump
+    saved to directory /scratch/herbertl/franck-condon-factors/formaldehyde/hf/molcas/from-cas-4.3/alaska-root-2
+
+>>> END DO
+
+
+--- Start Module: alaska at Fri Jun 11 13:19:25 2021 ---
+
+()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()
+
+                                              &ALASKA
+
+                                   only a single process is used
+                       available to each process: 2.0 GB of memory, 1 thread?
+                                             pid: 10301
+()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()
+
+
+                     Threshold for contributions to the gradient: 0.100E-06
+
+
+                    ********************************************
+                    * Symmetry Adapted Cartesian Displacements *
+                    ********************************************
+
+
+           Irreducible representation : a  
+           Basis function(s) of irrep: x, y, xy, Rz, z, xz, Ry, yz, Rx, I                                              
+
+ Basis Label        Type   Center Phase
+   1   C1           x         1     1
+   2   C1           y         1     1
+   3   C1           z         1     1
+   4   O1           x         2     1
+   5   O1           y         2     1
+   6   O1           z         2     1
+   7   H1           x         3     1
+   8   H1           y         3     1
+   9   H1           z         3     1
+  10   H2           x         4     1
+  11   H2           y         4     1
+  12   H2           z         4     1
+
+                     No automatic utilization of translational and rotational invariance of the energy is employed.
+
+ Conventional ERI gradients!
+
+ Wavefunction type: State average CASSCF
+
+
+ **************************************************
+ *                                                *
+ *              Molecular gradients               *
+ *                                                *
+ **************************************************
+
+  Irreducible representation: a  
+ ------------------------------------------------------------------------------------------
+                              X                       Y                       Z
+ ------------------------------------------------------------------------------------------
+  C1                5.92358182464126E-03    8.16707812489881E-15    1.14493156898314E-01
+  O1               -2.16669670043899E-03   -4.76181594155634E-14   -1.10875009228624E-01
+  H1               -1.87844256209857E-03    5.00231347558633E-03   -1.80907383486395E-03
+  H2               -1.87844256210395E-03   -5.00231347554769E-03   -1.80907383482753E-03
+ ------------------------------------------------------------------------------------------
+
+
+++ Geometry section
+
+********************************************************************************
+  Geometrical information of the new structure
+********************************************************************************
+
+
+ *********************************************************
+ * Nuclear coordinates for the next iteration / Bohr     *
+ *********************************************************
+  ATOM              X               Y               Z     
+  C1              -0.067272       -0.000000       -1.201171
+  O1               0.004810        0.000000        1.598575
+  H1               0.409176       -1.881162       -2.131955
+  H2               0.409176        1.881162       -2.131955
+
+
+ *********************************************************
+ * Nuclear coordinates for the next iteration / Angstrom *
+ *********************************************************
+  ATOM              X               Y               Z     
+  C1              -0.035599       -0.000000       -0.635632
+  O1               0.002546        0.000000        0.845929
+  H1               0.216527       -0.995468       -1.128182
+  H2               0.216527        0.995468       -1.128182
+
+
+                    *************************************** 
+                    *    InterNuclear Distances / Bohr    * 
+                    *************************************** 
+
+               1 C1            2 O1            3 H1            4 H2    
+    1 C1       0.000000
+    2 O1       2.800673        0.000000
+    3 H1       2.152239        4.197515        0.000000
+    4 H2       2.152239        4.197515        3.762324        0.000000
+
+                    ******************************************* 
+                    *    InterNuclear Distances / Angstrom    * 
+                    ******************************************* 
+
+               1 C1            2 O1            3 H1            4 H2    
+    1 C1       0.000000
+    2 O1       1.482053        0.000000
+    3 H1       1.138916        2.221229        0.000000
+    4 H2       1.138916        2.221229        1.990936        0.000000
+
+                    ************************************** 
+                    *    Valence Bond Angles / Degree    * 
+                    ************************************** 
+                          Atom centers                 Phi
+                      2 O1       1 C1       3 H1       115.25
+                      2 O1       1 C1       4 H2       115.25
+                      3 H1       1 C1       4 H2       121.87
+--
+--- Stop Module: slapaf at Fri Jun 11 13:19:25 2021 /rc=_RC_CONTINUE_LOOP_ ---
+*** files: formald.geo.molden formald.slapaf.h5 formald.structure formald.Opt.xyz xmldump
+    saved to directory /scratch/herbertl/franck-condon-factors/formaldehyde/hf/molcas/from-cas-4.3/alaska-root-2
+
+
+--- Start Module: alaska at Fri Jun 11 13:19:27 2021 ---
+
+()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()
+
+                                              &ALASKA
+
+                                   only a single process is used
+                       available to each process: 2.0 GB of memory, 1 thread?
+                                             pid: 10319
+()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()
+
+
+                     Threshold for contributions to the gradient: 0.100E-06
+
+
+                    ********************************************
+                    * Symmetry Adapted Cartesian Displacements *
+                    ********************************************
+
+
+           Irreducible representation : a  
+           Basis function(s) of irrep: x, y, xy, Rz, z, xz, Ry, yz, Rx, I                                              
+
+ Basis Label        Type   Center Phase
+   1   C1           x         1     1
+   2   C1           y         1     1
+   3   C1           z         1     1
+   4   O1           x         2     1
+   5   O1           y         2     1
+   6   O1           z         2     1
+   7   H1           x         3     1
+   8   H1           y         3     1
+   9   H1           z         3     1
+  10   H2           x         4     1
+  11   H2           y         4     1
+  12   H2           z         4     1
+
+                     No automatic utilization of translational and rotational invariance of the energy is employed.
+
+ Conventional ERI gradients!
+
+ Wavefunction type: State average CASSCF
+
+
+ **************************************************
+ *                                                *
+ *              Molecular gradients               *
+ *                                                *
+ **************************************************
+
+  Irreducible representation: a  
+ ------------------------------------------------------------------------------------------
+                              X                       Y                       Z
+ ------------------------------------------------------------------------------------------
+  C1                5.12758645759381E-03    4.42007541678890E-15    4.48512600022322E-02
+  O1               -2.22591491772028E-03   -3.65458531492724E-14   -4.41247941496412E-02
+  H1               -1.45083576992844E-03    1.21134603220718E-03   -3.63232926312129E-04
+  H2               -1.45083576994426E-03   -1.21134603217610E-03   -3.63232926276602E-04
+ ------------------------------------------------------------------------------------------
+
+
+++ Geometry section
+
+********************************************************************************
+  Geometrical information of the new structure
+********************************************************************************
+
+
+ *********************************************************
+ * Nuclear coordinates for the next iteration / Bohr     *
+ *********************************************************
+  ATOM              X               Y               Z     
+  C1              -0.315426       -0.000000       -1.338007
+  O1               0.086590        0.000000        1.595835
+  H1               0.492363       -1.871282       -2.062167
+  H2               0.492363        1.871282       -2.062167
+
+
+ *********************************************************
+ * Nuclear coordinates for the next iteration / Angstrom *
+ *********************************************************
+  ATOM              X               Y               Z     
+  C1              -0.166916       -0.000000       -0.708043
+  O1               0.045821        0.000000        0.844479
+  H1               0.260547       -0.990240       -1.091252
+  H2               0.260547        0.990240       -1.091252
+
+
+                    *************************************** 
+                    *    InterNuclear Distances / Bohr    * 
+                    *************************************** 
+
+               1 C1            2 O1            3 H1            4 H2    
+    1 C1       0.000000
+    2 O1       2.961257        0.000000
+    3 H1       2.163013        4.128840        0.000000
+    4 H2       2.163013        4.128840        3.742564        0.000000
+
+                    ******************************************* 
+                    *    InterNuclear Distances / Angstrom    * 
+                    ******************************************* 
+
+               1 C1            2 O1            3 H1            4 H2    
+    1 C1       0.000000
+    2 O1       1.567030        0.000000
+    3 H1       1.144617        2.184888        0.000000
+    4 H2       1.144617        2.184888        1.980479        0.000000
+
+                    ************************************** 
+                    *    Valence Bond Angles / Degree    * 
+                    ************************************** 
+                          Atom centers                 Phi
+                      2 O1       1 C1       3 H1       106.32
+                      2 O1       1 C1       4 H2       106.32
+                      3 H1       1 C1       4 H2       119.79
+--
+--- Stop Module: slapaf at Fri Jun 11 13:19:27 2021 /rc=_RC_CONTINUE_LOOP_ ---
+*** files: formald.geo.molden formald.slapaf.h5 formald.structure formald.Opt.xyz xmldump
+    saved to directory /scratch/herbertl/franck-condon-factors/formaldehyde/hf/molcas/from-cas-4.3/alaska-root-2
+
+>>> END DO
+
+
+--- Start Module: alaska at Fri Jun 11 13:19:29 2021 ---
+
+()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()
+
+                                              &ALASKA
+
+                                   only a single process is used
+                       available to each process: 2.0 GB of memory, 1 thread?
+                                             pid: 10337
+()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()
+
+
+                     Threshold for contributions to the gradient: 0.100E-06
+
+
+                    ********************************************
+                    * Symmetry Adapted Cartesian Displacements *
+                    ********************************************
+
+
+           Irreducible representation : a  
+           Basis function(s) of irrep: x, y, xy, Rz, z, xz, Ry, yz, Rx, I                                              
+
+ Basis Label        Type   Center Phase
+   1   C1           x         1     1
+   2   C1           y         1     1
+   3   C1           z         1     1
+   4   O1           x         2     1
+   5   O1           y         2     1
+   6   O1           z         2     1
+   7   H1           x         3     1
+   8   H1           y         3     1
+   9   H1           z         3     1
+  10   H2           x         4     1
+  11   H2           y         4     1
+  12   H2           z         4     1
+
+                     No automatic utilization of translational and rotational invariance of the energy is employed.
+
+ Conventional ERI gradients!
+
+ Wavefunction type: State average CASSCF
+
+
+ **************************************************
+ *                                                *
+ *              Molecular gradients               *
+ *                                                *
+ **************************************************
+
+  Irreducible representation: a  
+ ------------------------------------------------------------------------------------------
+                              X                       Y                       Z
+ ------------------------------------------------------------------------------------------
+  C1               -1.44047473335411E-02   -6.27276008913213E-15   -1.00199457502428E-02
+  O1                5.69139448592337E-03   -1.70224077888914E-14   -5.65475392319215E-03
+  H1                4.35667642381643E-03    5.04587899121445E-04    7.83734983671847E-03
+  H2                4.35667642379944E-03   -5.04587899098796E-04    7.83734983672069E-03
+ ------------------------------------------------------------------------------------------
+
+
+++ Geometry section
+
+********************************************************************************
+  Geometrical information of the new structure
+********************************************************************************
+
+
+ *********************************************************
+ * Nuclear coordinates for the next iteration / Bohr     *
+ *********************************************************
+  ATOM              X               Y               Z     
+  C1              -0.135376       -0.000000       -1.277963
+  O1               0.024822        0.000000        1.703755
+  H1               0.433222       -1.897164       -2.146149
+  H2               0.433222        1.897164       -2.146149
+
+
+ *********************************************************
+ * Nuclear coordinates for the next iteration / Angstrom *
+ *********************************************************
+  ATOM              X               Y               Z     
+  C1              -0.071638       -0.000000       -0.676269
+  O1               0.013135        0.000000        0.901588
+  H1               0.229251       -1.003936       -1.135693
+  H2               0.229251        1.003936       -1.135693
+
+
+                    *************************************** 
+                    *    InterNuclear Distances / Bohr    * 
+                    *************************************** 
+
+               1 C1            2 O1            3 H1            4 H2    
+    1 C1       0.000000
+    2 O1       2.986018        0.000000
+    3 H1       2.162472        4.311355        0.000000
+    4 H2       2.162472        4.311355        3.794329        0.000000
+
+                    ******************************************* 
+                    *    InterNuclear Distances / Angstrom    * 
+                    ******************************************* 
+
+               1 C1            2 O1            3 H1            4 H2    
+    1 C1       0.000000
+    2 O1       1.580133        0.000000
+    3 H1       1.144331        2.281471        0.000000
+    4 H2       1.144331        2.281471        2.007872        0.000000
+
+                    ************************************** 
+                    *    Valence Bond Angles / Degree    * 
+                    ************************************** 
+                          Atom centers                 Phi
+                      2 O1       1 C1       3 H1       112.76
+                      2 O1       1 C1       4 H2       112.76
+                      3 H1       1 C1       4 H2       122.64
+--
+--- Stop Module: slapaf at Fri Jun 11 13:19:29 2021 /rc=_RC_CONTINUE_LOOP_ ---
+*** files: formald.geo.molden formald.slapaf.h5 formald.structure formald.Opt.xyz xmldump
+    saved to directory /scratch/herbertl/franck-condon-factors/formaldehyde/hf/molcas/from-cas-4.3/alaska-root-2
+
+--- Start Module: alaska at Fri Jun 11 13:19:31 2021 ---
+
+()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()
+
+                                              &ALASKA
+
+                                   only a single process is used
+                       available to each process: 2.0 GB of memory, 1 thread?
+                                             pid: 10355
+()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()
+
+
+                     Threshold for contributions to the gradient: 0.100E-06
+
+
+                    ********************************************
+                    * Symmetry Adapted Cartesian Displacements *
+                    ********************************************
+
+
+           Irreducible representation : a  
+           Basis function(s) of irrep: x, y, xy, Rz, z, xz, Ry, yz, Rx, I                                              
+
+ Basis Label        Type   Center Phase
+   1   C1           x         1     1
+   2   C1           y         1     1
+   3   C1           z         1     1
+   4   O1           x         2     1
+   5   O1           y         2     1
+   6   O1           z         2     1
+   7   H1           x         3     1
+   8   H1           y         3     1
+   9   H1           z         3     1
+  10   H2           x         4     1
+  11   H2           y         4     1
+  12   H2           z         4     1
+
+                     No automatic utilization of translational and rotational invariance of the energy is employed.
+
+ Conventional ERI gradients!
+
+ Wavefunction type: State average CASSCF
+
+
+ **************************************************
+ *                                                *
+ *              Molecular gradients               *
+ *                                                *
+ **************************************************
+
+  Irreducible representation: a  
+ ------------------------------------------------------------------------------------------
+                              X                       Y                       Z
+ ------------------------------------------------------------------------------------------
+  C1                2.66257650372026E-06   -2.85188539450587E-15   -4.76593077788667E-03
+  O1                2.22105628349956E-04   -2.65035389468427E-14    4.53283196083820E-03
+  H1               -1.12384102423313E-04   -1.70033846678330E-03    1.16549408498368E-04
+  H2               -1.12384102431196E-04    1.70033846681439E-03    1.16549408543443E-04
+ ------------------------------------------------------------------------------------------
+
+++ Geometry section
+
+********************************************************************************
+  Geometrical information of the new structure
+********************************************************************************
+
+
+ *********************************************************
+ * Nuclear coordinates for the next iteration / Bohr     *
+ *********************************************************
+  ATOM              X               Y               Z     
+  C1              -0.149202       -0.000000       -1.264942
+  O1               0.027020        0.000000        1.694300
+  H1               0.439037       -1.879558       -2.147932
+  H2               0.439037        1.879558       -2.147932
+
+
+ *********************************************************
+ * Nuclear coordinates for the next iteration / Angstrom *
+ *********************************************************
+  ATOM              X               Y               Z     
+  C1              -0.078954       -0.000000       -0.669378
+  O1               0.014298        0.000000        0.896585
+  H1               0.232328       -0.994620       -1.136637
+  H2               0.232328        0.994620       -1.136637
+
+
+                    *************************************** 
+                    *    InterNuclear Distances / Bohr    * 
+                    *************************************** 
+
+               1 C1            2 O1            3 H1            4 H2    
+    1 C1       0.000000
+    2 O1       2.964484        0.000000
+    3 H1       2.158341        4.297120        0.000000
+    4 H2       2.158341        4.297120        3.759117        0.000000
+
+                    ******************************************* 
+                    *    InterNuclear Distances / Angstrom    * 
+                    ******************************************* 
+
+               1 C1            2 O1            3 H1            4 H2    
+    1 C1       0.000000
+    2 O1       1.568737        0.000000
+    3 H1       1.142145        2.273938        0.000000
+    4 H2       1.142145        2.273938        1.989239        0.000000
+
+                    ************************************** 
+                    *    Valence Bond Angles / Degree    * 
+                    ************************************** 
+                          Atom centers                 Phi
+                      2 O1       1 C1       3 H1       113.09
+                      2 O1       1 C1       4 H2       113.09
+                      3 H1       1 C1       4 H2       121.11
+--
+--- Stop Module: slapaf at Fri Jun 11 13:19:32 2021 /rc=_RC_CONTINUE_LOOP_ ---
+*** files: formald.geo.molden formald.slapaf.h5 formald.structure formald.Opt.xyz xmldump
+    saved to directory /scratch/herbertl/franck-condon-factors/formaldehyde/hf/molcas/from-cas-4.3/alaska-root-2
+
+--- Start Module: alaska at Fri Jun 11 13:19:33 2021 ---
+
+()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()
+
+                                              &ALASKA
+
+                                   only a single process is used
+                       available to each process: 2.0 GB of memory, 1 thread?
+                                             pid: 10375
+()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()
+
+
+                     Threshold for contributions to the gradient: 0.100E-06
+
+
+                    ********************************************
+                    * Symmetry Adapted Cartesian Displacements *
+                    ********************************************
+
+
+           Irreducible representation : a  
+           Basis function(s) of irrep: x, y, xy, Rz, z, xz, Ry, yz, Rx, I                                              
+
+ Basis Label        Type   Center Phase
+   1   C1           x         1     1
+   2   C1           y         1     1
+   3   C1           z         1     1
+   4   O1           x         2     1
+   5   O1           y         2     1
+   6   O1           z         2     1
+   7   H1           x         3     1
+   8   H1           y         3     1
+   9   H1           z         3     1
+  10   H2           x         4     1
+  11   H2           y         4     1
+  12   H2           z         4     1
+
+                     No automatic utilization of translational and rotational invariance of the energy is employed.
+
+ Conventional ERI gradients!
+
+ Wavefunction type: State average CASSCF
+
+
+ **************************************************
+ *                                                *
+ *              Molecular gradients               *
+ *                                                *
+ **************************************************
+
+  Irreducible representation: a  
+ ------------------------------------------------------------------------------------------
+                              X                       Y                       Z
+ ------------------------------------------------------------------------------------------
+  C1               -2.09950290912975E-04    6.98816005062497E-14   -3.55126319178112E-05
+  O1                8.56434999463307E-06   -3.91184480641460E-14    4.12732473761501E-04
+  H1                1.00692970459448E-04    5.76249979018728E-04   -1.88609920934724E-04
+  H2                1.00692970458227E-04   -5.76249979050036E-04   -1.88609920913185E-04
+ ------------------------------------------------------------------------------------------
+
+*****************************************************************************************************************
+*****************************************************************************************************************
+
+++ Geometry section
+
+********************************************************************************
+  Geometrical information of the new structure
+********************************************************************************
+
+
+ *********************************************************
+ * Nuclear coordinates for the next iteration / Bohr     *
+ *********************************************************
+  ATOM              X               Y               Z     
+  C1              -0.144794       -0.000000       -1.266825
+  O1               0.026673        0.000000        1.690772
+  H1               0.437006       -1.884529       -2.145227
+  H2               0.437006        1.884529       -2.145227
+
+
+ *********************************************************
+ * Nuclear coordinates for the next iteration / Angstrom *
+ *********************************************************
+  ATOM              X               Y               Z     
+  C1              -0.076622       -0.000000       -0.670375
+  O1               0.014115        0.000000        0.894718
+  H1               0.231254       -0.997250       -1.135205
+  H2               0.231254        0.997250       -1.135205
+
+
+                    *************************************** 
+                    *    InterNuclear Distances / Bohr    * 
+                    *************************************** 
+
+               1 C1            2 O1            3 H1            4 H2    
+    1 C1       0.000000
+    2 O1       2.962563        0.000000
+    3 H1       2.159058        4.293566        0.000000
+    4 H2       2.159058        4.293566        3.769057        0.000000
+
+                    ******************************************* 
+                    *    InterNuclear Distances / Angstrom    * 
+                    ******************************************* 
+
+               1 C1            2 O1            3 H1            4 H2    
+    1 C1       0.000000
+    2 O1       1.567721        0.000000
+    3 H1       1.142524        2.272057        0.000000
+    4 H2       1.142524        2.272057        1.994499        0.000000
+
+                    ************************************** 
+                    *    Valence Bond Angles / Degree    * 
+                    ************************************** 
+                          Atom centers                 Phi
+                      2 O1       1 C1       3 H1       112.99
+                      2 O1       1 C1       4 H2       112.99
+                      3 H1       1 C1       4 H2       121.58
+--
+--- Stop Module: slapaf at Fri Jun 11 13:19:34 2021 /rc=_RC_CONTINUE_LOOP_ ---
+*** files: formald.geo.molden formald.slapaf.h5 formald.structure formald.Opt.xyz xmldump
+    saved to directory /scratch/herbertl/franck-condon-factors/formaldehyde/hf/molcas/from-cas-4.3/alaska-root-2
+
+--- Start Module: alaska at Fri Jun 11 13:19:35 2021 ---
+
+()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()
+
+                                              &ALASKA
+
+                                   only a single process is used
+                       available to each process: 2.0 GB of memory, 1 thread?
+                                             pid: 10395
+()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()
+
+
+                     Threshold for contributions to the gradient: 0.100E-06
+
+
+                    ********************************************
+                    * Symmetry Adapted Cartesian Displacements *
+                    ********************************************
+
+
+           Irreducible representation : a  
+           Basis function(s) of irrep: x, y, xy, Rz, z, xz, Ry, yz, Rx, I                                              
+
+ Basis Label        Type   Center Phase
+   1   C1           x         1     1
+   2   C1           y         1     1
+   3   C1           z         1     1
+   4   O1           x         2     1
+   5   O1           y         2     1
+   6   O1           z         2     1
+   7   H1           x         3     1
+   8   H1           y         3     1
+   9   H1           z         3     1
+  10   H2           x         4     1
+  11   H2           y         4     1
+  12   H2           z         4     1
+
+                     No automatic utilization of translational and rotational invariance of the energy is employed.
+
+ Conventional ERI gradients!
+
+ Wavefunction type: State average CASSCF
+
+
+ **************************************************
+ *                                                *
+ *              Molecular gradients               *
+ *                                                *
+ **************************************************
+
+  Irreducible representation: a  
+ ------------------------------------------------------------------------------------------
+                              X                       Y                       Z
+ ------------------------------------------------------------------------------------------
+  C1                3.68580823457698E-05   -1.14054599098523E-13    1.06322732893460E-05
+  O1                9.90478240647796E-07    7.70115308329489E-14   -1.06295234441944E-04
+  H1               -1.89242802977052E-05    1.49385977674665E-05    4.78314805831825E-05
+  H2               -1.89242802883793E-05   -1.49385977301630E-05    4.78314805762992E-05
+ ------------------------------------------------------------------------------------------
+
+
+++ Geometry section
+
+********************************************************************************
+  Geometrical information of the final structure
+********************************************************************************
+
+  NOTE: on convergence the final predicted structure will be printed here.
+  This is not identical to the structure printed in the head of the output.
+
+ *********************************************************
+ * Nuclear coordinates of the final structure / Bohr     *
+ *********************************************************
+  ATOM              X               Y               Z     
+  C1              -0.144974        0.000000       -1.266713
+  O1               0.026635       -0.000000        1.691360
+  H1               0.437115       -1.884343       -2.145576
+  H2               0.437115        1.884343       -2.145576
+
+
+ *********************************************************
+ * Nuclear coordinates of the final structure / Angstrom *
+ *********************************************************
+  ATOM              X               Y               Z     
+  C1              -0.076717        0.000000       -0.670316
+  O1               0.014094       -0.000000        0.895029
+  H1               0.231311       -0.997152       -1.135390
+  H2               0.231311        0.997152       -1.135390
+
+
+                    *************************************** 
+                    *    InterNuclear Distances / Bohr    * 
+                    *************************************** 
+
+               1 C1            2 O1            3 H1            4 H2    
+    1 C1       0.000000
+    2 O1       2.963046        0.000000
+    3 H1       2.159162        4.294336        0.000000
+    4 H2       2.159162        4.294336        3.768687        0.000000
+
+                    ******************************************* 
+                    *    InterNuclear Distances / Angstrom    * 
+                    ******************************************* 
+
+               1 C1            2 O1            3 H1            4 H2    
+    1 C1       0.000000
+    2 O1       1.567977        0.000000
+    3 H1       1.142579        2.272465        0.000000
+    4 H2       1.142579        2.272465        1.994303        0.000000
+
+                    ************************************** 
+                    *    Valence Bond Angles / Degree    * 
+                    ************************************** 
+                          Atom centers                 Phi
+                      2 O1       1 C1       3 H1       113.00
+                      2 O1       1 C1       4 H2       113.00
+                      3 H1       1 C1       4 H2       121.55
+--
+
+ Observe that the harmonic oscillator analysis is only valid at stationary points!
+
+ Note that rotational and translational degrees have been automatically removed,
+ if the energy is invariant to these degrees of freedom.
+
+
+ Harmonic frequencies in cm-1
+
+ IR Intensities in km/mol
+
+                        1         2         3         4         5         6
+
+     Frequency:       683.44    877.16    887.36   1367.14   3214.24   3407.64                                          
+
+     Intensity:    1.840E+01 1.078E-01 7.780E-01 3.444E+00 1.957E+01 2.643E+01
+     Red. mass:      1.27201   6.14217   1.19498   1.14433   1.04603   1.12497
+
+     C1         x   -0.12825  -0.03223   0.00019   0.01513   0.02769  -0.00000
+     C1         y   -0.00006  -0.00035  -0.10036   0.00001   0.00001  -0.09733
+     C1         z    0.00411  -0.19182   0.00067  -0.10206  -0.05050  -0.00001
+     O1         x    0.02519   0.00949  -0.00005   0.00801   0.00080   0.00000
+     O1         y    0.00003   0.00020   0.05534  -0.00000   0.00000   0.00006
+     O1         z   -0.03386   0.16714  -0.00057   0.00938   0.00179   0.00000
+     H1         x    0.56357   0.11627  -0.08965  -0.15367  -0.17116  -0.17889
+     H1         y    0.08154   0.03031   0.15814  -0.35161   0.60406   0.57905
+     H1         z    0.24387  -0.18654  -0.61500   0.53323   0.28641   0.26932
+     H2         x    0.56366   0.11689   0.08816  -0.15368  -0.17120   0.17889
+     H2         y   -0.08139  -0.02920   0.15852   0.35159  -0.60420   0.57889
+     H2         z    0.24461  -0.18220   0.61606   0.53316   0.28651  -0.26924
+
+
+
+++ Thermochemistry
+
+ *********************
+ *                   *
+ *  THERMOCHEMISTRY  *
+ *                   *
+ *********************
+
+ Mass-centered Coordinates (Angstrom):
+ ********************************************************
+ Label        X           Y           Z          Mass  
+ --------------------------------------------------------
+ C1        -0.056301   -0.000000   -0.804053     12.00000
+ O1         0.009589    0.000000    0.762539     15.99491
+ H1         0.259089   -0.997152   -1.264166      1.00783
+ H2         0.259089    0.997152   -1.264166      1.00783
+ --------------------------------------------------------
+ Molecular mass:   30.010565
+ Rotational Constants (cm-1):    0.7565    0.8242    7.7364
+ Rotational Constants (GHz) :   22.6791   24.7074  231.9319
+ Rotational temperatures (K):    1.0884    1.1858   11.1310
+ Rotational Symmetry factor:  1
+ Vibrational temperature (K): 
+    983.32  1262.04  1276.72  1967.01  4624.58
+   4902.83
+ Number of trans. and rot. degrees of freedom:  6
+ ZPVE                14.920 kcal/mol      0.023777 au.
+ ZPVE corrected energy                 -113.795689 au.
+
+ *****************************************************
+ Temperature =     0.00 Kelvin, Pressure =   1.00 atm
+ -----------------------------------------------------
+ Molecular Partition Function and Molar Entropy:
+                        q/V (M**-3)    S(kcal/mol*K)
+ Electronic            0.100000D+01        0.000
+ Translational         0.100000D+01        0.000
+ Rotational            0.100000D+01        2.981
+ Vibrational           0.100000D+01        0.000
+ TOTAL                 0.100000D+01        2.981
+
+ Thermal contributions to INTERNAL ENERGY:
+ Electronic           0.000 kcal/mol      0.000000 au.
+ Translational        0.000 kcal/mol      0.000000 au.
+ Rotational           0.000 kcal/mol      0.000000 au.
+ Vibrational         14.920 kcal/mol      0.023777 au.
+ TOTAL               14.920 kcal/mol      0.023777 au.
+
+ Thermal contributions to
+ ENTHALPY            14.920 kcal/mol      0.023777 au.
+ GIBBS FREE ENERGY   14.920 kcal/mol      0.023777 au.
+
+ Sum of energy and thermal contributions
+ INTERNAL ENERGY                       -113.795689 au.
+ ENTHALPY                              -113.795689 au.
+ GIBBS FREE ENERGY                     -113.795689 au.
+ -----------------------------------------------------
+
+ *****************************************************
+ Temperature =   100.00 Kelvin, Pressure =   1.00 atm
+ -----------------------------------------------------
+ Molecular Partition Function and Molar Entropy:
+                        q/V (M**-3)    S(kcal/mol*K)
+ Electronic            0.100000D+01        0.000
+ Translational         0.977046D+27       30.704
+ Rotational            0.467639D+03       15.198
+ Vibrational           0.246794D-32        0.001
+ TOTAL                 0.112762D-02       45.902
+
+ Thermal contributions to INTERNAL ENERGY:
+ Electronic           0.000 kcal/mol      0.000000 au.
+ Translational        0.298 kcal/mol      0.000475 au.
+ Rotational           0.298 kcal/mol      0.000475 au.
+ Vibrational         14.921 kcal/mol      0.023777 au.
+ TOTAL               15.517 kcal/mol      0.024727 au.
+
+ Thermal contributions to
+ ENTHALPY            15.715 kcal/mol      0.025044 au.
+ GIBBS FREE ENERGY   11.125 kcal/mol      0.017729 au.
+
+ Sum of energy and thermal contributions
+ INTERNAL ENERGY                       -113.794738 au.
+ ENTHALPY                              -113.794422 au.
+ GIBBS FREE ENERGY                     -113.801737 au.
+ -----------------------------------------------------
+
+ *****************************************************
+ Temperature =   273.15 Kelvin, Pressure =   1.00 atm
+ -----------------------------------------------------
+ Molecular Partition Function and Molar Entropy:
+                        q/V (M**-3)    S(kcal/mol*K)
+ Electronic            0.100000D+01        0.000
+ Translational         0.441080D+28       35.696
+ Rotational            0.211112D+04       18.193
+ Vibrational           0.121082D-11        0.485
+ TOTAL                 0.112748D+20       54.374
+
+ Thermal contributions to INTERNAL ENERGY:
+ Electronic           0.000 kcal/mol      0.000000 au.
+ Translational        0.814 kcal/mol      0.001298 au.
+ Rotational           0.814 kcal/mol      0.001298 au.
+ Vibrational         15.027 kcal/mol      0.023947 au.
+ TOTAL               16.656 kcal/mol      0.026542 au.
+
+ Thermal contributions to
+ ENTHALPY            17.198 kcal/mol      0.027407 au.
+ GIBBS FREE ENERGY    2.346 kcal/mol      0.003739 au.
+
+ Sum of energy and thermal contributions
+ INTERNAL ENERGY                       -113.792923 au.
+ ENTHALPY                              -113.792058 au.
+ GIBBS FREE ENERGY                     -113.815727 au.
+ -----------------------------------------------------
+
+ *****************************************************
+ Temperature =   298.15 Kelvin, Pressure =   1.00 atm
+ -----------------------------------------------------
+ Molecular Partition Function and Molar Entropy:
+                        q/V (M**-3)    S(kcal/mol*K)
+ Electronic            0.100000D+01        0.000
+ Translational         0.502999D+28       36.131
+ Rotational            0.240748D+04       18.454
+ Vibrational           0.123783D-10        0.647
+ TOTAL                 0.149897D+21       55.231
+
+ Thermal contributions to INTERNAL ENERGY:
+ Electronic           0.000 kcal/mol      0.000000 au.
+ Translational        0.889 kcal/mol      0.001416 au.
+ Rotational           0.889 kcal/mol      0.001416 au.
+ Vibrational         15.073 kcal/mol      0.024021 au.
+ TOTAL               16.851 kcal/mol      0.026853 au.
+
+ Thermal contributions to
+ ENTHALPY            17.443 kcal/mol      0.027797 au.
+ GIBBS FREE ENERGY    0.976 kcal/mol      0.001555 au.
+
+ Sum of energy and thermal contributions
+ INTERNAL ENERGY                       -113.792612 au.
+ ENTHALPY                              -113.791668 au.
+ GIBBS FREE ENERGY                     -113.817911 au.
+ -----------------------------------------------------
+
+ *****************************************************
+ Temperature =   323.15 Kelvin, Pressure =   1.00 atm
+ -----------------------------------------------------
+ Molecular Partition Function and Molar Entropy:
+                        q/V (M**-3)    S(kcal/mol*K)
+ Electronic            0.100000D+01        0.000
+ Translational         0.567573D+28       36.531
+ Rotational            0.271654D+04       18.694
+ Vibrational           0.889014D-10        0.825
+ TOTAL                 0.137071D+22       56.049
+
+ Thermal contributions to INTERNAL ENERGY:
+ Electronic           0.000 kcal/mol      0.000000 au.
+ Translational        0.963 kcal/mol      0.001535 au.
+ Rotational           0.963 kcal/mol      0.001535 au.
+ Vibrational         15.128 kcal/mol      0.024109 au.
+ TOTAL               17.055 kcal/mol      0.027179 au.
+
+ Thermal contributions to
+ ENTHALPY            17.697 kcal/mol      0.028202 au.
+ GIBBS FREE ENERGY   -0.415 kcal/mol     -0.000662 au.
+
+ Sum of energy and thermal contributions
+ INTERNAL ENERGY                       -113.792287 au.
+ ENTHALPY                              -113.791263 au.
+ GIBBS FREE ENERGY                     -113.820127 au.
+ -----------------------------------------------------
+
+ *****************************************************
+ Temperature =   373.15 Kelvin, Pressure =   1.00 atm
+ -----------------------------------------------------
+ Molecular Partition Function and Molar Entropy:
+                        q/V (M**-3)    S(kcal/mol*K)
+ Electronic            0.100000D+01        0.000
+ Translational         0.704272D+28       37.245
+ Rotational            0.337082D+04       19.123
+ Vibrational           0.211590D-08        1.218
+ TOTAL                 0.502310D+23       57.586
+
+ Thermal contributions to INTERNAL ENERGY:
+ Electronic           0.000 kcal/mol      0.000000 au.
+ Translational        1.112 kcal/mol      0.001773 au.
+ Rotational           1.112 kcal/mol      0.001773 au.
+ Vibrational         15.265 kcal/mol      0.024327 au.
+ TOTAL               17.490 kcal/mol      0.027872 au.
+
+ Thermal contributions to
+ ENTHALPY            18.232 kcal/mol      0.029054 au.
+ GIBBS FREE ENERGY   -3.257 kcal/mol     -0.005190 au.
+
+ Sum of energy and thermal contributions
+ INTERNAL ENERGY                       -113.791594 au.
+ ENTHALPY                              -113.790412 au.
+ GIBBS FREE ENERGY                     -113.824655 au.
+ -----------------------------------------------------
+
+ *****************************************************
+ Temperature =   473.15 Kelvin, Pressure =   1.00 atm
+ -----------------------------------------------------
+ Molecular Partition Function and Molar Entropy:
+                        q/V (M**-3)    S(kcal/mol*K)
+ Electronic            0.100000D+01        0.000
+ Translational         0.100557D+29       38.425
+ Rotational            0.481292D+04       19.831
+ Vibrational           0.171736D-06        2.085
+ TOTAL                 0.831158D+25       60.341
+
+ Thermal contributions to INTERNAL ENERGY:
+ Electronic           0.000 kcal/mol      0.000000 au.
+ Translational        1.410 kcal/mol      0.002248 au.
+ Rotational           1.410 kcal/mol      0.002248 au.
+ Vibrational         15.633 kcal/mol      0.024913 au.
+ TOTAL               18.454 kcal/mol      0.029408 au.
+
+ Thermal contributions to
+ ENTHALPY            19.394 kcal/mol      0.030907 au.
+ GIBBS FREE ENERGY   -9.156 kcal/mol     -0.014591 au.
+
+ Sum of energy and thermal contributions
+ INTERNAL ENERGY                       -113.790057 au.
+ ENTHALPY                              -113.788559 au.
+ GIBBS FREE ENERGY                     -113.834057 au.
+ -----------------------------------------------------
+--
+
+++    Isotopic shifts:
+      ----------------
+
+
+
+ ****************************************
+ *                                      *
+ * Isotope shifted frequencies in cm-1  *
+ *                                      *
+ ****************************************
+
+
+  Single substitutions:
+  -----------------------
+
+ Masses:
+ =======
+  13  16   1   1
+
+
+ Frequencies:
+ ============
+                         1         2         3         4         5         6
+
+            Freq.      i0.00     i0.00     i0.00     i0.00      0.00      0.00                                               
+
+
+                         7         8         9        10        11        12
+
+            Freq.     678.19    861.40    883.17   1360.52   3209.32   3392.67                                               
+
+
+ Masses:
+ =======
+  14  16   1   1
+
+
+ Frequencies:
+ ============
+                         1         2         3         4         5         6
+
+            Freq.      i0.00     i0.00     i0.00      0.00      0.00      0.00                                               
+
+
+                         7         8         9        10        11        12
+
+            Freq.     673.66    847.28    879.52   1355.04   3205.14   3379.85                                               
+
+
+ Masses:
+ =======
+  12  18   1   1
+
+
+ Frequencies:
+ ============
+                         1         2         3         4         5         6
+
+            Freq.      i0.00     i0.00      0.00      0.00      0.00      0.00                                               
+
+
+                         7         8         9        10        11        12
+
+            Freq.     682.26    855.05    884.94   1366.96   3214.23   3407.64                                               
+
+
+ Masses:
+ =======
+  12  17   1   1
+
+
+ Frequencies:
+ ============
+                         1         2         3         4         5         6
+
+            Freq.      i0.00     i0.00     i0.00     i0.00      0.00      0.00                                               
+
+
+                         7         8         9        10        11        12
+
+            Freq.     682.84    865.48    886.08   1367.05   3214.24   3407.64                                               
+
+
+ Masses:
+ =======
+  12  16   2   1
+
+
+ Frequencies:
+ ============
+                         1         2         3         4         5         6
+
+            Freq.      i0.00     i0.00      0.00      0.00      0.00      0.00                                               
+
+
+                         7         8         9        10        11        12
+
+            Freq.     600.06    749.01    874.12   1233.16   2421.48   3322.55                                               
+
+
+ Masses:
+ =======
+  12  16   3   1
+
+
+ Frequencies:
+ ============
+                         1         2         3         4         5         6
+
+            Freq.      i0.00     i0.00      0.00      0.00      0.00      0.00                                               
+
+
+                         7         8         9        10        11        12
+
+            Freq.     552.60    686.81    872.38   1194.63   2053.88   3319.55                                               
+
+
+ Masses:
+ =======
+  12  16   1   2
+
+
+ Frequencies:
+ ============
+                         1         2         3         4         5         6
+
+            Freq.      i0.00     i0.00      0.00      0.00      0.00      0.00                                               
+
+
+                         7         8         9        10        11        12
+
+            Freq.     599.96    749.14    874.08   1233.19   2421.43   3322.60                                               
+
+
+ Masses:
+ =======
+  12  16   1   3
+
+
+ Frequencies:
+ ============
+                         1         2         3         4         5         6
+
+            Freq.      i0.00     i0.00      0.00      0.00      0.00      0.00                                               
+
+
+                         7         8         9        10        11        12
+
+            Freq.     552.46    686.98    872.35   1194.68   2053.83   3319.60                                               
+
+
+
+  Full substitutions:
+  -----------------------
+
+ Masses:
+ =======
+  12  16   2   2
+
+
+ Frequencies:
+ ============
+                         1         2         3         4         5         6
+
+            Freq.      i0.00     i0.00     i0.00      0.00      0.00      0.00                                               
+
+
+                         7         8         9        10        11        12
+
+            Freq.     534.36    674.99    818.25   1053.08   2320.90   2544.64                                               
+
+
+ Masses:
+ =======
+  12  16   3   3
+
+
+ Frequencies:
+ ============
+                         1         2         3         4         5         6
+
+            Freq.      i0.00     i0.00     i0.00     i0.00      0.00      0.00                                               
+
+
+                         7         8         9        10        11        12
+
+            Freq.     473.81    582.71    738.92    965.02   1938.32   2184.43                                               
+
+
+ Masses:
+ =======
+  13  16   1   1
+
+
+ Frequencies:
+ ============
+                         1         2         3         4         5         6
+
+            Freq.      i0.00     i0.00     i0.00     i0.00      0.00      0.00                                               
+
+
+                         7         8         9        10        11        12
+
+            Freq.     678.19    861.40    883.17   1360.52   3209.32   3392.67                                               
+
+
+ Masses:
+ =======
+  14  16   1   1
+
+
+ Frequencies:
+ ============
+                         1         2         3         4         5         6
+
+            Freq.      i0.00     i0.00     i0.00      0.00      0.00      0.00                                               
+
+
+                         7         8         9        10        11        12
+
+            Freq.     673.66    847.28    879.52   1355.04   3205.14   3379.85                                               
+
+
+ Masses:
+ =======
+  12  18   1   1
+
+
+ Frequencies:
+ ============
+                         1         2         3         4         5         6
+
+            Freq.      i0.00     i0.00      0.00      0.00      0.00      0.00                                               
+
+
+                         7         8         9        10        11        12
+
+            Freq.     682.26    855.05    884.94   1366.96   3214.23   3407.64                                               
+
+
+ Masses:
+ =======
+  12  17   1   1
+
+
+ Frequencies:
+ ============
+                         1         2         3         4         5         6
+
+            Freq.      i0.00     i0.00     i0.00     i0.00      0.00      0.00                                               
+
+
+                         7         8         9        10        11        12
+
+            Freq.     682.84    865.48    886.08   1367.05   3214.24   3407.64                                               
+
+
+--
+
+++ Principal components of the normal modes
+   ----------------------------------------
+
+   (Only contributions larger than 0.50 times the maximum are printed)
+
+
+      Mode      1
+        Frequency:          683.44 cm-1
+      ---------------------------------
+        Angle H1 C1 H2          -1.0000
+        Angle O1 C1 H2          -0.8771
+        Angle O1 C1 H1          -0.8759
+      ---------------------------------
+
+      Mode      2
+        Frequency:          877.16 cm-1
+      ---------------------------------
+        Bond O1 C1               1.0000
+      ---------------------------------
+
+      Mode      3
+        Frequency:          887.36 cm-1
+      ---------------------------------
+        Angle O1 C1 H1           1.0000
+        Angle O1 C1 H2          -0.9982
+      ---------------------------------
+
+      Mode      4
+        Frequency:         1367.14 cm-1
+      ---------------------------------
+        Angle H1 C1 H2           1.0000
+      ---------------------------------
+
+      Mode      5
+        Frequency:         3214.24 cm-1
+      ---------------------------------
+        Bond H2 C1              -1.0000
+        Bond H1 C1              -0.9997
+      ---------------------------------
+
+      Mode      6
+        Frequency:         3407.64 cm-1
+      ---------------------------------
+        Bond H1 C1              -1.0000
+        Bond H2 C1               0.9998
+      ---------------------------------
+--
+
+--- Stop Module: slapaf at Fri Jun 11 13:20:02 2021 /rc=_RC_ALL_IS_WELL_ ---
+*** files: formald.freq.molden formald.slapaf.h5 xmldump
+    saved to directory /scratch/herbertl/franck-condon-factors/formaldehyde/hf/molcas/from-cas-4.3/alaska-root-2
+
+>>> END DO
+

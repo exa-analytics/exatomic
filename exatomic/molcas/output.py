@@ -342,15 +342,21 @@ class Output(six.with_metaclass(OutMeta, Editor)):
                     pass
         else:
             _reatom = "Nuclear coordinates for the next iteration / Bohr"
-            found = self.find(_reatom, keys_only=True)
-            starts = np.array(found)[:-1]+3
+            _reatom02 = "Nuclear coordinates of the final structure / Bohr"
+            found = self.find(_reatom, _reatom02, keys_only=True)
+            if len(found[_reatom02]) > 1:
+                raise ValueError("Found more than one final atom table.")
+            elif len(found[_reatom02]) == 0:
+                raise ValueError("Could not find a final atom table in the file.")
+            starts = np.array(found[_reatom])
+            starts = np.array(list(starts)+found[_reatom02])+3
             stop = starts[0]
             while self[stop].strip(): stop += 1
             stops = starts + (stop - starts[0])
+            cols = ['symbol', 'x', 'y', 'z']
             dfs = []
             for idx, (start, stop) in enumerate(zip(starts, stops)):
                 df = self.pandas_dataframe(start, stop, ncol=4)
-                cols = ['symbol', 'x', 'y', 'z']
                 df.columns = cols
                 label = np.concatenate(list(map(lambda x: re.findall(r'\D+', x),
                                                 df['symbol'])))
@@ -367,33 +373,34 @@ class Output(six.with_metaclass(OutMeta, Editor)):
             atom = pd.concat(dfs, ignore_index=True)
             self.atom = atom
 
-    def parse_gradient(self, alaska=True):
-        if alaska:
-            _regrad = "Molecular gradients"
-            _reirr = "Irreducible representation:"
-            found = self.find(_regrad, _reirr, keys_only=True)
-            if len(found[_regrad]) != len(found[_reirr]):
-                text = "Do not have support for multiple irreducible " \
-                       +"representations yet."
-                raise NotImplementedError(text)
-            starts = np.array(found[_regrad]) + 8
-            stop = starts[0]
-            while self[stop].strip()[:2] != '--': stop += 1
-            stops = starts + (stop - starts[0])
-            dfs = []
-            for idx, (start, stop) in enumerate(zip(starts, stops)):
-                df = self.pandas_dataframe(start, stop, ncol=4)
-                cols = ['symbol', 'fx', 'fy', 'fz']
-                df.columns = cols
-                label = np.concatenate(list(map(lambda x: re.findall(r'\D+', x),
-                                                df['symbol'])))
-                df['symbol'] = label
-                df['atom'] = range(df.shape[0])
-                df['frame'] = idx
-                df['Z'] = df['symbol'].map(sym2z)
-                dfs.append(df)
-            grad = pd.concat(dfs, ignore_index=True)
-            self.gradient = grad
+    def parse_gradient(self):
+        _regrad = "Molecular gradients"
+        _reirr = "Irreducible representation:"
+        found = self.find(_regrad, _reirr, keys_only=True)
+        if not found[_regrad]:
+            return
+        if len(found[_regrad]) != len(found[_reirr]):
+            text = "Do not have support for multiple irreducible " \
+                   +"representations yet."
+            raise NotImplementedError(text)
+        starts = np.array(found[_regrad]) + 8
+        stop = starts[0]
+        while self[stop].strip()[:2] != '--': stop += 1
+        stops = starts + (stop - starts[0])
+        dfs = []
+        for idx, (start, stop) in enumerate(zip(starts, stops)):
+            df = self.pandas_dataframe(start, stop, ncol=4)
+            cols = ['symbol', 'fx', 'fy', 'fz']
+            df.columns = cols
+            label = np.concatenate(list(map(lambda x: re.findall(r'\D+', x),
+                                            df['symbol'])))
+            df['symbol'] = label
+            df['atom'] = range(df.shape[0])
+            df['frame'] = idx
+            df['Z'] = df['symbol'].map(sym2z)
+            dfs.append(df)
+        grad = pd.concat(dfs, ignore_index=True)
+        self.gradient = grad
 
     def parse_frequency(self, linear=False, normalize=True):
         _refreq = "Frequency:"
