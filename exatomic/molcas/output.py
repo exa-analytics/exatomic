@@ -164,32 +164,31 @@ class Output(six.with_metaclass(OutMeta, Editor)):
         # we can take a nested for loop of three elements without too
         # much of a hit on performance
         for idx, prop in enumerate(props):
-            # keep track of columns parsed so far
-            counter = 0
             # find where the data blocks are printed
             starts = np.array(self.find(self._resta, start=prop, keys_only=True)) + prop + 2
             # data_length should always be the same
-            # we could determine it for each data block but that would
-            # be a large number of while loops
             stops = starts + data_length
             # hardcoding but should apply in all of our cases
-            # there should be a max of 4 columns of data in each of the 'STATE'
-            # data blocks so we get the maximum number of hits that there should be
-            # assuming a square matrix of data_length x data_length
+            # there should be an n number of 4 column data blocks that
+            # we need to parse
+            # use np.ceil as if we have a 7x7 matrix we get one data set
+            # with 4 columns and one with 3 columns
             n = int(np.ceil(data_length/4))
             dfs = []
             # grab all of the data
+            # we use all hits up to n as there are many places with the
+            # 'STATE' keyword so we want to just grab the data starting
+            # at the property keyword
             for ndx, (start, stop) in enumerate(zip(starts[:n], stops[:n])):
+                # should be four in all but the last data set
                 ncols = len(self[start-2].split())
                 df = self.pandas_dataframe(start, stop, ncol=ncols)
-                df[0] -= 1
-                # set the indexes as they may be different and drop the column
-                df.index = df[0]
+                # the only column we do not need will always be the
+                # column with name 0
                 df.drop(0, axis=1, inplace=True)
                 # set the columns as they should be
-                df.columns = list(range(counter, counter+ncols-1))
+                df.columns = list(range(ndx*4, ndx*4+ncols-1))
                 dfs.append(df)
-                counter += ncols - 1
             # put the component together
             all_dfs.append(pd.concat(dfs, axis=1))
             all_dfs[-1]['component'] = idx
