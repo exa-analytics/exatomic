@@ -474,25 +474,21 @@ class Output(six.with_metaclass(OutMeta, Editor)):
             self.meta['spherical'] = False
 
     def parse_sf_dipole_moment(self):
-        '''
-        Get the Spin-Free electric dipole moment.
-
-        Raises:
-            AttributeError: If it cannot find the angular momentum property. This is
-                            applicable to this package as it expects it to be present.
-        '''
+        ''' Get the Spin-Free electric dipole moment from RASSI '''
         # define the search string
         _retdm = "PROPERTY: MLTPL  1"
-        _resta = "STATE"
         component_map = {0: 'x', 1: 'y', 2: 'z'}
         found = self.find(_retdm, keys_only=True)
         if not found:
-            raise AttributeError("Could not find the TDM in the output")
-        #found = self.find(_retdm, _resta, keys_only=True)
+            return
         if len(found) > 6:
+            # in new version of molcas they introduced
+            # extra matrices that are printed so this
+            # was added due to that change
             props = np.array(found)[:6:2]
         else:
             props = np.array(found)[:3]
+        # find the number of lines that the data spans
         stop = props[0] + 5
         while self[stop].strip(): stop += 1
         data_length = stop - props[0] - 5
@@ -502,20 +498,16 @@ class Output(six.with_metaclass(OutMeta, Editor)):
         self.sf_dipole_moment = stdm
 
     def parse_sf_quadrupole_moment(self):
-        '''
-        Get the Spin-Free electric quadrupole moment.
-
-        Raises:
-            AttributeError: If it cannot find the angular momentum property. This is
-                            applicable to this package as it expects it to be present.
-        '''
+        ''' Get the Spin-Free electric quadrupole moment from RASSI '''
         _requad = "PROPERTY: MLTPL  2"
-        _resta = "STATE"
         component_map = {0: 'xx', 1: 'xy', 2: 'xz', 3: 'yy', 4: 'yz', 5: 'zz'}
         found = self.find(_requad, keys_only=True)
         if not found:
-            raise AttributeError("Could not find the Quadrupoles in the output")
+            return
+        # molcas prints the upper triangular tensor
+        # elements of the full quadrupole tensor
         props = np.array(found)[:6]
+        # find the number of lines that the data spans
         stop = props[0] + 5
         while self[stop].strip(): stop += 1
         data_length = stop - props[0] - 5
@@ -525,20 +517,14 @@ class Output(six.with_metaclass(OutMeta, Editor)):
         self.sf_quadrupole_moment = sqdm
 
     def parse_sf_angmom(self):
-        '''
-        Get the Spin-Free angular momentum.
-
-        Raises:
-            AttributeError: If it cannot find the angular momentum property. This is
-                            applicable to this package as it expects it to be present.
-        '''
+        ''' Get the Spin-Free angular momentum from RASSI '''
         _reangm = "PROPERTY: ANGMOM"
-        _resta = "STATE"
         component_map = {0: 'x', 1: 'y', 2: 'z'}
         found = self.find(_reangm, keys_only=True)
         if not found:
-            raise AttributeError("Could not find the Angular Momentum in the output")
+            return
         props = np.array(found)[:3]
+        # find the number of lines that the data spans
         stop = props[0] + 5
         while self[stop].strip(): stop += 1
         data_length = stop - props[0] - 5
@@ -548,9 +534,7 @@ class Output(six.with_metaclass(OutMeta, Editor)):
         self.sf_angmom = sangm
 
     def parse_sf_energy(self):
-        '''
-        Get the Spin-Free energies.
-        '''
+        ''' Get the Spin-Free energies from RASSI or RASSCF '''
         _reenerg = " RASSI State "
         _reenerg_rasscf = " RASSCF root number"
         found = self.find(_reenerg, _reenerg_rasscf)
@@ -562,7 +546,11 @@ class Output(six.with_metaclass(OutMeta, Editor)):
         else:
             return
         if key == '':
-            raise ValueError("This should not have executed at all")
+            msg = "There was an issue in determining the key to " \
+                  +"be used in the parsing of the SF energies. " \
+                  +"Please open an issue ticket as this should " \
+                  +"never show."
+            raise ValueError(msg)
         energies = []
         for _, line in found[key]:
             energy = float(line.split()[-1])
@@ -572,9 +560,7 @@ class Output(six.with_metaclass(OutMeta, Editor)):
         self.sf_energy = df
 
     def parse_so_energy(self):
-        '''
-        Get the Spin-Orbit energies.
-        '''
+        ''' Get the Spin-Orbit energies from RASSI '''
         _reenerg = " SO-RASSI State "
         found = self.find(_reenerg)
         if not found:
@@ -588,9 +574,9 @@ class Output(six.with_metaclass(OutMeta, Editor)):
         self.so_energy = df
 
     def parse_sf_oscillator(self):
-        '''
-        Get the printed Spin-Free oscillators.
-        '''
+        ''' Get the printed Spin-Free oscillators from RASSI '''
+        # TODO: check how this has to be adjusted for different
+        #       molcas print levels
         _reosc = "++ Dipole transition strengths (spin-free states):"
         found = self.find(_reosc, keys_only=True)
         if not found:
@@ -602,9 +588,9 @@ class Output(six.with_metaclass(OutMeta, Editor)):
         self.sf_oscillator = df
 
     def parse_so_oscillator(self):
-        '''
-        Get the printed Spin-Orbit oscillators.
-        '''
+        ''' Get the printed Spin-Orbit oscillators from RASSI '''
+        # TODO: check how this has to be adjusted for different
+        #       molcas print levels
         _reosc = "++ Dipole transition strengths (SO states):"
         found = self.find(_reosc, keys_only=True)
         if not found:

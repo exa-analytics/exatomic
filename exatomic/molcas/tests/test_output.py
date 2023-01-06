@@ -115,6 +115,35 @@ class TestOutput(TestCase):
         self.assertEqual(self.formald.sf_angmom.shape[0], 30)
         self.assertTrue(np.all(pd.notnull(pd.DataFrame(self.formald.sf_angmom))))
 
+    def test_parse_sf_oscillator(self):
+        self.formald.parse_sf_oscillator()
+        self.assertEqual(self.formald.sf_oscillator.shape[0], 6)
+        self.assertTrue(np.all(pd.notnull(pd.DataFrame(self.formald.sf_oscillator))))
+
+    def test_parse_so_oscillator(self):
+        self.formald.parse_so_oscillator()
+        self.assertEqual(self.formald.so_oscillator.shape[0], 6)
+        self.assertTrue(np.all(pd.notnull(pd.DataFrame(self.formald.so_oscillator))))
+
+    def test_parse_sf_energy(self):
+        self.cdz.parse_sf_energy()
+        self.assertEqual(self.cdz.sf_energy.shape[0], 8)
+        self.assertTrue(np.all(pd.notnull(pd.DataFrame(self.cdz.sf_energy))))
+        self.formald.parse_sf_energy()
+        self.assertEqual(self.formald.sf_energy.shape[0], 10)
+        self.assertTrue(np.all(pd.notnull(pd.DataFrame(self.formald.sf_energy))))
+        self.uo2sp.parse_sf_energy()
+        self.assertEqual(self.uo2sp.sf_energy.shape[0], 4)
+        self.assertTrue(np.all(pd.notnull(pd.DataFrame(self.uo2sp.sf_energy))))
+
+    def test_parse_so_energy(self):
+        self.cdz.parse_so_energy()
+        self.assertEqual(self.cdz.so_energy.shape[0], 24)
+        self.assertTrue(np.all(pd.notnull(pd.DataFrame(self.cdz.so_energy))))
+        self.formald.parse_so_energy()
+        self.assertEqual(self.formald.so_energy.shape[0], 10)
+        self.assertTrue(np.all(pd.notnull(pd.DataFrame(self.formald.so_energy))))
+
     def test_to_universe(self):
         """Test that the Outputs can be converted to universes."""
         uni = self.uo2sp.to_universe()
