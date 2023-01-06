@@ -121,7 +121,7 @@ class Output(six.with_metaclass(GauMeta, Editor)):
         if orientation is None:
             key = _regeom02 if found[_regeom02] else _regeom01
         else:
-            if orienatation.lower() == 'input':
+            if orientation.lower() == 'input':
                 key = _regeom01
             elif orientation.lower() == 'standard':
                 if not found[_regeom02]:
@@ -133,8 +133,10 @@ class Output(six.with_metaclass(GauMeta, Editor)):
                 else:
                     key = _regeom02
             else:
-                raise ValueError("Could not understand the requested " \
-                                 +"orientation to parse.")
+                msg = "Could not understand the requested " \
+                      +"orientation to parse. Expected " \
+                      +"'Standard' or 'Input', but got {}."
+                raise ValueError(msg.format(orientation))
         starts = np.array(found[key]) + 5
         # Prints converged geometry twice but only need it once
         starts = starts[:-1] if len(starts) > 1 else starts
