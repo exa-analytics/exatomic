@@ -10,6 +10,7 @@ from __future__ import absolute_import
 from __future__ import print_function
 from __future__ import division
 import os
+import re
 import six
 import pandas as pd
 import numpy as np
@@ -17,7 +18,7 @@ from six import StringIO
 from exatomic.exa import TypedMeta
 import exatomic
 from .editor import Editor
-from exatomic import Atom
+from exatomic.core import Atom, Gradient, Frequency
 from exatomic.algorithms.numerical import _flat_square_to_triangle, _square_indices
 from exatomic.algorithms.basis import lmap, spher_lml_count
 from exatomic.core.basis import (Overlap, BasisSet, BasisSetOrder,
@@ -144,6 +145,7 @@ class Orb(six.with_metaclass(OrbMeta, Editor)):
 
 class OutMeta(TypedMeta):
     atom = Atom
+    gradient = Gradient
     basis_set = BasisSet
     basis_set_order = BasisSetOrder
     sf_dipole_moment = pd.DataFrame
@@ -153,6 +155,7 @@ class OutMeta(TypedMeta):
     so_energy = pd.DataFrame
     sf_oscillator = pd.DataFrame
     so_oscillator = pd.DataFrame
+    frequency = Frequency
 
 
 class Output(six.with_metaclass(OutMeta, Editor)):
@@ -292,51 +295,195 @@ class Output(six.with_metaclass(OutMeta, Editor)):
         return atom
 
 
-    def parse_atom(self):
+    def parse_atom(self, seward=True):
         """Parses the atom list generated in SEWARD."""
-        _re_atom0 = 'Label   Cartesian Coordinates'
-        _re_atom1 = 'Center  Label'
-        found = self.find(_re_atom0, _re_atom1, keys_only=True)
-        if found[_re_atom0]:
-            accurate = True
-            starts = [i + 2 for i in found[_re_atom0]]
+        if seward:
+            _re_atom0 = 'Label   Cartesian Coordinates'
+            _re_atom1 = 'Center  Label'
+            found = self.find(_re_atom0, _re_atom1, keys_only=True)
+            if found[_re_atom0]:
+                accurate = True
+                starts = [i + 2 for i in found[_re_atom0]]
+            else:
+                accurate = False
+                starts = [i + 1 for i in found[_re_atom1]]
+            stops = starts[:]    # Copy the list
+            for i in range(len(stops)):
+                while len(self[stops[i]].strip().split()) > 3:
+                    stops[i] += 1
+                    if not self[stops[i]].strip(): break
+                stops[i] -= 1
+            if accurate:
+                lns = StringIO('\n'.join([self._lines[i] for j in (range(i, j + 1)
+                                         for i, j in zip(starts, stops)) for i in j]))
+                cols = ['tag', 'x', 'y', 'z']
+            else:
+                lns = StringIO('\n'.join(self[starts[0]:stops[0] + 1]))
+                cols = ['center', 'tag', 'x', 'y', 'z', 'xa', 'ya', 'za']
+            atom = pd.read_csv(lns, delim_whitespace=True,
+                               names=cols)
+            if len(cols) == 8:
+                atom.drop(['xa', 'ya', 'za'], axis=1, inplace=True)
+            atom['symbol'] = atom['tag'].str.extract(
+                '([A-z]{1,})([0-9]*)', expand=False)[0].str.lower().str.title()
+            atom['Z'] = atom['symbol'].map(sym2z).astype(np.int64)
+            atom['center'] = range(atom.shape[0])
+            atom['frame'] = 0
+            self.atom = atom
+            # Work-around for symmetrized calcs?
+            allatom = self._check_atom_sym()
+            self.meta['symmetrized'] = False
+            if allatom.shape[0] > self.atom.shape[0]:
+                self.atom = allatom
+                self.meta['symmetrized'] = True
+                try:
+                    self.atom['utag'] = _add_unique_tags(self.atom)
+                except ValueError:
+                    pass
         else:
-            accurate = False
-            starts = [i + 1 for i in found[_re_atom1]]
-        stops = starts[:]    # Copy the list
-        for i in range(len(stops)):
-            while len(self[stops[i]].strip().split()) > 3:
-                stops[i] += 1
-                if not self[stops[i]].strip(): break
-            stops[i] -= 1
-        if accurate:
-            lns = StringIO('\n'.join([self._lines[i] for j in (range(i, j + 1)
-                                     for i, j in zip(starts, stops)) for i in j]))
-            cols = ['tag', 'x', 'y', 'z']
-        else:
-            lns = StringIO('\n'.join(self[starts[0]:stops[0] + 1]))
-            cols = ['center', 'tag', 'x', 'y', 'z', 'xa', 'ya', 'za']
-        atom = pd.read_csv(lns, delim_whitespace=True,
-                           names=cols)
-        if len(cols) == 8:
-            atom.drop(['xa', 'ya', 'za'], axis=1, inplace=True)
-        atom['symbol'] = atom['tag'].str.extract(
-            '([A-z]{1,})([0-9]*)', expand=False)[0].str.lower().str.title()
-        atom['Z'] = atom['symbol'].map(sym2z).astype(np.int64)
-        atom['center'] = range(atom.shape[0])
-        atom['frame'] = 0
-        self.atom = atom
-        # Work-around for symmetrized calcs?
-        allatom = self._check_atom_sym()
-        self.meta['symmetrized'] = False
-        if allatom.shape[0] > self.atom.shape[0]:
-            self.atom = allatom
-            self.meta['symmetrized'] = True
-            try:
-                self.atom['utag'] = _add_unique_tags(self.atom)
-            except ValueError:
-                pass
+            _reatom = "Nuclear coordinates for the next iteration / Bohr"
+            found = self.find(_reatom, keys_only=True)
+            starts = np.array(found)[:-1]+3
+            stop = starts[0]
+            while self[stop].strip(): stop += 1
+            stops = starts + (stop - starts[0])
+            dfs = []
+            for idx, (start, stop) in enumerate(zip(starts, stops)):
+                df = self.pandas_dataframe(start, stop, ncol=4)
+                cols = ['symbol', 'x', 'y', 'z']
+                df.columns = cols
+                label = np.concatenate(list(map(lambda x: re.findall(r'\D+', x),
+                                                df['symbol'])))
+                if label.shape[0] > df.shape[0]:
+                    text = "There was an issue with interpreting the labels " \
+                           +"of the atom table. Expected {} labels but " \
+                           +"interpreted {}"
+                    raise ValueError(text.format(df.shape[0], label.shape[0]))
+                df['symbol'] = label
+                df['Z'] = df['symbol'].map(sym2z)
+                df['set'] = range(df.shape[0])
+                df['frame'] = idx
+                dfs.append(df)
+            atom = pd.concat(dfs, ignore_index=True)
+            self.atom = atom
 
+    def parse_gradient(self, alaska=True):
+        if alaska:
+            _regrad = "Molecular gradients"
+            _reirr = "Irreducible representation:"
+            found = self.find(_regrad, _reirr, keys_only=True)
+            if len(found[_regrad]) != len(found[_reirr]):
+                text = "Do not have support for multiple irreducible " \
+                       +"representations yet."
+                raise NotImplementedError(text)
+            starts = np.array(found[_regrad]) + 8
+            stop = starts[0]
+            while self[stop].strip()[:2] != '--': stop += 1
+            stops = starts + (stop - starts[0])
+            dfs = []
+            for idx, (start, stop) in enumerate(zip(starts, stops)):
+                df = self.pandas_dataframe(start, stop, ncol=4)
+                cols = ['symbol', 'fx', 'fy', 'fz']
+                df.columns = cols
+                label = np.concatenate(list(map(lambda x: re.findall(r'\D+', x),
+                                                df['symbol'])))
+                df['symbol'] = label
+                df['atom'] = range(df.shape[0])
+                df['frame'] = idx
+                df['Z'] = df['symbol'].map(sym2z)
+                dfs.append(df)
+            grad = pd.concat(dfs, ignore_index=True)
+            self.gradient = grad
+
+    def parse_frequency(self, linear=False, normalize=True):
+        _refreq = "Frequency:"
+        _reint = "Intensity:"
+        _remass = "Red. mass:"
+        _rerot = "Note that rotational and translational degrees " \
+                 +"have been automatically removed,"
+        found = self.find(_refreq, _reint, _rerot, _remass)
+        if not found[_refreq]:
+            return
+        start = found[_remass][-1][0] + 2
+        stop = found[_remass][-1][0] + 2
+        while self[stop].strip(): stop += 1
+        lines = stop - start
+        dfs = []
+        count = 0
+        arr = zip(found[_refreq], found[_reint], found[_remass])
+        for idx, ((_, freq), (_, inten), (ldx, mass)) in enumerate(arr):
+            # parse the normal modes
+            start = ldx + 2
+            stop = start + lines
+            arr = self.pandas_dataframe(start, stop, ncol=8)
+            arr.dropna(how='all', axis=1, inplace=True)
+            # extract the atomic symbols
+            symbols = arr[0].drop_duplicates()
+            symbols = list(map(lambda x: re.findall(r'\D+', x)[0], symbols))
+            nat = len(symbols)
+            if linear and idx == 0 and found[_rerot]:
+                arr.drop([2, 3, 4, 5, 6], axis=1, inplace=True)
+            elif not found[_rerot] and idx == 0 and not linear:
+                print("Found rotational modes in the calculation")
+                continue
+            # set the columns where the normal modes are on the table
+            cols = range(2, arr.columns.max()+1)
+            arr.drop([0], axis=1, inplace=True)
+            # re-organize the normal mode data
+            tmp = arr.groupby(1).apply(lambda x: x[cols].values.T.flatten())
+            df = pd.DataFrame(tmp.to_dict())
+            df.columns = ['dx', 'dy', 'dz']
+            errortext = "Something went wrong when trying to turn the {} " \
+                        +"into floating point numbers."
+            # get the frequencies
+            # skip the first element as it is the table label
+            freqs = freq.split()[1:]
+            # replace all imaginary signs with '-'
+            freqs = list(map(lambda x: x.replace('i', '-'), freqs))
+            # turn them into floats
+            try:
+                freqs = list(map(float, freqs))
+            except ValueError:
+                print(freqs)
+                raise ValueError(errortext.format('frequencies'))
+            # get the reduced masses
+            # skip the first element as it is the table label
+            rmass = mass.split()[2:]
+            # turn them into floats
+            try:
+                rmass = list(map(float, rmass))
+            except ValueError:
+                print(rmass)
+                raise ValueError(errortext.format('reduced masses'))
+            # get the IR intensities
+            # skip the first element as it is the table label
+            irint = inten.split()[1:]
+            # turn them into floats
+            try:
+                irint = list(map(float, irint))
+            except ValueError:
+                print(irint)
+                raise ValueError(errortext.format('IR intensities'))
+            # put everything together
+            df['symbol'] = np.tile(symbols, len(cols))
+            df['label'] = np.tile(range(nat), len(cols))
+            df['Z'] = df['symbol'].map(sym2z)
+            df['frequency'] = np.repeat(freqs, nat)
+            df['r_mass'] = np.repeat(rmass, nat)
+            df['ir_int'] = np.repeat(irint, nat)
+            df.loc[df['ir_int'].abs() < 1e-9, 'ir_int'] = 0
+            df['freqdx'] = np.repeat(range(count*6, (count+1)*len(cols)), nat)
+            count += 1
+            df['frame'] = 0
+            if normalize and found[_rerot]:
+                df[['dx', 'dy', 'dz']] *= np.sqrt(df['r_mass'].values.reshape(-1,1))
+            elif normalize and not found[_rerot]:
+                pass
+            dfs.append(df)
+        df = pd.concat(dfs, ignore_index=True)
+        cols = ['Z', 'label', 'dx', 'dy', 'dz', 'frequency', 'freqdx',
+                'ir_int', 'r_mass', 'symbol', 'frame']
+        self.frequency = df[cols]
 
     def parse_basis_set_order(self):
         """
