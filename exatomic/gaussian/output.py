@@ -606,6 +606,8 @@ class Output(six.with_metaclass(GauMeta, Editor)):
         if not found: return
         found = self.find(_reiso)
         # base properties
+        if not hasattr(self, 'atom'):
+            self.parse_atom()
         atom = self.atom['set'].drop_duplicates().values
         nat = len(atom)
         symbols = self.atom.groupby('frame').get_group(0)['symbol']
@@ -649,6 +651,9 @@ class Output(six.with_metaclass(GauMeta, Editor)):
         # Gaussian prints the gradients in the
         # input orientation
         self.parse_atom(orientation='input')
+        print("Parsing the atom table in the input " \
+              +"orientation as the gradient is printed " \
+              +"using this molecular orientation.")
         # set start point
         starts = np.array(found) + 3
         stop = starts[0]
@@ -696,6 +701,9 @@ class Output(six.with_metaclass(GauMeta, Editor)):
         # Gaussian prints the hessian in the
         # input orientation
         self.parse_atom(orientation='input')
+        print("Parsing the atom table in the input " \
+              +"orientation as the Hessian is printed " \
+              +"using this molecular orientation.")
         ldx = found[0] + 1
         dfs = []
         try:
@@ -992,11 +1000,9 @@ class Fchk(six.with_metaclass(GauMeta, Editor)):
         _regrad = 'Cartesian Gradient'
         _reznums = 'Atomic numbers'
         _renat = 'Number of atoms'
-        found = self.find(_regrad)
-        if not found:
+        found = self.find(_regrad, _reznums, _renat, keys_only=True)
+        if not found[_regrad]:
             return
-        else:
-            found = self.find(_regrad, _reznums, _renat, keys_only=True)
         # get number of atoms
         nat = self._intme(found[_renat])
         # get atomic numbers
