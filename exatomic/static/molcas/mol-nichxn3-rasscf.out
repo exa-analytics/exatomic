@@ -1,0 +1,597 @@
+   This run of MOLCAS is using the pymolcas driver
+
+                             OPE
+                             OPE          NMOL  CASOP  ENMOLC A   SO
+                 OPE        NMOLC        AS  OP EN  MO LC     AS  OP
+                OPENM       OL CA        SO  PE NM  OL CA     SOP EN
+                OP EN      MO   LC       AS  OP ENMOL  CASO   PENMOL
+                OP  EN     MO   LC       AS  OP EN     MO     LC ASO
+               OP   E  NMOL  C  AS       OP  EN MO     LC     AS  OP
+               OP  E   NMO   LC AS        OPEN  MO     LCASOP EN   M
+               O  PEN   MO  LCA  SO
+            OPE   NMO   L   CAS    OP
+        OPENMOL  CASOP     ENMOL   CASOPE
+     OPENMOLCA   SOPENMOLCASOPEN   MOLCASOPE
+    OPENMOLCAS   OP           EN   MOL    CAS
+    OPENMOLCAS       OP  ENM        O     LCA
+    OPENMOLCAS    OPEN  MOLCASO     P  E  NMO
+    OPENMOLCAS     OP               E  N  MOL
+    OPENMOLCA   SO           PENM   O  L  CAS    OPEN    MO    LCAS
+    OPENMOLCA   SOP           ENM   O  L  CAS   OP  EN  MOLC  AS   O
+    OPENMOLCA   SOPE           NM      O  LCA   S      OP  EN MO
+    OPENMOLC                AS         O  PEN   M      OL  CA  SOPE
+    OPENMO        LCASOPE  NMOL        C  ASO   P      ENMOLC     AS
+    OPE     NMO      LCA  SO     P     E   NM   OL  CA SO  PE N   MO
+          OPENMOLCA            SOPE   NMO        LCAS  O    P  ENMO
+     OPENMOLCASOPENMOLCASOPENMOLCASOPENMOLCA
+        OPENMOLCASOPENMOLCASOPENMOLCASOPE
+            OPENMOLCASOPENMOLCASOPENM
+               OPENMOLCASOPENMOLCA        version: 21.02
+                   OPENMOLCASO
+                       OPE                tag: 669-g0067cad
+
+ OpenMolcas is free software; you can redistribute it and/or modify it
+ under the terms of the GNU Lesser General Public License version 2.1.
+ OpenMolcas is distributed in the hope that it will be useful, but it
+ is provided "as is" and without any express or implied warranties.
+ For more details see the full text of the license in the file
+ LICENSE or in <http://www.gnu.org/licenses/>.
+
+                 Copyright (C) The OpenMolcas Authors
+           For the author list and the recommended citation,
+                   consult the file CONTRIBUTORS.md
+
+           *************************************************
+           * pymolcas version py2.18                       *
+           *   build 5a9d16c365638e1ebbbccf273233178a      *
+           *   (after the EMIL interpreter by V. Veryazov) *
+           *************************************************
+
+configuration info
+------------------
+Host name: srv-p22-12.cbls.ccr.buffalo.edu (Linux)
+C Compiler ID: Intel
+C flags: -std=gnu99
+Fortran Compiler ID: Intel
+Fortran flags: -fpp -i8 -r8 -heap-arrays
+Definitions: _MOLCAS_;_I8_;_LINUX_
+Parallel: OFF (GA=OFF)
+
+
+   --------------------------------------------------------------------------------------------------------------------------
+  |
+  |           Project: nichxn
+  |    Submitted from: /scratch/6404039
+  |      Scratch area: /scratch/6404039
+  |   Save outputs to: /projects/academic/jochena/herbertl/projects/vibronic-coupling/nichxn3/d-conf/molcas/cas-12.12-10roots
+  |            Molcas: /projects/academic/jochena/herbertl/src/OpenMolcas/build-intel
+  |
+  | Scratch area is NOT empty
+  |
+  |        MOLCASBIN = /projects/academic/jochena/herbertl/src/OpenMolcas/build-intel/bin
+  |      MOLCAS_CPUS = 1
+  |    MOLCAS_DRIVER = /projects/academic/jochena/herbertl/src/OpenMolcas/build-intel/pymolcas
+  |    MOLCAS_MOLDEN = OFF
+  |    MOLCAS_NPROCS = 1
+  |     MOLCAS_PRINT = 2
+  |    MOLCAS_SOURCE = /projects/academic/jochena/herbertl/src/OpenMolcas
+  | MOLCAS_STRUCTURE = 0
+  |
+   --------------------------------------------------------------------------------------------------------------------------
+
+++ ---------   Input file   ---------
+
+>>> COPY $HomeDir/guess.GvOrb INPORB
+
+&GRID_IT
+ Sparse
+ all
+End of input
+
+>>> COPY $Project.lus $HomeDir/guess.lus
+
+>>> COPY $HomeDir/guess.GvOrb INPORB
+
+&RASSCF
+Spin
+    3
+Symmetry
+    1
+nActEl
+    12 0 0
+TYPEINDEX
+CIRoots
+    12 12 1
+Iter
+    100 100
+LumOrb
+orbappear
+    compact
+orblisting
+    all
+levshift
+    1.0
+MAXORb
+    1
+End of input
+
+>>> COPY $Project.RasOrb $HomeDir/$Project.trip.RasOrb
+
+>>> COPY $HomeDir/$Project.trip.RasOrb INPORB
+
+&GRID_IT
+ Sparse
+ all
+End of input
+
+>>> COPY $Project.lus $HomeDir/$Project.trip.lus
+
+-- ----------------------------------
+
+--- Start Module: rasscf at Thu Aug 19 09:37:56 2021 ---
+ 
+()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()
+
+                                              &RASSCF
+
+                                   only a single process is used
+                       available to each process: 12 GB of memory, 1 thread?
+                                            pid: 143304
+()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()
+ 
+ 
+      Header of the ONEINT file:
+      --------------------------
+      
+      Integrals generated by Gateway/Seward, Mon Aug 16 14:38:08 2021
+ 
+ 
+      OrdInt status: non-squared
+ 
+ 
+      Cartesian coordinates in Angstrom:
+      -----------------------------------------------------
+      No.  Label        X            Y            Z        
+      -----------------------------------------------------
+       1   NI1        0.00000000   0.00000000   0.00000000
+       2   N1         0.80373600   1.60326300  -1.13871400
+       3   N2        -0.80373600   1.59907600   1.13871400
+       4   N3         0.96514400  -1.45982500  -1.20437500
+       5   N4         1.80752500  -0.13913800   1.10145300
+       6   N5        -1.76888200  -0.06803200  -1.17453900
+       7   N6        -1.00378900  -1.53093000   1.07161900
+       8   C1        -0.09557600   2.83932300   0.75609000
+       9   C2         0.11182700   2.84653700  -0.75180000
+      10   C3        -0.83225500   4.09929900   1.20137000
+      11   C4         0.85735500   4.10627200  -1.18420700
+      12   C5        -0.10403200   5.36146700   0.75632700
+      13   C6         0.12080400   5.36088600  -0.74589700
+      14   C7         2.52018200  -1.35925300   0.66608800
+      15   C8         2.39473800  -1.49396700  -0.84484400
+      16   C9         3.98770600  -1.36484700   1.08423900
+      17   C10        3.10466100  -2.75456800  -1.33127700
+      18   C11        4.70816000  -2.61127400   0.58541600
+      19   C12        4.56735000  -2.75737100  -0.91992200
+      20   C13       -2.42460700  -1.52475700   0.66254100
+      21   C14       -2.50656700  -1.30032200  -0.84069200
+      22   C15       -3.15545100  -2.80602600   1.05334700
+      23   C16       -3.96201800  -1.26992500  -1.29945000
+      24   C17       -4.60412100  -2.79142000   0.58156200
+      25   C18       -4.68815600  -2.54818000  -0.91543600
+      26   H1         1.80297000   1.73360900  -0.98148700
+      27   H2         0.72773200   1.48474300  -2.14811900
+      28   H3        -1.80059200   1.73689800   0.97397700
+      29   H4        -0.73455700   1.48164900   2.14887700
+      30   H5         0.88784400   2.80674400   1.24156200
+      31   H6        -0.87206100   2.82987200  -1.23735000
+      32   H7        -1.84348300   4.08639800   0.77030000
+      33   H8        -0.95668000   4.08855100   2.28920400
+      34   H9         1.86314400   4.09207300  -0.74079900
+      35   H10        0.99484200   4.09684600  -2.27064700
+      36   H11       -0.67710500   6.24110300   1.05824800
+      37   H12        0.85849500   5.43381700   1.27735400
+      38   H13        0.68658600   6.24534700  -1.04778900
+      39   H14       -0.84169900   5.42502600  -1.26824200
+      40   H15        0.58129700  -2.39513200  -1.06998800
+      41   H16        0.88176800  -1.30219300  -2.20782000
+      42   H17        2.42229400   0.66041600   0.95116900
+      43   H18        1.68987200  -0.17302800   2.11337600
+      44   H19        2.00932900  -2.21008200   1.13407800
+      45   H20        2.86343200  -0.61841200  -1.31145200
+      46   H21        4.47410900  -0.46896500   0.67268500
+      47   H22        4.06079800  -1.28671100   2.17397800
+      48   H23        2.59762000  -3.63254400  -0.90643200
+      49   H24        3.00761200  -2.83393000  -2.41921900
+      50   H25        5.76190100  -2.56405500   0.86952000
+      51   H26        4.29907900  -3.49747500   1.08586300
+      52   H27        5.04470300  -3.67911600  -1.26057800
+      53   H28        5.09430500  -1.93915800  -1.42608500
+      54   H29       -2.38415200   0.72699200  -1.00276000
+      55   H30       -1.60968100  -0.04216900  -2.18086200
+      56   H31       -0.62135800  -2.45745000   0.88424000
+      57   H32       -0.95550700  -1.44459200   2.08612200
+      58   H33       -2.89702100  -0.67252500   1.16692100
+      59   H34       -1.99121700  -2.12825000  -1.34368100
+      60   H35       -2.63069800  -3.66121200   0.60407400
+      61   H36       -3.10402700  -2.94344100   2.13845000
+      62   H37       -4.46076500  -0.40628600  -0.83707300
+      63   H38       -4.00249700  -1.11120600  -2.38227100
+      64   H39       -5.08480300  -3.73651800   0.84436400
+      65   H40       -5.15772400  -2.01089300   1.11771800
+      66   H41       -5.73124600  -2.49019600  -1.23501200
+      67   H42       -4.25278500  -3.39676100  -1.45741700
+      -----------------------------------------------------
+      Nuclear repulsion energy = 3220.39593630
+ 
+++    Wave function specifications:
+      -----------------------------
+ 
+      Number of closed shell electrons         206
+      Number of electrons in active shells      12
+      Max number of holes in RAS1 space          0
+      Max nr of electrons in RAS3 space          0
+      Number of inactive orbitals              103
+      Number of active orbitals                 12
+      Number of secondary orbitals             460
+      Spin quantum number                      1.0
+      State symmetry                             1
+--
+ 
+++    Orbital specifications:
+      -----------------------
+ 
+      Symmetry species                           1
+                                                 a
+      Frozen orbitals                            0
+      Inactive orbitals                        103
+      Active orbitals                           12
+      RAS1 orbitals                              0
+      RAS2 orbitals                             12
+      RAS3 orbitals                              0
+      Secondary orbitals                       460
+      Deleted orbitals                           0
+      Number of basis functions                575
+--
+ 
+++    CI expansion specifications:
+      ----------------------------
+ 
+      Number of CSFs                        382239
+      Number of determinants                627264
+      Number of root(s) required                12
+      Root chosen for geometry opt.             12
+      CI roots used                              1     2     3     4     5     6     7     8     9    10
+                                                11    12
+      weights                                0.083 0.083 0.083 0.083 0.083 0.083 0.083 0.083 0.083 0.083
+                                             0.083 0.083
+      highest root included in the CI           12
+      max. size of the explicit Hamiltonian    200
+--
+ 
+++    Optimization specifications:
+      ----------------------------
+ 
+      RASSCF algorithm: LK RI/DF
+      Maximum number of macro iterations       100
+      Maximum number of SX iterations          100
+      Threshold for RASSCF energy            0.100E-07
+      Threshold for max MO rotation          0.100E+00
+      Threshold for max BLB element          0.100E-03
+      Level shift parameter                  0.100E+01
+      Make Quasi-Newton update
+--
+ 
+      The MO-coefficients are taken from the file:
+      INPORB                                                                                                                          
+      Title: RASSCF average (pseudo-natural) orbitals                                      
+ 
+      Total molecular charge    2.00
+ 
+      ************************************************************************************************************************
+      *                                                                                                                      *
+      *                                            Wave function control section                                             *
+      *                                                                                                                      *
+      ************************************************************************************************************************
+ 
+ 
+                                         RASSCF iterations: Energy and convergence statistics
+                                         ----------------------------------------------------
+ 
+      Iter CI   SX   CI       RASSCF       Energy    max ROT     max BLB   max BLB  Level Ln srch  Step   QN   Walltime
+          iter iter root      energy       change     param      element    value   shift minimum  type update hh:mm:ss
+ Nr of preliminary CI iterations:   6
+      Total energies have been shifted. Add                -2000.00 au
+        1   1    9    0  -552.10563756    0.00E+00  -0.62E-01  108 549 1 -0.27E-01*  0.97   0.00    SX    NO    0:08:42
+        2  12    9    0  -552.11160508   -0.60E-02*  0.53E-01  108 549 1 -0.91E-02*  0.99   0.00    SX    NO    0:04:27
+        3   4    9    0  -552.11389125   -0.23E-02* -0.52E-01   86 104 1  0.55E-02*  0.99   0.00    SX    NO    0:04:04
+        4   9    8    0  -552.11571483   -0.18E-02*  0.51E-01   86 104 1  0.55E-02*  0.99   0.00    SX    NO    0:04:18
+        5  10    8    0  -552.11726861   -0.16E-02*  0.21E+00*  86 104 1  0.52E-02*  0.99   2.50    QN   YES    0:03:52
+        6  10    9    0  -552.12252987   -0.53E-02*  0.11E+00*  33 555 1 -0.48E-02*  0.98   1.89    LS   YES    0:03:54
+        7   9    8    0  -552.12408294   -0.16E-02*  0.70E-01   33 555 1 -0.50E-02*  0.98   1.85    LS   YES    0:03:41
+        8  10    8    0  -552.12452123   -0.44E-03*  0.38E-01   33 555 1 -0.53E-02*  0.98   1.46    QN   YES    0:03:43
+        9  11    8    0  -552.12497285   -0.45E-03*  0.45E-01  108 549 1  0.25E-02*  0.98   2.50    LS   YES    0:03:42
+       10  10    8    0  -552.12523877   -0.27E-03*  0.21E-01   33 555 1  0.46E-02*  0.97   1.29    QN   YES    0:03:40
+       11  12    8    0  -552.12558216   -0.34E-03*  0.25E-01   33 555 1  0.39E-02*  0.97   2.37    LS   YES    0:03:45
+       12  12    8    0  -552.12578372   -0.20E-03*  0.20E-01   33 555 1  0.30E-02*  0.97   1.34    QN   YES    0:03:53
+       13  11    8    0  -552.12596636   -0.18E-03*  0.26E-01   31 558 1  0.14E-02*  0.97   2.50    LS   YES    0:03:34
+       14  11    8    0  -552.12606113   -0.95E-04* -0.22E-01   33 555 1 -0.50E-02*  0.97   1.10    QN   YES    0:03:47
+       15   9    8    0  -552.12622768   -0.17E-03* -0.66E-01   33 555 1 -0.35E-02*  0.96   2.50    QN   YES    0:03:43
+       16   9    7    0  -552.12656340   -0.34E-03* -0.40E-01   31 558 1 -0.13E-02*  0.97   1.48    QN   YES    0:03:51
+       17  10    7    0  -552.12666690   -0.10E-03*  0.33E-01   33 555 1  0.18E-02*  0.97   1.77    QN   YES    0:03:44
+       18  13    7    0  -552.12673363   -0.67E-04* -0.20E-01   33 555 1  0.13E-02*  0.97   1.58    QN   YES    0:03:47
+       19   4    7    0  -552.12677643   -0.43E-04* -0.73E-02  108 214 1  0.59E-03*  0.97   1.56    QN   YES    0:03:22
+       20  11    7    0  -552.12679437   -0.18E-04* -0.36E-02  108 214 1  0.29E-03*  0.97   1.37    QN   YES    0:03:52
+       21   9    6    0  -552.12679937   -0.50E-05* -0.24E-02   33 555 1 -0.29E-03*  0.97   1.54    QN   YES    0:03:45
+       22  11    6    0  -552.12680153   -0.22E-05* -0.17E-02   67 165 1  0.99E-04   0.97   1.49    QN   YES    0:03:52
+       23  12    6    0  -552.12680261   -0.11E-05* -0.26E-02  108 214 1 -0.92E-04   0.97   1.45    QN   YES    0:03:50
+       24   9    6    0  -552.12680327   -0.65E-06*  0.28E-02   33 555 1  0.79E-04   0.97   1.49    QN   YES    0:03:47
+       25  11    6    0  -552.12680378   -0.52E-06*  0.28E-02   33 555 1  0.67E-04   0.97   1.44    QN   YES    0:03:52
+       26  12    6    0  -552.12680427   -0.49E-06*  0.25E-02   67 154 1 -0.58E-04   0.97   1.37    QN   YES    0:03:49
+       27  11    6    0  -552.12680473   -0.46E-06* -0.22E-02  108 214 1  0.68E-04   0.97   1.30    QN   YES    0:03:56
+       28  12    6    0  -552.12680515   -0.42E-06* -0.24E-02  108 214 1  0.56E-04   0.97   1.25    QN   YES    0:03:48
+       29  12    6    0  -552.12680555   -0.40E-06* -0.20E-02   33 555 1 -0.36E-04   0.96   1.20    QN   YES    0:03:53
+       30  10    6    0  -552.12680588   -0.33E-06* -0.22E-02   67 154 1  0.41E-04   0.96   1.22    QN   YES    0:03:44
+       31  11    6    0  -552.12680620   -0.32E-06*  0.11E-02  108 214 1 -0.45E-04   0.96   1.09    QN   YES    0:03:46
+       32  10    6    0  -552.12680633   -0.14E-06*  0.69E-02   32 563 1 -0.83E-04   0.96   1.55    QN   YES    0:03:38
+       33  13    6    0  -552.12680605    0.28E-06*  0.24E-02   32 563 1  0.30E-03*  0.96   0.49    LS   YES    0:03:52
+       34  11    6    0  -552.12680639   -0.34E-06*  0.36E-02   32 563 1 -0.16E-03*  0.96   2.50    LS   YES    0:03:33
+       35  10    6    0  -552.12680642   -0.26E-07*  0.28E-02   32 563 1 -0.26E-03*  0.96   0.66    QN   YES    0:03:41
+       36  13    6    0  -552.12680655   -0.13E-06* -0.12E-02   32 563 1  0.15E-03*  0.96   0.64    QN   YES    0:03:35
+       37   9    6    0  -552.12680659   -0.42E-07* -0.20E-03   32 563 1 -0.11E-03*  0.96   0.65    QN   YES    0:03:03
+       38  12    5    0  -552.12680663   -0.35E-07* -0.29E-03   32 563 1 -0.26E-04   0.96   2.50    LS   YES    0:03:01
+       39   8    5    0  -552.12680665   -0.24E-07* -0.44E-03   32 559 1  0.16E-04   0.96   2.50    LS   YES    0:03:00
+       40  12    5    0  -552.12680666   -0.65E-08   0.14E-03   33 555 1 -0.36E-04   0.96   0.69    QN   YES    0:03:14
+      Convergence after 40 iterations
+       41   9    5    0  -552.12680669   -0.26E-07*  0.14E-03   33 562 1 -0.46E-04   0.96   0.69    QN   YES    0:03:06
+ 
+      ************************************************************************************************************************
+                                                      Wave function printout:
+                       occupation of active orbitals, and spin coupling of open shells (u,d: Spin up or down)
+      ************************************************************************************************************************
+ 
+      Note: transformation to natural orbitals
+      has been made, which may change the order of the CSFs.
+ 
+      printout of CI-coefficients larger than  0.05 for root  1
+      energy=   -2552.261252
+      conf/sym  111111111111     Coeff  Weight
+             2  22222u0u0000  -0.98546 0.97114
+ 
+      printout of CI-coefficients larger than  0.05 for root  2
+      energy=   -2552.210572
+      conf/sym  111111111111     Coeff  Weight
+            14  222u220u0000  -0.22760 0.05180
+            20  22u2220u0000   0.42575 0.18126
+           355  2222uu020000   0.70191 0.49268
+           391  222u2u020000   0.43654 0.19056
+           427  22u22u020000   0.23916 0.05720
+ 
+      printout of CI-coefficients larger than  0.05 for root  3
+      energy=   -2552.210566
+      conf/sym  111111111111     Coeff  Weight
+             8  2222u20u0000  -0.71760 0.51496
+            14  222u220u0000   0.40970 0.16785
+            20  22u2220u0000   0.22471 0.05049
+           391  222u2u020000   0.23004 0.05292
+           427  22u22u020000  -0.43280 0.18731
+ 
+      printout of CI-coefficients larger than  0.05 for root  4
+      energy=   -2552.210234
+      conf/sym  111111111111     Coeff  Weight
+            14  222u220u0000  -0.70248 0.49347
+           427  22u22u020000  -0.69312 0.48042
+ 
+      printout of CI-coefficients larger than  0.05 for root  5
+      energy=   -2552.178788
+      conf/sym  111111111111     Coeff  Weight
+            14  222u220u0000   0.19376 0.03754
+            20  22u2220u0000  -0.32053 0.10274
+           355  2222uu020000   0.51041 0.26052
+           391  222u2u020000  -0.31504 0.09925
+           427  22u22u020000  -0.18939 0.03587
+           571  22u2u2020000  -0.66265 0.43911
+ 
+      printout of CI-coefficients larger than  0.05 for root  6
+      energy=   -2552.178778
+      conf/sym  111111111111     Coeff  Weight
+             8  2222u20u0000   0.49807 0.24808
+            14  222u220u0000   0.32861 0.10798
+            20  22u2220u0000   0.19693 0.03878
+           391  222u2u020000   0.19390 0.03760
+           427  22u22u020000  -0.32107 0.10309
+           535  222uu2020000  -0.66300 0.43957
+ 
+      printout of CI-coefficients larger than  0.05 for root  7
+      energy=   -2552.174947
+      conf/sym  111111111111     Coeff  Weight
+            20  22u2220u0000   0.49446 0.24449
+           391  222u2u020000  -0.49287 0.24292
+           679  22uu22020000  -0.69838 0.48773
+ 
+      printout of CI-coefficients larger than  0.05 for root  8
+      energy=   -2552.117981
+      conf/sym  111111111111     Coeff  Weight
+            20  22u2220u0000   0.49138 0.24145
+           391  222u2u020000  -0.49200 0.24206
+           679  22uu22020000   0.69849 0.48789
+ 
+      printout of CI-coefficients larger than  0.05 for root  9
+      energy=   -2552.114627
+      conf/sym  111111111111     Coeff  Weight
+            14  222u220u0000   0.16469 0.02712
+            20  22u2220u0000  -0.29032 0.08429
+           355  2222uu020000   0.46765 0.21870
+           391  222u2u020000  -0.28226 0.07967
+           427  22u22u020000  -0.16102 0.02593
+           571  22u2u2020000   0.73217 0.53608
+ 
+      printout of CI-coefficients larger than  0.05 for root 10
+      energy=   -2552.114621
+      conf/sym  111111111111     Coeff  Weight
+             8  2222u20u0000  -0.45693 0.20879
+            14  222u220u0000  -0.29638 0.08784
+            20  22u2220u0000  -0.16888 0.02852
+           391  222u2u020000  -0.16460 0.02709
+           427  22u22u020000   0.28955 0.08384
+           535  222uu2020000  -0.73196 0.53576
+ 
+      printout of CI-coefficients larger than  0.05 for root 11
+      energy=   -2551.874660
+      conf/sym  111111111111     Coeff  Weight
+            26  2u22220u0000   0.52384 0.27440
+            32  u222220u0000  -0.44055 0.19408
+           463  2u222u020000   0.46044 0.21201
+           499  u2222u020000   0.51942 0.26980
+ 
+      printout of CI-coefficients larger than  0.05 for root 12
+      energy=   -2551.874655
+      conf/sym  111111111111     Coeff  Weight
+            26  2u22220u0000   0.45251 0.20477
+            32  u222220u0000   0.50999 0.26009
+           463  2u222u020000  -0.53302 0.28411
+           499  u2222u020000   0.44869 0.20133
+ 
+      Natural orbitals and occupation numbers for root  1
+      sym 1:   1.997543   1.997548   1.986402   1.986404   1.986571   0.997448   0.005266   0.997449   0.005263   0.013419
+               0.013265   0.013421
+ 
+      Natural orbitals and occupation numbers for root  2
+      sym 1:   1.999269   1.998360   1.749187   1.986948   1.232284   1.234759   0.009094   1.752068   0.006398   0.012883
+               0.007404   0.011347
+ 
+      Natural orbitals and occupation numbers for root  3
+      sym 1:   1.998369   1.999257   1.742014   1.986875   1.239510   1.744787   0.006435   1.242051   0.009052   0.012929
+               0.007499   0.011222
+ 
+      Natural orbitals and occupation numbers for root  4
+      sym 1:   1.998803   1.998828   1.497493   1.483999   1.986904   1.500174   0.007712   1.486669   0.007778   0.009340
+               0.012859   0.009441
+ 
+      Natural orbitals and occupation numbers for root  5
+      sym 1:   1.999477   1.998866   1.139828   1.843687   1.138785   1.988384   0.009917   1.845162   0.006292   0.012040
+               0.006753   0.010808
+ 
+      Natural orbitals and occupation numbers for root  6
+      sym 1:   1.998932   1.999410   1.844378   1.138937   1.137620   1.846526   0.006235   1.988389   0.009702   0.011145
+               0.006832   0.011893
+ 
+      Natural orbitals and occupation numbers for root  7
+      sym 1:   1.999157   1.999161   1.064734   1.064740   1.987416   1.919678   0.010472   1.919670   0.010465   0.006050
+               0.012406   0.006052
+ 
+      Natural orbitals and occupation numbers for root  8
+      sym 1:   1.998706   1.998705   1.056130   1.056127   1.986509   1.928330   0.010828   1.928330   0.010827   0.006190
+               0.013129   0.006189
+ 
+      Natural orbitals and occupation numbers for root  9
+      sym 1:   1.999335   1.998451   1.109318   1.873472   1.108432   1.875536   0.010220   1.988175   0.011093   0.012735
+               0.006753   0.006479
+ 
+      Natural orbitals and occupation numbers for root 10
+      sym 1:   1.998622   1.999165   1.875703   1.109954   1.108636   1.872517   0.011497   1.988114   0.009902   0.006426
+               0.006873   0.012590
+ 
+      Natural orbitals and occupation numbers for root 11
+      sym 1:   1.514767   1.485203   1.985381   1.985351   1.985516   1.476702   0.008799   1.506062   0.008615   0.014609
+               0.014417   0.014578
+ 
+      Natural orbitals and occupation numbers for root 12
+      sym 1:   1.516917   1.483054   1.985344   1.985385   1.985520   1.474567   0.008812   1.508196   0.008601   0.014574
+               0.014415   0.014615
+ 
+      ************************************************************************************************************************
+      *                                                                                                                      *
+      *                                                    Final results                                                     *
+      *                                                                                                                      *
+      ************************************************************************************************************************
+ 
+ 
+++    Wave function specifications:
+      -----------------------------
+ 
+      Number of closed shell electrons         206
+      Number of electrons in active shells      12
+      Max number of holes in RAS1 space          0
+      Max nr of electrons in RAS3 space          0
+      Number of inactive orbitals              103
+      Number of active orbitals                 12
+      Number of secondary orbitals             460
+      Spin quantum number                      1.0
+      State symmetry                             1
+--
+ 
+++    Orbital specifications:
+      -----------------------
+ 
+      Symmetry species                           1
+                                                 a
+      Frozen orbitals                            0
+      Inactive orbitals                        103
+      Active orbitals                           12
+      RAS1 orbitals                              0
+      RAS2 orbitals                             12
+      RAS3 orbitals                              0
+      Secondary orbitals                       460
+      Deleted orbitals                           0
+      Number of basis functions                575
+--
+ 
+++    CI expansion specifications:
+      ----------------------------
+ 
+      Number of CSFs                        382239
+      Number of determinants                627264
+      Number of root(s) required                12
+      CI roots used                              1     2     3     4     5     6     7     8     9    10
+                                                11    12
+      weights                                0.083 0.083 0.083 0.083 0.083 0.083 0.083 0.083 0.083 0.083
+                                             0.083 0.083
+      highest root included in the CI           12
+      Root passed to geometry opt.              12
+--
+ 
+++    Final optimization conditions:
+      ------------------------------
+ 
+      Average CI energy                           -2552.12680669
+      RASSCF energy for state 12                  -2551.87465527
+      Super-CI energy                                -0.00000002
+      RASSCF energy change                            0.00000000
+      Max change in MO coefficients               0.907E-04
+      Max non-diagonal density matrix element     0.137E-03
+      Maximum BLB matrix element                 -0.455E-04
+      (orbital pair  33, 562 in symmetry   1)
+      Norm of electronic gradient            0.478E+00
+--
+ 
+ 
+      Final state energy(ies):
+      ------------------------
+ 
+::    RASSCF root number  1 Total energy:  -2552.26125151
+::    RASSCF root number  2 Total energy:  -2552.21057154
+::    RASSCF root number  3 Total energy:  -2552.21056647
+::    RASSCF root number  4 Total energy:  -2552.21023371
+::    RASSCF root number  5 Total energy:  -2552.17878801
+::    RASSCF root number  6 Total energy:  -2552.17877839
+::    RASSCF root number  7 Total energy:  -2552.17494694
+::    RASSCF root number  8 Total energy:  -2552.11798066
+::    RASSCF root number  9 Total energy:  -2552.11462671
+::    RASSCF root number 10 Total energy:  -2552.11462089
+::    RASSCF root number 11 Total energy:  -2551.87466014
+::    RASSCF root number 12 Total energy:  -2551.87465527
+ 
+--- Stop Module: rasscf at Thu Aug 19 12:20:57 2021 /rc=_RC_ALL_IS_WELL_ ---
+*** files: nichxn.RasOrb nichxn.RasOrb.1 nichxn.rasscf.h5 nichxn.SpdOrb.1 xmldump
+    saved to directory /projects/academic/jochena/herbertl/projects/vibronic-coupling/nichxn3/d-conf/molcas/cas-12.12-10roots
+--- Module rasscf spent 2 hours 43 minutes 1 second ---
+
+>>> COPY nichxn.RasOrb /projects/academic/jochena/herbertl/projects/vibronic-coupling/nichxn3/d-conf/molcas/cas-12.12-10roots/nichxn.trip.RasOrb
+
+>>> COPY /projects/academic/jochena/herbertl/projects/vibronic-coupling/nichxn3/d-conf/molcas/cas-12.12-10roots/nichxn.trip.RasOrb INPORB
+
+.##################.
+.# Happy landing! #.
+.##################.
+
+    Timing: Wall=9823.52 User=9605.06 System=191.57
