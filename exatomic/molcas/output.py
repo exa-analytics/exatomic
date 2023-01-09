@@ -156,6 +156,8 @@ class OutMeta(TypedMeta):
     sf_oscillator = pd.DataFrame
     so_oscillator = pd.DataFrame
     frequency = Frequency
+    natural_occ = pd.DataFrame
+    caspt2_energy = pd.DataFrame
 
 
 class Output(six.with_metaclass(OutMeta, Editor)):
@@ -163,17 +165,11 @@ class Output(six.with_metaclass(OutMeta, Editor)):
     def _property_parsing(self, props, data_length):
         ''' Helper method for parsing the spin-free properties sections. '''
         all_dfs = []
-        # this is a bit of a mess but since we have three components
-        # we can take a nested for loop of three elements without too
-        # much of a hit on performance
         for idx, prop in enumerate(props):
             # find where the data blocks are printed
             starts = np.array(self.find(self._resta, start=prop, keys_only=True)) + prop + 2
             # data_length should always be the same
             stops = starts + data_length
-            # hardcoding but should apply in all of our cases
-            # there should be an n number of 4 column data blocks that
-            # we need to parse
             # use np.ceil as if we have a 7x7 matrix we get one data set
             # with 4 columns and one with 3 columns
             n = int(np.ceil(data_length/4))
@@ -207,7 +203,7 @@ class Output(six.with_metaclass(OutMeta, Editor)):
             ldx += 1
         df = pd.DataFrame(oscillators)
         df.columns = ['nrow', 'ncol', 'oscil', 'a_x', 'a_y', 'a_z', 'a_tot']
-        df[['nrow', 'ncol']] = df[['nrow', 'ncol']].astype(np.uint16)
+        df[['nrow', 'ncol']] = df[['nrow', 'ncol']].astype(int)
         df[['nrow', 'ncol']] -= [1, 1]
         df[['nrow', 'ncol']] = df[['nrow', 'ncol']].astype('category')
         cols = ['oscil', 'a_x', 'a_y', 'a_z', 'a_tot']
@@ -693,11 +689,16 @@ class Output(six.with_metaclass(OutMeta, Editor)):
         found = self.find(_reenerg, _reenerg_rasscf)
         key = ''
         if found[_reenerg]:
+            if found[_reenerg_rasscf]:
+                msg = "Found RASSCF and RASSI Spin-Free energies.\n" \
+                      +"Will only parse the RASSI Spin-Free energies."
+                print(msg)
             key = _reenerg
         elif found[_reenerg_rasscf]:
             key = _reenerg_rasscf
         else:
             return
+        # should not be necessary but you never know
         if key == '':
             msg = "There was an issue in determining the key to " \
                   +"be used in the parsing of the SF energies. " \
@@ -708,6 +709,8 @@ class Output(six.with_metaclass(OutMeta, Editor)):
         for _, line in found[key]:
             energy = float(line.split()[-1])
             energies.append(energy)
+        # should always be the case that the first energy is the
+        # ground state minimum energy
         rel_energy = list(map(lambda x: x - energies[0], energies))
         df = pd.DataFrame.from_dict({'energy': energies, 'rel_energy': rel_energy})
         self.sf_energy = df
@@ -753,6 +756,98 @@ class Output(six.with_metaclass(OutMeta, Editor)):
                                       +"oscillators.")
         df = self._oscillator_parsing(found[0])
         self.so_oscillator = df
+
+    def parse_natural_occ(self):
+        # define search string for natural occupations
+        _renoo = "Natural orbitals and occupation numbers for root"
+        # define search string for energies per root
+        _reeng = "energy="
+        found = self.find(_renoo, _reeng)
+        # get the occupations, roots, and energies of each root
+        occs = {}
+        roots = []
+        energies = []
+        for (nooldx, nooline), (engldx, engline) in zip(found[_renoo], found[_reeng]):
+            energy = float(engline.split('=')[-1].strip())
+            energies.append(energy)
+            root = list(map(int, re.findall(r'\d+', nooline)))
+            # just an error check should never actually happen
+            if len(root) != 1:
+                raise ValueError("Found more than one group of numbers where one " \
+                                 +"number should have been listed for the root. " \
+                                 +"Found line {}".format(nooline))
+            roots.append(root[0])
+            # get the natural occupations
+            start = nooldx + 1
+            dldx = nooldx+1
+            vals = {}
+            while self[dldx].strip() != '':
+                d = self[dldx].split()
+                if d[0] == 'sym':
+                    arr = list(map(float, d[2:]))
+                    symm = int(d[1].replace(':', ''))
+                    if root[0] == 1:
+                        occs[symm] = []
+                    vals[symm] = []
+                else:
+                    arr = list(map(float, d))
+                vals[symm].append(arr)
+                dldx += 1
+            for key, item in vals.items():
+                occs[key].append(list(np.concatenate(item)))
+        dfs = []
+        for symm, occ in occs.items():
+            df = pd.DataFrame(occ)
+            df['symmetry'] = symm
+            df['root'] = roots
+            df['energy'] = energies
+            df['rel_energy'] = df['energy'] - df['energy'].values.min()
+            dfs.append(df)
+        df = pd.concat(dfs, ignore_index=True)
+        self.natural_occ = df.sort_values(by=['symmetry', 'root']).reset_index(drop=True)
+
+    def parse_caspt2_energy(self):
+        # parsing strings
+        _resspt2 = " CASPT2 Root"
+        _remspt2 = " MS-CASPT2 Root"
+        _reref = "Reference energy:"
+        _reweight = "Reference weight:"
+        _reroot = "Compute H0 matrices for state"
+        _respin = "Spin quantum number"
+        dfs = []
+        found = self.find(_resspt2, _reref, _reweight, _reroot, _respin,
+                          _remspt2)
+        if not found[_resspt2]:
+            return
+        total_energy = []
+        # get the number of SS/MS-PT2 energies
+        nsspt2 = len(found[_resspt2])
+        nmspt2 = len(found[_remspt2])
+        # TODO: this needs to be verified as it assumes that there is
+        #       only one spin/multiplicity in the system
+        #       do not know if this is always the case
+        # get the spin quantum number of the system
+        spin = float(found[_respin][0][1].split()[-1])
+        # get the multiplicity
+        mult = np.repeat(int(2*spin + 1), len(found[_remspt2]))
+        sspt2 = [] # SSPT2 energies
+        mspt2 = [] # MSPT2 energies
+        reference = [] # reference energies from the wavefunction file
+        weights = [] # reference weight (not sure what it actually is)
+        roots = [] # root index
+        arr = zip(found[_resspt2], found[_reref], found[_reweight],
+                  found[_reroot], found[_remspt2])
+        # grab all of the values we are interested in
+        for (_, ss), (_, ref), (_, weight), (_, root), (_, ms) in arr:
+            sspt2.append(float(ss.split()[-1]))
+            reference.append(float(ref.split()[-1]))
+            weights.append(float(weight.split()[-1]))
+            roots.append(int(re.findall(r'\d+', root)[-1]))
+            mspt2.append(float(ms.split()[-1]))
+        df = pd.DataFrame.from_dict({'sspt2_au': sspt2, 'mspt2_au': mspt2,
+                                     'ras_au': reference, 'weight': weights,
+                                     'root': roots, 'mult': mult})
+        self.caspt2_energy = df
 
     def __init__(self, *args, **kwargs):
         super(Output, self).__init__(*args, **kwargs)

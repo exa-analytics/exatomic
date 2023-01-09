@@ -21,6 +21,9 @@ class TestOutput(TestCase):
         self.c2h6 = Output(resource('mol-c2h6-basis.out'))
         self.formald = Output(resource('mol-formald-rassi.out'))
         self.formald_al = Output(resource('mol-formald-alaska.out'))
+        self.form_pt2 = Output(resource('mol-formald-caspt2.out'))
+        self.nichxn_ras = Output(resource('mol-nichxn3-rasscf.out'))
+        self.ucl6_ras = Output(resource('mol-ucl6-rasscf.out'))
 
     def test_add_orb(self):
         """Test adding orbital file functionality."""
@@ -157,6 +160,37 @@ class TestOutput(TestCase):
         self.formald_al.parse_gradient()
         self.assertEqual(self.formald_al.gradient.shape[0], 32)
         self.assertTrue(np.all(pd.notnull(pd.DataFrame(self.formald_al.gradient))))
+
+    def test_parse_natural_occ(self):
+        # test the size of both axes as the number of orbitals is
+        # specific to each case
+        # simple test cases
+        self.cdz.parse_natural_occ()
+        self.assertEqual(self.cdz.natural_occ.shape, (15, 8))
+        self.assertTrue(np.all(pd.notnull(pd.DataFrame(self.cdz.natural_occ))))
+        self.uo2sp.parse_natural_occ()
+        self.assertEqual(self.uo2sp.natural_occ.shape, (4, 8))
+        self.assertTrue(np.all(pd.notnull(pd.DataFrame(self.uo2sp.natural_occ))))
+        # test more than one row in a symmetry
+        self.nichxn_ras.parse_natural_occ()
+        self.assertEqual(self.nichxn_ras.natural_occ.shape, (12, 16))
+        self.assertTrue(np.all(pd.notnull(pd.DataFrame(self.nichxn_ras.natural_occ))))
+        # test case for more than one symmetry
+        self.ucl6_ras.parse_natural_occ()
+        self.assertEqual(self.ucl6_ras.natural_occ.shape, (70, 12))
+        # ensure that the values in symmetry 1 do not contain a nan
+        grouped = self.ucl6_ras.natural_occ.groupby('symmetry')
+        self.assertTrue(np.all(pd.notnull(pd.DataFrame(grouped.get_group(1)))))
+        # ensure that the values for the available orbitals in symmetry 2 are real
+        self.assertTrue(np.all(pd.notnull(pd.DataFrame(grouped.get_group(2)[range(7)]))))
+        # ensure that the last column is a nan value as the number of columns in
+        # symmetry 2 is less than 1
+        self.assertFalse(np.all(pd.notnull(pd.DataFrame(grouped.get_group(2)[7]))))
+
+    def test_parse_caspt2_energy(self):
+        self.form_pt2.parse_caspt2_energy()
+        self.assertEqual(self.form_pt2.caspt2_energy.shape[0], 26)
+        self.assertTrue(np.all(pd.notnull(pd.DataFrame(self.form_pt2.caspt2_energy))))
 
     def test_to_universe(self):
         """Test that the Outputs can be converted to universes."""
