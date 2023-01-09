@@ -149,6 +149,8 @@ class TestOutput(TestCase):
         self.meth_opt_freq_hp.parse_atom()
         self.assertEqual(self.meth_opt_freq_hp.atom.shape[0], 130)
         self.assertTrue(np.all(pd.notnull(pd.DataFrame(self.meth_opt_freq_hp.atom))))
+        self.assertRaises(ValueError,
+                          self.mam4.parse_atom, orientation='error')
 
     def test_parse_basis_set(self):
         self.uo2.parse_basis_set()
