@@ -720,7 +720,7 @@ class Output(six.with_metaclass(OutMeta, Editor)):
         _reenerg = " SO-RASSI State "
         found = self.find(_reenerg)
         if not found:
-            raise AttributeError("Could not find the Spin-Orbit energies.")
+            return
         energies = []
         for _, line in found:
             energy = float(line.split()[-1])
@@ -763,6 +763,8 @@ class Output(six.with_metaclass(OutMeta, Editor)):
         # define search string for energies per root
         _reeng = "energy="
         found = self.find(_renoo, _reeng)
+        if not found[_renoo]:
+            return
         # get the occupations, roots, and energies of each root
         occs = {}
         roots = []
