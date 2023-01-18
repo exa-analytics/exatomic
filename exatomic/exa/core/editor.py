@@ -297,7 +297,7 @@ class Editor(object):
         Returns:
             pd.DataFrame: structured data
         """
-        if isinstance(ncol, (int, np.int, np.int64, np.int32)):
+        if isinstance(ncol, (int, np.int64, np.int32)):
             return pd.read_csv(io.StringIO('\n'.join(self[start:stop])), delim_whitespace=True, names=range(ncol), **kwargs)
         else:
             return pd.read_csv(io.StringIO('\n'.join(self[start:stop])), delim_whitespace=True, names=ncol, **kwargs)

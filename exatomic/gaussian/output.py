@@ -58,6 +58,11 @@ class GauMeta(TypedMeta):
     gradient = Gradient
     nmr_shielding = NMRShielding
     frequency_ext = pd.DataFrame
+    hessian = pd.DataFrame
+    elec_dipole = pd.DataFrame
+    elec_quadrupole = pd.DataFrame
+    mag_dipole = pd.DataFrame
+    spec_prop = pd.DataFrame
 
 class Output(six.with_metaclass(GauMeta, Editor)):
     def _parse_triangular_matrix(self, regex, column='coef', values_only=False):
@@ -84,14 +89,54 @@ class Output(six.with_metaclass(GauMeta, Editor)):
                                       'frame': idxs[:,2],
                                        column: matrix})
 
-    def parse_atom(self):
+    def _get_dipole(self, length=True):
+        _relen = "Ground to excited state transition electric dipole moments"
+        _revel = "Ground to excited state transition velocity dipole moments"
+        found = self.find(_relen, _revel, keys_only=True)
+        if not found[_relen]: return
+        key = _relen if length else _revel
+        start = found[key][0] + 2
+        stop = start
+        while self[stop].split()[0] != 'Ground': stop += 1
+        df = self.pandas_dataframe(start, stop, ncol=6)
+        df.drop(0, axis=1, inplace=True)
+        df.columns = ['x', 'y', 'z', 'dipstr', 'oscilstr']
+        return df
+
+    def parse_atom(self, orientation=None):
+        '''
+        Parse the atom tables.
+
+        Args:
+            orientation (str, optional): Specify which orientation
+                to parse. Will only accept `'input'` or `'standard'`.
+                Defaults to `None` (will determine orientation to
+                parse internally).
+        '''
         # Atom flags
         _regeom01 = 'Input orientation'
         _regeom02 = 'Standard orientation'
         # Find our data
         found = self.find(_regeom01, _regeom02, keys_only=True)
-        # Check if nosymm was specified
-        key = _regeom02 if found[_regeom02] else _regeom01
+        if orientation is None:
+            key = _regeom02 if found[_regeom02] else _regeom01
+        else:
+            if orientation.lower() == 'input':
+                key = _regeom01
+            elif orientation.lower() == 'standard':
+                if not found[_regeom02]:
+                    msg = "Parsing of the standard orientation was " \
+                          +"requested, but there were no atom tables " \
+                          +"found. Will parse the input orientations."
+                    warnings.warn(msg, Warning)
+                    key = _regeom01
+                else:
+                    key = _regeom02
+            else:
+                msg = "Could not understand the requested " \
+                      +"orientation to parse. Expected " \
+                      +"'Standard' or 'Input', but got {}."
+                raise ValueError(msg.format(orientation))
         starts = np.array(found[key]) + 5
         # Prints converged geometry twice but only need it once
         starts = starts[:-1] if len(starts) > 1 else starts
@@ -349,8 +394,6 @@ class Output(six.with_metaclass(GauMeta, Editor)):
         # TDDFT flags
         _retddft = 'TD'
         _reexcst = 'Excited State'
-        # removing stop condition for similar reasons as in parse_frequency
-        #chk = self.find(_retddft, stop=1000, keys_only=True)
         chk = self.find(_retddft, keys_only=True)
         if not chk: return
         # Find the data
@@ -380,75 +423,71 @@ class Output(six.with_metaclass(GauMeta, Editor)):
         conts['frame'] = conts['group'] = 0
         self.excitation = conts
 
-    #######################################################################
-    # this is a copy-paste of the parse_frequency method
-    # the to_universe seems to be having issues with creating more than one
-    # class attribute in one method
-    #######################################################################
-    def parse_frequency_ext(self):
-        # check to see if HPModes is being used in the input
-        _rehpmodes = 'HPModes'
-        _reharm = 'Harmonic frequencies'
-        found_hp = self.regex(_rehpmodes, ignore_case=True)
-        # TODO: look into effect of the next huge assumption
-        #       test with an ROA calculation
-        found_ha = self.regex(_reharm, keys_only=True)
-        if not found_ha: return
-        # if it is found then we get the location of the _reharm labels
-        # this gives us the location of the different precision data types
-        start_read = found_ha[0]
-        if found_hp:
-            print("Parsing frequency normal modes from HPModes output")
-            hpmodes = True
-            stop_read = found_ha[1]
-        else:
-            stop_read=None
-            hpmodes = False
+    def parse_elec_dipole(self, length=True):
+        '''
+        Parse the electric dipole moment.
 
-        # Frequency flags
-        _refreq = 'Frequencies'
-        # we set the start and stop condition because HPModes will print the displacement
-        # data twice, once with high precision and once with normal precision
-        found = self.regex(_refreq, start=start_read, stop=stop_read, keys_only=True)
+        Args:
+            length (bool, optional): Parse the dipoles in the
+                length formalism. Defaults to `True`.
+        '''
+        df = self._get_dipole(length=length)
+        self.elec_dipole = df
+
+    def parse_elec_quadrupole(self):
+        ''' Parse the transition velocity quadrupole moment. '''
+        _requad = "Ground to excited state transition velocity quadrupole moments"
+        found = self.find(_requad, keys_only=True)
         if not found: return
-        # set the start point where the matches were found and add the starting point
-        starts = np.array(found) + start_read
-        # get the location of the Atom labels in the frequency blocks
-        # the line below this is where all of the normal mode displacement data begins
-        #found_atom = np.array(self.regex('Atom', start=start_read, stop=stop_read, keys_only=True)) + start_read
-        # Total lines per block minus the unnecessary ones
-        #span = starts[1] - found_atom[0] - 3
-        # get the number of other attributes included
-        # this is done so we can have some flexibility in the code as there may be times that
-        # the number of added attributes is not always the same and we get errors
-        fdx = 0
-        # set a bunch of conditional parameters if hpmodes is activated
-        # saves us from putting if statements in the for loop
-        freq_start = 24 if hpmodes else 15
-        #mapper = ["freq", "r_mass", "f_const", "ir_int"]
-        ext_dfs = []
-        # Iterate over what we found
-        for lno in starts:
-            ln = self[lno]
-            # Get the frequencies first
-            freqs = ln[freq_start:].split()
-            # get the reduced mass
-            r_mass = self[lno+1][freq_start:].split()
-            # get the force constants
-            f_const = self[lno+2][freq_start:].split()
-            # get the ir intensities
-            ir_int = self[lno+3][freq_start:].split()
-            nfreqs = len(freqs)
-            # TODO: are these always present?
-            ext_dfs.append(pd.DataFrame.from_dict({'freq': freqs, 'r_mass': r_mass, 'f_const': f_const,
-                                           'ir_int': ir_int, 'freqdx': [i for i in range(fdx, fdx + nfreqs)]}))
-            fdx += nfreqs
-        freq_ext = pd.concat(ext_dfs, ignore_index=True)
-        freq_ext = freq_ext.astype(np.float64)
-        freq_ext['freqdx'] = freq_ext['freqdx'].astype(np.int64)
-        # TODO: we are having issues with the to_universe() in that it only seems to set the
-        #       class attribute corresponding to the method
-        self.frequency_ext = freq_ext
+        start = found[0] + 2
+        stop = start
+        while self[stop].split()[0] != r'<0|del|b>': stop += 1
+        df = self.pandas_dataframe(start, stop, ncol=7)
+        df.drop(0, axis=1, inplace=True)
+        cols = ['xx', 'yy', 'zz', 'xy', 'xz', 'yz']
+        df.columns = cols
+        self.elec_quadrupole = df
+
+    def parse_mag_dipole(self):
+        ''' Parse the magnetic dipole moment. '''
+        _remag = "Ground to excited state transition magnetic dipole moments"
+        found = self.find(_remag, keys_only=True)
+        if not found: return
+        start = found[0] + 2
+        stop = start
+        while self[stop].split()[0] != 'Ground': stop += 1
+        df = self.pandas_dataframe(start, stop, ncol=4)
+        df.drop(0, axis=1, inplace=True)
+        df.columns = ['x', 'y', 'z']
+        self.mag_dipole = df
+
+    def parse_spec_prop(self):
+        ''' Parse the spectral properties. '''
+        _rerotstr = r"Rotatory Strengths (R) in cgs (10**-40 erg-esu-cm/Gauss)"
+        found = self.find(_rerotstr, keys_only=True)
+        if not found: return
+        starts = np.array(found) + 2
+        stop = starts[0]
+        while self[stop].split()[0] != r'1/2[<0|r|b>*<b|rxdel|0>': stop += 1
+        stops = starts + (stop - starts[0])
+        srs = []
+        for idx, (start, stop) in enumerate(zip(starts, stops)):
+            df = self.pandas_dataframe(start, stop, ncol=6)
+            name = 'rotstr_len' if idx == 1 else 'rotstr_vel'
+            sr = pd.Series(df[4].values, name=name)
+            srs.append(sr)
+        df = self._get_dipole(True)
+        dip_len = pd.Series(df['dipstr'].values, name='dipstr_len')
+        df = self._get_dipole(False)
+        dip_vel = pd.Series(df['dipstr'].values, name='dipstr_vel')
+        srs.append(dip_len)
+        srs.append(dip_vel)
+        if not hasattr(self, 'excitation'):
+            self.parse_excitation()
+        exc = self.excitation.groupby('map').apply(lambda x: x.iloc[0]['energy'])
+        exc = pd.Series(exc.values, name='energy_au')
+        df = pd.concat([exc]+srs, axis=1)
+        self.spec_prop = df
 
     def parse_frequency(self):
         # check to see if HPModes is being used in the input
@@ -469,7 +508,6 @@ class Output(six.with_metaclass(GauMeta, Editor)):
         else:
             stop_read = None
             hpmodes = False
-
         # Frequency flags
         _refreq = 'Frequencies'
         # we set the start and stop condition because HPModes will print the displacement
@@ -506,8 +544,9 @@ class Output(six.with_metaclass(GauMeta, Editor)):
             # Get the frequencies first
             freqs = ln[freq_start:].split()
             # get the ir intensities
-            ir_int = list(map(float, self[lno+3][freq_start:].split()))
             r_mass = list(map(float, self[lno+1][freq_start:].split()))
+            f_cons = list(map(float, self[lno+2][freq_start:].split()))
+            ir_int = list(map(float, self[lno+3][freq_start:].split()))
             nfreqs = len(freqs)
             # Get just the atom displacement vectors
             start = lno + span_freq_vals
@@ -528,6 +567,7 @@ class Output(six.with_metaclass(GauMeta, Editor)):
                 freqs = np.repeat(freqs, int(df.shape[0]/3))
                 ir_int = np.repeat(ir_int, int(df.shape[0]/3))
                 r_mass = np.repeat(r_mass, int(df.shape[0]/3))
+                f_cons = np.repeat(f_cons, int(df.shape[0]/3))
             else:
                 # Split up the df and unstack it
                 slices = [list(range(2 + i, 2 + 3 * nfreqs, 3)) for i in range(nfreqs)]
@@ -539,26 +579,19 @@ class Output(six.with_metaclass(GauMeta, Editor)):
                 freqs = np.repeat(freqs, df.shape[0])
                 ir_int = np.repeat(ir_int, df.shape[0])
                 r_mass = np.repeat(r_mass, df.shape[0])
+                f_cons = np.repeat(f_cons, df.shape[0])
             fdx += nfreqs
             # Put it all together
             stacked = pd.DataFrame.from_dict({'Z': zs, 'label': labels,
                                     'dx': dx, 'dy': dy, 'dz': dz,
                                     'frequency': freqs, 'freqdx': freqdxs,
-                                    'ir_int': ir_int, 'r_mass': r_mass})
+                                    'ir_int': ir_int, 'r_mass': r_mass,
+                                    'f_const': f_cons})
             stacked['symbol'] = stacked['Z'].map(z2sym)
             dfs.append(stacked)
         # Now put all our frequencies together
         frequency = pd.concat(dfs).reset_index(drop=True)
         frequency['frequency'] = frequency['frequency'].astype(np.float64)
-        #freq_ext = pd.concat(ext_dfs, ignore_index=True)
-        # Pretty sure displacements are in cartesian angstroms
-        # TODO: Make absolutely sure what units gaussian reports the displacements as
-        # TODO: verify with an external program that vibrational
-        #       modes look the same as the ones generated with
-        #       this methodology.
-        #frequency['dx'] *= Length['Angstrom', 'au']
-        #frequency['dy'] *= Length['Angstrom', 'au']
-        #frequency['dz'] *= Length['Angstrom', 'au']
         # Frame not really implemented here either
         frequency['frame'] = 0
         # generate the frequency and extended frequency dataframes
@@ -570,11 +603,11 @@ class Output(six.with_metaclass(GauMeta, Editor)):
         _renmr = "SCF GIAO Magnetic shielding tensor (ppm):"
         _reiso = "Isotropic"
         found = self.find(_renmr)
-        if not found:
-            return
-        else:
-            found = self.find(_reiso)
+        if not found: return
+        found = self.find(_reiso)
         # base properties
+        if not hasattr(self, 'atom'):
+            self.parse_atom()
         atom = self.atom['set'].drop_duplicates().values
         nat = len(atom)
         symbols = self.atom.groupby('frame').get_group(0)['symbol']
@@ -615,6 +648,12 @@ class Output(six.with_metaclass(GauMeta, Editor)):
         found = self.find(_regradient, keys_only=True)
         if not found:
             return
+        # Gaussian prints the gradients in the
+        # input orientation
+        self.parse_atom(orientation='input')
+        print("Parsing the atom table in the input " \
+              +"orientation as the gradient is printed " \
+              +"using this molecular orientation.")
         # set start point
         starts = np.array(found) + 3
         stop = starts[0]
@@ -649,6 +688,47 @@ class Output(six.with_metaclass(GauMeta, Editor)):
             mltpl['ix3'] = self._parse_triangular_matrix(_reixn.format(3), 'ix3', True)
             self.multipole = mltpl
 
+    def parse_hessian(self):
+        '''
+        Parse the Hessian from the Gaussian stdout. This
+        is printed as a lower triangular matrix. We convert
+        this to a square matrix internally.
+        '''
+        _rehess = 'Force constants in Cartesian coordinates:'
+        found = self.find(_rehess, keys_only=True)
+        if not found:
+            return
+        # Gaussian prints the hessian in the
+        # input orientation
+        self.parse_atom(orientation='input')
+        print("Parsing the atom table in the input " \
+              +"orientation as the Hessian is printed " \
+              +"using this molecular orientation.")
+        ldx = found[0] + 1
+        dfs = []
+        try:
+            while float(self[ldx].split()[0]):
+                d = self[ldx].split()
+                if 'D' not in d[1]:
+                    ncols = len(d)
+                    cols = list(map(lambda x: int(x)-1, d))
+                    if cols[0] != 0:
+                        dfs.append(pd.concat(srs, axis=1).T)
+                    srs = []
+                else:
+                    arr = np.zeros(ncols)
+                    d = [x.replace('D', 'E') for x in d]
+                    arr[range(len(d)-1)] = list(map(float, d[1:]))
+                    sr = pd.Series(arr, index=cols, name=int(d[0])-1)
+                    srs.append(sr)
+                ldx += 1
+        except ValueError:
+            dfs.append(pd.concat(srs, axis=1).T)
+        df = pd.concat(dfs, axis=1)
+        df.fillna(0, inplace=True)
+        df = df + (df.T - np.eye(df.shape[0])*df)
+        self.hessian = df
+
     def __init__(self, *args, **kwargs):
         super(Output, self).__init__(*args, **kwargs)
 
@@ -666,6 +746,41 @@ class Fchk(six.with_metaclass(GauMeta, Editor)):
         col = min(len(self[start].split()), dim)
         stop = np.ceil(start + dim / col).astype(np.int64)
         return self.pandas_dataframe(start, stop, col).stack().values
+
+    def _frequency_ext(self):
+        '''
+        Parses extended frequency data present in FChk file
+
+        Note:
+            Requires Freq(SaveNormalModes) in input
+        '''
+        # Frequency regex
+        _renmode = 'Number of Normal Modes'
+        _refinfo = 'Vib-E2'
+        # TODO: find out what these two values are useful for
+        _rendim = 'Vib-NDim'
+        _rendim0 = 'Vib-NDim0'
+
+        found = self.find(_renmode)
+        if not found:
+            return
+        else:
+            found = self.find(_renmode, _refinfo, keys_only=True)
+        # find number of vibrational modes
+        nmode = self._intme(found[_renmode])
+        # get extended data (given by mapper array)
+        all_info = self._dfme(found[_refinfo], nmode * 14)
+        all_info[abs(all_info) < self._tol] = 0
+        freqdx = [i for i in range(nmode)]
+        # mapper array to filter through all of the values printed on the fchk file
+        # TODO: have to find labels of unknown columns
+        mapper = ["freq", "r_mass", "f_const", "ir_int", "raman_activity", "depol_plane", "depol_unpol",
+                  "dipole_s", "rot_s", "unk4", "unk5", "unk6", "unk7", "em_angle"]
+        # build extended frequency table
+        df = pd.DataFrame.from_dict({mapper[int(i/nmode)]: all_info[i:i+nmode]
+                                            for i in range(0, nmode*14-1, nmode)})
+        df['freqdx'] = freqdx
+        return df
 
     def parse_atom(self):
         # Atom regex
@@ -824,44 +939,6 @@ class Fchk(six.with_metaclass(GauMeta, Editor)):
         if bcoefs is not None:
             self.momatrix['coef1'] = bcoefs
 
-    def parse_frequency_ext(self):
-        '''
-        Parses extended frequency data present in FChk file
-
-        Note:
-            Requires Freq(SaveNormalModes) in input
-        '''
-        # Frequency regex
-        _renmode = 'Number of Normal Modes'
-        _refinfo = 'Vib-E2'
-        # TODO: find out what these two values are useful for
-        _rendim = 'Vib-NDim'
-        _rendim0 = 'Vib-NDim0'
-
-        found = self.find(_renmode)
-        if not found:
-            return
-        else:
-            found = self.find(_renmode, _refinfo, keys_only=True)
-        # find number of vibrational modes
-        nmode = self._intme(found[_renmode])
-        # get extended data (given by mapper array)
-        all_info = self._dfme(found[_refinfo], nmode * 14)
-        all_info[abs(all_info) < self._tol] = 0
-        freqdx = [i for i in range(nmode)]
-        # mapper array to filter through all of the values printed on the fchk file
-        # TODO: have to find labels of unknown columns
-        mapper = ["freq", "r_mass", "f_const", "ir_int", "raman_activity", "depol_plane", "depol_unpol",
-                  "dipole_s", "rot_s", "unk4", "unk5", "unk6", "unk7", "em_angle"]
-        # build extended frequency table
-        self.frequency_ext = pd.DataFrame.from_dict({mapper[int(i/nmode)]: all_info[i:i+nmode]
-                                                     for i in range(0, nmode*14-1, nmode)})
-        self.frequency_ext['freqdx'] = freqdx
-        # convert from atomic mass units to atomic units
-        #self.frequency_ext['r_mass'] *= Mass['u', 'au_mass']
-        ## convert from cm^{-1} to Ha
-        #self.frequency_ext['freq'] *= Energy['cm^-1', 'Ha']
-
     def parse_frequency(self):
         '''
         Parses frequency data from FChk file
@@ -873,14 +950,12 @@ class Fchk(six.with_metaclass(GauMeta, Editor)):
         _renmode = 'Number of Normal Modes'
         _redisp = 'Vib-Modes'
         _refinfo = 'Vib-E2'
-
         found = self.find(_renmode)
         if not found:
             return
         else:
             found = self.find(_renmode, _refinfo, _redisp, keys_only=True)
-        if not hasattr(self, 'frequency_ext'):
-            self.parse_frequency_ext()
+        ext_params = self._frequency_ext()
         # get atomic numbers
         znums = self.atom['Zeff'].values
         # get number of atoms
@@ -906,35 +981,28 @@ class Fchk(six.with_metaclass(GauMeta, Editor)):
         znums = np.tile(znums, nmode)
         label = np.tile(label, nmode)
         symbols = list(map(lambda x: z2sym[x], znums))
-        ir_int = np.repeat(self.frequency_ext['ir_int'].values, nat)
-        r_mass = np.repeat(self.frequency_ext['r_mass'].values, nat)
         # just to have the same table as the one generated for normal output parser
         frame = np.zeros(len(znums)).astype(np.int)
         # build frequency table
-        self.frequency = pd.DataFrame.from_dict({"Z": znums, "label": label, "dx": dx,
-                                                 "dy": dy, "dz": dz, "frequency": freq,
-                                                 "freqdx": freqdx, "symbol": symbols,
-                                                 "ir_int": ir_int, "r_mass": r_mass,
-                                                 "frame": frame})
-        self.frequency.reset_index(drop=True, inplace=True)
-        # convert atomic displacements to atomic units
-        # TODO: Make absolutely sure what units gaussian reports the displacements in
-        #       bohr instead of angstroms
-        #self.frequency['dx'] *= Length['Angstrom', 'au']
-        #self.frequency['dy'] *= Length['Angstrom', 'au']
-        #self.frequency['dz'] *= Length['Angstrom', 'au']
+        df = pd.DataFrame.from_dict({"Z": znums, "label": label, "dx": dx,
+                                     "dy": dy, "dz": dz, "frequency": freq,
+                                     "freqdx": freqdx, "symbol": symbols,
+                                     "frame": frame})
+        cols = list(map(lambda x: 'unk' not in x and 'freq' not in x,
+                            ext_params.columns))
+        cols = ext_params.columns[cols]
+        for col in cols:
+            df[col] = np.repeat(ext_params[col].values, nat)
+        self.frequency = df
 
     def parse_gradient(self):
         # gradient regex
         _regrad = 'Cartesian Gradient'
         _reznums = 'Atomic numbers'
         _renat = 'Number of atoms'
-
-        found = self.find(_regrad)
-        if not found:
+        found = self.find(_regrad, _reznums, _renat, keys_only=True)
+        if not found[_regrad]:
             return
-        else:
-            found = self.find(_regrad, _reznums, _renat, keys_only=True)
         # get number of atoms
         nat = self._intme(found[_renat])
         # get atomic numbers
@@ -970,7 +1038,6 @@ class Fchk(six.with_metaclass(GauMeta, Editor)):
         # base properties
         _renat = 'Number of atoms'
         _reznums = 'Atomic numbers'
-
         found = self.find(_renmr)
         if not found:
             return
@@ -1049,6 +1116,28 @@ class Fchk(six.with_metaclass(GauMeta, Editor)):
         os = nbas != len(ens)
         self.orbital = Orbital.from_energies(ens, ae, be, os=os)
 
+    def parse_hessian(self):
+        '''
+        Parse the Hessian from the Gaussian stdout. This
+        is printed as a lower triangular matrix. We convert
+        this to a square matrix internally.
+        '''
+        _rehess = 'Cartesian Force Constants'
+        found = self.find(_rehess, keys_only=True)
+        if not found:
+            return
+        if not hasattr(self, 'atom'):
+            self.parse_atom()
+        nelem = self._intme(found)
+        hess_elem = self._dfme(found, nelem)
+        nat = self.atom.shape[0]
+        arr = np.zeros((3*nat, 3*nat))
+        tril_idx = np.tril_indices_from(arr, k=0)
+        for idx, (i, j) in enumerate(zip(*tril_idx)):
+            arr[i][j] = hess_elem[idx]
+        arr = arr + (arr.T - np.eye(3*nat)*arr)
+        df = pd.DataFrame(arr)
+        self.hessian = df
 
     def __init__(self, *args, **kwargs):
         super(Fchk, self).__init__(*args, **kwargs)

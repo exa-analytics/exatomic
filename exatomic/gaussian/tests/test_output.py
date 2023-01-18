@@ -74,14 +74,6 @@ class TestFchk(TestCase):
         self.assertEqual(self.mam4.frequency.shape[0], 24)
         self.assertTrue(np.all(pd.notnull(pd.DataFrame(self.mam4.frequency))))
 
-    def test_parse_frequency_ext(self):
-        self.mam3.parse_frequency_ext()
-        self.assertEqual(self.mam3.frequency_ext.shape[0], 24)
-        self.assertTrue(np.all(pd.notnull(pd.DataFrame(self.mam3.frequency_ext))))
-        self.mam4.parse_frequency_ext()
-        self.assertEqual(self.mam4.frequency_ext.shape[0], 6)
-        self.assertTrue(np.all(pd.notnull(pd.DataFrame(self.mam4.frequency_ext))))
-
     def test_parse_gradient(self):
         self.mam3.parse_gradient()
         self.assertEqual(self.mam3.gradient.shape[0], 10)
@@ -89,6 +81,14 @@ class TestFchk(TestCase):
         self.mam4.parse_gradient()
         self.assertEqual(self.mam4.gradient.shape[0], 4)
         self.assertTrue(np.all(pd.notnull(pd.DataFrame(self.mam4.gradient))))
+
+    def test_parse_hessian(self):
+        self.mam3.parse_hessian()
+        self.assertEqual(self.mam3.hessian.shape, (30,30))
+        self.assertTrue(np.all(pd.notnull(pd.DataFrame(self.mam3.hessian))))
+        self.mam4.parse_hessian()
+        self.assertEqual(self.mam4.hessian.shape, (12,12))
+        self.assertTrue(np.all(pd.notnull(pd.DataFrame(self.mam4.hessian))))
 
     def test_shielding_tensor(self):
         self.nitro_nmr.parse_nmr_shielding()
@@ -149,6 +149,8 @@ class TestOutput(TestCase):
         self.meth_opt_freq_hp.parse_atom()
         self.assertEqual(self.meth_opt_freq_hp.atom.shape[0], 130)
         self.assertTrue(np.all(pd.notnull(pd.DataFrame(self.meth_opt_freq_hp.atom))))
+        self.assertRaises(ValueError,
+                          self.mam4.parse_atom, orientation='error')
 
     def test_parse_basis_set(self):
         self.uo2.parse_basis_set()
@@ -219,16 +221,6 @@ class TestOutput(TestCase):
         self.assertEqual(self.nap_opt.frame.shape[0], 26)
         self.assertTrue(np.all(pd.notnull(pd.DataFrame(self.nap_opt.frame))))
 
-    def test_parse_frequency_ext(self):
-        self.meth_freq.parse_frequency_ext()
-        self.assertEqual(self.meth_freq.frequency_ext.shape[0], 24)
-        self.assertEqual(self.meth_freq.frequency_ext.shape[1], 5)
-        self.assertTrue(np.all(pd.notnull(pd.DataFrame(self.meth_freq.frequency_ext))))
-        self.meth_opt_freq_hp.parse_frequency_ext()
-        self.assertEqual(self.meth_opt_freq_hp.frequency_ext.shape[0], 24)
-        self.assertEqual(self.meth_opt_freq_hp.frequency_ext.shape[1], 5)
-        self.assertTrue(np.all(pd.notnull(pd.DataFrame(self.meth_opt_freq_hp.frequency_ext))))
-
     def test_parse_frequency(self):
         self.meth_freq.parse_frequency()
         self.assertEqual(self.meth_freq.frequency.shape[0], 240)
@@ -248,7 +240,7 @@ class TestOutput(TestCase):
         self.assertEqual(self.h2o2_tddft.excitation.shape[0], 32)
         self.assertTrue(np.all(pd.notnull(pd.DataFrame(self.h2o2_tddft.excitation))))
 
-    def test_shielding_tensor(self):
+    def test_parse_nmr_shielding(self):
         self.nitro_nmr.parse_nmr_shielding()
         self.assertEqual(self.nitro_nmr.nmr_shielding.shape[0], 15)
         self.assertTrue(np.all(pd.notnull(pd.DataFrame(self.nitro_nmr.nmr_shielding))))
@@ -257,9 +249,53 @@ class TestOutput(TestCase):
         self.meth_opt.parse_gradient()
         self.assertEqual(self.meth_opt.gradient.shape[0], 120)
         self.assertTrue(np.all(pd.notnull(pd.DataFrame(self.meth_opt.gradient))))
+        self.meth_freq.parse_gradient()
+        self.assertEqual(self.meth_freq.gradient.shape[0], 10)
+        self.assertTrue(np.all(pd.notnull(pd.DataFrame(self.meth_freq.gradient))))
         self.nap_opt.parse_gradient()
         self.assertEqual(self.nap_opt.gradient.shape[0], 806)
         self.assertTrue(np.all(pd.notnull(pd.DataFrame(self.nap_opt.gradient))))
+
+    def test_parse_hessian(self):
+        self.meth_freq.parse_hessian()
+        self.assertEqual(self.meth_freq.hessian.shape, (30,30))
+        self.assertTrue(np.all(pd.notnull(pd.DataFrame(self.meth_freq.hessian))))
+        self.h2o_freq.parse_hessian()
+        self.assertEqual(self.h2o_freq.hessian.shape, (9,9))
+        self.assertTrue(np.all(pd.notnull(pd.DataFrame(self.h2o_freq.hessian))))
+
+    def test_parse_elec_dipole(self):
+        # naproxen example
+        self.nap_tddft.parse_elec_dipole(length=True)
+        self.assertEqual(self.nap_tddft.elec_dipole.shape[0], 5)
+        self.assertTrue(np.all(pd.notnull(pd.DataFrame(self.nap_tddft.elec_dipole))))
+        actual = [ 0.4478,-0.6177, 0.0607, 0.5858, 0.0500]
+        self.assertTrue(np.allclose(self.nap_tddft.elec_dipole.loc[0].values, actual))
+        self.nap_tddft.parse_elec_dipole(length=False)
+        self.assertEqual(self.nap_tddft.elec_dipole.shape[0], 5)
+        self.assertTrue(np.all(pd.notnull(pd.DataFrame(self.nap_tddft.elec_dipole))))
+        actual = [-0.0572, 0.0797,-0.0077, 0.0097, 0.0504]
+        self.assertTrue(np.allclose(self.nap_tddft.elec_dipole.loc[0].values, actual))
+
+    def test_parse_mag_dipole(self):
+        # naproxen example
+        self.nap_tddft.parse_mag_dipole()
+        self.assertEqual(self.nap_tddft.mag_dipole.shape[0], 5)
+        self.assertTrue(np.all(pd.notnull(pd.DataFrame(self.nap_tddft.mag_dipole))))
+
+    def test_parse_elec_quadrupole(self):
+        # naproxen example
+        self.nap_tddft.parse_elec_quadrupole()
+        self.assertEqual(self.nap_tddft.elec_quadrupole.shape[0], 5)
+        self.assertTrue(np.all(pd.notnull(pd.DataFrame(self.nap_tddft.elec_quadrupole))))
+
+    def test_parse_spec_prop(self):
+        # naproxen example
+        self.nap_tddft.parse_spec_prop()
+        self.assertEqual(self.nap_tddft.spec_prop.shape[0], 5)
+        self.assertTrue(np.all(pd.notnull(pd.DataFrame(self.nap_tddft.spec_prop))))
+        actual = [0.128024,-8.2309,-8.1542,0.5858,0.0097]
+        self.assertTrue(np.allclose(self.nap_tddft.spec_prop.loc[0].values, actual))
 
     def test_to_universe(self):
         """Test the to_universe method."""

@@ -1,0 +1,1234 @@
+   This run of MOLCAS is using the pymolcas driver
+
+                             OPE
+                             OPE          NMOL  CASOP  ENMOLC A   SO
+                 OPE        NMOLC        AS  OP EN  MO LC     AS  OP
+                OPENM       OL CA        SO  PE NM  OL CA     SOP EN
+                OP EN      MO   LC       AS  OP ENMOL  CASO   PENMOL
+                OP  EN     MO   LC       AS  OP EN     MO     LC ASO
+               OP   E  NMOL  C  AS       OP  EN MO     LC     AS  OP
+               OP  E   NMO   LC AS        OPEN  MO     LCASOP EN   M
+               O  PEN   MO  LCA  SO
+            OPE   NMO   L   CAS    OP
+        OPENMOL  CASOP     ENMOL   CASOPE
+     OPENMOLCA   SOPENMOLCASOPEN   MOLCASOPE
+    OPENMOLCAS   OP           EN   MOL    CAS
+    OPENMOLCAS       OP  ENM        O     LCA
+    OPENMOLCAS    OPEN  MOLCASO     P  E  NMO
+    OPENMOLCAS     OP               E  N  MOL
+    OPENMOLCA   SO           PENM   O  L  CAS    OPEN    MO    LCAS
+    OPENMOLCA   SOP           ENM   O  L  CAS   OP  EN  MOLC  AS   O
+    OPENMOLCA   SOPE           NM      O  LCA   S      OP  EN MO
+    OPENMOLC                AS         O  PEN   M      OL  CA  SOPE
+    OPENMO        LCASOPE  NMOL        C  ASO   P      ENMOLC     AS
+    OPE     NMO      LCA  SO     P     E   NM   OL  CA SO  PE N   MO
+          OPENMOLCA            SOPE   NMO        LCAS  O    P  ENMO
+     OPENMOLCASOPENMOLCASOPENMOLCASOPENMOLCA
+        OPENMOLCASOPENMOLCASOPENMOLCASOPE
+            OPENMOLCASOPENMOLCASOPENM
+               OPENMOLCASOPENMOLCA        version: 18.09
+                   OPENMOLCASO
+                       OPE                tag: 618-g92cc73c
+
+ OpenMolcas is free software; you can redistribute it and/or modify it
+ under the terms of the GNU Lesser General Public License version 2.1.
+ OpenMolcas is distributed in the hope that it will be useful, but it
+ is provided "as is" and without any express or implied warranties.
+ For more details see the full text of the license in the file
+ LICENSE or in <http://www.gnu.org/licenses/>.
+
+                 Copyright (C) The OpenMolcas Authors
+           For the author list and the recommended citation,
+                   consult the file CONTRIBUTORS.md
+
+           *************************************************
+           * pymolcas version py2.05                       *
+           *   build d52f080366dd25876f9462b9d7efbea2      *
+           *   (after the EMIL interpreter by V. Veryazov) *
+           *************************************************
+
+configuration info
+------------------
+C Compiler ID: GNU
+C flags: -std=gnu99
+Fortran Compiler ID: GNU
+Fortran flags: -cpp -fno-aggressive-loop-optimizations -fdefault-integer-8
+Definitions: _MOLCAS_;_I8_;_LINUX_;_MKL_
+Parallel: OFF (GA=OFF)
+
+
+   -----------------------------------------------------------------------------------------------------
+  |
+  |           Project: ucl
+  |    Submitted from: /scratch/303625
+  |      Scratch area: /scratch/303625
+  |   Save outputs to: /projects/academic/jochena/gaurabga/vib-coupling/ucl6_2minus-gas/molcas-symCi/f2d
+  |            Molcas: /projects/academic/jochena/gaurabga/Molcas/OpenMolcas/build
+  |
+  | Scratch area is NOT empty
+  |
+  |      MOLCAS_CPUS = 1
+  |    MOLCAS_DRIVER = /projects/academic/jochena/gaurabga/bin/pymolcas
+  |    MOLCAS_MOLDEN = ON
+  |    MOLCAS_NPROCS = 1
+  |     MOLCAS_PRINT = 2
+  |    MOLCAS_SOURCE = /projects/academic/jochena/gaurabga/Molcas/OpenMolcas
+  | MOLCAS_STRUCTURE = 0
+  |
+   -----------------------------------------------------------------------------------------------------
+
+++ ---------   Input file   ---------
+
+>>> COPY $HomeDir/../guess.GvOrb INPORB
+
+&RASSCF
+Spin
+1
+Symmetry
+2
+nActEl
+8 0 1
+TYPEINDEX
+CIRoots
+35 35 1
+Iter
+100 100
+LumOrb
+orbappear
+compact
+orblisting
+all
+levshift
+1.0
+MAXORb
+2
+End of input
+
+
+--- Start Module: rasscf at Tue Oct  1 19:03:18 2019 ---
+
+()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()
+
+                                              &RASSCF
+
+                                   only a single process is used
+                       available to each process: 55 GB of memory, 1 thread?
+()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()()
+
+
+ ******************* WARNING *******************
+ ###############################################################################
+ ###############################################################################
+ ###                                                                         ###
+ ###                                                                         ###
+ ###    WARNING: You allow no holes in Ras1                                  ###
+ ###                                                                         ###
+ ###                                                                         ###
+ ###############################################################################
+ ###############################################################################
+ You allow no holes in Ras1.                    
+ This may be deliberate, but may give numerical 
+ problems in SXCTL section.
+ ***********************************************
+
+      Header of the ONEINT file:
+      --------------------------
+      
+      Integrals generated by seward 4.2.0  , Sun Sep 29 00:59:46 2019
+
+
+      OrdInt status: non-squared
+
+
+      Cartesian coordinates in Angstrom:
+      -----------------------------------------------------
+      No.  Label        X            Y            Z        
+      -----------------------------------------------------
+       1   U          0.00000000   0.00000000   0.00000000
+       2   CL1        0.00000000   0.00000000   2.66203800
+       3   CL2        0.00000000   2.66203800   0.00000000
+       4   CL3        2.66203800   0.00000000   0.00000000
+       5   CL1       -0.00000000  -0.00000000  -2.66203800
+       6   CL2       -0.00000000  -2.66203800  -0.00000000
+       7   CL3       -2.66203800  -0.00000000  -0.00000000
+      -----------------------------------------------------
+      Nuclear repulsion energy = 2439.05989869
+
+++    Wave function specifications:
+      -----------------------------
+
+      Number of closed shell electrons         188
+      Number of electrons in active shells       8
+      Max number of holes in RAS1 space          0
+      Max nr of electrons in RAS3 space          1
+      Number of inactive orbitals               94
+      Number of active orbitals                 15
+      Number of secondary orbitals             215
+      Spin quantum number                      0.0
+      State symmetry                             2
+--
+
+++    Orbital specifications:
+      -----------------------
+
+      Symmetry species                           1   2
+                                                ag  au
+      Frozen orbitals                            0   0
+      Inactive orbitals                         45  49
+      Active orbitals                            8   7
+      RAS1 orbitals                              3   0
+      RAS2 orbitals                              0   7
+      RAS3 orbitals                              5   0
+      Secondary orbitals                       106 109
+      Deleted orbitals                           0   0
+      Number of basis functions                159 165
+--
+
+++    CI expansion specifications:
+      ----------------------------
+
+      Number of CSFs                            35
+      Number of determinants                    35
+      Number of root(s) required                35
+      Root chosen for geometry opt.             35
+      CI roots used                              1     2     3     4     5     6     7     8     9    10
+                                                11    12    13    14    15    16    17    18    19    20
+                                                21    22    23    24    25    26    27    28    29    30
+                                                31    32    33    34    35
+      weights                                0.029 0.029 0.029 0.029 0.029 0.029 0.029 0.029 0.029 0.029
+                                             0.029 0.029 0.029 0.029 0.029 0.029 0.029 0.029 0.029 0.029
+                                             0.029 0.029 0.029 0.029 0.029 0.029 0.029 0.029 0.029 0.029
+                                             0.029 0.029 0.029 0.029 0.029
+      highest root included in the CI           35
+      max. size of the explicit Hamiltonian     35
+--
+
+++    Optimization specifications:
+      ----------------------------
+
+      RASSCF algorithm: LK Cholesky
+      Maximum number of macro iterations       100
+      Maximum number of SX iterations          100
+      Threshold for RASSCF energy            0.100E-07
+      Threshold for max MO rotation          0.100E+00
+      Threshold for max BLB element          0.100E-03
+      Level shift parameter                  0.100E+01
+      Make Quasi-Newton update
+--
+
+      The MO-coefficients are taken from the file:
+      INPORB                                                                                                                          
+      Title: RKS-DFT orbitals / B3LYP                                                      
+
+      Total molecular charge   -2.00
+
+      ************************************************************************************************************************
+      *                                                                                                                      *
+      *                                            Wave function control section                                             *
+      *                                                                                                                      *
+      ************************************************************************************************************************
+
+
+                                         RASSCF iterations: Energy and convergence statistics
+                                         ----------------------------------------------------
+
+      Iter CI   SX   CI       RASSCF       Energy    max ROT     max BLB   max BLB  Level Ln srch  Step   QN   Walltime
+          iter iter root      energy       change     param      element    value   shift minimum  type update hh:mm:ss
+ Nr of preliminary CI iterations:   1
+ ###############################################################################
+ ###############################################################################
+ ###                                                                         ###
+ ###                                                                         ###
+ ###    WARNING: Problems in orbital optimization.                           ###
+ ###                                                                         ###
+ ###                                                                         ###
+ ###############################################################################
+ ###############################################################################
+  Warning: In symmetry  1, orbital p=  46 has diagonal density matrix element D(p,p) close to two. (2 - D(p,p))= -0.444089D-15
+  Warning: In symmetry  1, orbital p=  47 has diagonal density matrix element D(p,p) close to two. (2 - D(p,p))= -0.444089D-15
+  Warning: In symmetry  1, orbital p=  48 has diagonal density matrix element D(p,p) close to two. (2 - D(p,p))= -0.444089D-15
+      Total energies have been shifted. Add               -30000.00 au
+        1   1    8    0  -714.92946124    0.00E+00   0.11E+00*  41  54 2 -0.54E+00*  1.42   0.00    SX    NO    0:00:20
+ ###############################################################################
+ ###############################################################################
+ ###                                                                         ###
+ ###                                                                         ###
+ ###    WARNING: Problems in orbital optimization.                           ###
+ ###                                                                         ###
+ ###                                                                         ###
+ ###############################################################################
+ ###############################################################################
+  Warning: In symmetry  1, orbital p=  46 has diagonal density matrix element D(p,p) close to two. (2 - D(p,p))= -0.888178D-15
+  Warning: In symmetry  1, orbital p=  47 has diagonal density matrix element D(p,p) close to two. (2 - D(p,p))= -0.888178D-15
+  Warning: In symmetry  1, orbital p=  48 has diagonal density matrix element D(p,p) close to two. (2 - D(p,p))= -0.888178D-15
+        2   1    6    0  -715.50215652   -0.57E+00* -0.44E-01   41  54 2 -0.13E+00*  1.07   0.00    SX    NO    0:00:10
+ ###############################################################################
+ ###############################################################################
+ ###                                                                         ###
+ ###                                                                         ###
+ ###    WARNING: Problems in orbital optimization.                           ###
+ ###                                                                         ###
+ ###                                                                         ###
+ ###############################################################################
+ ###############################################################################
+  Warning: In symmetry  1, orbital p=  46 has diagonal density matrix element D(p,p) close to two. (2 - D(p,p))= -0.444089D-15
+  Warning: In symmetry  1, orbital p=  47 has diagonal density matrix element D(p,p) close to two. (2 - D(p,p))= -0.444089D-15
+  Warning: In symmetry  1, orbital p=  48 has diagonal density matrix element D(p,p) close to two. (2 - D(p,p))= -0.444089D-15
+        3   1    6    0  -715.61190180   -0.11E+00* -0.31E-01   41  54 2 -0.88E-01*  1.04   0.00    SX    NO    0:00:10
+ ###############################################################################
+ ###############################################################################
+ ###                                                                         ###
+ ###                                                                         ###
+ ###    WARNING: Problems in orbital optimization.                           ###
+ ###                                                                         ###
+ ###                                                                         ###
+ ###############################################################################
+ ###############################################################################
+  Warning: In symmetry  1, orbital p=  46 has diagonal density matrix element D(p,p) close to two. (2 - D(p,p))= -0.444089D-15
+  Warning: In symmetry  1, orbital p=  47 has diagonal density matrix element D(p,p) close to two. (2 - D(p,p))= -0.444089D-15
+  Warning: In symmetry  1, orbital p=  48 has diagonal density matrix element D(p,p) close to two. (2 - D(p,p))= -0.444089D-15
+        4   1    6    0  -715.65197486   -0.40E-01*  0.21E-01   41  54 2 -0.59E-01*  1.02   0.00    SX    NO    0:00:10
+ ###############################################################################
+ ###############################################################################
+ ###                                                                         ###
+ ###                                                                         ###
+ ###    WARNING: Problems in orbital optimization.                           ###
+ ###                                                                         ###
+ ###                                                                         ###
+ ###############################################################################
+ ###############################################################################
+  Warning: In symmetry  1, orbital p=  46 has diagonal density matrix element D(p,p) close to two. (2 - D(p,p))= -0.888178D-15
+  Warning: In symmetry  1, orbital p=  47 has diagonal density matrix element D(p,p) close to two. (2 - D(p,p))= -0.888178D-15
+  Warning: In symmetry  1, orbital p=  48 has diagonal density matrix element D(p,p) close to two. (2 - D(p,p))= -0.888178D-15
+        5   1    6    0  -715.67131102   -0.19E-01*  0.24E-01   41  54 2 -0.45E-01*  1.02   2.50    LS   YES    0:00:10
+ ###############################################################################
+ ###############################################################################
+ ###                                                                         ###
+ ###                                                                         ###
+ ###    WARNING: Problems in orbital optimization.                           ###
+ ###                                                                         ###
+ ###                                                                         ###
+ ###############################################################################
+ ###############################################################################
+  Warning: In symmetry  1, orbital p=  46 has diagonal density matrix element D(p,p) close to two. (2 - D(p,p))= -0.444089D-15
+  Warning: In symmetry  1, orbital p=  47 has diagonal density matrix element D(p,p) close to two. (2 - D(p,p))= -0.444089D-15
+  Warning: In symmetry  1, orbital p=  48 has diagonal density matrix element D(p,p) close to two. (2 - D(p,p))= -0.444089D-15
+        6   1    6    0  -715.68531468   -0.14E-01*  0.20E-01   41  54 2 -0.30E-01*  1.01   2.01    LS   YES    0:00:10
+ ###############################################################################
+ ###############################################################################
+ ###                                                                         ###
+ ###                                                                         ###
+ ###    WARNING: Problems in orbital optimization.                           ###
+ ###                                                                         ###
+ ###                                                                         ###
+ ###############################################################################
+ ###############################################################################
+  Warning: In symmetry  1, orbital p=  46 has diagonal density matrix element D(p,p) close to two. (2 - D(p,p))= -0.444089D-15
+  Warning: In symmetry  1, orbital p=  47 has diagonal density matrix element D(p,p) close to two. (2 - D(p,p))= -0.444089D-15
+  Warning: In symmetry  1, orbital p=  48 has diagonal density matrix element D(p,p) close to two. (2 - D(p,p))= -0.444089D-15
+        7   1    6    0  -715.68992132   -0.46E-02* -0.13E-01   41  54 2 -0.19E-01*  1.01   1.22    QN   YES    0:00:10
+ ###############################################################################
+ ###############################################################################
+ ###                                                                         ###
+ ###                                                                         ###
+ ###    WARNING: Problems in orbital optimization.                           ###
+ ###                                                                         ###
+ ###                                                                         ###
+ ###############################################################################
+ ###############################################################################
+  Warning: In symmetry  1, orbital p=  46 has diagonal density matrix element D(p,p) close to two. (2 - D(p,p))= -0.444089D-15
+  Warning: In symmetry  1, orbital p=  47 has diagonal density matrix element D(p,p) close to two. (2 - D(p,p))= -0.444089D-15
+  Warning: In symmetry  1, orbital p=  48 has diagonal density matrix element D(p,p) close to two. (2 - D(p,p))= -0.444089D-15
+        8   1    6    0  -715.69269630   -0.28E-02*  0.18E-01   40  55 1  0.78E-02*  1.01   1.53    QN   YES    0:00:10
+ ###############################################################################
+ ###############################################################################
+ ###                                                                         ###
+ ###                                                                         ###
+ ###    WARNING: Problems in orbital optimization.                           ###
+ ###                                                                         ###
+ ###                                                                         ###
+ ###############################################################################
+ ###############################################################################
+  Warning: In symmetry  1, orbital p=  46 has diagonal density matrix element D(p,p) close to two. (2 - D(p,p))=  0.000000D+00
+  Warning: In symmetry  1, orbital p=  47 has diagonal density matrix element D(p,p) close to two. (2 - D(p,p))=  0.000000D+00
+  Warning: In symmetry  1, orbital p=  48 has diagonal density matrix element D(p,p) close to two. (2 - D(p,p))=  0.000000D+00
+        9   1    5    0  -715.69387840   -0.12E-02*  0.97E-02   42  52 1  0.51E-02*  1.01   1.56    LS   YES    0:00:10
+ ###############################################################################
+ ###############################################################################
+ ###                                                                         ###
+ ###                                                                         ###
+ ###    WARNING: Problems in orbital optimization.                           ###
+ ###                                                                         ###
+ ###                                                                         ###
+ ###############################################################################
+ ###############################################################################
+  Warning: In symmetry  1, orbital p=  46 has diagonal density matrix element D(p,p) close to two. (2 - D(p,p))= -0.444089D-15
+  Warning: In symmetry  1, orbital p=  47 has diagonal density matrix element D(p,p) close to two. (2 - D(p,p))= -0.444089D-15
+  Warning: In symmetry  1, orbital p=  48 has diagonal density matrix element D(p,p) close to two. (2 - D(p,p))= -0.444089D-15
+       10   1    5    0  -715.69405086   -0.17E-03* -0.12E-01   42  52 1  0.36E-02*  1.01   1.05    QN   YES    0:00:10
+ ###############################################################################
+ ###############################################################################
+ ###                                                                         ###
+ ###                                                                         ###
+ ###    WARNING: Problems in orbital optimization.                           ###
+ ###                                                                         ###
+ ###                                                                         ###
+ ###############################################################################
+ ###############################################################################
+  Warning: In symmetry  1, orbital p=  46 has diagonal density matrix element D(p,p) close to two. (2 - D(p,p))= -0.444089D-15
+  Warning: In symmetry  1, orbital p=  47 has diagonal density matrix element D(p,p) close to two. (2 - D(p,p))= -0.444089D-15
+  Warning: In symmetry  1, orbital p=  48 has diagonal density matrix element D(p,p) close to two. (2 - D(p,p))= -0.444089D-15
+       11   1    5    0  -715.69428426   -0.23E-03* -0.15E-01   53  56 1  0.20E-02*  1.01   2.35    LS   YES    0:00:10
+ ###############################################################################
+ ###############################################################################
+ ###                                                                         ###
+ ###                                                                         ###
+ ###    WARNING: Problems in orbital optimization.                           ###
+ ###                                                                         ###
+ ###                                                                         ###
+ ###############################################################################
+ ###############################################################################
+  Warning: In symmetry  1, orbital p=  46 has diagonal density matrix element D(p,p) close to two. (2 - D(p,p))= -0.888178D-15
+  Warning: In symmetry  1, orbital p=  47 has diagonal density matrix element D(p,p) close to two. (2 - D(p,p))= -0.444089D-15
+  Warning: In symmetry  1, orbital p=  48 has diagonal density matrix element D(p,p) close to two. (2 - D(p,p))= -0.444089D-15
+       12   1    5    0  -715.69439890   -0.11E-03*  0.99E-02   40  55 1 -0.20E-02*  1.01   1.05    QN   YES    0:00:10
+ ###############################################################################
+ ###############################################################################
+ ###                                                                         ###
+ ###                                                                         ###
+ ###    WARNING: Problems in orbital optimization.                           ###
+ ###                                                                         ###
+ ###                                                                         ###
+ ###############################################################################
+ ###############################################################################
+  Warning: In symmetry  1, orbital p=  46 has diagonal density matrix element D(p,p) close to two. (2 - D(p,p))= -0.888178D-15
+  Warning: In symmetry  1, orbital p=  47 has diagonal density matrix element D(p,p) close to two. (2 - D(p,p))= -0.888178D-15
+  Warning: In symmetry  1, orbital p=  48 has diagonal density matrix element D(p,p) close to two. (2 - D(p,p))= -0.888178D-15
+       13   1    5    0  -715.69447455   -0.76E-04*  0.14E-01   40  55 1 -0.19E-02*  1.01   2.50    LS   YES    0:00:10
+ ###############################################################################
+ ###############################################################################
+ ###                                                                         ###
+ ###                                                                         ###
+ ###    WARNING: Problems in orbital optimization.                           ###
+ ###                                                                         ###
+ ###                                                                         ###
+ ###############################################################################
+ ###############################################################################
+  Warning: In symmetry  1, orbital p=  46 has diagonal density matrix element D(p,p) close to two. (2 - D(p,p))= -0.444089D-15
+  Warning: In symmetry  1, orbital p=  47 has diagonal density matrix element D(p,p) close to two. (2 - D(p,p))= -0.444089D-15
+  Warning: In symmetry  1, orbital p=  48 has diagonal density matrix element D(p,p) close to two. (2 - D(p,p))= -0.444089D-15
+       14   1    5    0  -715.69454014   -0.66E-04*  0.20E-01   13 139 2 -0.21E-02*  1.01   1.78    QN   YES    0:00:10
+ ###############################################################################
+ ###############################################################################
+ ###                                                                         ###
+ ###                                                                         ###
+ ###    WARNING: Problems in orbital optimization.                           ###
+ ###                                                                         ###
+ ###                                                                         ###
+ ###############################################################################
+ ###############################################################################
+  Warning: In symmetry  1, orbital p=  46 has diagonal density matrix element D(p,p) close to two. (2 - D(p,p))= -0.888178D-15
+  Warning: In symmetry  1, orbital p=  47 has diagonal density matrix element D(p,p) close to two. (2 - D(p,p))= -0.888178D-15
+  Warning: In symmetry  1, orbital p=  48 has diagonal density matrix element D(p,p) close to two. (2 - D(p,p))= -0.888178D-15
+       15   1    5    0  -715.69460584   -0.66E-04*  0.13E-01   42  52 1 -0.12E-02*  1.01   1.57    QN   YES    0:00:10
+ ###############################################################################
+ ###############################################################################
+ ###                                                                         ###
+ ###                                                                         ###
+ ###    WARNING: Problems in orbital optimization.                           ###
+ ###                                                                         ###
+ ###                                                                         ###
+ ###############################################################################
+ ###############################################################################
+  Warning: In symmetry  1, orbital p=  46 has diagonal density matrix element D(p,p) close to two. (2 - D(p,p))= -0.888178D-15
+  Warning: In symmetry  1, orbital p=  47 has diagonal density matrix element D(p,p) close to two. (2 - D(p,p))= -0.888178D-15
+  Warning: In symmetry  1, orbital p=  48 has diagonal density matrix element D(p,p) close to two. (2 - D(p,p))= -0.888178D-15
+       16   1    5    0  -715.69463307   -0.27E-04*  0.54E-02   42  87 2  0.62E-03*  1.01   1.47    QN   YES    0:00:10
+ ###############################################################################
+ ###############################################################################
+ ###                                                                         ###
+ ###                                                                         ###
+ ###    WARNING: Problems in orbital optimization.                           ###
+ ###                                                                         ###
+ ###                                                                         ###
+ ###############################################################################
+ ###############################################################################
+  Warning: In symmetry  1, orbital p=  46 has diagonal density matrix element D(p,p) close to two. (2 - D(p,p))= -0.444089D-15
+  Warning: In symmetry  1, orbital p=  47 has diagonal density matrix element D(p,p) close to two. (2 - D(p,p))= -0.444089D-15
+  Warning: In symmetry  1, orbital p=  48 has diagonal density matrix element D(p,p) close to two. (2 - D(p,p))= -0.444089D-15
+       17   1    5    0  -715.69464226   -0.92E-05*  0.80E-03   43  86 2  0.32E-03*  1.01   1.42    QN   YES    0:00:10
+ ###############################################################################
+ ###############################################################################
+ ###                                                                         ###
+ ###                                                                         ###
+ ###    WARNING: Problems in orbital optimization.                           ###
+ ###                                                                         ###
+ ###                                                                         ###
+ ###############################################################################
+ ###############################################################################
+  Warning: In symmetry  1, orbital p=  46 has diagonal density matrix element D(p,p) close to two. (2 - D(p,p))= -0.444089D-15
+  Warning: In symmetry  1, orbital p=  47 has diagonal density matrix element D(p,p) close to two. (2 - D(p,p))= -0.444089D-15
+  Warning: In symmetry  1, orbital p=  48 has diagonal density matrix element D(p,p) close to two. (2 - D(p,p))= -0.444089D-15
+       18   1    4    0  -715.69464462   -0.24E-05* -0.31E-03   40  54 1  0.16E-03*  1.02   1.31    QN   YES    0:00:10
+ ###############################################################################
+ ###############################################################################
+ ###                                                                         ###
+ ###                                                                         ###
+ ###    WARNING: Problems in orbital optimization.                           ###
+ ###                                                                         ###
+ ###                                                                         ###
+ ###############################################################################
+ ###############################################################################
+  Warning: In symmetry  1, orbital p=  46 has diagonal density matrix element D(p,p) close to two. (2 - D(p,p))= -0.444089D-15
+  Warning: In symmetry  1, orbital p=  47 has diagonal density matrix element D(p,p) close to two. (2 - D(p,p))= -0.444089D-15
+  Warning: In symmetry  1, orbital p=  48 has diagonal density matrix element D(p,p) close to two. (2 - D(p,p))= -0.444089D-15
+       19   1    4    0  -715.69464506   -0.44E-06* -0.19E-03   40  54 1  0.87E-04   1.02   1.39    QN   YES    0:00:10
+ ###############################################################################
+ ###############################################################################
+ ###                                                                         ###
+ ###                                                                         ###
+ ###    WARNING: Problems in orbital optimization.                           ###
+ ###                                                                         ###
+ ###                                                                         ###
+ ###############################################################################
+ ###############################################################################
+  Warning: In symmetry  1, orbital p=  46 has diagonal density matrix element D(p,p) close to two. (2 - D(p,p))= -0.444089D-15
+  Warning: In symmetry  1, orbital p=  47 has diagonal density matrix element D(p,p) close to two. (2 - D(p,p))= -0.444089D-15
+  Warning: In symmetry  1, orbital p=  48 has diagonal density matrix element D(p,p) close to two. (2 - D(p,p))= -0.444089D-15
+       20   1    4    0  -715.69464517   -0.11E-06*  0.97E-04   40  54 1  0.41E-04   1.02   1.40    QN   YES    0:00:10
+ ###############################################################################
+ ###############################################################################
+ ###                                                                         ###
+ ###                                                                         ###
+ ###    WARNING: Problems in orbital optimization.                           ###
+ ###                                                                         ###
+ ###                                                                         ###
+ ###############################################################################
+ ###############################################################################
+  Warning: In symmetry  1, orbital p=  46 has diagonal density matrix element D(p,p) close to two. (2 - D(p,p))= -0.444089D-15
+  Warning: In symmetry  1, orbital p=  47 has diagonal density matrix element D(p,p) close to two. (2 - D(p,p))= -0.444089D-15
+  Warning: In symmetry  1, orbital p=  48 has diagonal density matrix element D(p,p) close to two. (2 - D(p,p))= -0.444089D-15
+       21   1    4    0  -715.69464520   -0.30E-07* -0.73E-04   41  85 2 -0.21E-04   1.02   1.39    QN   YES    0:00:10
+ ###############################################################################
+ ###############################################################################
+ ###                                                                         ###
+ ###                                                                         ###
+ ###    WARNING: Problems in orbital optimization.                           ###
+ ###                                                                         ###
+ ###                                                                         ###
+ ###############################################################################
+ ###############################################################################
+  Warning: In symmetry  1, orbital p=  46 has diagonal density matrix element D(p,p) close to two. (2 - D(p,p))= -0.444089D-15
+  Warning: In symmetry  1, orbital p=  47 has diagonal density matrix element D(p,p) close to two. (2 - D(p,p))= -0.444089D-15
+  Warning: In symmetry  1, orbital p=  48 has diagonal density matrix element D(p,p) close to two. (2 - D(p,p))= -0.444089D-15
+       22   1    4    0  -715.69464521   -0.81E-08  -0.36E-04   41  54 2  0.12E-04   1.02   1.42    QN   YES    0:00:10
+      Convergence after 22 iterations
+       23   1    4    0  -715.69464521   -0.27E-08  -0.36E-04   41  73 2  0.82E-05   1.02   1.42    QN   YES    0:00:11
+
+      ************************************************************************************************************************
+                                                      Wave function printout:
+                       occupation of active orbitals, and spin coupling of open shells (u,d: Spin up or down)
+      ************************************************************************************************************************
+
+      Note: transformation to natural orbitals
+      has been made, which may change the order of the CSFs.
+
+      printout of CI-coefficients larger than  0.05 for root  1
+      energy=  -30715.791294
+      conf/sym  111 2222222 11111     Coeff  Weight
+             1  222 u000000 d0000  -0.37240 0.13868
+             6  222 0u00000 d0000  -0.39790 0.15832
+            12  222 00u0000 0d000   0.43434 0.18865
+            18  222 000u000 00d00  -0.53324 0.28435
+            21  222 0000u00 d0000   0.17962 0.03226
+            29  222 000000u 0d000   0.37708 0.14219
+            30  222 00000u0 00d00   0.22053 0.04863
+
+      printout of CI-coefficients larger than  0.05 for root  2
+      energy=  -30715.778712
+      conf/sym  111 2222222 11111     Coeff  Weight
+             2  222 u000000 0d000   0.44852 0.20117
+             3  222 u000000 00d00  -0.12594 0.01586
+             7  222 0u00000 0d000  -0.42129 0.17748
+             8  222 0u00000 00d00  -0.14200 0.02016
+            15  222 00u0000 0000d   0.11066 0.01225
+            16  222 000u000 d0000   0.15245 0.02324
+            23  222 0000u00 00d00   0.51030 0.26040
+            26  222 00000u0 d0000  -0.52250 0.27300
+            33  222 000000u 000d0   0.05122 0.00262
+            35  222 000000u 0000d   0.08371 0.00701
+
+      printout of CI-coefficients larger than  0.05 for root  3
+      energy=  -30715.778712
+      conf/sym  111 2222222 11111     Coeff  Weight
+             1  222 u000000 d0000  -0.44892 0.20153
+             4  222 u000000 000d0  -0.09825 0.00965
+             6  222 0u00000 d0000   0.42302 0.17895
+             9  222 0u00000 000d0  -0.10102 0.01020
+            17  222 000u000 0d000   0.47638 0.22694
+            28  222 00000u0 0d000   0.26118 0.06822
+            31  222 000000u 00d00   0.54254 0.29435
+
+      printout of CI-coefficients larger than  0.05 for root  4
+      energy=  -30715.778712
+      conf/sym  111 2222222 11111     Coeff  Weight
+             2  222 u000000 0d000   0.31654 0.10020
+             3  222 u000000 00d00   0.44907 0.20166
+             7  222 0u00000 0d000   0.32456 0.10534
+             8  222 0u00000 00d00  -0.42231 0.17835
+            11  222 00u0000 d0000   0.53457 0.28576
+            19  222 000u000 000d0  -0.09325 0.00870
+            20  222 000u000 0000d   0.09978 0.00996
+            22  222 0000u00 0d000   0.29737 0.08843
+            27  222 000000u d0000  -0.09533 0.00909
+            34  222 00000u0 0000d  -0.06020 0.00362
+
+      printout of CI-coefficients larger than  0.05 for root  5
+      energy=  -30715.772944
+      conf/sym  111 2222222 11111     Coeff  Weight
+             1  222 u000000 d0000   0.31661 0.10024
+             6  222 0u00000 d0000   0.33019 0.10903
+             9  222 0u00000 000d0   0.05236 0.00274
+            11  222 00u0000 d0000  -0.05909 0.00349
+            12  222 00u0000 0d000   0.51711 0.26740
+            18  222 000u000 00d00   0.23602 0.05570
+            21  222 0000u00 d0000   0.16816 0.02828
+            29  222 000000u 0d000  -0.05233 0.00274
+            30  222 00000u0 00d00   0.64547 0.41663
+
+      printout of CI-coefficients larger than  0.05 for root  6
+      energy=  -30715.772944
+      conf/sym  111 2222222 11111     Coeff  Weight
+             5  222 u000000 0000d  -0.05112 0.00261
+             7  222 0u00000 0d000  -0.06237 0.00389
+            12  222 00u0000 0d000  -0.19260 0.03709
+            18  222 000u000 00d00   0.41494 0.17217
+            21  222 0000u00 d0000   0.64700 0.41861
+            29  222 000000u 0d000   0.58531 0.34258
+            30  222 00000u0 00d00  -0.12157 0.01478
+
+      printout of CI-coefficients larger than  0.05 for root  7
+      energy=  -30715.758025
+      conf/sym  111 2222222 11111     Coeff  Weight
+             1  222 u000000 d0000  -0.05902 0.00348
+             2  222 u000000 0d000   0.46022 0.21180
+             6  222 0u00000 d0000  -0.05638 0.00318
+             7  222 0u00000 0d000   0.48333 0.23360
+            11  222 00u0000 d0000  -0.68655 0.47135
+            12  222 00u0000 0d000  -0.08387 0.00703
+            20  222 000u000 0000d  -0.08757 0.00767
+            22  222 0000u00 0d000   0.17845 0.03185
+            27  222 000000u d0000  -0.10102 0.01021
+            32  222 00000u0 000d0   0.09922 0.00985
+            34  222 00000u0 0000d  -0.06646 0.00442
+
+      printout of CI-coefficients larger than  0.05 for root  8
+      energy=  -30715.758025
+      conf/sym  111 2222222 11111     Coeff  Weight
+             3  222 u000000 00d00  -0.29269 0.08567
+             8  222 0u00000 00d00  -0.32300 0.10433
+            14  222 00u0000 000d0   0.09047 0.00819
+            15  222 00u0000 0000d   0.05092 0.00259
+            16  222 000u000 d0000  -0.39612 0.15691
+            23  222 0000u00 00d00   0.54387 0.29579
+            26  222 00000u0 d0000   0.57473 0.33032
+            35  222 000000u 0000d  -0.10651 0.01134
+
+      printout of CI-coefficients larger than  0.05 for root  9
+      energy=  -30715.758025
+      conf/sym  111 2222222 11111     Coeff  Weight
+             5  222 u000000 0000d   0.06009 0.00361
+            10  222 0u00000 0000d   0.06537 0.00427
+            13  222 00u0000 00d00  -0.19255 0.03708
+            17  222 000u000 0d000   0.68513 0.46941
+            24  222 0000u00 000d0   0.11838 0.01401
+            28  222 00000u0 0d000   0.12582 0.01583
+            31  222 000000u 00d00  -0.66979 0.44862
+
+      printout of CI-coefficients larger than  0.05 for root 10
+      energy=  -30715.737349
+      conf/sym  111 2222222 11111     Coeff  Weight
+             1  222 u000000 d0000   0.12828 0.01646
+             6  222 0u00000 d0000   0.12128 0.01471
+             7  222 0u00000 0d000   0.06881 0.00473
+            12  222 00u0000 0d000   0.37505 0.14067
+            18  222 000u000 00d00  -0.22039 0.04857
+            21  222 0000u00 d0000   0.54827 0.30060
+            29  222 000000u 0d000  -0.43106 0.18581
+            30  222 00000u0 00d00  -0.53179 0.28280
+
+      printout of CI-coefficients larger than  0.05 for root 11
+      energy=  -30715.736643
+      conf/sym  111 2222222 11111     Coeff  Weight
+             1  222 u000000 d0000   0.33859 0.11465
+             4  222 u000000 000d0   0.17733 0.03145
+             5  222 u000000 0000d   0.13236 0.01752
+             6  222 0u00000 d0000   0.37228 0.13859
+             9  222 0u00000 000d0  -0.16319 0.02663
+            10  222 0u00000 0000d  -0.11796 0.01391
+            11  222 00u0000 d0000  -0.05627 0.00317
+            12  222 00u0000 0d000   0.28732 0.08255
+            18  222 000u000 00d00  -0.17455 0.03047
+            21  222 0000u00 d0000  -0.35974 0.12942
+            29  222 000000u 0d000   0.53122 0.28219
+            30  222 00000u0 00d00  -0.35347 0.12494
+
+      printout of CI-coefficients larger than  0.05 for root 12
+      energy=  -30715.736643
+      conf/sym  111 2222222 11111     Coeff  Weight
+             1  222 u000000 d0000   0.28161 0.07930
+             4  222 u000000 000d0   0.12849 0.01651
+             5  222 u000000 0000d  -0.17186 0.02954
+             6  222 0u00000 d0000   0.29049 0.08439
+             9  222 0u00000 000d0  -0.12225 0.01495
+            10  222 0u00000 0000d   0.16629 0.02765
+            12  222 00u0000 0d000  -0.48707 0.23724
+            18  222 000u000 00d00  -0.61399 0.37698
+            21  222 0000u00 d0000   0.23439 0.05494
+            30  222 00000u0 00d00   0.27106 0.07348
+
+      printout of CI-coefficients larger than  0.05 for root 13
+      energy=  -30715.733931
+      conf/sym  111 2222222 11111     Coeff  Weight
+             3  222 u000000 00d00   0.36789 0.13534
+             8  222 0u00000 00d00   0.37932 0.14388
+            13  222 00u0000 00d00  -0.05153 0.00266
+            14  222 00u0000 000d0  -0.12447 0.01549
+            15  222 00u0000 0000d   0.10448 0.01092
+            16  222 000u000 d0000   0.56375 0.31781
+            23  222 0000u00 00d00   0.43731 0.19124
+            26  222 00000u0 d0000   0.39397 0.15521
+            33  222 000000u 000d0  -0.14767 0.02181
+
+      printout of CI-coefficients larger than  0.05 for root 14
+      energy=  -30715.733931
+      conf/sym  111 2222222 11111     Coeff  Weight
+             5  222 u000000 0000d  -0.12683 0.01609
+             8  222 0u00000 00d00   0.06753 0.00456
+            10  222 0u00000 0000d  -0.13602 0.01850
+            13  222 00u0000 00d00   0.65719 0.43190
+            17  222 000u000 0d000  -0.11970 0.01433
+            24  222 0000u00 000d0   0.06618 0.00438
+            25  222 0000u00 0000d   0.07520 0.00565
+            28  222 00000u0 0d000   0.67547 0.45626
+            31  222 000000u 00d00  -0.19233 0.03699
+
+      printout of CI-coefficients larger than  0.05 for root 15
+      energy=  -30715.733931
+      conf/sym  111 2222222 11111     Coeff  Weight
+             2  222 u000000 0d000  -0.10764 0.01159
+             6  222 0u00000 d0000  -0.06267 0.00393
+             7  222 0u00000 0d000  -0.13229 0.01750
+            11  222 00u0000 d0000  -0.10153 0.01031
+            19  222 000u000 000d0   0.16676 0.02781
+            20  222 000u000 0000d   0.09501 0.00903
+            22  222 0000u00 0d000   0.66624 0.44388
+            27  222 000000u d0000   0.67879 0.46076
+            34  222 00000u0 0000d  -0.10768 0.01159
+
+      printout of CI-coefficients larger than  0.05 for root 16
+      energy=  -30715.726540
+      conf/sym  111 2222222 11111     Coeff  Weight
+             1  222 u000000 d0000   0.51463 0.26484
+             2  222 u000000 0d000   0.05329 0.00284
+             4  222 u000000 000d0  -0.07850 0.00616
+             6  222 0u00000 d0000  -0.48221 0.23253
+             9  222 0u00000 000d0  -0.09377 0.00879
+            13  222 00u0000 00d00   0.27196 0.07396
+            17  222 000u000 0d000   0.47637 0.22693
+            24  222 0000u00 000d0   0.05143 0.00265
+            25  222 0000u00 0000d  -0.06048 0.00366
+            27  222 000000u d0000  -0.05612 0.00315
+            28  222 00000u0 0d000  -0.06595 0.00435
+            31  222 000000u 00d00   0.39889 0.15912
+
+      printout of CI-coefficients larger than  0.05 for root 17
+      energy=  -30715.726540
+      conf/sym  111 2222222 11111     Coeff  Weight
+             1  222 u000000 d0000   0.06172 0.00381
+             2  222 u000000 0d000  -0.52363 0.27418
+             3  222 u000000 00d00  -0.25689 0.06599
+             7  222 0u00000 0d000   0.47008 0.22097
+             8  222 0u00000 00d00  -0.31375 0.09844
+            13  222 00u0000 00d00   0.05211 0.00272
+            14  222 00u0000 000d0   0.07954 0.00633
+            15  222 00u0000 0000d   0.07817 0.00611
+            16  222 000u000 d0000   0.38546 0.14858
+            23  222 0000u00 00d00   0.25984 0.06752
+            26  222 00000u0 d0000  -0.28764 0.08274
+            29  222 000000u 0d000   0.05454 0.00297
+            35  222 000000u 0000d   0.10025 0.01005
+
+      printout of CI-coefficients larger than  0.05 for root 18
+      energy=  -30715.726540
+      conf/sym  111 2222222 11111     Coeff  Weight
+             2  222 u000000 0d000   0.31319 0.09809
+             3  222 u000000 00d00  -0.52560 0.27626
+             7  222 0u00000 0d000   0.36425 0.13268
+             8  222 0u00000 00d00   0.47550 0.22610
+            11  222 00u0000 d0000   0.43252 0.18708
+            19  222 000u000 000d0  -0.05559 0.00309
+            20  222 000u000 0000d   0.11341 0.01286
+            27  222 000000u d0000   0.21680 0.04700
+            31  222 000000u 00d00   0.05416 0.00293
+            32  222 00000u0 000d0   0.08457 0.00715
+
+      printout of CI-coefficients larger than  0.05 for root 19
+      energy=  -30715.703137
+      conf/sym  111 2222222 11111     Coeff  Weight
+             1  222 u000000 d0000   0.23698 0.05616
+             6  222 0u00000 d0000  -0.22024 0.04851
+             8  222 0u00000 00d00  -0.06390 0.00408
+            13  222 00u0000 00d00  -0.64628 0.41768
+            17  222 000u000 0d000  -0.14837 0.02201
+            28  222 00000u0 0d000   0.64936 0.42167
+            31  222 000000u 00d00   0.15457 0.02389
+
+      printout of CI-coefficients larger than  0.05 for root 20
+      energy=  -30715.703137
+      conf/sym  111 2222222 11111     Coeff  Weight
+             2  222 u000000 0d000  -0.23390 0.05471
+             3  222 u000000 00d00   0.37092 0.13758
+             7  222 0u00000 0d000   0.22164 0.04912
+             8  222 0u00000 00d00   0.38320 0.14685
+            13  222 00u0000 00d00  -0.05144 0.00265
+            16  222 000u000 d0000  -0.56543 0.31971
+            23  222 0000u00 00d00   0.39807 0.15846
+            26  222 00000u0 d0000  -0.35494 0.12598
+
+      printout of CI-coefficients larger than  0.05 for root 21
+      energy=  -30715.703137
+      conf/sym  111 2222222 11111     Coeff  Weight
+             2  222 u000000 0d000  -0.12697 0.01612
+             3  222 u000000 00d00  -0.23621 0.05579
+             6  222 0u00000 d0000   0.06504 0.00423
+             7  222 0u00000 0d000  -0.14728 0.02169
+             8  222 0u00000 00d00   0.22104 0.04886
+            11  222 00u0000 d0000   0.06486 0.00421
+            22  222 0000u00 0d000   0.63702 0.40580
+            27  222 000000u d0000  -0.66200 0.43824
+
+      printout of CI-coefficients larger than  0.05 for root 22
+      energy=  -30715.650495
+      conf/sym  111 2222222 11111     Coeff  Weight
+             4  222 u000000 000d0   0.06542 0.00428
+             5  222 u000000 0000d   0.50027 0.25027
+             9  222 0u00000 000d0   0.05449 0.00297
+            10  222 0u00000 0000d   0.53322 0.28433
+            13  222 00u0000 00d00   0.10196 0.01040
+            15  222 00u0000 0000d  -0.06613 0.00437
+            17  222 000u000 0d000  -0.11437 0.01308
+            24  222 0000u00 000d0   0.62932 0.39604
+            25  222 0000u00 0000d  -0.13867 0.01923
+            28  222 00000u0 0d000   0.05538 0.00307
+            31  222 000000u 00d00   0.07728 0.00597
+
+      printout of CI-coefficients larger than  0.05 for root 23
+      energy=  -30715.650495
+      conf/sym  111 2222222 11111     Coeff  Weight
+             2  222 u000000 0d000   0.07764 0.00603
+             7  222 0u00000 0d000   0.08561 0.00733
+            11  222 00u0000 d0000  -0.09058 0.00821
+            19  222 000u000 000d0   0.38913 0.15142
+            20  222 000u000 0000d   0.62415 0.38956
+            27  222 000000u d0000  -0.08946 0.00800
+            32  222 00000u0 000d0  -0.58846 0.34629
+            34  222 00000u0 0000d   0.27392 0.07503
+
+      printout of CI-coefficients larger than  0.05 for root 24
+      energy=  -30715.650495
+      conf/sym  111 2222222 11111     Coeff  Weight
+             3  222 u000000 00d00   0.08385 0.00703
+             8  222 0u00000 00d00   0.08820 0.00778
+            10  222 0u00000 0000d   0.06949 0.00483
+            14  222 00u0000 000d0   0.67513 0.45579
+            15  222 00u0000 0000d   0.18124 0.03285
+            16  222 000u000 d0000   0.12051 0.01452
+            33  222 000000u 000d0   0.28841 0.08318
+            35  222 000000u 0000d  -0.62038 0.38488
+
+      printout of CI-coefficients larger than  0.05 for root 25
+      energy=  -30715.635756
+      conf/sym  111 2222222 11111     Coeff  Weight
+             1  222 u000000 d0000   0.07927 0.00628
+             4  222 u000000 000d0  -0.37210 0.13846
+             5  222 u000000 0000d   0.58213 0.33887
+             6  222 0u00000 d0000   0.08858 0.00785
+             9  222 0u00000 000d0   0.34795 0.12107
+            10  222 0u00000 0000d  -0.54429 0.29626
+            12  222 00u0000 0d000  -0.17427 0.03037
+            18  222 000u000 00d00  -0.14994 0.02248
+            21  222 0000u00 d0000   0.14066 0.01978
+            30  222 00000u0 00d00   0.08355 0.00698
+            35  222 000000u 0000d  -0.06049 0.00366
+
+      printout of CI-coefficients larger than  0.05 for root 26
+      energy=  -30715.635756
+      conf/sym  111 2222222 11111     Coeff  Weight
+             1  222 u000000 d0000   0.08854 0.00784
+             4  222 u000000 000d0  -0.57987 0.33625
+             5  222 u000000 0000d  -0.37218 0.13851
+             6  222 0u00000 d0000   0.08849 0.00783
+             9  222 0u00000 000d0   0.54397 0.29590
+            10  222 0u00000 0000d   0.35074 0.12302
+            18  222 000u000 00d00  -0.08805 0.00775
+            21  222 0000u00 d0000  -0.12069 0.01457
+            29  222 000000u 0d000   0.16988 0.02886
+            30  222 00000u0 00d00  -0.16368 0.02679
+            33  222 000000u 000d0   0.07138 0.00509
+
+      printout of CI-coefficients larger than  0.05 for root 27
+      energy=  -30715.617405
+      conf/sym  111 2222222 11111     Coeff  Weight
+             4  222 u000000 000d0   0.57867 0.33485
+             5  222 u000000 0000d   0.16138 0.02604
+             9  222 0u00000 000d0   0.62088 0.38549
+            10  222 0u00000 0000d   0.16438 0.02702
+            14  222 00u0000 000d0  -0.07845 0.00615
+            17  222 000u000 0d000   0.13514 0.01826
+            24  222 0000u00 000d0  -0.33049 0.10923
+            25  222 0000u00 0000d   0.24878 0.06189
+            31  222 000000u 00d00   0.13470 0.01815
+
+      printout of CI-coefficients larger than  0.05 for root 28
+      energy=  -30715.617405
+      conf/sym  111 2222222 11111     Coeff  Weight
+             3  222 u000000 00d00   0.05592 0.00313
+             8  222 0u00000 00d00   0.06343 0.00402
+            14  222 00u0000 000d0   0.44146 0.19488
+            15  222 00u0000 0000d   0.57720 0.33316
+            16  222 000u000 d0000  -0.07676 0.00589
+            23  222 0000u00 00d00  -0.11073 0.01226
+            26  222 00000u0 d0000   0.11671 0.01362
+            35  222 000000u 0000d   0.65296 0.42635
+
+      printout of CI-coefficients larger than  0.05 for root 29
+      energy=  -30715.617405
+      conf/sym  111 2222222 11111     Coeff  Weight
+             2  222 u000000 0d000  -0.09051 0.00819
+             7  222 0u00000 0d000  -0.09705 0.00942
+            11  222 00u0000 d0000  -0.13867 0.01923
+            19  222 000u000 000d0  -0.44395 0.19709
+            20  222 000u000 0000d   0.74264 0.55151
+            32  222 00000u0 000d0   0.44552 0.19849
+            34  222 00000u0 0000d  -0.09575 0.00917
+
+      printout of CI-coefficients larger than  0.05 for root 30
+      energy=  -30715.610349
+      conf/sym  111 2222222 11111     Coeff  Weight
+            19  222 000u000 000d0   0.62639 0.39236
+            20  222 000u000 0000d   0.13309 0.01771
+            22  222 0000u00 0d000  -0.13894 0.01930
+            27  222 000000u d0000  -0.13116 0.01720
+            32  222 00000u0 000d0   0.25364 0.06433
+            34  222 00000u0 0000d  -0.69363 0.48113
+
+      printout of CI-coefficients larger than  0.05 for root 31
+      energy=  -30715.610349
+      conf/sym  111 2222222 11111     Coeff  Weight
+             3  222 u000000 00d00   0.06300 0.00397
+             8  222 0u00000 00d00   0.06495 0.00422
+            10  222 0u00000 0000d  -0.07781 0.00605
+            14  222 00u0000 000d0   0.25458 0.06481
+            15  222 00u0000 0000d  -0.63010 0.39703
+            16  222 000u000 d0000   0.09738 0.00948
+            23  222 0000u00 00d00   0.10692 0.01143
+            26  222 00000u0 d0000   0.09938 0.00988
+            33  222 000000u 000d0   0.58356 0.34054
+            35  222 000000u 0000d   0.38399 0.14744
+
+      printout of CI-coefficients larger than  0.05 for root 32
+      energy=  -30715.610349
+      conf/sym  111 2222222 11111     Coeff  Weight
+             4  222 u000000 000d0   0.22899 0.05244
+             5  222 u000000 0000d  -0.36800 0.13542
+             9  222 0u00000 000d0   0.22595 0.05105
+            10  222 0u00000 0000d  -0.39730 0.15784
+            13  222 00u0000 00d00  -0.12461 0.01553
+            24  222 0000u00 000d0   0.68228 0.46551
+            25  222 0000u00 0000d   0.30165 0.09099
+            28  222 00000u0 0d000  -0.14080 0.01982
+            31  222 000000u 00d00   0.06355 0.00404
+
+      printout of CI-coefficients larger than  0.05 for root 33
+      energy=  -30715.585823
+      conf/sym  111 2222222 11111     Coeff  Weight
+            19  222 000u000 000d0   0.46151 0.21300
+            32  222 00000u0 000d0   0.60366 0.36440
+            34  222 00000u0 0000d   0.64025 0.40992
+
+      printout of CI-coefficients larger than  0.05 for root 34
+      energy=  -30715.585823
+      conf/sym  111 2222222 11111     Coeff  Weight
+             4  222 u000000 000d0  -0.23026 0.05302
+             5  222 u000000 0000d   0.17849 0.03186
+             9  222 0u00000 000d0  -0.24342 0.05925
+            10  222 0u00000 0000d   0.16668 0.02778
+            25  222 0000u00 0000d   0.90350 0.81630
+
+      printout of CI-coefficients larger than  0.05 for root 35
+      energy=  -30715.585823
+      conf/sym  111 2222222 11111     Coeff  Weight
+             7  222 0u00000 0d000   0.05292 0.00280
+             9  222 0u00000 000d0  -0.09671 0.00935
+            14  222 00u0000 000d0  -0.48997 0.24007
+            15  222 00u0000 0000d   0.44154 0.19496
+            33  222 000000u 000d0   0.73398 0.53873
+            35  222 000000u 0000d  -0.06454 0.00417
+
+      Natural orbitals and occupation numbers for root  1
+      sym 1:   2.000000   2.000000   2.000000   0.333333   0.333333   0.333333   0.000000  -0.000000
+      sym 2:  -0.000000   0.333333   0.333333   0.333333   0.000000   0.000000  -0.000000
+
+      Natural orbitals and occupation numbers for root  2
+      sym 1:   2.000000   2.000000   2.000000   0.297101   0.383035   0.297088   0.000755   0.022021
+      sym 2:   0.383035  -0.000000   0.022021  -0.000000   0.297088   0.297101   0.000755
+
+      Natural orbitals and occupation numbers for root  3
+      sym 1:   2.000000   2.000000   2.000000   0.383029   0.297093   0.297101   0.022022   0.000755
+      sym 2:   0.383029   0.022022   0.000000   0.297093   0.000755  -0.000000   0.297101
+
+      Natural orbitals and occupation numbers for root  4
+      sym 1:   2.000000   2.000000   2.000000   0.297101   0.297089   0.383034   0.000755   0.022021
+      sym 2:   0.383034   0.297089   0.297101   0.022021   0.000000   0.000755  -0.000000
+
+      Natural orbitals and occupation numbers for root  5
+      sym 1:   2.000000   2.000000   2.000000   0.242146   0.275908   0.474511   0.007435   0.000000
+      sym 2:   0.007435   0.242146   0.275908  -0.000000   0.000000   0.474511   0.000000
+
+      Natural orbitals and occupation numbers for root  6
+      sym 1:   2.000000   2.000000   2.000000   0.419564   0.385802   0.187199  -0.000000   0.007435
+      sym 2:   0.000000   0.007435  -0.000000   0.187199   0.419564  -0.000000   0.385802
+
+      Natural orbitals and occupation numbers for root  7
+      sym 1:   2.000000   2.000000   2.000000   0.488667   0.488667   0.000001   0.007832   0.014833
+      sym 2:  -0.000000   0.488667   0.488667   0.007832   0.000001   0.014833   0.000000
+
+      Natural orbitals and occupation numbers for root  8
+      sym 1:   2.000000   2.000000   2.000000   0.488663   0.000005   0.488667   0.007832   0.014833
+      sym 2:   0.000000  -0.000000   0.007832   0.000005   0.488667   0.488663   0.014833
+
+      Natural orbitals and occupation numbers for root  9
+      sym 1:   2.000000   2.000000   2.000000   0.000004   0.488663   0.488668   0.014833   0.007832
+      sym 2:  -0.000000   0.007832   0.000000   0.488663   0.014833   0.000004   0.488668
+
+      Natural orbitals and occupation numbers for root 10
+      sym 1:   2.000000   2.000000   2.000000   0.333334   0.333332   0.333334   0.000000   0.000000
+      sym 2:   0.000000   0.000000   0.000000  -0.000000   0.333334   0.333334   0.333332
+
+      Natural orbitals and occupation numbers for root 11
+      sym 1:   2.000000   2.000000   2.000000   0.387087   0.367269   0.156426   0.089217   0.000000
+      sym 2:   0.089217   0.387087  -0.000000  -0.000000   0.000000   0.156426   0.367269
+
+      Natural orbitals and occupation numbers for root 12
+      sym 1:   2.000000   2.000000   2.000000   0.220101   0.239920   0.450762  -0.000000   0.089217
+      sym 2:   0.089217   0.220101   0.239920   0.450762   0.000000   0.000000  -0.000000
+
+      Natural orbitals and occupation numbers for root 13
+      sym 1:   2.000000   2.000000   2.000000   0.475533   0.000010   0.475524   0.042302   0.006632
+      sym 2:   0.000000   0.475524   0.042302   0.475533   0.000010  -0.000000   0.006632
+
+      Natural orbitals and occupation numbers for root 14
+      sym 1:   2.000000   2.000000   2.000000   0.000001   0.475532   0.475533   0.006631   0.042302
+      sym 2:   0.000000   0.042302   0.475533   0.000001   0.006631   0.475532   0.000000
+
+      Natural orbitals and occupation numbers for root 15
+      sym 1:   2.000000   2.000000   2.000000   0.475533   0.475524   0.000009   0.042302   0.006632
+      sym 2:  -0.000000   0.000009   0.000000   0.042302   0.475524   0.006632   0.475533
+
+      Natural orbitals and occupation numbers for root 16
+      sym 1:   2.000000   2.000000   2.000000   0.506754   0.235021   0.235362   0.017829   0.005035
+      sym 2:   0.506754   0.017829  -0.000000   0.235021   0.005035  -0.000000   0.235362
+
+      Natural orbitals and occupation numbers for root 17
+      sym 1:   2.000000   2.000000   2.000000   0.235030   0.506806   0.235340   0.005034   0.017790
+      sym 2:   0.506806   0.235340   0.017790   0.235030  -0.000000  -0.000000   0.005034
+
+      Natural orbitals and occupation numbers for root 18
+      sym 1:   2.000000   2.000000   2.000000   0.235255   0.235163   0.506611   0.005038   0.017932
+      sym 2:   0.506611   0.235163   0.235255   0.017932   0.000000   0.005038  -0.000000
+
+      Natural orbitals and occupation numbers for root 19
+      sym 1:   2.000000   2.000000   2.000000   0.105153   0.447312   0.447321   0.000000   0.000214
+      sym 2:   0.105153   0.000000   0.447321  -0.000000   0.000214   0.447312  -0.000000
+
+      Natural orbitals and occupation numbers for root 20
+      sym 1:   2.000000   2.000000   2.000000   0.447314   0.105152   0.447320   0.000214   0.000000
+      sym 2:   0.105152   0.447320   0.000000   0.447314   0.000000   0.000000   0.000214
+
+      Natural orbitals and occupation numbers for root 21
+      sym 1:   2.000000   2.000000   2.000000   0.447315   0.447319   0.105151   0.000214   0.000000
+      sym 2:  -0.000000   0.105151  -0.000000   0.000000   0.447319   0.000214   0.447315
+
+      Natural orbitals and occupation numbers for root 22
+      sym 1:   2.000000   2.000000   2.000000   0.000000   0.016297   0.016297   0.401395   0.566011
+      sym 2:   0.000000   0.566011   0.016297   0.016297   0.401395  -0.000000   0.000000
+
+      Natural orbitals and occupation numbers for root 23
+      sym 1:   2.000000   2.000000   2.000000   0.016297   0.016297   0.000000   0.566010   0.401396
+      sym 2:   0.000000   0.016297   0.016297   0.566010   0.000000   0.401396   0.000000
+
+      Natural orbitals and occupation numbers for root 24
+      sym 1:   2.000000   2.000000   2.000000   0.016297   0.000000   0.016297   0.566011   0.401395
+      sym 2:  -0.000000   0.016297   0.566011   0.016297  -0.000000   0.000000   0.401395
+
+      Natural orbitals and occupation numbers for root 25
+      sym 1:   2.000000   2.000000   2.000000   0.033995   0.033017   0.029640  -0.000000   0.903348
+      sym 2:   0.903348  -0.000000   0.033017   0.029640   0.033995   0.000000   0.000000
+
+      Natural orbitals and occupation numbers for root 26
+      sym 1:   2.000000   2.000000   2.000000   0.030439   0.031418   0.034795   0.903348  -0.000000
+      sym 2:   0.903348   0.030439   0.000000   0.000000   0.000000   0.034795   0.031418
+
+      Natural orbitals and occupation numbers for root 27
+      sym 1:   2.000000   2.000000   2.000000   0.000712   0.019576   0.019576   0.862478   0.097659
+      sym 2:   0.000712   0.862478   0.000000   0.019576   0.097659   0.000000   0.019576
+
+      Natural orbitals and occupation numbers for root 28
+      sym 1:   2.000000   2.000000   2.000000   0.019576   0.000712   0.019576   0.097660   0.862477
+      sym 2:  -0.000000   0.000712   0.862477  -0.000000   0.019576   0.019576   0.097660
+
+      Natural orbitals and occupation numbers for root 29
+      sym 1:   2.000000   2.000000   2.000000   0.019576   0.019576   0.000712   0.097659   0.862478
+      sym 2:   0.000712   0.019576   0.019576   0.862478  -0.000000   0.097659   0.000000
+
+      Natural orbitals and occupation numbers for root 30
+      sym 1:   2.000000   2.000000   2.000000   0.019502   0.019502   0.000000   0.383856   0.577140
+      sym 2:   0.000000  -0.000000   0.000000   0.383856   0.019502   0.577140   0.019502
+
+      Natural orbitals and occupation numbers for root 31
+      sym 1:   2.000000   2.000000   2.000000   0.019502   0.000000   0.019502   0.383855   0.577140
+      sym 2:   0.000000   0.000000   0.383855  -0.000000   0.019502   0.019502   0.577140
+
+      Natural orbitals and occupation numbers for root 32
+      sym 1:   2.000000   2.000000   2.000000   0.000000   0.019502   0.019502   0.577140   0.383855
+      sym 2:   0.000000   0.383855   0.019502   0.000000   0.577140   0.019502   0.000000
+
+      Natural orbitals and occupation numbers for root 33
+      sym 1:   2.000000   2.000000   2.000000   0.000789   0.000788   0.004560   0.896333   0.097530
+      sym 2:   0.004560   0.000788   0.000789   0.097530  -0.000000   0.896333   0.000000
+
+      Natural orbitals and occupation numbers for root 34
+      sym 1:   2.000000   2.000000   2.000000   0.004560   0.000789   0.000789   0.097529   0.896334
+      sym 2:   0.004560   0.097529  -0.000000   0.000789   0.896334  -0.000000   0.000789
+
+      Natural orbitals and occupation numbers for root 35
+      sym 1:   2.000000   2.000000   2.000000   0.000788   0.004560   0.000789   0.896333   0.097529
+      sym 2:  -0.000000   0.004560   0.097529  -0.000000   0.000789   0.000788   0.896333
+
+      ************************************************************************************************************************
+      *                                                                                                                      *
+      *                                                    Final results                                                     *
+      *                                                                                                                      *
+      ************************************************************************************************************************
+
+
+++    Wave function specifications:
+      -----------------------------
+
+      Number of closed shell electrons         188
+      Number of electrons in active shells       8
+      Max number of holes in RAS1 space          0
+      Max nr of electrons in RAS3 space          1
+      Number of inactive orbitals               94
+      Number of active orbitals                 15
+      Number of secondary orbitals             215
+      Spin quantum number                      0.0
+      State symmetry                             2
+--
+
+++    Orbital specifications:
+      -----------------------
+
+      Symmetry species                           1   2
+                                                ag  au
+      Frozen orbitals                            0   0
+      Inactive orbitals                         45  49
+      Active orbitals                            8   7
+      RAS1 orbitals                              3   0
+      RAS2 orbitals                              0   7
+      RAS3 orbitals                              5   0
+      Secondary orbitals                       106 109
+      Deleted orbitals                           0   0
+      Number of basis functions                159 165
+--
+
+++    CI expansion specifications:
+      ----------------------------
+
+      Number of CSFs                            35
+      Number of determinants                    35
+      Number of root(s) required                35
+      CI roots used                              1     2     3     4     5     6     7     8     9    10
+                                                11    12    13    14    15    16    17    18    19    20
+                                                21    22    23    24    25    26    27    28    29    30
+                                                31    32    33    34    35
+      weights                                0.029 0.029 0.029 0.029 0.029 0.029 0.029 0.029 0.029 0.029
+                                             0.029 0.029 0.029 0.029 0.029 0.029 0.029 0.029 0.029 0.029
+                                             0.029 0.029 0.029 0.029 0.029 0.029 0.029 0.029 0.029 0.029
+                                             0.029 0.029 0.029 0.029 0.029
+      highest root included in the CI           35
+      Root passed to geometry opt.              35
+--
+
+++    Final optimization conditions:
+      ------------------------------
+
+      Average CI energy                          -30715.69464521
+      RASSCF energy for state 35                 -30715.58582344
+      Super-CI energy                                -0.00000000
+      RASSCF energy change                           -0.00000000
+      Max change in MO coefficients              -0.511E-04
+      Max non-diagonal density matrix element    -0.365E-04
+      Maximum BLB matrix element                  0.824E-05
+      (orbital pair  41,  73 in symmetry   2)
+      Norm of electronic gradient            0.239E+00
+--
+
+
+      Final state energy(ies):
+      ------------------------
+
+::    RASSCF root number  1 Total energy: -30715.79129373
+::    RASSCF root number  2 Total energy: -30715.77871208
+::    RASSCF root number  3 Total energy: -30715.77871208
+::    RASSCF root number  4 Total energy: -30715.77871208
+::    RASSCF root number  5 Total energy: -30715.77294355
+::    RASSCF root number  6 Total energy: -30715.77294354
+::    RASSCF root number  7 Total energy: -30715.75802506
+::    RASSCF root number  8 Total energy: -30715.75802506
+::    RASSCF root number  9 Total energy: -30715.75802505
+::    RASSCF root number 10 Total energy: -30715.73734895
+::    RASSCF root number 11 Total energy: -30715.73664306
+::    RASSCF root number 12 Total energy: -30715.73664306
+::    RASSCF root number 13 Total energy: -30715.73393082
+::    RASSCF root number 14 Total energy: -30715.73393082
+::    RASSCF root number 15 Total energy: -30715.73393082
+::    RASSCF root number 16 Total energy: -30715.72654040
+::    RASSCF root number 17 Total energy: -30715.72654040
+::    RASSCF root number 18 Total energy: -30715.72654040
+::    RASSCF root number 19 Total energy: -30715.70313711
+::    RASSCF root number 20 Total energy: -30715.70313711
+::    RASSCF root number 21 Total energy: -30715.70313710
+::    RASSCF root number 22 Total energy: -30715.65049527
+::    RASSCF root number 23 Total energy: -30715.65049526
+::    RASSCF root number 24 Total energy: -30715.65049526
+::    RASSCF root number 25 Total energy: -30715.63575629
+::    RASSCF root number 26 Total energy: -30715.63575629
+::    RASSCF root number 27 Total energy: -30715.61740522
+::    RASSCF root number 28 Total energy: -30715.61740522
+::    RASSCF root number 29 Total energy: -30715.61740522
+::    RASSCF root number 30 Total energy: -30715.61034862
+::    RASSCF root number 31 Total energy: -30715.61034861
+::    RASSCF root number 32 Total energy: -30715.61034861
+::    RASSCF root number 33 Total energy: -30715.58582345
+::    RASSCF root number 34 Total energy: -30715.58582344
+::    RASSCF root number 35 Total energy: -30715.58582344
+
+--- Stop Module: rasscf at Tue Oct  1 19:08:12 2019 /rc=_RC_ALL_IS_WELL_ ---
+*** files: ucl.LprOrb ucl.RasOrb ucl.RasOrb.1 ucl.RasOrb.2 ucl.rasscf.h5 ucl.SpdOrb.1 ucl.SpdOrb.2 xmldump
+    saved to directory /projects/academic/jochena/gaurabga/vib-coupling/ucl6_2minus-gas/molcas-symCi/f2d
+--- Module rasscf spent 4 minutes 54 seconds ---
+
+
+    Timing: Wall=1101.53 User=1059.63 System=29.37
