@@ -23,8 +23,8 @@ class Gradient(DataFrame):
             norms = np.linalg.norm(data[cols].values, axis=1)
             rms = np.sqrt(np.mean(np.square(norms)))
             avg = np.mean(norms)
-            max = norms.max()
-            min = norms.min()
+            max_grad = norms.max()
+            min_grad = norms.min()
             sr = pd.Series([rms, avg, max, min], index=['rms', 'mean',
                                                         'max', 'min'])
             srs.append(sr)
@@ -46,7 +46,7 @@ class Gradient(DataFrame):
         cols = ['fx', 'fy', 'fz']
         arr = []
         for _, data in self.groupby('frame'):
-            val = np.mean(data[cols].values)
+            val = np.mean(data[cols].abs().values)
             arr.append(val)
         avg = pd.Series(arr)
         return avg

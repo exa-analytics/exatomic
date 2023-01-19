@@ -643,7 +643,7 @@ class Output(six.with_metaclass(OutMeta, Editor)):
         data_length = stop - props[0] - 5
         # get the data
         stdm = self._property_parsing(props, data_length)
-        stdm['component'] = np.repeat(['x', 'y', 'z'], data_length)
+        stdm['component'] = stdm['component'].map(component_map)
         self.sf_dipole_moment = stdm
 
     def parse_sf_quadrupole_moment(self):
@@ -769,7 +769,7 @@ class Output(six.with_metaclass(OutMeta, Editor)):
         occs = {}
         roots = []
         energies = []
-        for (nooldx, nooline), (engldx, engline) in zip(found[_renoo], found[_reeng]):
+        for (nooldx, nooline), (_, engline) in zip(found[_renoo], found[_reeng]):
             energy = float(engline.split('=')[-1].strip())
             energies.append(energy)
             root = list(map(int, re.findall(r'\d+', nooline)))
@@ -780,7 +780,6 @@ class Output(six.with_metaclass(OutMeta, Editor)):
                                  +"Found line {}".format(nooline))
             roots.append(root[0])
             # get the natural occupations
-            start = nooldx + 1
             dldx = nooldx+1
             vals = {}
             while self[dldx].strip() != '':
@@ -816,15 +815,10 @@ class Output(six.with_metaclass(OutMeta, Editor)):
         _reweight = "Reference weight:"
         _reroot = "Compute H0 matrices for state"
         _respin = "Spin quantum number"
-        dfs = []
         found = self.find(_resspt2, _reref, _reweight, _reroot, _respin,
                           _remspt2)
         if not found[_resspt2]:
             return
-        total_energy = []
-        # get the number of SS/MS-PT2 energies
-        nsspt2 = len(found[_resspt2])
-        nmspt2 = len(found[_remspt2])
         # TODO: this needs to be verified as it assumes that there is
         #       only one spin/multiplicity in the system
         #       do not know if this is always the case

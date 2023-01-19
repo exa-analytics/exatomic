@@ -706,6 +706,8 @@ class Output(six.with_metaclass(GauMeta, Editor)):
               +"using this molecular orientation.")
         ldx = found[0] + 1
         dfs = []
+        srs = []
+        srs_old = []
         try:
             while float(self[ldx].split()[0]):
                 d = self[ldx].split()
@@ -713,7 +715,8 @@ class Output(six.with_metaclass(GauMeta, Editor)):
                     ncols = len(d)
                     cols = list(map(lambda x: int(x)-1, d))
                     if cols[0] != 0:
-                        dfs.append(pd.concat(srs, axis=1).T)
+                        srs_old = srs
+                        dfs.append(pd.concat(srs_old, axis=1).T)
                     srs = []
                 else:
                     arr = np.zeros(ncols)
