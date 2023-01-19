@@ -25,8 +25,8 @@ class Gradient(DataFrame):
             avg = np.mean(norms)
             max_grad = norms.max()
             min_grad = norms.min()
-            sr = pd.Series([rms, avg, max, min], index=['rms', 'mean',
-                                                        'max', 'min'])
+            sr = pd.Series([rms, avg, max_grad, min_grad],
+                           index=['rms', 'mean', 'max', 'min'])
             srs.append(sr)
         df = pd.concat(srs, axis=1, ignore_index=True).T
         return df
