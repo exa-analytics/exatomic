@@ -60,7 +60,7 @@ class BaseSeries(Numerical):
 
     Attributes:
         _sname (str): May have a required name (default None)
-        _iname (str: May have a required index name
+        _iname (str): May have a required index name
         _stype (type): May have a required value type
         _itype (type): May have a required index type
     """
