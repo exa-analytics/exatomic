@@ -60,6 +60,7 @@ jobs:
     if: ${{ always() }}
     name: codacy-coverage-reporter
     steps:
+      - uses: actions/checkout@v2
       - name: Run codacy-coverage-reporter
         uses: ./.github/workflows/codacy-reporter
         with:
