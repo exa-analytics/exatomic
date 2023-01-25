@@ -65,7 +65,7 @@ jobs:
         uses: codacy/codacy-coverage-reporter-action@v1
         with:
           coverage-reports: coverage.xml
-          project-token: ${{ secrets.CODACY_PROJECT_TOKEN }}
+          api-token: ${{ secrets.CODACY_PROJECT_TOKEN }}
       #- name: Download Coverage Report
       #  uses: actions/download-artifact@v2
       #  with:
