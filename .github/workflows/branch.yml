@@ -7,6 +7,11 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
   cancel-in-progress: true
 
+inputs:
+  project-token:
+    required: false
+    description: "API project token to authenticate on the Codacy API while uploading the coverage data"
+
 jobs:
 
   support-matrix:
@@ -65,7 +70,7 @@ jobs:
         uses: codacy/codacy-coverage-reporter-action@v1
         with:
           coverage-reports: coverage.xml
-          api-token: ${{ secrets.CODACY_PROJECT_TOKEN }}
+          project-token: ${{ secrets.CODACY_PROJECT_TOKEN }}
       #- name: Download Coverage Report
       #  uses: actions/download-artifact@v2
       #  with:
