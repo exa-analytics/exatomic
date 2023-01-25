@@ -9,7 +9,4 @@ runs:
   steps:
     - name: Run codacy-coverage-reporter
       uses: codacy/codacy-coverage-reporter-action@v1
-      with:
-        coverage-reports: coverage.xml
-        project-token: ${{ secrets.CODACY_PROJECT_TOKEN }}
 
