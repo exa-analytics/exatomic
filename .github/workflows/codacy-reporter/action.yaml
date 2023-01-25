@@ -1,0 +1,16 @@
+name: Upload codacy coverage
+inputs:
+  project-token:
+    required: false
+    description: "API project token to authenticate on the Codacy API while uploading the coverage data"
+
+runs:
+  using: "composite"
+  steps:
+    - uses: actions/checkout@v2
+    - name: Run codacy-coverage-reporter
+      uses: codacy/codacy-coverage-reporter-action@v1
+      with:
+        coverage-reports: coverage.xml
+        project-token: ${{ secrets.CODACY_PROJECT_TOKEN }}
+
