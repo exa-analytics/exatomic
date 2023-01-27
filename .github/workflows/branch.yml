@@ -53,7 +53,7 @@ jobs:
       - name: Run Tests
         uses: ./.github/workflows/run-tests
         with:
-          coverage-artifact-name: code-coverage-report-code-coverage
+          coverage-artifact-name: code-coverage
       - name: Debug
         run: ls -la; pwd; export
       #- name: Run codacy-coverage-reporter
