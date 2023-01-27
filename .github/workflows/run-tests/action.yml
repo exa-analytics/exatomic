@@ -14,7 +14,7 @@ runs:
     - name: Run Tests (Nix)
       shell: bash -l {0}
       if: (runner.os == 'Linux') || (runner.os == 'macOS')
-      run: pytest --doctest-modules -v --cov coveralls --cov-report term --cov=exatomic --cov-report xml
+      run: pytest --doctest-modules -v --cov coveralls --cov-report term --cov=exatomic --cov-report xml exatomic/gaussian/tests
 
     - name: Run Tests (Win)
       shell: pwsh
