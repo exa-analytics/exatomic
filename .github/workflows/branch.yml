@@ -54,14 +54,6 @@ jobs:
         uses: ./.github/workflows/run-tests
         with:
           coverage-artifact-name: code-coverage
-      - name: Debug
-        run: ls -la; pwd; export
-      #- name: Run codacy-coverage-reporter
-      #  if: (runner.os == 'Linux') && (matrix.python-version == '3.8')
-      #  uses: codacy/codacy-coverage-reporter-action@v1
-      #  with:
-      #    project-token: ${{ secrets.CODACY_PROJECT_TOKEN }}
-      #    coverage-reports: coverage.xml
 
   codacy-coverage-reporter:
     runs-on: ubuntu-latest
@@ -77,8 +69,6 @@ jobs:
       #  with:
       #    project-token: ${{ secrets.CODACY_PROJECT_TOKEN }}
       #    coverage-reports: coverage.xml
-      - name: Debug
-        run: ls -la; pwd; export
       - name: Download Coverage Report
         uses: actions/download-artifact@v2
         with:
