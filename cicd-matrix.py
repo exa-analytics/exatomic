@@ -5,15 +5,15 @@ import json
 
 systems = [
     "ubuntu-latest",
-    "macos-latest",
-    "windows-latest"
+    #"macos-latest",
+    #"windows-latest"
 ]
 
 versions = [
-    "3.7",
+    #"3.7",
     "3.8",
-    "3.9",
-    "3.10",
+    #"3.9",
+    #"3.10",
 ]
 
 print(
