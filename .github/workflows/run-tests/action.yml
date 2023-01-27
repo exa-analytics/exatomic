@@ -12,7 +12,7 @@ runs:
     - name: Run Tests (Nix)
       shell: bash -l {0}
       if: (runner.os == 'Linux') || (runner.os == 'macOS')
-      run: pytest --doctest-modules -v --cov coveralls --cov-report term --cov=exatomic --cov-report xml exatomic/gaussian exatomic/adf exatomic/molcas exatomic/widgets
+      run: pytest --doctest-modules -v --cov coveralls --cov-report term --cov=exatomic --cov-report xml
 
     - name: Run Tests (Win)
       shell: pwsh
