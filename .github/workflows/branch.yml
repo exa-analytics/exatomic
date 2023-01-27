@@ -53,6 +53,7 @@ jobs:
         uses: ./.github/workflows/run-tests
         with:
           coverage-artifact-name: ${{ needs.coverage-artifact-name.outputs.ref }}
+          project-token: ${{ secrets.CODACY_PROJECT_TOKEN }}
 
   #codacy-coverage-reporter:
   #  runs-on: ubuntu-latest

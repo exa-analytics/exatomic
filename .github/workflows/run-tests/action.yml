@@ -5,6 +5,8 @@ inputs:
     description: 'Name of coverage artifact to be uploaded'
     required: true
     default: 'issue-x'
+  project-token:
+    required: true
 runs:
   using: "composite"
   steps:
@@ -30,6 +32,6 @@ runs:
       if: (runner.os == 'Linux') && (matrix.python-version == '3.8')
       uses: codacy/codacy-coverage-reporter-action@v1
       with:
-        project-token: ${{ secrets.CODACY_PROJECT_TOKEN }}
+        project-token: ${{ inputs.project-token }}
         coverage-reports: coverage.xml
 
