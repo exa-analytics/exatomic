@@ -28,10 +28,10 @@ runs:
         name: code-coverage-report-${{ inputs.coverage-artifact-name }}
         path: coverage.xml
         retention-days: 1
-    - name: Run codacy-coverage-reporter
-      if: (runner.os == 'Linux') && (matrix.python-version == '3.8')
-      uses: codacy/codacy-coverage-reporter-action@v1
-      with:
-        project-token: ${{ inputs.project-token }}
-        coverage-reports: coverage.xml
+    #- name: Run codacy-coverage-reporter
+    #  if: (runner.os == 'Linux') && (matrix.python-version == '3.8')
+    #  uses: codacy/codacy-coverage-reporter-action@v1
+    #  with:
+    #    project-token: ${{ inputs.project-token }}
+    #    coverage-reports: coverage.xml
 
