@@ -1,7 +1,7 @@
 PyYAML>=3.0
 bokeh
 h5py>=3.4.0
-ipywidgets>=7.0
+ipywidgets>=7.0,<8.0
 matplotlib>=3.0
 networkx>=2.0
 numba>=0.50
