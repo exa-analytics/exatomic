@@ -660,26 +660,9 @@ class AMS(six.with_metaclass(OutMeta, Editor)):
         self.gradient = grad
 
     def parse_excitation(self):
-        _reexc = "no.     E/a.u.        E/eV      f"
-        found = self.find(_reexc, keys_only=True)
-        if not found:
-            return
-        # there should only be one in the entire output
-        start = found[0] + 2
-        stop = start
-        while self[stop].strip(): stop += 1
-        df = self.pandas_dataframe(start, stop, ncol=6)
-        df.columns = ['excitation', 'energy', 'energy_ev', 'osc', 'tau', 'symmetry']
-        nan = np.where(list(map(lambda x: any(x), df.isna().values)))[0]
-        df.loc[nan, 'symmetry'] = df.loc[nan, 'tau'].copy()
-        df.loc[nan, 'tau'] = 0.0
-        df['tau'] = df['tau'].astype(float)
-        df['excitation'] = [int(x[:-1]) for x in df['excitation'].values]
-        df.index = df['excitation'] - 1
-        df.drop('excitation', axis=1, inplace=True)
-        df['frame'] = 0
-        df['group'] = 0
-        self.excitation = df
+        # the output has not changed from the last few iterations
+        # of ADF
+        ADF.parse_excitation(self)
 
     def parse_electric_dipole(self):
         _reexc = "Excitation energies E in a.u. and eV, dE wrt prev. cycle"
@@ -716,7 +699,7 @@ class AMS(six.with_metaclass(OutMeta, Editor)):
         diff = np.setdiff1d(df['excitation'].values.flatten(),
                             tdm['excitation'].values.flatten())
         if len(diff) > 0:
-            for idx, d in enumerate(diff):
+            for d in diff:
                 df1 = tdm.loc[range(d)]
                 df2 = tdm.loc[range(d, tdm.shape[0])]
                 new_line = [d, df.loc[d, 'energy_ev'],
