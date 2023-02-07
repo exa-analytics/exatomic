@@ -46,10 +46,6 @@ class Numerical(object):
         key = check_key(self, key)
         return cls(self.loc[key])
 
-    def __repr__(self):
-        name = '.'.join([self.__module__, self.__class__.__name__])
-        return '{0}{1}'.format(name, self.shape)
-
     def __str__(self):
         return self.__repr__()
 
@@ -60,7 +56,7 @@ class BaseSeries(Numerical):
 
     Attributes:
         _sname (str): May have a required name (default None)
-        _iname (str: May have a required index name
+        _iname (str): May have a required index name
         _stype (type): May have a required value type
         _itype (type): May have a required index type
     """
@@ -193,13 +189,20 @@ class DataFrame(BaseDataFrame, pd.DataFrame):
         cls = self.__class__    # Note that type conversion does not perform copy
         return cls(pd.DataFrame(self).copy(*args, **kwargs))
 
-    def _revert_categories(self):
+    def _revert_categories(self, inplace=True):
         """
         Inplace conversion to categories.
         """
-        for column, dtype in self._categories.items():
-            if column in self.columns:
-                self[column] = self[column].astype(dtype)
+        if inplace:
+            for column, dtype in self._categories.items():
+                if column in self.columns:
+                    self[column] = self[column].astype(dtype)
+        else:
+            copy = self.copy()
+            for column, dtype in copy._categories.items():
+                if column in copy.columns:
+                    copy[column] = copy[column].astype(dtype)
+            return copy
 
     def _set_categories(self):
         """

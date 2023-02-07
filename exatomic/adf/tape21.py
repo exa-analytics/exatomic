@@ -10,7 +10,6 @@ converted TAPE21 file from ADF
 
 from exatomic.exa.core.container import TypedMeta
 from exatomic.exa.core.editor import Editor
-from exatomic.exa.util.units import Length, Mass, Energy
 from exatomic.core.atom import Atom, Frequency
 from exatomic.core.gradient import Gradient
 from exatomic.core.tensor import JCoupling, NMRShielding
@@ -18,7 +17,6 @@ from exatomic.base import z2sym, sym2isomass
 import numpy as np
 import pandas as pd
 import six
-import warnings
 
 class MissingSection(Exception):
     pass
@@ -167,7 +165,6 @@ class Tape21(six.with_metaclass(Tape21Meta, Editor)):
         # these should be the ones that ADF determines to be translations and rotations
         # TODO: need a test case with one imaginary frequency
         low = freq != 0
-        nlow = low.shape[0]
         # get only the ones that are non-zero
         freq = freq[low]
         nmodes = freq.shape[0]
@@ -202,14 +199,10 @@ class Tape21(six.with_metaclass(Tape21Meta, Editor)):
         dz = np.array(dz).flatten()
         freqdx = np.repeat(range(nmodes), nat)
         label = np.tile(self.atom['label'], nmodes)
-        symbol = self.atom['symbol']
-        # get the isotopic masses
-        mass = _get_isomass(symbol)
         symbol = np.tile(self.atom['symbol'], nmodes)
         # put the data together
         df = pd.DataFrame({'dx': dx, 'dy': dy, 'dz': dz, 'frequency': freq,
                            'freqdx': freqdx})
-        cols = ['dx', 'dy', 'dz']
         # calculate the reduced masses
         if not cart:
             r_mass = df.groupby(['freqdx']).apply(self.rmass_mwc,
@@ -220,6 +213,7 @@ class Tape21(six.with_metaclass(Tape21Meta, Editor)):
         df['r_mass'] = np.repeat(r_mass, nat)
         df['symbol'] = symbol
         df['label'] = label
+        # TODO: find out if this is stored in the file anywhere
         df['ir_int'] = 0
         df['frame'] = 0
         self.frequency = df
@@ -311,7 +305,6 @@ class Tape21(six.with_metaclass(Tape21Meta, Editor)):
         self.parse_atom(input_order=input_order)
         symbol = self.atom.last_frame['symbol'].values
         Z = self.atom.last_frame['Z'].values.astype(int)
-        nat = self.atom.last_frame.shape[0]
         # get the gradients
         ngrad = self._intme(np.array(found[_regrad]))
         grad = self._dfme(np.array(found[_regrad]), ngrad)
@@ -323,7 +316,6 @@ class Tape21(six.with_metaclass(Tape21Meta, Editor)):
                                      'fy': y, 'fz': z, 'symbol': symbol,
                                      'frame': 0})
         df = df[['atom', 'Z', 'fx', 'fy', 'fz', 'symbol', 'frame']]
-        #for u in ['fx', 'fy', 'fz']: df[u] *= 1./Length['Angstrom', 'au']
         self.gradient = df
 
     def parse_nmr_shielding(self):

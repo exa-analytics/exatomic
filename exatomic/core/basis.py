@@ -119,14 +119,16 @@ class BasisSet(DataFrame):
     def functions_by_shell(self):
         """Return a series of n functions per (set, L).
         This does not include degenerate functions."""
-        obj = self.groupby(self._indexes)['shell'].nunique()
+        obj = self._revert_categories(inplace=False)
+        obj = obj.groupby(self._indexes)['shell'].nunique()
         obj.index.set_names(self._indexes, inplace=True)
         return obj
 
     def primitives_by_shell(self):
         """Return a series of n primitives per (set, L).
         This does not include degenerate primitives."""
-        obj = self.groupby(self._indexes)['alpha'].nunique()
+        obj = self._revert_categories(inplace=False)
+        obj = obj.groupby(self._indexes)['alpha'].nunique()
         obj.index.set_names(self._indexes, inplace=True)
         return obj
 

@@ -391,7 +391,7 @@ class ADF(six.with_metaclass(OutMeta, Editor)):
         while self[stop].strip(): stop += 1
         df = self.pandas_dataframe(start, stop, ncol=6)
         df.columns = ['excitation', 'energy', 'energy_ev', 'osc', 'tau', 'symmetry']
-        nan = np.where(list(map(lambda x: any(x), df.isna().values)))[0]
+        nan = np.where(df.isna().values)[0]
         df.loc[nan, 'symmetry'] = df.loc[nan, 'tau'].copy()
         df.loc[nan, 'tau'] = 0.0
         df['tau'] = df['tau'].astype(float)
@@ -536,7 +536,7 @@ class ADF(six.with_metaclass(OutMeta, Editor)):
             else:
                 start = stop + 4
             stop = start + natoms
-            freqs = list(map(lambda x: float(x), self[start-2].split()))
+            freqs = list(map(float, self[start-2].split()))
             ncol = len(freqs)
             df = self.pandas_dataframe(start, stop, ncol=1+3*ncol)
             tmp = list(map(lambda x: x.split('.'), df[0]))
@@ -660,26 +660,9 @@ class AMS(six.with_metaclass(OutMeta, Editor)):
         self.gradient = grad
 
     def parse_excitation(self):
-        _reexc = "no.     E/a.u.        E/eV      f"
-        found = self.find(_reexc, keys_only=True)
-        if not found:
-            return
-        # there should only be one in the entire output
-        start = found[0] + 2
-        stop = start
-        while self[stop].strip(): stop += 1
-        df = self.pandas_dataframe(start, stop, ncol=6)
-        df.columns = ['excitation', 'energy', 'energy_ev', 'osc', 'tau', 'symmetry']
-        nan = np.where(list(map(lambda x: any(x), df.isna().values)))[0]
-        df.loc[nan, 'symmetry'] = df.loc[nan, 'tau'].copy()
-        df.loc[nan, 'tau'] = 0.0
-        df['tau'] = df['tau'].astype(float)
-        df['excitation'] = [int(x[:-1]) for x in df['excitation'].values]
-        df.index = df['excitation'] - 1
-        df.drop('excitation', axis=1, inplace=True)
-        df['frame'] = 0
-        df['group'] = 0
-        self.excitation = df
+        # the output has not changed from the last few iterations
+        # of ADF
+        ADF.parse_excitation(self)
 
     def parse_electric_dipole(self):
         _reexc = "Excitation energies E in a.u. and eV, dE wrt prev. cycle"
@@ -707,21 +690,20 @@ class AMS(six.with_metaclass(OutMeta, Editor)):
         tdm = self.pandas_dataframe(start, stop, ncol=10)
         tdm.dropna(axis=1, how='all', inplace=True)
         if tdm.shape[1] == 9:
-            spinorbit=True
+            # TODO: should we get the magnitude here instead?
             tdm.columns = ['excitation', 'energy_ev', 'osc', 'remu_x' ,'remu_y', 'remu_z',
                            'immu_x', 'immu_y', 'immu_z']
         else:
             tdm.columns = ['excitation', 'energy_ev', 'osc', 'mu_x' ,'mu_y', 'mu_z']
-            spinorbit=False
         tdm['excitation'] -= 1
         diff = np.setdiff1d(df['excitation'].values.flatten(),
                             tdm['excitation'].values.flatten())
         if len(diff) > 0:
-            for idx in range(len(diff)):
-                df1 = tdm.loc[range(diff[idx])]
-                df2 = tdm.loc[range(diff[idx], tdm.shape[0])]
-                new_line = [diff[idx], df.loc[diff[idx], 'energy_ev'],
-                            df.loc[diff[idx], 'osc']]+[0.0]*int(len(tdm.columns)-3)
+            for d in diff:
+                df1 = tdm.loc[range(d)]
+                df2 = tdm.loc[range(d, tdm.shape[0])]
+                new_line = [d, df.loc[d, 'energy_ev'],
+                            df.loc[d, 'osc']]+[0.0]*int(len(tdm.columns)-3)
                 new_line = pd.DataFrame([new_line], columns=tdm.columns)
                 new_df = pd.concat([df1, new_line, df2], ignore_index=True)
                 tdm = new_df.copy()
