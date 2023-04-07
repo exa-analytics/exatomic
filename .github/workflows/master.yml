@@ -39,6 +39,10 @@ jobs:
         with:
           path: ${{ env.pythonLocation }}
           key: ${{ runner.os }}-${{ matrix.python-version }}-${{ hashFiles('requirements.txt') }}-${{ hashFiles('requirements.dev.txt') }}
+      - name: Use Node.js version 16
+        uses: actions/setup-node@v3
+        with:
+          node-version: "16.19.1"
       - name: Install Dependencies
         run: |
           pip install --upgrade --upgrade-strategy eager -r requirements.txt -r requirements.dev.txt -e .
@@ -70,8 +74,15 @@ jobs:
         run: |
           rm -rf docs/source/*.txt
           SPHINX_APIDOC_OPTIONS=members,undoc-members,show-inheritance sphinx-apidoc -eM -s txt -o docs/source/ exatomic *test*
-          travis-sphinx build
-          travis-sphinx deploy
+          sphinx-build docs/source _build
+      - name: Deploy
+        uses: peaceiris/actions-gh-pages@v3
+        if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/master' }}
+        with:
+          publish_branch: gh-pages
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: _build/
+          force_orphan: true
 
   # keep github release and pypi upload together
   publish-release:

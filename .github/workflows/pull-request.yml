@@ -1,4 +1,4 @@
-name: Branch
+name: Pull Request
 
 on:
   pull_request:
@@ -46,6 +46,10 @@ jobs:
         with:
           path: ${{ env.pythonLocation }}
           key: ${{ runner.os }}-${{ matrix.python-version }}-${{ hashFiles('requirements.txt') }}-${{ hashFiles('requirements.dev.txt') }}
+      - name: Use Node.js version 16
+        uses: actions/setup-node@v3
+        with:
+          node-version: "16.19.1"
       - name: Install Dependencies
         run: |
           pip install --upgrade --upgrade-strategy eager -r requirements.txt -r requirements.dev.txt -e .

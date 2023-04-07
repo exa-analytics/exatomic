@@ -3,7 +3,7 @@ name: Branch
 on:
   push:
     branches-ignore:
-      - [master, main]
+      [master, main]
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
@@ -48,6 +48,10 @@ jobs:
         with:
           path: ${{ env.pythonLocation }}
           key: ${{ runner.os }}-${{ matrix.python-version }}-${{ hashFiles('requirements.txt') }}-${{ hashFiles('requirements.dev.txt') }}
+      - name: Use Node.js version 16
+        uses: actions/setup-node@v3
+        with:
+          node-version: "16.19.1"
       - name: Install Dependencies
         run: |
           pip install --upgrade --upgrade-strategy eager -r requirements.txt -r requirements.dev.txt -e .
@@ -71,3 +75,4 @@ jobs:
         with:
           project-token: ${{ secrets.CODACY_PROJECT_TOKEN }}
           coverage-reports: coverage.xml
+
