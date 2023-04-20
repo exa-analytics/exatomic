@@ -77,7 +77,7 @@ jobs:
           sphinx-build docs/source _build
       - name: Deploy
         uses: peaceiris/actions-gh-pages@v3
-        if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/master' }}
+        if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}
         with:
           publish_branch: gh-pages
           github_token: ${{ secrets.GITHUB_TOKEN }}
@@ -97,6 +97,10 @@ jobs:
       - uses: actions/setup-python@v2
         with:
           python-version: ${{ matrix.python-version }}
+      - name: Use Node.js version 16
+        uses: actions/setup-node@v3
+        with:
+          node-version: "16.19.1"
       - uses: actions/cache@v2
         with:
           path: ${{ env.pythonLocation }}
@@ -147,7 +151,7 @@ jobs:
       - uses: actions/checkout@v2
       - uses: actions/setup-node@v2
         with:
-          node-version: '16'
+          node-version: '16.19.1'
       - name: Publish NPM Package
         shell: bash -l {0}
         run: |
