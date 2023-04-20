@@ -121,6 +121,10 @@ jobs:
         python-version: ${{ fromJson(needs.support-matrix.outputs.matrix).python-version }}
     steps:
       - uses: actions/checkout@v2
+      - name: Use Node.js version 16
+        uses: actions/setup-node@v3
+        with:
+          node-version: "16.19.1"
       - name: Publish Conda Release
         uses: ./.github/workflows/publish-conda
         with:
