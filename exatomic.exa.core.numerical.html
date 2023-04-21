@@ -1,0 +1,515 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>exatomic.exa.core.numerical module &mdash; exatomic 0.6.0 documentation</title>
+      <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+        <script src="_static/doctools.js"></script>
+        <script src="_static/sphinx_highlight.js"></script>
+        <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="exatomic.exa.util package" href="exatomic.exa.util.html" />
+    <link rel="prev" title="exatomic.exa.core.error module" href="exatomic.exa.core.error.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            exatomic
+              <img src="_static/logo.png" class="logo" alt="Logo"/>
+          </a>
+              <div class="version">
+                0.6.0
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Sitemap</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="install.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="started.html">Getting Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="contrib.html">Development</a></li>
+</ul>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="exatomic.html">exatomic package</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="exatomic.html#supported-software">Supported Software</a></li>
+<li class="toctree-l2"><a class="reference internal" href="exatomic.html#exatomic.func_log"><code class="docutils literal notranslate"><span class="pre">func_log()</span></code></a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="exatomic.html#subpackages">Subpackages</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="exatomic.adf.html">exatomic.adf package</a></li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.algorithms.html">exatomic.algorithms package</a></li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.core.html">exatomic.core package</a></li>
+<li class="toctree-l3 current"><a class="reference internal" href="exatomic.exa.html">exatomic.exa package</a><ul class="current">
+<li class="toctree-l4"><a class="reference internal" href="exatomic.exa.html#exa">Exa</a></li>
+<li class="toctree-l4 current"><a class="reference internal" href="exatomic.exa.html#subpackages">Subpackages</a></li>
+<li class="toctree-l4"><a class="reference internal" href="exatomic.exa.html#submodules">Submodules</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.gaussian.html">exatomic.gaussian package</a></li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.interfaces.html">exatomic.interfaces package</a></li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.molcas.html">exatomic.molcas package</a></li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.nbo.html">exatomic.nbo package</a></li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.nwchem.html">exatomic.nwchem package</a></li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.plotter.html">exatomic.plotter package</a></li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.qchem.html">exatomic.qchem package</a></li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.qe.html">exatomic.qe package</a></li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.util.html">exatomic.util package</a></li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.widgets.html">exatomic.widgets package</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="exatomic.html#submodules">Submodules</a></li>
+</ul>
+</li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">exatomic</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="exatomic.html">exatomic package</a></li>
+          <li class="breadcrumb-item"><a href="exatomic.exa.html">exatomic.exa package</a></li>
+          <li class="breadcrumb-item"><a href="exatomic.exa.core.html">exatomic.exa.core package</a></li>
+      <li class="breadcrumb-item active">exatomic.exa.core.numerical module</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/exatomic.exa.core.numerical.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="module-exatomic.exa.core.numerical">
+<span id="exatomic-exa-core-numerical-module"></span><h1>exatomic.exa.core.numerical module<a class="headerlink" href="#module-exatomic.exa.core.numerical" title="Permalink to this heading"></a></h1>
+<section id="data-objects">
+<h2>Data Objects<a class="headerlink" href="#data-objects" title="Permalink to this heading"></a></h2>
+<p>Data objects are used to store typed data coming from an external source (for
+example a file on disk). There are three primary data objects provided by
+this module, <a class="reference internal" href="#exatomic.exa.core.numerical.Series" title="exatomic.exa.core.numerical.Series"><code class="xref py py-class docutils literal notranslate"><span class="pre">Series</span></code></a>, <a class="reference internal" href="#exatomic.exa.core.numerical.DataFrame" title="exatomic.exa.core.numerical.DataFrame"><code class="xref py py-class docutils literal notranslate"><span class="pre">DataFrame</span></code></a>,
+and <a class="reference internal" href="#exatomic.exa.core.numerical.Field" title="exatomic.exa.core.numerical.Field"><code class="xref py py-class docutils literal notranslate"><span class="pre">Field</span></code></a>. The purpose of these objects is to facilitate
+conversion of data into “traits” used in visualization and enforce relationships
+between data objects in a given container. Any of the objects provided by this
+module may be extended.</p>
+</section>
+<dl class="py class">
+<dt class="sig sig-object py" id="exatomic.exa.core.numerical.Numerical">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">exatomic.exa.core.numerical.</span></span><span class="sig-name descname"><span class="pre">Numerical</span></span><a class="reference internal" href="_modules/exatomic/exa/core/numerical.html#Numerical"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#exatomic.exa.core.numerical.Numerical" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/functions.html#object" title="(in Python v3.11)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
+<p>Base class for <a class="reference internal" href="#exatomic.exa.core.numerical.Series" title="exatomic.exa.core.numerical.Series"><code class="xref py py-class docutils literal notranslate"><span class="pre">Series</span></code></a>,
+<a class="reference internal" href="#exatomic.exa.core.numerical.DataFrame" title="exatomic.exa.core.numerical.DataFrame"><code class="xref py py-class docutils literal notranslate"><span class="pre">DataFrame</span></code></a>, and <code class="xref py py-class docutils literal notranslate"><span class="pre">Field</span></code>
+objects, providing default trait functionality and clean representations
+when present as part of containers.</p>
+<dl class="py property">
+<dt class="sig sig-object py" id="exatomic.exa.core.numerical.Numerical.log">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">log</span></span><a class="headerlink" href="#exatomic.exa.core.numerical.Numerical.log" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="exatomic.exa.core.numerical.Numerical.slice_naive">
+<span class="sig-name descname"><span class="pre">slice_naive</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">key</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/exatomic/exa/core/numerical.html#Numerical.slice_naive"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#exatomic.exa.core.numerical.Numerical.slice_naive" title="Permalink to this definition"></a></dt>
+<dd><p>Slice a data object based on its index, either by value (.loc) or
+position (.iloc).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>key</strong> – Single index value, slice, tuple, or list of indices/positionals</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><em>data</em> – Slice of self</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="exatomic.exa.core.numerical.BaseSeries">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">exatomic.exa.core.numerical.</span></span><span class="sig-name descname"><span class="pre">BaseSeries</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/exatomic/exa/core/numerical.html#BaseSeries"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#exatomic.exa.core.numerical.BaseSeries" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#exatomic.exa.core.numerical.Numerical" title="exatomic.exa.core.numerical.Numerical"><code class="xref py py-class docutils literal notranslate"><span class="pre">Numerical</span></code></a></p>
+<p>Base class for dense and sparse series objects (labeled arrays).</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="exatomic.exa.core.numerical.BaseSeries._sname">
+<span class="sig-name descname"><span class="pre">_sname</span></span><a class="headerlink" href="#exatomic.exa.core.numerical.BaseSeries._sname" title="Permalink to this definition"></a></dt>
+<dd><p>May have a required name (default None)</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.11)">str</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="exatomic.exa.core.numerical.BaseSeries._iname">
+<span class="sig-name descname"><span class="pre">_iname</span></span><a class="headerlink" href="#exatomic.exa.core.numerical.BaseSeries._iname" title="Permalink to this definition"></a></dt>
+<dd><p>May have a required index name</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.11)">str</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="exatomic.exa.core.numerical.BaseSeries._stype">
+<span class="sig-name descname"><span class="pre">_stype</span></span><a class="headerlink" href="#exatomic.exa.core.numerical.BaseSeries._stype" title="Permalink to this definition"></a></dt>
+<dd><p>May have a required value type</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/functions.html#type" title="(in Python v3.11)">type</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="exatomic.exa.core.numerical.BaseSeries._itype">
+<span class="sig-name descname"><span class="pre">_itype</span></span><a class="headerlink" href="#exatomic.exa.core.numerical.BaseSeries._itype" title="Permalink to this definition"></a></dt>
+<dd><p>May have a required index type</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/functions.html#type" title="(in Python v3.11)">type</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="exatomic.exa.core.numerical.BaseDataFrame">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">exatomic.exa.core.numerical.</span></span><span class="sig-name descname"><span class="pre">BaseDataFrame</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/exatomic/exa/core/numerical.html#BaseDataFrame"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#exatomic.exa.core.numerical.BaseDataFrame" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#exatomic.exa.core.numerical.Numerical" title="exatomic.exa.core.numerical.Numerical"><code class="xref py py-class docutils literal notranslate"><span class="pre">Numerical</span></code></a></p>
+<p>Base class for dense and sparse dataframe objects (labeled matrices).</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>If the _cardinal attribute is populated, it will automatically be added
+to the _categories and _columns attributes.</p>
+</div>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="exatomic.exa.core.numerical.BaseDataFrame._cardinal">
+<span class="sig-name descname"><span class="pre">_cardinal</span></span><a class="headerlink" href="#exatomic.exa.core.numerical.BaseDataFrame._cardinal" title="Permalink to this definition"></a></dt>
+<dd><p>Tuple of column name and raw type that acts as foreign key to index of another table</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.11)">tuple</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="exatomic.exa.core.numerical.BaseDataFrame._index">
+<span class="sig-name descname"><span class="pre">_index</span></span><a class="headerlink" href="#exatomic.exa.core.numerical.BaseDataFrame._index" title="Permalink to this definition"></a></dt>
+<dd><p>Name of index (may be used as foreign key in another table)</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.11)">str</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="exatomic.exa.core.numerical.BaseDataFrame._columns">
+<span class="sig-name descname"><span class="pre">_columns</span></span><a class="headerlink" href="#exatomic.exa.core.numerical.BaseDataFrame._columns" title="Permalink to this definition"></a></dt>
+<dd><p>Required columns</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.11)">list</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="exatomic.exa.core.numerical.BaseDataFrame._categories">
+<span class="sig-name descname"><span class="pre">_categories</span></span><a class="headerlink" href="#exatomic.exa.core.numerical.BaseDataFrame._categories" title="Permalink to this definition"></a></dt>
+<dd><p>Dict of column names, raw types that if present will be converted to and from categoricals automatically</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.11)">dict</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="exatomic.exa.core.numerical.BaseDataFrame.cardinal_groupby">
+<span class="sig-name descname"><span class="pre">cardinal_groupby</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/exatomic/exa/core/numerical.html#BaseDataFrame.cardinal_groupby"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#exatomic.exa.core.numerical.BaseDataFrame.cardinal_groupby" title="Permalink to this definition"></a></dt>
+<dd><p>Group this object on it cardinal dimension (_cardinal).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p><em>grpby</em> – Pandas groupby object (grouped on _cardinal)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="exatomic.exa.core.numerical.BaseDataFrame.slice_cardinal">
+<span class="sig-name descname"><span class="pre">slice_cardinal</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">key</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/exatomic/exa/core/numerical.html#BaseDataFrame.slice_cardinal"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#exatomic.exa.core.numerical.BaseDataFrame.slice_cardinal" title="Permalink to this definition"></a></dt>
+<dd><p>Get the slice of this object by the value or values of the cardinal
+dimension.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="exatomic.exa.core.numerical.Series">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">exatomic.exa.core.numerical.</span></span><span class="sig-name descname"><span class="pre">Series</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/exatomic/exa/core/numerical.html#Series"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#exatomic.exa.core.numerical.Series" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#exatomic.exa.core.numerical.BaseSeries" title="exatomic.exa.core.numerical.BaseSeries"><code class="xref py py-class docutils literal notranslate"><span class="pre">BaseSeries</span></code></a>, <code class="xref py py-class docutils literal notranslate"><span class="pre">Series</span></code></p>
+<p>A labeled array.</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="k">class</span> <span class="nc">MySeries</span><span class="p">(</span><span class="n">exatomic</span><span class="o">.</span><span class="n">exa</span><span class="o">.</span><span class="n">core</span><span class="o">.</span><span class="n">numerical</span><span class="o">.</span><span class="n">Series</span><span class="p">):</span>
+    <span class="n">_sname</span> <span class="o">=</span> <span class="s1">&#39;data&#39;</span>        <span class="c1"># series default name</span>
+    <span class="n">_iname</span> <span class="o">=</span> <span class="s1">&#39;data_index&#39;</span>  <span class="c1"># series default index name</span>
+
+<span class="n">seri</span> <span class="o">=</span> <span class="n">MySeries</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">rand</span><span class="p">(</span><span class="mi">10</span><span class="o">**</span><span class="mi">5</span><span class="p">))</span>
+</pre></div>
+</div>
+<dl class="py method">
+<dt class="sig sig-object py" id="exatomic.exa.core.numerical.Series.copy">
+<span class="sig-name descname"><span class="pre">copy</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/exatomic/exa/core/numerical.html#Series.copy"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#exatomic.exa.core.numerical.Series.copy" title="Permalink to this definition"></a></dt>
+<dd><p>Make a copy of this object.</p>
+<div class="admonition seealso">
+<p class="admonition-title">See also</p>
+<p>For arguments and description of behavior see <a class="reference external" href="http://pandas.pydata.org/pandas-docs/stable/generated/pandas.Series.copy.html">pandas docs</a>.</p>
+</div>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="exatomic.exa.core.numerical.DataFrame">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">exatomic.exa.core.numerical.</span></span><span class="sig-name descname"><span class="pre">DataFrame</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/exatomic/exa/core/numerical.html#DataFrame"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#exatomic.exa.core.numerical.DataFrame" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#exatomic.exa.core.numerical.BaseDataFrame" title="exatomic.exa.core.numerical.BaseDataFrame"><code class="xref py py-class docutils literal notranslate"><span class="pre">BaseDataFrame</span></code></a>, <code class="xref py py-class docutils literal notranslate"><span class="pre">DataFrame</span></code></p>
+<p>A data table</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="k">class</span> <span class="nc">MyDF</span><span class="p">(</span><span class="n">exatomic</span><span class="o">.</span><span class="n">exa</span><span class="o">.</span><span class="n">core</span><span class="o">.</span><span class="n">numerical</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">):</span>
+    <span class="n">_cardinal</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39;cardinal&#39;</span><span class="p">,</span> <span class="nb">int</span><span class="p">)</span>
+    <span class="n">_index</span> <span class="o">=</span> <span class="s1">&#39;mydf_index&#39;</span>
+    <span class="n">_columns</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;x&#39;</span><span class="p">,</span> <span class="s1">&#39;y&#39;</span><span class="p">,</span> <span class="s1">&#39;z&#39;</span><span class="p">,</span> <span class="s1">&#39;symbol&#39;</span><span class="p">]</span>
+    <span class="n">_categories</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;symbol&#39;</span><span class="p">:</span> <span class="nb">str</span><span class="p">}</span>
+</pre></div>
+</div>
+<dl class="py method">
+<dt class="sig sig-object py" id="exatomic.exa.core.numerical.DataFrame.copy">
+<span class="sig-name descname"><span class="pre">copy</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/exatomic/exa/core/numerical.html#DataFrame.copy"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#exatomic.exa.core.numerical.DataFrame.copy" title="Permalink to this definition"></a></dt>
+<dd><p>Make a copy of this object.</p>
+<div class="admonition seealso">
+<p class="admonition-title">See also</p>
+<p>For arguments and description of behavior see <a class="reference external" href="http://pandas.pydata.org/pandas-docs/stable/generated/pandas.Series.copy.html">pandas docs</a>.</p>
+</div>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="exatomic.exa.core.numerical.Field">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">exatomic.exa.core.numerical.</span></span><span class="sig-name descname"><span class="pre">Field</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/exatomic/exa/core/numerical.html#Field"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#exatomic.exa.core.numerical.Field" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#exatomic.exa.core.numerical.DataFrame" title="exatomic.exa.core.numerical.DataFrame"><code class="xref py py-class docutils literal notranslate"><span class="pre">DataFrame</span></code></a></p>
+<p>A field is defined by field data and field values. Field data defines the
+discretization of the field (i.e. its origin in a given space, number of
+steps/step spaceing, and endpoint for example). Field values can be scalar
+(series) and/or vector (dataframe) data defining the magnitude and/or direction
+at each given point.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>The convention for generating the discrete field data and ordering of
+the field values must be the same (e.g. discrete field points are
+generated x, y, then z and scalar field values are a series object
+ordered looping first over x then y, then z).</p>
+</div>
+<p>In addition to the <a class="reference internal" href="#exatomic.exa.core.numerical.DataFrame" title="exatomic.exa.core.numerical.DataFrame"><code class="xref py py-class docutils literal notranslate"><span class="pre">DataFrame</span></code></a> attributes, this object
+has the following:</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="exatomic.exa.core.numerical.Field.copy">
+<span class="sig-name descname"><span class="pre">copy</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/exatomic/exa/core/numerical.html#Field.copy"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#exatomic.exa.core.numerical.Field.copy" title="Permalink to this definition"></a></dt>
+<dd><p>Make a copy of this object.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Copies both field data and field values.</p>
+</div>
+<div class="admonition seealso">
+<p class="admonition-title">See also</p>
+<p>For arguments and description of behavior see <a class="reference external" href="http://pandas.pydata.org/pandas-docs/stable/generated/pandas.Series.copy.html">pandas docs</a>.</p>
+</div>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="exatomic.exa.core.numerical.Field.memory_usage">
+<span class="sig-name descname"><span class="pre">memory_usage</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/exatomic/exa/core/numerical.html#Field.memory_usage"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#exatomic.exa.core.numerical.Field.memory_usage" title="Permalink to this definition"></a></dt>
+<dd><p>Get the combined memory usage of the field data and field values.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="exatomic.exa.core.numerical.Field.slice_naive">
+<span class="sig-name descname"><span class="pre">slice_naive</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">key</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/exatomic/exa/core/numerical.html#Field.slice_naive"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#exatomic.exa.core.numerical.Field.slice_naive" title="Permalink to this definition"></a></dt>
+<dd><p>Naively (on index) slice the field data and values.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>key</strong> – Int, slice, or iterable to select data and values</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><em>field</em> – Sliced field object</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="exatomic.exa.core.numerical.Field3D">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">exatomic.exa.core.numerical.</span></span><span class="sig-name descname"><span class="pre">Field3D</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/exatomic/exa/core/numerical.html#Field3D"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#exatomic.exa.core.numerical.Field3D" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#exatomic.exa.core.numerical.Field" title="exatomic.exa.core.numerical.Field"><code class="xref py py-class docutils literal notranslate"><span class="pre">Field</span></code></a></p>
+<p>Dataframe for storing dimensions of a scalar or vector field of 3D space.</p>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Column</p></th>
+<th class="head"><p>Type</p></th>
+<th class="head"><p>Description</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>nx</p></td>
+<td><p>int</p></td>
+<td><p>number of grid points in x</p></td>
+</tr>
+<tr class="row-odd"><td><p>ny</p></td>
+<td><p>int</p></td>
+<td><p>number of grid points in y</p></td>
+</tr>
+<tr class="row-even"><td><p>nz</p></td>
+<td><p>int</p></td>
+<td><p>number of grid points in z</p></td>
+</tr>
+<tr class="row-odd"><td><p>ox</p></td>
+<td><p>float</p></td>
+<td><p>field origin point in x</p></td>
+</tr>
+<tr class="row-even"><td><p>oy</p></td>
+<td><p>float</p></td>
+<td><p>field origin point in y</p></td>
+</tr>
+<tr class="row-odd"><td><p>oz</p></td>
+<td><p>float</p></td>
+<td><p>field origin point in z</p></td>
+</tr>
+<tr class="row-even"><td><p>xi</p></td>
+<td><p>float</p></td>
+<td><p>First component in x</p></td>
+</tr>
+<tr class="row-odd"><td><p>xj</p></td>
+<td><p>float</p></td>
+<td><p>Second component in x</p></td>
+</tr>
+<tr class="row-even"><td><p>xk</p></td>
+<td><p>float</p></td>
+<td><p>Third component in x</p></td>
+</tr>
+<tr class="row-odd"><td><p>yi</p></td>
+<td><p>float</p></td>
+<td><p>First component in y</p></td>
+</tr>
+<tr class="row-even"><td><p>yj</p></td>
+<td><p>float</p></td>
+<td><p>Second component in y</p></td>
+</tr>
+<tr class="row-odd"><td><p>yk</p></td>
+<td><p>float</p></td>
+<td><p>Third component in y</p></td>
+</tr>
+<tr class="row-even"><td><p>zi</p></td>
+<td><p>float</p></td>
+<td><p>First component in z</p></td>
+</tr>
+<tr class="row-odd"><td><p>zj</p></td>
+<td><p>float</p></td>
+<td><p>Second component in z</p></td>
+</tr>
+<tr class="row-even"><td><p>zk</p></td>
+<td><p>float</p></td>
+<td><p>Third component in z</p></td>
+</tr>
+</tbody>
+</table>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Each field should be flattened into an N x 1 (scalar) or N x 3 (vector)
+series or dataframe respectively. The orientation of the flattening
+should have x as the outer loop and z values as the inner loop (for both
+cases). This is sometimes called C-major or C-style order, and has
+the last index changing the fastest and the first index changing the
+slowest.</p>
+</div>
+<div class="admonition seealso">
+<p class="admonition-title">See also</p>
+<p><a class="reference internal" href="#exatomic.exa.core.numerical.Field" title="exatomic.exa.core.numerical.Field"><code class="xref py py-class docutils literal notranslate"><span class="pre">Field</span></code></a></p>
+</div>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="exatomic.exa.core.numerical.check_key">
+<span class="sig-prename descclassname"><span class="pre">exatomic.exa.core.numerical.</span></span><span class="sig-name descname"><span class="pre">check_key</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data_object</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">key</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cardinal</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/exatomic/exa/core/numerical.html#check_key"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#exatomic.exa.core.numerical.check_key" title="Permalink to this definition"></a></dt>
+<dd><p>Update the value of an index key by matching values or getting positionals.</p>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="exatomic.exa.core.numerical.SparseDataFrame">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">exatomic.exa.core.numerical.</span></span><span class="sig-name descname"><span class="pre">SparseDataFrame</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/exatomic/exa/core/numerical.html#SparseDataFrame"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#exatomic.exa.core.numerical.SparseDataFrame" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#exatomic.exa.core.numerical.BaseDataFrame" title="exatomic.exa.core.numerical.BaseDataFrame"><code class="xref py py-class docutils literal notranslate"><span class="pre">BaseDataFrame</span></code></a></p>
+</dd></dl>
+
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="exatomic.exa.core.error.html" class="btn btn-neutral float-left" title="exatomic.exa.core.error module" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="exatomic.exa.util.html" class="btn btn-neutral float-right" title="exatomic.exa.util package" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright .
+      <span class="lastupdated">Last updated on Apr 21, 2023.
+      </span></p>
+  </div>
+
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

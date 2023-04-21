@@ -1,0 +1,728 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>exatomic.adf.output module &mdash; exatomic 0.6.0 documentation</title>
+      <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+        <script src="_static/doctools.js"></script>
+        <script src="_static/sphinx_highlight.js"></script>
+        <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="exatomic.adf.tape21 module" href="exatomic.adf.tape21.html" />
+    <link rel="prev" title="exatomic.adf.inputs module" href="exatomic.adf.inputs.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            exatomic
+              <img src="_static/logo.png" class="logo" alt="Logo"/>
+          </a>
+              <div class="version">
+                0.6.0
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Sitemap</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="install.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="started.html">Getting Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="contrib.html">Development</a></li>
+</ul>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="exatomic.html">exatomic package</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="exatomic.html#supported-software">Supported Software</a></li>
+<li class="toctree-l2"><a class="reference internal" href="exatomic.html#exatomic.func_log"><code class="docutils literal notranslate"><span class="pre">func_log()</span></code></a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="exatomic.html#subpackages">Subpackages</a><ul class="current">
+<li class="toctree-l3 current"><a class="reference internal" href="exatomic.adf.html">exatomic.adf package</a><ul class="current">
+<li class="toctree-l4"><a class="reference internal" href="exatomic.adf.html#subpackages">Subpackages</a></li>
+<li class="toctree-l4 current"><a class="reference internal" href="exatomic.adf.html#submodules">Submodules</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.algorithms.html">exatomic.algorithms package</a></li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.core.html">exatomic.core package</a></li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.exa.html">exatomic.exa package</a></li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.gaussian.html">exatomic.gaussian package</a></li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.interfaces.html">exatomic.interfaces package</a></li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.molcas.html">exatomic.molcas package</a></li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.nbo.html">exatomic.nbo package</a></li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.nwchem.html">exatomic.nwchem package</a></li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.plotter.html">exatomic.plotter package</a></li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.qchem.html">exatomic.qchem package</a></li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.qe.html">exatomic.qe package</a></li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.util.html">exatomic.util package</a></li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.widgets.html">exatomic.widgets package</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="exatomic.html#submodules">Submodules</a></li>
+</ul>
+</li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">exatomic</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="exatomic.html">exatomic package</a></li>
+          <li class="breadcrumb-item"><a href="exatomic.adf.html">exatomic.adf package</a></li>
+      <li class="breadcrumb-item active">exatomic.adf.output module</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/exatomic.adf.output.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="module-exatomic.adf.output">
+<span id="exatomic-adf-output-module"></span><h1>exatomic.adf.output module<a class="headerlink" href="#module-exatomic.adf.output" title="Permalink to this heading"></a></h1>
+<section id="adf-composite-output">
+<h2>ADF Composite Output<a class="headerlink" href="#adf-composite-output" title="Permalink to this heading"></a></h2>
+<p>This module provides the primary (user facing) output parser.</p>
+</section>
+<dl class="py class">
+<dt class="sig sig-object py" id="exatomic.adf.output.OutMeta">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">exatomic.adf.output.</span></span><span class="sig-name descname"><span class="pre">OutMeta</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bases</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">clsdict</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/exatomic/adf/output.html#OutMeta"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#exatomic.adf.output.OutMeta" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="exatomic.exa.core.container.html#exatomic.exa.core.container.TypedMeta" title="exatomic.exa.core.container.TypedMeta"><code class="xref py py-class docutils literal notranslate"><span class="pre">TypedMeta</span></code></a></p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="exatomic.adf.output.OutMeta.atom">
+<span class="sig-name descname"><span class="pre">atom</span></span><a class="headerlink" href="#exatomic.adf.output.OutMeta.atom" title="Permalink to this definition"></a></dt>
+<dd><p>alias of <a class="reference internal" href="exatomic.core.atom.html#exatomic.core.atom.Atom" title="exatomic.core.atom.Atom"><code class="xref py py-class docutils literal notranslate"><span class="pre">Atom</span></code></a></p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="exatomic.adf.output.OutMeta.basis_set">
+<span class="sig-name descname"><span class="pre">basis_set</span></span><a class="headerlink" href="#exatomic.adf.output.OutMeta.basis_set" title="Permalink to this definition"></a></dt>
+<dd><p>alias of <a class="reference internal" href="exatomic.core.basis.html#exatomic.core.basis.BasisSet" title="exatomic.core.basis.BasisSet"><code class="xref py py-class docutils literal notranslate"><span class="pre">BasisSet</span></code></a></p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="exatomic.adf.output.OutMeta.basis_set_order">
+<span class="sig-name descname"><span class="pre">basis_set_order</span></span><a class="headerlink" href="#exatomic.adf.output.OutMeta.basis_set_order" title="Permalink to this definition"></a></dt>
+<dd><p>alias of <a class="reference internal" href="exatomic.core.basis.html#exatomic.core.basis.BasisSetOrder" title="exatomic.core.basis.BasisSetOrder"><code class="xref py py-class docutils literal notranslate"><span class="pre">BasisSetOrder</span></code></a></p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="exatomic.adf.output.OutMeta.orbital">
+<span class="sig-name descname"><span class="pre">orbital</span></span><a class="headerlink" href="#exatomic.adf.output.OutMeta.orbital" title="Permalink to this definition"></a></dt>
+<dd><p>alias of <a class="reference internal" href="exatomic.core.orbital.html#exatomic.core.orbital.Orbital" title="exatomic.core.orbital.Orbital"><code class="xref py py-class docutils literal notranslate"><span class="pre">Orbital</span></code></a></p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="exatomic.adf.output.OutMeta.contribution">
+<span class="sig-name descname"><span class="pre">contribution</span></span><a class="headerlink" href="#exatomic.adf.output.OutMeta.contribution" title="Permalink to this definition"></a></dt>
+<dd><p>alias of <code class="xref py py-class docutils literal notranslate"><span class="pre">DataFrame</span></code></p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="exatomic.adf.output.OutMeta.excitation">
+<span class="sig-name descname"><span class="pre">excitation</span></span><a class="headerlink" href="#exatomic.adf.output.OutMeta.excitation" title="Permalink to this definition"></a></dt>
+<dd><p>alias of <a class="reference internal" href="exatomic.core.orbital.html#exatomic.core.orbital.Excitation" title="exatomic.core.orbital.Excitation"><code class="xref py py-class docutils literal notranslate"><span class="pre">Excitation</span></code></a></p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="exatomic.adf.output.OutMeta.momatrix">
+<span class="sig-name descname"><span class="pre">momatrix</span></span><a class="headerlink" href="#exatomic.adf.output.OutMeta.momatrix" title="Permalink to this definition"></a></dt>
+<dd><p>alias of <a class="reference internal" href="exatomic.core.orbital.html#exatomic.core.orbital.MOMatrix" title="exatomic.core.orbital.MOMatrix"><code class="xref py py-class docutils literal notranslate"><span class="pre">MOMatrix</span></code></a></p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="exatomic.adf.output.OutMeta.sphr_momatrix">
+<span class="sig-name descname"><span class="pre">sphr_momatrix</span></span><a class="headerlink" href="#exatomic.adf.output.OutMeta.sphr_momatrix" title="Permalink to this definition"></a></dt>
+<dd><p>alias of <a class="reference internal" href="exatomic.core.orbital.html#exatomic.core.orbital.MOMatrix" title="exatomic.core.orbital.MOMatrix"><code class="xref py py-class docutils literal notranslate"><span class="pre">MOMatrix</span></code></a></p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="exatomic.adf.output.OutMeta.gradient">
+<span class="sig-name descname"><span class="pre">gradient</span></span><a class="headerlink" href="#exatomic.adf.output.OutMeta.gradient" title="Permalink to this definition"></a></dt>
+<dd><p>alias of <a class="reference internal" href="exatomic.core.gradient.html#exatomic.core.gradient.Gradient" title="exatomic.core.gradient.Gradient"><code class="xref py py-class docutils literal notranslate"><span class="pre">Gradient</span></code></a></p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="exatomic.adf.output.OutMeta.frequency">
+<span class="sig-name descname"><span class="pre">frequency</span></span><a class="headerlink" href="#exatomic.adf.output.OutMeta.frequency" title="Permalink to this definition"></a></dt>
+<dd><p>alias of <a class="reference internal" href="exatomic.core.atom.html#exatomic.core.atom.Frequency" title="exatomic.core.atom.Frequency"><code class="xref py py-class docutils literal notranslate"><span class="pre">Frequency</span></code></a></p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="exatomic.adf.output.OutMeta.nmr_shielding">
+<span class="sig-name descname"><span class="pre">nmr_shielding</span></span><a class="headerlink" href="#exatomic.adf.output.OutMeta.nmr_shielding" title="Permalink to this definition"></a></dt>
+<dd><p>alias of <a class="reference internal" href="exatomic.core.tensor.html#exatomic.core.tensor.NMRShielding" title="exatomic.core.tensor.NMRShielding"><code class="xref py py-class docutils literal notranslate"><span class="pre">NMRShielding</span></code></a></p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="exatomic.adf.output.OutMeta.j_coupling">
+<span class="sig-name descname"><span class="pre">j_coupling</span></span><a class="headerlink" href="#exatomic.adf.output.OutMeta.j_coupling" title="Permalink to this definition"></a></dt>
+<dd><p>alias of <a class="reference internal" href="exatomic.core.tensor.html#exatomic.core.tensor.JCoupling" title="exatomic.core.tensor.JCoupling"><code class="xref py py-class docutils literal notranslate"><span class="pre">JCoupling</span></code></a></p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="exatomic.adf.output.OutMeta.electric_dipole">
+<span class="sig-name descname"><span class="pre">electric_dipole</span></span><a class="headerlink" href="#exatomic.adf.output.OutMeta.electric_dipole" title="Permalink to this definition"></a></dt>
+<dd><p>alias of <code class="xref py py-class docutils literal notranslate"><span class="pre">DataFrame</span></code></p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="exatomic.adf.output.OutMeta.magnetic_dipole">
+<span class="sig-name descname"><span class="pre">magnetic_dipole</span></span><a class="headerlink" href="#exatomic.adf.output.OutMeta.magnetic_dipole" title="Permalink to this definition"></a></dt>
+<dd><p>alias of <code class="xref py py-class docutils literal notranslate"><span class="pre">DataFrame</span></code></p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="exatomic.adf.output.NMR">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">exatomic.adf.output.</span></span><span class="sig-name descname"><span class="pre">NMR</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/exatomic/adf/output.html#NMR"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#exatomic.adf.output.NMR" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="exatomic.adf.editor.html#exatomic.adf.editor.Editor" title="exatomic.adf.editor.Editor"><code class="xref py py-class docutils literal notranslate"><span class="pre">Editor</span></code></a></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="exatomic.adf.output.NMR.parse_atom">
+<span class="sig-name descname"><span class="pre">parse_atom</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/exatomic/adf/output.html#NMR.parse_atom"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#exatomic.adf.output.NMR.parse_atom" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="exatomic.adf.output.NMR.parse_nmr_shielding">
+<span class="sig-name descname"><span class="pre">parse_nmr_shielding</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/exatomic/adf/output.html#NMR.parse_nmr_shielding"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#exatomic.adf.output.NMR.parse_nmr_shielding" title="Permalink to this definition"></a></dt>
+<dd><p>Parse the NMR shielding in the cartesian axis represntation.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="exatomic.adf.output.NMR.parse_j_coupling">
+<span class="sig-name descname"><span class="pre">parse_j_coupling</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">cartesian</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/exatomic/adf/output.html#NMR.parse_j_coupling"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#exatomic.adf.output.NMR.parse_j_coupling" title="Permalink to this definition"></a></dt>
+<dd><p>Parse the J Coupling matrices.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>cartesian</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.11)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">bool</span></code></a>, optional) – Parameter to parse the
+tensors in the Cartesian axis reprentation. Set to
+<cite>False</cite> for the pricipal axis representation.
+Defaults to <cite>True</cite>.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="exatomic.adf.output.NMR.atom">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">atom</span></span><a class="headerlink" href="#exatomic.adf.output.NMR.atom" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="exatomic.adf.output.NMR.basis_set">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">basis_set</span></span><a class="headerlink" href="#exatomic.adf.output.NMR.basis_set" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="exatomic.adf.output.NMR.basis_set_order">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">basis_set_order</span></span><a class="headerlink" href="#exatomic.adf.output.NMR.basis_set_order" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="exatomic.adf.output.NMR.contribution">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">contribution</span></span><a class="headerlink" href="#exatomic.adf.output.NMR.contribution" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="exatomic.adf.output.NMR.electric_dipole">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">electric_dipole</span></span><a class="headerlink" href="#exatomic.adf.output.NMR.electric_dipole" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="exatomic.adf.output.NMR.excitation">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">excitation</span></span><a class="headerlink" href="#exatomic.adf.output.NMR.excitation" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="exatomic.adf.output.NMR.frequency">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">frequency</span></span><a class="headerlink" href="#exatomic.adf.output.NMR.frequency" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="exatomic.adf.output.NMR.gradient">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">gradient</span></span><a class="headerlink" href="#exatomic.adf.output.NMR.gradient" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="exatomic.adf.output.NMR.j_coupling">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">j_coupling</span></span><a class="headerlink" href="#exatomic.adf.output.NMR.j_coupling" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="exatomic.adf.output.NMR.magnetic_dipole">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">magnetic_dipole</span></span><a class="headerlink" href="#exatomic.adf.output.NMR.magnetic_dipole" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="exatomic.adf.output.NMR.momatrix">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">momatrix</span></span><a class="headerlink" href="#exatomic.adf.output.NMR.momatrix" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="exatomic.adf.output.NMR.nmr_shielding">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">nmr_shielding</span></span><a class="headerlink" href="#exatomic.adf.output.NMR.nmr_shielding" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="exatomic.adf.output.NMR.orbital">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">orbital</span></span><a class="headerlink" href="#exatomic.adf.output.NMR.orbital" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="exatomic.adf.output.NMR.sphr_momatrix">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">sphr_momatrix</span></span><a class="headerlink" href="#exatomic.adf.output.NMR.sphr_momatrix" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="exatomic.adf.output.ADF">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">exatomic.adf.output.</span></span><span class="sig-name descname"><span class="pre">ADF</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/exatomic/adf/output.html#ADF"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#exatomic.adf.output.ADF" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="exatomic.adf.editor.html#exatomic.adf.editor.Editor" title="exatomic.adf.editor.Editor"><code class="xref py py-class docutils literal notranslate"><span class="pre">Editor</span></code></a></p>
+<p>The ADF output parser.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="exatomic.adf.output.ADF.parse_atom">
+<span class="sig-name descname"><span class="pre">parse_atom</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/exatomic/adf/output.html#ADF.parse_atom"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#exatomic.adf.output.ADF.parse_atom" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="exatomic.adf.output.ADF.parse_basis_set">
+<span class="sig-name descname"><span class="pre">parse_basis_set</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/exatomic/adf/output.html#ADF.parse_basis_set"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#exatomic.adf.output.ADF.parse_basis_set" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="exatomic.adf.output.ADF.parse_basis_set_order">
+<span class="sig-name descname"><span class="pre">parse_basis_set_order</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/exatomic/adf/output.html#ADF.parse_basis_set_order"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#exatomic.adf.output.ADF.parse_basis_set_order" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="exatomic.adf.output.ADF.parse_orbital">
+<span class="sig-name descname"><span class="pre">parse_orbital</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/exatomic/adf/output.html#ADF.parse_orbital"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#exatomic.adf.output.ADF.parse_orbital" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="exatomic.adf.output.ADF.parse_contribution">
+<span class="sig-name descname"><span class="pre">parse_contribution</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/exatomic/adf/output.html#ADF.parse_contribution"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#exatomic.adf.output.ADF.parse_contribution" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="exatomic.adf.output.ADF.parse_excitation">
+<span class="sig-name descname"><span class="pre">parse_excitation</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/exatomic/adf/output.html#ADF.parse_excitation"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#exatomic.adf.output.ADF.parse_excitation" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="exatomic.adf.output.ADF.parse_momatrix">
+<span class="sig-name descname"><span class="pre">parse_momatrix</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/exatomic/adf/output.html#ADF.parse_momatrix"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#exatomic.adf.output.ADF.parse_momatrix" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="exatomic.adf.output.ADF.parse_sphr_momatrix">
+<span class="sig-name descname"><span class="pre">parse_sphr_momatrix</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">verbose</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/exatomic/adf/output.html#ADF.parse_sphr_momatrix"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#exatomic.adf.output.ADF.parse_sphr_momatrix" title="Permalink to this definition"></a></dt>
+<dd><p>Parser localized momatrix (if present).</p>
+<p>If the <code class="docutils literal notranslate"><span class="pre">locorb</span></code> keyword is used in ADF, an additional momatrix is
+printed after localization is performed. Parsing this table allows
+for visualization of these orbitals.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>The attr <code class="xref py py-attr docutils literal notranslate"><span class="pre">_re_loc_mo</span></code> is used for parsing this
+section.</p>
+</div>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="exatomic.adf.output.ADF.parse_gradient">
+<span class="sig-name descname"><span class="pre">parse_gradient</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/exatomic/adf/output.html#ADF.parse_gradient"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#exatomic.adf.output.ADF.parse_gradient" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="exatomic.adf.output.ADF.parse_frequency">
+<span class="sig-name descname"><span class="pre">parse_frequency</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/exatomic/adf/output.html#ADF.parse_frequency"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#exatomic.adf.output.ADF.parse_frequency" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="exatomic.adf.output.ADF.atom">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">atom</span></span><a class="headerlink" href="#exatomic.adf.output.ADF.atom" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="exatomic.adf.output.ADF.basis_set">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">basis_set</span></span><a class="headerlink" href="#exatomic.adf.output.ADF.basis_set" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="exatomic.adf.output.ADF.basis_set_order">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">basis_set_order</span></span><a class="headerlink" href="#exatomic.adf.output.ADF.basis_set_order" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="exatomic.adf.output.ADF.contribution">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">contribution</span></span><a class="headerlink" href="#exatomic.adf.output.ADF.contribution" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="exatomic.adf.output.ADF.electric_dipole">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">electric_dipole</span></span><a class="headerlink" href="#exatomic.adf.output.ADF.electric_dipole" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="exatomic.adf.output.ADF.excitation">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">excitation</span></span><a class="headerlink" href="#exatomic.adf.output.ADF.excitation" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="exatomic.adf.output.ADF.frequency">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">frequency</span></span><a class="headerlink" href="#exatomic.adf.output.ADF.frequency" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="exatomic.adf.output.ADF.gradient">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">gradient</span></span><a class="headerlink" href="#exatomic.adf.output.ADF.gradient" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="exatomic.adf.output.ADF.j_coupling">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">j_coupling</span></span><a class="headerlink" href="#exatomic.adf.output.ADF.j_coupling" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="exatomic.adf.output.ADF.magnetic_dipole">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">magnetic_dipole</span></span><a class="headerlink" href="#exatomic.adf.output.ADF.magnetic_dipole" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="exatomic.adf.output.ADF.momatrix">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">momatrix</span></span><a class="headerlink" href="#exatomic.adf.output.ADF.momatrix" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="exatomic.adf.output.ADF.nmr_shielding">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">nmr_shielding</span></span><a class="headerlink" href="#exatomic.adf.output.ADF.nmr_shielding" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="exatomic.adf.output.ADF.orbital">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">orbital</span></span><a class="headerlink" href="#exatomic.adf.output.ADF.orbital" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="exatomic.adf.output.ADF.sphr_momatrix">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">sphr_momatrix</span></span><a class="headerlink" href="#exatomic.adf.output.ADF.sphr_momatrix" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="exatomic.adf.output.AMS">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">exatomic.adf.output.</span></span><span class="sig-name descname"><span class="pre">AMS</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/exatomic/adf/output.html#AMS"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#exatomic.adf.output.AMS" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="exatomic.adf.editor.html#exatomic.adf.editor.Editor" title="exatomic.adf.editor.Editor"><code class="xref py py-class docutils literal notranslate"><span class="pre">Editor</span></code></a></p>
+<p>The ADF output parser for versions newer than 2019</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="exatomic.adf.output.AMS.parse_atom">
+<span class="sig-name descname"><span class="pre">parse_atom</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/exatomic/adf/output.html#AMS.parse_atom"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#exatomic.adf.output.AMS.parse_atom" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="exatomic.adf.output.AMS.parse_frequency">
+<span class="sig-name descname"><span class="pre">parse_frequency</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/exatomic/adf/output.html#AMS.parse_frequency"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#exatomic.adf.output.AMS.parse_frequency" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="exatomic.adf.output.AMS.parse_gradient">
+<span class="sig-name descname"><span class="pre">parse_gradient</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/exatomic/adf/output.html#AMS.parse_gradient"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#exatomic.adf.output.AMS.parse_gradient" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="exatomic.adf.output.AMS.parse_excitation">
+<span class="sig-name descname"><span class="pre">parse_excitation</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/exatomic/adf/output.html#AMS.parse_excitation"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#exatomic.adf.output.AMS.parse_excitation" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="exatomic.adf.output.AMS.parse_electric_dipole">
+<span class="sig-name descname"><span class="pre">parse_electric_dipole</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/exatomic/adf/output.html#AMS.parse_electric_dipole"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#exatomic.adf.output.AMS.parse_electric_dipole" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="exatomic.adf.output.AMS.parse_magnetic_dipole">
+<span class="sig-name descname"><span class="pre">parse_magnetic_dipole</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/exatomic/adf/output.html#AMS.parse_magnetic_dipole"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#exatomic.adf.output.AMS.parse_magnetic_dipole" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="exatomic.adf.output.AMS.atom">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">atom</span></span><a class="headerlink" href="#exatomic.adf.output.AMS.atom" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="exatomic.adf.output.AMS.basis_set">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">basis_set</span></span><a class="headerlink" href="#exatomic.adf.output.AMS.basis_set" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="exatomic.adf.output.AMS.basis_set_order">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">basis_set_order</span></span><a class="headerlink" href="#exatomic.adf.output.AMS.basis_set_order" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="exatomic.adf.output.AMS.contribution">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">contribution</span></span><a class="headerlink" href="#exatomic.adf.output.AMS.contribution" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="exatomic.adf.output.AMS.electric_dipole">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">electric_dipole</span></span><a class="headerlink" href="#exatomic.adf.output.AMS.electric_dipole" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="exatomic.adf.output.AMS.excitation">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">excitation</span></span><a class="headerlink" href="#exatomic.adf.output.AMS.excitation" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="exatomic.adf.output.AMS.frequency">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">frequency</span></span><a class="headerlink" href="#exatomic.adf.output.AMS.frequency" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="exatomic.adf.output.AMS.gradient">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">gradient</span></span><a class="headerlink" href="#exatomic.adf.output.AMS.gradient" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="exatomic.adf.output.AMS.j_coupling">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">j_coupling</span></span><a class="headerlink" href="#exatomic.adf.output.AMS.j_coupling" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="exatomic.adf.output.AMS.magnetic_dipole">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">magnetic_dipole</span></span><a class="headerlink" href="#exatomic.adf.output.AMS.magnetic_dipole" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="exatomic.adf.output.AMS.momatrix">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">momatrix</span></span><a class="headerlink" href="#exatomic.adf.output.AMS.momatrix" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="exatomic.adf.output.AMS.nmr_shielding">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">nmr_shielding</span></span><a class="headerlink" href="#exatomic.adf.output.AMS.nmr_shielding" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="exatomic.adf.output.AMS.orbital">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">orbital</span></span><a class="headerlink" href="#exatomic.adf.output.AMS.orbital" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="exatomic.adf.output.AMS.sphr_momatrix">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">sphr_momatrix</span></span><a class="headerlink" href="#exatomic.adf.output.AMS.sphr_momatrix" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="exatomic.adf.output.Output">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">exatomic.adf.output.</span></span><span class="sig-name descname"><span class="pre">Output</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">file</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/exatomic/adf/output.html#Output"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#exatomic.adf.output.Output" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="exatomic.adf.editor.html#exatomic.adf.editor.Editor" title="exatomic.adf.editor.Editor"><code class="xref py py-class docutils literal notranslate"><span class="pre">Editor</span></code></a></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="exatomic.adf.output.Output.parse_atom">
+<span class="sig-name descname"><span class="pre">parse_atom</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/exatomic/adf/output.html#Output.parse_atom"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#exatomic.adf.output.Output.parse_atom" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="exatomic.adf.output.Output.parse_basis_set">
+<span class="sig-name descname"><span class="pre">parse_basis_set</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/exatomic/adf/output.html#Output.parse_basis_set"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#exatomic.adf.output.Output.parse_basis_set" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="exatomic.adf.output.Output.parse_basis_set_order">
+<span class="sig-name descname"><span class="pre">parse_basis_set_order</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/exatomic/adf/output.html#Output.parse_basis_set_order"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#exatomic.adf.output.Output.parse_basis_set_order" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="exatomic.adf.output.Output.parse_orbital">
+<span class="sig-name descname"><span class="pre">parse_orbital</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/exatomic/adf/output.html#Output.parse_orbital"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#exatomic.adf.output.Output.parse_orbital" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="exatomic.adf.output.Output.parse_contribution">
+<span class="sig-name descname"><span class="pre">parse_contribution</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/exatomic/adf/output.html#Output.parse_contribution"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#exatomic.adf.output.Output.parse_contribution" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="exatomic.adf.output.Output.parse_excitation">
+<span class="sig-name descname"><span class="pre">parse_excitation</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/exatomic/adf/output.html#Output.parse_excitation"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#exatomic.adf.output.Output.parse_excitation" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="exatomic.adf.output.Output.parse_momatrix">
+<span class="sig-name descname"><span class="pre">parse_momatrix</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/exatomic/adf/output.html#Output.parse_momatrix"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#exatomic.adf.output.Output.parse_momatrix" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="exatomic.adf.output.Output.parse_sphr_momatrix">
+<span class="sig-name descname"><span class="pre">parse_sphr_momatrix</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/exatomic/adf/output.html#Output.parse_sphr_momatrix"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#exatomic.adf.output.Output.parse_sphr_momatrix" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="exatomic.adf.output.Output.parse_gradient">
+<span class="sig-name descname"><span class="pre">parse_gradient</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/exatomic/adf/output.html#Output.parse_gradient"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#exatomic.adf.output.Output.parse_gradient" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="exatomic.adf.output.Output.parse_frequency">
+<span class="sig-name descname"><span class="pre">parse_frequency</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/exatomic/adf/output.html#Output.parse_frequency"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#exatomic.adf.output.Output.parse_frequency" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="exatomic.adf.output.Output.parse_nmr_shielding">
+<span class="sig-name descname"><span class="pre">parse_nmr_shielding</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/exatomic/adf/output.html#Output.parse_nmr_shielding"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#exatomic.adf.output.Output.parse_nmr_shielding" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="exatomic.adf.output.Output.parse_j_coupling">
+<span class="sig-name descname"><span class="pre">parse_j_coupling</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/exatomic/adf/output.html#Output.parse_j_coupling"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#exatomic.adf.output.Output.parse_j_coupling" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="exatomic.adf.output.Output.parse_electric_dipole">
+<span class="sig-name descname"><span class="pre">parse_electric_dipole</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/exatomic/adf/output.html#Output.parse_electric_dipole"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#exatomic.adf.output.Output.parse_electric_dipole" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="exatomic.adf.output.Output.parse_magnetic_dipole">
+<span class="sig-name descname"><span class="pre">parse_magnetic_dipole</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/exatomic/adf/output.html#Output.parse_magnetic_dipole"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#exatomic.adf.output.Output.parse_magnetic_dipole" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="exatomic.adf.output.Output.atom">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">atom</span></span><a class="headerlink" href="#exatomic.adf.output.Output.atom" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="exatomic.adf.output.Output.basis_set">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">basis_set</span></span><a class="headerlink" href="#exatomic.adf.output.Output.basis_set" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="exatomic.adf.output.Output.basis_set_order">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">basis_set_order</span></span><a class="headerlink" href="#exatomic.adf.output.Output.basis_set_order" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="exatomic.adf.output.Output.contribution">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">contribution</span></span><a class="headerlink" href="#exatomic.adf.output.Output.contribution" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="exatomic.adf.output.Output.electric_dipole">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">electric_dipole</span></span><a class="headerlink" href="#exatomic.adf.output.Output.electric_dipole" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="exatomic.adf.output.Output.excitation">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">excitation</span></span><a class="headerlink" href="#exatomic.adf.output.Output.excitation" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="exatomic.adf.output.Output.frequency">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">frequency</span></span><a class="headerlink" href="#exatomic.adf.output.Output.frequency" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="exatomic.adf.output.Output.gradient">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">gradient</span></span><a class="headerlink" href="#exatomic.adf.output.Output.gradient" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="exatomic.adf.output.Output.j_coupling">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">j_coupling</span></span><a class="headerlink" href="#exatomic.adf.output.Output.j_coupling" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="exatomic.adf.output.Output.magnetic_dipole">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">magnetic_dipole</span></span><a class="headerlink" href="#exatomic.adf.output.Output.magnetic_dipole" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="exatomic.adf.output.Output.momatrix">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">momatrix</span></span><a class="headerlink" href="#exatomic.adf.output.Output.momatrix" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="exatomic.adf.output.Output.nmr_shielding">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">nmr_shielding</span></span><a class="headerlink" href="#exatomic.adf.output.Output.nmr_shielding" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="exatomic.adf.output.Output.orbital">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">orbital</span></span><a class="headerlink" href="#exatomic.adf.output.Output.orbital" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="exatomic.adf.output.Output.sphr_momatrix">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">sphr_momatrix</span></span><a class="headerlink" href="#exatomic.adf.output.Output.sphr_momatrix" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="exatomic.adf.inputs.html" class="btn btn-neutral float-left" title="exatomic.adf.inputs module" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="exatomic.adf.tape21.html" class="btn btn-neutral float-right" title="exatomic.adf.tape21 module" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright .
+      <span class="lastupdated">Last updated on Apr 21, 2023.
+      </span></p>
+  </div>
+
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

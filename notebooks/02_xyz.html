@@ -1,0 +1,804 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>XYZ Example &mdash; exatomic 0.6.0 documentation</title>
+      <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/nbsphinx-code-cells.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+        <script src="../_static/doctools.js"></script>
+        <script src="../_static/sphinx_highlight.js"></script>
+        <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+        <script>window.MathJax = {"tex": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true}, "options": {"ignoreHtmlClass": "tex2jax_ignore|mathjax_ignore|document", "processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
+        <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Visualize Orbitals" href="03_orbitals.html" />
+    <link rel="prev" title="Welcome to exatomic" href="01_basics.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            exatomic
+              <img src="../_static/logo.png" class="logo" alt="Logo"/>
+          </a>
+              <div class="version">
+                0.6.0
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Sitemap</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../install.html">Installation</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../started.html">Getting Started</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="00_index.html">An Introduction to exatomic</a></li>
+<li class="toctree-l2"><a class="reference internal" href="01_basics.html">Welcome to exatomic</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">XYZ Example</a></li>
+<li class="toctree-l2"><a class="reference internal" href="03_orbitals.html">Visualize Orbitals</a></li>
+<li class="toctree-l2"><a class="reference internal" href="04_cluster_extraction.html">Extraction of cluster geometries from a trajectory</a></li>
+<li class="toctree-l2"><a class="reference internal" href="nwchem.html">NWChem</a></li>
+<li class="toctree-l2"><a class="reference internal" href="qe.html">Support for Quantum ESPRESSO in exatomic</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../contrib.html">Development</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../exatomic.html">exatomic package</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">exatomic</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../started.html">Getting Started</a></li>
+      <li class="breadcrumb-item active">XYZ Example</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/notebooks/02_xyz.ipynb.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="XYZ-Example">
+<h1>XYZ Example<a class="headerlink" href="#XYZ-Example" title="Permalink to this heading"></a></h1>
+<p>In this tutorial we load an XYZ trajectory.</p>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[1]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="o">%</span><span class="k">matplotlib</span> inline
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">exatomic</span>
+<span class="kn">import</span> <span class="nn">bz2</span><span class="o">,</span> <span class="nn">os</span>
+<span class="k">if</span> <span class="ow">not</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">bz2</span><span class="p">,</span> <span class="s2">&quot;open&quot;</span><span class="p">):</span>
+    <span class="n">bz2</span><span class="o">.</span><span class="n">open</span> <span class="o">=</span> <span class="n">bz2</span><span class="o">.</span><span class="n">BZ2File</span>
+</pre></div>
+</div>
+</div>
+<ul class="simple">
+<li><p>The extra stuff, bz2, is due to the fact that the data is compressed</p></li>
+<li><p>Typically, the syntax is as simple as <strong>exatomic.XYZ(“myfile.xyz”)</strong></p></li>
+</ul>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[3]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">xyz</span> <span class="o">=</span> <span class="n">exatomic</span><span class="o">.</span><span class="n">XYZ</span><span class="p">(</span><span class="n">exatomic</span><span class="o">.</span><span class="n">base</span><span class="o">.</span><span class="n">resource</span><span class="p">(</span><span class="s2">&quot;H2O.traj.xyz&quot;</span><span class="p">))</span>
+</pre></div>
+</div>
+</div>
+<ul class="simple">
+<li><p>The xyz object is an <strong>Editor</strong></p></li>
+<li><p><strong>Editors</strong> are representations of text files on disk</p></li>
+<li><p>These objects facilitate parsing of output data</p></li>
+</ul>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[4]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">xyz</span><span class="o">.</span><span class="n">head</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+     0: 192
+     1: frame: 500
+     2: O   10.28508956   8.14460938   13.52695208
+     3: O   11.35249854   11.35175769   9.48063013
+     4: O   12.13309196   8.16159606   4.40491549
+     5: O   13.08212337   0.82074230   8.49852496
+     6: O   11.61851733   6.25548970   6.55479391
+     7: O   9.43623192   4.76428163   2.98272836
+     8: O   13.09122527 -0.60466753   1.95264245
+     9: O   12.99597287   5.17908995   0.11265448
+</pre></div></div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[5]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">xyz</span><span class="o">.</span><span class="n">tail</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+227941: H   6.04990327   3.24458779   2.04330157
+227942: H   3.57922006 -0.35624345 -2.44128726
+227943: H -3.88712344   4.80109139   4.02831396
+227944: H -1.25442119   5.64846732   2.59449545
+227945: H   5.15913457   2.78450812   10.49242229
+227946: H   3.73656644   16.44876653   12.33820213
+227947: H   1.84052508   5.15303842   9.75342242
+227948: H -0.71357806   4.52787046   1.57043161
+227949: H   3.75299748   1.08580857   6.38535047
+
+</pre></div></div>
+</div>
+<ul class="simple">
+<li><p>We expect 1175 <strong>frames</strong> (remember that <strong>frames</strong> are states - in this case denoting steps in time)</p></li>
+</ul>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[6]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="nb">len</span><span class="p">(</span><span class="n">xyz</span><span class="p">)</span> <span class="o">//</span> <span class="p">(</span><span class="mi">192</span> <span class="o">+</span> <span class="mi">2</span><span class="p">)</span>     <span class="c1"># 192 atoms per frame plus 2 for the xyz file syntax</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[6]:
+</pre></div>
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+1175
+</pre></div></div>
+</div>
+<ul class="simple">
+<li><p>Parsing is performed automatically if the attribute of interest is requested</p></li>
+</ul>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[7]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">xyz</span><span class="o">.</span><span class="n">atom</span><span class="o">.</span><span class="n">head</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[7]:
+</pre></div>
+</div>
+<div class="output_area rendered_html docutils container">
+<div>
+<style scoped>
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>symbol</th>
+      <th>x</th>
+      <th>y</th>
+      <th>z</th>
+      <th>frame</th>
+    </tr>
+    <tr>
+      <th>atom</th>
+      <th></th>
+      <th></th>
+      <th></th>
+      <th></th>
+      <th></th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>0</th>
+      <td>O</td>
+      <td>19.4359</td>
+      <td>15.39100</td>
+      <td>25.56210</td>
+      <td>0</td>
+    </tr>
+    <tr>
+      <th>1</th>
+      <td>O</td>
+      <td>21.4530</td>
+      <td>21.45160</td>
+      <td>17.91570</td>
+      <td>0</td>
+    </tr>
+    <tr>
+      <th>2</th>
+      <td>O</td>
+      <td>22.9281</td>
+      <td>15.42310</td>
+      <td>8.32404</td>
+      <td>0</td>
+    </tr>
+    <tr>
+      <th>3</th>
+      <td>O</td>
+      <td>24.7215</td>
+      <td>1.55097</td>
+      <td>16.05980</td>
+      <td>0</td>
+    </tr>
+    <tr>
+      <th>4</th>
+      <td>O</td>
+      <td>21.9557</td>
+      <td>11.82110</td>
+      <td>12.38670</td>
+      <td>0</td>
+    </tr>
+  </tbody>
+</table>
+</div></div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[8]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">xyz</span><span class="o">.</span><span class="n">frame</span><span class="o">.</span><span class="n">head</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[8]:
+</pre></div>
+</div>
+<div class="output_area rendered_html docutils container">
+<div>
+<style scoped>
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>atom_count</th>
+    </tr>
+    <tr>
+      <th>frame</th>
+      <th></th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>0</th>
+      <td>192</td>
+    </tr>
+    <tr>
+      <th>1</th>
+      <td>192</td>
+    </tr>
+    <tr>
+      <th>2</th>
+      <td>192</td>
+    </tr>
+    <tr>
+      <th>3</th>
+      <td>192</td>
+    </tr>
+    <tr>
+      <th>4</th>
+      <td>192</td>
+    </tr>
+  </tbody>
+</table>
+</div></div>
+</div>
+<ul class="simple">
+<li><p>Always check that data was correctly constructed</p></li>
+</ul>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[9]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">xyz</span><span class="o">.</span><span class="n">frame</span><span class="o">.</span><span class="n">tail</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[9]:
+</pre></div>
+</div>
+<div class="output_area rendered_html docutils container">
+<div>
+<style scoped>
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>atom_count</th>
+    </tr>
+    <tr>
+      <th>frame</th>
+      <th></th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>1170</th>
+      <td>192</td>
+    </tr>
+    <tr>
+      <th>1171</th>
+      <td>192</td>
+    </tr>
+    <tr>
+      <th>1172</th>
+      <td>192</td>
+    </tr>
+    <tr>
+      <th>1173</th>
+      <td>192</td>
+    </tr>
+    <tr>
+      <th>1174</th>
+      <td>192</td>
+    </tr>
+  </tbody>
+</table>
+</div></div>
+</div>
+<ul class="simple">
+<li><p>This happens to be a periodic calculations so lets quickly add that information</p></li>
+<li><p>This is important for periodic two-body calculations</p></li>
+</ul>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[10]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">r</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">((</span><span class="s2">&quot;x&quot;</span><span class="p">,</span> <span class="s2">&quot;y&quot;</span><span class="p">,</span> <span class="s2">&quot;z&quot;</span><span class="p">)):</span>
+    <span class="k">for</span> <span class="n">j</span><span class="p">,</span> <span class="n">q</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">((</span><span class="s2">&quot;i&quot;</span><span class="p">,</span> <span class="s2">&quot;j&quot;</span><span class="p">,</span> <span class="s2">&quot;k&quot;</span><span class="p">)):</span>
+        <span class="k">if</span> <span class="n">i</span> <span class="o">==</span> <span class="n">j</span><span class="p">:</span>
+            <span class="n">xyz</span><span class="o">.</span><span class="n">frame</span><span class="p">[</span><span class="n">r</span><span class="o">+</span><span class="n">q</span><span class="p">]</span> <span class="o">=</span> <span class="mf">12.4</span><span class="o">/</span><span class="mf">0.529</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">xyz</span><span class="o">.</span><span class="n">frame</span><span class="p">[</span><span class="n">r</span><span class="o">+</span><span class="n">q</span><span class="p">]</span> <span class="o">=</span> <span class="mf">0.0</span>
+    <span class="n">xyz</span><span class="o">.</span><span class="n">frame</span><span class="p">[</span><span class="s2">&quot;o&quot;</span><span class="o">+</span><span class="n">r</span><span class="p">]</span> <span class="o">=</span> <span class="mf">0.0</span>
+<span class="n">xyz</span><span class="o">.</span><span class="n">frame</span><span class="p">[</span><span class="s1">&#39;periodic&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="kc">True</span>
+</pre></div>
+</div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[11]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">xyz</span><span class="o">.</span><span class="n">atom</span><span class="o">.</span><span class="n">tail</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[11]:
+</pre></div>
+</div>
+<div class="output_area rendered_html docutils container">
+<div>
+<style scoped>
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>symbol</th>
+      <th>x</th>
+      <th>y</th>
+      <th>z</th>
+      <th>frame</th>
+    </tr>
+    <tr>
+      <th>atom</th>
+      <th></th>
+      <th></th>
+      <th></th>
+      <th></th>
+      <th></th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>225595</th>
+      <td>H</td>
+      <td>9.74930</td>
+      <td>5.26193</td>
+      <td>19.82770</td>
+      <td>1174</td>
+    </tr>
+    <tr>
+      <th>225596</th>
+      <td>H</td>
+      <td>7.06105</td>
+      <td>31.08350</td>
+      <td>23.31570</td>
+      <td>1174</td>
+    </tr>
+    <tr>
+      <th>225597</th>
+      <td>H</td>
+      <td>3.47807</td>
+      <td>9.73778</td>
+      <td>18.43120</td>
+      <td>1174</td>
+    </tr>
+    <tr>
+      <th>225598</th>
+      <td>H</td>
+      <td>-1.34846</td>
+      <td>8.55639</td>
+      <td>2.96767</td>
+      <td>1174</td>
+    </tr>
+    <tr>
+      <th>225599</th>
+      <td>H</td>
+      <td>7.09210</td>
+      <td>2.05187</td>
+      <td>12.06650</td>
+      <td>1174</td>
+    </tr>
+  </tbody>
+</table>
+</div></div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[12]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">np</span><span class="o">.</span><span class="n">all</span><span class="p">(</span><span class="n">xyz</span><span class="o">.</span><span class="n">atom</span><span class="o">.</span><span class="n">groupby</span><span class="p">(</span><span class="s2">&quot;frame&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">size</span><span class="p">()</span> <span class="o">==</span> <span class="mi">192</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[12]:
+</pre></div>
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+True
+</pre></div></div>
+</div>
+<ul class="simple">
+<li><p>The <strong>XYZ</strong> object has a convenience method for creating a <strong>Universe</strong></p></li>
+</ul>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[13]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">uni</span> <span class="o">=</span> <span class="n">xyz</span><span class="o">.</span><span class="n">to_universe</span><span class="p">()</span>
+<span class="nb">len</span><span class="p">(</span><span class="n">uni</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[13]:
+</pre></div>
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+1175
+</pre></div></div>
+</div>
+<ul class="simple">
+<li><p>Note that <strong>data is not duplicated</strong>!</p></li>
+</ul>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[14]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">uni</span><span class="o">.</span><span class="n">atom</span> <span class="ow">is</span> <span class="n">xyz</span><span class="o">.</span><span class="n">atom</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[14]:
+</pre></div>
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+True
+</pre></div></div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[15]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">uni</span><span class="o">.</span><span class="n">frame</span> <span class="ow">is</span> <span class="n">xyz</span><span class="o">.</span><span class="n">frame</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[15]:
+</pre></div>
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+True
+</pre></div></div>
+</div>
+<ul class="simple">
+<li><p>We can ask exatomic to compute distances (bonds)</p></li>
+<li><p><strong>WARNING</strong> this operation might take a minute!</p></li>
+</ul>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[16]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="o">%</span><span class="k">time</span> uni.compute_atom_two()
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+CPU times: user 11.5 s, sys: 2.56 s, total: 14.1 s
+Wall time: 16.1 s
+</pre></div></div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[17]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">uni</span><span class="o">.</span><span class="n">atom_two</span><span class="o">.</span><span class="n">shape</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[17]:
+</pre></div>
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+(3564092, 5)
+</pre></div></div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[18]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">uni</span><span class="o">.</span><span class="n">atom_two</span><span class="p">[</span><span class="n">uni</span><span class="o">.</span><span class="n">atom_two</span><span class="p">[</span><span class="s1">&#39;bond&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="kc">True</span><span class="p">]</span><span class="o">.</span><span class="n">shape</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[18]:
+</pre></div>
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+(150395, 5)
+</pre></div></div>
+</div>
+<ul class="simple">
+<li><p>This means that changes to <strong>xyz.atom</strong> will appear in <strong>uni.atom</strong></p></li>
+<li><p>The <strong>network</strong> method helps keep track of what data objects exist</p></li>
+</ul>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[19]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">uni</span><span class="o">.</span><span class="n">network</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[19]:
+</pre></div>
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+&lt;networkx.classes.graph.Graph at 0x7f755061d240&gt;
+</pre></div></div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="../_images/notebooks_02_xyz_28_1.png" src="../_images/notebooks_02_xyz_28_1.png" />
+</div>
+</div>
+<ul class="simple">
+<li><p>Since <strong>atom_two</strong> scales quadractically its size is large compared to the other datatables</p></li>
+<li><p>The <strong>unit_atom</strong> table is needed for computing periodic two-body data</p></li>
+</ul>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[20]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">uni</span><span class="o">.</span><span class="n">atom_two</span><span class="o">.</span><span class="n">dtypes</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[20]:
+</pre></div>
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+atom0         category
+atom1         category
+dr             float64
+projection       int64
+bond              bool
+dtype: object
+</pre></div></div>
+</div>
+<ul class="simple">
+<li><p>Of course we can also visualize the animation of the trajectory!</p></li>
+</ul>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[21]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">exatomic</span><span class="o">.</span><span class="n">UniverseWidget</span><span class="p">(</span><span class="n">uni</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<script type="application/vnd.jupyter.widget-view+json">{"model_id": "16c4745734bd4116ac83fb7cb8fc9315", "version_major": 2, "version_minor": 0}</script></div>
+</div>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>
+</pre></div>
+</div>
+</div>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>
+</pre></div>
+</div>
+</div>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>
+</pre></div>
+</div>
+</div>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>
+</pre></div>
+</div>
+</div>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>
+</pre></div>
+</div>
+</div>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="01_basics.html" class="btn btn-neutral float-left" title="Welcome to exatomic" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="03_orbitals.html" class="btn btn-neutral float-right" title="Visualize Orbitals" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright .
+      <span class="lastupdated">Last updated on Apr 21, 2023.
+      </span></p>
+  </div>
+
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

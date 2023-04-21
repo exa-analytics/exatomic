@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>exatomic.adf package &mdash; exatomic 0.6.0 documentation</title>
+      <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+        <script src="_static/doctools.js"></script>
+        <script src="_static/sphinx_highlight.js"></script>
+        <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="exatomic.adf.adf package" href="exatomic.adf.adf.html" />
+    <link rel="prev" title="exatomic package" href="exatomic.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            exatomic
+              <img src="_static/logo.png" class="logo" alt="Logo"/>
+          </a>
+              <div class="version">
+                0.6.0
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Sitemap</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="install.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="started.html">Getting Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="contrib.html">Development</a></li>
+</ul>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="exatomic.html">exatomic package</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="exatomic.html#supported-software">Supported Software</a></li>
+<li class="toctree-l2"><a class="reference internal" href="exatomic.html#exatomic.func_log"><code class="docutils literal notranslate"><span class="pre">func_log()</span></code></a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="exatomic.html#subpackages">Subpackages</a><ul class="current">
+<li class="toctree-l3 current"><a class="current reference internal" href="#">exatomic.adf package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#subpackages">Subpackages</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#submodules">Submodules</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.algorithms.html">exatomic.algorithms package</a></li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.core.html">exatomic.core package</a></li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.exa.html">exatomic.exa package</a></li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.gaussian.html">exatomic.gaussian package</a></li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.interfaces.html">exatomic.interfaces package</a></li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.molcas.html">exatomic.molcas package</a></li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.nbo.html">exatomic.nbo package</a></li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.nwchem.html">exatomic.nwchem package</a></li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.plotter.html">exatomic.plotter package</a></li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.qchem.html">exatomic.qchem package</a></li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.qe.html">exatomic.qe package</a></li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.util.html">exatomic.util package</a></li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.widgets.html">exatomic.widgets package</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="exatomic.html#submodules">Submodules</a></li>
+</ul>
+</li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">exatomic</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="exatomic.html">exatomic package</a></li>
+      <li class="breadcrumb-item active">exatomic.adf package</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/exatomic.adf.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="module-exatomic.adf">
+<span id="exatomic-adf-package"></span><h1>exatomic.adf package<a class="headerlink" href="#module-exatomic.adf" title="Permalink to this heading"></a></h1>
+<section id="subpackages">
+<h2>Subpackages<a class="headerlink" href="#subpackages" title="Permalink to this heading"></a></h2>
+<div class="toctree-wrapper compound">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="exatomic.adf.adf.html">exatomic.adf.adf package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="exatomic.adf.adf.html#submodules">Submodules</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.adf.adf.adf.html">exatomic.adf.adf.adf module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.adf.adf.geometry.html">exatomic.adf.adf.geometry module</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="exatomic.adf.adf.geometry.html#geometry-parser-a-d-f-calculations">Geometry Parser (‘A D F’ Calculations)</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.adf.adf.output.html">exatomic.adf.adf.output module</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="exatomic.adf.adf.output.html#parser-for-a-d-f-calculations">Parser for ‘A D F’ Calculations</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.adf.adf.scf.html">exatomic.adf.adf.scf module</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="exatomic.adf.dirac.html">exatomic.adf.dirac package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="exatomic.adf.dirac.html#submodules">Submodules</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.adf.dirac.dirac.html">exatomic.adf.dirac.dirac module</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="exatomic.adf.nmr.html">exatomic.adf.nmr package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="exatomic.adf.nmr.html#submodules">Submodules</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.adf.nmr.output.html">exatomic.adf.nmr.output module</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</div>
+</section>
+<section id="submodules">
+<h2>Submodules<a class="headerlink" href="#submodules" title="Permalink to this heading"></a></h2>
+<div class="toctree-wrapper compound">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="exatomic.adf.editor.html">exatomic.adf.editor module</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="exatomic.adf.editor.html#base-adf-editor">Base ADF editor</a></li>
+<li class="toctree-l2"><a class="reference internal" href="exatomic.adf.editor.html#exatomic.adf.editor.Editor"><code class="docutils literal notranslate"><span class="pre">Editor</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="exatomic.adf.inputs.html">exatomic.adf.inputs module</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="exatomic.adf.inputs.html#input-generator-and-parser">Input Generator and Parser</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="exatomic.adf.output.html">exatomic.adf.output module</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="exatomic.adf.output.html#adf-composite-output">ADF Composite Output</a></li>
+<li class="toctree-l2"><a class="reference internal" href="exatomic.adf.output.html#exatomic.adf.output.OutMeta"><code class="docutils literal notranslate"><span class="pre">OutMeta</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.adf.output.html#exatomic.adf.output.OutMeta.atom"><code class="docutils literal notranslate"><span class="pre">OutMeta.atom</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.adf.output.html#exatomic.adf.output.OutMeta.basis_set"><code class="docutils literal notranslate"><span class="pre">OutMeta.basis_set</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.adf.output.html#exatomic.adf.output.OutMeta.basis_set_order"><code class="docutils literal notranslate"><span class="pre">OutMeta.basis_set_order</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.adf.output.html#exatomic.adf.output.OutMeta.orbital"><code class="docutils literal notranslate"><span class="pre">OutMeta.orbital</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.adf.output.html#exatomic.adf.output.OutMeta.contribution"><code class="docutils literal notranslate"><span class="pre">OutMeta.contribution</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.adf.output.html#exatomic.adf.output.OutMeta.excitation"><code class="docutils literal notranslate"><span class="pre">OutMeta.excitation</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.adf.output.html#exatomic.adf.output.OutMeta.momatrix"><code class="docutils literal notranslate"><span class="pre">OutMeta.momatrix</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.adf.output.html#exatomic.adf.output.OutMeta.sphr_momatrix"><code class="docutils literal notranslate"><span class="pre">OutMeta.sphr_momatrix</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.adf.output.html#exatomic.adf.output.OutMeta.gradient"><code class="docutils literal notranslate"><span class="pre">OutMeta.gradient</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.adf.output.html#exatomic.adf.output.OutMeta.frequency"><code class="docutils literal notranslate"><span class="pre">OutMeta.frequency</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.adf.output.html#exatomic.adf.output.OutMeta.nmr_shielding"><code class="docutils literal notranslate"><span class="pre">OutMeta.nmr_shielding</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.adf.output.html#exatomic.adf.output.OutMeta.j_coupling"><code class="docutils literal notranslate"><span class="pre">OutMeta.j_coupling</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.adf.output.html#exatomic.adf.output.OutMeta.electric_dipole"><code class="docutils literal notranslate"><span class="pre">OutMeta.electric_dipole</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.adf.output.html#exatomic.adf.output.OutMeta.magnetic_dipole"><code class="docutils literal notranslate"><span class="pre">OutMeta.magnetic_dipole</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="exatomic.adf.output.html#exatomic.adf.output.NMR"><code class="docutils literal notranslate"><span class="pre">NMR</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.adf.output.html#exatomic.adf.output.NMR.parse_atom"><code class="docutils literal notranslate"><span class="pre">NMR.parse_atom()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.adf.output.html#exatomic.adf.output.NMR.parse_nmr_shielding"><code class="docutils literal notranslate"><span class="pre">NMR.parse_nmr_shielding()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.adf.output.html#exatomic.adf.output.NMR.parse_j_coupling"><code class="docutils literal notranslate"><span class="pre">NMR.parse_j_coupling()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.adf.output.html#exatomic.adf.output.NMR.atom"><code class="docutils literal notranslate"><span class="pre">NMR.atom</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.adf.output.html#exatomic.adf.output.NMR.basis_set"><code class="docutils literal notranslate"><span class="pre">NMR.basis_set</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.adf.output.html#exatomic.adf.output.NMR.basis_set_order"><code class="docutils literal notranslate"><span class="pre">NMR.basis_set_order</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.adf.output.html#exatomic.adf.output.NMR.contribution"><code class="docutils literal notranslate"><span class="pre">NMR.contribution</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.adf.output.html#exatomic.adf.output.NMR.electric_dipole"><code class="docutils literal notranslate"><span class="pre">NMR.electric_dipole</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.adf.output.html#exatomic.adf.output.NMR.excitation"><code class="docutils literal notranslate"><span class="pre">NMR.excitation</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.adf.output.html#exatomic.adf.output.NMR.frequency"><code class="docutils literal notranslate"><span class="pre">NMR.frequency</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.adf.output.html#exatomic.adf.output.NMR.gradient"><code class="docutils literal notranslate"><span class="pre">NMR.gradient</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.adf.output.html#exatomic.adf.output.NMR.j_coupling"><code class="docutils literal notranslate"><span class="pre">NMR.j_coupling</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.adf.output.html#exatomic.adf.output.NMR.magnetic_dipole"><code class="docutils literal notranslate"><span class="pre">NMR.magnetic_dipole</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.adf.output.html#exatomic.adf.output.NMR.momatrix"><code class="docutils literal notranslate"><span class="pre">NMR.momatrix</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.adf.output.html#exatomic.adf.output.NMR.nmr_shielding"><code class="docutils literal notranslate"><span class="pre">NMR.nmr_shielding</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.adf.output.html#exatomic.adf.output.NMR.orbital"><code class="docutils literal notranslate"><span class="pre">NMR.orbital</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.adf.output.html#exatomic.adf.output.NMR.sphr_momatrix"><code class="docutils literal notranslate"><span class="pre">NMR.sphr_momatrix</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="exatomic.adf.output.html#exatomic.adf.output.ADF"><code class="docutils literal notranslate"><span class="pre">ADF</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.adf.output.html#exatomic.adf.output.ADF.parse_atom"><code class="docutils literal notranslate"><span class="pre">ADF.parse_atom()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.adf.output.html#exatomic.adf.output.ADF.parse_basis_set"><code class="docutils literal notranslate"><span class="pre">ADF.parse_basis_set()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.adf.output.html#exatomic.adf.output.ADF.parse_basis_set_order"><code class="docutils literal notranslate"><span class="pre">ADF.parse_basis_set_order()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.adf.output.html#exatomic.adf.output.ADF.parse_orbital"><code class="docutils literal notranslate"><span class="pre">ADF.parse_orbital()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.adf.output.html#exatomic.adf.output.ADF.parse_contribution"><code class="docutils literal notranslate"><span class="pre">ADF.parse_contribution()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.adf.output.html#exatomic.adf.output.ADF.parse_excitation"><code class="docutils literal notranslate"><span class="pre">ADF.parse_excitation()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.adf.output.html#exatomic.adf.output.ADF.parse_momatrix"><code class="docutils literal notranslate"><span class="pre">ADF.parse_momatrix()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.adf.output.html#exatomic.adf.output.ADF.parse_sphr_momatrix"><code class="docutils literal notranslate"><span class="pre">ADF.parse_sphr_momatrix()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.adf.output.html#exatomic.adf.output.ADF.parse_gradient"><code class="docutils literal notranslate"><span class="pre">ADF.parse_gradient()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.adf.output.html#exatomic.adf.output.ADF.parse_frequency"><code class="docutils literal notranslate"><span class="pre">ADF.parse_frequency()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.adf.output.html#exatomic.adf.output.ADF.atom"><code class="docutils literal notranslate"><span class="pre">ADF.atom</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.adf.output.html#exatomic.adf.output.ADF.basis_set"><code class="docutils literal notranslate"><span class="pre">ADF.basis_set</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.adf.output.html#exatomic.adf.output.ADF.basis_set_order"><code class="docutils literal notranslate"><span class="pre">ADF.basis_set_order</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.adf.output.html#exatomic.adf.output.ADF.contribution"><code class="docutils literal notranslate"><span class="pre">ADF.contribution</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.adf.output.html#exatomic.adf.output.ADF.electric_dipole"><code class="docutils literal notranslate"><span class="pre">ADF.electric_dipole</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.adf.output.html#exatomic.adf.output.ADF.excitation"><code class="docutils literal notranslate"><span class="pre">ADF.excitation</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.adf.output.html#exatomic.adf.output.ADF.frequency"><code class="docutils literal notranslate"><span class="pre">ADF.frequency</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.adf.output.html#exatomic.adf.output.ADF.gradient"><code class="docutils literal notranslate"><span class="pre">ADF.gradient</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.adf.output.html#exatomic.adf.output.ADF.j_coupling"><code class="docutils literal notranslate"><span class="pre">ADF.j_coupling</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.adf.output.html#exatomic.adf.output.ADF.magnetic_dipole"><code class="docutils literal notranslate"><span class="pre">ADF.magnetic_dipole</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.adf.output.html#exatomic.adf.output.ADF.momatrix"><code class="docutils literal notranslate"><span class="pre">ADF.momatrix</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.adf.output.html#exatomic.adf.output.ADF.nmr_shielding"><code class="docutils literal notranslate"><span class="pre">ADF.nmr_shielding</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.adf.output.html#exatomic.adf.output.ADF.orbital"><code class="docutils literal notranslate"><span class="pre">ADF.orbital</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.adf.output.html#exatomic.adf.output.ADF.sphr_momatrix"><code class="docutils literal notranslate"><span class="pre">ADF.sphr_momatrix</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="exatomic.adf.output.html#exatomic.adf.output.AMS"><code class="docutils literal notranslate"><span class="pre">AMS</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.adf.output.html#exatomic.adf.output.AMS.parse_atom"><code class="docutils literal notranslate"><span class="pre">AMS.parse_atom()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.adf.output.html#exatomic.adf.output.AMS.parse_frequency"><code class="docutils literal notranslate"><span class="pre">AMS.parse_frequency()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.adf.output.html#exatomic.adf.output.AMS.parse_gradient"><code class="docutils literal notranslate"><span class="pre">AMS.parse_gradient()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.adf.output.html#exatomic.adf.output.AMS.parse_excitation"><code class="docutils literal notranslate"><span class="pre">AMS.parse_excitation()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.adf.output.html#exatomic.adf.output.AMS.parse_electric_dipole"><code class="docutils literal notranslate"><span class="pre">AMS.parse_electric_dipole()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.adf.output.html#exatomic.adf.output.AMS.parse_magnetic_dipole"><code class="docutils literal notranslate"><span class="pre">AMS.parse_magnetic_dipole()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.adf.output.html#exatomic.adf.output.AMS.atom"><code class="docutils literal notranslate"><span class="pre">AMS.atom</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.adf.output.html#exatomic.adf.output.AMS.basis_set"><code class="docutils literal notranslate"><span class="pre">AMS.basis_set</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.adf.output.html#exatomic.adf.output.AMS.basis_set_order"><code class="docutils literal notranslate"><span class="pre">AMS.basis_set_order</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.adf.output.html#exatomic.adf.output.AMS.contribution"><code class="docutils literal notranslate"><span class="pre">AMS.contribution</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.adf.output.html#exatomic.adf.output.AMS.electric_dipole"><code class="docutils literal notranslate"><span class="pre">AMS.electric_dipole</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.adf.output.html#exatomic.adf.output.AMS.excitation"><code class="docutils literal notranslate"><span class="pre">AMS.excitation</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.adf.output.html#exatomic.adf.output.AMS.frequency"><code class="docutils literal notranslate"><span class="pre">AMS.frequency</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.adf.output.html#exatomic.adf.output.AMS.gradient"><code class="docutils literal notranslate"><span class="pre">AMS.gradient</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.adf.output.html#exatomic.adf.output.AMS.j_coupling"><code class="docutils literal notranslate"><span class="pre">AMS.j_coupling</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.adf.output.html#exatomic.adf.output.AMS.magnetic_dipole"><code class="docutils literal notranslate"><span class="pre">AMS.magnetic_dipole</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.adf.output.html#exatomic.adf.output.AMS.momatrix"><code class="docutils literal notranslate"><span class="pre">AMS.momatrix</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.adf.output.html#exatomic.adf.output.AMS.nmr_shielding"><code class="docutils literal notranslate"><span class="pre">AMS.nmr_shielding</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.adf.output.html#exatomic.adf.output.AMS.orbital"><code class="docutils literal notranslate"><span class="pre">AMS.orbital</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.adf.output.html#exatomic.adf.output.AMS.sphr_momatrix"><code class="docutils literal notranslate"><span class="pre">AMS.sphr_momatrix</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="exatomic.adf.output.html#exatomic.adf.output.Output"><code class="docutils literal notranslate"><span class="pre">Output</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.adf.output.html#exatomic.adf.output.Output.parse_atom"><code class="docutils literal notranslate"><span class="pre">Output.parse_atom()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.adf.output.html#exatomic.adf.output.Output.parse_basis_set"><code class="docutils literal notranslate"><span class="pre">Output.parse_basis_set()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.adf.output.html#exatomic.adf.output.Output.parse_basis_set_order"><code class="docutils literal notranslate"><span class="pre">Output.parse_basis_set_order()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.adf.output.html#exatomic.adf.output.Output.parse_orbital"><code class="docutils literal notranslate"><span class="pre">Output.parse_orbital()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.adf.output.html#exatomic.adf.output.Output.parse_contribution"><code class="docutils literal notranslate"><span class="pre">Output.parse_contribution()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.adf.output.html#exatomic.adf.output.Output.parse_excitation"><code class="docutils literal notranslate"><span class="pre">Output.parse_excitation()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.adf.output.html#exatomic.adf.output.Output.parse_momatrix"><code class="docutils literal notranslate"><span class="pre">Output.parse_momatrix()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.adf.output.html#exatomic.adf.output.Output.parse_sphr_momatrix"><code class="docutils literal notranslate"><span class="pre">Output.parse_sphr_momatrix()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.adf.output.html#exatomic.adf.output.Output.parse_gradient"><code class="docutils literal notranslate"><span class="pre">Output.parse_gradient()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.adf.output.html#exatomic.adf.output.Output.parse_frequency"><code class="docutils literal notranslate"><span class="pre">Output.parse_frequency()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.adf.output.html#exatomic.adf.output.Output.parse_nmr_shielding"><code class="docutils literal notranslate"><span class="pre">Output.parse_nmr_shielding()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.adf.output.html#exatomic.adf.output.Output.parse_j_coupling"><code class="docutils literal notranslate"><span class="pre">Output.parse_j_coupling()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.adf.output.html#exatomic.adf.output.Output.parse_electric_dipole"><code class="docutils literal notranslate"><span class="pre">Output.parse_electric_dipole()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.adf.output.html#exatomic.adf.output.Output.parse_magnetic_dipole"><code class="docutils literal notranslate"><span class="pre">Output.parse_magnetic_dipole()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.adf.output.html#exatomic.adf.output.Output.atom"><code class="docutils literal notranslate"><span class="pre">Output.atom</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.adf.output.html#exatomic.adf.output.Output.basis_set"><code class="docutils literal notranslate"><span class="pre">Output.basis_set</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.adf.output.html#exatomic.adf.output.Output.basis_set_order"><code class="docutils literal notranslate"><span class="pre">Output.basis_set_order</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.adf.output.html#exatomic.adf.output.Output.contribution"><code class="docutils literal notranslate"><span class="pre">Output.contribution</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.adf.output.html#exatomic.adf.output.Output.electric_dipole"><code class="docutils literal notranslate"><span class="pre">Output.electric_dipole</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.adf.output.html#exatomic.adf.output.Output.excitation"><code class="docutils literal notranslate"><span class="pre">Output.excitation</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.adf.output.html#exatomic.adf.output.Output.frequency"><code class="docutils literal notranslate"><span class="pre">Output.frequency</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.adf.output.html#exatomic.adf.output.Output.gradient"><code class="docutils literal notranslate"><span class="pre">Output.gradient</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.adf.output.html#exatomic.adf.output.Output.j_coupling"><code class="docutils literal notranslate"><span class="pre">Output.j_coupling</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.adf.output.html#exatomic.adf.output.Output.magnetic_dipole"><code class="docutils literal notranslate"><span class="pre">Output.magnetic_dipole</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.adf.output.html#exatomic.adf.output.Output.momatrix"><code class="docutils literal notranslate"><span class="pre">Output.momatrix</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.adf.output.html#exatomic.adf.output.Output.nmr_shielding"><code class="docutils literal notranslate"><span class="pre">Output.nmr_shielding</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.adf.output.html#exatomic.adf.output.Output.orbital"><code class="docutils literal notranslate"><span class="pre">Output.orbital</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.adf.output.html#exatomic.adf.output.Output.sphr_momatrix"><code class="docutils literal notranslate"><span class="pre">Output.sphr_momatrix</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="exatomic.adf.tape21.html">exatomic.adf.tape21 module</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="exatomic.adf.tape21.html#adf-tape21-ascii-converted-output">ADF TAPE21 ASCII converted output</a></li>
+<li class="toctree-l2"><a class="reference internal" href="exatomic.adf.tape21.html#exatomic.adf.tape21.MissingSection"><code class="docutils literal notranslate"><span class="pre">MissingSection</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="exatomic.adf.tape21.html#exatomic.adf.tape21.Tape21Meta"><code class="docutils literal notranslate"><span class="pre">Tape21Meta</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.adf.tape21.html#exatomic.adf.tape21.Tape21Meta.atom"><code class="docutils literal notranslate"><span class="pre">Tape21Meta.atom</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.adf.tape21.html#exatomic.adf.tape21.Tape21Meta.frequency"><code class="docutils literal notranslate"><span class="pre">Tape21Meta.frequency</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.adf.tape21.html#exatomic.adf.tape21.Tape21Meta.gradient"><code class="docutils literal notranslate"><span class="pre">Tape21Meta.gradient</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.adf.tape21.html#exatomic.adf.tape21.Tape21Meta.j_coupling"><code class="docutils literal notranslate"><span class="pre">Tape21Meta.j_coupling</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.adf.tape21.html#exatomic.adf.tape21.Tape21Meta.nmr_shielding"><code class="docutils literal notranslate"><span class="pre">Tape21Meta.nmr_shielding</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="exatomic.adf.tape21.html#exatomic.adf.tape21.Tape21"><code class="docutils literal notranslate"><span class="pre">Tape21</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.adf.tape21.html#exatomic.adf.tape21.Tape21.rmass_mwc"><code class="docutils literal notranslate"><span class="pre">Tape21.rmass_mwc()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.adf.tape21.html#exatomic.adf.tape21.Tape21.rmass_cart"><code class="docutils literal notranslate"><span class="pre">Tape21.rmass_cart()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.adf.tape21.html#exatomic.adf.tape21.Tape21.parse_frequency"><code class="docutils literal notranslate"><span class="pre">Tape21.parse_frequency()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.adf.tape21.html#exatomic.adf.tape21.Tape21.parse_atom"><code class="docutils literal notranslate"><span class="pre">Tape21.parse_atom()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.adf.tape21.html#exatomic.adf.tape21.Tape21.parse_gradient"><code class="docutils literal notranslate"><span class="pre">Tape21.parse_gradient()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.adf.tape21.html#exatomic.adf.tape21.Tape21.parse_nmr_shielding"><code class="docutils literal notranslate"><span class="pre">Tape21.parse_nmr_shielding()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.adf.tape21.html#exatomic.adf.tape21.Tape21.parse_j_coupling"><code class="docutils literal notranslate"><span class="pre">Tape21.parse_j_coupling()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.adf.tape21.html#exatomic.adf.tape21.Tape21.atom"><code class="docutils literal notranslate"><span class="pre">Tape21.atom</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.adf.tape21.html#exatomic.adf.tape21.Tape21.frequency"><code class="docutils literal notranslate"><span class="pre">Tape21.frequency</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.adf.tape21.html#exatomic.adf.tape21.Tape21.gradient"><code class="docutils literal notranslate"><span class="pre">Tape21.gradient</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.adf.tape21.html#exatomic.adf.tape21.Tape21.j_coupling"><code class="docutils literal notranslate"><span class="pre">Tape21.j_coupling</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.adf.tape21.html#exatomic.adf.tape21.Tape21.nmr_shielding"><code class="docutils literal notranslate"><span class="pre">Tape21.nmr_shielding</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</div>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="exatomic.html" class="btn btn-neutral float-left" title="exatomic package" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="exatomic.adf.adf.html" class="btn btn-neutral float-right" title="exatomic.adf.adf package" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright .
+      <span class="lastupdated">Last updated on Apr 21, 2023.
+      </span></p>
+  </div>
+
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>exatomic.interfaces.cube module &mdash; exatomic 0.6.0 documentation</title>
+      <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+        <script src="_static/doctools.js"></script>
+        <script src="_static/sphinx_highlight.js"></script>
+        <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="exatomic.interfaces.pdb module" href="exatomic.interfaces.pdb.html" />
+    <link rel="prev" title="exatomic.interfaces.cclib module" href="exatomic.interfaces.cclib.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            exatomic
+              <img src="_static/logo.png" class="logo" alt="Logo"/>
+          </a>
+              <div class="version">
+                0.6.0
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Sitemap</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="install.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="started.html">Getting Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="contrib.html">Development</a></li>
+</ul>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="exatomic.html">exatomic package</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="exatomic.html#supported-software">Supported Software</a></li>
+<li class="toctree-l2"><a class="reference internal" href="exatomic.html#exatomic.func_log"><code class="docutils literal notranslate"><span class="pre">func_log()</span></code></a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="exatomic.html#subpackages">Subpackages</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="exatomic.adf.html">exatomic.adf package</a></li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.algorithms.html">exatomic.algorithms package</a></li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.core.html">exatomic.core package</a></li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.exa.html">exatomic.exa package</a></li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.gaussian.html">exatomic.gaussian package</a></li>
+<li class="toctree-l3 current"><a class="reference internal" href="exatomic.interfaces.html">exatomic.interfaces package</a><ul class="current">
+<li class="toctree-l4"><a class="reference internal" href="exatomic.interfaces.html#interfaces">Interfaces</a></li>
+<li class="toctree-l4 current"><a class="reference internal" href="exatomic.interfaces.html#submodules">Submodules</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.molcas.html">exatomic.molcas package</a></li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.nbo.html">exatomic.nbo package</a></li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.nwchem.html">exatomic.nwchem package</a></li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.plotter.html">exatomic.plotter package</a></li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.qchem.html">exatomic.qchem package</a></li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.qe.html">exatomic.qe package</a></li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.util.html">exatomic.util package</a></li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.widgets.html">exatomic.widgets package</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="exatomic.html#submodules">Submodules</a></li>
+</ul>
+</li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">exatomic</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="exatomic.html">exatomic package</a></li>
+          <li class="breadcrumb-item"><a href="exatomic.interfaces.html">exatomic.interfaces package</a></li>
+      <li class="breadcrumb-item active">exatomic.interfaces.cube module</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/exatomic.interfaces.cube.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="module-exatomic.interfaces.cube">
+<span id="exatomic-interfaces-cube-module"></span><h1>exatomic.interfaces.cube module<a class="headerlink" href="#module-exatomic.interfaces.cube" title="Permalink to this heading"></a></h1>
+<section id="cube-file-support">
+<h2>Cube File Support<a class="headerlink" href="#cube-file-support" title="Permalink to this heading"></a></h2>
+<p>Cube files contain an atomic geometry and scalar field values corresponding to
+a physical quantity.</p>
+</section>
+<dl class="py class">
+<dt class="sig sig-object py" id="exatomic.interfaces.cube.Meta">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">exatomic.interfaces.cube.</span></span><span class="sig-name descname"><span class="pre">Meta</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bases</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">clsdict</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/exatomic/interfaces/cube.html#Meta"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#exatomic.interfaces.cube.Meta" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="exatomic.exa.core.container.html#exatomic.exa.core.container.TypedMeta" title="exatomic.exa.core.container.TypedMeta"><code class="xref py py-class docutils literal notranslate"><span class="pre">TypedMeta</span></code></a></p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="exatomic.interfaces.cube.Meta.atom">
+<span class="sig-name descname"><span class="pre">atom</span></span><a class="headerlink" href="#exatomic.interfaces.cube.Meta.atom" title="Permalink to this definition"></a></dt>
+<dd><p>alias of <a class="reference internal" href="exatomic.core.atom.html#exatomic.core.atom.Atom" title="exatomic.core.atom.Atom"><code class="xref py py-class docutils literal notranslate"><span class="pre">Atom</span></code></a></p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="exatomic.interfaces.cube.Meta.frame">
+<span class="sig-name descname"><span class="pre">frame</span></span><a class="headerlink" href="#exatomic.interfaces.cube.Meta.frame" title="Permalink to this definition"></a></dt>
+<dd><p>alias of <a class="reference internal" href="exatomic.core.frame.html#exatomic.core.frame.Frame" title="exatomic.core.frame.Frame"><code class="xref py py-class docutils literal notranslate"><span class="pre">Frame</span></code></a></p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="exatomic.interfaces.cube.Meta.field">
+<span class="sig-name descname"><span class="pre">field</span></span><a class="headerlink" href="#exatomic.interfaces.cube.Meta.field" title="Permalink to this definition"></a></dt>
+<dd><p>alias of <a class="reference internal" href="exatomic.core.field.html#exatomic.core.field.AtomicField" title="exatomic.core.field.AtomicField"><code class="xref py py-class docutils literal notranslate"><span class="pre">AtomicField</span></code></a></p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="exatomic.interfaces.cube.Cube">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">exatomic.interfaces.cube.</span></span><span class="sig-name descname"><span class="pre">Cube</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/exatomic/interfaces/cube.html#Cube"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#exatomic.interfaces.cube.Cube" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="exatomic.core.editor.html#exatomic.core.editor.Editor" title="exatomic.core.editor.Editor"><code class="xref py py-class docutils literal notranslate"><span class="pre">Editor</span></code></a></p>
+<p>An editor for handling cube files. Assumes scalar field values are arranged
+with the x axis as the outer loop and the z axis as the inner loop.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">cube</span> <span class="o">=</span> <span class="n">Cube</span><span class="p">(</span><span class="s1">&#39;my.cube&#39;</span><span class="p">)</span>
+<span class="n">cube</span><span class="o">.</span><span class="n">atom</span>                <span class="c1"># Displays the atom dataframe</span>
+<span class="n">cube</span><span class="o">.</span><span class="n">field</span>               <span class="c1"># Displays the field dataframe</span>
+<span class="n">cube</span><span class="o">.</span><span class="n">field</span><span class="o">.</span><span class="n">field_values</span>  <span class="c1"># Displays the list of field values</span>
+<span class="n">uni</span> <span class="o">=</span> <span class="n">cube</span><span class="o">.</span><span class="n">to_universe</span><span class="p">()</span> <span class="c1"># Converts the cube file editor to a universe</span>
+<span class="n">UniverseWidget</span><span class="p">(</span><span class="n">uni</span><span class="p">)</span>      <span class="c1"># Renders the cube file</span>
+</pre></div>
+</div>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>Be sure your cube is in atomic units.</p>
+</div>
+<dl class="py method">
+<dt class="sig sig-object py" id="exatomic.interfaces.cube.Cube.parse_atom">
+<span class="sig-name descname"><span class="pre">parse_atom</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/exatomic/interfaces/cube.html#Cube.parse_atom"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#exatomic.interfaces.cube.Cube.parse_atom" title="Permalink to this definition"></a></dt>
+<dd><p>Parse the <code class="xref py py-class docutils literal notranslate"><span class="pre">Atom</span></code> object from the cube file in place.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="exatomic.interfaces.cube.Cube.parse_field">
+<span class="sig-name descname"><span class="pre">parse_field</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/exatomic/interfaces/cube.html#Cube.parse_field"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#exatomic.interfaces.cube.Cube.parse_field" title="Permalink to this definition"></a></dt>
+<dd><p>Parse the scalar field into an <a class="reference internal" href="exatomic.core.field.html#exatomic.core.field.AtomicField" title="exatomic.core.field.AtomicField"><code class="xref py py-class docutils literal notranslate"><span class="pre">AtomicField</span></code></a>.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>The <a class="reference internal" href="exatomic.core.field.html#exatomic.core.field.AtomicField" title="exatomic.core.field.AtomicField"><code class="xref py py-class docutils literal notranslate"><span class="pre">AtomicField</span></code></a> tracks both the
+field parameters (i.e. information about the discretization and shape of
+the field’s spatial points) as well as the field values (at each of
+those points in space). See <a class="reference internal" href="exatomic.algorithms.orbital_util.html#exatomic.algorithms.orbital_util.make_fps" title="exatomic.algorithms.orbital_util.make_fps"><code class="xref py py-meth docutils literal notranslate"><span class="pre">make_fps()</span></code></a>
+for more details.</p>
+</div>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="exatomic.interfaces.cube.Cube.from_universe">
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">from_universe</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">uni</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">idx</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">frame</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/exatomic/interfaces/cube.html#Cube.from_universe"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#exatomic.interfaces.cube.Cube.from_universe" title="Permalink to this definition"></a></dt>
+<dd><p>Make a cube file format Editor from a given field in a
+<a class="reference internal" href="exatomic.core.universe.html#exatomic.core.universe.Universe" title="exatomic.core.universe.Universe"><code class="xref py py-class docutils literal notranslate"><span class="pre">Universe</span></code></a>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>uni</strong> (<a class="reference internal" href="exatomic.core.universe.html#exatomic.core.universe.Universe" title="exatomic.core.universe.Universe"><code class="xref py py-class docutils literal notranslate"><span class="pre">Universe</span></code></a>) – a universe</p></li>
+<li><p><strong>idx</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.11)"><em>int</em></a>) – field index in <a class="reference internal" href="exatomic.core.field.html#exatomic.core.field.AtomicField" title="exatomic.core.field.AtomicField"><code class="xref py py-class docutils literal notranslate"><span class="pre">AtomicField</span></code></a></p></li>
+<li><p><strong>name</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.11)"><em>str</em></a>) – description for comment line</p></li>
+<li><p><strong>frame</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.11)"><em>int</em></a>) – frame index in <a class="reference internal" href="exatomic.core.atom.html#exatomic.core.atom.Atom" title="exatomic.core.atom.Atom"><code class="xref py py-class docutils literal notranslate"><span class="pre">Atom</span></code></a></p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="exatomic.interfaces.cube.Cube.atom">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">atom</span></span><a class="headerlink" href="#exatomic.interfaces.cube.Cube.atom" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="exatomic.interfaces.cube.Cube.field">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">field</span></span><a class="headerlink" href="#exatomic.interfaces.cube.Cube.field" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="exatomic.interfaces.cube.Cube.frame">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">frame</span></span><a class="headerlink" href="#exatomic.interfaces.cube.Cube.frame" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="exatomic.interfaces.cube.uni_from_cubes">
+<span class="sig-prename descclassname"><span class="pre">exatomic.interfaces.cube.</span></span><span class="sig-name descname"><span class="pre">uni_from_cubes</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">adir</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">verbose</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ncubes</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ext</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'cube'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/exatomic/interfaces/cube.html#uni_from_cubes"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#exatomic.interfaces.cube.uni_from_cubes" title="Permalink to this definition"></a></dt>
+<dd><p>Put a bunch of cubes into a universe.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">uni</span> <span class="o">=</span> <span class="n">uni_from_cubes</span><span class="p">(</span><span class="s1">&#39;/path/to/files/&#39;</span><span class="p">)</span>       <span class="c1"># Parse all cubes matching &#39;files/*cube&#39;</span>
+<span class="n">uni</span> <span class="o">=</span> <span class="n">uni_from_cubes</span><span class="p">(</span><span class="s1">&#39;files/&#39;</span><span class="p">,</span> <span class="n">ext</span><span class="o">=</span><span class="s1">&#39;cub&#39;</span><span class="p">)</span>     <span class="c1"># Parse all cubes matching &#39;files/*cub&#39;</span>
+<span class="n">uni</span> <span class="o">=</span> <span class="n">uni_from_cubes</span><span class="p">(</span><span class="s1">&#39;files/&#39;</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>  <span class="c1"># Print file names when parsing</span>
+<span class="n">uni</span> <span class="o">=</span> <span class="n">uni_from_cubes</span><span class="p">(</span><span class="s1">&#39;files/&#39;</span><span class="p">,</span> <span class="n">ncubes</span><span class="o">=</span><span class="mi">5</span><span class="p">)</span>      <span class="c1"># Only parse the first 5 cubes</span>
+                                              <span class="c1"># sorted lexicographically by file name</span>
+</pre></div>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>verbose</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.11)"><em>bool</em></a>) – print file names when reading cubes</p></li>
+<li><p><strong>ncubes</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.11)"><em>int</em></a>) – get only the first ncubes</p></li>
+<li><p><strong>ext</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.11)"><em>str</em></a>) – file extension of cube files</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>uni (<a class="reference internal" href="exatomic.core.universe.html#exatomic.core.universe.Universe" title="exatomic.core.universe.Universe"><code class="xref py py-class docutils literal notranslate"><span class="pre">exatomic.core.universe.Universe</span></code></a>)</p>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="exatomic.interfaces.cclib.html" class="btn btn-neutral float-left" title="exatomic.interfaces.cclib module" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="exatomic.interfaces.pdb.html" class="btn btn-neutral float-right" title="exatomic.interfaces.pdb module" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright .
+      <span class="lastupdated">Last updated on Apr 21, 2023.
+      </span></p>
+  </div>
+
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

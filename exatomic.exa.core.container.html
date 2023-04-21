@@ -1,0 +1,402 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>exatomic.exa.core.container module &mdash; exatomic 0.6.0 documentation</title>
+      <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+        <script src="_static/doctools.js"></script>
+        <script src="_static/sphinx_highlight.js"></script>
+        <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="exatomic.exa.core.editor module" href="exatomic.exa.core.editor.html" />
+    <link rel="prev" title="exatomic.exa.core package" href="exatomic.exa.core.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            exatomic
+              <img src="_static/logo.png" class="logo" alt="Logo"/>
+          </a>
+              <div class="version">
+                0.6.0
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Sitemap</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="install.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="started.html">Getting Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="contrib.html">Development</a></li>
+</ul>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="exatomic.html">exatomic package</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="exatomic.html#supported-software">Supported Software</a></li>
+<li class="toctree-l2"><a class="reference internal" href="exatomic.html#exatomic.func_log"><code class="docutils literal notranslate"><span class="pre">func_log()</span></code></a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="exatomic.html#subpackages">Subpackages</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="exatomic.adf.html">exatomic.adf package</a></li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.algorithms.html">exatomic.algorithms package</a></li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.core.html">exatomic.core package</a></li>
+<li class="toctree-l3 current"><a class="reference internal" href="exatomic.exa.html">exatomic.exa package</a><ul class="current">
+<li class="toctree-l4"><a class="reference internal" href="exatomic.exa.html#exa">Exa</a></li>
+<li class="toctree-l4 current"><a class="reference internal" href="exatomic.exa.html#subpackages">Subpackages</a></li>
+<li class="toctree-l4"><a class="reference internal" href="exatomic.exa.html#submodules">Submodules</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.gaussian.html">exatomic.gaussian package</a></li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.interfaces.html">exatomic.interfaces package</a></li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.molcas.html">exatomic.molcas package</a></li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.nbo.html">exatomic.nbo package</a></li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.nwchem.html">exatomic.nwchem package</a></li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.plotter.html">exatomic.plotter package</a></li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.qchem.html">exatomic.qchem package</a></li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.qe.html">exatomic.qe package</a></li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.util.html">exatomic.util package</a></li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.widgets.html">exatomic.widgets package</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="exatomic.html#submodules">Submodules</a></li>
+</ul>
+</li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">exatomic</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="exatomic.html">exatomic package</a></li>
+          <li class="breadcrumb-item"><a href="exatomic.exa.html">exatomic.exa package</a></li>
+          <li class="breadcrumb-item"><a href="exatomic.exa.core.html">exatomic.exa.core package</a></li>
+      <li class="breadcrumb-item active">exatomic.exa.core.container module</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/exatomic.exa.core.container.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="module-exatomic.exa.core.container">
+<span id="exatomic-exa-core-container-module"></span><h1>exatomic.exa.core.container module<a class="headerlink" href="#module-exatomic.exa.core.container" title="Permalink to this heading"></a></h1>
+<section id="container">
+<h2>Container<a class="headerlink" href="#container" title="Permalink to this heading"></a></h2>
+<p>The <a class="reference internal" href="#exatomic.exa.core.container.Container" title="exatomic.exa.core.container.Container"><code class="xref py py-class docutils literal notranslate"><span class="pre">Container</span></code></a> class is the primary object for
+data processing, analysis, and visualization. In brief, containers are composed
+of data objects whose contents are used for 2D and 3D visualization. Containers
+also provide some content management and data relationship features.</p>
+<div class="admonition seealso">
+<p class="admonition-title">See also</p>
+<p>For a description of data objects see <a class="reference internal" href="exatomic.exa.core.numerical.html#module-exatomic.exa.core.numerical" title="exatomic.exa.core.numerical"><code class="xref py py-mod docutils literal notranslate"><span class="pre">numerical</span></code></a>.</p>
+</div>
+</section>
+<dl class="py class">
+<dt class="sig sig-object py" id="exatomic.exa.core.container.Container">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">exatomic.exa.core.container.</span></span><span class="sig-name descname"><span class="pre">Container</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">description</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">meta</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">uuid</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/exatomic/exa/core/container.html#Container"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#exatomic.exa.core.container.Container" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/functions.html#object" title="(in Python v3.11)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
+<p>Container class responsible for all features related to data management.</p>
+<dl class="py property">
+<dt class="sig sig-object py" id="exatomic.exa.core.container.Container.log">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">log</span></span><a class="headerlink" href="#exatomic.exa.core.container.Container.log" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="exatomic.exa.core.container.Container.copy">
+<span class="sig-name descname"><span class="pre">copy</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">description</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">meta</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/exatomic/exa/core/container.html#Container.copy"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#exatomic.exa.core.container.Container.copy" title="Permalink to this definition"></a></dt>
+<dd><p>Create a copy of the current object (may alter the container’s name,
+description, and update the metadata if needed).</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="exatomic.exa.core.container.Container.concat">
+<span class="sig-name descname"><span class="pre">concat</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/exatomic/exa/core/container.html#Container.concat"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#exatomic.exa.core.container.Container.concat" title="Permalink to this definition"></a></dt>
+<dd><p>Concatenate any number of container objects with the current object into
+a single container object.</p>
+<div class="admonition seealso">
+<p class="admonition-title">See also</p>
+<p>For argument description, see <code class="xref py py-func docutils literal notranslate"><span class="pre">concat()</span></code>.</p>
+</div>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="exatomic.exa.core.container.Container.slice_naive">
+<span class="sig-name descname"><span class="pre">slice_naive</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">key</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/exatomic/exa/core/container.html#Container.slice_naive"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#exatomic.exa.core.container.Container.slice_naive" title="Permalink to this definition"></a></dt>
+<dd><p>Naively slice each data object in the container by the object’s index.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>key</strong> – Int, slice, or list by which to extra “sub”-container</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><em>sub</em> – Sub container of the same format with a view of the data</p>
+</dd>
+</dl>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>To ensure that a new container is created, use the copy method.</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="n">mycontainer</span><span class="p">[</span><span class="nb">slice</span><span class="p">]</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="exatomic.exa.core.container.Container.slice_cardinal">
+<span class="sig-name descname"><span class="pre">slice_cardinal</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">key</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/exatomic/exa/core/container.html#Container.slice_cardinal"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#exatomic.exa.core.container.Container.slice_cardinal" title="Permalink to this definition"></a></dt>
+<dd><p>Slice the container according to its (primary) cardinal axis.</p>
+<p>The “cardinal” axis can have any name so long as the name matches a
+data object attached to the container. The index name for this object
+should also match the value of the cardinal axis.</p>
+<p>The algorithm builds a network graph representing the data relationships
+(including information about the type of relationship) and then traverses
+the edge tree (starting from the cardinal table). Each subsequent child
+object in the tree is sliced based on its relationship with its parent.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Breadth first traversal is performed.</p>
+</div>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>This function does not make a copy (if possible): to ensure a new
+object is created (a copy) use <a class="reference internal" href="#exatomic.exa.core.container.Container.copy" title="exatomic.exa.core.container.Container.copy"><code class="xref py py-func docutils literal notranslate"><span class="pre">copy()</span></code></a>
+after slicing.</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="n">myslice</span> <span class="o">=</span> <span class="n">mycontainer</span><span class="p">[::</span><span class="mi">2</span><span class="p">]</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+<div class="admonition seealso">
+<p class="admonition-title">See also</p>
+<p>For data network generation, see <a class="reference internal" href="#exatomic.exa.core.container.Container.network" title="exatomic.exa.core.container.Container.network"><code class="xref py py-func docutils literal notranslate"><span class="pre">network()</span></code></a>.
+For information about relationships between data objects see
+<a class="reference internal" href="exatomic.exa.core.numerical.html#module-exatomic.exa.core.numerical" title="exatomic.exa.core.numerical"><code class="xref py py-mod docutils literal notranslate"><span class="pre">numerical</span></code></a>.</p>
+</div>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="exatomic.exa.core.container.Container.cardinal_groupby">
+<span class="sig-name descname"><span class="pre">cardinal_groupby</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/exatomic/exa/core/container.html#Container.cardinal_groupby"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#exatomic.exa.core.container.Container.cardinal_groupby" title="Permalink to this definition"></a></dt>
+<dd><p>Create an instance of this class for every step in the cardinal dimension.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="exatomic.exa.core.container.Container.info">
+<span class="sig-name descname"><span class="pre">info</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/exatomic/exa/core/container.html#Container.info"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#exatomic.exa.core.container.Container.info" title="Permalink to this definition"></a></dt>
+<dd><p>Display information about the container’s data objects (note that info
+on metadata and visualization objects is also provided).</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Sizes are reported in bytes.</p>
+</div>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="exatomic.exa.core.container.Container.memory_usage">
+<span class="sig-name descname"><span class="pre">memory_usage</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">string</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/exatomic/exa/core/container.html#Container.memory_usage"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#exatomic.exa.core.container.Container.memory_usage" title="Permalink to this definition"></a></dt>
+<dd><p>Get the memory usage estimate of the container.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>string</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.11)"><em>bool</em></a>) – Human readable string (default false)</p>
+</dd>
+</dl>
+<div class="admonition seealso">
+<p class="admonition-title">See also</p>
+<p><a class="reference internal" href="#exatomic.exa.core.container.Container.info" title="exatomic.exa.core.container.Container.info"><code class="xref py py-func docutils literal notranslate"><span class="pre">info()</span></code></a></p>
+</div>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="exatomic.exa.core.container.Container.network">
+<span class="sig-name descname"><span class="pre">network</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">figsize</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">(14,</span> <span class="pre">9)</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fig</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/exatomic/exa/core/container.html#Container.network"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#exatomic.exa.core.container.Container.network" title="Permalink to this definition"></a></dt>
+<dd><p>Display information about the container’s object relationships.</p>
+<p>Nodes correspond to data objects. The size of the node corresponds
+to the size of the table in memory. The color of the node corresponds
+to its fundamental data type. Nodes are labeled by their container
+name; class information is listed below. The color of the connections
+correspond to the type of relationship; either an index of one table
+corresponds to a column in another table or the two tables share an
+index.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>figsize</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.11)"><em>tuple</em></a>) – Tuple containing figure dimensions</p></li>
+<li><p><strong>fig</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.11)"><em>bool</em></a>) – Generate the figure (default true)</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><em>graph</em> – Network graph object containing data relationships</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="exatomic.exa.core.container.Container.save">
+<span class="sig-name descname"><span class="pre">save</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">path</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">complevel</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">complib</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'zlib'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/exatomic/exa/core/container.html#Container.save"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#exatomic.exa.core.container.Container.save" title="Permalink to this definition"></a></dt>
+<dd><p>Save the container as an HDF5 archive.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>path</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.11)"><em>str</em></a>) – Path where to save the container</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><em>savepath (str)</em> – Path where the container was saved</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="exatomic.exa.core.container.Container.to_hdf">
+<span class="sig-name descname"><span class="pre">to_hdf</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/exatomic/exa/core/container.html#Container.to_hdf"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#exatomic.exa.core.container.Container.to_hdf" title="Permalink to this definition"></a></dt>
+<dd><p>Alias of <a class="reference internal" href="#exatomic.exa.core.container.Container" title="exatomic.exa.core.container.Container"><code class="xref py py-func docutils literal notranslate"><span class="pre">Container()</span></code></a>.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="exatomic.exa.core.container.Container.load">
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">load</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">pkid_or_path</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/exatomic/exa/core/container.html#Container.load"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#exatomic.exa.core.container.Container.load" title="Permalink to this definition"></a></dt>
+<dd><p>Load a container object from a persistent location or file path.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>pkid_or_path</strong> – Integer pkid corresponding to the container table or file path</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><em>container</em> – The saved container object</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="exatomic.exa.core.container.Container.from_hdf">
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">from_hdf</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/exatomic/exa/core/container.html#Container.from_hdf"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#exatomic.exa.core.container.Container.from_hdf" title="Permalink to this definition"></a></dt>
+<dd><p>Alias for <a class="reference internal" href="#exatomic.exa.core.container.Container" title="exatomic.exa.core.container.Container"><code class="xref py py-func docutils literal notranslate"><span class="pre">Container()</span></code></a>.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="exatomic.exa.core.container.TypedMeta">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">exatomic.exa.core.container.</span></span><span class="sig-name descname"><span class="pre">TypedMeta</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bases</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">clsdict</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/exatomic/exa/core/container.html#TypedMeta"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#exatomic.exa.core.container.TypedMeta" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/functions.html#type" title="(in Python v3.11)"><code class="xref py py-class docutils literal notranslate"><span class="pre">type</span></code></a></p>
+<p>This metaclass creates statically typed class attributes using the property
+framework.</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="k">class</span> <span class="nc">TestMeta</span><span class="p">(</span><span class="n">TypedMeta</span><span class="p">):</span>
+    <span class="n">attr1</span> <span class="o">=</span> <span class="p">(</span><span class="nb">int</span><span class="p">,</span> <span class="nb">float</span><span class="p">)</span>
+    <span class="n">attr2</span> <span class="o">=</span> <span class="n">DataFrame</span>
+
+<span class="k">class</span> <span class="nc">TestClass</span><span class="p">(</span><span class="n">metaclass</span><span class="o">=</span><span class="n">TestMeta</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">attr1</span><span class="p">,</span> <span class="n">attr2</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">attr1</span> <span class="o">=</span> <span class="n">attr1</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">attr2</span> <span class="o">=</span> <span class="n">attr2</span>
+</pre></div>
+</div>
+<p>The above code dynamically creates code that looks like the following:</p>
+<div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="k">class</span> <span class="nc">TestClass</span><span class="p">:</span>
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">attr1</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_attr1</span>
+
+    <span class="nd">@attr1</span><span class="o">.</span><span class="n">setter</span>
+    <span class="k">def</span> <span class="nf">attr1</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">obj</span><span class="p">):</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="p">(</span><span class="nb">int</span><span class="p">,</span> <span class="nb">float</span><span class="p">)):</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s1">&#39;attr1 must be int&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_attr1</span> <span class="o">=</span> <span class="n">obj</span>
+
+    <span class="nd">@attr1</span><span class="o">.</span><span class="n">deleter</span>
+    <span class="k">def</span> <span class="nf">attr1</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">del</span> <span class="bp">self</span><span class="o">.</span><span class="n">_attr1</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">attr2</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_attr2</span>
+
+    <span class="nd">@attr2</span><span class="o">.</span><span class="n">setter</span>
+    <span class="k">def</span> <span class="nf">attr2</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">obj</span><span class="p">):</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="n">DataFrame</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s1">&#39;attr2 must be DataFrame&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_attr2</span> <span class="o">=</span> <span class="n">obj</span>
+
+    <span class="nd">@attr2</span><span class="o">.</span><span class="n">deleter</span>
+    <span class="k">def</span> <span class="nf">attr2</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">del</span> <span class="bp">self</span><span class="o">.</span><span class="n">_attr2</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">attr1</span><span class="p">,</span> <span class="n">attr2</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">attr1</span> <span class="o">=</span> <span class="n">attr1</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">attr2</span> <span class="o">=</span> <span class="n">attr2</span>
+</pre></div>
+</div>
+<dl class="py method">
+<dt class="sig sig-object py" id="exatomic.exa.core.container.TypedMeta.create_property">
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">create_property</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ptype</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/exatomic/exa/core/container.html#TypedMeta.create_property"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#exatomic.exa.core.container.TypedMeta.create_property" title="Permalink to this definition"></a></dt>
+<dd><p>Creates a custom property with a getter that performs computing
+functionality (if available) and raise a type error if setting
+with the wrong type.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>By default, the setter attempts to convert the object to the
+correct type; a type error is raised if this fails.</p>
+</div>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="exatomic.exa.core.html" class="btn btn-neutral float-left" title="exatomic.exa.core package" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="exatomic.exa.core.editor.html" class="btn btn-neutral float-right" title="exatomic.exa.core.editor module" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright .
+      <span class="lastupdated">Last updated on Apr 21, 2023.
+      </span></p>
+  </div>
+
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

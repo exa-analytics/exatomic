@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>exatomic.molcas package &mdash; exatomic 0.6.0 documentation</title>
+      <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+        <script src="_static/doctools.js"></script>
+        <script src="_static/sphinx_highlight.js"></script>
+        <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="exatomic.molcas.editor module" href="exatomic.molcas.editor.html" />
+    <link rel="prev" title="exatomic.interfaces.xyz module" href="exatomic.interfaces.xyz.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            exatomic
+              <img src="_static/logo.png" class="logo" alt="Logo"/>
+          </a>
+              <div class="version">
+                0.6.0
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Sitemap</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="install.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="started.html">Getting Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="contrib.html">Development</a></li>
+</ul>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="exatomic.html">exatomic package</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="exatomic.html#supported-software">Supported Software</a></li>
+<li class="toctree-l2"><a class="reference internal" href="exatomic.html#exatomic.func_log"><code class="docutils literal notranslate"><span class="pre">func_log()</span></code></a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="exatomic.html#subpackages">Subpackages</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="exatomic.adf.html">exatomic.adf package</a></li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.algorithms.html">exatomic.algorithms package</a></li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.core.html">exatomic.core package</a></li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.exa.html">exatomic.exa package</a></li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.gaussian.html">exatomic.gaussian package</a></li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.interfaces.html">exatomic.interfaces package</a></li>
+<li class="toctree-l3 current"><a class="current reference internal" href="#">exatomic.molcas package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#submodules">Submodules</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.nbo.html">exatomic.nbo package</a></li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.nwchem.html">exatomic.nwchem package</a></li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.plotter.html">exatomic.plotter package</a></li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.qchem.html">exatomic.qchem package</a></li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.qe.html">exatomic.qe package</a></li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.util.html">exatomic.util package</a></li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.widgets.html">exatomic.widgets package</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="exatomic.html#submodules">Submodules</a></li>
+</ul>
+</li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">exatomic</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="exatomic.html">exatomic package</a></li>
+      <li class="breadcrumb-item active">exatomic.molcas package</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/exatomic.molcas.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="module-exatomic.molcas">
+<span id="exatomic-molcas-package"></span><h1>exatomic.molcas package<a class="headerlink" href="#module-exatomic.molcas" title="Permalink to this heading"></a></h1>
+<section id="submodules">
+<h2>Submodules<a class="headerlink" href="#submodules" title="Permalink to this heading"></a></h2>
+<div class="toctree-wrapper compound">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="exatomic.molcas.editor.html">exatomic.molcas.editor module</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="exatomic.molcas.editor.html#base-molcas-editor">Base Molcas Editor</a></li>
+<li class="toctree-l2"><a class="reference internal" href="exatomic.molcas.editor.html#exatomic.molcas.editor.Editor"><code class="docutils literal notranslate"><span class="pre">Editor</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.molcas.editor.html#exatomic.molcas.editor.Editor.to_universe"><code class="docutils literal notranslate"><span class="pre">Editor.to_universe()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="exatomic.molcas.inputs.html">exatomic.molcas.inputs module</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="exatomic.molcas.inputs.html#input-generator-and-parser">Input Generator and Parser</a></li>
+<li class="toctree-l2"><a class="reference internal" href="exatomic.molcas.inputs.html#exatomic.molcas.inputs.InputGenerator"><code class="docutils literal notranslate"><span class="pre">InputGenerator</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="exatomic.molcas.inputs.html#exatomic.molcas.inputs.write_molcas_input"><code class="docutils literal notranslate"><span class="pre">write_molcas_input()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="exatomic.molcas.output.html">exatomic.molcas.output module</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="exatomic.molcas.output.html#molcas-output-parser">Molcas Output Parser</a></li>
+<li class="toctree-l2"><a class="reference internal" href="exatomic.molcas.output.html#exatomic.molcas.output.OrbMeta"><code class="docutils literal notranslate"><span class="pre">OrbMeta</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.molcas.output.html#exatomic.molcas.output.OrbMeta.momatrix"><code class="docutils literal notranslate"><span class="pre">OrbMeta.momatrix</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.molcas.output.html#exatomic.molcas.output.OrbMeta.orbital"><code class="docutils literal notranslate"><span class="pre">OrbMeta.orbital</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="exatomic.molcas.output.html#exatomic.molcas.output.Orb"><code class="docutils literal notranslate"><span class="pre">Orb</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.molcas.output.html#exatomic.molcas.output.Orb.to_universe"><code class="docutils literal notranslate"><span class="pre">Orb.to_universe()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.molcas.output.html#exatomic.molcas.output.Orb.parse_momatrix"><code class="docutils literal notranslate"><span class="pre">Orb.parse_momatrix()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.molcas.output.html#exatomic.molcas.output.Orb.momatrix"><code class="docutils literal notranslate"><span class="pre">Orb.momatrix</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.molcas.output.html#exatomic.molcas.output.Orb.orbital"><code class="docutils literal notranslate"><span class="pre">Orb.orbital</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="exatomic.molcas.output.html#exatomic.molcas.output.OutMeta"><code class="docutils literal notranslate"><span class="pre">OutMeta</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.molcas.output.html#exatomic.molcas.output.OutMeta.atom"><code class="docutils literal notranslate"><span class="pre">OutMeta.atom</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.molcas.output.html#exatomic.molcas.output.OutMeta.gradient"><code class="docutils literal notranslate"><span class="pre">OutMeta.gradient</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.molcas.output.html#exatomic.molcas.output.OutMeta.basis_set"><code class="docutils literal notranslate"><span class="pre">OutMeta.basis_set</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.molcas.output.html#exatomic.molcas.output.OutMeta.basis_set_order"><code class="docutils literal notranslate"><span class="pre">OutMeta.basis_set_order</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.molcas.output.html#exatomic.molcas.output.OutMeta.sf_dipole_moment"><code class="docutils literal notranslate"><span class="pre">OutMeta.sf_dipole_moment</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.molcas.output.html#exatomic.molcas.output.OutMeta.sf_quadrupole_moment"><code class="docutils literal notranslate"><span class="pre">OutMeta.sf_quadrupole_moment</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.molcas.output.html#exatomic.molcas.output.OutMeta.sf_angmom"><code class="docutils literal notranslate"><span class="pre">OutMeta.sf_angmom</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.molcas.output.html#exatomic.molcas.output.OutMeta.sf_energy"><code class="docutils literal notranslate"><span class="pre">OutMeta.sf_energy</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.molcas.output.html#exatomic.molcas.output.OutMeta.so_energy"><code class="docutils literal notranslate"><span class="pre">OutMeta.so_energy</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.molcas.output.html#exatomic.molcas.output.OutMeta.sf_oscillator"><code class="docutils literal notranslate"><span class="pre">OutMeta.sf_oscillator</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.molcas.output.html#exatomic.molcas.output.OutMeta.so_oscillator"><code class="docutils literal notranslate"><span class="pre">OutMeta.so_oscillator</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.molcas.output.html#exatomic.molcas.output.OutMeta.frequency"><code class="docutils literal notranslate"><span class="pre">OutMeta.frequency</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.molcas.output.html#exatomic.molcas.output.OutMeta.natural_occ"><code class="docutils literal notranslate"><span class="pre">OutMeta.natural_occ</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.molcas.output.html#exatomic.molcas.output.OutMeta.caspt2_energy"><code class="docutils literal notranslate"><span class="pre">OutMeta.caspt2_energy</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="exatomic.molcas.output.html#exatomic.molcas.output.Output"><code class="docutils literal notranslate"><span class="pre">Output</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.molcas.output.html#exatomic.molcas.output.Output.add_orb"><code class="docutils literal notranslate"><span class="pre">Output.add_orb()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.molcas.output.html#exatomic.molcas.output.Output.add_overlap"><code class="docutils literal notranslate"><span class="pre">Output.add_overlap()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.molcas.output.html#exatomic.molcas.output.Output.parse_atom"><code class="docutils literal notranslate"><span class="pre">Output.parse_atom()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.molcas.output.html#exatomic.molcas.output.Output.parse_gradient"><code class="docutils literal notranslate"><span class="pre">Output.parse_gradient()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.molcas.output.html#exatomic.molcas.output.Output.parse_frequency"><code class="docutils literal notranslate"><span class="pre">Output.parse_frequency()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.molcas.output.html#exatomic.molcas.output.Output.parse_basis_set_order"><code class="docutils literal notranslate"><span class="pre">Output.parse_basis_set_order()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.molcas.output.html#exatomic.molcas.output.Output.parse_basis_set"><code class="docutils literal notranslate"><span class="pre">Output.parse_basis_set()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.molcas.output.html#exatomic.molcas.output.Output.parse_sf_dipole_moment"><code class="docutils literal notranslate"><span class="pre">Output.parse_sf_dipole_moment()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.molcas.output.html#exatomic.molcas.output.Output.parse_sf_quadrupole_moment"><code class="docutils literal notranslate"><span class="pre">Output.parse_sf_quadrupole_moment()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.molcas.output.html#exatomic.molcas.output.Output.parse_sf_angmom"><code class="docutils literal notranslate"><span class="pre">Output.parse_sf_angmom()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.molcas.output.html#exatomic.molcas.output.Output.parse_sf_energy"><code class="docutils literal notranslate"><span class="pre">Output.parse_sf_energy()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.molcas.output.html#exatomic.molcas.output.Output.parse_so_energy"><code class="docutils literal notranslate"><span class="pre">Output.parse_so_energy()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.molcas.output.html#exatomic.molcas.output.Output.parse_sf_oscillator"><code class="docutils literal notranslate"><span class="pre">Output.parse_sf_oscillator()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.molcas.output.html#exatomic.molcas.output.Output.parse_so_oscillator"><code class="docutils literal notranslate"><span class="pre">Output.parse_so_oscillator()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.molcas.output.html#exatomic.molcas.output.Output.parse_natural_occ"><code class="docutils literal notranslate"><span class="pre">Output.parse_natural_occ()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.molcas.output.html#exatomic.molcas.output.Output.parse_caspt2_energy"><code class="docutils literal notranslate"><span class="pre">Output.parse_caspt2_energy()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.molcas.output.html#exatomic.molcas.output.Output.atom"><code class="docutils literal notranslate"><span class="pre">Output.atom</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.molcas.output.html#exatomic.molcas.output.Output.basis_set"><code class="docutils literal notranslate"><span class="pre">Output.basis_set</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.molcas.output.html#exatomic.molcas.output.Output.basis_set_order"><code class="docutils literal notranslate"><span class="pre">Output.basis_set_order</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.molcas.output.html#exatomic.molcas.output.Output.caspt2_energy"><code class="docutils literal notranslate"><span class="pre">Output.caspt2_energy</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.molcas.output.html#exatomic.molcas.output.Output.frequency"><code class="docutils literal notranslate"><span class="pre">Output.frequency</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.molcas.output.html#exatomic.molcas.output.Output.gradient"><code class="docutils literal notranslate"><span class="pre">Output.gradient</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.molcas.output.html#exatomic.molcas.output.Output.natural_occ"><code class="docutils literal notranslate"><span class="pre">Output.natural_occ</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.molcas.output.html#exatomic.molcas.output.Output.sf_angmom"><code class="docutils literal notranslate"><span class="pre">Output.sf_angmom</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.molcas.output.html#exatomic.molcas.output.Output.sf_dipole_moment"><code class="docutils literal notranslate"><span class="pre">Output.sf_dipole_moment</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.molcas.output.html#exatomic.molcas.output.Output.sf_energy"><code class="docutils literal notranslate"><span class="pre">Output.sf_energy</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.molcas.output.html#exatomic.molcas.output.Output.sf_oscillator"><code class="docutils literal notranslate"><span class="pre">Output.sf_oscillator</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.molcas.output.html#exatomic.molcas.output.Output.sf_quadrupole_moment"><code class="docutils literal notranslate"><span class="pre">Output.sf_quadrupole_moment</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.molcas.output.html#exatomic.molcas.output.Output.so_energy"><code class="docutils literal notranslate"><span class="pre">Output.so_energy</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.molcas.output.html#exatomic.molcas.output.Output.so_oscillator"><code class="docutils literal notranslate"><span class="pre">Output.so_oscillator</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="exatomic.molcas.output.html#exatomic.molcas.output.HDFMeta"><code class="docutils literal notranslate"><span class="pre">HDFMeta</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.molcas.output.html#exatomic.molcas.output.HDFMeta.atom"><code class="docutils literal notranslate"><span class="pre">HDFMeta.atom</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.molcas.output.html#exatomic.molcas.output.HDFMeta.overlap"><code class="docutils literal notranslate"><span class="pre">HDFMeta.overlap</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.molcas.output.html#exatomic.molcas.output.HDFMeta.orbital"><code class="docutils literal notranslate"><span class="pre">HDFMeta.orbital</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.molcas.output.html#exatomic.molcas.output.HDFMeta.momatrix"><code class="docutils literal notranslate"><span class="pre">HDFMeta.momatrix</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.molcas.output.html#exatomic.molcas.output.HDFMeta.basis_set"><code class="docutils literal notranslate"><span class="pre">HDFMeta.basis_set</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.molcas.output.html#exatomic.molcas.output.HDFMeta.basis_set_order"><code class="docutils literal notranslate"><span class="pre">HDFMeta.basis_set_order</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="exatomic.molcas.output.html#exatomic.molcas.output.HDF"><code class="docutils literal notranslate"><span class="pre">HDF</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.molcas.output.html#exatomic.molcas.output.HDF.to_universe"><code class="docutils literal notranslate"><span class="pre">HDF.to_universe()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.molcas.output.html#exatomic.molcas.output.HDF.parse_atom"><code class="docutils literal notranslate"><span class="pre">HDF.parse_atom()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.molcas.output.html#exatomic.molcas.output.HDF.parse_basis_set_order"><code class="docutils literal notranslate"><span class="pre">HDF.parse_basis_set_order()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.molcas.output.html#exatomic.molcas.output.HDF.parse_orbital"><code class="docutils literal notranslate"><span class="pre">HDF.parse_orbital()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.molcas.output.html#exatomic.molcas.output.HDF.parse_overlap"><code class="docutils literal notranslate"><span class="pre">HDF.parse_overlap()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.molcas.output.html#exatomic.molcas.output.HDF.parse_basis_set"><code class="docutils literal notranslate"><span class="pre">HDF.parse_basis_set()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.molcas.output.html#exatomic.molcas.output.HDF.parse_momatrix"><code class="docutils literal notranslate"><span class="pre">HDF.parse_momatrix()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.molcas.output.html#exatomic.molcas.output.HDF.atom"><code class="docutils literal notranslate"><span class="pre">HDF.atom</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.molcas.output.html#exatomic.molcas.output.HDF.basis_set"><code class="docutils literal notranslate"><span class="pre">HDF.basis_set</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.molcas.output.html#exatomic.molcas.output.HDF.basis_set_order"><code class="docutils literal notranslate"><span class="pre">HDF.basis_set_order</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.molcas.output.html#exatomic.molcas.output.HDF.momatrix"><code class="docutils literal notranslate"><span class="pre">HDF.momatrix</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.molcas.output.html#exatomic.molcas.output.HDF.orbital"><code class="docutils literal notranslate"><span class="pre">HDF.orbital</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.molcas.output.html#exatomic.molcas.output.HDF.overlap"><code class="docutils literal notranslate"><span class="pre">HDF.overlap</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="exatomic.molcas.output.html#exatomic.molcas.output.parse_molcas"><code class="docutils literal notranslate"><span class="pre">parse_molcas()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</div>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="exatomic.interfaces.xyz.html" class="btn btn-neutral float-left" title="exatomic.interfaces.xyz module" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="exatomic.molcas.editor.html" class="btn btn-neutral float-right" title="exatomic.molcas.editor module" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright .
+      <span class="lastupdated">Last updated on Apr 21, 2023.
+      </span></p>
+  </div>
+
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

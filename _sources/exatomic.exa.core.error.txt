@@ -1,0 +1,7 @@
+exatomic.exa.core.error module
+==============================
+
+.. automodule:: exatomic.exa.core.error
+   :members:
+   :undoc-members:
+   :show-inheritance:

@@ -1,0 +1,7 @@
+exatomic.exa.typed module
+=========================
+
+.. automodule:: exatomic.exa.typed
+   :members:
+   :undoc-members:
+   :show-inheritance:

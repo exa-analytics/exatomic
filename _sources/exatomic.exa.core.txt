@@ -1,0 +1,18 @@
+exatomic.exa.core package
+=========================
+
+.. automodule:: exatomic.exa.core
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+Submodules
+----------
+
+.. toctree::
+   :maxdepth: 4
+
+   exatomic.exa.core.container
+   exatomic.exa.core.editor
+   exatomic.exa.core.error
+   exatomic.exa.core.numerical

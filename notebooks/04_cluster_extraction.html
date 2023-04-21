@@ -1,0 +1,621 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Extraction of cluster geometries from a trajectory &mdash; exatomic 0.6.0 documentation</title>
+      <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/nbsphinx-code-cells.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+        <script src="../_static/doctools.js"></script>
+        <script src="../_static/sphinx_highlight.js"></script>
+        <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+        <script>window.MathJax = {"tex": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true}, "options": {"ignoreHtmlClass": "tex2jax_ignore|mathjax_ignore|document", "processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
+        <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="NWChem" href="nwchem.html" />
+    <link rel="prev" title="Visualize Orbitals" href="03_orbitals.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            exatomic
+              <img src="../_static/logo.png" class="logo" alt="Logo"/>
+          </a>
+              <div class="version">
+                0.6.0
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Sitemap</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../install.html">Installation</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../started.html">Getting Started</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="00_index.html">An Introduction to exatomic</a></li>
+<li class="toctree-l2"><a class="reference internal" href="01_basics.html">Welcome to exatomic</a></li>
+<li class="toctree-l2"><a class="reference internal" href="02_xyz.html">XYZ Example</a></li>
+<li class="toctree-l2"><a class="reference internal" href="03_orbitals.html">Visualize Orbitals</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Extraction of cluster geometries from a trajectory</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#To-extract-clusters-from-the-trajectory,-we-don't-need-to-pre-compute-atom_two">To extract clusters from the trajectory, we don’t need to pre-compute atom_two</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#If-we-had-wanted-to-view-the-entire-universe...">If we had wanted to view the entire universe…</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="nwchem.html">NWChem</a></li>
+<li class="toctree-l2"><a class="reference internal" href="qe.html">Support for Quantum ESPRESSO in exatomic</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../contrib.html">Development</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../exatomic.html">exatomic package</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">exatomic</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../started.html">Getting Started</a></li>
+      <li class="breadcrumb-item active">Extraction of cluster geometries from a trajectory</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/notebooks/04_cluster_extraction.ipynb.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="Extraction-of-cluster-geometries-from-a-trajectory">
+<h1>Extraction of cluster geometries from a trajectory<a class="headerlink" href="#Extraction-of-cluster-geometries-from-a-trajectory" title="Permalink to this heading"></a></h1>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[1]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">exa.util</span> <span class="kn">import</span> <span class="n">isotopes</span>
+<span class="kn">import</span> <span class="nn">exatomic</span>
+<span class="kn">from</span> <span class="nn">exatomic.core.two</span> <span class="kn">import</span> <span class="n">compute_atom_two_out_of_core</span>    <span class="c1"># If we need to compute atom_two out of core (low RAM)</span>
+<span class="kn">from</span> <span class="nn">exatomic.algorithms.neighbors</span> <span class="kn">import</span> <span class="n">periodic_nearest_neighbors_by_atom</span>    <span class="c1"># Only valid for simple cubic periodic cells</span>
+<span class="kn">from</span> <span class="nn">exatomic.base</span> <span class="kn">import</span> <span class="n">resource</span> <span class="c1"># Helper function to find the path to an example file</span>
+</pre></div>
+</div>
+</div>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[2]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">xyzpath</span> <span class="o">=</span> <span class="n">resource</span><span class="p">(</span><span class="s2">&quot;rh2.traj.xyz&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[3]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">xyz</span> <span class="o">=</span> <span class="n">exatomic</span><span class="o">.</span><span class="n">XYZ</span><span class="p">(</span><span class="n">xyzpath</span><span class="p">)</span>    <span class="c1"># Editor that can parse the XYZ file and build a universe!</span>
+</pre></div>
+</div>
+</div>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[4]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">u</span> <span class="o">=</span> <span class="n">xyz</span><span class="o">.</span><span class="n">to_universe</span><span class="p">()</span>    <span class="c1"># Parse the XYZ data to a universe</span>
+</pre></div>
+</div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[5]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">u</span><span class="o">.</span><span class="n">info</span><span class="p">()</span>    <span class="c1"># Current tables</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[5]:
+</pre></div>
+</div>
+<div class="output_area rendered_html docutils container">
+<div>
+<style scoped>
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>size</th>
+      <th>type</th>
+    </tr>
+    <tr>
+      <th>object</th>
+      <th></th>
+      <th></th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>METADATA</th>
+      <td>48</td>
+      <td>-</td>
+    </tr>
+    <tr>
+      <th>WIDGET</th>
+      <td>0</td>
+      <td>-</td>
+    </tr>
+    <tr>
+      <th>atom</th>
+      <td>985706</td>
+      <td>exatomic.core.atom.Atom</td>
+    </tr>
+    <tr>
+      <th>frame</th>
+      <td>1616</td>
+      <td>exatomic.core.frame.Frame</td>
+    </tr>
+  </tbody>
+</table>
+</div></div>
+</div>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[6]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># Add the unit cell dimensions to the frame table of the universe</span>
+<span class="n">a</span> <span class="o">=</span> <span class="mf">37.08946302</span>
+<span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">q</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">((</span><span class="s2">&quot;x&quot;</span><span class="p">,</span> <span class="s2">&quot;y&quot;</span><span class="p">,</span> <span class="s2">&quot;z&quot;</span><span class="p">)):</span>
+    <span class="k">for</span> <span class="n">j</span><span class="p">,</span> <span class="n">r</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">((</span><span class="s2">&quot;i&quot;</span><span class="p">,</span> <span class="s2">&quot;j&quot;</span><span class="p">,</span> <span class="s2">&quot;k&quot;</span><span class="p">)):</span>
+        <span class="k">if</span> <span class="n">i</span> <span class="o">==</span> <span class="n">j</span><span class="p">:</span>
+            <span class="n">u</span><span class="o">.</span><span class="n">frame</span><span class="p">[</span><span class="n">q</span><span class="o">+</span><span class="n">r</span><span class="p">]</span> <span class="o">=</span> <span class="n">a</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">u</span><span class="o">.</span><span class="n">frame</span><span class="p">[</span><span class="n">q</span><span class="o">+</span><span class="n">r</span><span class="p">]</span> <span class="o">=</span> <span class="mf">0.0</span>
+    <span class="n">u</span><span class="o">.</span><span class="n">frame</span><span class="p">[</span><span class="s2">&quot;o&quot;</span><span class="o">+</span><span class="n">q</span><span class="p">]</span> <span class="o">=</span> <span class="mf">0.0</span>
+<span class="n">u</span><span class="o">.</span><span class="n">frame</span><span class="p">[</span><span class="s1">&#39;periodic&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="kc">True</span>
+</pre></div>
+</div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[7]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="nb">len</span><span class="p">(</span><span class="n">u</span><span class="p">)</span>    <span class="c1"># Number of steps in this trajectory (small for example purposes)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[7]:
+</pre></div>
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+101
+</pre></div></div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[8]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">isotopes</span><span class="o">.</span><span class="n">Rh</span><span class="o">.</span><span class="n">radius</span>    <span class="c1"># Default Rh (covalent) radius</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[8]:
+</pre></div>
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+2.3621574999999995
+</pre></div></div>
+</div>
+<section id="To-extract-clusters-from-the-trajectory,-we-don't-need-to-pre-compute-atom_two">
+<h2>To extract clusters from the trajectory, we don’t need to pre-compute atom_two<a class="headerlink" href="#To-extract-clusters-from-the-trajectory,-we-don't-need-to-pre-compute-atom_two" title="Permalink to this heading"></a></h2>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[9]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">u</span><span class="o">.</span><span class="n">atom</span><span class="o">.</span><span class="n">head</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[9]:
+</pre></div>
+</div>
+<div class="output_area rendered_html docutils container">
+<div>
+<style scoped>
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>symbol</th>
+      <th>x</th>
+      <th>y</th>
+      <th>z</th>
+      <th>frame</th>
+    </tr>
+    <tr>
+      <th>atom</th>
+      <th></th>
+      <th></th>
+      <th></th>
+      <th></th>
+      <th></th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>0</th>
+      <td>Rh</td>
+      <td>19.3251</td>
+      <td>20.99490</td>
+      <td>12.9253</td>
+      <td>0</td>
+    </tr>
+    <tr>
+      <th>1</th>
+      <td>Rh</td>
+      <td>20.8605</td>
+      <td>19.40470</td>
+      <td>17.0475</td>
+      <td>0</td>
+    </tr>
+    <tr>
+      <th>2</th>
+      <td>Cl</td>
+      <td>32.7903</td>
+      <td>9.48909</td>
+      <td>27.4356</td>
+      <td>0</td>
+    </tr>
+    <tr>
+      <th>3</th>
+      <td>Cl</td>
+      <td>27.2017</td>
+      <td>10.59920</td>
+      <td>26.4768</td>
+      <td>0</td>
+    </tr>
+    <tr>
+      <th>4</th>
+      <td>Cl</td>
+      <td>39.1224</td>
+      <td>25.75620</td>
+      <td>13.6518</td>
+      <td>0</td>
+    </tr>
+  </tbody>
+</table>
+</div></div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[10]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="o">%%time</span>
+<span class="n">dct</span> <span class="o">=</span> <span class="n">periodic_nearest_neighbors_by_atom</span><span class="p">(</span><span class="n">u</span><span class="p">,</span>       <span class="c1"># Universe with all frames from which we want to extract clusters</span>
+                                         <span class="s2">&quot;Rh&quot;</span><span class="p">,</span>    <span class="c1"># Source atom from which we will search for neighbors</span>
+                                         <span class="n">a</span><span class="p">,</span>       <span class="c1"># Cubic cell dimension</span>
+                                         <span class="c1"># Cluster sizes we want</span>
+                                         <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">8</span><span class="p">,</span> <span class="mi">12</span><span class="p">,</span> <span class="mi">16</span><span class="p">],</span>
+                                         <span class="c1"># Additional arguments to be passed to the atomic two body calculation</span>
+                                         <span class="c1"># Note that it is critical to increase dmax (in compute_atom_two)!!!</span>
+                                         <span class="n">Rh</span><span class="o">=</span><span class="mf">2.6</span><span class="p">,</span> <span class="n">dmax</span><span class="o">=</span><span class="n">a</span><span class="o">/</span><span class="mi">2</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<script type="application/vnd.jupyter.widget-view+json">{"model_id": "", "version_major": 2, "version_minor": 0}</script></div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+CPU times: user 2min 20s, sys: 2min 35s, total: 4min 56s
+Wall time: 5min 20s
+</pre></div></div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[11]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">dct</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span>    <span class="c1"># &#39;dct&#39; is a dictionary containing our clustered universes as well as the sorted neighbor list (per frame)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[11]:
+</pre></div>
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+dict_keys([&#39;nearest&#39;, 0, 1, 2, 3, 4, 8, 12, 16])
+</pre></div></div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[12]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">dct</span><span class="p">[</span><span class="s1">&#39;nearest&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">head</span><span class="p">()</span>    <span class="c1"># Table of sorted indexes of nearest molecules to &quot;Rh&quot; in each frame</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[12]:
+</pre></div>
+</div>
+<div class="output_area rendered_html docutils container">
+<div>
+<style scoped>
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>frame</th>
+      <th>idx</th>
+      <th>two</th>
+      <th>atom</th>
+      <th>molecule</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>0</th>
+      <td>0</td>
+      <td>18</td>
+      <td>421055</td>
+      <td>5186</td>
+      <td>890</td>
+    </tr>
+    <tr>
+      <th>1</th>
+      <td>0</td>
+      <td>26</td>
+      <td>420722</td>
+      <td>4930</td>
+      <td>879</td>
+    </tr>
+    <tr>
+      <th>2</th>
+      <td>0</td>
+      <td>30</td>
+      <td>420997</td>
+      <td>5083</td>
+      <td>859</td>
+    </tr>
+    <tr>
+      <th>3</th>
+      <td>0</td>
+      <td>34</td>
+      <td>420801</td>
+      <td>5090</td>
+      <td>857</td>
+    </tr>
+    <tr>
+      <th>4</th>
+      <td>0</td>
+      <td>35</td>
+      <td>420834</td>
+      <td>5155</td>
+      <td>881</td>
+    </tr>
+  </tbody>
+</table>
+</div></div>
+</div>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">exatomic</span><span class="o">.</span><span class="n">UniverseWidget</span><span class="p">(</span><span class="n">dct</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>    <span class="c1"># Just the analyte</span>
+</pre></div>
+</div>
+</div>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">exatomic</span><span class="o">.</span><span class="n">UniverseWidget</span><span class="p">(</span><span class="n">dct</span><span class="p">[</span><span class="mi">16</span><span class="p">])</span>   <span class="c1"># View the universe with 16 nearest molecules</span>
+</pre></div>
+</div>
+</div>
+</section>
+<section id="If-we-had-wanted-to-view-the-entire-universe...">
+<h2>If we had wanted to view the entire universe…<a class="headerlink" href="#If-we-had-wanted-to-view-the-entire-universe..." title="Permalink to this heading"></a></h2>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[15]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="o">%</span><span class="k">time</span> u.compute_atom_two(Rh=2.6)    # Compute atom two body data with slightly larger Rh radius
+<span class="c1"># OR</span>
+<span class="c1">#%time compute_atom_two_out_of_core(&quot;atom_two.hdf&quot;, u, a, Rh=2.6)      # Writes the two body data to &quot;atom_two.hdf&quot; with keys &quot;frame_{index}/atom_two&quot;</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+CPU times: user 3.17 s, sys: 281 ms, total: 3.45 s
+Wall time: 3.51 s
+</pre></div></div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[16]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">u</span><span class="o">.</span><span class="n">memory_usage</span><span class="p">()</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span><span class="o">/</span><span class="mi">1024</span><span class="o">**</span><span class="mi">2</span>    <span class="c1"># RAM usage (MB)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[16]:
+</pre></div>
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+10.53761100769043
+</pre></div></div>
+</div>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">exatomic</span><span class="o">.</span><span class="n">UniverseWidget</span><span class="p">(</span><span class="n">u</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>
+</pre></div>
+</div>
+</div>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>
+</pre></div>
+</div>
+</div>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>
+</pre></div>
+</div>
+</div>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>
+</pre></div>
+</div>
+</div>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>
+</pre></div>
+</div>
+</div>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>
+</pre></div>
+</div>
+</div>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="03_orbitals.html" class="btn btn-neutral float-left" title="Visualize Orbitals" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="nwchem.html" class="btn btn-neutral float-right" title="NWChem" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright .
+      <span class="lastupdated">Last updated on Apr 21, 2023.
+      </span></p>
+  </div>
+
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

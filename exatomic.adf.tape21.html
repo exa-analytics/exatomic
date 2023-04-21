@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>exatomic.adf.tape21 module &mdash; exatomic 0.6.0 documentation</title>
+      <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+        <script src="_static/doctools.js"></script>
+        <script src="_static/sphinx_highlight.js"></script>
+        <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+        <script>window.MathJax = {"tex": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true}, "options": {"ignoreHtmlClass": "tex2jax_ignore|mathjax_ignore|document", "processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
+        <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="exatomic.algorithms package" href="exatomic.algorithms.html" />
+    <link rel="prev" title="exatomic.adf.output module" href="exatomic.adf.output.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            exatomic
+              <img src="_static/logo.png" class="logo" alt="Logo"/>
+          </a>
+              <div class="version">
+                0.6.0
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Sitemap</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="install.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="started.html">Getting Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="contrib.html">Development</a></li>
+</ul>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="exatomic.html">exatomic package</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="exatomic.html#supported-software">Supported Software</a></li>
+<li class="toctree-l2"><a class="reference internal" href="exatomic.html#exatomic.func_log"><code class="docutils literal notranslate"><span class="pre">func_log()</span></code></a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="exatomic.html#subpackages">Subpackages</a><ul class="current">
+<li class="toctree-l3 current"><a class="reference internal" href="exatomic.adf.html">exatomic.adf package</a><ul class="current">
+<li class="toctree-l4"><a class="reference internal" href="exatomic.adf.html#subpackages">Subpackages</a></li>
+<li class="toctree-l4 current"><a class="reference internal" href="exatomic.adf.html#submodules">Submodules</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.algorithms.html">exatomic.algorithms package</a></li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.core.html">exatomic.core package</a></li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.exa.html">exatomic.exa package</a></li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.gaussian.html">exatomic.gaussian package</a></li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.interfaces.html">exatomic.interfaces package</a></li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.molcas.html">exatomic.molcas package</a></li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.nbo.html">exatomic.nbo package</a></li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.nwchem.html">exatomic.nwchem package</a></li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.plotter.html">exatomic.plotter package</a></li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.qchem.html">exatomic.qchem package</a></li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.qe.html">exatomic.qe package</a></li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.util.html">exatomic.util package</a></li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.widgets.html">exatomic.widgets package</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="exatomic.html#submodules">Submodules</a></li>
+</ul>
+</li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">exatomic</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="exatomic.html">exatomic package</a></li>
+          <li class="breadcrumb-item"><a href="exatomic.adf.html">exatomic.adf package</a></li>
+      <li class="breadcrumb-item active">exatomic.adf.tape21 module</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/exatomic.adf.tape21.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="module-exatomic.adf.tape21">
+<span id="exatomic-adf-tape21-module"></span><h1>exatomic.adf.tape21 module<a class="headerlink" href="#module-exatomic.adf.tape21" title="Permalink to this heading"></a></h1>
+<section id="adf-tape21-ascii-converted-output">
+<h2>ADF TAPE21 ASCII converted output<a class="headerlink" href="#adf-tape21-ascii-converted-output" title="Permalink to this heading"></a></h2>
+<p>this module provides the primary (user facing) parser for an ASCII
+converted TAPE21 file from ADF</p>
+</section>
+<dl class="py exception">
+<dt class="sig sig-object py" id="exatomic.adf.tape21.MissingSection">
+<em class="property"><span class="pre">exception</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">exatomic.adf.tape21.</span></span><span class="sig-name descname"><span class="pre">MissingSection</span></span><a class="reference internal" href="_modules/exatomic/adf/tape21.html#MissingSection"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#exatomic.adf.tape21.MissingSection" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/exceptions.html#Exception" title="(in Python v3.11)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Exception</span></code></a></p>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="exatomic.adf.tape21.Tape21Meta">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">exatomic.adf.tape21.</span></span><span class="sig-name descname"><span class="pre">Tape21Meta</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bases</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">clsdict</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/exatomic/adf/tape21.html#Tape21Meta"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#exatomic.adf.tape21.Tape21Meta" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="exatomic.exa.core.container.html#exatomic.exa.core.container.TypedMeta" title="exatomic.exa.core.container.TypedMeta"><code class="xref py py-class docutils literal notranslate"><span class="pre">TypedMeta</span></code></a></p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="exatomic.adf.tape21.Tape21Meta.atom">
+<span class="sig-name descname"><span class="pre">atom</span></span><a class="headerlink" href="#exatomic.adf.tape21.Tape21Meta.atom" title="Permalink to this definition"></a></dt>
+<dd><p>alias of <a class="reference internal" href="exatomic.core.atom.html#exatomic.core.atom.Atom" title="exatomic.core.atom.Atom"><code class="xref py py-class docutils literal notranslate"><span class="pre">Atom</span></code></a></p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="exatomic.adf.tape21.Tape21Meta.frequency">
+<span class="sig-name descname"><span class="pre">frequency</span></span><a class="headerlink" href="#exatomic.adf.tape21.Tape21Meta.frequency" title="Permalink to this definition"></a></dt>
+<dd><p>alias of <a class="reference internal" href="exatomic.core.atom.html#exatomic.core.atom.Frequency" title="exatomic.core.atom.Frequency"><code class="xref py py-class docutils literal notranslate"><span class="pre">Frequency</span></code></a></p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="exatomic.adf.tape21.Tape21Meta.gradient">
+<span class="sig-name descname"><span class="pre">gradient</span></span><a class="headerlink" href="#exatomic.adf.tape21.Tape21Meta.gradient" title="Permalink to this definition"></a></dt>
+<dd><p>alias of <a class="reference internal" href="exatomic.core.gradient.html#exatomic.core.gradient.Gradient" title="exatomic.core.gradient.Gradient"><code class="xref py py-class docutils literal notranslate"><span class="pre">Gradient</span></code></a></p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="exatomic.adf.tape21.Tape21Meta.j_coupling">
+<span class="sig-name descname"><span class="pre">j_coupling</span></span><a class="headerlink" href="#exatomic.adf.tape21.Tape21Meta.j_coupling" title="Permalink to this definition"></a></dt>
+<dd><p>alias of <a class="reference internal" href="exatomic.core.tensor.html#exatomic.core.tensor.JCoupling" title="exatomic.core.tensor.JCoupling"><code class="xref py py-class docutils literal notranslate"><span class="pre">JCoupling</span></code></a></p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="exatomic.adf.tape21.Tape21Meta.nmr_shielding">
+<span class="sig-name descname"><span class="pre">nmr_shielding</span></span><a class="headerlink" href="#exatomic.adf.tape21.Tape21Meta.nmr_shielding" title="Permalink to this definition"></a></dt>
+<dd><p>alias of <a class="reference internal" href="exatomic.core.tensor.html#exatomic.core.tensor.NMRShielding" title="exatomic.core.tensor.NMRShielding"><code class="xref py py-class docutils literal notranslate"><span class="pre">NMRShielding</span></code></a></p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="exatomic.adf.tape21.Tape21">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">exatomic.adf.tape21.</span></span><span class="sig-name descname"><span class="pre">Tape21</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">path_stream_or_string</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">as_interned</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nprint</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">30</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">description</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">meta</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">encoding</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ignore</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/exatomic/adf/tape21.html#Tape21"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#exatomic.adf.tape21.Tape21" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="exatomic.exa.core.editor.html#exatomic.exa.core.editor.Editor" title="exatomic.exa.core.editor.Editor"><code class="xref py py-class docutils literal notranslate"><span class="pre">Editor</span></code></a></p>
+<p>Parser for ADF Tape21 that have been converted to an ASCII file with
+their dmpkf utility.</p>
+<p><strong>All properties are parsed based on the input order.</strong></p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>This is not yet tested for ADF versions newer than 2017.</p>
+</div>
+<dl class="py method">
+<dt class="sig sig-object py" id="exatomic.adf.tape21.Tape21.rmass_mwc">
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">rmass_mwc</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">symbol</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/exatomic/adf/tape21.html#Tape21.rmass_mwc"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#exatomic.adf.tape21.Tape21.rmass_mwc" title="Permalink to this definition"></a></dt>
+<dd><p>Calculate the reduced masses from the mass-weighted normal modes. With
+the equation,</p>
+<div class="math notranslate nohighlight">
+\[\mu_i = \left(\sum_k^{3N} \left(\frac{l_{MWCk,i}}
+                                    {\sqrt{m_k}}\right)^2\right)^{-1}\]</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>This assumes that the normal modes have already been placed in the
+<code class="code docutils literal notranslate"><span class="pre">['dx',</span> <span class="pre">'dy',</span> <span class="pre">'dz']</span></code> columns.</p>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>data</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">pandas.DataFrame</span></code>) – Data frame the has the mass-weighted
+normal modes.</p></li>
+<li><p><strong>symbol</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.11)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">list</span></code></a>) – List-like object that has the atomic symbols.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><p>r_mass (<a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.24)"><code class="xref py py-class docutils literal notranslate"><span class="pre">numpy.ndarray</span></code></a>) –</p>
+<dl class="simple">
+<dt>Array containing the calculated reduced</dt><dd><p>masses.</p>
+</dd>
+</dl>
+</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="exatomic.adf.tape21.Tape21.rmass_cart">
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">rmass_cart</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">symbol</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/exatomic/adf/tape21.html#Tape21.rmass_cart"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#exatomic.adf.tape21.Tape21.rmass_cart" title="Permalink to this definition"></a></dt>
+<dd><p>Calculate the reduced masses from the normalized non-mass-weighted cartesian
+normal modes. With the equation,</p>
+<div class="math notranslate nohighlight">
+\[\mu_i = \left(\sum_k^{3N} l_{CARTk,i}^2\right)^{-1}\]</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>This assumes that the normal modes have already been placed in the
+<code class="code docutils literal notranslate"><span class="pre">['dx',</span> <span class="pre">'dy',</span> <span class="pre">'dz']</span></code> columns.</p>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>data</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">pandas.DataFrame</span></code>) – Data frame the has the non-mass-weighted
+cartesian normal modes.</p></li>
+<li><p><strong>symbol</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.11)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">list</span></code></a>) – List-like object that has the atomic symbols.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><p>r_mass (<a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.24)"><code class="xref py py-class docutils literal notranslate"><span class="pre">numpy.ndarray</span></code></a>) –</p>
+<dl class="simple">
+<dt>Array containing the calculated reduced</dt><dd><p>masses.</p>
+</dd>
+</dl>
+</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="exatomic.adf.tape21.Tape21.parse_frequency">
+<span class="sig-name descname"><span class="pre">parse_frequency</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">cart</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/exatomic/adf/tape21.html#Tape21.parse_frequency"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#exatomic.adf.tape21.Tape21.parse_frequency" title="Permalink to this definition"></a></dt>
+<dd><p>ADF frequency parser.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>This will toss a warning if it cannot find the mass-weighted normal modes
+which must be used to generate the displaced structures for vibrational
+averaging. Also, it will be unable to calculate the reduced masses as it will
+have normalized cartesian coordinates where it expects normalized
+mass-weighted cartesian normal modes.</p>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>cart</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.11)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">bool</span></code></a>, optional) – Parse the normalized cartesian coordinates or
+the mass-weighted normal modes. Defaults to
+<code class="code docutils literal notranslate"><span class="pre">True</span></code>.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="exatomic.adf.tape21.Tape21.parse_atom">
+<span class="sig-name descname"><span class="pre">parse_atom</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input_order</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/exatomic/adf/tape21.html#Tape21.parse_atom"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#exatomic.adf.tape21.Tape21.parse_atom" title="Permalink to this definition"></a></dt>
+<dd><p>Parse the atom table.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>input_order</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.11)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">bool</span></code></a>, optional) – Parse the atom table
+in the input order format. Defaults to <code class="code docutils literal notranslate"><span class="pre">False</span></code>.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="exatomic.adf.tape21.Tape21.parse_gradient">
+<span class="sig-name descname"><span class="pre">parse_gradient</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input_order</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/exatomic/adf/tape21.html#Tape21.parse_gradient"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#exatomic.adf.tape21.Tape21.parse_gradient" title="Permalink to this definition"></a></dt>
+<dd><p>Parse the gradients in the input order.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="exatomic.adf.tape21.Tape21.parse_nmr_shielding">
+<span class="sig-name descname"><span class="pre">parse_nmr_shielding</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/exatomic/adf/tape21.html#Tape21.parse_nmr_shielding"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#exatomic.adf.tape21.Tape21.parse_nmr_shielding" title="Permalink to this definition"></a></dt>
+<dd><p>Parse the NMR shielding tensors in the input order.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="exatomic.adf.tape21.Tape21.parse_j_coupling">
+<span class="sig-name descname"><span class="pre">parse_j_coupling</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/exatomic/adf/tape21.html#Tape21.parse_j_coupling"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#exatomic.adf.tape21.Tape21.parse_j_coupling" title="Permalink to this definition"></a></dt>
+<dd><p>Parse the J Coupling in the Cartesian representation.</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="exatomic.adf.tape21.Tape21.atom">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">atom</span></span><a class="headerlink" href="#exatomic.adf.tape21.Tape21.atom" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="exatomic.adf.tape21.Tape21.frequency">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">frequency</span></span><a class="headerlink" href="#exatomic.adf.tape21.Tape21.frequency" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="exatomic.adf.tape21.Tape21.gradient">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">gradient</span></span><a class="headerlink" href="#exatomic.adf.tape21.Tape21.gradient" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="exatomic.adf.tape21.Tape21.j_coupling">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">j_coupling</span></span><a class="headerlink" href="#exatomic.adf.tape21.Tape21.j_coupling" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="exatomic.adf.tape21.Tape21.nmr_shielding">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">nmr_shielding</span></span><a class="headerlink" href="#exatomic.adf.tape21.Tape21.nmr_shielding" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="exatomic.adf.output.html" class="btn btn-neutral float-left" title="exatomic.adf.output module" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="exatomic.algorithms.html" class="btn btn-neutral float-right" title="exatomic.algorithms package" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright .
+      <span class="lastupdated">Last updated on Apr 21, 2023.
+      </span></p>
+  </div>
+
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

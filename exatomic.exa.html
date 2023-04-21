@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>exatomic.exa package &mdash; exatomic 0.6.0 documentation</title>
+      <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+        <script src="_static/doctools.js"></script>
+        <script src="_static/sphinx_highlight.js"></script>
+        <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="exatomic.exa.core package" href="exatomic.exa.core.html" />
+    <link rel="prev" title="exatomic.core.universe module" href="exatomic.core.universe.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            exatomic
+              <img src="_static/logo.png" class="logo" alt="Logo"/>
+          </a>
+              <div class="version">
+                0.6.0
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Sitemap</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="install.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="started.html">Getting Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="contrib.html">Development</a></li>
+</ul>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="exatomic.html">exatomic package</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="exatomic.html#supported-software">Supported Software</a></li>
+<li class="toctree-l2"><a class="reference internal" href="exatomic.html#exatomic.func_log"><code class="docutils literal notranslate"><span class="pre">func_log()</span></code></a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="exatomic.html#subpackages">Subpackages</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="exatomic.adf.html">exatomic.adf package</a></li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.algorithms.html">exatomic.algorithms package</a></li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.core.html">exatomic.core package</a></li>
+<li class="toctree-l3 current"><a class="current reference internal" href="#">exatomic.exa package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#exa">Exa</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#subpackages">Subpackages</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#submodules">Submodules</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.gaussian.html">exatomic.gaussian package</a></li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.interfaces.html">exatomic.interfaces package</a></li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.molcas.html">exatomic.molcas package</a></li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.nbo.html">exatomic.nbo package</a></li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.nwchem.html">exatomic.nwchem package</a></li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.plotter.html">exatomic.plotter package</a></li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.qchem.html">exatomic.qchem package</a></li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.qe.html">exatomic.qe package</a></li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.util.html">exatomic.util package</a></li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.widgets.html">exatomic.widgets package</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="exatomic.html#submodules">Submodules</a></li>
+</ul>
+</li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">exatomic</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="exatomic.html">exatomic package</a></li>
+      <li class="breadcrumb-item active">exatomic.exa package</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/exatomic.exa.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="module-exatomic.exa">
+<span id="exatomic-exa-package"></span><h1>exatomic.exa package<a class="headerlink" href="#module-exatomic.exa" title="Permalink to this heading"></a></h1>
+<section id="exa">
+<h2>Exa<a class="headerlink" href="#exa" title="Permalink to this heading"></a></h2>
+</section>
+<section id="subpackages">
+<h2>Subpackages<a class="headerlink" href="#subpackages" title="Permalink to this heading"></a></h2>
+<div class="toctree-wrapper compound">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="exatomic.exa.core.html">exatomic.exa.core package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="exatomic.exa.core.html#submodules">Submodules</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.exa.core.container.html">exatomic.exa.core.container module</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="exatomic.exa.core.container.html#container">Container</a></li>
+<li class="toctree-l4"><a class="reference internal" href="exatomic.exa.core.container.html#exatomic.exa.core.container.Container"><code class="docutils literal notranslate"><span class="pre">Container</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="exatomic.exa.core.container.html#exatomic.exa.core.container.TypedMeta"><code class="docutils literal notranslate"><span class="pre">TypedMeta</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.exa.core.editor.html">exatomic.exa.core.editor module</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="exatomic.exa.core.editor.html#editor">Editor</a></li>
+<li class="toctree-l4"><a class="reference internal" href="exatomic.exa.core.editor.html#exatomic.exa.core.editor.Editor"><code class="docutils literal notranslate"><span class="pre">Editor</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="exatomic.exa.core.editor.html#exatomic.exa.core.editor.lines_from_file"><code class="docutils literal notranslate"><span class="pre">lines_from_file()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="exatomic.exa.core.editor.html#exatomic.exa.core.editor.lines_from_stream"><code class="docutils literal notranslate"><span class="pre">lines_from_stream()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="exatomic.exa.core.editor.html#exatomic.exa.core.editor.lines_from_string"><code class="docutils literal notranslate"><span class="pre">lines_from_string()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.exa.core.error.html">exatomic.exa.core.error module</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="exatomic.exa.core.error.html#exceptions">Exceptions</a></li>
+<li class="toctree-l4"><a class="reference internal" href="exatomic.exa.core.error.html#exatomic.exa.core.error.ExaException"><code class="docutils literal notranslate"><span class="pre">ExaException</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="exatomic.exa.core.error.html#exatomic.exa.core.error.RequiredColumnError"><code class="docutils literal notranslate"><span class="pre">RequiredColumnError</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.exa.core.numerical.html">exatomic.exa.core.numerical module</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="exatomic.exa.core.numerical.html#data-objects">Data Objects</a></li>
+<li class="toctree-l4"><a class="reference internal" href="exatomic.exa.core.numerical.html#exatomic.exa.core.numerical.Numerical"><code class="docutils literal notranslate"><span class="pre">Numerical</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="exatomic.exa.core.numerical.html#exatomic.exa.core.numerical.BaseSeries"><code class="docutils literal notranslate"><span class="pre">BaseSeries</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="exatomic.exa.core.numerical.html#exatomic.exa.core.numerical.BaseDataFrame"><code class="docutils literal notranslate"><span class="pre">BaseDataFrame</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="exatomic.exa.core.numerical.html#exatomic.exa.core.numerical.Series"><code class="docutils literal notranslate"><span class="pre">Series</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="exatomic.exa.core.numerical.html#exatomic.exa.core.numerical.DataFrame"><code class="docutils literal notranslate"><span class="pre">DataFrame</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="exatomic.exa.core.numerical.html#exatomic.exa.core.numerical.Field"><code class="docutils literal notranslate"><span class="pre">Field</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="exatomic.exa.core.numerical.html#exatomic.exa.core.numerical.Field3D"><code class="docutils literal notranslate"><span class="pre">Field3D</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="exatomic.exa.core.numerical.html#exatomic.exa.core.numerical.check_key"><code class="docutils literal notranslate"><span class="pre">check_key()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="exatomic.exa.core.numerical.html#exatomic.exa.core.numerical.SparseDataFrame"><code class="docutils literal notranslate"><span class="pre">SparseDataFrame</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="exatomic.exa.util.html">exatomic.exa.util package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="exatomic.exa.util.html#submodules">Submodules</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.exa.util.constants.html">exatomic.exa.util.constants module</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="exatomic.exa.util.constants.html#physical-constants">Physical Constants</a></li>
+<li class="toctree-l4"><a class="reference internal" href="exatomic.exa.util.constants.html#exatomic.exa.util.constants.Constant"><code class="docutils literal notranslate"><span class="pre">Constant</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.exa.util.io.html">exatomic.exa.util.io module</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="exatomic.exa.util.io.html#disk-i-o-utilities">Disk I/O Utilities</a></li>
+<li class="toctree-l4"><a class="reference internal" href="exatomic.exa.util.io.html#exatomic.exa.util.io.read_tarball"><code class="docutils literal notranslate"><span class="pre">read_tarball()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.exa.util.isotopes.html">exatomic.exa.util.isotopes module</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="exatomic.exa.util.isotopes.html#periodic-table-of-elements-and-isotopes">Periodic Table of Elements and Isotopes</a></li>
+<li class="toctree-l4"><a class="reference internal" href="exatomic.exa.util.isotopes.html#exatomic.exa.util.isotopes.Element"><code class="docutils literal notranslate"><span class="pre">Element</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="exatomic.exa.util.isotopes.html#exatomic.exa.util.isotopes.Isotope"><code class="docutils literal notranslate"><span class="pre">Isotope</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="exatomic.exa.util.isotopes.html#exatomic.exa.util.isotopes.as_df"><code class="docutils literal notranslate"><span class="pre">as_df()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.exa.util.mpl.html">exatomic.exa.util.mpl module</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="exatomic.exa.util.mpl.html#matplotlib-utilities">Matplotlib Utilities</a></li>
+<li class="toctree-l4"><a class="reference internal" href="exatomic.exa.util.mpl.html#exatomic.exa.util.mpl.seaborn_set"><code class="docutils literal notranslate"><span class="pre">seaborn_set()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.exa.util.nbvars.html">exatomic.exa.util.nbvars module</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="exatomic.exa.util.nbvars.html#numba-extensions">Numba Extensions</a></li>
+<li class="toctree-l4"><a class="reference internal" href="exatomic.exa.util.nbvars.html#exatomic.exa.util.nbvars.numbafy"><code class="docutils literal notranslate"><span class="pre">numbafy()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.exa.util.units.html">exatomic.exa.util.units module</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="exatomic.exa.util.units.html#unit-conversions">Unit Conversions</a></li>
+<li class="toctree-l4"><a class="reference internal" href="exatomic.exa.util.units.html#exatomic.exa.util.units.Unit"><code class="docutils literal notranslate"><span class="pre">Unit</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.exa.util.utility.html">exatomic.exa.util.utility module</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="exatomic.exa.util.utility.html#utilities">Utilities</a></li>
+<li class="toctree-l4"><a class="reference internal" href="exatomic.exa.util.utility.html#exatomic.exa.util.utility.datetime_header"><code class="docutils literal notranslate"><span class="pre">datetime_header()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="exatomic.exa.util.utility.html#exatomic.exa.util.utility.mkp"><code class="docutils literal notranslate"><span class="pre">mkp()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="exatomic.exa.util.utility.html#exatomic.exa.util.utility.convert_bytes"><code class="docutils literal notranslate"><span class="pre">convert_bytes()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="exatomic.exa.util.utility.html#exatomic.exa.util.utility.get_internal_modules"><code class="docutils literal notranslate"><span class="pre">get_internal_modules()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</div>
+</section>
+<section id="submodules">
+<h2>Submodules<a class="headerlink" href="#submodules" title="Permalink to this heading"></a></h2>
+<div class="toctree-wrapper compound">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="exatomic.exa.static.html">exatomic.exa.static module</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="exatomic.exa.static.html#static-data-directory">Static Data Directory</a></li>
+<li class="toctree-l2"><a class="reference internal" href="exatomic.exa.static.html#exatomic.exa.static.staticdir"><code class="docutils literal notranslate"><span class="pre">staticdir()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="exatomic.exa.static.html#exatomic.exa.static.resource"><code class="docutils literal notranslate"><span class="pre">resource()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="exatomic.exa.typed.html">exatomic.exa.typed module</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="exatomic.exa.typed.html#strongly-typed-class-attributes">Strongly Typed Class Attributes</a></li>
+<li class="toctree-l2"><a class="reference internal" href="exatomic.exa.typed.html#exatomic.exa.typed.typed"><code class="docutils literal notranslate"><span class="pre">typed()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="exatomic.exa.typed.html#exatomic.exa.typed.yield_typed"><code class="docutils literal notranslate"><span class="pre">yield_typed()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="exatomic.exa.typed.html#exatomic.exa.typed.Typed"><code class="docutils literal notranslate"><span class="pre">Typed</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="exatomic.exa.typed.html#exatomic.exa.typed.TypedMeta"><code class="docutils literal notranslate"><span class="pre">TypedMeta</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="exatomic.exa.typed.html#exatomic.exa.typed.TypedClass"><code class="docutils literal notranslate"><span class="pre">TypedClass</span></code></a></li>
+</ul>
+</li>
+</ul>
+</div>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="exatomic.core.universe.html" class="btn btn-neutral float-left" title="exatomic.core.universe module" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="exatomic.exa.core.html" class="btn btn-neutral float-right" title="exatomic.exa.core package" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright .
+      <span class="lastupdated">Last updated on Apr 21, 2023.
+      </span></p>
+  </div>
+
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

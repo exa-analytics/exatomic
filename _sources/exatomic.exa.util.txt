@@ -1,0 +1,21 @@
+exatomic.exa.util package
+=========================
+
+.. automodule:: exatomic.exa.util
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+Submodules
+----------
+
+.. toctree::
+   :maxdepth: 4
+
+   exatomic.exa.util.constants
+   exatomic.exa.util.io
+   exatomic.exa.util.isotopes
+   exatomic.exa.util.mpl
+   exatomic.exa.util.nbvars
+   exatomic.exa.util.units
+   exatomic.exa.util.utility

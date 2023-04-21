@@ -1,0 +1,7 @@
+exatomic.exa.util.nbvars module
+===============================
+
+.. automodule:: exatomic.exa.util.nbvars
+   :members:
+   :undoc-members:
+   :show-inheritance:

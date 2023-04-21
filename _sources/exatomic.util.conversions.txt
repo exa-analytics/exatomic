@@ -1,0 +1,7 @@
+exatomic.util.conversions module
+================================
+
+.. automodule:: exatomic.util.conversions
+   :members:
+   :undoc-members:
+   :show-inheritance:

@@ -1,0 +1,1053 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>NWChem &mdash; exatomic 0.6.0 documentation</title>
+      <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/nbsphinx-code-cells.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+        <script src="../_static/doctools.js"></script>
+        <script src="../_static/sphinx_highlight.js"></script>
+        <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+        <script>window.MathJax = {"tex": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true}, "options": {"ignoreHtmlClass": "tex2jax_ignore|mathjax_ignore|document", "processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
+        <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Support for Quantum ESPRESSO in exatomic" href="qe.html" />
+    <link rel="prev" title="Extraction of cluster geometries from a trajectory" href="04_cluster_extraction.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            exatomic
+              <img src="../_static/logo.png" class="logo" alt="Logo"/>
+          </a>
+              <div class="version">
+                0.6.0
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Sitemap</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../install.html">Installation</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../started.html">Getting Started</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="00_index.html">An Introduction to exatomic</a></li>
+<li class="toctree-l2"><a class="reference internal" href="01_basics.html">Welcome to exatomic</a></li>
+<li class="toctree-l2"><a class="reference internal" href="02_xyz.html">XYZ Example</a></li>
+<li class="toctree-l2"><a class="reference internal" href="03_orbitals.html">Visualize Orbitals</a></li>
+<li class="toctree-l2"><a class="reference internal" href="04_cluster_extraction.html">Extraction of cluster geometries from a trajectory</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">NWChem</a></li>
+<li class="toctree-l2"><a class="reference internal" href="qe.html">Support for Quantum ESPRESSO in exatomic</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../contrib.html">Development</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../exatomic.html">exatomic package</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">exatomic</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../started.html">Getting Started</a></li>
+      <li class="breadcrumb-item active">NWChem</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/notebooks/nwchem.ipynb.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="NWChem">
+<h1>NWChem<a class="headerlink" href="#NWChem" title="Permalink to this heading"></a></h1>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[1]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="o">%</span><span class="k">matplotlib</span> inline
+<span class="kn">import</span> <span class="nn">os</span><span class="o">,</span> <span class="nn">bz2</span>
+<span class="kn">import</span> <span class="nn">exatomic</span>
+<span class="kn">from</span> <span class="nn">exatomic</span> <span class="kn">import</span> <span class="n">nwchem</span>
+</pre></div>
+</div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[4]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">out</span> <span class="o">=</span> <span class="n">nwchem</span><span class="o">.</span><span class="n">Output</span><span class="p">(</span><span class="n">exatomic</span><span class="o">.</span><span class="n">base</span><span class="o">.</span><span class="n">resource</span><span class="p">(</span><span class="s2">&quot;nw-ch3nh2-augccpvdz.out&quot;</span><span class="p">))</span>
+<span class="n">out</span><span class="o">.</span><span class="n">head</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+   0:  argument  1 = ch3nh2.nw
+   1:
+   2:
+   3:
+   4: ============================== echo of input deck ==============================
+   5: echo
+   6: start ch3nh2
+   7: title ch3nh2
+   8:
+   9: geometry  units angstrom  noautoz nocenter
+</pre></div></div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[5]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">out</span><span class="o">.</span><span class="n">tail</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+2954:         K. Hirao, R. A. Kendall, J. A. Nichols, K. Tsemekhman, K. Wolinski,
+2955:      J. Anchell, D. E. Bernholdt, P. Borowski, T. Clark, D. Clerc, H. Dachsel,
+2956:    M. J. O. Deegan, K. Dyall, D. Elwood, E. Glendening, M. Gutowski, A. C. Hess,
+2957:          J. Jaffe, B. G. Johnson, J. Ju, R. Kobayashi, R. Kutteh, Z. Lin,
+2958:    R. Littlefield, X. Long, B. Meng, T. Nakajima, S. Niu, L. Pollack, M. Rosing,
+2959:    K. Glaesemann, G. Sandrone, M. Stave, H. Taylor, G. Thomas, J. H. van Lenthe,
+2960:                                A. T. Wong, Z. Zhang.
+2961:
+2962:  Total times  cpu:        3.9s     wall:        4.1s
+
+</pre></div></div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[6]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">out</span><span class="o">.</span><span class="n">parse_atom</span><span class="p">()</span>
+<span class="n">out</span><span class="o">.</span><span class="n">atom</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[6]:
+</pre></div>
+</div>
+<div class="output_area rendered_html docutils container">
+<div>
+<style scoped>
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>tag</th>
+      <th>Z</th>
+      <th>x</th>
+      <th>y</th>
+      <th>z</th>
+      <th>symbol</th>
+      <th>Zeff</th>
+      <th>frame</th>
+    </tr>
+    <tr>
+      <th>atom</th>
+      <th></th>
+      <th></th>
+      <th></th>
+      <th></th>
+      <th></th>
+      <th></th>
+      <th></th>
+      <th></th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>0</th>
+      <td>C</td>
+      <td>6</td>
+      <td>1.409566</td>
+      <td>0.020987</td>
+      <td>0.000000</td>
+      <td>C</td>
+      <td>6</td>
+      <td>0</td>
+    </tr>
+    <tr>
+      <th>1</th>
+      <td>N</td>
+      <td>7</td>
+      <td>-1.363889</td>
+      <td>-0.135772</td>
+      <td>0.000000</td>
+      <td>N</td>
+      <td>7</td>
+      <td>0</td>
+    </tr>
+    <tr>
+      <th>2</th>
+      <td>H</td>
+      <td>1</td>
+      <td>1.969196</td>
+      <td>2.003298</td>
+      <td>0.000000</td>
+      <td>H</td>
+      <td>1</td>
+      <td>0</td>
+    </tr>
+    <tr>
+      <th>3</th>
+      <td>H</td>
+      <td>1</td>
+      <td>2.134053</td>
+      <td>-0.913404</td>
+      <td>1.686645</td>
+      <td>H</td>
+      <td>1</td>
+      <td>0</td>
+    </tr>
+    <tr>
+      <th>4</th>
+      <td>H</td>
+      <td>1</td>
+      <td>2.134053</td>
+      <td>-0.913404</td>
+      <td>-1.686645</td>
+      <td>H</td>
+      <td>1</td>
+      <td>0</td>
+    </tr>
+    <tr>
+      <th>5</th>
+      <td>H</td>
+      <td>1</td>
+      <td>-2.035202</td>
+      <td>0.730039</td>
+      <td>-1.562856</td>
+      <td>H</td>
+      <td>1</td>
+      <td>0</td>
+    </tr>
+    <tr>
+      <th>6</th>
+      <td>H</td>
+      <td>1</td>
+      <td>-2.035202</td>
+      <td>0.730039</td>
+      <td>1.562856</td>
+      <td>H</td>
+      <td>1</td>
+      <td>0</td>
+    </tr>
+  </tbody>
+</table>
+</div></div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[7]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">out</span><span class="o">.</span><span class="n">parse_basis_set</span><span class="p">()</span>
+<span class="n">out</span><span class="o">.</span><span class="n">basis_set</span><span class="o">.</span><span class="n">tail</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[7]:
+</pre></div>
+</div>
+<div class="output_area rendered_html docutils container">
+<div>
+<style scoped>
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>shell</th>
+      <th>L</th>
+      <th>alpha</th>
+      <th>d</th>
+      <th>set</th>
+      <th>frame</th>
+    </tr>
+    <tr>
+      <th>function</th>
+      <th></th>
+      <th></th>
+      <th></th>
+      <th></th>
+      <th></th>
+      <th></th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>52</th>
+      <td>0</td>
+      <td>0</td>
+      <td>0.44460</td>
+      <td>0.478148</td>
+      <td>2</td>
+      <td>0</td>
+    </tr>
+    <tr>
+      <th>53</th>
+      <td>1</td>
+      <td>0</td>
+      <td>0.12200</td>
+      <td>1.000000</td>
+      <td>2</td>
+      <td>0</td>
+    </tr>
+    <tr>
+      <th>54</th>
+      <td>2</td>
+      <td>0</td>
+      <td>0.02974</td>
+      <td>1.000000</td>
+      <td>2</td>
+      <td>0</td>
+    </tr>
+    <tr>
+      <th>55</th>
+      <td>3</td>
+      <td>1</td>
+      <td>0.72700</td>
+      <td>1.000000</td>
+      <td>2</td>
+      <td>0</td>
+    </tr>
+    <tr>
+      <th>56</th>
+      <td>4</td>
+      <td>1</td>
+      <td>0.14100</td>
+      <td>1.000000</td>
+      <td>2</td>
+      <td>0</td>
+    </tr>
+  </tbody>
+</table>
+</div></div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[8]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">out</span><span class="o">.</span><span class="n">parse_basis_set_order</span><span class="p">()</span>
+<span class="n">out</span><span class="o">.</span><span class="n">basis_set_order</span><span class="o">.</span><span class="n">tail</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[8]:
+</pre></div>
+</div>
+<div class="output_area rendered_html docutils container">
+<div>
+<style scoped>
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>center</th>
+      <th>shell</th>
+      <th>L</th>
+      <th>ml</th>
+      <th>frame</th>
+    </tr>
+    <tr>
+      <th>chi</th>
+      <th></th>
+      <th></th>
+      <th></th>
+      <th></th>
+      <th></th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>86</th>
+      <td>6</td>
+      <td>3</td>
+      <td>1</td>
+      <td>-1</td>
+      <td>0</td>
+    </tr>
+    <tr>
+      <th>87</th>
+      <td>6</td>
+      <td>3</td>
+      <td>1</td>
+      <td>0</td>
+      <td>0</td>
+    </tr>
+    <tr>
+      <th>88</th>
+      <td>6</td>
+      <td>4</td>
+      <td>1</td>
+      <td>1</td>
+      <td>0</td>
+    </tr>
+    <tr>
+      <th>89</th>
+      <td>6</td>
+      <td>4</td>
+      <td>1</td>
+      <td>-1</td>
+      <td>0</td>
+    </tr>
+    <tr>
+      <th>90</th>
+      <td>6</td>
+      <td>4</td>
+      <td>1</td>
+      <td>0</td>
+      <td>0</td>
+    </tr>
+  </tbody>
+</table>
+</div></div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[9]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">out</span><span class="o">.</span><span class="n">parse_frame</span><span class="p">()</span>
+<span class="n">out</span><span class="o">.</span><span class="n">frame</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[9]:
+</pre></div>
+</div>
+<div class="output_area rendered_html docutils container">
+<div>
+<style scoped>
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>atom_count</th>
+      <th>total_energy</th>
+    </tr>
+    <tr>
+      <th>frame</th>
+      <th></th>
+      <th></th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>0</th>
+      <td>7</td>
+      <td>-95.229252</td>
+    </tr>
+  </tbody>
+</table>
+</div></div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[10]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">out</span><span class="o">.</span><span class="n">parse_momatrix</span><span class="p">()</span>
+<span class="n">out</span><span class="o">.</span><span class="n">momatrix</span><span class="o">.</span><span class="n">shape</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[10]:
+</pre></div>
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+(8281, 4)
+</pre></div></div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[11]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">out</span><span class="o">.</span><span class="n">parse_orbital</span><span class="p">()</span>
+<span class="n">out</span><span class="o">.</span><span class="n">orbital</span><span class="o">.</span><span class="n">tail</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[11]:
+</pre></div>
+</div>
+<div class="output_area rendered_html docutils container">
+<div>
+<style scoped>
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>energy</th>
+      <th>frame</th>
+      <th>occupation</th>
+      <th>vector</th>
+      <th>x</th>
+      <th>y</th>
+      <th>z</th>
+      <th>spin</th>
+      <th>group</th>
+    </tr>
+    <tr>
+      <th>orbital</th>
+      <th></th>
+      <th></th>
+      <th></th>
+      <th></th>
+      <th></th>
+      <th></th>
+      <th></th>
+      <th></th>
+      <th></th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>86</th>
+      <td>3.034495</td>
+      <td>0</td>
+      <td>0.0</td>
+      <td>86</td>
+      <td>0.079</td>
+      <td>-3.900000e-14</td>
+      <td>-3.900000e-14</td>
+      <td>0</td>
+      <td>0</td>
+    </tr>
+    <tr>
+      <th>87</th>
+      <td>3.059546</td>
+      <td>0</td>
+      <td>0.0</td>
+      <td>87</td>
+      <td>-0.370</td>
+      <td>3.000000e-13</td>
+      <td>3.000000e-13</td>
+      <td>0</td>
+      <td>0</td>
+    </tr>
+    <tr>
+      <th>88</th>
+      <td>3.074835</td>
+      <td>0</td>
+      <td>0.0</td>
+      <td>88</td>
+      <td>0.095</td>
+      <td>-6.900000e-13</td>
+      <td>-6.900000e-13</td>
+      <td>0</td>
+      <td>0</td>
+    </tr>
+    <tr>
+      <th>89</th>
+      <td>3.380757</td>
+      <td>0</td>
+      <td>0.0</td>
+      <td>89</td>
+      <td>-0.800</td>
+      <td>1.800000e-13</td>
+      <td>1.800000e-13</td>
+      <td>0</td>
+      <td>0</td>
+    </tr>
+    <tr>
+      <th>90</th>
+      <td>3.634046</td>
+      <td>0</td>
+      <td>0.0</td>
+      <td>90</td>
+      <td>-0.670</td>
+      <td>-2.200000e-13</td>
+      <td>-2.200000e-13</td>
+      <td>0</td>
+      <td>0</td>
+    </tr>
+  </tbody>
+</table>
+</div></div>
+</div>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[12]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">uni</span> <span class="o">=</span> <span class="n">out</span><span class="o">.</span><span class="n">to_universe</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[13]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">uni</span><span class="o">.</span><span class="n">network</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[13]:
+</pre></div>
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+&lt;networkx.classes.graph.Graph at 0x7f82eb582630&gt;
+</pre></div></div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="../_images/notebooks_nwchem_11_1.png" src="../_images/notebooks_nwchem_11_1.png" />
+</div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[14]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">uni</span><span class="o">.</span><span class="n">compute_atom_two</span><span class="p">()</span>
+<span class="n">uni</span><span class="o">.</span><span class="n">atom_two</span><span class="o">.</span><span class="n">bonded</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[14]:
+</pre></div>
+</div>
+<div class="output_area rendered_html docutils container">
+<div>
+<style scoped>
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>atom0</th>
+      <th>atom1</th>
+      <th>dr</th>
+      <th>bond</th>
+    </tr>
+    <tr>
+      <th>two</th>
+      <th></th>
+      <th></th>
+      <th></th>
+      <th></th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>0</th>
+      <td>0</td>
+      <td>1</td>
+      <td>2.777882</td>
+      <td>True</td>
+    </tr>
+    <tr>
+      <th>1</th>
+      <td>0</td>
+      <td>2</td>
+      <td>2.059791</td>
+      <td>True</td>
+    </tr>
+    <tr>
+      <th>2</th>
+      <td>0</td>
+      <td>3</td>
+      <td>2.059791</td>
+      <td>True</td>
+    </tr>
+    <tr>
+      <th>3</th>
+      <td>0</td>
+      <td>4</td>
+      <td>2.059791</td>
+      <td>True</td>
+    </tr>
+    <tr>
+      <th>9</th>
+      <td>1</td>
+      <td>5</td>
+      <td>1.908614</td>
+      <td>True</td>
+    </tr>
+    <tr>
+      <th>10</th>
+      <td>1</td>
+      <td>6</td>
+      <td>1.908614</td>
+      <td>True</td>
+    </tr>
+  </tbody>
+</table>
+</div></div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[15]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">uni</span><span class="o">.</span><span class="n">orbital</span><span class="p">[</span><span class="n">uni</span><span class="o">.</span><span class="n">orbital</span><span class="p">[</span><span class="s1">&#39;occupation&#39;</span><span class="p">]</span> <span class="o">!=</span> <span class="mf">0.0</span><span class="p">]</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[15]:
+</pre></div>
+</div>
+<div class="output_area rendered_html docutils container">
+<div>
+<style scoped>
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>energy</th>
+      <th>frame</th>
+      <th>occupation</th>
+      <th>vector</th>
+      <th>x</th>
+      <th>y</th>
+      <th>z</th>
+      <th>spin</th>
+      <th>group</th>
+    </tr>
+    <tr>
+      <th>orbital</th>
+      <th></th>
+      <th></th>
+      <th></th>
+      <th></th>
+      <th></th>
+      <th></th>
+      <th></th>
+      <th></th>
+      <th></th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>0</th>
+      <td>-15.544670</td>
+      <td>0</td>
+      <td>2.0</td>
+      <td>0</td>
+      <td>-0.72</td>
+      <td>-3.700000e-15</td>
+      <td>-3.700000e-15</td>
+      <td>0</td>
+      <td>0</td>
+    </tr>
+    <tr>
+      <th>1</th>
+      <td>-11.248320</td>
+      <td>0</td>
+      <td>2.0</td>
+      <td>1</td>
+      <td>0.75</td>
+      <td>1.300000e-15</td>
+      <td>1.300000e-15</td>
+      <td>0</td>
+      <td>0</td>
+    </tr>
+    <tr>
+      <th>2</th>
+      <td>-1.170266</td>
+      <td>0</td>
+      <td>2.0</td>
+      <td>2</td>
+      <td>-0.45</td>
+      <td>1.200000e-13</td>
+      <td>1.200000e-13</td>
+      <td>0</td>
+      <td>0</td>
+    </tr>
+    <tr>
+      <th>3</th>
+      <td>-0.893624</td>
+      <td>0</td>
+      <td>2.0</td>
+      <td>3</td>
+      <td>0.46</td>
+      <td>1.200000e-13</td>
+      <td>1.200000e-13</td>
+      <td>0</td>
+      <td>0</td>
+    </tr>
+    <tr>
+      <th>4</th>
+      <td>-0.668444</td>
+      <td>0</td>
+      <td>2.0</td>
+      <td>4</td>
+      <td>-0.43</td>
+      <td>-3.800000e-13</td>
+      <td>-3.800000e-13</td>
+      <td>0</td>
+      <td>0</td>
+    </tr>
+    <tr>
+      <th>5</th>
+      <td>-0.597788</td>
+      <td>0</td>
+      <td>2.0</td>
+      <td>5</td>
+      <td>0.40</td>
+      <td>1.100000e-13</td>
+      <td>1.100000e-13</td>
+      <td>0</td>
+      <td>0</td>
+    </tr>
+    <tr>
+      <th>6</th>
+      <td>-0.555492</td>
+      <td>0</td>
+      <td>2.0</td>
+      <td>6</td>
+      <td>0.18</td>
+      <td>9.200000e-13</td>
+      <td>9.200000e-13</td>
+      <td>0</td>
+      <td>0</td>
+    </tr>
+    <tr>
+      <th>7</th>
+      <td>-0.522872</td>
+      <td>0</td>
+      <td>2.0</td>
+      <td>7</td>
+      <td>0.51</td>
+      <td>-1.800000e-12</td>
+      <td>-1.800000e-12</td>
+      <td>0</td>
+      <td>0</td>
+    </tr>
+    <tr>
+      <th>8</th>
+      <td>-0.385592</td>
+      <td>0</td>
+      <td>2.0</td>
+      <td>8</td>
+      <td>-0.45</td>
+      <td>-1.600000e-13</td>
+      <td>-1.600000e-13</td>
+      <td>0</td>
+      <td>0</td>
+    </tr>
+  </tbody>
+</table>
+</div></div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[16]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">uni</span><span class="o">.</span><span class="n">add_molecular_orbitals</span><span class="p">(</span><span class="n">field_params</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;rmin&#39;</span><span class="p">:</span> <span class="o">-</span><span class="mi">20</span><span class="p">,</span> <span class="s1">&#39;rmax&#39;</span><span class="p">:</span> <span class="mi">20</span><span class="p">,</span> <span class="s1">&#39;nr&#39;</span><span class="p">:</span> <span class="mi">51</span><span class="p">})</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+Warning: Check spherical shell parameter for nwchem molecular orbital generation
+Evaluating 91 basis functions once.
+Timing: compute orbitals -     3.56s.
+</pre></div></div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[17]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">exatomic</span><span class="o">.</span><span class="n">UniverseWidget</span><span class="p">(</span><span class="n">uni</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<script type="application/vnd.jupyter.widget-view+json">{"model_id": "a1a64b4472434de0bea2707b06498eff", "version_major": 2, "version_minor": 0}</script></div>
+</div>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>
+</pre></div>
+</div>
+</div>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>
+</pre></div>
+</div>
+</div>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>
+</pre></div>
+</div>
+</div>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="04_cluster_extraction.html" class="btn btn-neutral float-left" title="Extraction of cluster geometries from a trajectory" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="qe.html" class="btn btn-neutral float-right" title="Support for Quantum ESPRESSO in exatomic" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright .
+      <span class="lastupdated">Last updated on Apr 21, 2023.
+      </span></p>
+  </div>
+
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

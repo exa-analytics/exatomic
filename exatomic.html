@@ -1,0 +1,791 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>exatomic package &mdash; exatomic 0.6.0 documentation</title>
+      <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+        <script src="_static/doctools.js"></script>
+        <script src="_static/sphinx_highlight.js"></script>
+        <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="exatomic.adf package" href="exatomic.adf.html" />
+    <link rel="prev" title="Development" href="contrib.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            exatomic
+              <img src="_static/logo.png" class="logo" alt="Logo"/>
+          </a>
+              <div class="version">
+                0.6.0
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Sitemap</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="install.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="started.html">Getting Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="contrib.html">Development</a></li>
+</ul>
+<ul class="current">
+<li class="toctree-l1 current"><a class="current reference internal" href="#">exatomic package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#supported-software">Supported Software</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#exatomic.func_log"><code class="docutils literal notranslate"><span class="pre">func_log()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#subpackages">Subpackages</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.adf.html">exatomic.adf package</a></li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.algorithms.html">exatomic.algorithms package</a></li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.core.html">exatomic.core package</a></li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.exa.html">exatomic.exa package</a></li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.gaussian.html">exatomic.gaussian package</a></li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.interfaces.html">exatomic.interfaces package</a></li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.molcas.html">exatomic.molcas package</a></li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.nbo.html">exatomic.nbo package</a></li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.nwchem.html">exatomic.nwchem package</a></li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.plotter.html">exatomic.plotter package</a></li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.qchem.html">exatomic.qchem package</a></li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.qe.html">exatomic.qe package</a></li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.util.html">exatomic.util package</a></li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.widgets.html">exatomic.widgets package</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#submodules">Submodules</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.base.html">exatomic.base module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.formula.html">exatomic.formula module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.mpl.html">exatomic.mpl module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.static.html">exatomic.static module</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">exatomic</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">exatomic package</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/exatomic.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="module-exatomic">
+<span id="exatomic-package"></span><h1>exatomic package<a class="headerlink" href="#module-exatomic" title="Permalink to this heading"></a></h1>
+<p>A unified data anlaysis and visualization platform for computational and
+theoretical chemists, physicists, etc. Support for molecular geometry and
+orbital visualization is provided via the <a class="reference external" href="https://jupyter.org">Jupyter</a> notebook, a web-browser
+based interactive (multi-programming language) environment.</p>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>This package uses the <a class="reference external" href="https://en.wikipedia.org/wiki/Atomic_units">atomic</a> unit system (Hartree) by default.</p>
+</div>
+<section id="supported-software">
+<h2>Supported Software<a class="headerlink" href="#supported-software" title="Permalink to this heading"></a></h2>
+<p>The list below contains third-party software that is supported by this package.
+For specific features supported (per software), see the appropriate description
+below.</p>
+<ul class="simple">
+<li><p><code class="xref py py-mod docutils literal notranslate"><span class="pre">__init__</span></code>: <a class="reference external" href="https://www.scm.com">Amsterdam Density Functional</a></p></li>
+<li><p><code class="xref py py-mod docutils literal notranslate"><span class="pre">__init__</span></code>: <a class="reference external" href="http://gaussian.com/">Gaussian</a></p></li>
+<li><p><code class="xref py py-mod docutils literal notranslate"><span class="pre">__init__</span></code>: <a class="reference external" href="https://gitlab.com/Molcas/OpenMolcas">OpenMolcas</a></p></li>
+<li><p><code class="xref py py-mod docutils literal notranslate"><span class="pre">__init__</span></code>: <a class="reference external" href="http://nbo6.chem.wisc.edu/">NBO</a></p></li>
+<li><p><code class="xref py py-mod docutils literal notranslate"><span class="pre">__init__</span></code>: <a class="reference external" href="http://www.nwchem-sw.org/index.php/Main_Page">NWChem</a></p></li>
+<li><p><code class="xref py py-mod docutils literal notranslate"><span class="pre">__init__</span></code>: <a class="reference external" href="http://www.quantum-espresso.org/">Quantum ESPRESSO</a></p></li>
+<li><p><code class="xref py py-mod docutils literal notranslate"><span class="pre">__init__</span></code>: Additional 3rd party support</p></li>
+</ul>
+</section>
+<dl class="py function">
+<dt class="sig sig-object py" id="exatomic.func_log">
+<span class="sig-prename descclassname"><span class="pre">exatomic.</span></span><span class="sig-name descname"><span class="pre">func_log</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">func</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/exatomic.html#func_log"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#exatomic.func_log" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<section id="subpackages">
+<h2>Subpackages<a class="headerlink" href="#subpackages" title="Permalink to this heading"></a></h2>
+<div class="toctree-wrapper compound">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="exatomic.adf.html">exatomic.adf package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="exatomic.adf.html#subpackages">Subpackages</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.adf.adf.html">exatomic.adf.adf package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="exatomic.adf.adf.html#submodules">Submodules</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.adf.dirac.html">exatomic.adf.dirac package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="exatomic.adf.dirac.html#submodules">Submodules</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.adf.nmr.html">exatomic.adf.nmr package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="exatomic.adf.nmr.html#submodules">Submodules</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="exatomic.adf.html#submodules">Submodules</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.adf.editor.html">exatomic.adf.editor module</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="exatomic.adf.editor.html#base-adf-editor">Base ADF editor</a></li>
+<li class="toctree-l4"><a class="reference internal" href="exatomic.adf.editor.html#exatomic.adf.editor.Editor"><code class="docutils literal notranslate"><span class="pre">Editor</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.adf.inputs.html">exatomic.adf.inputs module</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="exatomic.adf.inputs.html#input-generator-and-parser">Input Generator and Parser</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.adf.output.html">exatomic.adf.output module</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="exatomic.adf.output.html#adf-composite-output">ADF Composite Output</a></li>
+<li class="toctree-l4"><a class="reference internal" href="exatomic.adf.output.html#exatomic.adf.output.OutMeta"><code class="docutils literal notranslate"><span class="pre">OutMeta</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="exatomic.adf.output.html#exatomic.adf.output.NMR"><code class="docutils literal notranslate"><span class="pre">NMR</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="exatomic.adf.output.html#exatomic.adf.output.ADF"><code class="docutils literal notranslate"><span class="pre">ADF</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="exatomic.adf.output.html#exatomic.adf.output.AMS"><code class="docutils literal notranslate"><span class="pre">AMS</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="exatomic.adf.output.html#exatomic.adf.output.Output"><code class="docutils literal notranslate"><span class="pre">Output</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.adf.tape21.html">exatomic.adf.tape21 module</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="exatomic.adf.tape21.html#adf-tape21-ascii-converted-output">ADF TAPE21 ASCII converted output</a></li>
+<li class="toctree-l4"><a class="reference internal" href="exatomic.adf.tape21.html#exatomic.adf.tape21.MissingSection"><code class="docutils literal notranslate"><span class="pre">MissingSection</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="exatomic.adf.tape21.html#exatomic.adf.tape21.Tape21Meta"><code class="docutils literal notranslate"><span class="pre">Tape21Meta</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="exatomic.adf.tape21.html#exatomic.adf.tape21.Tape21"><code class="docutils literal notranslate"><span class="pre">Tape21</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="exatomic.algorithms.html">exatomic.algorithms package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="exatomic.algorithms.html#submodules">Submodules</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.algorithms.angles.html">exatomic.algorithms.angles module</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="exatomic.algorithms.angles.html#two-body-properties-computations">Two Body Properties Computations</a></li>
+<li class="toctree-l4"><a class="reference internal" href="exatomic.algorithms.angles.html#exatomic.algorithms.angles.angles"><code class="docutils literal notranslate"><span class="pre">angles()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="exatomic.algorithms.angles.html#exatomic.algorithms.angles.compute_angles_out_of_core"><code class="docutils literal notranslate"><span class="pre">compute_angles_out_of_core()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.algorithms.basis.html">exatomic.algorithms.basis module</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="exatomic.algorithms.basis.html#basis-function-manipulation">Basis Function Manipulation</a></li>
+<li class="toctree-l4"><a class="reference internal" href="exatomic.algorithms.basis.html#exatomic.algorithms.basis.gen_enum_cartesian"><code class="docutils literal notranslate"><span class="pre">gen_enum_cartesian()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="exatomic.algorithms.basis.html#exatomic.algorithms.basis.spherical_harmonics"><code class="docutils literal notranslate"><span class="pre">spherical_harmonics()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="exatomic.algorithms.basis.html#exatomic.algorithms.basis.solid_harmonics"><code class="docutils literal notranslate"><span class="pre">solid_harmonics()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="exatomic.algorithms.basis.html#exatomic.algorithms.basis.car2sph"><code class="docutils literal notranslate"><span class="pre">car2sph()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="exatomic.algorithms.basis.html#exatomic.algorithms.basis.diff_expr"><code class="docutils literal notranslate"><span class="pre">diff_expr()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="exatomic.algorithms.basis.html#exatomic.algorithms.basis.evaluate_expr"><code class="docutils literal notranslate"><span class="pre">evaluate_expr()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="exatomic.algorithms.basis.html#exatomic.algorithms.basis.BasisFunctions"><code class="docutils literal notranslate"><span class="pre">BasisFunctions</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="exatomic.algorithms.basis.html#exatomic.algorithms.basis.compute_uncontracted_basis_set_order"><code class="docutils literal notranslate"><span class="pre">compute_uncontracted_basis_set_order()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.algorithms.car2sph.html">exatomic.algorithms.car2sph module</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="exatomic.algorithms.car2sph.html#exatomic.algorithms.car2sph.car2sph_scaled"><code class="docutils literal notranslate"><span class="pre">car2sph_scaled()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.algorithms.delocalization.html">exatomic.algorithms.delocalization module</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="exatomic.algorithms.delocalization.html#delocalization">Delocalization</a></li>
+<li class="toctree-l4"><a class="reference internal" href="exatomic.algorithms.delocalization.html#exatomic.algorithms.delocalization.plot_energy"><code class="docutils literal notranslate"><span class="pre">plot_energy()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="exatomic.algorithms.delocalization.html#exatomic.algorithms.delocalization.combine_curvature"><code class="docutils literal notranslate"><span class="pre">combine_curvature()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="exatomic.algorithms.delocalization.html#exatomic.algorithms.delocalization.compute_curvature"><code class="docutils literal notranslate"><span class="pre">compute_curvature()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="exatomic.algorithms.delocalization.html#exatomic.algorithms.delocalization.functional_results"><code class="docutils literal notranslate"><span class="pre">functional_results()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="exatomic.algorithms.delocalization.html#exatomic.algorithms.delocalization.tuning_results"><code class="docutils literal notranslate"><span class="pre">tuning_results()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.algorithms.diffusion.html">exatomic.algorithms.diffusion module</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="exatomic.algorithms.diffusion.html#diffusion-coefficients">Diffusion Coefficients</a></li>
+<li class="toctree-l4"><a class="reference internal" href="exatomic.algorithms.diffusion.html#exatomic.algorithms.diffusion.einstein_relation"><code class="docutils literal notranslate"><span class="pre">einstein_relation()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.algorithms.displacement.html">exatomic.algorithms.displacement module</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="exatomic.algorithms.displacement.html#computation-of-displacement">Computation of Displacement</a></li>
+<li class="toctree-l4"><a class="reference internal" href="exatomic.algorithms.displacement.html#exatomic.algorithms.displacement.absolute_squared_displacement"><code class="docutils literal notranslate"><span class="pre">absolute_squared_displacement()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.algorithms.distance.html">exatomic.algorithms.distance module</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="exatomic.algorithms.distance.html#two-body-properties-computations">Two Body Properties Computations</a></li>
+<li class="toctree-l4"><a class="reference internal" href="exatomic.algorithms.distance.html#exatomic.algorithms.distance.pdist_ortho"><code class="docutils literal notranslate"><span class="pre">pdist_ortho()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="exatomic.algorithms.distance.html#exatomic.algorithms.distance.pdist_ortho_nv"><code class="docutils literal notranslate"><span class="pre">pdist_ortho_nv()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="exatomic.algorithms.distance.html#exatomic.algorithms.distance.pdist"><code class="docutils literal notranslate"><span class="pre">pdist()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="exatomic.algorithms.distance.html#exatomic.algorithms.distance.pdist_nv"><code class="docutils literal notranslate"><span class="pre">pdist_nv()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.algorithms.geometry.html">exatomic.algorithms.geometry module</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="exatomic.algorithms.geometry.html#geometry">Geometry</a></li>
+<li class="toctree-l4"><a class="reference internal" href="exatomic.algorithms.geometry.html#exatomic.algorithms.geometry.make_small_molecule"><code class="docutils literal notranslate"><span class="pre">make_small_molecule()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.algorithms.harmonics.html">exatomic.algorithms.harmonics module</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="exatomic.algorithms.harmonics.html#spherical-and-solid-harmonics">Spherical and Solid Harmonics</a></li>
+<li class="toctree-l4"><a class="reference internal" href="exatomic.algorithms.harmonics.html#exatomic.algorithms.harmonics.SolidHarmonics"><code class="docutils literal notranslate"><span class="pre">SolidHarmonics</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="exatomic.algorithms.harmonics.html#exatomic.algorithms.harmonics.solid_harmonics"><code class="docutils literal notranslate"><span class="pre">solid_harmonics()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.algorithms.indexing.html">exatomic.algorithms.indexing module</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="exatomic.algorithms.indexing.html#indexing">Indexing</a></li>
+<li class="toctree-l4"><a class="reference internal" href="exatomic.algorithms.indexing.html#exatomic.algorithms.indexing.starts_count"><code class="docutils literal notranslate"><span class="pre">starts_count()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="exatomic.algorithms.indexing.html#exatomic.algorithms.indexing.starts_counts"><code class="docutils literal notranslate"><span class="pre">starts_counts()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.algorithms.interpolation.html">exatomic.algorithms.interpolation module</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="exatomic.algorithms.interpolation.html#interpolation">Interpolation</a></li>
+<li class="toctree-l4"><a class="reference internal" href="exatomic.algorithms.interpolation.html#exatomic.algorithms.interpolation.interpolate_j2"><code class="docutils literal notranslate"><span class="pre">interpolate_j2()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.algorithms.neighbors.html">exatomic.algorithms.neighbors module</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="exatomic.algorithms.neighbors.html#neighbor-selection-algorithms">Neighbor Selection Algorithms</a></li>
+<li class="toctree-l4"><a class="reference internal" href="exatomic.algorithms.neighbors.html#exatomic.algorithms.neighbors.periodic_nearest_neighbors_by_atom"><code class="docutils literal notranslate"><span class="pre">periodic_nearest_neighbors_by_atom()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="exatomic.algorithms.neighbors.html#exatomic.algorithms.neighbors.periodic_nearest_neighbors_by_atom_large"><code class="docutils literal notranslate"><span class="pre">periodic_nearest_neighbors_by_atom_large()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.algorithms.numerical.html">exatomic.algorithms.numerical module</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="exatomic.algorithms.numerical.html#numerical-methods-and-classes">Numerical methods and classes</a></li>
+<li class="toctree-l4"><a class="reference internal" href="exatomic.algorithms.numerical.html#exatomic.algorithms.numerical.fac"><code class="docutils literal notranslate"><span class="pre">fac()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="exatomic.algorithms.numerical.html#exatomic.algorithms.numerical.fac2"><code class="docutils literal notranslate"><span class="pre">fac2()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="exatomic.algorithms.numerical.html#exatomic.algorithms.numerical.dfac21"><code class="docutils literal notranslate"><span class="pre">dfac21()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="exatomic.algorithms.numerical.html#exatomic.algorithms.numerical.choose"><code class="docutils literal notranslate"><span class="pre">choose()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="exatomic.algorithms.numerical.html#exatomic.algorithms.numerical.sdist"><code class="docutils literal notranslate"><span class="pre">sdist()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="exatomic.algorithms.numerical.html#exatomic.algorithms.numerical.density_from_momatrix"><code class="docutils literal notranslate"><span class="pre">density_from_momatrix()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="exatomic.algorithms.numerical.html#exatomic.algorithms.numerical.density_as_square"><code class="docutils literal notranslate"><span class="pre">density_as_square()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="exatomic.algorithms.numerical.html#exatomic.algorithms.numerical.momatrix_as_square"><code class="docutils literal notranslate"><span class="pre">momatrix_as_square()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="exatomic.algorithms.numerical.html#exatomic.algorithms.numerical.reorder_matrix"><code class="docutils literal notranslate"><span class="pre">reorder_matrix()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.algorithms.orbital.html">exatomic.algorithms.orbital module</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="exatomic.algorithms.orbital.html#numerical-orbital-functions">Numerical Orbital Functions</a></li>
+<li class="toctree-l4"><a class="reference internal" href="exatomic.algorithms.orbital.html#exatomic.algorithms.orbital.add_molecular_orbitals"><code class="docutils literal notranslate"><span class="pre">add_molecular_orbitals()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="exatomic.algorithms.orbital.html#exatomic.algorithms.orbital.add_density"><code class="docutils literal notranslate"><span class="pre">add_density()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="exatomic.algorithms.orbital.html#exatomic.algorithms.orbital.add_orb_ang_mom"><code class="docutils literal notranslate"><span class="pre">add_orb_ang_mom()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.algorithms.orbital_util.html">exatomic.algorithms.orbital_util module</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="exatomic.algorithms.orbital_util.html#molecular-orbital-utilities">Molecular Orbital Utilities</a></li>
+<li class="toctree-l4"><a class="reference internal" href="exatomic.algorithms.orbital_util.html#exatomic.algorithms.orbital_util.compare_fields"><code class="docutils literal notranslate"><span class="pre">compare_fields()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="exatomic.algorithms.orbital_util.html#exatomic.algorithms.orbital_util.numerical_grid_from_field_params"><code class="docutils literal notranslate"><span class="pre">numerical_grid_from_field_params()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="exatomic.algorithms.orbital_util.html#exatomic.algorithms.orbital_util.make_fps"><code class="docutils literal notranslate"><span class="pre">make_fps()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.algorithms.overlap.html">exatomic.algorithms.overlap module</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="exatomic.algorithms.overlap.html#overlap-computation">Overlap computation</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.algorithms.packing.html">exatomic.algorithms.packing module</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="exatomic.algorithms.packing.html#cell-packing-utilities">Cell Packing Utilities</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.algorithms.pcf.html">exatomic.algorithms.pcf module</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="exatomic.algorithms.pcf.html#pair-correlation-functions">Pair Correlation Functions</a></li>
+<li class="toctree-l4"><a class="reference internal" href="exatomic.algorithms.pcf.html#exatomic.algorithms.pcf.radial_pair_correlation"><code class="docutils literal notranslate"><span class="pre">radial_pair_correlation()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="exatomic.algorithms.pcf.html#exatomic.algorithms.pcf.radial_pcf_out_of_core"><code class="docutils literal notranslate"><span class="pre">radial_pcf_out_of_core()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="exatomic.core.html">exatomic.core package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="exatomic.core.html#submodules">Submodules</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.core.atom.html">exatomic.core.atom module</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="exatomic.core.atom.html#atomic-position-data">Atomic Position Data</a></li>
+<li class="toctree-l4"><a class="reference internal" href="exatomic.core.atom.html#exatomic.core.atom.Atom"><code class="docutils literal notranslate"><span class="pre">Atom</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="exatomic.core.atom.html#exatomic.core.atom.UnitAtom"><code class="docutils literal notranslate"><span class="pre">UnitAtom</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="exatomic.core.atom.html#exatomic.core.atom.ProjectedAtom"><code class="docutils literal notranslate"><span class="pre">ProjectedAtom</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="exatomic.core.atom.html#exatomic.core.atom.VisualAtom"><code class="docutils literal notranslate"><span class="pre">VisualAtom</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="exatomic.core.atom.html#exatomic.core.atom.Frequency"><code class="docutils literal notranslate"><span class="pre">Frequency</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="exatomic.core.atom.html#exatomic.core.atom.add_vibrational_mode"><code class="docutils literal notranslate"><span class="pre">add_vibrational_mode()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.core.basis.html">exatomic.core.basis module</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="exatomic.core.basis.html#basis-set-representations">Basis Set Representations</a></li>
+<li class="toctree-l4"><a class="reference internal" href="exatomic.core.basis.html#exatomic.core.basis.BasisSet"><code class="docutils literal notranslate"><span class="pre">BasisSet</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="exatomic.core.basis.html#exatomic.core.basis.deduplicate_basis_sets"><code class="docutils literal notranslate"><span class="pre">deduplicate_basis_sets()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="exatomic.core.basis.html#exatomic.core.basis.BasisSetOrder"><code class="docutils literal notranslate"><span class="pre">BasisSetOrder</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="exatomic.core.basis.html#exatomic.core.basis.Overlap"><code class="docutils literal notranslate"><span class="pre">Overlap</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.core.editor.html">exatomic.core.editor module</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="exatomic.core.editor.html#atomic-editor">Atomic Editor</a></li>
+<li class="toctree-l4"><a class="reference internal" href="exatomic.core.editor.html#exatomic.core.editor.Editor"><code class="docutils literal notranslate"><span class="pre">Editor</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.core.error.html">exatomic.core.error module</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="exatomic.core.error.html#exceptions">Exceptions</a></li>
+<li class="toctree-l4"><a class="reference internal" href="exatomic.core.error.html#exatomic.core.error.AtomicException"><code class="docutils literal notranslate"><span class="pre">AtomicException</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="exatomic.core.error.html#exatomic.core.error.StringFormulaError"><code class="docutils literal notranslate"><span class="pre">StringFormulaError</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="exatomic.core.error.html#exatomic.core.error.ClassificationError"><code class="docutils literal notranslate"><span class="pre">ClassificationError</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="exatomic.core.error.html#exatomic.core.error.PeriodicUniverseError"><code class="docutils literal notranslate"><span class="pre">PeriodicUniverseError</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="exatomic.core.error.html#exatomic.core.error.FreeBoundaryUniverseError"><code class="docutils literal notranslate"><span class="pre">FreeBoundaryUniverseError</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="exatomic.core.error.html#exatomic.core.error.BasisSetNotFoundError"><code class="docutils literal notranslate"><span class="pre">BasisSetNotFoundError</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.core.field.html">exatomic.core.field module</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="exatomic.core.field.html#atomic-field">Atomic Field</a></li>
+<li class="toctree-l4"><a class="reference internal" href="exatomic.core.field.html#exatomic.core.field.AtomicField"><code class="docutils literal notranslate"><span class="pre">AtomicField</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.core.frame.html">exatomic.core.frame module</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="exatomic.core.frame.html#frame-data">Frame Data</a></li>
+<li class="toctree-l4"><a class="reference internal" href="exatomic.core.frame.html#exatomic.core.frame.Frame"><code class="docutils literal notranslate"><span class="pre">Frame</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="exatomic.core.frame.html#exatomic.core.frame.compute_frame"><code class="docutils literal notranslate"><span class="pre">compute_frame()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="exatomic.core.frame.html#exatomic.core.frame.compute_frame_from_atom"><code class="docutils literal notranslate"><span class="pre">compute_frame_from_atom()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.core.gradient.html">exatomic.core.gradient module</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="exatomic.core.gradient.html#exatomic.core.gradient.Gradient"><code class="docutils literal notranslate"><span class="pre">Gradient</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.core.matrices.html">exatomic.core.matrices module</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="exatomic.core.matrices.html#matrices">Matrices</a></li>
+<li class="toctree-l4"><a class="reference internal" href="exatomic.core.matrices.html#exatomic.core.matrices.Triangle"><code class="docutils literal notranslate"><span class="pre">Triangle</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.core.molecule.html">exatomic.core.molecule module</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="exatomic.core.molecule.html#molecule-table">Molecule Table</a></li>
+<li class="toctree-l4"><a class="reference internal" href="exatomic.core.molecule.html#exatomic.core.molecule.Molecule"><code class="docutils literal notranslate"><span class="pre">Molecule</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="exatomic.core.molecule.html#exatomic.core.molecule.compute_molecule"><code class="docutils literal notranslate"><span class="pre">compute_molecule()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="exatomic.core.molecule.html#exatomic.core.molecule.compute_molecule_count"><code class="docutils literal notranslate"><span class="pre">compute_molecule_count()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="exatomic.core.molecule.html#exatomic.core.molecule.compute_molecule_com"><code class="docutils literal notranslate"><span class="pre">compute_molecule_com()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.core.orbital.html">exatomic.core.orbital module</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="exatomic.core.orbital.html#orbital-dataframe">Orbital DataFrame</a></li>
+<li class="toctree-l4"><a class="reference internal" href="exatomic.core.orbital.html#exatomic.core.orbital.Orbital"><code class="docutils literal notranslate"><span class="pre">Orbital</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="exatomic.core.orbital.html#exatomic.core.orbital.Excitation"><code class="docutils literal notranslate"><span class="pre">Excitation</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="exatomic.core.orbital.html#exatomic.core.orbital.MOMatrix"><code class="docutils literal notranslate"><span class="pre">MOMatrix</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="exatomic.core.orbital.html#exatomic.core.orbital.DensityMatrix"><code class="docutils literal notranslate"><span class="pre">DensityMatrix</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.core.tensor.html">exatomic.core.tensor module</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="exatomic.core.tensor.html#exatomic.core.tensor.Tensor"><code class="docutils literal notranslate"><span class="pre">Tensor</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="exatomic.core.tensor.html#exatomic.core.tensor.Polarizability"><code class="docutils literal notranslate"><span class="pre">Polarizability</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="exatomic.core.tensor.html#exatomic.core.tensor.NMRShielding"><code class="docutils literal notranslate"><span class="pre">NMRShielding</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="exatomic.core.tensor.html#exatomic.core.tensor.JCoupling"><code class="docutils literal notranslate"><span class="pre">JCoupling</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="exatomic.core.tensor.html#exatomic.core.tensor.add_tensor"><code class="docutils literal notranslate"><span class="pre">add_tensor()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.core.two.html">exatomic.core.two module</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="exatomic.core.two.html#atomic-two-body">Atomic Two Body</a></li>
+<li class="toctree-l4"><a class="reference internal" href="exatomic.core.two.html#exatomic.core.two.AtomTwo"><code class="docutils literal notranslate"><span class="pre">AtomTwo</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="exatomic.core.two.html#exatomic.core.two.MoleculeTwo"><code class="docutils literal notranslate"><span class="pre">MoleculeTwo</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="exatomic.core.two.html#exatomic.core.two.compute_atom_two"><code class="docutils literal notranslate"><span class="pre">compute_atom_two()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="exatomic.core.two.html#exatomic.core.two.compute_pdist"><code class="docutils literal notranslate"><span class="pre">compute_pdist()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="exatomic.core.two.html#exatomic.core.two.compute_pdist_nv"><code class="docutils literal notranslate"><span class="pre">compute_pdist_nv()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="exatomic.core.two.html#exatomic.core.two.compute_pdist_ortho"><code class="docutils literal notranslate"><span class="pre">compute_pdist_ortho()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="exatomic.core.two.html#exatomic.core.two.compute_pdist_ortho_nv"><code class="docutils literal notranslate"><span class="pre">compute_pdist_ortho_nv()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="exatomic.core.two.html#exatomic.core.two.compute_atom_two_out_of_core"><code class="docutils literal notranslate"><span class="pre">compute_atom_two_out_of_core()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="exatomic.core.two.html#exatomic.core.two.compute_molecule_two"><code class="docutils literal notranslate"><span class="pre">compute_molecule_two()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.core.universe.html">exatomic.core.universe module</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="exatomic.core.universe.html#the-atomic-universe">The Atomic Universe</a></li>
+<li class="toctree-l4"><a class="reference internal" href="exatomic.core.universe.html#exatomic.core.universe.Meta"><code class="docutils literal notranslate"><span class="pre">Meta</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="exatomic.core.universe.html#exatomic.core.universe.Universe"><code class="docutils literal notranslate"><span class="pre">Universe</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="exatomic.core.universe.html#exatomic.core.universe.concat"><code class="docutils literal notranslate"><span class="pre">concat()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="exatomic.core.universe.html#exatomic.core.universe.basis_function_contributions"><code class="docutils literal notranslate"><span class="pre">basis_function_contributions()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="exatomic.exa.html">exatomic.exa package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="exatomic.exa.html#exa">Exa</a></li>
+<li class="toctree-l2"><a class="reference internal" href="exatomic.exa.html#subpackages">Subpackages</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.exa.core.html">exatomic.exa.core package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="exatomic.exa.core.html#submodules">Submodules</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.exa.util.html">exatomic.exa.util package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="exatomic.exa.util.html#submodules">Submodules</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="exatomic.exa.html#submodules">Submodules</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.exa.static.html">exatomic.exa.static module</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="exatomic.exa.static.html#static-data-directory">Static Data Directory</a></li>
+<li class="toctree-l4"><a class="reference internal" href="exatomic.exa.static.html#exatomic.exa.static.staticdir"><code class="docutils literal notranslate"><span class="pre">staticdir()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="exatomic.exa.static.html#exatomic.exa.static.resource"><code class="docutils literal notranslate"><span class="pre">resource()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.exa.typed.html">exatomic.exa.typed module</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="exatomic.exa.typed.html#strongly-typed-class-attributes">Strongly Typed Class Attributes</a></li>
+<li class="toctree-l4"><a class="reference internal" href="exatomic.exa.typed.html#exatomic.exa.typed.typed"><code class="docutils literal notranslate"><span class="pre">typed()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="exatomic.exa.typed.html#exatomic.exa.typed.yield_typed"><code class="docutils literal notranslate"><span class="pre">yield_typed()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="exatomic.exa.typed.html#exatomic.exa.typed.Typed"><code class="docutils literal notranslate"><span class="pre">Typed</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="exatomic.exa.typed.html#exatomic.exa.typed.TypedMeta"><code class="docutils literal notranslate"><span class="pre">TypedMeta</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="exatomic.exa.typed.html#exatomic.exa.typed.TypedClass"><code class="docutils literal notranslate"><span class="pre">TypedClass</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="exatomic.gaussian.html">exatomic.gaussian package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="exatomic.gaussian.html#submodules">Submodules</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.gaussian.editor.html">exatomic.gaussian.editor module</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="exatomic.gaussian.editor.html#gaussian-editor">Gaussian Editor</a></li>
+<li class="toctree-l4"><a class="reference internal" href="exatomic.gaussian.editor.html#exatomic.gaussian.editor.Editor"><code class="docutils literal notranslate"><span class="pre">Editor</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.gaussian.inputs.html">exatomic.gaussian.inputs module</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="exatomic.gaussian.inputs.html#gaussian-input-generator">Gaussian Input Generator</a></li>
+<li class="toctree-l4"><a class="reference internal" href="exatomic.gaussian.inputs.html#exatomic.gaussian.inputs.Input"><code class="docutils literal notranslate"><span class="pre">Input</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="exatomic.gaussian.inputs.html#exatomic.gaussian.inputs.tuning_inputs"><code class="docutils literal notranslate"><span class="pre">tuning_inputs()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="exatomic.gaussian.inputs.html#exatomic.gaussian.inputs.functional_inputs"><code class="docutils literal notranslate"><span class="pre">functional_inputs()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.gaussian.output.html">exatomic.gaussian.output module</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="exatomic.gaussian.output.html#gaussian-output-editor">Gaussian Output Editor</a></li>
+<li class="toctree-l4"><a class="reference internal" href="exatomic.gaussian.output.html#exatomic.gaussian.output.GauMeta"><code class="docutils literal notranslate"><span class="pre">GauMeta</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="exatomic.gaussian.output.html#exatomic.gaussian.output.Output"><code class="docutils literal notranslate"><span class="pre">Output</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="exatomic.gaussian.output.html#exatomic.gaussian.output.Fchk"><code class="docutils literal notranslate"><span class="pre">Fchk</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="exatomic.interfaces.html">exatomic.interfaces package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="exatomic.interfaces.html#interfaces">Interfaces</a></li>
+<li class="toctree-l2"><a class="reference internal" href="exatomic.interfaces.html#submodules">Submodules</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.interfaces.cclib.html">exatomic.interfaces.cclib module</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="exatomic.interfaces.cclib.html#interface-to-cclib">Interface to cclib</a></li>
+<li class="toctree-l4"><a class="reference internal" href="exatomic.interfaces.cclib.html#exatomic.interfaces.cclib.universe_from_cclib"><code class="docutils literal notranslate"><span class="pre">universe_from_cclib()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="exatomic.interfaces.cclib.html#exatomic.interfaces.cclib.parse_ccobj_atom"><code class="docutils literal notranslate"><span class="pre">parse_ccobj_atom()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="exatomic.interfaces.cclib.html#exatomic.interfaces.cclib.parse_ccobj_orbital"><code class="docutils literal notranslate"><span class="pre">parse_ccobj_orbital()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="exatomic.interfaces.cclib.html#exatomic.interfaces.cclib.parse_ccobj_momatrix"><code class="docutils literal notranslate"><span class="pre">parse_ccobj_momatrix()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="exatomic.interfaces.cclib.html#exatomic.interfaces.cclib.parse_ccobj_basis_set_order"><code class="docutils literal notranslate"><span class="pre">parse_ccobj_basis_set_order()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="exatomic.interfaces.cclib.html#exatomic.interfaces.cclib.parse_ccobj_gaussian_basis_set"><code class="docutils literal notranslate"><span class="pre">parse_ccobj_gaussian_basis_set()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.interfaces.cube.html">exatomic.interfaces.cube module</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="exatomic.interfaces.cube.html#cube-file-support">Cube File Support</a></li>
+<li class="toctree-l4"><a class="reference internal" href="exatomic.interfaces.cube.html#exatomic.interfaces.cube.Meta"><code class="docutils literal notranslate"><span class="pre">Meta</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="exatomic.interfaces.cube.html#exatomic.interfaces.cube.Cube"><code class="docutils literal notranslate"><span class="pre">Cube</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="exatomic.interfaces.cube.html#exatomic.interfaces.cube.uni_from_cubes"><code class="docutils literal notranslate"><span class="pre">uni_from_cubes()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.interfaces.pdb.html">exatomic.interfaces.pdb module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.interfaces.xyz.html">exatomic.interfaces.xyz module</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="exatomic.interfaces.xyz.html#xyz-file-editor">XYZ File Editor</a></li>
+<li class="toctree-l4"><a class="reference internal" href="exatomic.interfaces.xyz.html#exatomic.interfaces.xyz.InputError"><code class="docutils literal notranslate"><span class="pre">InputError</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="exatomic.interfaces.xyz.html#exatomic.interfaces.xyz.Meta"><code class="docutils literal notranslate"><span class="pre">Meta</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="exatomic.interfaces.xyz.html#exatomic.interfaces.xyz.XYZ"><code class="docutils literal notranslate"><span class="pre">XYZ</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="exatomic.molcas.html">exatomic.molcas package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="exatomic.molcas.html#submodules">Submodules</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.molcas.editor.html">exatomic.molcas.editor module</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="exatomic.molcas.editor.html#base-molcas-editor">Base Molcas Editor</a></li>
+<li class="toctree-l4"><a class="reference internal" href="exatomic.molcas.editor.html#exatomic.molcas.editor.Editor"><code class="docutils literal notranslate"><span class="pre">Editor</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.molcas.inputs.html">exatomic.molcas.inputs module</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="exatomic.molcas.inputs.html#input-generator-and-parser">Input Generator and Parser</a></li>
+<li class="toctree-l4"><a class="reference internal" href="exatomic.molcas.inputs.html#exatomic.molcas.inputs.InputGenerator"><code class="docutils literal notranslate"><span class="pre">InputGenerator</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="exatomic.molcas.inputs.html#exatomic.molcas.inputs.write_molcas_input"><code class="docutils literal notranslate"><span class="pre">write_molcas_input()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.molcas.output.html">exatomic.molcas.output module</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="exatomic.molcas.output.html#molcas-output-parser">Molcas Output Parser</a></li>
+<li class="toctree-l4"><a class="reference internal" href="exatomic.molcas.output.html#exatomic.molcas.output.OrbMeta"><code class="docutils literal notranslate"><span class="pre">OrbMeta</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="exatomic.molcas.output.html#exatomic.molcas.output.Orb"><code class="docutils literal notranslate"><span class="pre">Orb</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="exatomic.molcas.output.html#exatomic.molcas.output.OutMeta"><code class="docutils literal notranslate"><span class="pre">OutMeta</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="exatomic.molcas.output.html#exatomic.molcas.output.Output"><code class="docutils literal notranslate"><span class="pre">Output</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="exatomic.molcas.output.html#exatomic.molcas.output.HDFMeta"><code class="docutils literal notranslate"><span class="pre">HDFMeta</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="exatomic.molcas.output.html#exatomic.molcas.output.HDF"><code class="docutils literal notranslate"><span class="pre">HDF</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="exatomic.molcas.output.html#exatomic.molcas.output.parse_molcas"><code class="docutils literal notranslate"><span class="pre">parse_molcas()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="exatomic.nbo.html">exatomic.nbo package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="exatomic.nbo.html#submodules">Submodules</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.nbo.editor.html">exatomic.nbo.editor module</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="exatomic.nbo.editor.html#gaussian-editor">Gaussian Editor</a></li>
+<li class="toctree-l4"><a class="reference internal" href="exatomic.nbo.editor.html#exatomic.nbo.editor.Editor"><code class="docutils literal notranslate"><span class="pre">Editor</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.nbo.inputs.html">exatomic.nbo.inputs module</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="exatomic.nbo.inputs.html#exnbo-input-generator-and-parser">exnbo Input Generator and Parser</a></li>
+<li class="toctree-l4"><a class="reference internal" href="exatomic.nbo.inputs.html#exatomic.nbo.inputs.InpMeta"><code class="docutils literal notranslate"><span class="pre">InpMeta</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="exatomic.nbo.inputs.html#exatomic.nbo.inputs.Input"><code class="docutils literal notranslate"><span class="pre">Input</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.nbo.output.html">exatomic.nbo.output module</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="exatomic.nbo.output.html#exnbo-output-editor">exnbo Output Editor</a></li>
+<li class="toctree-l4"><a class="reference internal" href="exatomic.nbo.output.html#exatomic.nbo.output.Output"><code class="docutils literal notranslate"><span class="pre">Output</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="exatomic.nbo.output.html#exatomic.nbo.output.MOMatrix"><code class="docutils literal notranslate"><span class="pre">MOMatrix</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="exatomic.nwchem.html">exatomic.nwchem package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="exatomic.nwchem.html#submodules">Submodules</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.nwchem.basis.html">exatomic.nwchem.basis module</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="exatomic.nwchem.basis.html#basis-set-support">Basis Set Support</a></li>
+<li class="toctree-l4"><a class="reference internal" href="exatomic.nwchem.basis.html#exatomic.nwchem.basis.cartesian_ordering_function"><code class="docutils literal notranslate"><span class="pre">cartesian_ordering_function()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="exatomic.nwchem.basis.html#exatomic.nwchem.basis.spherical_ordering_function"><code class="docutils literal notranslate"><span class="pre">spherical_ordering_function()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.nwchem.editor.html">exatomic.nwchem.editor module</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="exatomic.nwchem.editor.html#nwchem-editor">NWChem Editor</a></li>
+<li class="toctree-l4"><a class="reference internal" href="exatomic.nwchem.editor.html#exatomic.nwchem.editor.Editor"><code class="docutils literal notranslate"><span class="pre">Editor</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.nwchem.inputs.html">exatomic.nwchem.inputs module</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="exatomic.nwchem.inputs.html#input-generator-and-parser">Input Generator and Parser</a></li>
+<li class="toctree-l4"><a class="reference internal" href="exatomic.nwchem.inputs.html#exatomic.nwchem.inputs.Input"><code class="docutils literal notranslate"><span class="pre">Input</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="exatomic.nwchem.inputs.html#exatomic.nwchem.inputs.tuning_inputs"><code class="docutils literal notranslate"><span class="pre">tuning_inputs()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.nwchem.output.html">exatomic.nwchem.output module</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="exatomic.nwchem.output.html#nwchem-output">NWChem Output</a></li>
+<li class="toctree-l4"><a class="reference internal" href="exatomic.nwchem.output.html#exatomic.nwchem.output.OutMeta"><code class="docutils literal notranslate"><span class="pre">OutMeta</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="exatomic.nwchem.output.html#exatomic.nwchem.output.Output"><code class="docutils literal notranslate"><span class="pre">Output</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="exatomic.nwchem.output.html#exatomic.nwchem.output.Ecce"><code class="docutils literal notranslate"><span class="pre">Ecce</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="exatomic.nwchem.output.html#exatomic.nwchem.output.parse_nwchem"><code class="docutils literal notranslate"><span class="pre">parse_nwchem()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="exatomic.plotter.html">exatomic.plotter package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="exatomic.plotter.html#submodules">Submodules</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.plotter.plot.html">exatomic.plotter.plot module</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="exatomic.plotter.plot.html#plotter">Plotter</a></li>
+<li class="toctree-l4"><a class="reference internal" href="exatomic.plotter.plot.html#exatomic.plotter.plot.lorentzian"><code class="docutils literal notranslate"><span class="pre">lorentzian()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="exatomic.plotter.plot.html#exatomic.plotter.plot.gaussian"><code class="docutils literal notranslate"><span class="pre">gaussian()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="exatomic.plotter.plot.html#exatomic.plotter.plot.Plot"><code class="docutils literal notranslate"><span class="pre">Plot</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="exatomic.qchem.html">exatomic.qchem package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="exatomic.qchem.html#submodules">Submodules</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.qchem.editor.html">exatomic.qchem.editor module</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="exatomic.qchem.editor.html#q-chem-editor">Q-Chem Editor</a></li>
+<li class="toctree-l4"><a class="reference internal" href="exatomic.qchem.editor.html#exatomic.qchem.editor.Editor"><code class="docutils literal notranslate"><span class="pre">Editor</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.qchem.inputs.html">exatomic.qchem.inputs module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.qchem.output.html">exatomic.qchem.output module</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="exatomic.qchem.output.html#q-chem-ouput-editor">Q-Chem Ouput Editor</a></li>
+<li class="toctree-l4"><a class="reference internal" href="exatomic.qchem.output.html#exatomic.qchem.output.QMeta"><code class="docutils literal notranslate"><span class="pre">QMeta</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="exatomic.qchem.output.html#exatomic.qchem.output.Output"><code class="docutils literal notranslate"><span class="pre">Output</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="exatomic.qe.html">exatomic.qe package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="exatomic.qe.html#quantum-espresso">Quantum ESPRESSO</a></li>
+<li class="toctree-l2"><a class="reference internal" href="exatomic.qe.html#subpackages">Subpackages</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.qe.core.html">exatomic.qe.core package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="exatomic.qe.core.html#submodules">Submodules</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.qe.cp.html">exatomic.qe.cp package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="exatomic.qe.cp.html#submodules">Submodules</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.qe.psp.html">exatomic.qe.psp package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="exatomic.qe.psp.html#submodules">Submodules</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.qe.pw.html">exatomic.qe.pw package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="exatomic.qe.pw.html#submodules">Submodules</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="exatomic.qe.html#submodules">Submodules</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.qe.types.html">exatomic.qe.types module</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="exatomic.qe.types.html#qe-type-conversions">QE Type Conversions</a></li>
+<li class="toctree-l4"><a class="reference internal" href="exatomic.qe.types.html#exatomic.qe.types.to_qe_type"><code class="docutils literal notranslate"><span class="pre">to_qe_type()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="exatomic.qe.types.html#exatomic.qe.types.to_py_type"><code class="docutils literal notranslate"><span class="pre">to_py_type()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="exatomic.qe.types.html#exatomic.qe.types.get_length"><code class="docutils literal notranslate"><span class="pre">get_length()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="exatomic.util.html">exatomic.util package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="exatomic.util.html#submodules">Submodules</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.util.builder.html">exatomic.util.builder module</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="exatomic.util.builder.html#construction-of-molecules">Construction of Molecules</a></li>
+<li class="toctree-l4"><a class="reference internal" href="exatomic.util.builder.html#exatomic.util.builder.monatomic"><code class="docutils literal notranslate"><span class="pre">monatomic()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="exatomic.util.builder.html#exatomic.util.builder.diatomic"><code class="docutils literal notranslate"><span class="pre">diatomic()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.util.constants.html">exatomic.util.constants module</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="exatomic.util.constants.html#physical-constants">Physical Constants</a></li>
+<li class="toctree-l4"><a class="reference internal" href="exatomic.util.constants.html#exatomic.util.constants.Constant"><code class="docutils literal notranslate"><span class="pre">Constant</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.util.conversions.html">exatomic.util.conversions module</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="exatomic.util.conversions.html#common-conversion-factors">Common conversion factors</a></li>
+<li class="toctree-l4"><a class="reference internal" href="exatomic.util.conversions.html#exatomic.util.conversions.Conversion"><code class="docutils literal notranslate"><span class="pre">Conversion</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="exatomic.widgets.html">exatomic.widgets package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="exatomic.widgets.html#submodules">Submodules</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.widgets.traits.html">exatomic.widgets.traits module</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="exatomic.widgets.traits.html#universe-trait-functions">Universe trait functions</a></li>
+<li class="toctree-l4"><a class="reference internal" href="exatomic.widgets.traits.html#exatomic.widgets.traits.atom_traits"><code class="docutils literal notranslate"><span class="pre">atom_traits()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="exatomic.widgets.traits.html#exatomic.widgets.traits.field_traits"><code class="docutils literal notranslate"><span class="pre">field_traits()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="exatomic.widgets.traits.html#exatomic.widgets.traits.two_traits"><code class="docutils literal notranslate"><span class="pre">two_traits()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="exatomic.widgets.traits.html#exatomic.widgets.traits.frame_traits"><code class="docutils literal notranslate"><span class="pre">frame_traits()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="exatomic.widgets.traits.html#exatomic.widgets.traits.tensor_traits"><code class="docutils literal notranslate"><span class="pre">tensor_traits()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="exatomic.widgets.traits.html#exatomic.widgets.traits.uni_traits"><code class="docutils literal notranslate"><span class="pre">uni_traits()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.widgets.widget.html">exatomic.widgets.widget module</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="exatomic.widgets.widget.html#universe-notebook-widget">Universe Notebook Widget</a></li>
+<li class="toctree-l4"><a class="reference internal" href="exatomic.widgets.widget.html#exatomic.widgets.widget.DemoContainer"><code class="docutils literal notranslate"><span class="pre">DemoContainer</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="exatomic.widgets.widget.html#exatomic.widgets.widget.TensorContainer"><code class="docutils literal notranslate"><span class="pre">TensorContainer</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="exatomic.widgets.widget.html#exatomic.widgets.widget.DemoUniverse"><code class="docutils literal notranslate"><span class="pre">DemoUniverse</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="exatomic.widgets.widget.html#exatomic.widgets.widget.UniverseWidget"><code class="docutils literal notranslate"><span class="pre">UniverseWidget</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.widgets.widget_base.html">exatomic.widgets.widget_base module</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="exatomic.widgets.widget_base.html#lower-level-widgets">Lower Level Widgets</a></li>
+<li class="toctree-l4"><a class="reference internal" href="exatomic.widgets.widget_base.html#exatomic.widgets.widget_base.ExatomicScene"><code class="docutils literal notranslate"><span class="pre">ExatomicScene</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="exatomic.widgets.widget_base.html#exatomic.widgets.widget_base.TensorScene"><code class="docutils literal notranslate"><span class="pre">TensorScene</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="exatomic.widgets.widget_base.html#exatomic.widgets.widget_base.UniverseScene"><code class="docutils literal notranslate"><span class="pre">UniverseScene</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="exatomic.widgets.widget_base.html#exatomic.widgets.widget_base.ExatomicBox"><code class="docutils literal notranslate"><span class="pre">ExatomicBox</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.widgets.widget_df.html">exatomic.widgets.widget_df module</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="exatomic.widgets.widget_df.html#a-dataframe-widget">A dataframe widget</a></li>
+<li class="toctree-l4"><a class="reference internal" href="exatomic.widgets.widget_df.html#exatomic.widgets.widget_df.DFBox"><code class="docutils literal notranslate"><span class="pre">DFBox</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.widgets.widget_utils.html">exatomic.widgets.widget_utils module</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="exatomic.widgets.widget_utils.html#widget-utilities">Widget Utilities</a></li>
+<li class="toctree-l4"><a class="reference internal" href="exatomic.widgets.widget_utils.html#exatomic.widgets.widget_utils.Folder"><code class="docutils literal notranslate"><span class="pre">Folder</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="exatomic.widgets.widget_utils.html#exatomic.widgets.widget_utils.GUIBox"><code class="docutils literal notranslate"><span class="pre">GUIBox</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="exatomic.widgets.widget_utils.html#exatomic.widgets.widget_utils.gui_field_widgets"><code class="docutils literal notranslate"><span class="pre">gui_field_widgets()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</div>
+</section>
+<section id="submodules">
+<h2>Submodules<a class="headerlink" href="#submodules" title="Permalink to this heading"></a></h2>
+<div class="toctree-wrapper compound">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="exatomic.base.html">exatomic.base module</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="exatomic.base.html#base-functionality">Base Functionality</a></li>
+<li class="toctree-l2"><a class="reference internal" href="exatomic.base.html#exatomic.base.staticdir"><code class="docutils literal notranslate"><span class="pre">staticdir()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="exatomic.base.html#exatomic.base.resource"><code class="docutils literal notranslate"><span class="pre">resource()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="exatomic.base.html#exatomic.base.list_resources"><code class="docutils literal notranslate"><span class="pre">list_resources()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="exatomic.base.html#exatomic.base.display_side_by_side"><code class="docutils literal notranslate"><span class="pre">display_side_by_side()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="exatomic.base.html#exatomic.base.sym2isomass"><code class="docutils literal notranslate"><span class="pre">sym2isomass()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="exatomic.formula.html">exatomic.formula module</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="exatomic.formula.html#simple-formula">Simple Formula</a></li>
+<li class="toctree-l2"><a class="reference internal" href="exatomic.formula.html#exatomic.formula.SimpleFormula"><code class="docutils literal notranslate"><span class="pre">SimpleFormula</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.formula.html#exatomic.formula.SimpleFormula.mass"><code class="docutils literal notranslate"><span class="pre">SimpleFormula.mass</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.formula.html#exatomic.formula.SimpleFormula.as_string"><code class="docutils literal notranslate"><span class="pre">SimpleFormula.as_string()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="exatomic.formula.html#exatomic.formula.string_to_dict"><code class="docutils literal notranslate"><span class="pre">string_to_dict()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="exatomic.formula.html#exatomic.formula.dict_to_string"><code class="docutils literal notranslate"><span class="pre">dict_to_string()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="exatomic.mpl.html">exatomic.mpl module</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="exatomic.mpl.html#custom-axes">Custom Axes</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="exatomic.static.html">exatomic.static module</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="exatomic.static.html#static-data-directory">Static Data Directory</a></li>
+</ul>
+</li>
+</ul>
+</div>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="contrib.html" class="btn btn-neutral float-left" title="Development" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="exatomic.adf.html" class="btn btn-neutral float-right" title="exatomic.adf package" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright .
+      <span class="lastupdated">Last updated on Apr 21, 2023.
+      </span></p>
+  </div>
+
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

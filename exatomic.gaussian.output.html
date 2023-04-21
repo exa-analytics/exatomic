@@ -1,0 +1,620 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>exatomic.gaussian.output module &mdash; exatomic 0.6.0 documentation</title>
+      <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+        <script src="_static/doctools.js"></script>
+        <script src="_static/sphinx_highlight.js"></script>
+        <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="exatomic.interfaces package" href="exatomic.interfaces.html" />
+    <link rel="prev" title="exatomic.gaussian.inputs module" href="exatomic.gaussian.inputs.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            exatomic
+              <img src="_static/logo.png" class="logo" alt="Logo"/>
+          </a>
+              <div class="version">
+                0.6.0
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Sitemap</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="install.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="started.html">Getting Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="contrib.html">Development</a></li>
+</ul>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="exatomic.html">exatomic package</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="exatomic.html#supported-software">Supported Software</a></li>
+<li class="toctree-l2"><a class="reference internal" href="exatomic.html#exatomic.func_log"><code class="docutils literal notranslate"><span class="pre">func_log()</span></code></a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="exatomic.html#subpackages">Subpackages</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="exatomic.adf.html">exatomic.adf package</a></li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.algorithms.html">exatomic.algorithms package</a></li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.core.html">exatomic.core package</a></li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.exa.html">exatomic.exa package</a></li>
+<li class="toctree-l3 current"><a class="reference internal" href="exatomic.gaussian.html">exatomic.gaussian package</a><ul class="current">
+<li class="toctree-l4 current"><a class="reference internal" href="exatomic.gaussian.html#submodules">Submodules</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.interfaces.html">exatomic.interfaces package</a></li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.molcas.html">exatomic.molcas package</a></li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.nbo.html">exatomic.nbo package</a></li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.nwchem.html">exatomic.nwchem package</a></li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.plotter.html">exatomic.plotter package</a></li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.qchem.html">exatomic.qchem package</a></li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.qe.html">exatomic.qe package</a></li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.util.html">exatomic.util package</a></li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.widgets.html">exatomic.widgets package</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="exatomic.html#submodules">Submodules</a></li>
+</ul>
+</li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">exatomic</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="exatomic.html">exatomic package</a></li>
+          <li class="breadcrumb-item"><a href="exatomic.gaussian.html">exatomic.gaussian package</a></li>
+      <li class="breadcrumb-item active">exatomic.gaussian.output module</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/exatomic.gaussian.output.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="module-exatomic.gaussian.output">
+<span id="exatomic-gaussian-output-module"></span><h1>exatomic.gaussian.output module<a class="headerlink" href="#module-exatomic.gaussian.output" title="Permalink to this heading"></a></h1>
+<section id="gaussian-output-editor">
+<h2>Gaussian Output Editor<a class="headerlink" href="#gaussian-output-editor" title="Permalink to this heading"></a></h2>
+<p>Editor classes for various types of Gaussian output files</p>
+</section>
+<dl class="py class">
+<dt class="sig sig-object py" id="exatomic.gaussian.output.GauMeta">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">exatomic.gaussian.output.</span></span><span class="sig-name descname"><span class="pre">GauMeta</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bases</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">clsdict</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/exatomic/gaussian/output.html#GauMeta"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#exatomic.gaussian.output.GauMeta" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="exatomic.exa.core.container.html#exatomic.exa.core.container.TypedMeta" title="exatomic.exa.core.container.TypedMeta"><code class="xref py py-class docutils literal notranslate"><span class="pre">TypedMeta</span></code></a></p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="exatomic.gaussian.output.GauMeta.atom">
+<span class="sig-name descname"><span class="pre">atom</span></span><a class="headerlink" href="#exatomic.gaussian.output.GauMeta.atom" title="Permalink to this definition"></a></dt>
+<dd><p>alias of <a class="reference internal" href="exatomic.core.atom.html#exatomic.core.atom.Atom" title="exatomic.core.atom.Atom"><code class="xref py py-class docutils literal notranslate"><span class="pre">Atom</span></code></a></p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="exatomic.gaussian.output.GauMeta.basis_set">
+<span class="sig-name descname"><span class="pre">basis_set</span></span><a class="headerlink" href="#exatomic.gaussian.output.GauMeta.basis_set" title="Permalink to this definition"></a></dt>
+<dd><p>alias of <a class="reference internal" href="exatomic.core.basis.html#exatomic.core.basis.BasisSet" title="exatomic.core.basis.BasisSet"><code class="xref py py-class docutils literal notranslate"><span class="pre">BasisSet</span></code></a></p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="exatomic.gaussian.output.GauMeta.orbital">
+<span class="sig-name descname"><span class="pre">orbital</span></span><a class="headerlink" href="#exatomic.gaussian.output.GauMeta.orbital" title="Permalink to this definition"></a></dt>
+<dd><p>alias of <a class="reference internal" href="exatomic.core.orbital.html#exatomic.core.orbital.Orbital" title="exatomic.core.orbital.Orbital"><code class="xref py py-class docutils literal notranslate"><span class="pre">Orbital</span></code></a></p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="exatomic.gaussian.output.GauMeta.momatrix">
+<span class="sig-name descname"><span class="pre">momatrix</span></span><a class="headerlink" href="#exatomic.gaussian.output.GauMeta.momatrix" title="Permalink to this definition"></a></dt>
+<dd><p>alias of <a class="reference internal" href="exatomic.core.orbital.html#exatomic.core.orbital.MOMatrix" title="exatomic.core.orbital.MOMatrix"><code class="xref py py-class docutils literal notranslate"><span class="pre">MOMatrix</span></code></a></p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="exatomic.gaussian.output.GauMeta.basis_set_order">
+<span class="sig-name descname"><span class="pre">basis_set_order</span></span><a class="headerlink" href="#exatomic.gaussian.output.GauMeta.basis_set_order" title="Permalink to this definition"></a></dt>
+<dd><p>alias of <a class="reference internal" href="exatomic.core.basis.html#exatomic.core.basis.BasisSetOrder" title="exatomic.core.basis.BasisSetOrder"><code class="xref py py-class docutils literal notranslate"><span class="pre">BasisSetOrder</span></code></a></p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="exatomic.gaussian.output.GauMeta.frame">
+<span class="sig-name descname"><span class="pre">frame</span></span><a class="headerlink" href="#exatomic.gaussian.output.GauMeta.frame" title="Permalink to this definition"></a></dt>
+<dd><p>alias of <a class="reference internal" href="exatomic.core.frame.html#exatomic.core.frame.Frame" title="exatomic.core.frame.Frame"><code class="xref py py-class docutils literal notranslate"><span class="pre">Frame</span></code></a></p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="exatomic.gaussian.output.GauMeta.excitation">
+<span class="sig-name descname"><span class="pre">excitation</span></span><a class="headerlink" href="#exatomic.gaussian.output.GauMeta.excitation" title="Permalink to this definition"></a></dt>
+<dd><p>alias of <a class="reference internal" href="exatomic.core.orbital.html#exatomic.core.orbital.Excitation" title="exatomic.core.orbital.Excitation"><code class="xref py py-class docutils literal notranslate"><span class="pre">Excitation</span></code></a></p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="exatomic.gaussian.output.GauMeta.frequency">
+<span class="sig-name descname"><span class="pre">frequency</span></span><a class="headerlink" href="#exatomic.gaussian.output.GauMeta.frequency" title="Permalink to this definition"></a></dt>
+<dd><p>alias of <a class="reference internal" href="exatomic.core.atom.html#exatomic.core.atom.Frequency" title="exatomic.core.atom.Frequency"><code class="xref py py-class docutils literal notranslate"><span class="pre">Frequency</span></code></a></p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="exatomic.gaussian.output.GauMeta.overlap">
+<span class="sig-name descname"><span class="pre">overlap</span></span><a class="headerlink" href="#exatomic.gaussian.output.GauMeta.overlap" title="Permalink to this definition"></a></dt>
+<dd><p>alias of <a class="reference internal" href="exatomic.core.basis.html#exatomic.core.basis.Overlap" title="exatomic.core.basis.Overlap"><code class="xref py py-class docutils literal notranslate"><span class="pre">Overlap</span></code></a></p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="exatomic.gaussian.output.GauMeta.multipole">
+<span class="sig-name descname"><span class="pre">multipole</span></span><a class="headerlink" href="#exatomic.gaussian.output.GauMeta.multipole" title="Permalink to this definition"></a></dt>
+<dd><p>alias of <code class="xref py py-class docutils literal notranslate"><span class="pre">DataFrame</span></code></p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="exatomic.gaussian.output.GauMeta.gradient">
+<span class="sig-name descname"><span class="pre">gradient</span></span><a class="headerlink" href="#exatomic.gaussian.output.GauMeta.gradient" title="Permalink to this definition"></a></dt>
+<dd><p>alias of <a class="reference internal" href="exatomic.core.gradient.html#exatomic.core.gradient.Gradient" title="exatomic.core.gradient.Gradient"><code class="xref py py-class docutils literal notranslate"><span class="pre">Gradient</span></code></a></p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="exatomic.gaussian.output.GauMeta.nmr_shielding">
+<span class="sig-name descname"><span class="pre">nmr_shielding</span></span><a class="headerlink" href="#exatomic.gaussian.output.GauMeta.nmr_shielding" title="Permalink to this definition"></a></dt>
+<dd><p>alias of <a class="reference internal" href="exatomic.core.tensor.html#exatomic.core.tensor.NMRShielding" title="exatomic.core.tensor.NMRShielding"><code class="xref py py-class docutils literal notranslate"><span class="pre">NMRShielding</span></code></a></p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="exatomic.gaussian.output.GauMeta.frequency_ext">
+<span class="sig-name descname"><span class="pre">frequency_ext</span></span><a class="headerlink" href="#exatomic.gaussian.output.GauMeta.frequency_ext" title="Permalink to this definition"></a></dt>
+<dd><p>alias of <code class="xref py py-class docutils literal notranslate"><span class="pre">DataFrame</span></code></p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="exatomic.gaussian.output.GauMeta.hessian">
+<span class="sig-name descname"><span class="pre">hessian</span></span><a class="headerlink" href="#exatomic.gaussian.output.GauMeta.hessian" title="Permalink to this definition"></a></dt>
+<dd><p>alias of <code class="xref py py-class docutils literal notranslate"><span class="pre">DataFrame</span></code></p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="exatomic.gaussian.output.GauMeta.elec_dipole">
+<span class="sig-name descname"><span class="pre">elec_dipole</span></span><a class="headerlink" href="#exatomic.gaussian.output.GauMeta.elec_dipole" title="Permalink to this definition"></a></dt>
+<dd><p>alias of <code class="xref py py-class docutils literal notranslate"><span class="pre">DataFrame</span></code></p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="exatomic.gaussian.output.GauMeta.elec_quadrupole">
+<span class="sig-name descname"><span class="pre">elec_quadrupole</span></span><a class="headerlink" href="#exatomic.gaussian.output.GauMeta.elec_quadrupole" title="Permalink to this definition"></a></dt>
+<dd><p>alias of <code class="xref py py-class docutils literal notranslate"><span class="pre">DataFrame</span></code></p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="exatomic.gaussian.output.GauMeta.mag_dipole">
+<span class="sig-name descname"><span class="pre">mag_dipole</span></span><a class="headerlink" href="#exatomic.gaussian.output.GauMeta.mag_dipole" title="Permalink to this definition"></a></dt>
+<dd><p>alias of <code class="xref py py-class docutils literal notranslate"><span class="pre">DataFrame</span></code></p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="exatomic.gaussian.output.GauMeta.spec_prop">
+<span class="sig-name descname"><span class="pre">spec_prop</span></span><a class="headerlink" href="#exatomic.gaussian.output.GauMeta.spec_prop" title="Permalink to this definition"></a></dt>
+<dd><p>alias of <code class="xref py py-class docutils literal notranslate"><span class="pre">DataFrame</span></code></p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="exatomic.gaussian.output.Output">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">exatomic.gaussian.output.</span></span><span class="sig-name descname"><span class="pre">Output</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/exatomic/gaussian/output.html#Output"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#exatomic.gaussian.output.Output" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="exatomic.gaussian.editor.html#exatomic.gaussian.editor.Editor" title="exatomic.gaussian.editor.Editor"><code class="xref py py-class docutils literal notranslate"><span class="pre">Editor</span></code></a></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="exatomic.gaussian.output.Output.parse_atom">
+<span class="sig-name descname"><span class="pre">parse_atom</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">orientation</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/exatomic/gaussian/output.html#Output.parse_atom"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#exatomic.gaussian.output.Output.parse_atom" title="Permalink to this definition"></a></dt>
+<dd><p>Parse the atom tables.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>orientation</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.11)"><em>str</em></a><em>, </em><em>optional</em>) – Specify which orientation
+to parse. Will only accept <cite>‘input’</cite> or <cite>‘standard’</cite>.
+Defaults to <cite>None</cite> (will determine orientation to
+parse internally).</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="exatomic.gaussian.output.Output.parse_basis_set">
+<span class="sig-name descname"><span class="pre">parse_basis_set</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/exatomic/gaussian/output.html#Output.parse_basis_set"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#exatomic.gaussian.output.Output.parse_basis_set" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="exatomic.gaussian.output.Output.parse_orbital">
+<span class="sig-name descname"><span class="pre">parse_orbital</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/exatomic/gaussian/output.html#Output.parse_orbital"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#exatomic.gaussian.output.Output.parse_orbital" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="exatomic.gaussian.output.Output.parse_momatrix">
+<span class="sig-name descname"><span class="pre">parse_momatrix</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/exatomic/gaussian/output.html#Output.parse_momatrix"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#exatomic.gaussian.output.Output.parse_momatrix" title="Permalink to this definition"></a></dt>
+<dd><p>Parses the MO matrix if asked for in the input.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Requires specification of pop(full) or pop(no) or the like.</p>
+</div>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="exatomic.gaussian.output.Output.parse_basis_set_order">
+<span class="sig-name descname"><span class="pre">parse_basis_set_order</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/exatomic/gaussian/output.html#Output.parse_basis_set_order"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#exatomic.gaussian.output.Output.parse_basis_set_order" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="exatomic.gaussian.output.Output.parse_frame">
+<span class="sig-name descname"><span class="pre">parse_frame</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/exatomic/gaussian/output.html#Output.parse_frame"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#exatomic.gaussian.output.Output.parse_frame" title="Permalink to this definition"></a></dt>
+<dd><p>Create a minimal <code class="xref py py-class docutils literal notranslate"><span class="pre">Frame</span></code> from the (parsed)
+<a class="reference internal" href="exatomic.core.atom.html#exatomic.core.atom.Atom" title="exatomic.core.atom.Atom"><code class="xref py py-class docutils literal notranslate"><span class="pre">Atom</span></code></a> object.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="exatomic.gaussian.output.Output.parse_excitation">
+<span class="sig-name descname"><span class="pre">parse_excitation</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/exatomic/gaussian/output.html#Output.parse_excitation"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#exatomic.gaussian.output.Output.parse_excitation" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="exatomic.gaussian.output.Output.parse_elec_dipole">
+<span class="sig-name descname"><span class="pre">parse_elec_dipole</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">length</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/exatomic/gaussian/output.html#Output.parse_elec_dipole"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#exatomic.gaussian.output.Output.parse_elec_dipole" title="Permalink to this definition"></a></dt>
+<dd><p>Parse the electric dipole moment.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>length</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.11)"><em>bool</em></a><em>, </em><em>optional</em>) – Parse the dipoles in the
+length formalism. Defaults to <cite>True</cite>.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="exatomic.gaussian.output.Output.parse_elec_quadrupole">
+<span class="sig-name descname"><span class="pre">parse_elec_quadrupole</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/exatomic/gaussian/output.html#Output.parse_elec_quadrupole"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#exatomic.gaussian.output.Output.parse_elec_quadrupole" title="Permalink to this definition"></a></dt>
+<dd><p>Parse the transition velocity quadrupole moment.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="exatomic.gaussian.output.Output.parse_mag_dipole">
+<span class="sig-name descname"><span class="pre">parse_mag_dipole</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/exatomic/gaussian/output.html#Output.parse_mag_dipole"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#exatomic.gaussian.output.Output.parse_mag_dipole" title="Permalink to this definition"></a></dt>
+<dd><p>Parse the magnetic dipole moment.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="exatomic.gaussian.output.Output.parse_spec_prop">
+<span class="sig-name descname"><span class="pre">parse_spec_prop</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/exatomic/gaussian/output.html#Output.parse_spec_prop"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#exatomic.gaussian.output.Output.parse_spec_prop" title="Permalink to this definition"></a></dt>
+<dd><p>Parse the spectral properties.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="exatomic.gaussian.output.Output.parse_frequency">
+<span class="sig-name descname"><span class="pre">parse_frequency</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/exatomic/gaussian/output.html#Output.parse_frequency"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#exatomic.gaussian.output.Output.parse_frequency" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="exatomic.gaussian.output.Output.parse_nmr_shielding">
+<span class="sig-name descname"><span class="pre">parse_nmr_shielding</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/exatomic/gaussian/output.html#Output.parse_nmr_shielding"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#exatomic.gaussian.output.Output.parse_nmr_shielding" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="exatomic.gaussian.output.Output.parse_gradient">
+<span class="sig-name descname"><span class="pre">parse_gradient</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/exatomic/gaussian/output.html#Output.parse_gradient"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#exatomic.gaussian.output.Output.parse_gradient" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="exatomic.gaussian.output.Output.parse_overlap">
+<span class="sig-name descname"><span class="pre">parse_overlap</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/exatomic/gaussian/output.html#Output.parse_overlap"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#exatomic.gaussian.output.Output.parse_overlap" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="exatomic.gaussian.output.Output.parse_multipole">
+<span class="sig-name descname"><span class="pre">parse_multipole</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/exatomic/gaussian/output.html#Output.parse_multipole"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#exatomic.gaussian.output.Output.parse_multipole" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="exatomic.gaussian.output.Output.parse_hessian">
+<span class="sig-name descname"><span class="pre">parse_hessian</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/exatomic/gaussian/output.html#Output.parse_hessian"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#exatomic.gaussian.output.Output.parse_hessian" title="Permalink to this definition"></a></dt>
+<dd><p>Parse the Hessian from the Gaussian stdout. This
+is printed as a lower triangular matrix. We convert
+this to a square matrix internally.</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="exatomic.gaussian.output.Output.atom">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">atom</span></span><a class="headerlink" href="#exatomic.gaussian.output.Output.atom" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="exatomic.gaussian.output.Output.basis_set">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">basis_set</span></span><a class="headerlink" href="#exatomic.gaussian.output.Output.basis_set" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="exatomic.gaussian.output.Output.basis_set_order">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">basis_set_order</span></span><a class="headerlink" href="#exatomic.gaussian.output.Output.basis_set_order" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="exatomic.gaussian.output.Output.elec_dipole">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">elec_dipole</span></span><a class="headerlink" href="#exatomic.gaussian.output.Output.elec_dipole" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="exatomic.gaussian.output.Output.elec_quadrupole">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">elec_quadrupole</span></span><a class="headerlink" href="#exatomic.gaussian.output.Output.elec_quadrupole" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="exatomic.gaussian.output.Output.excitation">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">excitation</span></span><a class="headerlink" href="#exatomic.gaussian.output.Output.excitation" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="exatomic.gaussian.output.Output.frame">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">frame</span></span><a class="headerlink" href="#exatomic.gaussian.output.Output.frame" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="exatomic.gaussian.output.Output.frequency">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">frequency</span></span><a class="headerlink" href="#exatomic.gaussian.output.Output.frequency" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="exatomic.gaussian.output.Output.frequency_ext">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">frequency_ext</span></span><a class="headerlink" href="#exatomic.gaussian.output.Output.frequency_ext" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="exatomic.gaussian.output.Output.gradient">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">gradient</span></span><a class="headerlink" href="#exatomic.gaussian.output.Output.gradient" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="exatomic.gaussian.output.Output.hessian">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">hessian</span></span><a class="headerlink" href="#exatomic.gaussian.output.Output.hessian" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="exatomic.gaussian.output.Output.mag_dipole">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">mag_dipole</span></span><a class="headerlink" href="#exatomic.gaussian.output.Output.mag_dipole" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="exatomic.gaussian.output.Output.momatrix">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">momatrix</span></span><a class="headerlink" href="#exatomic.gaussian.output.Output.momatrix" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="exatomic.gaussian.output.Output.multipole">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">multipole</span></span><a class="headerlink" href="#exatomic.gaussian.output.Output.multipole" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="exatomic.gaussian.output.Output.nmr_shielding">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">nmr_shielding</span></span><a class="headerlink" href="#exatomic.gaussian.output.Output.nmr_shielding" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="exatomic.gaussian.output.Output.orbital">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">orbital</span></span><a class="headerlink" href="#exatomic.gaussian.output.Output.orbital" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="exatomic.gaussian.output.Output.overlap">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">overlap</span></span><a class="headerlink" href="#exatomic.gaussian.output.Output.overlap" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="exatomic.gaussian.output.Output.spec_prop">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">spec_prop</span></span><a class="headerlink" href="#exatomic.gaussian.output.Output.spec_prop" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="exatomic.gaussian.output.Fchk">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">exatomic.gaussian.output.</span></span><span class="sig-name descname"><span class="pre">Fchk</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/exatomic/gaussian/output.html#Fchk"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#exatomic.gaussian.output.Fchk" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="exatomic.gaussian.editor.html#exatomic.gaussian.editor.Editor" title="exatomic.gaussian.editor.Editor"><code class="xref py py-class docutils literal notranslate"><span class="pre">Editor</span></code></a></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="exatomic.gaussian.output.Fchk.parse_atom">
+<span class="sig-name descname"><span class="pre">parse_atom</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/exatomic/gaussian/output.html#Fchk.parse_atom"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#exatomic.gaussian.output.Fchk.parse_atom" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="exatomic.gaussian.output.Fchk.parse_basis_set">
+<span class="sig-name descname"><span class="pre">parse_basis_set</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/exatomic/gaussian/output.html#Fchk.parse_basis_set"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#exatomic.gaussian.output.Fchk.parse_basis_set" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="exatomic.gaussian.output.Fchk.parse_basis_set_order">
+<span class="sig-name descname"><span class="pre">parse_basis_set_order</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/exatomic/gaussian/output.html#Fchk.parse_basis_set_order"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#exatomic.gaussian.output.Fchk.parse_basis_set_order" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="exatomic.gaussian.output.Fchk.parse_momatrix">
+<span class="sig-name descname"><span class="pre">parse_momatrix</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/exatomic/gaussian/output.html#Fchk.parse_momatrix"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#exatomic.gaussian.output.Fchk.parse_momatrix" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="exatomic.gaussian.output.Fchk.parse_frequency">
+<span class="sig-name descname"><span class="pre">parse_frequency</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/exatomic/gaussian/output.html#Fchk.parse_frequency"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#exatomic.gaussian.output.Fchk.parse_frequency" title="Permalink to this definition"></a></dt>
+<dd><p>Parses frequency data from FChk file</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Requires Freq(SaveNormalModes) in input</p>
+</div>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="exatomic.gaussian.output.Fchk.parse_gradient">
+<span class="sig-name descname"><span class="pre">parse_gradient</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/exatomic/gaussian/output.html#Fchk.parse_gradient"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#exatomic.gaussian.output.Fchk.parse_gradient" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="exatomic.gaussian.output.Fchk.parse_nmr_shielding">
+<span class="sig-name descname"><span class="pre">parse_nmr_shielding</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/exatomic/gaussian/output.html#Fchk.parse_nmr_shielding"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#exatomic.gaussian.output.Fchk.parse_nmr_shielding" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="exatomic.gaussian.output.Fchk.parse_orbital">
+<span class="sig-name descname"><span class="pre">parse_orbital</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/exatomic/gaussian/output.html#Fchk.parse_orbital"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#exatomic.gaussian.output.Fchk.parse_orbital" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="exatomic.gaussian.output.Fchk.parse_hessian">
+<span class="sig-name descname"><span class="pre">parse_hessian</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/exatomic/gaussian/output.html#Fchk.parse_hessian"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#exatomic.gaussian.output.Fchk.parse_hessian" title="Permalink to this definition"></a></dt>
+<dd><p>Parse the Hessian from the Gaussian stdout. This
+is printed as a lower triangular matrix. We convert
+this to a square matrix internally.</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="exatomic.gaussian.output.Fchk.atom">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">atom</span></span><a class="headerlink" href="#exatomic.gaussian.output.Fchk.atom" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="exatomic.gaussian.output.Fchk.basis_set">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">basis_set</span></span><a class="headerlink" href="#exatomic.gaussian.output.Fchk.basis_set" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="exatomic.gaussian.output.Fchk.basis_set_order">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">basis_set_order</span></span><a class="headerlink" href="#exatomic.gaussian.output.Fchk.basis_set_order" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="exatomic.gaussian.output.Fchk.elec_dipole">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">elec_dipole</span></span><a class="headerlink" href="#exatomic.gaussian.output.Fchk.elec_dipole" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="exatomic.gaussian.output.Fchk.elec_quadrupole">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">elec_quadrupole</span></span><a class="headerlink" href="#exatomic.gaussian.output.Fchk.elec_quadrupole" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="exatomic.gaussian.output.Fchk.excitation">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">excitation</span></span><a class="headerlink" href="#exatomic.gaussian.output.Fchk.excitation" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="exatomic.gaussian.output.Fchk.frame">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">frame</span></span><a class="headerlink" href="#exatomic.gaussian.output.Fchk.frame" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="exatomic.gaussian.output.Fchk.frequency">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">frequency</span></span><a class="headerlink" href="#exatomic.gaussian.output.Fchk.frequency" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="exatomic.gaussian.output.Fchk.frequency_ext">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">frequency_ext</span></span><a class="headerlink" href="#exatomic.gaussian.output.Fchk.frequency_ext" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="exatomic.gaussian.output.Fchk.gradient">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">gradient</span></span><a class="headerlink" href="#exatomic.gaussian.output.Fchk.gradient" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="exatomic.gaussian.output.Fchk.hessian">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">hessian</span></span><a class="headerlink" href="#exatomic.gaussian.output.Fchk.hessian" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="exatomic.gaussian.output.Fchk.mag_dipole">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">mag_dipole</span></span><a class="headerlink" href="#exatomic.gaussian.output.Fchk.mag_dipole" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="exatomic.gaussian.output.Fchk.momatrix">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">momatrix</span></span><a class="headerlink" href="#exatomic.gaussian.output.Fchk.momatrix" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="exatomic.gaussian.output.Fchk.multipole">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">multipole</span></span><a class="headerlink" href="#exatomic.gaussian.output.Fchk.multipole" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="exatomic.gaussian.output.Fchk.nmr_shielding">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">nmr_shielding</span></span><a class="headerlink" href="#exatomic.gaussian.output.Fchk.nmr_shielding" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="exatomic.gaussian.output.Fchk.orbital">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">orbital</span></span><a class="headerlink" href="#exatomic.gaussian.output.Fchk.orbital" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="exatomic.gaussian.output.Fchk.overlap">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">overlap</span></span><a class="headerlink" href="#exatomic.gaussian.output.Fchk.overlap" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="exatomic.gaussian.output.Fchk.spec_prop">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">spec_prop</span></span><a class="headerlink" href="#exatomic.gaussian.output.Fchk.spec_prop" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="exatomic.gaussian.inputs.html" class="btn btn-neutral float-left" title="exatomic.gaussian.inputs module" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="exatomic.interfaces.html" class="btn btn-neutral float-right" title="exatomic.interfaces package" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright .
+      <span class="lastupdated">Last updated on Apr 21, 2023.
+      </span></p>
+  </div>
+
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

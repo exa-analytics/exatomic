@@ -1,0 +1,425 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>exatomic.core.tensor module &mdash; exatomic 0.6.0 documentation</title>
+      <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+        <script src="_static/doctools.js"></script>
+        <script src="_static/sphinx_highlight.js"></script>
+        <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="exatomic.core.two module" href="exatomic.core.two.html" />
+    <link rel="prev" title="exatomic.core.orbital module" href="exatomic.core.orbital.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            exatomic
+              <img src="_static/logo.png" class="logo" alt="Logo"/>
+          </a>
+              <div class="version">
+                0.6.0
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Sitemap</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="install.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="started.html">Getting Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="contrib.html">Development</a></li>
+</ul>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="exatomic.html">exatomic package</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="exatomic.html#supported-software">Supported Software</a></li>
+<li class="toctree-l2"><a class="reference internal" href="exatomic.html#exatomic.func_log"><code class="docutils literal notranslate"><span class="pre">func_log()</span></code></a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="exatomic.html#subpackages">Subpackages</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="exatomic.adf.html">exatomic.adf package</a></li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.algorithms.html">exatomic.algorithms package</a></li>
+<li class="toctree-l3 current"><a class="reference internal" href="exatomic.core.html">exatomic.core package</a><ul class="current">
+<li class="toctree-l4 current"><a class="reference internal" href="exatomic.core.html#submodules">Submodules</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.exa.html">exatomic.exa package</a></li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.gaussian.html">exatomic.gaussian package</a></li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.interfaces.html">exatomic.interfaces package</a></li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.molcas.html">exatomic.molcas package</a></li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.nbo.html">exatomic.nbo package</a></li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.nwchem.html">exatomic.nwchem package</a></li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.plotter.html">exatomic.plotter package</a></li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.qchem.html">exatomic.qchem package</a></li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.qe.html">exatomic.qe package</a></li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.util.html">exatomic.util package</a></li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.widgets.html">exatomic.widgets package</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="exatomic.html#submodules">Submodules</a></li>
+</ul>
+</li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">exatomic</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="exatomic.html">exatomic package</a></li>
+          <li class="breadcrumb-item"><a href="exatomic.core.html">exatomic.core package</a></li>
+      <li class="breadcrumb-item active">exatomic.core.tensor module</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/exatomic.core.tensor.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="module-exatomic.core.tensor">
+<span id="exatomic-core-tensor-module"></span><h1>exatomic.core.tensor module<a class="headerlink" href="#module-exatomic.core.tensor" title="Permalink to this heading"></a></h1>
+<dl class="py class">
+<dt class="sig sig-object py" id="exatomic.core.tensor.Tensor">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">exatomic.core.tensor.</span></span><span class="sig-name descname"><span class="pre">Tensor</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/exatomic/core/tensor.html#Tensor"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#exatomic.core.tensor.Tensor" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="exatomic.exa.core.numerical.html#exatomic.exa.core.numerical.DataFrame" title="exatomic.exa.core.numerical.DataFrame"><code class="xref py py-class docutils literal notranslate"><span class="pre">DataFrame</span></code></a></p>
+<p>The tensor dataframe.</p>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Column</p></th>
+<th class="head"><p>Type</p></th>
+<th class="head"><p>Description</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>xx</p></td>
+<td><p>float</p></td>
+<td><p>0,0 position in tensor</p></td>
+</tr>
+<tr class="row-odd"><td><p>xy</p></td>
+<td><p>float</p></td>
+<td><p>1,0 position in tensor</p></td>
+</tr>
+<tr class="row-even"><td><p>xz</p></td>
+<td><p>float</p></td>
+<td><p>2,0 position in tensor</p></td>
+</tr>
+<tr class="row-odd"><td><p>yx</p></td>
+<td><p>float</p></td>
+<td><p>0,1 position in tensor</p></td>
+</tr>
+<tr class="row-even"><td><p>yy</p></td>
+<td><p>float</p></td>
+<td><p>1,1 position in tensor</p></td>
+</tr>
+<tr class="row-odd"><td><p>yz</p></td>
+<td><p>float</p></td>
+<td><p>2,1 position in tensor</p></td>
+</tr>
+<tr class="row-even"><td><p>zx</p></td>
+<td><p>float</p></td>
+<td><p>0,3 position in tensor</p></td>
+</tr>
+<tr class="row-odd"><td><p>zy</p></td>
+<td><p>float</p></td>
+<td><p>1,3 position in tensor</p></td>
+</tr>
+<tr class="row-even"><td><p>zz</p></td>
+<td><p>float</p></td>
+<td><p>2,3 position in tensor</p></td>
+</tr>
+<tr class="row-odd"><td><p>frame</p></td>
+<td><p>category</p></td>
+<td><p>frame value to which atach tensor</p></td>
+</tr>
+<tr class="row-even"><td><p>atom</p></td>
+<td><p>int</p></td>
+<td><p>atom index of molecule to place tensor</p></td>
+</tr>
+<tr class="row-odd"><td><p>label</p></td>
+<td><p>category</p></td>
+<td><p>label of the type of tensor</p></td>
+</tr>
+</tbody>
+</table>
+<dl class="py method">
+<dt class="sig sig-object py" id="exatomic.core.tensor.Tensor.from_file">
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">from_file</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">filename</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/exatomic/core/tensor.html#Tensor.from_file"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#exatomic.core.tensor.Tensor.from_file" title="Permalink to this definition"></a></dt>
+<dd><p>A file reader that will take a tensor file and extract all
+necessary information. There is a specific file format in place
+and is as follows</p>
+<p>frame label atom
+xx xy xz
+yx yy yz
+zx zy zz</p>
+<p>For multiple tensors just append the same format as above without
+whitespace unless leaving the frame, label, atom attributes as empty.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>filename</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.11)"><em>str</em></a>) – file pathname</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>tens (<code class="xref py py-class docutils literal notranslate"><span class="pre">Tensor</span></code>) – Tensor table with the tensor attributes</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="exatomic.core.tensor.Polarizability">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">exatomic.core.tensor.</span></span><span class="sig-name descname"><span class="pre">Polarizability</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/exatomic/core/tensor.html#Polarizability"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#exatomic.core.tensor.Polarizability" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#exatomic.core.tensor.Tensor" title="exatomic.core.tensor.Tensor"><code class="xref py py-class docutils literal notranslate"><span class="pre">Tensor</span></code></a></p>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="exatomic.core.tensor.NMRShielding">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">exatomic.core.tensor.</span></span><span class="sig-name descname"><span class="pre">NMRShielding</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/exatomic/core/tensor.html#NMRShielding"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#exatomic.core.tensor.NMRShielding" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#exatomic.core.tensor.Tensor" title="exatomic.core.tensor.Tensor"><code class="xref py py-class docutils literal notranslate"><span class="pre">Tensor</span></code></a></p>
+<p>The NMR Shielding tensor dataframe.</p>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Column</p></th>
+<th class="head"><p>Type</p></th>
+<th class="head"><p>Description</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>xx</p></td>
+<td><p>float</p></td>
+<td><p>0,0 position in tensor</p></td>
+</tr>
+<tr class="row-odd"><td><p>xy</p></td>
+<td><p>float</p></td>
+<td><p>1,0 position in tensor</p></td>
+</tr>
+<tr class="row-even"><td><p>xz</p></td>
+<td><p>float</p></td>
+<td><p>2,0 position in tensor</p></td>
+</tr>
+<tr class="row-odd"><td><p>yx</p></td>
+<td><p>float</p></td>
+<td><p>0,1 position in tensor</p></td>
+</tr>
+<tr class="row-even"><td><p>yy</p></td>
+<td><p>float</p></td>
+<td><p>1,1 position in tensor</p></td>
+</tr>
+<tr class="row-odd"><td><p>yz</p></td>
+<td><p>float</p></td>
+<td><p>2,1 position in tensor</p></td>
+</tr>
+<tr class="row-even"><td><p>zx</p></td>
+<td><p>float</p></td>
+<td><p>0,3 position in tensor</p></td>
+</tr>
+<tr class="row-odd"><td><p>zy</p></td>
+<td><p>float</p></td>
+<td><p>1,3 position in tensor</p></td>
+</tr>
+<tr class="row-even"><td><p>zz</p></td>
+<td><p>float</p></td>
+<td><p>2,3 position in tensor</p></td>
+</tr>
+<tr class="row-odd"><td><p>frame</p></td>
+<td><p>category</p></td>
+<td><p>frame value to which atach tensor</p></td>
+</tr>
+<tr class="row-even"><td><p>atom</p></td>
+<td><p>int</p></td>
+<td><p>atom index of molecule to place tensor</p></td>
+</tr>
+<tr class="row-odd"><td><p>label</p></td>
+<td><p>category</p></td>
+<td><p>label of the type of tensor</p></td>
+</tr>
+<tr class="row-even"><td><p>symbol</p></td>
+<td><p>category</p></td>
+<td><p>atom symbol the tensor is attached to</p></td>
+</tr>
+<tr class="row-odd"><td><p>isotropic</p></td>
+<td><p>float</p></td>
+<td><p>isotropic shift value of the tensor</p></td>
+</tr>
+</tbody>
+</table>
+<dl class="py method">
+<dt class="sig sig-object py" id="exatomic.core.tensor.NMRShielding.nmr_spectra">
+<span class="sig-name descname"><span class="pre">nmr_spectra</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">fwhm</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ref</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">atom</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'H'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lineshape</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'lorentzian'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">xrange</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">res</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">invert_x</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/exatomic/core/tensor.html#NMRShielding.nmr_spectra"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#exatomic.core.tensor.NMRShielding.nmr_spectra" title="Permalink to this definition"></a></dt>
+<dd><p>Generate NMR spectra with the plotter class. We can define a gaussian or lorentzian
+lineshape function. For the most part we pass all of the kwargs directly into the
+plotter.Plot class.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>fwhm</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.11)"><em>float</em></a>) – Full-width at half-maximum</p></li>
+<li><p><strong>ref</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.11)"><em>float</em></a>) – Isotropic shift of the reference compound</p></li>
+<li><p><strong>atom</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.11)"><em>str</em></a>) – Atom that we want to display the spectra for</p></li>
+<li><p><strong>lineshape</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.11)"><em>str</em></a>) – Switch beteen the different lineshape functions available</p></li>
+<li><p><strong>xrange</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.11)"><em>list</em></a>) – X-bounds for the plot</p></li>
+<li><p><strong>res</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.11)"><em>float</em></a>) – Resolution for the plot line</p></li>
+<li><p><strong>invert_x</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.11)"><em>bool</em></a>) – Invert x-axis</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="exatomic.core.tensor.JCoupling">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">exatomic.core.tensor.</span></span><span class="sig-name descname"><span class="pre">JCoupling</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/exatomic/core/tensor.html#JCoupling"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#exatomic.core.tensor.JCoupling" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#exatomic.core.tensor.Tensor" title="exatomic.core.tensor.Tensor"><code class="xref py py-class docutils literal notranslate"><span class="pre">Tensor</span></code></a></p>
+<p>The J-Coupling tensor dataframe</p>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Column</p></th>
+<th class="head"><p>Type</p></th>
+<th class="head"><p>Description</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>xx</p></td>
+<td><p>float</p></td>
+<td><p>0,0 position in tensor</p></td>
+</tr>
+<tr class="row-odd"><td><p>xy</p></td>
+<td><p>float</p></td>
+<td><p>1,0 position in tensor</p></td>
+</tr>
+<tr class="row-even"><td><p>xz</p></td>
+<td><p>float</p></td>
+<td><p>2,0 position in tensor</p></td>
+</tr>
+<tr class="row-odd"><td><p>yx</p></td>
+<td><p>float</p></td>
+<td><p>0,1 position in tensor</p></td>
+</tr>
+<tr class="row-even"><td><p>yy</p></td>
+<td><p>float</p></td>
+<td><p>1,1 position in tensor</p></td>
+</tr>
+<tr class="row-odd"><td><p>yz</p></td>
+<td><p>float</p></td>
+<td><p>2,1 position in tensor</p></td>
+</tr>
+<tr class="row-even"><td><p>zx</p></td>
+<td><p>float</p></td>
+<td><p>0,3 position in tensor</p></td>
+</tr>
+<tr class="row-odd"><td><p>zy</p></td>
+<td><p>float</p></td>
+<td><p>1,3 position in tensor</p></td>
+</tr>
+<tr class="row-even"><td><p>zz</p></td>
+<td><p>float</p></td>
+<td><p>2,3 position in tensor</p></td>
+</tr>
+<tr class="row-odd"><td><p>isotropic</p></td>
+<td><p>float</p></td>
+<td><p>isotropic shift value of the tensor</p></td>
+</tr>
+<tr class="row-even"><td><p>atom</p></td>
+<td><p>int</p></td>
+<td><p>atom index of molecule to place tensor</p></td>
+</tr>
+<tr class="row-odd"><td><p>symbol</p></td>
+<td><p>category</p></td>
+<td><p>atom symbol the tensor is attached to</p></td>
+</tr>
+<tr class="row-even"><td><p>pt_atom</p></td>
+<td><p>int</p></td>
+<td><p>atom index of perturbing atom</p></td>
+</tr>
+<tr class="row-odd"><td><p>pt_symbol</p></td>
+<td><p>category</p></td>
+<td><p>atom symbol of perturbing atom</p></td>
+</tr>
+<tr class="row-even"><td><p>label</p></td>
+<td><p>category</p></td>
+<td><p>label of the type of tensor</p></td>
+</tr>
+<tr class="row-odd"><td><p>frame</p></td>
+<td><p>category</p></td>
+<td><p>frame value to which atach tensor</p></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="exatomic.core.tensor.add_tensor">
+<span class="sig-prename descclassname"><span class="pre">exatomic.core.tensor.</span></span><span class="sig-name descname"><span class="pre">add_tensor</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">uni</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fp</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/exatomic/core/tensor.html#add_tensor"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#exatomic.core.tensor.add_tensor" title="Permalink to this definition"></a></dt>
+<dd><p>Simple function to add a tensor object to the universe.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>uni</strong> (<em>universe</em>) – Universe object</p></li>
+<li><p><strong>fp</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.11)"><em>str</em></a>) – file pathname</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="exatomic.core.orbital.html" class="btn btn-neutral float-left" title="exatomic.core.orbital module" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="exatomic.core.two.html" class="btn btn-neutral float-right" title="exatomic.core.two module" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright .
+      <span class="lastupdated">Last updated on Apr 21, 2023.
+      </span></p>
+  </div>
+
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

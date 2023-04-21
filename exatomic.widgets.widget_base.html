@@ -1,0 +1,710 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>exatomic.widgets.widget_base module &mdash; exatomic 0.6.0 documentation</title>
+      <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+        <script src="_static/doctools.js"></script>
+        <script src="_static/sphinx_highlight.js"></script>
+        <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="exatomic.widgets.widget_df module" href="exatomic.widgets.widget_df.html" />
+    <link rel="prev" title="exatomic.widgets.widget module" href="exatomic.widgets.widget.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            exatomic
+              <img src="_static/logo.png" class="logo" alt="Logo"/>
+          </a>
+              <div class="version">
+                0.6.0
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Sitemap</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="install.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="started.html">Getting Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="contrib.html">Development</a></li>
+</ul>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="exatomic.html">exatomic package</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="exatomic.html#supported-software">Supported Software</a></li>
+<li class="toctree-l2"><a class="reference internal" href="exatomic.html#exatomic.func_log"><code class="docutils literal notranslate"><span class="pre">func_log()</span></code></a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="exatomic.html#subpackages">Subpackages</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="exatomic.adf.html">exatomic.adf package</a></li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.algorithms.html">exatomic.algorithms package</a></li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.core.html">exatomic.core package</a></li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.exa.html">exatomic.exa package</a></li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.gaussian.html">exatomic.gaussian package</a></li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.interfaces.html">exatomic.interfaces package</a></li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.molcas.html">exatomic.molcas package</a></li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.nbo.html">exatomic.nbo package</a></li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.nwchem.html">exatomic.nwchem package</a></li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.plotter.html">exatomic.plotter package</a></li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.qchem.html">exatomic.qchem package</a></li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.qe.html">exatomic.qe package</a></li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.util.html">exatomic.util package</a></li>
+<li class="toctree-l3 current"><a class="reference internal" href="exatomic.widgets.html">exatomic.widgets package</a><ul class="current">
+<li class="toctree-l4 current"><a class="reference internal" href="exatomic.widgets.html#submodules">Submodules</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="exatomic.html#submodules">Submodules</a></li>
+</ul>
+</li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">exatomic</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="exatomic.html">exatomic package</a></li>
+          <li class="breadcrumb-item"><a href="exatomic.widgets.html">exatomic.widgets package</a></li>
+      <li class="breadcrumb-item active">exatomic.widgets.widget_base module</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/exatomic.widgets.widget_base.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="module-exatomic.widgets.widget_base">
+<span id="exatomic-widgets-widget-base-module"></span><h1>exatomic.widgets.widget_base module<a class="headerlink" href="#module-exatomic.widgets.widget_base" title="Permalink to this heading"></a></h1>
+<section id="lower-level-widgets">
+<h2>Lower Level Widgets<a class="headerlink" href="#lower-level-widgets" title="Permalink to this heading"></a></h2>
+<p>Lower level support widgets framework.</p>
+</section>
+<dl class="py class">
+<dt class="sig sig-object py" id="exatomic.widgets.widget_base.ExatomicScene">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">exatomic.widgets.widget_base.</span></span><span class="sig-name descname"><span class="pre">ExatomicScene</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Any" title="(in Python v3.11)"><span class="pre">Any</span></a></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/exatomic/widgets/widget_base.html#ExatomicScene"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#exatomic.widgets.widget_base.ExatomicScene" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">DOMWidget</span></code></p>
+<p>A custom scene (three.js scene) used for visualization
+of an atomic universe.</p>
+<p>Custom parameters can be inspected using <code class="docutils literal notranslate"><span class="pre">vars</span></code>. Parameters
+include field dimensions, the universe itself, field colors,
+widths, heights for the widget, etc.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="exatomic.widgets.widget_base.ExatomicScene.savedir">
+<span class="sig-name descname"><span class="pre">savedir</span></span><a class="headerlink" href="#exatomic.widgets.widget_base.ExatomicScene.savedir" title="Permalink to this definition"></a></dt>
+<dd><p>A trait for unicode strings.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="exatomic.widgets.widget_base.ExatomicScene.imgname">
+<span class="sig-name descname"><span class="pre">imgname</span></span><a class="headerlink" href="#exatomic.widgets.widget_base.ExatomicScene.imgname" title="Permalink to this definition"></a></dt>
+<dd><p>A trait for unicode strings.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="exatomic.widgets.widget_base.ExatomicScene.index">
+<span class="sig-name descname"><span class="pre">index</span></span><a class="headerlink" href="#exatomic.widgets.widget_base.ExatomicScene.index" title="Permalink to this definition"></a></dt>
+<dd><p>An int trait.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="exatomic.widgets.widget_base.ExatomicScene.cameras">
+<span class="sig-name descname"><span class="pre">cameras</span></span><a class="headerlink" href="#exatomic.widgets.widget_base.ExatomicScene.cameras" title="Permalink to this definition"></a></dt>
+<dd><p>An instance of a Python list.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="exatomic.widgets.widget_base.ExatomicScene.save_cam">
+<span class="sig-name descname"><span class="pre">save_cam</span></span><a class="headerlink" href="#exatomic.widgets.widget_base.ExatomicScene.save_cam" title="Permalink to this definition"></a></dt>
+<dd><p>A boolean (True, False) trait.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="exatomic.widgets.widget_base.ExatomicScene.clear">
+<span class="sig-name descname"><span class="pre">clear</span></span><a class="headerlink" href="#exatomic.widgets.widget_base.ExatomicScene.clear" title="Permalink to this definition"></a></dt>
+<dd><p>A boolean (True, False) trait.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="exatomic.widgets.widget_base.ExatomicScene.save">
+<span class="sig-name descname"><span class="pre">save</span></span><a class="headerlink" href="#exatomic.widgets.widget_base.ExatomicScene.save" title="Permalink to this definition"></a></dt>
+<dd><p>A boolean (True, False) trait.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="exatomic.widgets.widget_base.ExatomicScene.w">
+<span class="sig-name descname"><span class="pre">w</span></span><a class="headerlink" href="#exatomic.widgets.widget_base.ExatomicScene.w" title="Permalink to this definition"></a></dt>
+<dd><p>An int trait.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="exatomic.widgets.widget_base.ExatomicScene.h">
+<span class="sig-name descname"><span class="pre">h</span></span><a class="headerlink" href="#exatomic.widgets.widget_base.ExatomicScene.h" title="Permalink to this definition"></a></dt>
+<dd><p>An int trait.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="exatomic.widgets.widget_base.ExatomicScene.field_pos">
+<span class="sig-name descname"><span class="pre">field_pos</span></span><a class="headerlink" href="#exatomic.widgets.widget_base.ExatomicScene.field_pos" title="Permalink to this definition"></a></dt>
+<dd><p>A trait for unicode strings.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="exatomic.widgets.widget_base.ExatomicScene.field_neg">
+<span class="sig-name descname"><span class="pre">field_neg</span></span><a class="headerlink" href="#exatomic.widgets.widget_base.ExatomicScene.field_neg" title="Permalink to this definition"></a></dt>
+<dd><p>A trait for unicode strings.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="exatomic.widgets.widget_base.ExatomicScene.field_iso">
+<span class="sig-name descname"><span class="pre">field_iso</span></span><a class="headerlink" href="#exatomic.widgets.widget_base.ExatomicScene.field_iso" title="Permalink to this definition"></a></dt>
+<dd><p>A float trait.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="exatomic.widgets.widget_base.ExatomicScene.field_o">
+<span class="sig-name descname"><span class="pre">field_o</span></span><a class="headerlink" href="#exatomic.widgets.widget_base.ExatomicScene.field_o" title="Permalink to this definition"></a></dt>
+<dd><p>A float trait.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="exatomic.widgets.widget_base.ExatomicScene.field">
+<span class="sig-name descname"><span class="pre">field</span></span><a class="headerlink" href="#exatomic.widgets.widget_base.ExatomicScene.field" title="Permalink to this definition"></a></dt>
+<dd><p>A trait for unicode strings.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="exatomic.widgets.widget_base.ExatomicScene.field_kind">
+<span class="sig-name descname"><span class="pre">field_kind</span></span><a class="headerlink" href="#exatomic.widgets.widget_base.ExatomicScene.field_kind" title="Permalink to this definition"></a></dt>
+<dd><p>A trait for unicode strings.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="exatomic.widgets.widget_base.ExatomicScene.field_ml">
+<span class="sig-name descname"><span class="pre">field_ml</span></span><a class="headerlink" href="#exatomic.widgets.widget_base.ExatomicScene.field_ml" title="Permalink to this definition"></a></dt>
+<dd><p>A trait for unicode strings.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="exatomic.widgets.widget_base.ExatomicScene.uni">
+<span class="sig-name descname"><span class="pre">uni</span></span><a class="headerlink" href="#exatomic.widgets.widget_base.ExatomicScene.uni" title="Permalink to this definition"></a></dt>
+<dd><p>A boolean (True, False) trait.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="exatomic.widgets.widget_base.ExatomicScene.field_nx">
+<span class="sig-name descname"><span class="pre">field_nx</span></span><a class="headerlink" href="#exatomic.widgets.widget_base.ExatomicScene.field_nx" title="Permalink to this definition"></a></dt>
+<dd><p>An int trait.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="exatomic.widgets.widget_base.ExatomicScene.field_ny">
+<span class="sig-name descname"><span class="pre">field_ny</span></span><a class="headerlink" href="#exatomic.widgets.widget_base.ExatomicScene.field_ny" title="Permalink to this definition"></a></dt>
+<dd><p>An int trait.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="exatomic.widgets.widget_base.ExatomicScene.field_nz">
+<span class="sig-name descname"><span class="pre">field_nz</span></span><a class="headerlink" href="#exatomic.widgets.widget_base.ExatomicScene.field_nz" title="Permalink to this definition"></a></dt>
+<dd><p>An int trait.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="exatomic.widgets.widget_base.ExatomicScene.field_ox">
+<span class="sig-name descname"><span class="pre">field_ox</span></span><a class="headerlink" href="#exatomic.widgets.widget_base.ExatomicScene.field_ox" title="Permalink to this definition"></a></dt>
+<dd><p>A float trait.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="exatomic.widgets.widget_base.ExatomicScene.field_oy">
+<span class="sig-name descname"><span class="pre">field_oy</span></span><a class="headerlink" href="#exatomic.widgets.widget_base.ExatomicScene.field_oy" title="Permalink to this definition"></a></dt>
+<dd><p>A float trait.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="exatomic.widgets.widget_base.ExatomicScene.field_oz">
+<span class="sig-name descname"><span class="pre">field_oz</span></span><a class="headerlink" href="#exatomic.widgets.widget_base.ExatomicScene.field_oz" title="Permalink to this definition"></a></dt>
+<dd><p>A float trait.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="exatomic.widgets.widget_base.ExatomicScene.field_fx">
+<span class="sig-name descname"><span class="pre">field_fx</span></span><a class="headerlink" href="#exatomic.widgets.widget_base.ExatomicScene.field_fx" title="Permalink to this definition"></a></dt>
+<dd><p>A float trait.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="exatomic.widgets.widget_base.ExatomicScene.field_fy">
+<span class="sig-name descname"><span class="pre">field_fy</span></span><a class="headerlink" href="#exatomic.widgets.widget_base.ExatomicScene.field_fy" title="Permalink to this definition"></a></dt>
+<dd><p>A float trait.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="exatomic.widgets.widget_base.ExatomicScene.field_fz">
+<span class="sig-name descname"><span class="pre">field_fz</span></span><a class="headerlink" href="#exatomic.widgets.widget_base.ExatomicScene.field_fz" title="Permalink to this definition"></a></dt>
+<dd><p>A float trait.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="exatomic.widgets.widget_base.ExatomicScene.geom">
+<span class="sig-name descname"><span class="pre">geom</span></span><a class="headerlink" href="#exatomic.widgets.widget_base.ExatomicScene.geom" title="Permalink to this definition"></a></dt>
+<dd><p>A boolean (True, False) trait.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="exatomic.widgets.widget_base.TensorScene">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">exatomic.widgets.widget_base.</span></span><span class="sig-name descname"><span class="pre">TensorScene</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Any" title="(in Python v3.11)"><span class="pre">Any</span></a></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/exatomic/widgets/widget_base.html#TensorScene"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#exatomic.widgets.widget_base.TensorScene" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#exatomic.widgets.widget_base.ExatomicScene" title="exatomic.widgets.widget_base.ExatomicScene"><code class="xref py py-class docutils literal notranslate"><span class="pre">ExatomicScene</span></code></a></p>
+<p>Visualize a cartesian tensor.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="exatomic.widgets.widget_base.TensorScene.field">
+<span class="sig-name descname"><span class="pre">field</span></span><a class="headerlink" href="#exatomic.widgets.widget_base.TensorScene.field" title="Permalink to this definition"></a></dt>
+<dd><p>A trait for unicode strings.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="exatomic.widgets.widget_base.TensorScene.geom">
+<span class="sig-name descname"><span class="pre">geom</span></span><a class="headerlink" href="#exatomic.widgets.widget_base.TensorScene.geom" title="Permalink to this definition"></a></dt>
+<dd><p>A boolean (True, False) trait.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="exatomic.widgets.widget_base.TensorScene.txx">
+<span class="sig-name descname"><span class="pre">txx</span></span><a class="headerlink" href="#exatomic.widgets.widget_base.TensorScene.txx" title="Permalink to this definition"></a></dt>
+<dd><p>A float trait.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="exatomic.widgets.widget_base.TensorScene.txy">
+<span class="sig-name descname"><span class="pre">txy</span></span><a class="headerlink" href="#exatomic.widgets.widget_base.TensorScene.txy" title="Permalink to this definition"></a></dt>
+<dd><p>A float trait.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="exatomic.widgets.widget_base.TensorScene.txz">
+<span class="sig-name descname"><span class="pre">txz</span></span><a class="headerlink" href="#exatomic.widgets.widget_base.TensorScene.txz" title="Permalink to this definition"></a></dt>
+<dd><p>A float trait.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="exatomic.widgets.widget_base.TensorScene.tyx">
+<span class="sig-name descname"><span class="pre">tyx</span></span><a class="headerlink" href="#exatomic.widgets.widget_base.TensorScene.tyx" title="Permalink to this definition"></a></dt>
+<dd><p>A float trait.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="exatomic.widgets.widget_base.TensorScene.tyy">
+<span class="sig-name descname"><span class="pre">tyy</span></span><a class="headerlink" href="#exatomic.widgets.widget_base.TensorScene.tyy" title="Permalink to this definition"></a></dt>
+<dd><p>A float trait.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="exatomic.widgets.widget_base.TensorScene.tyz">
+<span class="sig-name descname"><span class="pre">tyz</span></span><a class="headerlink" href="#exatomic.widgets.widget_base.TensorScene.tyz" title="Permalink to this definition"></a></dt>
+<dd><p>A float trait.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="exatomic.widgets.widget_base.TensorScene.tzx">
+<span class="sig-name descname"><span class="pre">tzx</span></span><a class="headerlink" href="#exatomic.widgets.widget_base.TensorScene.tzx" title="Permalink to this definition"></a></dt>
+<dd><p>A float trait.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="exatomic.widgets.widget_base.TensorScene.tzy">
+<span class="sig-name descname"><span class="pre">tzy</span></span><a class="headerlink" href="#exatomic.widgets.widget_base.TensorScene.tzy" title="Permalink to this definition"></a></dt>
+<dd><p>A float trait.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="exatomic.widgets.widget_base.TensorScene.tzz">
+<span class="sig-name descname"><span class="pre">tzz</span></span><a class="headerlink" href="#exatomic.widgets.widget_base.TensorScene.tzz" title="Permalink to this definition"></a></dt>
+<dd><p>A float trait.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="exatomic.widgets.widget_base.TensorScene.scale">
+<span class="sig-name descname"><span class="pre">scale</span></span><a class="headerlink" href="#exatomic.widgets.widget_base.TensorScene.scale" title="Permalink to this definition"></a></dt>
+<dd><p>A float trait.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="exatomic.widgets.widget_base.TensorScene.tdx">
+<span class="sig-name descname"><span class="pre">tdx</span></span><a class="headerlink" href="#exatomic.widgets.widget_base.TensorScene.tdx" title="Permalink to this definition"></a></dt>
+<dd><p>An int trait.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="exatomic.widgets.widget_base.TensorScene.tens">
+<span class="sig-name descname"><span class="pre">tens</span></span><a class="headerlink" href="#exatomic.widgets.widget_base.TensorScene.tens" title="Permalink to this definition"></a></dt>
+<dd><p>A boolean (True, False) trait.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="exatomic.widgets.widget_base.UniverseScene">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">exatomic.widgets.widget_base.</span></span><span class="sig-name descname"><span class="pre">UniverseScene</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Any" title="(in Python v3.11)"><span class="pre">Any</span></a></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/exatomic/widgets/widget_base.html#UniverseScene"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#exatomic.widgets.widget_base.UniverseScene" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#exatomic.widgets.widget_base.ExatomicScene" title="exatomic.widgets.widget_base.ExatomicScene"><code class="xref py py-class docutils literal notranslate"><span class="pre">ExatomicScene</span></code></a></p>
+<p>A scene for viewing quantum systems.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="exatomic.widgets.widget_base.UniverseScene.frame_idx">
+<span class="sig-name descname"><span class="pre">frame_idx</span></span><a class="headerlink" href="#exatomic.widgets.widget_base.UniverseScene.frame_idx" title="Permalink to this definition"></a></dt>
+<dd><p>An int trait.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="exatomic.widgets.widget_base.UniverseScene.axis">
+<span class="sig-name descname"><span class="pre">axis</span></span><a class="headerlink" href="#exatomic.widgets.widget_base.UniverseScene.axis" title="Permalink to this definition"></a></dt>
+<dd><p>A boolean (True, False) trait.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="exatomic.widgets.widget_base.UniverseScene.atom_x">
+<span class="sig-name descname"><span class="pre">atom_x</span></span><a class="headerlink" href="#exatomic.widgets.widget_base.UniverseScene.atom_x" title="Permalink to this definition"></a></dt>
+<dd><p>A trait for unicode strings.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="exatomic.widgets.widget_base.UniverseScene.atom_y">
+<span class="sig-name descname"><span class="pre">atom_y</span></span><a class="headerlink" href="#exatomic.widgets.widget_base.UniverseScene.atom_y" title="Permalink to this definition"></a></dt>
+<dd><p>A trait for unicode strings.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="exatomic.widgets.widget_base.UniverseScene.atom_z">
+<span class="sig-name descname"><span class="pre">atom_z</span></span><a class="headerlink" href="#exatomic.widgets.widget_base.UniverseScene.atom_z" title="Permalink to this definition"></a></dt>
+<dd><p>A trait for unicode strings.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="exatomic.widgets.widget_base.UniverseScene.atom_l">
+<span class="sig-name descname"><span class="pre">atom_l</span></span><a class="headerlink" href="#exatomic.widgets.widget_base.UniverseScene.atom_l" title="Permalink to this definition"></a></dt>
+<dd><p>An instance of a Python dict.</p>
+<p>One or more traits can be passed to the constructor
+to validate the keys and/or values of the dict.
+If you need more detailed validation,
+you may use a custom validator method.</p>
+<div class="versionchanged">
+<p><span class="versionmodified changed">Changed in version 5.0: </span>Added key_trait for validating dict keys.</p>
+</div>
+<div class="versionchanged">
+<p><span class="versionmodified changed">Changed in version 5.0: </span>Deprecated ambiguous <code class="docutils literal notranslate"><span class="pre">trait</span></code>, <code class="docutils literal notranslate"><span class="pre">traits</span></code> args in favor of <code class="docutils literal notranslate"><span class="pre">value_trait</span></code>, <code class="docutils literal notranslate"><span class="pre">per_key_traits</span></code>.</p>
+</div>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="exatomic.widgets.widget_base.UniverseScene.atom_s">
+<span class="sig-name descname"><span class="pre">atom_s</span></span><a class="headerlink" href="#exatomic.widgets.widget_base.UniverseScene.atom_s" title="Permalink to this definition"></a></dt>
+<dd><p>A trait for unicode strings.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="exatomic.widgets.widget_base.UniverseScene.atom_vr">
+<span class="sig-name descname"><span class="pre">atom_vr</span></span><a class="headerlink" href="#exatomic.widgets.widget_base.UniverseScene.atom_vr" title="Permalink to this definition"></a></dt>
+<dd><p>An instance of a Python dict.</p>
+<p>One or more traits can be passed to the constructor
+to validate the keys and/or values of the dict.
+If you need more detailed validation,
+you may use a custom validator method.</p>
+<div class="versionchanged">
+<p><span class="versionmodified changed">Changed in version 5.0: </span>Added key_trait for validating dict keys.</p>
+</div>
+<div class="versionchanged">
+<p><span class="versionmodified changed">Changed in version 5.0: </span>Deprecated ambiguous <code class="docutils literal notranslate"><span class="pre">trait</span></code>, <code class="docutils literal notranslate"><span class="pre">traits</span></code> args in favor of <code class="docutils literal notranslate"><span class="pre">value_trait</span></code>, <code class="docutils literal notranslate"><span class="pre">per_key_traits</span></code>.</p>
+</div>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="exatomic.widgets.widget_base.UniverseScene.atom_cr">
+<span class="sig-name descname"><span class="pre">atom_cr</span></span><a class="headerlink" href="#exatomic.widgets.widget_base.UniverseScene.atom_cr" title="Permalink to this definition"></a></dt>
+<dd><p>An instance of a Python dict.</p>
+<p>One or more traits can be passed to the constructor
+to validate the keys and/or values of the dict.
+If you need more detailed validation,
+you may use a custom validator method.</p>
+<div class="versionchanged">
+<p><span class="versionmodified changed">Changed in version 5.0: </span>Added key_trait for validating dict keys.</p>
+</div>
+<div class="versionchanged">
+<p><span class="versionmodified changed">Changed in version 5.0: </span>Deprecated ambiguous <code class="docutils literal notranslate"><span class="pre">trait</span></code>, <code class="docutils literal notranslate"><span class="pre">traits</span></code> args in favor of <code class="docutils literal notranslate"><span class="pre">value_trait</span></code>, <code class="docutils literal notranslate"><span class="pre">per_key_traits</span></code>.</p>
+</div>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="exatomic.widgets.widget_base.UniverseScene.atom_c">
+<span class="sig-name descname"><span class="pre">atom_c</span></span><a class="headerlink" href="#exatomic.widgets.widget_base.UniverseScene.atom_c" title="Permalink to this definition"></a></dt>
+<dd><p>An instance of a Python dict.</p>
+<p>One or more traits can be passed to the constructor
+to validate the keys and/or values of the dict.
+If you need more detailed validation,
+you may use a custom validator method.</p>
+<div class="versionchanged">
+<p><span class="versionmodified changed">Changed in version 5.0: </span>Added key_trait for validating dict keys.</p>
+</div>
+<div class="versionchanged">
+<p><span class="versionmodified changed">Changed in version 5.0: </span>Deprecated ambiguous <code class="docutils literal notranslate"><span class="pre">trait</span></code>, <code class="docutils literal notranslate"><span class="pre">traits</span></code> args in favor of <code class="docutils literal notranslate"><span class="pre">value_trait</span></code>, <code class="docutils literal notranslate"><span class="pre">per_key_traits</span></code>.</p>
+</div>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="exatomic.widgets.widget_base.UniverseScene.atom_3d">
+<span class="sig-name descname"><span class="pre">atom_3d</span></span><a class="headerlink" href="#exatomic.widgets.widget_base.UniverseScene.atom_3d" title="Permalink to this definition"></a></dt>
+<dd><p>A boolean (True, False) trait.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="exatomic.widgets.widget_base.UniverseScene.two_b0">
+<span class="sig-name descname"><span class="pre">two_b0</span></span><a class="headerlink" href="#exatomic.widgets.widget_base.UniverseScene.two_b0" title="Permalink to this definition"></a></dt>
+<dd><p>A trait for unicode strings.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="exatomic.widgets.widget_base.UniverseScene.two_b1">
+<span class="sig-name descname"><span class="pre">two_b1</span></span><a class="headerlink" href="#exatomic.widgets.widget_base.UniverseScene.two_b1" title="Permalink to this definition"></a></dt>
+<dd><p>A trait for unicode strings.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="exatomic.widgets.widget_base.UniverseScene.field_i">
+<span class="sig-name descname"><span class="pre">field_i</span></span><a class="headerlink" href="#exatomic.widgets.widget_base.UniverseScene.field_i" title="Permalink to this definition"></a></dt>
+<dd><p>An instance of a Python list.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="exatomic.widgets.widget_base.UniverseScene.field_v">
+<span class="sig-name descname"><span class="pre">field_v</span></span><a class="headerlink" href="#exatomic.widgets.widget_base.UniverseScene.field_v" title="Permalink to this definition"></a></dt>
+<dd><p>An instance of a Python list.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="exatomic.widgets.widget_base.UniverseScene.field_p">
+<span class="sig-name descname"><span class="pre">field_p</span></span><a class="headerlink" href="#exatomic.widgets.widget_base.UniverseScene.field_p" title="Permalink to this definition"></a></dt>
+<dd><p>An instance of a Python dict.</p>
+<p>One or more traits can be passed to the constructor
+to validate the keys and/or values of the dict.
+If you need more detailed validation,
+you may use a custom validator method.</p>
+<div class="versionchanged">
+<p><span class="versionmodified changed">Changed in version 5.0: </span>Added key_trait for validating dict keys.</p>
+</div>
+<div class="versionchanged">
+<p><span class="versionmodified changed">Changed in version 5.0: </span>Deprecated ambiguous <code class="docutils literal notranslate"><span class="pre">trait</span></code>, <code class="docutils literal notranslate"><span class="pre">traits</span></code> args in favor of <code class="docutils literal notranslate"><span class="pre">value_trait</span></code>, <code class="docutils literal notranslate"><span class="pre">per_key_traits</span></code>.</p>
+</div>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="exatomic.widgets.widget_base.UniverseScene.field_idx">
+<span class="sig-name descname"><span class="pre">field_idx</span></span><a class="headerlink" href="#exatomic.widgets.widget_base.UniverseScene.field_idx" title="Permalink to this definition"></a></dt>
+<dd><p>A trait which allows any value.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="exatomic.widgets.widget_base.UniverseScene.field_iso">
+<span class="sig-name descname"><span class="pre">field_iso</span></span><a class="headerlink" href="#exatomic.widgets.widget_base.UniverseScene.field_iso" title="Permalink to this definition"></a></dt>
+<dd><p>A float trait.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="exatomic.widgets.widget_base.UniverseScene.field_show">
+<span class="sig-name descname"><span class="pre">field_show</span></span><a class="headerlink" href="#exatomic.widgets.widget_base.UniverseScene.field_show" title="Permalink to this definition"></a></dt>
+<dd><p>A boolean (True, False) trait.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="exatomic.widgets.widget_base.UniverseScene.cont_show">
+<span class="sig-name descname"><span class="pre">cont_show</span></span><a class="headerlink" href="#exatomic.widgets.widget_base.UniverseScene.cont_show" title="Permalink to this definition"></a></dt>
+<dd><p>A boolean (True, False) trait.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="exatomic.widgets.widget_base.UniverseScene.cont_axis">
+<span class="sig-name descname"><span class="pre">cont_axis</span></span><a class="headerlink" href="#exatomic.widgets.widget_base.UniverseScene.cont_axis" title="Permalink to this definition"></a></dt>
+<dd><p>A trait for unicode strings.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="exatomic.widgets.widget_base.UniverseScene.cont_num">
+<span class="sig-name descname"><span class="pre">cont_num</span></span><a class="headerlink" href="#exatomic.widgets.widget_base.UniverseScene.cont_num" title="Permalink to this definition"></a></dt>
+<dd><p>An int trait.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="exatomic.widgets.widget_base.UniverseScene.cont_lim">
+<span class="sig-name descname"><span class="pre">cont_lim</span></span><a class="headerlink" href="#exatomic.widgets.widget_base.UniverseScene.cont_lim" title="Permalink to this definition"></a></dt>
+<dd><p>An instance of a Python list.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="exatomic.widgets.widget_base.UniverseScene.cont_val">
+<span class="sig-name descname"><span class="pre">cont_val</span></span><a class="headerlink" href="#exatomic.widgets.widget_base.UniverseScene.cont_val" title="Permalink to this definition"></a></dt>
+<dd><p>A float trait.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="exatomic.widgets.widget_base.UniverseScene.frame__a">
+<span class="sig-name descname"><span class="pre">frame__a</span></span><a class="headerlink" href="#exatomic.widgets.widget_base.UniverseScene.frame__a" title="Permalink to this definition"></a></dt>
+<dd><p>A float trait.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="exatomic.widgets.widget_base.UniverseScene.tens">
+<span class="sig-name descname"><span class="pre">tens</span></span><a class="headerlink" href="#exatomic.widgets.widget_base.UniverseScene.tens" title="Permalink to this definition"></a></dt>
+<dd><p>A boolean (True, False) trait.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="exatomic.widgets.widget_base.UniverseScene.tensor_d">
+<span class="sig-name descname"><span class="pre">tensor_d</span></span><a class="headerlink" href="#exatomic.widgets.widget_base.UniverseScene.tensor_d" title="Permalink to this definition"></a></dt>
+<dd><p>An instance of a Python dict.</p>
+<p>One or more traits can be passed to the constructor
+to validate the keys and/or values of the dict.
+If you need more detailed validation,
+you may use a custom validator method.</p>
+<div class="versionchanged">
+<p><span class="versionmodified changed">Changed in version 5.0: </span>Added key_trait for validating dict keys.</p>
+</div>
+<div class="versionchanged">
+<p><span class="versionmodified changed">Changed in version 5.0: </span>Deprecated ambiguous <code class="docutils literal notranslate"><span class="pre">trait</span></code>, <code class="docutils literal notranslate"><span class="pre">traits</span></code> args in favor of <code class="docutils literal notranslate"><span class="pre">value_trait</span></code>, <code class="docutils literal notranslate"><span class="pre">per_key_traits</span></code>.</p>
+</div>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="exatomic.widgets.widget_base.UniverseScene.scale">
+<span class="sig-name descname"><span class="pre">scale</span></span><a class="headerlink" href="#exatomic.widgets.widget_base.UniverseScene.scale" title="Permalink to this definition"></a></dt>
+<dd><p>A float trait.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="exatomic.widgets.widget_base.UniverseScene.tidx">
+<span class="sig-name descname"><span class="pre">tidx</span></span><a class="headerlink" href="#exatomic.widgets.widget_base.UniverseScene.tidx" title="Permalink to this definition"></a></dt>
+<dd><p>An int trait.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="exatomic.widgets.widget_base.UniverseScene.fill_idx">
+<span class="sig-name descname"><span class="pre">fill_idx</span></span><a class="headerlink" href="#exatomic.widgets.widget_base.UniverseScene.fill_idx" title="Permalink to this definition"></a></dt>
+<dd><p>An int trait.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="exatomic.widgets.widget_base.UniverseScene.bond_r">
+<span class="sig-name descname"><span class="pre">bond_r</span></span><a class="headerlink" href="#exatomic.widgets.widget_base.UniverseScene.bond_r" title="Permalink to this definition"></a></dt>
+<dd><p>A float trait.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="exatomic.widgets.widget_base.UniverseScene.selected">
+<span class="sig-name descname"><span class="pre">selected</span></span><a class="headerlink" href="#exatomic.widgets.widget_base.UniverseScene.selected" title="Permalink to this definition"></a></dt>
+<dd><p>An instance of a Python dict.</p>
+<p>One or more traits can be passed to the constructor
+to validate the keys and/or values of the dict.
+If you need more detailed validation,
+you may use a custom validator method.</p>
+<div class="versionchanged">
+<p><span class="versionmodified changed">Changed in version 5.0: </span>Added key_trait for validating dict keys.</p>
+</div>
+<div class="versionchanged">
+<p><span class="versionmodified changed">Changed in version 5.0: </span>Deprecated ambiguous <code class="docutils literal notranslate"><span class="pre">trait</span></code>, <code class="docutils literal notranslate"><span class="pre">traits</span></code> args in favor of <code class="docutils literal notranslate"><span class="pre">value_trait</span></code>, <code class="docutils literal notranslate"><span class="pre">per_key_traits</span></code>.</p>
+</div>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="exatomic.widgets.widget_base.UniverseScene.clear_selected">
+<span class="sig-name descname"><span class="pre">clear_selected</span></span><a class="headerlink" href="#exatomic.widgets.widget_base.UniverseScene.clear_selected" title="Permalink to this definition"></a></dt>
+<dd><p>A boolean (True, False) trait.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="exatomic.widgets.widget_base.ExatomicBox">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">exatomic.widgets.widget_base.</span></span><span class="sig-name descname"><span class="pre">ExatomicBox</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Any" title="(in Python v3.11)"><span class="pre">Any</span></a></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/exatomic/widgets/widget_base.html#ExatomicBox"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#exatomic.widgets.widget_base.ExatomicBox" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Box</span></code></p>
+<p>Base class for containers of a GUI and scene.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="exatomic.widgets.widget_base.ExatomicBox.active_scene_indices">
+<span class="sig-name descname"><span class="pre">active_scene_indices</span></span><a class="headerlink" href="#exatomic.widgets.widget_base.ExatomicBox.active_scene_indices" title="Permalink to this definition"></a></dt>
+<dd><p>An instance of a Python list.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="exatomic.widgets.widget_base.ExatomicBox.linked">
+<span class="sig-name descname"><span class="pre">linked</span></span><a class="headerlink" href="#exatomic.widgets.widget_base.ExatomicBox.linked" title="Permalink to this definition"></a></dt>
+<dd><p>A boolean (True, False) trait.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="exatomic.widgets.widget_base.ExatomicBox.active">
+<span class="sig-name descname"><span class="pre">active</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/exatomic/widgets/widget_base.html#ExatomicBox.active"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#exatomic.widgets.widget_base.ExatomicBox.active" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="exatomic.widgets.widget.html" class="btn btn-neutral float-left" title="exatomic.widgets.widget module" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="exatomic.widgets.widget_df.html" class="btn btn-neutral float-right" title="exatomic.widgets.widget_df module" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright .
+      <span class="lastupdated">Last updated on Apr 21, 2023.
+      </span></p>
+  </div>
+
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

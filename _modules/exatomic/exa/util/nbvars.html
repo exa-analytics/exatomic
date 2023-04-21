@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>exatomic.exa.util.nbvars &mdash; exatomic 0.6.0 documentation</title>
+      <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../../../../_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="../../../../" id="documentation_options" src="../../../../_static/documentation_options.js"></script>
+        <script src="../../../../_static/doctools.js"></script>
+        <script src="../../../../_static/sphinx_highlight.js"></script>
+        <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script src="../../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../../index.html" class="icon icon-home">
+            exatomic
+              <img src="../../../../_static/logo.png" class="logo" alt="Logo"/>
+          </a>
+              <div class="version">
+                0.6.0
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Sitemap</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../install.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../started.html">Getting Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../contrib.html">Development</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../exatomic.html">exatomic package</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../../index.html">exatomic</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../../index.html">Module code</a></li>
+          <li class="breadcrumb-item"><a href="../../../exatomic.html">exatomic</a></li>
+      <li class="breadcrumb-item active">exatomic.exa.util.nbvars</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for exatomic.exa.util.nbvars</h1><div class="highlight"><pre>
+<span></span><span class="c1"># -*- coding: utf-8 -*-</span>
+<span class="c1"># Copyright (c) 2015-2022, Exa Analytics Development Team</span>
+<span class="c1"># Distributed under the terms of the Apache License 2.0</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Numba Extensions</span>
+<span class="sd">####################</span>
+<span class="sd">The `numba`_ package provides a mechanism for compiling Python code. With</span>
+<span class="sd">appropriate options, compilation can provide massive speedups to standard</span>
+<span class="sd">Python code. This module provides reasonable compilation options as well as</span>
+<span class="sd">a utility for compiling symbolic (or string) functions to &#39;numbafied&#39; functions.</span>
+
+<span class="sd">See Also:</span>
+<span class="sd">    `sympy`_, `symengine`_, and the compilation engine `numba`_</span>
+
+<span class="sd">.. _sympy: http://docs.sympy.org/latest/index.html</span>
+<span class="sd">.. _symengine: https://github.com/symengine/symengine</span>
+<span class="sd">.. _numba: http://numba.pydata.org/</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">sympy</span> <span class="k">as</span> <span class="nn">sy</span>
+<span class="kn">import</span> <span class="nn">numba</span> <span class="k">as</span> <span class="nn">nb</span>
+<span class="kn">from</span> <span class="nn">warnings</span> <span class="kn">import</span> <span class="n">warn</span>
+<span class="kn">from</span> <span class="nn">platform</span> <span class="kn">import</span> <span class="n">system</span>
+<span class="kn">from</span> <span class="nn">sympy.utilities.lambdify</span> <span class="kn">import</span> <span class="n">NUMPY_TRANSLATIONS</span><span class="p">,</span> <span class="n">NUMPY_DEFAULT</span>
+
+
+<span class="n">npvars</span> <span class="o">=</span> <span class="nb">vars</span><span class="p">(</span><span class="n">np</span><span class="p">)</span>
+<span class="n">npvars</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">NUMPY_DEFAULT</span><span class="p">)</span>
+<span class="n">npvars</span><span class="o">.</span><span class="n">update</span><span class="p">({</span><span class="n">k</span><span class="p">:</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">np</span><span class="p">,</span> <span class="n">v</span><span class="p">)</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">NUMPY_TRANSLATIONS</span><span class="o">.</span><span class="n">items</span><span class="p">()})</span>
+<span class="k">if</span> <span class="s2">&quot;linux&quot;</span> <span class="ow">in</span> <span class="n">system</span><span class="p">()</span><span class="o">.</span><span class="n">lower</span><span class="p">():</span>
+    <span class="n">jitkwargs</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">nopython</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">nogil</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">parallel</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="n">veckwargs</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">nopython</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">target</span><span class="o">=</span><span class="s2">&quot;parallel&quot;</span><span class="p">)</span>
+<span class="k">else</span><span class="p">:</span>
+    <span class="n">jitkwargs</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">nopython</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">nogil</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">parallel</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">cache</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="n">veckwargs</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">nopython</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">target</span><span class="o">=</span><span class="s2">&quot;cpu&quot;</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="numbafy"><a class="viewcode-back" href="../../../../exatomic.exa.util.nbvars.html#exatomic.exa.util.nbvars.numbafy">[docs]</a><span class="k">def</span> <span class="nf">numbafy</span><span class="p">(</span><span class="n">fn</span><span class="p">,</span> <span class="n">args</span><span class="p">,</span> <span class="n">compiler</span><span class="o">=</span><span class="s2">&quot;jit&quot;</span><span class="p">,</span> <span class="o">**</span><span class="n">nbkws</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Compile a string, sympy expression or symengine expression using numba.</span>
+
+<span class="sd">    Not all functions are supported by Python&#39;s numerical package (numpy). For</span>
+<span class="sd">    difficult cases, valid Python code (as string) may be more suitable than</span>
+<span class="sd">    symbolic expressions coming from sympy, symengine, etc. When compiling</span>
+<span class="sd">    vectorized functions, include valid signatures (see `numba`_ documentation).</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        fn: Symbolic expression as sympy/symengine expression or string</span>
+<span class="sd">        args (iterable): Symbolic arguments</span>
+<span class="sd">        compiler: String name or callable numba compiler</span>
+<span class="sd">        nbkws: Compiler keyword arguments (if none provided, smart defaults are used)</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        func: Compiled function</span>
+
+<span class="sd">    Warning:</span>
+<span class="sd">        For vectorized functions, valid signatures are (almost always) required.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">kwargs</span> <span class="o">=</span> <span class="p">{}</span>    <span class="c1"># Numba kwargs to be updated by user</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">args</span><span class="p">,</span> <span class="p">(</span><span class="nb">tuple</span><span class="p">,</span> <span class="nb">list</span><span class="p">)):</span>
+        <span class="n">args</span> <span class="o">=</span> <span class="p">(</span><span class="n">args</span><span class="p">,</span> <span class="p">)</span>
+    <span class="c1"># Parameterize compiler</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">compiler</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+        <span class="n">compiler_</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">nb</span><span class="p">,</span> <span class="n">compiler</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">compiler</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">AttributeError</span><span class="p">(</span><span class="s2">&quot;No numba function with name </span><span class="si">{}</span><span class="s2">.&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">compiler</span><span class="p">))</span>
+        <span class="n">compiler</span> <span class="o">=</span> <span class="n">compiler_</span>
+    <span class="k">if</span> <span class="n">compiler</span> <span class="ow">in</span> <span class="p">(</span><span class="n">nb</span><span class="o">.</span><span class="n">jit</span><span class="p">,</span> <span class="n">nb</span><span class="o">.</span><span class="n">njit</span><span class="p">):</span>
+        <span class="n">kwargs</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">jitkwargs</span><span class="p">)</span>
+        <span class="n">sig</span> <span class="o">=</span> <span class="n">nbkws</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;signature&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">kwargs</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">veckwargs</span><span class="p">)</span>
+        <span class="n">sig</span> <span class="o">=</span> <span class="n">nbkws</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;signatures&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">sig</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">warn</span><span class="p">(</span><span class="s2">&quot;Vectorization without &#39;signatures&#39; can lead to wrong results!&quot;</span><span class="p">)</span>
+    <span class="n">kwargs</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">nbkws</span><span class="p">)</span>
+    <span class="c1"># Expand sympy expressions and create string for eval</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">fn</span><span class="p">,</span> <span class="n">sy</span><span class="o">.</span><span class="n">Expr</span><span class="p">):</span>
+        <span class="n">fn</span> <span class="o">=</span> <span class="n">sy</span><span class="o">.</span><span class="n">expand_func</span><span class="p">(</span><span class="n">fn</span><span class="p">)</span>
+    <span class="n">func</span> <span class="o">=</span> <span class="n">sy</span><span class="o">.</span><span class="n">lambdify</span><span class="p">(</span><span class="n">args</span><span class="p">,</span> <span class="n">fn</span><span class="p">,</span> <span class="n">modules</span><span class="o">=</span><span class="s1">&#39;numpy&#39;</span><span class="p">)</span>
+    <span class="c1"># Machine code compilation</span>
+    <span class="k">if</span> <span class="n">sig</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">func</span> <span class="o">=</span> <span class="n">compiler</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)(</span><span class="n">func</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">RuntimeError</span><span class="p">:</span>
+            <span class="n">kwargs</span><span class="p">[</span><span class="s1">&#39;cache&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="kc">False</span>
+            <span class="n">func</span> <span class="o">=</span> <span class="n">compiler</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)(</span><span class="n">func</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">func</span> <span class="o">=</span> <span class="n">compiler</span><span class="p">(</span><span class="n">sig</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)(</span><span class="n">func</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">RuntimeError</span><span class="p">:</span>
+            <span class="n">kwargs</span><span class="p">[</span><span class="s1">&#39;cache&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="kc">False</span>
+            <span class="n">func</span> <span class="o">=</span> <span class="n">compiler</span><span class="p">(</span><span class="n">sig</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)(</span><span class="n">func</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">func</span></div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright .
+      <span class="lastupdated">Last updated on Apr 21, 2023.
+      </span></p>
+  </div>
+
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

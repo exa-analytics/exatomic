@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>exatomic.exa.util.isotopes &mdash; exatomic 0.6.0 documentation</title>
+      <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../../../../_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="../../../../" id="documentation_options" src="../../../../_static/documentation_options.js"></script>
+        <script src="../../../../_static/doctools.js"></script>
+        <script src="../../../../_static/sphinx_highlight.js"></script>
+        <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script src="../../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../../index.html" class="icon icon-home">
+            exatomic
+              <img src="../../../../_static/logo.png" class="logo" alt="Logo"/>
+          </a>
+              <div class="version">
+                0.6.0
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Sitemap</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../install.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../started.html">Getting Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../contrib.html">Development</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../exatomic.html">exatomic package</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../../index.html">exatomic</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../../index.html">Module code</a></li>
+          <li class="breadcrumb-item"><a href="../../../exatomic.html">exatomic</a></li>
+      <li class="breadcrumb-item active">exatomic.exa.util.isotopes</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for exatomic.exa.util.isotopes</h1><div class="highlight"><pre>
+<span></span><span class="c1"># -*- coding: utf-8 -*-</span>
+<span class="c1"># Copyright (c) 2015-2022, Exa Analytics Development Team</span>
+<span class="c1"># Distributed under the terms of the Apache License 2.0</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Periodic Table of Elements and Isotopes</span>
+<span class="sd">########################################</span>
+<span class="sd">This module provides a database of the atomic elements and their isotopes.</span>
+<span class="sd">Visualization parameters are also provided. Data is provided and maintained</span>
+<span class="sd">by `NIST`_. The full api is given in the code example below. Note that not</span>
+<span class="sd">all attributes that are present on isotopes are present on elements (and vice</span>
+<span class="sd">versa).</span>
+
+<span class="sd">.. code-block:: python</span>
+
+<span class="sd">    from exatomic.exa.util import isotopes</span>
+<span class="sd">    isotopes.H            # Hydrogen element</span>
+<span class="sd">    isotopes.H[2]         # Hydrogen isotopes 2 (deuterium)</span>
+<span class="sd">    isotopes.H.cov_radius # Empirical covalent radius (a.u. - Bohr)</span>
+<span class="sd">    isotopes.H.van_radius # Empirical Van der Waals radius (a.u. - Bohr)</span>
+<span class="sd">    isotopes.H.af         # Abundance fraction</span>
+<span class="sd">    isotopes.H.afu        # Abundance fraction uncertainty</span>
+<span class="sd">    isotopes.H.mass       # Atomic mass (g/mol)</span>
+<span class="sd">    isotopes.H.massu      # Atomic mass uncertainty (g/mol)</span>
+<span class="sd">    isotopes.H.eneg       # Electronegativity (Pauling scale)</span>
+<span class="sd">    isotopes.H[2].quad    # Nuclear quadrupole moment (eb - electron-barn - e10^(-28)m^2)</span>
+<span class="sd">    isotopes.H[2].A       # Atomic mass number (g/mol)</span>
+<span class="sd">    isotopes.H.Z          # Proton number</span>
+<span class="sd">    isotopes.H[2].g       # Nuclear g-factor (dimensionless magnetic moment)</span>
+<span class="sd">    isotopes.H[2].spin    # Nuclear spin</span>
+<span class="sd">    isotopes.H.color      # Traditional atomic color (HTML)</span>
+<span class="sd">    isotopes.H.name       # Full element name</span>
+
+<span class="sd">Warning:</span>
+<span class="sd">    Isotopes are provided as part of the static data directory.</span>
+
+<span class="sd">.. _NIST: https://www.nist.gov/</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="kn">import</span> <span class="nn">os</span> <span class="k">as</span> <span class="nn">_os</span>
+<span class="kn">import</span> <span class="nn">sys</span> <span class="k">as</span> <span class="nn">_sys</span>
+<span class="kn">import</span> <span class="nn">bz2</span> <span class="k">as</span> <span class="nn">_bz2</span>
+<span class="kn">from</span> <span class="nn">pandas</span> <span class="kn">import</span> <span class="n">read_json</span> <span class="k">as</span> <span class="n">_rj</span>
+<span class="kn">from</span> <span class="nn">exatomic.exa.static</span> <span class="kn">import</span> <span class="n">resource</span> <span class="k">as</span> <span class="n">_resource</span>
+<span class="k">if</span> <span class="ow">not</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">_bz2</span><span class="p">,</span> <span class="s2">&quot;open&quot;</span><span class="p">):</span>
+    <span class="n">_bz2</span><span class="o">.</span><span class="n">open</span> <span class="o">=</span> <span class="n">_bz2</span><span class="o">.</span><span class="n">BZ2File</span>
+
+
+<div class="viewcode-block" id="Element"><a class="viewcode-back" href="../../../../exatomic.exa.util.isotopes.html#exatomic.exa.util.isotopes.Element">[docs]</a><span class="k">class</span> <span class="nc">Element</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    An element from Mendeleev&#39;s periodic table.</span>
+
+<span class="sd">    .. code-block:: python</span>
+
+<span class="sd">        from exatomic.exa.util import isotopes</span>
+<span class="sd">        H = isotopes.H         # Hydrogen element (isotope averaged)</span>
+<span class="sd">        D = isotopes.H[&#39;2&#39;]    # Deuterium (2H, a specific isotope)</span>
+<span class="sd">        isotopes.H.isotopes    # List of available isotopes</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">isotopes</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">[</span><span class="n">v</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="nb">vars</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">items</span><span class="p">()</span> <span class="k">if</span> <span class="n">k</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;_&quot;</span><span class="p">)]</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">radius</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">cov_radius</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">symbol</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">mass</span><span class="p">,</span> <span class="n">znum</span><span class="p">,</span> <span class="n">cov_radius</span><span class="p">,</span> <span class="n">van_radius</span><span class="p">,</span> <span class="n">color</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">symbol</span> <span class="o">=</span> <span class="n">symbol</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="n">name</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">mass</span> <span class="o">=</span> <span class="n">mass</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">Z</span> <span class="o">=</span> <span class="n">znum</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">cov_radius</span> <span class="o">=</span> <span class="n">cov_radius</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">van_radius</span> <span class="o">=</span> <span class="n">van_radius</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">color</span> <span class="o">=</span> <span class="n">color</span>
+
+    <span class="k">def</span> <span class="fm">__getitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">):</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+            <span class="k">return</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s2">&quot;_&quot;</span><span class="o">+</span><span class="n">key</span><span class="p">)</span>
+        <span class="k">return</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">symbol</span></div>
+
+
+<div class="viewcode-block" id="Isotope"><a class="viewcode-back" href="../../../../exatomic.exa.util.isotopes.html#exatomic.exa.util.isotopes.Isotope">[docs]</a><span class="k">class</span> <span class="nc">Isotope</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    A specific atomic isotope (the physical manifestation of an element).</span>
+
+<span class="sd">    .. code-block:: python</span>
+
+<span class="sd">        from exatomic.exa.util import isotopes</span>
+<span class="sd">        isotopes.U[&#39;235&#39;].mass    # Mass of 235-U</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">radius</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">cov_radius</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">anum</span><span class="p">,</span> <span class="n">znum</span><span class="p">,</span> <span class="n">af</span><span class="p">,</span> <span class="n">afu</span><span class="p">,</span> <span class="n">cov_radius</span><span class="p">,</span> <span class="n">van_radius</span><span class="p">,</span> <span class="n">g</span><span class="p">,</span> <span class="n">mass</span><span class="p">,</span> <span class="n">massu</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">eneg</span><span class="p">,</span> <span class="n">quad</span><span class="p">,</span> <span class="n">spin</span><span class="p">,</span> <span class="n">symbol</span><span class="p">,</span> <span class="n">color</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">A</span> <span class="o">=</span> <span class="n">anum</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">Z</span> <span class="o">=</span> <span class="n">znum</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">af</span> <span class="o">=</span> <span class="n">af</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">afu</span> <span class="o">=</span> <span class="n">afu</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">cov_radius</span> <span class="o">=</span> <span class="n">cov_radius</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">van_radius</span> <span class="o">=</span> <span class="n">van_radius</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">g</span> <span class="o">=</span> <span class="n">g</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">mass</span> <span class="o">=</span> <span class="n">mass</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">massu</span> <span class="o">=</span> <span class="n">massu</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="n">name</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">eneg</span> <span class="o">=</span> <span class="n">eneg</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">quad</span> <span class="o">=</span> <span class="n">quad</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">spin</span> <span class="o">=</span> <span class="n">spin</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">symbol</span> <span class="o">=</span> <span class="n">symbol</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">color</span> <span class="o">=</span> <span class="n">color</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">radius</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">cov_radius</span>
+
+    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">A</span><span class="p">)</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">symbol</span></div>
+
+
+<span class="k">def</span> <span class="nf">_create</span><span class="p">():</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Globally called function for creating the isotope/element API.&quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">creator</span><span class="p">(</span><span class="n">group</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Helper function applied to each symbol group of the raw isotope table.&quot;&quot;&quot;</span>
+        <span class="n">symbol</span> <span class="o">=</span> <span class="n">group</span><span class="p">[</span><span class="s1">&#39;symbol&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">values</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="k">try</span><span class="p">:</span>    <span class="c1"># Ghosts and custom atoms don&#39;t necessarily have an abundance fraction</span>
+            <span class="n">mass</span> <span class="o">=</span> <span class="p">(</span><span class="n">group</span><span class="p">[</span><span class="s1">&#39;mass&#39;</span><span class="p">]</span><span class="o">*</span><span class="n">group</span><span class="p">[</span><span class="s1">&#39;af&#39;</span><span class="p">])</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span>
+            <span class="n">afm</span> <span class="o">=</span> <span class="n">group</span><span class="p">[</span><span class="s1">&#39;af&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span>
+            <span class="k">if</span> <span class="n">afm</span> <span class="o">&gt;</span> <span class="mf">0.0</span><span class="p">:</span>
+                <span class="n">mass</span> <span class="o">/=</span> <span class="n">afm</span>
+        <span class="k">except</span> <span class="ne">ZeroDivisionError</span><span class="p">:</span>
+            <span class="n">mass</span> <span class="o">=</span> <span class="n">group</span><span class="p">[</span><span class="s1">&#39;mass&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span>
+        <span class="n">znum</span> <span class="o">=</span> <span class="n">group</span><span class="p">[</span><span class="s1">&#39;Z&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">max</span><span class="p">()</span>
+        <span class="n">cov_radius</span> <span class="o">=</span> <span class="n">group</span><span class="p">[</span><span class="s1">&#39;cov_radius&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span>
+        <span class="n">van_radius</span> <span class="o">=</span> <span class="n">group</span><span class="p">[</span><span class="s1">&#39;van_radius&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">color</span> <span class="o">=</span> <span class="n">group</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">group</span><span class="p">[</span><span class="s1">&#39;af&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">idxmax</span><span class="p">(),</span> <span class="s1">&#39;color&#39;</span><span class="p">]</span>
+        <span class="k">except</span> <span class="p">(</span><span class="ne">TypeError</span><span class="p">,</span> <span class="ne">KeyError</span><span class="p">):</span>
+            <span class="n">color</span> <span class="o">=</span> <span class="n">group</span><span class="p">[</span><span class="s1">&#39;color&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">values</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">name</span> <span class="o">=</span> <span class="n">group</span><span class="p">[</span><span class="s1">&#39;name&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">values</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">ele</span> <span class="o">=</span> <span class="n">Element</span><span class="p">(</span><span class="n">symbol</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">mass</span><span class="p">,</span> <span class="n">znum</span><span class="p">,</span> <span class="n">cov_radius</span><span class="p">,</span> <span class="n">van_radius</span><span class="p">,</span> <span class="n">color</span><span class="p">)</span>
+        <span class="c1"># Attached isotopes</span>
+        <span class="k">for</span> <span class="n">tope</span> <span class="ow">in</span> <span class="n">group</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span><span class="k">lambda</span> <span class="n">s</span><span class="p">:</span> <span class="n">Isotope</span><span class="p">(</span><span class="o">*</span><span class="n">s</span><span class="o">.</span><span class="n">tolist</span><span class="p">()),</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
+            <span class="nb">setattr</span><span class="p">(</span><span class="n">ele</span><span class="p">,</span> <span class="s2">&quot;_&quot;</span><span class="o">+</span><span class="nb">str</span><span class="p">(</span><span class="n">tope</span><span class="o">.</span><span class="n">A</span><span class="p">),</span> <span class="n">tope</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">ele</span>
+
+    <span class="n">iso</span> <span class="o">=</span> <span class="n">_rj</span><span class="p">(</span><span class="n">_path</span><span class="p">)</span>
+    <span class="n">iso</span><span class="o">.</span><span class="n">columns</span> <span class="o">=</span> <span class="n">_columns</span>
+    <span class="nb">setattr</span><span class="p">(</span><span class="n">_this</span><span class="p">,</span> <span class="s2">&quot;iso&quot;</span><span class="p">,</span> <span class="n">iso</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">element</span> <span class="ow">in</span> <span class="n">iso</span><span class="o">.</span><span class="n">groupby</span><span class="p">(</span><span class="s2">&quot;symbol&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span><span class="n">creator</span><span class="p">):</span>
+        <span class="nb">setattr</span><span class="p">(</span><span class="n">_this</span><span class="p">,</span> <span class="n">element</span><span class="o">.</span><span class="n">symbol</span><span class="p">,</span> <span class="n">element</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="as_df"><a class="viewcode-back" href="../../../../exatomic.exa.util.isotopes.html#exatomic.exa.util.isotopes.as_df">[docs]</a><span class="k">def</span> <span class="nf">as_df</span><span class="p">():</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Return a dataframe of isotopes.&quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">_this</span><span class="o">.</span><span class="n">iso</span></div>
+
+
+<span class="c1"># Data order of isotopic (nuclear) properties:</span>
+<span class="n">_resource</span> <span class="o">=</span> <span class="n">_resource</span><span class="p">(</span><span class="s2">&quot;isotopes.json&quot;</span><span class="p">)</span>
+<span class="n">_columns</span> <span class="o">=</span> <span class="p">(</span><span class="s2">&quot;A&quot;</span><span class="p">,</span> <span class="s2">&quot;Z&quot;</span><span class="p">,</span> <span class="s2">&quot;af&quot;</span><span class="p">,</span> <span class="s2">&quot;afu&quot;</span><span class="p">,</span> <span class="s2">&quot;cov_radius&quot;</span><span class="p">,</span> <span class="s2">&quot;van_radius&quot;</span><span class="p">,</span> <span class="s2">&quot;g&quot;</span><span class="p">,</span> <span class="s2">&quot;mass&quot;</span><span class="p">,</span> <span class="s2">&quot;massu&quot;</span><span class="p">,</span> <span class="s2">&quot;name&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;eneg&quot;</span><span class="p">,</span> <span class="s2">&quot;quad&quot;</span><span class="p">,</span> <span class="s2">&quot;spin&quot;</span><span class="p">,</span> <span class="s2">&quot;symbol&quot;</span><span class="p">,</span> <span class="s2">&quot;color&quot;</span><span class="p">)</span>
+<span class="n">_this</span> <span class="o">=</span> <span class="n">_sys</span><span class="o">.</span><span class="n">modules</span><span class="p">[</span><span class="vm">__name__</span><span class="p">]</span>         <span class="c1"># Reference to this module</span>
+<span class="n">_path</span> <span class="o">=</span> <span class="n">_os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">abspath</span><span class="p">(</span><span class="n">_os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">_os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">abspath</span><span class="p">(</span><span class="vm">__file__</span><span class="p">),</span> <span class="n">_resource</span><span class="p">))</span>
+<span class="k">if</span> <span class="ow">not</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">_this</span><span class="p">,</span> <span class="s2">&quot;H&quot;</span><span class="p">):</span>
+    <span class="n">_create</span><span class="p">()</span>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright .
+      <span class="lastupdated">Last updated on Apr 21, 2023.
+      </span></p>
+  </div>
+
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

@@ -1,0 +1,419 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>exatomic.core.basis module &mdash; exatomic 0.6.0 documentation</title>
+      <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+        <script src="_static/doctools.js"></script>
+        <script src="_static/sphinx_highlight.js"></script>
+        <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+        <script>window.MathJax = {"tex": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true}, "options": {"ignoreHtmlClass": "tex2jax_ignore|mathjax_ignore|document", "processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
+        <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="exatomic.core.editor module" href="exatomic.core.editor.html" />
+    <link rel="prev" title="exatomic.core.atom module" href="exatomic.core.atom.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            exatomic
+              <img src="_static/logo.png" class="logo" alt="Logo"/>
+          </a>
+              <div class="version">
+                0.6.0
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Sitemap</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="install.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="started.html">Getting Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="contrib.html">Development</a></li>
+</ul>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="exatomic.html">exatomic package</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="exatomic.html#supported-software">Supported Software</a></li>
+<li class="toctree-l2"><a class="reference internal" href="exatomic.html#exatomic.func_log"><code class="docutils literal notranslate"><span class="pre">func_log()</span></code></a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="exatomic.html#subpackages">Subpackages</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="exatomic.adf.html">exatomic.adf package</a></li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.algorithms.html">exatomic.algorithms package</a></li>
+<li class="toctree-l3 current"><a class="reference internal" href="exatomic.core.html">exatomic.core package</a><ul class="current">
+<li class="toctree-l4 current"><a class="reference internal" href="exatomic.core.html#submodules">Submodules</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.exa.html">exatomic.exa package</a></li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.gaussian.html">exatomic.gaussian package</a></li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.interfaces.html">exatomic.interfaces package</a></li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.molcas.html">exatomic.molcas package</a></li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.nbo.html">exatomic.nbo package</a></li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.nwchem.html">exatomic.nwchem package</a></li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.plotter.html">exatomic.plotter package</a></li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.qchem.html">exatomic.qchem package</a></li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.qe.html">exatomic.qe package</a></li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.util.html">exatomic.util package</a></li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.widgets.html">exatomic.widgets package</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="exatomic.html#submodules">Submodules</a></li>
+</ul>
+</li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">exatomic</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="exatomic.html">exatomic package</a></li>
+          <li class="breadcrumb-item"><a href="exatomic.core.html">exatomic.core package</a></li>
+      <li class="breadcrumb-item active">exatomic.core.basis module</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/exatomic.core.basis.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="module-exatomic.core.basis">
+<span id="exatomic-core-basis-module"></span><h1>exatomic.core.basis module<a class="headerlink" href="#module-exatomic.core.basis" title="Permalink to this heading"></a></h1>
+<section id="basis-set-representations">
+<h2>Basis Set Representations<a class="headerlink" href="#basis-set-representations" title="Permalink to this heading"></a></h2>
+<p>This module provides classes that support representations of various basis sets.
+There are a handful of basis sets in computational chemistry, the most common of
+which are Gaussian type functions, Slater type functions, and plane waves. The
+classes provided by this module support not only storage of basis set data, but
+also analytical and discrete manipulations of the basis set.</p>
+<div class="admonition seealso">
+<p class="admonition-title">See also</p>
+<p>For symbolic and discrete manipulations see <a class="reference internal" href="exatomic.algorithms.basis.html#module-exatomic.algorithms.basis" title="exatomic.algorithms.basis"><code class="xref py py-mod docutils literal notranslate"><span class="pre">basis</span></code></a>.</p>
+</div>
+</section>
+<dl class="py class">
+<dt class="sig sig-object py" id="exatomic.core.basis.BasisSet">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">exatomic.core.basis.</span></span><span class="sig-name descname"><span class="pre">BasisSet</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/exatomic/core/basis.html#BasisSet"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#exatomic.core.basis.BasisSet" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="exatomic.exa.core.numerical.html#exatomic.exa.core.numerical.DataFrame" title="exatomic.exa.core.numerical.DataFrame"><code class="xref py py-class docutils literal notranslate"><span class="pre">DataFrame</span></code></a></p>
+<p>Stores information about a basis set. Common basis set types in use for
+electronic structure calculations usually consist of Gaussians or Slater
+Type Orbitals (STOs). Both types usually employ atom-centered basis functions,
+where each basis function resides on a given atom with coordinates
+<span class="math notranslate nohighlight">\(\left(A_{x}, A_{y}, A_{z}\right)\)</span>. For Gaussian basis sets, the
+functional form of <span class="math notranslate nohighlight">\(f\left(x, y, z\right)\)</span> is:</p>
+<div class="math notranslate nohighlight">
+\[\begin{split}r^{2} = \left(x - A_{x}\right)^{2} + \left(x - A_{y}\right)^{2} + \left(z - A_{z}\right)^{2} \\
+f\left(x, y, z\right) = \left(x - A_{x}\right)^{l}\left(x - A_{y}\right)^{m}\left(z - A_{z}\right)^{n}e^{-\alpha r^{2}}\end{split}\]</div>
+<p>where <span class="math notranslate nohighlight">\(l\)</span>, <span class="math notranslate nohighlight">\(m\)</span>, and <span class="math notranslate nohighlight">\(n\)</span> are not quantum numbers but positive
+integers (including zero) whose sum defines the orbital angular momentum of
+each function and <span class="math notranslate nohighlight">\(alpha\)</span> governs the exponential decay of the given
+function. Gaussian basis functions are usually constructed from multiple
+primitive Gaussians, with fixed contraction coefficients. Therefore, a basis
+function consists of the sum of one or more primitive functions:</p>
+<div class="math notranslate nohighlight">
+\[g_{i}\left(x, y, z\right) = \sum_{j=1}^{N_{i}}c_{ij}f_{ij}\left(x, y, z\right)\]</div>
+<p>Alternatively, STOs are usually not constructed from linear combinations
+of multiple primitives, and differ from Gaussian type functions in that they
+do not contain an exponent in the <span class="math notranslate nohighlight">\(r\)</span> term of the exponential decay.
+These functions have 2 main benefits; an adequate description of the cusp
+in the density at the nucleus, and the appropriate long-range decay behavior.</p>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Column</p></th>
+<th class="head"><p>Type</p></th>
+<th class="head"><p>Description</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>alpha</p></td>
+<td><p>float</p></td>
+<td><p>exponent</p></td>
+</tr>
+<tr class="row-odd"><td><p>shell</p></td>
+<td><p>int</p></td>
+<td><p>group of primitives</p></td>
+</tr>
+<tr class="row-even"><td><p>set</p></td>
+<td><p>int/cat</p></td>
+<td><p>unique basis set identifier</p></td>
+</tr>
+<tr class="row-odd"><td><p>d</p></td>
+<td><p>float</p></td>
+<td><p>contraction coefficient</p></td>
+</tr>
+<tr class="row-even"><td><p>L</p></td>
+<td><p>int</p></td>
+<td><p>orbital angular momentum</p></td>
+</tr>
+</tbody>
+</table>
+<dl class="py property">
+<dt class="sig sig-object py" id="exatomic.core.basis.BasisSet.lmax">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">lmax</span></span><a class="headerlink" href="#exatomic.core.basis.BasisSet.lmax" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="exatomic.core.basis.BasisSet.shells">
+<span class="sig-name descname"><span class="pre">shells</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">program</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">spherical</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gaussian</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/exatomic/core/basis.html#BasisSet.shells"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#exatomic.core.basis.BasisSet.shells" title="Permalink to this definition"></a></dt>
+<dd><p>Generate a multi-index series of <code class="xref py py-class docutils literal notranslate"><span class="pre">Shell</span></code>
+in the basis set, indexed by set and L.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>program</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.11)"><em>str</em></a>) – which code the basis set comes from</p></li>
+<li><p><strong>spherical</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.11)"><em>bool</em></a>) – expand in ml or cartesian powers</p></li>
+<li><p><strong>gaussian</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.11)"><em>bool</em></a>) – exponential dependence of basis functions</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><em>srs (pd.Series)</em> – multi-indexed by set and L</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="exatomic.core.basis.BasisSet.spherical_by_shell">
+<span class="sig-name descname"><span class="pre">spherical_by_shell</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">program</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">spherical</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/exatomic/core/basis.html#BasisSet.spherical_by_shell"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#exatomic.core.basis.BasisSet.spherical_by_shell" title="Permalink to this definition"></a></dt>
+<dd><p>Allows for some flexibility in treating shells either as
+cartesian functions or spherical functions (different normalizations).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>program</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.11)"><em>str</em></a>) – which code the basis set comes from</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="exatomic.core.basis.BasisSet.functions_by_shell">
+<span class="sig-name descname"><span class="pre">functions_by_shell</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/exatomic/core/basis.html#BasisSet.functions_by_shell"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#exatomic.core.basis.BasisSet.functions_by_shell" title="Permalink to this definition"></a></dt>
+<dd><p>Return a series of n functions per (set, L).
+This does not include degenerate functions.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="exatomic.core.basis.BasisSet.primitives_by_shell">
+<span class="sig-name descname"><span class="pre">primitives_by_shell</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/exatomic/core/basis.html#BasisSet.primitives_by_shell"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#exatomic.core.basis.BasisSet.primitives_by_shell" title="Permalink to this definition"></a></dt>
+<dd><p>Return a series of n primitives per (set, L).
+This does not include degenerate primitives.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="exatomic.core.basis.BasisSet.functions">
+<span class="sig-name descname"><span class="pre">functions</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">spherical</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/exatomic/core/basis.html#BasisSet.functions"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#exatomic.core.basis.BasisSet.functions" title="Permalink to this definition"></a></dt>
+<dd><p>Return a series of n functions per (set, L).
+This does include degenerate functions.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="exatomic.core.basis.BasisSet.primitives">
+<span class="sig-name descname"><span class="pre">primitives</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">spherical</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/exatomic/core/basis.html#BasisSet.primitives"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#exatomic.core.basis.BasisSet.primitives" title="Permalink to this definition"></a></dt>
+<dd><p>Return a series of n primitives per (set, L).
+This does include degenerate primitives.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="exatomic.core.basis.deduplicate_basis_sets">
+<span class="sig-prename descclassname"><span class="pre">exatomic.core.basis.</span></span><span class="sig-name descname"><span class="pre">deduplicate_basis_sets</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sets</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sp</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/exatomic/core/basis.html#deduplicate_basis_sets"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#exatomic.core.basis.deduplicate_basis_sets" title="Permalink to this definition"></a></dt>
+<dd><p>Deduplicate identical basis sets on different centers.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>sets</strong> (<em>pd.DataFrame</em>) – non-unique basis sets</p></li>
+<li><p><strong>sp</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.11)"><em>bool</em></a>) – Whether or not to call _expand_sp (gaussian program only)</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><em>tup (tuple)</em> – deduplicated basis sets and basis set map for atom table</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="exatomic.core.basis.BasisSetOrder">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">exatomic.core.basis.</span></span><span class="sig-name descname"><span class="pre">BasisSetOrder</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/exatomic/core/basis.html#BasisSetOrder"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#exatomic.core.basis.BasisSetOrder" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="exatomic.exa.core.numerical.html#exatomic.exa.core.numerical.DataFrame" title="exatomic.exa.core.numerical.DataFrame"><code class="xref py py-class docutils literal notranslate"><span class="pre">DataFrame</span></code></a></p>
+<p>BasisSetOrder uniquely determines the basis function ordering scheme for
+a given <a class="reference internal" href="exatomic.core.universe.html#exatomic.core.universe.Universe" title="exatomic.core.universe.Universe"><code class="xref py py-class docutils literal notranslate"><span class="pre">Universe</span></code></a>. This table is provided to
+make transparent the characteristic ordering scheme of various quantum
+codes. Either (L, ml) or (l, m, n) must be provided to have access to
+orbital visualization functionality.</p>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Column</p></th>
+<th class="head"><p>Type</p></th>
+<th class="head"><p>Description</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>center</p></td>
+<td><p>int</p></td>
+<td><p>atomic center</p></td>
+</tr>
+<tr class="row-odd"><td><p>L</p></td>
+<td><p>int</p></td>
+<td><p>orbital angular momentum</p></td>
+</tr>
+<tr class="row-even"><td><p>shell</p></td>
+<td><p>int</p></td>
+<td><p>group of primitives</p></td>
+</tr>
+<tr class="row-odd"><td><p>ml</p></td>
+<td><p>int</p></td>
+<td><p>magnetic quantum number</p></td>
+</tr>
+<tr class="row-even"><td><p>l</p></td>
+<td><p>int</p></td>
+<td><p>power in x</p></td>
+</tr>
+<tr class="row-odd"><td><p>m</p></td>
+<td><p>int</p></td>
+<td><p>power in y</p></td>
+</tr>
+<tr class="row-even"><td><p>n</p></td>
+<td><p>int</p></td>
+<td><p>power in z</p></td>
+</tr>
+<tr class="row-odd"><td><p>r</p></td>
+<td><p>int</p></td>
+<td><p>power in r (optional - for STOs)</p></td>
+</tr>
+<tr class="row-even"><td><p>prefac</p></td>
+<td><p>float</p></td>
+<td><p>prefactor (optional - for STOs)</p></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="exatomic.core.basis.Overlap">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">exatomic.core.basis.</span></span><span class="sig-name descname"><span class="pre">Overlap</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/exatomic/core/basis.html#Overlap"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#exatomic.core.basis.Overlap" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="exatomic.exa.core.numerical.html#exatomic.exa.core.numerical.DataFrame" title="exatomic.exa.core.numerical.DataFrame"><code class="xref py py-class docutils literal notranslate"><span class="pre">DataFrame</span></code></a></p>
+<p>Overlap enumerates the overlap matrix elements between basis functions in
+a contracted basis set. Currently nothing disambiguates between the
+primitive overlap matrix and the contracted overlap matrix. As it is
+square symmetric, only n_basis_functions * (n_basis_functions + 1) / 2
+rows are stored.</p>
+<p>See Gramian matrix for more on the general properties of the overlap matrix.</p>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Column</p></th>
+<th class="head"><p>Type</p></th>
+<th class="head"><p>Description</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>frame</p></td>
+<td><p>int/cat</p></td>
+<td><p>non-unique integer</p></td>
+</tr>
+<tr class="row-odd"><td><p>chi0</p></td>
+<td><p>int</p></td>
+<td><p>first basis function</p></td>
+</tr>
+<tr class="row-even"><td><p>chi1</p></td>
+<td><p>int</p></td>
+<td><p>second basis function</p></td>
+</tr>
+<tr class="row-odd"><td><p>coef</p></td>
+<td><p>float</p></td>
+<td><p>overlap matrix element</p></td>
+</tr>
+</tbody>
+</table>
+<dl class="py method">
+<dt class="sig sig-object py" id="exatomic.core.basis.Overlap.square">
+<span class="sig-name descname"><span class="pre">square</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">frame</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">column</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'coef'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mocoefs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">irrep</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/exatomic/core/basis.html#Overlap.square"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#exatomic.core.basis.Overlap.square" title="Permalink to this definition"></a></dt>
+<dd><p>Return a ‘square’ matrix DataFrame of the Overlap.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>column</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.11)"><em>str</em></a>) – column of coefficients to reshape</p></li>
+<li><p><strong>mocoefs</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.11)"><em>str</em></a>) – alias for <cite>column</cite></p></li>
+<li><p><strong>frame</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.11)"><em>int</em></a>) – default 0</p></li>
+<li><p><strong>irrep</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.11)"><em>int</em></a>) – irreducible representation if symmetrized</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="exatomic.core.basis.Overlap.from_column">
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">from_column</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">source</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/exatomic/core/basis.html#Overlap.from_column"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#exatomic.core.basis.Overlap.from_column" title="Permalink to this definition"></a></dt>
+<dd><p>Create an Overlap from a file with just the array of coefficients or
+an array of the values directly.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="exatomic.core.basis.Overlap.from_square">
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">from_square</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">df</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/exatomic/core/basis.html#Overlap.from_square"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#exatomic.core.basis.Overlap.from_square" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="exatomic.core.atom.html" class="btn btn-neutral float-left" title="exatomic.core.atom module" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="exatomic.core.editor.html" class="btn btn-neutral float-right" title="exatomic.core.editor module" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright .
+      <span class="lastupdated">Last updated on Apr 21, 2023.
+      </span></p>
+  </div>
+
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

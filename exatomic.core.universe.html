@@ -1,0 +1,840 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>exatomic.core.universe module &mdash; exatomic 0.6.0 documentation</title>
+      <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+        <script src="_static/doctools.js"></script>
+        <script src="_static/sphinx_highlight.js"></script>
+        <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="exatomic.exa package" href="exatomic.exa.html" />
+    <link rel="prev" title="exatomic.core.two module" href="exatomic.core.two.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            exatomic
+              <img src="_static/logo.png" class="logo" alt="Logo"/>
+          </a>
+              <div class="version">
+                0.6.0
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Sitemap</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="install.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="started.html">Getting Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="contrib.html">Development</a></li>
+</ul>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="exatomic.html">exatomic package</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="exatomic.html#supported-software">Supported Software</a></li>
+<li class="toctree-l2"><a class="reference internal" href="exatomic.html#exatomic.func_log"><code class="docutils literal notranslate"><span class="pre">func_log()</span></code></a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="exatomic.html#subpackages">Subpackages</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="exatomic.adf.html">exatomic.adf package</a></li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.algorithms.html">exatomic.algorithms package</a></li>
+<li class="toctree-l3 current"><a class="reference internal" href="exatomic.core.html">exatomic.core package</a><ul class="current">
+<li class="toctree-l4 current"><a class="reference internal" href="exatomic.core.html#submodules">Submodules</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.exa.html">exatomic.exa package</a></li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.gaussian.html">exatomic.gaussian package</a></li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.interfaces.html">exatomic.interfaces package</a></li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.molcas.html">exatomic.molcas package</a></li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.nbo.html">exatomic.nbo package</a></li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.nwchem.html">exatomic.nwchem package</a></li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.plotter.html">exatomic.plotter package</a></li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.qchem.html">exatomic.qchem package</a></li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.qe.html">exatomic.qe package</a></li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.util.html">exatomic.util package</a></li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.widgets.html">exatomic.widgets package</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="exatomic.html#submodules">Submodules</a></li>
+</ul>
+</li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">exatomic</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="exatomic.html">exatomic package</a></li>
+          <li class="breadcrumb-item"><a href="exatomic.core.html">exatomic.core package</a></li>
+      <li class="breadcrumb-item active">exatomic.core.universe module</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/exatomic.core.universe.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="module-exatomic.core.universe">
+<span id="exatomic-core-universe-module"></span><h1>exatomic.core.universe module<a class="headerlink" href="#module-exatomic.core.universe" title="Permalink to this heading"></a></h1>
+<section id="the-atomic-universe">
+<h2>The Atomic Universe<a class="headerlink" href="#the-atomic-universe" title="Permalink to this heading"></a></h2>
+<p>The <code class="xref py py-class docutils literal notranslate"><span class="pre">Universe</span></code> object is a subclass of
+<code class="xref py py-class docutils literal notranslate"><span class="pre">Container</span></code> that stores data coming from computational
+chemistry experiments in a unified and systematic way. Data is organized into
+“frames”. A frame is an axis that can represent time (e.g. molecular dynamics
+simulations), step number (e.g. geometry optimization), or an arbitrary index
+(e.g. density functional theory exchange correlation functional).</p>
+</section>
+<dl class="py class">
+<dt class="sig sig-object py" id="exatomic.core.universe.Meta">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">exatomic.core.universe.</span></span><span class="sig-name descname"><span class="pre">Meta</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bases</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">clsdict</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/exatomic/core/universe.html#Meta"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#exatomic.core.universe.Meta" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="exatomic.exa.core.container.html#exatomic.exa.core.container.TypedMeta" title="exatomic.exa.core.container.TypedMeta"><code class="xref py py-class docutils literal notranslate"><span class="pre">TypedMeta</span></code></a></p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="exatomic.core.universe.Meta.atom">
+<span class="sig-name descname"><span class="pre">atom</span></span><a class="headerlink" href="#exatomic.core.universe.Meta.atom" title="Permalink to this definition"></a></dt>
+<dd><p>alias of <a class="reference internal" href="exatomic.core.atom.html#exatomic.core.atom.Atom" title="exatomic.core.atom.Atom"><code class="xref py py-class docutils literal notranslate"><span class="pre">Atom</span></code></a></p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="exatomic.core.universe.Meta.frame">
+<span class="sig-name descname"><span class="pre">frame</span></span><a class="headerlink" href="#exatomic.core.universe.Meta.frame" title="Permalink to this definition"></a></dt>
+<dd><p>alias of <a class="reference internal" href="exatomic.core.frame.html#exatomic.core.frame.Frame" title="exatomic.core.frame.Frame"><code class="xref py py-class docutils literal notranslate"><span class="pre">Frame</span></code></a></p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="exatomic.core.universe.Meta.atom_two">
+<span class="sig-name descname"><span class="pre">atom_two</span></span><a class="headerlink" href="#exatomic.core.universe.Meta.atom_two" title="Permalink to this definition"></a></dt>
+<dd><p>alias of <a class="reference internal" href="exatomic.core.two.html#exatomic.core.two.AtomTwo" title="exatomic.core.two.AtomTwo"><code class="xref py py-class docutils literal notranslate"><span class="pre">AtomTwo</span></code></a></p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="exatomic.core.universe.Meta.unit_atom">
+<span class="sig-name descname"><span class="pre">unit_atom</span></span><a class="headerlink" href="#exatomic.core.universe.Meta.unit_atom" title="Permalink to this definition"></a></dt>
+<dd><p>alias of <a class="reference internal" href="exatomic.core.atom.html#exatomic.core.atom.UnitAtom" title="exatomic.core.atom.UnitAtom"><code class="xref py py-class docutils literal notranslate"><span class="pre">UnitAtom</span></code></a></p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="exatomic.core.universe.Meta.projected_atom">
+<span class="sig-name descname"><span class="pre">projected_atom</span></span><a class="headerlink" href="#exatomic.core.universe.Meta.projected_atom" title="Permalink to this definition"></a></dt>
+<dd><p>alias of <a class="reference internal" href="exatomic.core.atom.html#exatomic.core.atom.ProjectedAtom" title="exatomic.core.atom.ProjectedAtom"><code class="xref py py-class docutils literal notranslate"><span class="pre">ProjectedAtom</span></code></a></p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="exatomic.core.universe.Meta.visual_atom">
+<span class="sig-name descname"><span class="pre">visual_atom</span></span><a class="headerlink" href="#exatomic.core.universe.Meta.visual_atom" title="Permalink to this definition"></a></dt>
+<dd><p>alias of <a class="reference internal" href="exatomic.core.atom.html#exatomic.core.atom.VisualAtom" title="exatomic.core.atom.VisualAtom"><code class="xref py py-class docutils literal notranslate"><span class="pre">VisualAtom</span></code></a></p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="exatomic.core.universe.Meta.frequency">
+<span class="sig-name descname"><span class="pre">frequency</span></span><a class="headerlink" href="#exatomic.core.universe.Meta.frequency" title="Permalink to this definition"></a></dt>
+<dd><p>alias of <a class="reference internal" href="exatomic.core.atom.html#exatomic.core.atom.Frequency" title="exatomic.core.atom.Frequency"><code class="xref py py-class docutils literal notranslate"><span class="pre">Frequency</span></code></a></p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="exatomic.core.universe.Meta.molecule">
+<span class="sig-name descname"><span class="pre">molecule</span></span><a class="headerlink" href="#exatomic.core.universe.Meta.molecule" title="Permalink to this definition"></a></dt>
+<dd><p>alias of <a class="reference internal" href="exatomic.core.molecule.html#exatomic.core.molecule.Molecule" title="exatomic.core.molecule.Molecule"><code class="xref py py-class docutils literal notranslate"><span class="pre">Molecule</span></code></a></p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="exatomic.core.universe.Meta.molecule_two">
+<span class="sig-name descname"><span class="pre">molecule_two</span></span><a class="headerlink" href="#exatomic.core.universe.Meta.molecule_two" title="Permalink to this definition"></a></dt>
+<dd><p>alias of <a class="reference internal" href="exatomic.core.two.html#exatomic.core.two.MoleculeTwo" title="exatomic.core.two.MoleculeTwo"><code class="xref py py-class docutils literal notranslate"><span class="pre">MoleculeTwo</span></code></a></p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="exatomic.core.universe.Meta.field">
+<span class="sig-name descname"><span class="pre">field</span></span><a class="headerlink" href="#exatomic.core.universe.Meta.field" title="Permalink to this definition"></a></dt>
+<dd><p>alias of <a class="reference internal" href="exatomic.core.field.html#exatomic.core.field.AtomicField" title="exatomic.core.field.AtomicField"><code class="xref py py-class docutils literal notranslate"><span class="pre">AtomicField</span></code></a></p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="exatomic.core.universe.Meta.orbital">
+<span class="sig-name descname"><span class="pre">orbital</span></span><a class="headerlink" href="#exatomic.core.universe.Meta.orbital" title="Permalink to this definition"></a></dt>
+<dd><p>alias of <a class="reference internal" href="exatomic.core.orbital.html#exatomic.core.orbital.Orbital" title="exatomic.core.orbital.Orbital"><code class="xref py py-class docutils literal notranslate"><span class="pre">Orbital</span></code></a></p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="exatomic.core.universe.Meta.momatrix">
+<span class="sig-name descname"><span class="pre">momatrix</span></span><a class="headerlink" href="#exatomic.core.universe.Meta.momatrix" title="Permalink to this definition"></a></dt>
+<dd><p>alias of <a class="reference internal" href="exatomic.core.orbital.html#exatomic.core.orbital.MOMatrix" title="exatomic.core.orbital.MOMatrix"><code class="xref py py-class docutils literal notranslate"><span class="pre">MOMatrix</span></code></a></p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="exatomic.core.universe.Meta.cart_momatrix">
+<span class="sig-name descname"><span class="pre">cart_momatrix</span></span><a class="headerlink" href="#exatomic.core.universe.Meta.cart_momatrix" title="Permalink to this definition"></a></dt>
+<dd><p>alias of <a class="reference internal" href="exatomic.core.orbital.html#exatomic.core.orbital.MOMatrix" title="exatomic.core.orbital.MOMatrix"><code class="xref py py-class docutils literal notranslate"><span class="pre">MOMatrix</span></code></a></p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="exatomic.core.universe.Meta.sphr_momatrix">
+<span class="sig-name descname"><span class="pre">sphr_momatrix</span></span><a class="headerlink" href="#exatomic.core.universe.Meta.sphr_momatrix" title="Permalink to this definition"></a></dt>
+<dd><p>alias of <a class="reference internal" href="exatomic.core.orbital.html#exatomic.core.orbital.MOMatrix" title="exatomic.core.orbital.MOMatrix"><code class="xref py py-class docutils literal notranslate"><span class="pre">MOMatrix</span></code></a></p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="exatomic.core.universe.Meta.excitation">
+<span class="sig-name descname"><span class="pre">excitation</span></span><a class="headerlink" href="#exatomic.core.universe.Meta.excitation" title="Permalink to this definition"></a></dt>
+<dd><p>alias of <a class="reference internal" href="exatomic.core.orbital.html#exatomic.core.orbital.Excitation" title="exatomic.core.orbital.Excitation"><code class="xref py py-class docutils literal notranslate"><span class="pre">Excitation</span></code></a></p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="exatomic.core.universe.Meta.overlap">
+<span class="sig-name descname"><span class="pre">overlap</span></span><a class="headerlink" href="#exatomic.core.universe.Meta.overlap" title="Permalink to this definition"></a></dt>
+<dd><p>alias of <a class="reference internal" href="exatomic.core.basis.html#exatomic.core.basis.Overlap" title="exatomic.core.basis.Overlap"><code class="xref py py-class docutils literal notranslate"><span class="pre">Overlap</span></code></a></p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="exatomic.core.universe.Meta.density">
+<span class="sig-name descname"><span class="pre">density</span></span><a class="headerlink" href="#exatomic.core.universe.Meta.density" title="Permalink to this definition"></a></dt>
+<dd><p>alias of <a class="reference internal" href="exatomic.core.orbital.html#exatomic.core.orbital.DensityMatrix" title="exatomic.core.orbital.DensityMatrix"><code class="xref py py-class docutils literal notranslate"><span class="pre">DensityMatrix</span></code></a></p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="exatomic.core.universe.Meta.basis_set_order">
+<span class="sig-name descname"><span class="pre">basis_set_order</span></span><a class="headerlink" href="#exatomic.core.universe.Meta.basis_set_order" title="Permalink to this definition"></a></dt>
+<dd><p>alias of <a class="reference internal" href="exatomic.core.basis.html#exatomic.core.basis.BasisSetOrder" title="exatomic.core.basis.BasisSetOrder"><code class="xref py py-class docutils literal notranslate"><span class="pre">BasisSetOrder</span></code></a></p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="exatomic.core.universe.Meta.cart_basis_set_order">
+<span class="sig-name descname"><span class="pre">cart_basis_set_order</span></span><a class="headerlink" href="#exatomic.core.universe.Meta.cart_basis_set_order" title="Permalink to this definition"></a></dt>
+<dd><p>alias of <a class="reference internal" href="exatomic.core.basis.html#exatomic.core.basis.BasisSetOrder" title="exatomic.core.basis.BasisSetOrder"><code class="xref py py-class docutils literal notranslate"><span class="pre">BasisSetOrder</span></code></a></p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="exatomic.core.universe.Meta.sphr_basis_set_order">
+<span class="sig-name descname"><span class="pre">sphr_basis_set_order</span></span><a class="headerlink" href="#exatomic.core.universe.Meta.sphr_basis_set_order" title="Permalink to this definition"></a></dt>
+<dd><p>alias of <a class="reference internal" href="exatomic.core.basis.html#exatomic.core.basis.BasisSetOrder" title="exatomic.core.basis.BasisSetOrder"><code class="xref py py-class docutils literal notranslate"><span class="pre">BasisSetOrder</span></code></a></p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="exatomic.core.universe.Meta.uncontracted_basis_set_order">
+<span class="sig-name descname"><span class="pre">uncontracted_basis_set_order</span></span><a class="headerlink" href="#exatomic.core.universe.Meta.uncontracted_basis_set_order" title="Permalink to this definition"></a></dt>
+<dd><p>alias of <a class="reference internal" href="exatomic.core.basis.html#exatomic.core.basis.BasisSetOrder" title="exatomic.core.basis.BasisSetOrder"><code class="xref py py-class docutils literal notranslate"><span class="pre">BasisSetOrder</span></code></a></p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="exatomic.core.universe.Meta.basis_set">
+<span class="sig-name descname"><span class="pre">basis_set</span></span><a class="headerlink" href="#exatomic.core.universe.Meta.basis_set" title="Permalink to this definition"></a></dt>
+<dd><p>alias of <a class="reference internal" href="exatomic.core.basis.html#exatomic.core.basis.BasisSet" title="exatomic.core.basis.BasisSet"><code class="xref py py-class docutils literal notranslate"><span class="pre">BasisSet</span></code></a></p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="exatomic.core.universe.Meta.basis_dims">
+<span class="sig-name descname"><span class="pre">basis_dims</span></span><a class="headerlink" href="#exatomic.core.universe.Meta.basis_dims" title="Permalink to this definition"></a></dt>
+<dd><p>alias of <a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.11)"><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code></a></p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="exatomic.core.universe.Meta.basis_functions">
+<span class="sig-name descname"><span class="pre">basis_functions</span></span><a class="headerlink" href="#exatomic.core.universe.Meta.basis_functions" title="Permalink to this definition"></a></dt>
+<dd><p>alias of <a class="reference internal" href="exatomic.algorithms.basis.html#exatomic.algorithms.basis.BasisFunctions" title="exatomic.algorithms.basis.BasisFunctions"><code class="xref py py-class docutils literal notranslate"><span class="pre">BasisFunctions</span></code></a></p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="exatomic.core.universe.Meta.contribution">
+<span class="sig-name descname"><span class="pre">contribution</span></span><a class="headerlink" href="#exatomic.core.universe.Meta.contribution" title="Permalink to this definition"></a></dt>
+<dd><p>alias of <a class="reference internal" href="exatomic.exa.core.numerical.html#exatomic.exa.core.numerical.DataFrame" title="exatomic.exa.core.numerical.DataFrame"><code class="xref py py-class docutils literal notranslate"><span class="pre">DataFrame</span></code></a></p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="exatomic.core.universe.Meta.multipole">
+<span class="sig-name descname"><span class="pre">multipole</span></span><a class="headerlink" href="#exatomic.core.universe.Meta.multipole" title="Permalink to this definition"></a></dt>
+<dd><p>alias of <a class="reference internal" href="exatomic.exa.core.numerical.html#exatomic.exa.core.numerical.DataFrame" title="exatomic.exa.core.numerical.DataFrame"><code class="xref py py-class docutils literal notranslate"><span class="pre">DataFrame</span></code></a></p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="exatomic.core.universe.Meta.tensor">
+<span class="sig-name descname"><span class="pre">tensor</span></span><a class="headerlink" href="#exatomic.core.universe.Meta.tensor" title="Permalink to this definition"></a></dt>
+<dd><p>alias of <a class="reference internal" href="exatomic.core.tensor.html#exatomic.core.tensor.Tensor" title="exatomic.core.tensor.Tensor"><code class="xref py py-class docutils literal notranslate"><span class="pre">Tensor</span></code></a></p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="exatomic.core.universe.Universe">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">exatomic.core.universe.</span></span><span class="sig-name descname"><span class="pre">Universe</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/exatomic/core/universe.html#Universe"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#exatomic.core.universe.Universe" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="exatomic.exa.core.container.html#exatomic.exa.core.container.Container" title="exatomic.exa.core.container.Container"><code class="xref py py-class docutils literal notranslate"><span class="pre">Container</span></code></a></p>
+<p>The atomic container is called a universe because it represents everything
+known about the atomistic simulation (whether quantum or classical). This
+includes data such as atomic coordinates, molecular orbital energies, as
+well as (classical phenomena) such as two body distances, etc.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="exatomic.core.universe.Universe.frame">
+<span class="sig-name descname"><span class="pre">frame</span></span><a class="headerlink" href="#exatomic.core.universe.Universe.frame" title="Permalink to this definition"></a></dt>
+<dd><p>State variables:</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="exatomic.core.frame.html#exatomic.core.frame.Frame" title="exatomic.core.frame.Frame"><code class="xref py py-class docutils literal notranslate"><span class="pre">Frame</span></code></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="exatomic.core.universe.Universe.atom">
+<span class="sig-name descname"><span class="pre">atom</span></span><a class="headerlink" href="#exatomic.core.universe.Universe.atom" title="Permalink to this definition"></a></dt>
+<dd><p>(Classical) atomic data (e.g. coordinates)</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="exatomic.core.atom.html#exatomic.core.atom.Atom" title="exatomic.core.atom.Atom"><code class="xref py py-class docutils literal notranslate"><span class="pre">Atom</span></code></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="exatomic.core.universe.Universe.atom_two">
+<span class="sig-name descname"><span class="pre">atom_two</span></span><a class="headerlink" href="#exatomic.core.universe.Universe.atom_two" title="Permalink to this definition"></a></dt>
+<dd><p>Interatomic distances</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="exatomic.core.two.html#exatomic.core.two.AtomTwo" title="exatomic.core.two.AtomTwo"><code class="xref py py-class docutils literal notranslate"><span class="pre">AtomTwo</span></code></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="exatomic.core.universe.Universe.molecule">
+<span class="sig-name descname"><span class="pre">molecule</span></span><a class="headerlink" href="#exatomic.core.universe.Universe.molecule" title="Permalink to this definition"></a></dt>
+<dd><p>Molecule information</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="exatomic.core.molecule.html#exatomic.core.molecule.Molecule" title="exatomic.core.molecule.Molecule"><code class="xref py py-class docutils literal notranslate"><span class="pre">Molecule</span></code></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="exatomic.core.universe.Universe.orbital">
+<span class="sig-name descname"><span class="pre">orbital</span></span><a class="headerlink" href="#exatomic.core.universe.Universe.orbital" title="Permalink to this definition"></a></dt>
+<dd><p>Molecular orbital information</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="exatomic.core.orbital.html#exatomic.core.orbital.Orbital" title="exatomic.core.orbital.Orbital"><code class="xref py py-class docutils literal notranslate"><span class="pre">Orbital</span></code></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="exatomic.core.universe.Universe.momatrix">
+<span class="sig-name descname"><span class="pre">momatrix</span></span><a class="headerlink" href="#exatomic.core.universe.Universe.momatrix" title="Permalink to this definition"></a></dt>
+<dd><p>Molecular orbital coefficient matrix</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="exatomic.core.orbital.html#exatomic.core.orbital.MOMatrix" title="exatomic.core.orbital.MOMatrix"><code class="xref py py-class docutils literal notranslate"><span class="pre">MOMatrix</span></code></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="exatomic.core.universe.Universe.frequency">
+<span class="sig-name descname"><span class="pre">frequency</span></span><a class="headerlink" href="#exatomic.core.universe.Universe.frequency" title="Permalink to this definition"></a></dt>
+<dd><p>Vibrational modes and atom displacements</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="exatomic.core.atom.html#exatomic.core.atom.Frequency" title="exatomic.core.atom.Frequency"><code class="xref py py-class docutils literal notranslate"><span class="pre">Frequency</span></code></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="exatomic.core.universe.Universe.excitation">
+<span class="sig-name descname"><span class="pre">excitation</span></span><a class="headerlink" href="#exatomic.core.universe.Universe.excitation" title="Permalink to this definition"></a></dt>
+<dd><p>Electronic excitation information</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="exatomic.core.orbital.html#exatomic.core.orbital.Excitation" title="exatomic.core.orbital.Excitation"><code class="xref py py-class docutils literal notranslate"><span class="pre">Excitation</span></code></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="exatomic.core.universe.Universe.basis_set">
+<span class="sig-name descname"><span class="pre">basis_set</span></span><a class="headerlink" href="#exatomic.core.universe.Universe.basis_set" title="Permalink to this definition"></a></dt>
+<dd><p>Basis set specification</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="exatomic.core.basis.html#exatomic.core.basis.BasisSet" title="exatomic.core.basis.BasisSet"><code class="xref py py-class docutils literal notranslate"><span class="pre">BasisSet</span></code></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="exatomic.core.universe.Universe.overlap">
+<span class="sig-name descname"><span class="pre">overlap</span></span><a class="headerlink" href="#exatomic.core.universe.Universe.overlap" title="Permalink to this definition"></a></dt>
+<dd><p>The overlap matrix</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="exatomic.core.basis.html#exatomic.core.basis.Overlap" title="exatomic.core.basis.Overlap"><code class="xref py py-class docutils literal notranslate"><span class="pre">Overlap</span></code></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="exatomic.core.universe.Universe.basis_functions">
+<span class="sig-name descname"><span class="pre">basis_functions</span></span><a class="headerlink" href="#exatomic.core.universe.Universe.basis_functions" title="Permalink to this definition"></a></dt>
+<dd><p>Basis function evaluation</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="exatomic.algorithms.basis.html#exatomic.algorithms.basis.BasisFunctions" title="exatomic.algorithms.basis.BasisFunctions"><code class="xref py py-class docutils literal notranslate"><span class="pre">BasisFunctions</span></code></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="exatomic.core.universe.Universe.field">
+<span class="sig-name descname"><span class="pre">field</span></span><a class="headerlink" href="#exatomic.core.universe.Universe.field" title="Permalink to this definition"></a></dt>
+<dd><p>Scalar fields (MOs, densities, etc.)</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="exatomic.core.field.html#exatomic.core.field.AtomicField" title="exatomic.core.field.AtomicField"><code class="xref py py-class docutils literal notranslate"><span class="pre">AtomicField</span></code></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="exatomic.core.universe.Universe.current_momatrix">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">current_momatrix</span></span><a class="headerlink" href="#exatomic.core.universe.Universe.current_momatrix" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="exatomic.core.universe.Universe.current_basis_set_order">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">current_basis_set_order</span></span><a class="headerlink" href="#exatomic.core.universe.Universe.current_basis_set_order" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="exatomic.core.universe.Universe.periodic">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">periodic</span></span><a class="headerlink" href="#exatomic.core.universe.Universe.periodic" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="exatomic.core.universe.Universe.orthorhombic">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">orthorhombic</span></span><a class="headerlink" href="#exatomic.core.universe.Universe.orthorhombic" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="exatomic.core.universe.Universe.from_cclib">
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">from_cclib</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ccobj</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/exatomic/core/universe.html#Universe.from_cclib"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#exatomic.core.universe.Universe.from_cclib" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="exatomic.core.universe.Universe.compute_frame">
+<span class="sig-name descname"><span class="pre">compute_frame</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/exatomic/core/universe.html#Universe.compute_frame"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#exatomic.core.universe.Universe.compute_frame" title="Permalink to this definition"></a></dt>
+<dd><p>Compute a minmal frame table.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="exatomic.core.universe.Universe.compute_unit_atom">
+<span class="sig-name descname"><span class="pre">compute_unit_atom</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/exatomic/core/universe.html#Universe.compute_unit_atom"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#exatomic.core.universe.Universe.compute_unit_atom" title="Permalink to this definition"></a></dt>
+<dd><p>Compute minimal image for periodic systems.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="exatomic.core.universe.Universe.compute_visual_atom">
+<span class="sig-name descname"><span class="pre">compute_visual_atom</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/exatomic/core/universe.html#Universe.compute_visual_atom"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#exatomic.core.universe.Universe.compute_visual_atom" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="exatomic.core.universe.Universe.compute_atom_two">
+<span class="sig-name descname"><span class="pre">compute_atom_two</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/exatomic/core/universe.html#Universe.compute_atom_two"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#exatomic.core.universe.Universe.compute_atom_two" title="Permalink to this definition"></a></dt>
+<dd><p>Compute interatomic two body properties (e.g. bonds).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>mapper</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.11)"><em>dict</em></a>) – Custom radii to use when determining bonds</p></li>
+<li><p><strong>bond_extra</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.11)"><em>float</em></a>) – Extra additive factor to use when determining bonds</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="exatomic.core.universe.Universe.compute_bonds">
+<span class="sig-name descname"><span class="pre">compute_bonds</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/exatomic/core/universe.html#Universe.compute_bonds"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#exatomic.core.universe.Universe.compute_bonds" title="Permalink to this definition"></a></dt>
+<dd><p>Updates bonds (and molecules).</p>
+<div class="admonition seealso">
+<p class="admonition-title">See also</p>
+<p><code class="xref py py-func docutils literal notranslate"><span class="pre">compute_bonds()</span></code></p>
+</div>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="exatomic.core.universe.Universe.compute_bond_count">
+<span class="sig-name descname"><span class="pre">compute_bond_count</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/exatomic/core/universe.html#Universe.compute_bond_count"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#exatomic.core.universe.Universe.compute_bond_count" title="Permalink to this definition"></a></dt>
+<dd><p>Compute bond counts and attach them to the <code class="xref py py-class docutils literal notranslate"><span class="pre">Atom</span></code> table.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="exatomic.core.universe.Universe.compute_molecule">
+<span class="sig-name descname"><span class="pre">compute_molecule</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/exatomic/core/universe.html#Universe.compute_molecule"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#exatomic.core.universe.Universe.compute_molecule" title="Permalink to this definition"></a></dt>
+<dd><p>Compute the <code class="xref py py-class docutils literal notranslate"><span class="pre">Molecule</span></code> table.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="exatomic.core.universe.Universe.compute_molecule_com">
+<span class="sig-name descname"><span class="pre">compute_molecule_com</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/exatomic/core/universe.html#Universe.compute_molecule_com"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#exatomic.core.universe.Universe.compute_molecule_com" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="exatomic.core.universe.Universe.compute_atom_count">
+<span class="sig-name descname"><span class="pre">compute_atom_count</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/exatomic/core/universe.html#Universe.compute_atom_count"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#exatomic.core.universe.Universe.compute_atom_count" title="Permalink to this definition"></a></dt>
+<dd><p>Compute number of atoms per frame.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="exatomic.core.universe.Universe.compute_molecule_count">
+<span class="sig-name descname"><span class="pre">compute_molecule_count</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/exatomic/core/universe.html#Universe.compute_molecule_count"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#exatomic.core.universe.Universe.compute_molecule_count" title="Permalink to this definition"></a></dt>
+<dd><p>Compute number of molecules per frame.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="exatomic.core.universe.Universe.compute_basis_dims">
+<span class="sig-name descname"><span class="pre">compute_basis_dims</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/exatomic/core/universe.html#Universe.compute_basis_dims"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#exatomic.core.universe.Universe.compute_basis_dims" title="Permalink to this definition"></a></dt>
+<dd><p>Compute basis dimensions.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="exatomic.core.universe.Universe.compute_basis_functions">
+<span class="sig-name descname"><span class="pre">compute_basis_functions</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/exatomic/core/universe.html#Universe.compute_basis_functions"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#exatomic.core.universe.Universe.compute_basis_functions" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="exatomic.core.universe.Universe.compute_uncontracted_basis_set_order">
+<span class="sig-name descname"><span class="pre">compute_uncontracted_basis_set_order</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/exatomic/core/universe.html#Universe.compute_uncontracted_basis_set_order"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#exatomic.core.universe.Universe.compute_uncontracted_basis_set_order" title="Permalink to this definition"></a></dt>
+<dd><p>Compute an uncontracted basis set order.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="exatomic.core.universe.Universe.enumerate_shells">
+<span class="sig-name descname"><span class="pre">enumerate_shells</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">frame</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/exatomic/core/universe.html#Universe.enumerate_shells"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#exatomic.core.universe.Universe.enumerate_shells" title="Permalink to this definition"></a></dt>
+<dd><p>Extract minimal information from the universe to be used in
+numba-compiled numerical procedures.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">pointers</span><span class="p">,</span> <span class="n">atoms</span><span class="p">,</span> <span class="n">shells</span> <span class="o">=</span> <span class="n">uni</span><span class="o">.</span><span class="n">enumerate_shells</span><span class="p">()</span>
+</pre></div>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>frame</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.11)"><em>int</em></a>) – state of the universe (default 0)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="exatomic.core.universe.Universe.add_field">
+<span class="sig-name descname"><span class="pre">add_field</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">field</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/exatomic/core/universe.html#Universe.add_field"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#exatomic.core.universe.Universe.add_field" title="Permalink to this definition"></a></dt>
+<dd><p>Adds a field object to the universe.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Assuming field[n] is of type AtomicField</span>
+<span class="n">uni</span><span class="o">.</span><span class="n">add_field</span><span class="p">(</span><span class="n">field</span><span class="p">)</span>
+<span class="n">uni</span><span class="o">.</span><span class="n">add_field</span><span class="p">([</span><span class="n">field1</span><span class="p">,</span> <span class="n">field2</span><span class="p">])</span>
+</pre></div>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>field</strong> (iter, <a class="reference internal" href="exatomic.core.field.html#exatomic.core.field.AtomicField" title="exatomic.core.field.AtomicField"><code class="xref py py-class docutils literal notranslate"><span class="pre">exatomic.core.field.AtomicField</span></code></a>) – field(s) to add</p>
+</dd>
+</dl>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>Adding a large number of (high resolution) fields may impact performance.</p>
+</div>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="exatomic.core.universe.Universe.add_molecular_orbitals">
+<span class="sig-name descname"><span class="pre">add_molecular_orbitals</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">field_params</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mocoefs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">vector</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">frame</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">replace</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">inplace</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">verbose</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">irrep</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/exatomic/core/universe.html#Universe.add_molecular_orbitals"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#exatomic.core.universe.Universe.add_molecular_orbitals" title="Permalink to this definition"></a></dt>
+<dd><p>Add molecular orbitals to universe.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">uni</span><span class="o">.</span><span class="n">add_molecular_orbitals</span><span class="p">()</span>                  <span class="c1"># Default around (HOMO-5, LUMO+7)</span>
+<span class="n">uni</span><span class="o">.</span><span class="n">add_molecular_orbitals</span><span class="p">(</span><span class="n">vector</span><span class="o">=</span><span class="nb">range</span><span class="p">(</span><span class="mi">5</span><span class="p">))</span>   <span class="c1"># Specifies the first 5 MOs</span>
+<span class="n">uni</span><span class="o">.</span><span class="n">add_molecular_orbitals</span><span class="p">(</span>                   <span class="c1"># Higher resolution fields</span>
+    <span class="n">field_params</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;rmin&#39;</span><span class="p">:</span> <span class="o">-</span><span class="mi">10</span><span class="p">,</span>                <span class="c1"># smallest value in &#39;x&#39;, &#39;y&#39;, &#39;z&#39;</span>
+                  <span class="s1">&#39;rmax&#39;</span><span class="p">:</span> <span class="mi">10</span><span class="p">,</span>                 <span class="c1"># largest value in &#39;x&#39;, &#39;y&#39;, &#39;z&#39;</span>
+                  <span class="s1">&#39;nr&#39;</span><span class="p">:</span> <span class="mi">100</span><span class="p">})</span>                 <span class="c1"># number of points between rmin and rmax</span>
+<span class="n">uni</span><span class="o">.</span><span class="n">field</span>                                     <span class="c1"># The field parameters</span>
+<span class="n">uni</span><span class="o">.</span><span class="n">field</span><span class="o">.</span><span class="n">field_values</span>                        <span class="c1"># The generated scalar fields</span>
+</pre></div>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>field_params</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.11)"><em>dict</em></a><em>, </em><em>pd.Series</em>) – see <a class="reference internal" href="exatomic.algorithms.orbital_util.html#exatomic.algorithms.orbital_util.make_fps" title="exatomic.algorithms.orbital_util.make_fps"><code class="xref py py-func docutils literal notranslate"><span class="pre">exatomic.algorithms.orbital_util.make_fps()</span></code></a></p></li>
+<li><p><strong>mocoefs</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.11)"><em>str</em></a>) – column in <a class="reference internal" href="exatomic.core.orbital.html#exatomic.core.orbital.MOMatrix" title="exatomic.core.orbital.MOMatrix"><code class="xref py py-class docutils literal notranslate"><span class="pre">MOMatrix</span></code></a></p></li>
+<li><p><strong>vector</strong> (<em>iter</em>) – indices of orbitals to evaluate (0-based)</p></li>
+<li><p><strong>frame</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.11)"><em>int</em></a>) – frame of atomic positions for the orbitals</p></li>
+<li><p><strong>replace</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.11)"><em>bool</em></a>) – remove previous fields (default False)</p></li>
+<li><p><strong>inplace</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.11)"><em>bool</em></a>) – add directly to uni or return <a class="reference internal" href="exatomic.core.field.html#exatomic.core.field.AtomicField" title="exatomic.core.field.AtomicField"><code class="xref py py-class docutils literal notranslate"><span class="pre">AtomicField</span></code></a> (default True)</p></li>
+<li><p><strong>verbose</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.11)"><em>bool</em></a>) – print timing statistics (default True)</p></li>
+<li><p><strong>irrep</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.11)"><em>int</em></a>) – irreducible representation</p></li>
+</ul>
+</dd>
+</dl>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>Default behavior just continually adds fields to the universe.  This can
+affect performance if adding many fields. <cite>replace</cite> modifies this behavior.</p>
+</div>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>Specifying very high resolution field parameters, e.g. ‘nr’ &gt; 100
+may slow things down and/or crash the kernel.  Use with caution.</p>
+</div>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="exatomic.core.universe.Universe.write_cube">
+<span class="sig-name descname"><span class="pre">write_cube</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">file_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'output'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">field_number</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/exatomic/core/universe.html#Universe.write_cube"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#exatomic.core.universe.Universe.write_cube" title="Permalink to this definition"></a></dt>
+<dd><p>Write to a file in cube format for a single 3D scalar field in universe object.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">uni</span><span class="o">.</span><span class="n">add_molecular_orbitals</span><span class="p">()</span>                  <span class="c1"># Default around (HOMO-5, LUMO+7)</span>
+<span class="n">uni</span><span class="o">.</span><span class="n">write_cube</span><span class="p">(</span><span class="s1">&#39;cubefile&#39;</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>                    <span class="c1"># write to cubefile.cube for HOMO-5</span>
+</pre></div>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>file_name</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.11)"><em>str</em></a>) – name of the output file without file extension</p></li>
+<li><p><strong>field_number</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.11)"><em>int</em></a>) – number of the single field starting with 0</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="id0">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">atom</span></span><a class="headerlink" href="#id0" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="id1">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">atom_two</span></span><a class="headerlink" href="#id1" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="exatomic.core.universe.Universe.basis_dims">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">basis_dims</span></span><a class="headerlink" href="#exatomic.core.universe.Universe.basis_dims" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="id2">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">basis_functions</span></span><a class="headerlink" href="#id2" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="id3">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">basis_set</span></span><a class="headerlink" href="#id3" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="exatomic.core.universe.Universe.basis_set_order">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">basis_set_order</span></span><a class="headerlink" href="#exatomic.core.universe.Universe.basis_set_order" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="exatomic.core.universe.Universe.cart_basis_set_order">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">cart_basis_set_order</span></span><a class="headerlink" href="#exatomic.core.universe.Universe.cart_basis_set_order" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="exatomic.core.universe.Universe.cart_momatrix">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">cart_momatrix</span></span><a class="headerlink" href="#exatomic.core.universe.Universe.cart_momatrix" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="exatomic.core.universe.Universe.contribution">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">contribution</span></span><a class="headerlink" href="#exatomic.core.universe.Universe.contribution" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="exatomic.core.universe.Universe.density">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">density</span></span><a class="headerlink" href="#exatomic.core.universe.Universe.density" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="id4">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">excitation</span></span><a class="headerlink" href="#id4" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="id5">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">field</span></span><a class="headerlink" href="#id5" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="id6">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">frame</span></span><a class="headerlink" href="#id6" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="id7">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">frequency</span></span><a class="headerlink" href="#id7" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="id8">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">molecule</span></span><a class="headerlink" href="#id8" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="exatomic.core.universe.Universe.molecule_two">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">molecule_two</span></span><a class="headerlink" href="#exatomic.core.universe.Universe.molecule_two" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="id9">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">momatrix</span></span><a class="headerlink" href="#id9" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="exatomic.core.universe.Universe.multipole">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">multipole</span></span><a class="headerlink" href="#exatomic.core.universe.Universe.multipole" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="id10">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">orbital</span></span><a class="headerlink" href="#id10" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="id11">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">overlap</span></span><a class="headerlink" href="#id11" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="exatomic.core.universe.Universe.projected_atom">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">projected_atom</span></span><a class="headerlink" href="#exatomic.core.universe.Universe.projected_atom" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="exatomic.core.universe.Universe.sphr_basis_set_order">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">sphr_basis_set_order</span></span><a class="headerlink" href="#exatomic.core.universe.Universe.sphr_basis_set_order" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="exatomic.core.universe.Universe.sphr_momatrix">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">sphr_momatrix</span></span><a class="headerlink" href="#exatomic.core.universe.Universe.sphr_momatrix" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="exatomic.core.universe.Universe.tensor">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">tensor</span></span><a class="headerlink" href="#exatomic.core.universe.Universe.tensor" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="exatomic.core.universe.Universe.uncontracted_basis_set_order">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">uncontracted_basis_set_order</span></span><a class="headerlink" href="#exatomic.core.universe.Universe.uncontracted_basis_set_order" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="exatomic.core.universe.Universe.unit_atom">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">unit_atom</span></span><a class="headerlink" href="#exatomic.core.universe.Universe.unit_atom" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="exatomic.core.universe.Universe.visual_atom">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">visual_atom</span></span><a class="headerlink" href="#exatomic.core.universe.Universe.visual_atom" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="exatomic.core.universe.concat">
+<span class="sig-prename descclassname"><span class="pre">exatomic.core.universe.</span></span><span class="sig-name descname"><span class="pre">concat</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">description</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">meta</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">universes</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/exatomic/core/universe.html#concat"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#exatomic.core.universe.concat" title="Permalink to this definition"></a></dt>
+<dd><div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>This function is not fully featured or tested yet!</p>
+</div>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="exatomic.core.universe.basis_function_contributions">
+<span class="sig-prename descclassname"><span class="pre">exatomic.core.universe.</span></span><span class="sig-name descname"><span class="pre">basis_function_contributions</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">universe</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mo</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mocoefs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'coef'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tol</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.01</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ao</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">frame</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/exatomic/core/universe.html#basis_function_contributions"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#exatomic.core.universe.basis_function_contributions" title="Permalink to this definition"></a></dt>
+<dd><p>Provided a universe with momatrix and basis_set_order attributes,
+return the major basis function contributions of a particular
+molecular orbital.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># display the 16th orbital coefficients &gt; abs(0.15)</span>
+<span class="n">basis_function_contributions</span><span class="p">(</span><span class="n">uni</span><span class="p">,</span> <span class="mi">15</span><span class="p">,</span> <span class="n">tol</span><span class="o">=</span><span class="mf">0.15</span><span class="p">)</span> <span class="c1"># 0-based indexing!</span>
+</pre></div>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>(</strong><strong>class</strong> (<em>universe</em>) – <cite>exatomic.core.universe.Universe</cite>): a universe</p></li>
+<li><p><strong>mo</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.11)"><em>int</em></a>) – molecular orbital index</p></li>
+<li><p><strong>mocoefs</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.11)"><em>str</em></a>) – column of interest in universe.momatrix</p></li>
+<li><p><strong>tol</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.11)"><em>float</em></a>) – minimum value of coefficient by which to filter</p></li>
+<li><p><strong>frame</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.11)"><em>int</em></a>) – frame of the universe (default is zero)</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><em>joined (pd.DataFrame)</em> – a join of momatrix and basis_set_order</p>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="exatomic.core.two.html" class="btn btn-neutral float-left" title="exatomic.core.two module" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="exatomic.exa.html" class="btn btn-neutral float-right" title="exatomic.exa package" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright .
+      <span class="lastupdated">Last updated on Apr 21, 2023.
+      </span></p>
+  </div>
+
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

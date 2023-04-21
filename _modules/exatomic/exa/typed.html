@@ -1,0 +1,387 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>exatomic.exa.typed &mdash; exatomic 0.6.0 documentation</title>
+      <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="../../../" id="documentation_options" src="../../../_static/documentation_options.js"></script>
+        <script src="../../../_static/doctools.js"></script>
+        <script src="../../../_static/sphinx_highlight.js"></script>
+        <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../index.html" class="icon icon-home">
+            exatomic
+              <img src="../../../_static/logo.png" class="logo" alt="Logo"/>
+          </a>
+              <div class="version">
+                0.6.0
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Sitemap</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../install.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../started.html">Getting Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../contrib.html">Development</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../exatomic.html">exatomic package</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">exatomic</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../index.html">Module code</a></li>
+          <li class="breadcrumb-item"><a href="../../exatomic.html">exatomic</a></li>
+      <li class="breadcrumb-item active">exatomic.exa.typed</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for exatomic.exa.typed</h1><div class="highlight"><pre>
+<span></span><span class="c1"># -*- coding: utf-8 -*-</span>
+<span class="c1"># Copyright (c) 2015-2022, Exa Analytics Development Team</span>
+<span class="c1"># Distributed under the terms of the Apache License 2.0</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Strongly Typed Class Attributes</span>
+<span class="sd">######################################</span>
+<span class="sd">This module provides a typed attribute class and class decorator/base class for</span>
+<span class="sd">creating classes with type enforced attributes. Enforcing an attribute&#39;s type is</span>
+<span class="sd">handled by Python&#39;s property mechanism (the property&#39;s set function checks the</span>
+<span class="sd">value&#39;s type). A simple usage example follows.</span>
+
+<span class="sd">.. code-block:: Python</span>
+
+<span class="sd">    @typed</span>
+<span class="sd">    class Foo(object):</span>
+<span class="sd">        bar = Typed(int, doc=&quot;Always an integer type&quot;)</span>
+
+<span class="sd">The simple code example generates code similar to the following when the module</span>
+<span class="sd">is executed (i.e. imported).</span>
+
+<span class="sd">.. code-block:: python</span>
+
+<span class="sd">    class Foo(object):</span>
+<span class="sd">        @property</span>
+<span class="sd">        def bar(self):</span>
+<span class="sd">            return self._bar</span>
+
+<span class="sd">        @bar.setter</span>
+<span class="sd">        def bar(self, value):</span>
+<span class="sd">            if not isinstance(value, int):</span>
+<span class="sd">                try:</span>
+<span class="sd">                    value = int(value)</span>
+<span class="sd">                except Exception as e:</span>
+<span class="sd">                    raise TypeError(&quot;Cannot convert value&quot;) from e</span>
+<span class="sd">            self._bar = value</span>
+
+<span class="sd">The :class:`~exatomic.exa.typed.Typed` object additionally provides mechanisms for</span>
+<span class="sd">triggering function calls before and after get, set, and delete, and attempts</span>
+<span class="sd">automatic conversion (as shown above) for all types supported for a given</span>
+<span class="sd">attribute.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
+<span class="kn">import</span> <span class="nn">warnings</span>
+
+
+<span class="k">def</span> <span class="nf">_typed_from_items</span><span class="p">(</span><span class="n">items</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Construct strongly typed attributes (properties) from a dictionary of</span>
+<span class="sd">    name and :class:`~exatomic.exa.typed.Typed` object pairs.</span>
+
+<span class="sd">    See Also:</span>
+<span class="sd">        :func:`~exatomic.exa.typed.typed`</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">dct</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">attr</span> <span class="ow">in</span> <span class="n">items</span><span class="p">:</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">attr</span><span class="p">,</span> <span class="n">Typed</span><span class="p">):</span>
+            <span class="n">dct</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">attr</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">dct</span>
+
+
+<div class="viewcode-block" id="typed"><a class="viewcode-back" href="../../../exatomic.exa.typed.html#exatomic.exa.typed.typed">[docs]</a><span class="k">def</span> <span class="nf">typed</span><span class="p">(</span><span class="bp">cls</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Class decorator that updates a class definition with strongly typed</span>
+<span class="sd">    property attributes.</span>
+
+<span class="sd">    See Also:</span>
+<span class="sd">        If the class will be inherited, use :class:`~exatomic.exa.typed.TypedClass`.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">attr</span> <span class="ow">in</span> <span class="n">_typed_from_items</span><span class="p">(</span><span class="nb">vars</span><span class="p">(</span><span class="bp">cls</span><span class="p">)</span><span class="o">.</span><span class="n">items</span><span class="p">())</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+        <span class="nb">setattr</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">attr</span><span class="p">)</span>
+    <span class="k">return</span> <span class="bp">cls</span></div>
+
+
+<div class="viewcode-block" id="yield_typed"><a class="viewcode-back" href="../../../exatomic.exa.typed.html#exatomic.exa.typed.yield_typed">[docs]</a><span class="k">def</span> <span class="nf">yield_typed</span><span class="p">(</span><span class="n">obj_or_cls</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Generator that yields typed object names of the class (or object&#39;s class).</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        obj_or_cls (object): Class object or instance of class</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        name (array): Names of class attributes that are strongly typed</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">obj_or_cls</span><span class="p">,</span> <span class="nb">type</span><span class="p">):</span>
+        <span class="n">obj_or_cls</span> <span class="o">=</span> <span class="nb">type</span><span class="p">(</span><span class="n">obj_or_cls</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">attrname</span> <span class="ow">in</span> <span class="nb">dir</span><span class="p">(</span><span class="n">obj_or_cls</span><span class="p">):</span>
+        <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">obj_or_cls</span><span class="p">,</span> <span class="n">attrname</span><span class="p">):</span>
+            <span class="n">attr</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">obj_or_cls</span><span class="p">,</span> <span class="n">attrname</span><span class="p">)</span>
+            <span class="c1"># !!! Important hardcoded value here !!!</span>
+            <span class="k">if</span> <span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">attr</span><span class="p">,</span> <span class="nb">property</span><span class="p">)</span> <span class="ow">and</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">attr</span><span class="o">.</span><span class="vm">__doc__</span><span class="p">,</span> <span class="nb">str</span><span class="p">)</span>
+                <span class="ow">and</span> <span class="s2">&quot;__typed__&quot;</span> <span class="ow">in</span> <span class="n">attr</span><span class="o">.</span><span class="vm">__doc__</span><span class="p">):</span>
+                <span class="k">yield</span> <span class="n">attrname</span></div>
+
+
+<div class="viewcode-block" id="Typed"><a class="viewcode-back" href="../../../exatomic.exa.typed.html#exatomic.exa.typed.Typed">[docs]</a><span class="k">class</span> <span class="nc">Typed</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    A representation of a strongly typed class attribute.</span>
+
+<span class="sd">    .. code-block:: Python</span>
+
+<span class="sd">        @typed</span>
+<span class="sd">        class Strong(object):</span>
+<span class="sd">            foo = Typed(int, doc=&quot;my int&quot;)</span>
+
+<span class="sd">    The above example creates a class object that has a property-like attribute</span>
+<span class="sd">    which requires its value to be of type int. Additional arguments provide</span>
+<span class="sd">    the ability to have the property&#39;s getter, setter, and deleter functions call</span>
+<span class="sd">    other functions or methods of the class. If provided by the class, strongly</span>
+<span class="sd">    typed attributes created by here automatically attempt to to set themselves</span>
+<span class="sd">    (see below).</span>
+
+<span class="sd">    .. code-block:: Python</span>
+
+<span class="sd">        @typed</span>
+<span class="sd">        class Strong(object):</span>
+<span class="sd">            _setters = (&quot;_set&quot;, )</span>
+<span class="sd">            foo = Typed(int, doc=&quot;my int&quot;)</span>
+
+<span class="sd">            def _set_foo(self):</span>
+<span class="sd">                self.foo = 42</span>
+
+<span class="sd">    By defining a `_getters` class attribute the strongly typed property knows that,</span>
+<span class="sd">    if the foo attribute&#39;s value (i.e. `_foo`) is not defined (or is defined as None),</span>
+<span class="sd">    that the property getter should first call the `_set_foo` class method, and after</span>
+<span class="sd">    it should proceed with getting the property value. Note that `_set_foo` cannot</span>
+<span class="sd">    accept arguments (it must be &#39;automatic&#39;).</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        types (iterable, type): Iterable of types or type</span>
+<span class="sd">        doc (str): Documentation</span>
+<span class="sd">        autoconv (bool): Attempt automatic type conversion when setting (default true)</span>
+<span class="sd">        allow_none (bool): As an additional type, allow None (default true)</span>
+<span class="sd">        pre_set (callable, str): Callable or class method name called before setter</span>
+<span class="sd">        post_set (callable, str): Callabel or class method name called after setter</span>
+<span class="sd">        pre_get (callable, str): Callable or class method name called before getter</span>
+<span class="sd">        pre_del (callable, str): Callable or class method name called before setter</span>
+<span class="sd">        post_del (callable, str): Callabel or class method name called after setter</span>
+
+<span class="sd">    Warning:</span>
+<span class="sd">        Automatic type conversion (autoconv = true) is not guaranteed to work in</span>
+<span class="sd">        all cases and is known to fail for non-Python objects such as numpy</span>
+<span class="sd">        ndarray types: Setting **autoconv** to false is recommened for these cases.</span>
+
+<span class="sd">        .. code-block:: python</span>
+
+<span class="sd">            Typed(np.ndarray, autoconv=False)    # Do not attempt auto conversion</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Construct the property.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            name (str): Attribute (property) name</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            prop (property): Custom property definition with support for typing</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">priv</span> <span class="o">=</span> <span class="s2">&quot;_&quot;</span> <span class="o">+</span> <span class="n">name</span>    <span class="c1"># Reference to the variable&#39;s value</span>
+
+        <span class="c1"># The following is a definition of a Python property. Properties have</span>
+        <span class="c1"># get, set, and delete functions as well as documentation. The variable</span>
+        <span class="c1"># &quot;this&quot; references the class object instance where the property exists;</span>
+        <span class="c1"># it does not reference the instance of this (&quot;Typed&quot;) class.</span>
+        <span class="k">def</span> <span class="nf">getter</span><span class="p">(</span><span class="n">this</span><span class="p">):</span>
+            <span class="c1"># If the variable value (reference by priv) does not exist</span>
+            <span class="c1"># or is None AND the class has some automatic way of setting the value,</span>
+            <span class="c1"># set the value first then proceed to getting it.</span>
+            <span class="k">if</span> <span class="p">((</span><span class="ow">not</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">this</span><span class="p">,</span> <span class="n">priv</span><span class="p">)</span> <span class="ow">or</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">this</span><span class="p">,</span> <span class="n">priv</span><span class="p">)</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">)</span> <span class="ow">and</span>
+                <span class="nb">hasattr</span><span class="p">(</span><span class="n">this</span><span class="p">,</span> <span class="s2">&quot;_setters&quot;</span><span class="p">)</span> <span class="ow">and</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">this</span><span class="o">.</span><span class="n">_setters</span><span class="p">,</span> <span class="p">(</span><span class="nb">list</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">))):</span>
+                <span class="k">for</span> <span class="n">prefix</span> <span class="ow">in</span> <span class="n">this</span><span class="o">.</span><span class="n">_setters</span><span class="p">:</span>
+                    <span class="n">cmd</span> <span class="o">=</span> <span class="s2">&quot;</span><span class="si">{}{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">prefix</span><span class="p">,</span> <span class="n">priv</span><span class="p">)</span>
+                    <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">this</span><span class="p">,</span> <span class="n">cmd</span><span class="p">):</span>
+                        <span class="nb">getattr</span><span class="p">(</span><span class="n">this</span><span class="p">,</span> <span class="n">cmd</span><span class="p">)()</span>    <span class="c1"># Automatic method call</span>
+                        <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">this</span><span class="p">,</span> <span class="n">priv</span><span class="p">):</span>
+                            <span class="k">break</span>
+            <span class="c1"># Perform pre-get actions (if any)</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">pre_get</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+                <span class="nb">getattr</span><span class="p">(</span><span class="n">this</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">pre_get</span><span class="p">)()</span>
+            <span class="k">elif</span> <span class="nb">callable</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">pre_get</span><span class="p">):</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">pre_get</span><span class="p">(</span><span class="n">this</span><span class="p">)</span>
+            <span class="k">return</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">this</span><span class="p">,</span> <span class="n">priv</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>    <span class="c1"># Returns None by default</span>
+
+        <span class="k">def</span> <span class="nf">setter</span><span class="p">(</span><span class="n">this</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
+            <span class="c1"># If auto-conversion is on and the value is not the correct type (and</span>
+            <span class="c1"># also is not None), attempt to convert types</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">autoconv</span> <span class="ow">and</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">types</span><span class="p">)</span> <span class="ow">and</span> <span class="n">value</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">types</span><span class="p">:</span>
+                    <span class="k">try</span><span class="p">:</span>
+                        <span class="n">value</span> <span class="o">=</span> <span class="n">t</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+                        <span class="k">break</span>
+                    <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>    <span class="c1"># Catch all exceptions but if conversion fails ...</span>
+                        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">verbose</span><span class="p">:</span>
+                            <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="s2">&quot;Conversion of </span><span class="si">{}</span><span class="s2"> (with type </span><span class="si">{}</span><span class="s2">) failed to type </span><span class="si">{}</span><span class="se">\n</span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="nb">type</span><span class="p">(</span><span class="n">value</span><span class="p">),</span> <span class="n">t</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">)))</span>
+                <span class="k">else</span><span class="p">:</span>          <span class="c1"># ... raise a TypeError</span>
+                    <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;Cannot convert object of type </span><span class="si">{}</span><span class="s2"> to any of </span><span class="si">{}</span><span class="s2">.&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">value</span><span class="p">),</span> <span class="bp">self</span><span class="o">.</span><span class="n">types</span><span class="p">))</span>
+            <span class="c1"># If the value is none and none is not allowed,</span>
+            <span class="c1"># or the value is some other type (that is not none) and not of a type</span>
+            <span class="c1"># that is allowed, raise an error.</span>
+            <span class="k">elif</span> <span class="p">((</span><span class="n">value</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">allow_none</span> <span class="o">==</span> <span class="kc">False</span><span class="p">)</span> <span class="ow">or</span>
+                  <span class="p">(</span><span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">types</span><span class="p">)</span> <span class="ow">and</span> <span class="n">value</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">)):</span>
+                <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;Object &#39;</span><span class="si">{}</span><span class="s2">&#39; cannot have type </span><span class="si">{}</span><span class="s2">, must be of type(s) </span><span class="si">{}</span><span class="s2">.&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="nb">type</span><span class="p">(</span><span class="n">value</span><span class="p">),</span> <span class="bp">self</span><span class="o">.</span><span class="n">types</span><span class="p">))</span>
+            <span class="c1"># Perform pre-set actions (if any)</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">pre_set</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+                <span class="nb">getattr</span><span class="p">(</span><span class="n">this</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">pre_set</span><span class="p">)()</span>
+            <span class="k">elif</span> <span class="nb">callable</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">pre_set</span><span class="p">):</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">pre_set</span><span class="p">(</span><span class="n">this</span><span class="p">)</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">this</span><span class="p">,</span> <span class="p">(</span><span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span> <span class="p">)):</span>
+                <span class="n">this</span><span class="p">[</span><span class="n">priv</span><span class="p">]</span> <span class="o">=</span> <span class="n">value</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="nb">setattr</span><span class="p">(</span><span class="n">this</span><span class="p">,</span> <span class="n">priv</span><span class="p">,</span> <span class="n">value</span><span class="p">)</span>    <span class="c1"># Set the property value</span>
+            <span class="c1"># Perform post-set actions (if any)</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">post_set</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+                <span class="nb">getattr</span><span class="p">(</span><span class="n">this</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">post_set</span><span class="p">)()</span>
+            <span class="k">elif</span> <span class="nb">callable</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">post_set</span><span class="p">):</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">post_set</span><span class="p">(</span><span class="n">this</span><span class="p">)</span>
+
+        <span class="k">def</span> <span class="nf">deleter</span><span class="p">(</span><span class="n">this</span><span class="p">):</span>
+            <span class="c1"># Perform pre-del actions (if any)</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">pre_del</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+                <span class="nb">getattr</span><span class="p">(</span><span class="n">this</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">pre_del</span><span class="p">)()</span>
+            <span class="k">elif</span> <span class="nb">callable</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">pre_del</span><span class="p">):</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">pre_del</span><span class="p">(</span><span class="n">this</span><span class="p">)</span>
+            <span class="nb">delattr</span><span class="p">(</span><span class="n">this</span><span class="p">,</span> <span class="n">priv</span><span class="p">)</span>    <span class="c1"># Delete the attribute (allows for dynamic naming)</span>
+            <span class="c1"># Perform post-del actions (if any)</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">post_del</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+                <span class="nb">getattr</span><span class="p">(</span><span class="n">this</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">post_del</span><span class="p">)()</span>
+            <span class="k">elif</span> <span class="nb">callable</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">post_del</span><span class="p">):</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">post_del</span><span class="p">(</span><span class="n">this</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="nb">property</span><span class="p">(</span><span class="n">getter</span><span class="p">,</span> <span class="n">setter</span><span class="p">,</span> <span class="n">deleter</span><span class="p">,</span> <span class="n">doc</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">doc</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">types</span><span class="p">,</span> <span class="n">doc</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">autoconv</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">pre_set</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">allow_none</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                 <span class="n">post_set</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">pre_get</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">pre_del</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">post_del</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">types</span> <span class="o">=</span> <span class="n">types</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">types</span><span class="p">,</span> <span class="p">(</span><span class="nb">tuple</span><span class="p">,</span> <span class="nb">list</span><span class="p">))</span> <span class="k">else</span> <span class="p">(</span><span class="n">types</span><span class="p">,</span> <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">doc</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">doc</span><span class="p">)</span> <span class="o">+</span> <span class="s2">&quot;</span><span class="se">\n\n</span><span class="s2">__typed__&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">autoconv</span> <span class="o">=</span> <span class="n">autoconv</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">allow_none</span> <span class="o">=</span> <span class="n">allow_none</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">pre_set</span> <span class="o">=</span> <span class="n">pre_set</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">post_set</span> <span class="o">=</span> <span class="n">post_set</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">pre_get</span> <span class="o">=</span> <span class="n">pre_get</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">pre_del</span> <span class="o">=</span> <span class="n">pre_del</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">post_del</span> <span class="o">=</span> <span class="n">post_del</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">verbose</span> <span class="o">=</span> <span class="n">verbose</span></div>
+
+
+<div class="viewcode-block" id="TypedMeta"><a class="viewcode-back" href="../../../exatomic.exa.typed.html#exatomic.exa.typed.TypedMeta">[docs]</a><span class="k">class</span> <span class="nc">TypedMeta</span><span class="p">(</span><span class="nb">type</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    A metaclass for creating typed attributes which can be used instead of</span>
+<span class="sd">    the class decorator.</span>
+
+<span class="sd">    .. code-block:: Python</span>
+
+<span class="sd">        class Foo(metaclass=TypedMeta):</span>
+<span class="sd">            bar = Typed(int, doc=&quot;Always an int&quot;)</span>
+
+<span class="sd">    See Also:</span>
+<span class="sd">        :func:`~exatomic.exa.typed.typed` and :mod:`~exatomic.exa.core.data`</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="fm">__new__</span><span class="p">(</span><span class="n">mcs</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">bases</span><span class="p">,</span> <span class="n">namespace</span><span class="p">):</span>
+        <span class="n">namespace</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">_typed_from_items</span><span class="p">(</span><span class="n">namespace</span><span class="o">.</span><span class="n">items</span><span class="p">()))</span>
+        <span class="k">return</span> <span class="nb">super</span><span class="p">(</span><span class="n">TypedMeta</span><span class="p">,</span> <span class="n">mcs</span><span class="p">)</span><span class="o">.</span><span class="fm">__new__</span><span class="p">(</span><span class="n">mcs</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">bases</span><span class="p">,</span> <span class="n">namespace</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="TypedClass"><a class="viewcode-back" href="../../../exatomic.exa.typed.html#exatomic.exa.typed.TypedClass">[docs]</a><span class="k">class</span> <span class="nc">TypedClass</span><span class="p">(</span><span class="n">metaclass</span><span class="o">=</span><span class="n">TypedMeta</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    A mixin class which can be used to create a class with strongly typed</span>
+<span class="sd">    attributes.</span>
+
+<span class="sd">    .. code-block:: Python</span>
+
+<span class="sd">        class Foo(TypedClass):</span>
+<span class="sd">            bar = Typed(int, doc=&quot;Still an int&quot;)</span>
+
+<span class="sd">    See Also:</span>
+<span class="sd">        :func:`~exatomic.exa.typed.typed`</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">pass</span></div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright .
+      <span class="lastupdated">Last updated on Apr 21, 2023.
+      </span></p>
+  </div>
+
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

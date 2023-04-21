@@ -1,0 +1,25 @@
+exatomic.exa package
+====================
+
+.. automodule:: exatomic.exa
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+Subpackages
+-----------
+
+.. toctree::
+   :maxdepth: 4
+
+   exatomic.exa.core
+   exatomic.exa.util
+
+Submodules
+----------
+
+.. toctree::
+   :maxdepth: 4
+
+   exatomic.exa.static
+   exatomic.exa.typed

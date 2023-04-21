@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>exatomic.widgets package &mdash; exatomic 0.6.0 documentation</title>
+      <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+        <script src="_static/doctools.js"></script>
+        <script src="_static/sphinx_highlight.js"></script>
+        <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="exatomic.widgets.traits module" href="exatomic.widgets.traits.html" />
+    <link rel="prev" title="exatomic.util.conversions module" href="exatomic.util.conversions.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            exatomic
+              <img src="_static/logo.png" class="logo" alt="Logo"/>
+          </a>
+              <div class="version">
+                0.6.0
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Sitemap</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="install.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="started.html">Getting Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="contrib.html">Development</a></li>
+</ul>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="exatomic.html">exatomic package</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="exatomic.html#supported-software">Supported Software</a></li>
+<li class="toctree-l2"><a class="reference internal" href="exatomic.html#exatomic.func_log"><code class="docutils literal notranslate"><span class="pre">func_log()</span></code></a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="exatomic.html#subpackages">Subpackages</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="exatomic.adf.html">exatomic.adf package</a></li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.algorithms.html">exatomic.algorithms package</a></li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.core.html">exatomic.core package</a></li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.exa.html">exatomic.exa package</a></li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.gaussian.html">exatomic.gaussian package</a></li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.interfaces.html">exatomic.interfaces package</a></li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.molcas.html">exatomic.molcas package</a></li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.nbo.html">exatomic.nbo package</a></li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.nwchem.html">exatomic.nwchem package</a></li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.plotter.html">exatomic.plotter package</a></li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.qchem.html">exatomic.qchem package</a></li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.qe.html">exatomic.qe package</a></li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.util.html">exatomic.util package</a></li>
+<li class="toctree-l3 current"><a class="current reference internal" href="#">exatomic.widgets package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#submodules">Submodules</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="exatomic.html#submodules">Submodules</a></li>
+</ul>
+</li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">exatomic</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="exatomic.html">exatomic package</a></li>
+      <li class="breadcrumb-item active">exatomic.widgets package</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/exatomic.widgets.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="module-exatomic.widgets">
+<span id="exatomic-widgets-package"></span><h1>exatomic.widgets package<a class="headerlink" href="#module-exatomic.widgets" title="Permalink to this heading"></a></h1>
+<section id="submodules">
+<h2>Submodules<a class="headerlink" href="#submodules" title="Permalink to this heading"></a></h2>
+<div class="toctree-wrapper compound">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="exatomic.widgets.traits.html">exatomic.widgets.traits module</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="exatomic.widgets.traits.html#universe-trait-functions">Universe trait functions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="exatomic.widgets.traits.html#exatomic.widgets.traits.atom_traits"><code class="docutils literal notranslate"><span class="pre">atom_traits()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="exatomic.widgets.traits.html#exatomic.widgets.traits.field_traits"><code class="docutils literal notranslate"><span class="pre">field_traits()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="exatomic.widgets.traits.html#exatomic.widgets.traits.two_traits"><code class="docutils literal notranslate"><span class="pre">two_traits()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="exatomic.widgets.traits.html#exatomic.widgets.traits.frame_traits"><code class="docutils literal notranslate"><span class="pre">frame_traits()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="exatomic.widgets.traits.html#exatomic.widgets.traits.tensor_traits"><code class="docutils literal notranslate"><span class="pre">tensor_traits()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="exatomic.widgets.traits.html#exatomic.widgets.traits.uni_traits"><code class="docutils literal notranslate"><span class="pre">uni_traits()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="exatomic.widgets.widget.html">exatomic.widgets.widget module</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="exatomic.widgets.widget.html#universe-notebook-widget">Universe Notebook Widget</a></li>
+<li class="toctree-l2"><a class="reference internal" href="exatomic.widgets.widget.html#exatomic.widgets.widget.DemoContainer"><code class="docutils literal notranslate"><span class="pre">DemoContainer</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="exatomic.widgets.widget.html#exatomic.widgets.widget.TensorContainer"><code class="docutils literal notranslate"><span class="pre">TensorContainer</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="exatomic.widgets.widget.html#exatomic.widgets.widget.DemoUniverse"><code class="docutils literal notranslate"><span class="pre">DemoUniverse</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="exatomic.widgets.widget.html#exatomic.widgets.widget.UniverseWidget"><code class="docutils literal notranslate"><span class="pre">UniverseWidget</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="exatomic.widgets.widget_base.html">exatomic.widgets.widget_base module</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="exatomic.widgets.widget_base.html#lower-level-widgets">Lower Level Widgets</a></li>
+<li class="toctree-l2"><a class="reference internal" href="exatomic.widgets.widget_base.html#exatomic.widgets.widget_base.ExatomicScene"><code class="docutils literal notranslate"><span class="pre">ExatomicScene</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.widgets.widget_base.html#exatomic.widgets.widget_base.ExatomicScene.savedir"><code class="docutils literal notranslate"><span class="pre">ExatomicScene.savedir</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.widgets.widget_base.html#exatomic.widgets.widget_base.ExatomicScene.imgname"><code class="docutils literal notranslate"><span class="pre">ExatomicScene.imgname</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.widgets.widget_base.html#exatomic.widgets.widget_base.ExatomicScene.index"><code class="docutils literal notranslate"><span class="pre">ExatomicScene.index</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.widgets.widget_base.html#exatomic.widgets.widget_base.ExatomicScene.cameras"><code class="docutils literal notranslate"><span class="pre">ExatomicScene.cameras</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.widgets.widget_base.html#exatomic.widgets.widget_base.ExatomicScene.save_cam"><code class="docutils literal notranslate"><span class="pre">ExatomicScene.save_cam</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.widgets.widget_base.html#exatomic.widgets.widget_base.ExatomicScene.clear"><code class="docutils literal notranslate"><span class="pre">ExatomicScene.clear</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.widgets.widget_base.html#exatomic.widgets.widget_base.ExatomicScene.save"><code class="docutils literal notranslate"><span class="pre">ExatomicScene.save</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.widgets.widget_base.html#exatomic.widgets.widget_base.ExatomicScene.w"><code class="docutils literal notranslate"><span class="pre">ExatomicScene.w</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.widgets.widget_base.html#exatomic.widgets.widget_base.ExatomicScene.h"><code class="docutils literal notranslate"><span class="pre">ExatomicScene.h</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.widgets.widget_base.html#exatomic.widgets.widget_base.ExatomicScene.field_pos"><code class="docutils literal notranslate"><span class="pre">ExatomicScene.field_pos</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.widgets.widget_base.html#exatomic.widgets.widget_base.ExatomicScene.field_neg"><code class="docutils literal notranslate"><span class="pre">ExatomicScene.field_neg</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.widgets.widget_base.html#exatomic.widgets.widget_base.ExatomicScene.field_iso"><code class="docutils literal notranslate"><span class="pre">ExatomicScene.field_iso</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.widgets.widget_base.html#exatomic.widgets.widget_base.ExatomicScene.field_o"><code class="docutils literal notranslate"><span class="pre">ExatomicScene.field_o</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.widgets.widget_base.html#exatomic.widgets.widget_base.ExatomicScene.field"><code class="docutils literal notranslate"><span class="pre">ExatomicScene.field</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.widgets.widget_base.html#exatomic.widgets.widget_base.ExatomicScene.field_kind"><code class="docutils literal notranslate"><span class="pre">ExatomicScene.field_kind</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.widgets.widget_base.html#exatomic.widgets.widget_base.ExatomicScene.field_ml"><code class="docutils literal notranslate"><span class="pre">ExatomicScene.field_ml</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.widgets.widget_base.html#exatomic.widgets.widget_base.ExatomicScene.uni"><code class="docutils literal notranslate"><span class="pre">ExatomicScene.uni</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.widgets.widget_base.html#exatomic.widgets.widget_base.ExatomicScene.field_nx"><code class="docutils literal notranslate"><span class="pre">ExatomicScene.field_nx</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.widgets.widget_base.html#exatomic.widgets.widget_base.ExatomicScene.field_ny"><code class="docutils literal notranslate"><span class="pre">ExatomicScene.field_ny</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.widgets.widget_base.html#exatomic.widgets.widget_base.ExatomicScene.field_nz"><code class="docutils literal notranslate"><span class="pre">ExatomicScene.field_nz</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.widgets.widget_base.html#exatomic.widgets.widget_base.ExatomicScene.field_ox"><code class="docutils literal notranslate"><span class="pre">ExatomicScene.field_ox</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.widgets.widget_base.html#exatomic.widgets.widget_base.ExatomicScene.field_oy"><code class="docutils literal notranslate"><span class="pre">ExatomicScene.field_oy</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.widgets.widget_base.html#exatomic.widgets.widget_base.ExatomicScene.field_oz"><code class="docutils literal notranslate"><span class="pre">ExatomicScene.field_oz</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.widgets.widget_base.html#exatomic.widgets.widget_base.ExatomicScene.field_fx"><code class="docutils literal notranslate"><span class="pre">ExatomicScene.field_fx</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.widgets.widget_base.html#exatomic.widgets.widget_base.ExatomicScene.field_fy"><code class="docutils literal notranslate"><span class="pre">ExatomicScene.field_fy</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.widgets.widget_base.html#exatomic.widgets.widget_base.ExatomicScene.field_fz"><code class="docutils literal notranslate"><span class="pre">ExatomicScene.field_fz</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.widgets.widget_base.html#exatomic.widgets.widget_base.ExatomicScene.geom"><code class="docutils literal notranslate"><span class="pre">ExatomicScene.geom</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="exatomic.widgets.widget_base.html#exatomic.widgets.widget_base.TensorScene"><code class="docutils literal notranslate"><span class="pre">TensorScene</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.widgets.widget_base.html#exatomic.widgets.widget_base.TensorScene.field"><code class="docutils literal notranslate"><span class="pre">TensorScene.field</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.widgets.widget_base.html#exatomic.widgets.widget_base.TensorScene.geom"><code class="docutils literal notranslate"><span class="pre">TensorScene.geom</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.widgets.widget_base.html#exatomic.widgets.widget_base.TensorScene.txx"><code class="docutils literal notranslate"><span class="pre">TensorScene.txx</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.widgets.widget_base.html#exatomic.widgets.widget_base.TensorScene.txy"><code class="docutils literal notranslate"><span class="pre">TensorScene.txy</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.widgets.widget_base.html#exatomic.widgets.widget_base.TensorScene.txz"><code class="docutils literal notranslate"><span class="pre">TensorScene.txz</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.widgets.widget_base.html#exatomic.widgets.widget_base.TensorScene.tyx"><code class="docutils literal notranslate"><span class="pre">TensorScene.tyx</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.widgets.widget_base.html#exatomic.widgets.widget_base.TensorScene.tyy"><code class="docutils literal notranslate"><span class="pre">TensorScene.tyy</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.widgets.widget_base.html#exatomic.widgets.widget_base.TensorScene.tyz"><code class="docutils literal notranslate"><span class="pre">TensorScene.tyz</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.widgets.widget_base.html#exatomic.widgets.widget_base.TensorScene.tzx"><code class="docutils literal notranslate"><span class="pre">TensorScene.tzx</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.widgets.widget_base.html#exatomic.widgets.widget_base.TensorScene.tzy"><code class="docutils literal notranslate"><span class="pre">TensorScene.tzy</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.widgets.widget_base.html#exatomic.widgets.widget_base.TensorScene.tzz"><code class="docutils literal notranslate"><span class="pre">TensorScene.tzz</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.widgets.widget_base.html#exatomic.widgets.widget_base.TensorScene.scale"><code class="docutils literal notranslate"><span class="pre">TensorScene.scale</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.widgets.widget_base.html#exatomic.widgets.widget_base.TensorScene.tdx"><code class="docutils literal notranslate"><span class="pre">TensorScene.tdx</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.widgets.widget_base.html#exatomic.widgets.widget_base.TensorScene.tens"><code class="docutils literal notranslate"><span class="pre">TensorScene.tens</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="exatomic.widgets.widget_base.html#exatomic.widgets.widget_base.UniverseScene"><code class="docutils literal notranslate"><span class="pre">UniverseScene</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.widgets.widget_base.html#exatomic.widgets.widget_base.UniverseScene.frame_idx"><code class="docutils literal notranslate"><span class="pre">UniverseScene.frame_idx</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.widgets.widget_base.html#exatomic.widgets.widget_base.UniverseScene.axis"><code class="docutils literal notranslate"><span class="pre">UniverseScene.axis</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.widgets.widget_base.html#exatomic.widgets.widget_base.UniverseScene.atom_x"><code class="docutils literal notranslate"><span class="pre">UniverseScene.atom_x</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.widgets.widget_base.html#exatomic.widgets.widget_base.UniverseScene.atom_y"><code class="docutils literal notranslate"><span class="pre">UniverseScene.atom_y</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.widgets.widget_base.html#exatomic.widgets.widget_base.UniverseScene.atom_z"><code class="docutils literal notranslate"><span class="pre">UniverseScene.atom_z</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.widgets.widget_base.html#exatomic.widgets.widget_base.UniverseScene.atom_l"><code class="docutils literal notranslate"><span class="pre">UniverseScene.atom_l</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.widgets.widget_base.html#exatomic.widgets.widget_base.UniverseScene.atom_s"><code class="docutils literal notranslate"><span class="pre">UniverseScene.atom_s</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.widgets.widget_base.html#exatomic.widgets.widget_base.UniverseScene.atom_vr"><code class="docutils literal notranslate"><span class="pre">UniverseScene.atom_vr</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.widgets.widget_base.html#exatomic.widgets.widget_base.UniverseScene.atom_cr"><code class="docutils literal notranslate"><span class="pre">UniverseScene.atom_cr</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.widgets.widget_base.html#exatomic.widgets.widget_base.UniverseScene.atom_c"><code class="docutils literal notranslate"><span class="pre">UniverseScene.atom_c</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.widgets.widget_base.html#exatomic.widgets.widget_base.UniverseScene.atom_3d"><code class="docutils literal notranslate"><span class="pre">UniverseScene.atom_3d</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.widgets.widget_base.html#exatomic.widgets.widget_base.UniverseScene.two_b0"><code class="docutils literal notranslate"><span class="pre">UniverseScene.two_b0</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.widgets.widget_base.html#exatomic.widgets.widget_base.UniverseScene.two_b1"><code class="docutils literal notranslate"><span class="pre">UniverseScene.two_b1</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.widgets.widget_base.html#exatomic.widgets.widget_base.UniverseScene.field_i"><code class="docutils literal notranslate"><span class="pre">UniverseScene.field_i</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.widgets.widget_base.html#exatomic.widgets.widget_base.UniverseScene.field_v"><code class="docutils literal notranslate"><span class="pre">UniverseScene.field_v</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.widgets.widget_base.html#exatomic.widgets.widget_base.UniverseScene.field_p"><code class="docutils literal notranslate"><span class="pre">UniverseScene.field_p</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.widgets.widget_base.html#exatomic.widgets.widget_base.UniverseScene.field_idx"><code class="docutils literal notranslate"><span class="pre">UniverseScene.field_idx</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.widgets.widget_base.html#exatomic.widgets.widget_base.UniverseScene.field_iso"><code class="docutils literal notranslate"><span class="pre">UniverseScene.field_iso</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.widgets.widget_base.html#exatomic.widgets.widget_base.UniverseScene.field_show"><code class="docutils literal notranslate"><span class="pre">UniverseScene.field_show</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.widgets.widget_base.html#exatomic.widgets.widget_base.UniverseScene.cont_show"><code class="docutils literal notranslate"><span class="pre">UniverseScene.cont_show</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.widgets.widget_base.html#exatomic.widgets.widget_base.UniverseScene.cont_axis"><code class="docutils literal notranslate"><span class="pre">UniverseScene.cont_axis</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.widgets.widget_base.html#exatomic.widgets.widget_base.UniverseScene.cont_num"><code class="docutils literal notranslate"><span class="pre">UniverseScene.cont_num</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.widgets.widget_base.html#exatomic.widgets.widget_base.UniverseScene.cont_lim"><code class="docutils literal notranslate"><span class="pre">UniverseScene.cont_lim</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.widgets.widget_base.html#exatomic.widgets.widget_base.UniverseScene.cont_val"><code class="docutils literal notranslate"><span class="pre">UniverseScene.cont_val</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.widgets.widget_base.html#exatomic.widgets.widget_base.UniverseScene.frame__a"><code class="docutils literal notranslate"><span class="pre">UniverseScene.frame__a</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.widgets.widget_base.html#exatomic.widgets.widget_base.UniverseScene.tens"><code class="docutils literal notranslate"><span class="pre">UniverseScene.tens</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.widgets.widget_base.html#exatomic.widgets.widget_base.UniverseScene.tensor_d"><code class="docutils literal notranslate"><span class="pre">UniverseScene.tensor_d</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.widgets.widget_base.html#exatomic.widgets.widget_base.UniverseScene.scale"><code class="docutils literal notranslate"><span class="pre">UniverseScene.scale</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.widgets.widget_base.html#exatomic.widgets.widget_base.UniverseScene.tidx"><code class="docutils literal notranslate"><span class="pre">UniverseScene.tidx</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.widgets.widget_base.html#exatomic.widgets.widget_base.UniverseScene.fill_idx"><code class="docutils literal notranslate"><span class="pre">UniverseScene.fill_idx</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.widgets.widget_base.html#exatomic.widgets.widget_base.UniverseScene.bond_r"><code class="docutils literal notranslate"><span class="pre">UniverseScene.bond_r</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.widgets.widget_base.html#exatomic.widgets.widget_base.UniverseScene.selected"><code class="docutils literal notranslate"><span class="pre">UniverseScene.selected</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.widgets.widget_base.html#exatomic.widgets.widget_base.UniverseScene.clear_selected"><code class="docutils literal notranslate"><span class="pre">UniverseScene.clear_selected</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="exatomic.widgets.widget_base.html#exatomic.widgets.widget_base.ExatomicBox"><code class="docutils literal notranslate"><span class="pre">ExatomicBox</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.widgets.widget_base.html#exatomic.widgets.widget_base.ExatomicBox.active_scene_indices"><code class="docutils literal notranslate"><span class="pre">ExatomicBox.active_scene_indices</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.widgets.widget_base.html#exatomic.widgets.widget_base.ExatomicBox.linked"><code class="docutils literal notranslate"><span class="pre">ExatomicBox.linked</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.widgets.widget_base.html#exatomic.widgets.widget_base.ExatomicBox.active"><code class="docutils literal notranslate"><span class="pre">ExatomicBox.active()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="exatomic.widgets.widget_df.html">exatomic.widgets.widget_df module</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="exatomic.widgets.widget_df.html#a-dataframe-widget">A dataframe widget</a></li>
+<li class="toctree-l2"><a class="reference internal" href="exatomic.widgets.widget_df.html#exatomic.widgets.widget_df.DFBox"><code class="docutils literal notranslate"><span class="pre">DFBox</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.widgets.widget_df.html#exatomic.widgets.widget_df.DFBox.cur_frame"><code class="docutils literal notranslate"><span class="pre">DFBox.cur_frame</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.widgets.widget_df.html#exatomic.widgets.widget_df.DFBox.indexes"><code class="docutils literal notranslate"><span class="pre">DFBox.indexes</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.widgets.widget_df.html#exatomic.widgets.widget_df.DFBox.start"><code class="docutils literal notranslate"><span class="pre">DFBox.start</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.widgets.widget_df.html#exatomic.widgets.widget_df.DFBox.columns"><code class="docutils literal notranslate"><span class="pre">DFBox.columns</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="exatomic.widgets.widget_utils.html">exatomic.widgets.widget_utils module</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="exatomic.widgets.widget_utils.html#widget-utilities">Widget Utilities</a></li>
+<li class="toctree-l2"><a class="reference internal" href="exatomic.widgets.widget_utils.html#exatomic.widgets.widget_utils.Folder"><code class="docutils literal notranslate"><span class="pre">Folder</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.widgets.widget_utils.html#exatomic.widgets.widget_utils.Folder.activate"><code class="docutils literal notranslate"><span class="pre">Folder.activate()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.widgets.widget_utils.html#exatomic.widgets.widget_utils.Folder.deactivate"><code class="docutils literal notranslate"><span class="pre">Folder.deactivate()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.widgets.widget_utils.html#exatomic.widgets.widget_utils.Folder.insert"><code class="docutils literal notranslate"><span class="pre">Folder.insert()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.widgets.widget_utils.html#exatomic.widgets.widget_utils.Folder.update"><code class="docutils literal notranslate"><span class="pre">Folder.update()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.widgets.widget_utils.html#exatomic.widgets.widget_utils.Folder.move_to_end"><code class="docutils literal notranslate"><span class="pre">Folder.move_to_end()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="exatomic.widgets.widget_utils.html#exatomic.widgets.widget_utils.Folder.pop"><code class="docutils literal notranslate"><span class="pre">Folder.pop()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="exatomic.widgets.widget_utils.html#exatomic.widgets.widget_utils.GUIBox"><code class="docutils literal notranslate"><span class="pre">GUIBox</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="exatomic.widgets.widget_utils.html#exatomic.widgets.widget_utils.gui_field_widgets"><code class="docutils literal notranslate"><span class="pre">gui_field_widgets()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</div>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="exatomic.util.conversions.html" class="btn btn-neutral float-left" title="exatomic.util.conversions module" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="exatomic.widgets.traits.html" class="btn btn-neutral float-right" title="exatomic.widgets.traits module" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright .
+      <span class="lastupdated">Last updated on Apr 21, 2023.
+      </span></p>
+  </div>
+
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

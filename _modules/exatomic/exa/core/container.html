@@ -1,0 +1,706 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>exatomic.exa.core.container &mdash; exatomic 0.6.0 documentation</title>
+      <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../../../../_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="../../../../" id="documentation_options" src="../../../../_static/documentation_options.js"></script>
+        <script src="../../../../_static/doctools.js"></script>
+        <script src="../../../../_static/sphinx_highlight.js"></script>
+        <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script src="../../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../../index.html" class="icon icon-home">
+            exatomic
+              <img src="../../../../_static/logo.png" class="logo" alt="Logo"/>
+          </a>
+              <div class="version">
+                0.6.0
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Sitemap</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../install.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../started.html">Getting Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../contrib.html">Development</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../exatomic.html">exatomic package</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../../index.html">exatomic</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../../index.html">Module code</a></li>
+          <li class="breadcrumb-item"><a href="../../../exatomic.html">exatomic</a></li>
+      <li class="breadcrumb-item active">exatomic.exa.core.container</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for exatomic.exa.core.container</h1><div class="highlight"><pre>
+<span></span><span class="c1"># -*- coding: utf-8 -*-</span>
+<span class="c1"># Copyright (c) 2015-2022, Exa Analytics Development Team</span>
+<span class="c1"># Distributed under the terms of the Apache License 2.0</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Container</span>
+<span class="sd">########################</span>
+<span class="sd">The :class:`~exatomic.exa.core.container.Container` class is the primary object for</span>
+<span class="sd">data processing, analysis, and visualization. In brief, containers are composed</span>
+<span class="sd">of data objects whose contents are used for 2D and 3D visualization. Containers</span>
+<span class="sd">also provide some content management and data relationship features.</span>
+
+<span class="sd">See Also:</span>
+<span class="sd">    For a description of data objects see :mod:`~exatomic.exa.core.numerical`.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">logging</span>
+<span class="kn">from</span> <span class="nn">uuid</span> <span class="kn">import</span> <span class="n">uuid4</span>
+<span class="kn">from</span> <span class="nn">sys</span> <span class="kn">import</span> <span class="n">getsizeof</span>
+<span class="kn">from</span> <span class="nn">copy</span> <span class="kn">import</span> <span class="n">deepcopy</span>
+<span class="kn">from</span> <span class="nn">collections</span> <span class="kn">import</span> <span class="n">defaultdict</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
+<span class="kn">from</span> <span class="nn">pandas.core.dtypes.dtypes</span> <span class="kn">import</span> <span class="n">CategoricalDtype</span>
+<span class="kn">import</span> <span class="nn">networkx</span> <span class="k">as</span> <span class="nn">nx</span>
+<span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="nn">plt</span>
+<span class="kn">from</span> <span class="nn">exatomic.exa.util.utility</span> <span class="kn">import</span> <span class="n">convert_bytes</span>
+<span class="kn">from</span> <span class="nn">exatomic.exa.util</span> <span class="kn">import</span> <span class="n">mpl</span>
+<span class="kn">from</span> <span class="nn">.numerical</span> <span class="kn">import</span> <span class="n">check_key</span><span class="p">,</span> <span class="n">Field</span><span class="p">,</span> <span class="n">Series</span><span class="p">,</span> <span class="n">DataFrame</span>
+
+
+<div class="viewcode-block" id="Container"><a class="viewcode-back" href="../../../../exatomic.exa.core.container.html#exatomic.exa.core.container.Container">[docs]</a><span class="k">class</span> <span class="nc">Container</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Container class responsible for all features related to data management.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">_getter_prefix</span> <span class="o">=</span> <span class="s1">&#39;compute&#39;</span>
+    <span class="n">_cardinal</span> <span class="o">=</span> <span class="kc">None</span>    <span class="c1"># Name of the cardinal data table</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">log</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">name</span> <span class="o">=</span> <span class="s1">&#39;.&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="bp">self</span><span class="o">.</span><span class="vm">__module__</span><span class="p">,</span>
+                         <span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="p">])</span>
+        <span class="k">return</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
+
+<div class="viewcode-block" id="Container.copy"><a class="viewcode-back" href="../../../../exatomic.exa.core.container.html#exatomic.exa.core.container.Container.copy">[docs]</a>    <span class="k">def</span> <span class="nf">copy</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">description</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">meta</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Create a copy of the current object (may alter the container&#39;s name,</span>
+<span class="sd">        description, and update the metadata if needed).</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">cls</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span>
+        <span class="n">kwargs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_rel</span><span class="p">(</span><span class="n">copy</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="n">kwargs</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_data</span><span class="p">(</span><span class="n">copy</span><span class="o">=</span><span class="kc">True</span><span class="p">))</span>
+        <span class="k">if</span> <span class="n">name</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">kwargs</span><span class="p">[</span><span class="s1">&#39;name&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">name</span>
+        <span class="k">if</span> <span class="n">description</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">kwargs</span><span class="p">[</span><span class="s1">&#39;description&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">description</span>
+        <span class="k">if</span> <span class="n">meta</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">kwargs</span><span class="p">[</span><span class="s1">&#39;meta&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">meta</span>
+        <span class="k">return</span> <span class="bp">cls</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="Container.concat"><a class="viewcode-back" href="../../../../exatomic.exa.core.container.html#exatomic.exa.core.container.Container.concat">[docs]</a>    <span class="k">def</span> <span class="nf">concat</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Concatenate any number of container objects with the current object into</span>
+<span class="sd">        a single container object.</span>
+
+<span class="sd">        See Also:</span>
+<span class="sd">            For argument description, see :func:`~exatomic.exa.core.container.concat`.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="Container.slice_naive"><a class="viewcode-back" href="../../../../exatomic.exa.core.container.html#exatomic.exa.core.container.Container.slice_naive">[docs]</a>    <span class="k">def</span> <span class="nf">slice_naive</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Naively slice each data object in the container by the object&#39;s index.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            key: Int, slice, or list by which to extra &quot;sub&quot;-container</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            sub: Sub container of the same format with a view of the data</span>
+
+<span class="sd">        Warning:</span>
+<span class="sd">            To ensure that a new container is created, use the copy method.</span>
+
+<span class="sd">            .. code-block:: Python</span>
+
+<span class="sd">                mycontainer[slice].copy()</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">kwargs</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;name&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="s1">&#39;description&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">description</span><span class="p">,</span> <span class="s1">&#39;meta&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">meta</span><span class="p">}</span>
+        <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">data</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_data</span><span class="p">()</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="n">k</span> <span class="o">=</span> <span class="n">name</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span> <span class="k">if</span> <span class="n">name</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s1">&#39;_&#39;</span><span class="p">)</span> <span class="k">else</span> <span class="n">name</span>
+            <span class="n">kwargs</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">slice_naive</span><span class="p">(</span><span class="n">key</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="Container.slice_cardinal"><a class="viewcode-back" href="../../../../exatomic.exa.core.container.html#exatomic.exa.core.container.Container.slice_cardinal">[docs]</a>    <span class="k">def</span> <span class="nf">slice_cardinal</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Slice the container according to its (primary) cardinal axis.</span>
+
+<span class="sd">        The &quot;cardinal&quot; axis can have any name so long as the name matches a</span>
+<span class="sd">        data object attached to the container. The index name for this object</span>
+<span class="sd">        should also match the value of the cardinal axis.</span>
+
+<span class="sd">        The algorithm builds a network graph representing the data relationships</span>
+<span class="sd">        (including information about the type of relationship) and then traverses</span>
+<span class="sd">        the edge tree (starting from the cardinal table). Each subsequent child</span>
+<span class="sd">        object in the tree is sliced based on its relationship with its parent.</span>
+
+<span class="sd">        Note:</span>
+<span class="sd">            Breadth first traversal is performed.</span>
+
+<span class="sd">        Warning:</span>
+<span class="sd">            This function does not make a copy (if possible): to ensure a new</span>
+<span class="sd">            object is created (a copy) use :func:`~exatomic.exa.core.container.Container.copy`</span>
+<span class="sd">            after slicing.</span>
+
+<span class="sd">            .. code-block:: Python</span>
+
+<span class="sd">                myslice = mycontainer[::2].copy()</span>
+
+<span class="sd">        See Also:</span>
+<span class="sd">            For data network generation, see :func:`~exatomic.exa.core.container.Container.network`.</span>
+<span class="sd">            For information about relationships between data objects see</span>
+<span class="sd">            :mod:`~exatomic.exa.core.numerical`.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_cardinal</span><span class="p">:</span>
+            <span class="bp">cls</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span>
+            <span class="n">key</span> <span class="o">=</span> <span class="n">check_key</span><span class="p">(</span><span class="bp">self</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">_cardinal</span><span class="p">],</span> <span class="n">key</span><span class="p">,</span> <span class="n">cardinal</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+            <span class="n">g</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">network</span><span class="p">(</span><span class="n">fig</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+            <span class="n">kwargs</span> <span class="o">=</span> <span class="p">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_cardinal</span><span class="p">:</span> <span class="bp">self</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">_cardinal</span><span class="p">]</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">key</span><span class="p">],</span> <span class="s1">&#39;name&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">,</span>
+                      <span class="s1">&#39;description&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">description</span><span class="p">,</span> <span class="s1">&#39;meta&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">meta</span><span class="p">}</span>
+            <span class="c1"># Next traverse, breadth first, all data objects</span>
+            <span class="k">for</span> <span class="n">parent</span><span class="p">,</span> <span class="n">child</span> <span class="ow">in</span> <span class="n">nx</span><span class="o">.</span><span class="n">bfs_edges</span><span class="p">(</span><span class="n">g</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_cardinal</span><span class="p">):</span>
+                <span class="k">if</span> <span class="n">child</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="p">:</span>
+                    <span class="k">continue</span>
+                <span class="n">typ</span> <span class="o">=</span> <span class="n">g</span><span class="o">.</span><span class="n">edge_types</span><span class="p">[(</span><span class="n">parent</span><span class="p">,</span> <span class="n">child</span><span class="p">)]</span>
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_cardinal</span> <span class="ow">in</span> <span class="bp">self</span><span class="p">[</span><span class="n">child</span><span class="p">]</span><span class="o">.</span><span class="n">columns</span> <span class="ow">and</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="p">[</span><span class="n">child</span><span class="p">],</span> <span class="s1">&#39;slice_cardinal&#39;</span><span class="p">):</span>
+                    <span class="n">kwargs</span><span class="p">[</span><span class="n">child</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="p">[</span><span class="n">child</span><span class="p">]</span><span class="o">.</span><span class="n">slice_cardinal</span><span class="p">(</span><span class="n">key</span><span class="p">)</span>
+                <span class="k">elif</span> <span class="n">typ</span> <span class="o">==</span> <span class="s1">&#39;index-index&#39;</span><span class="p">:</span>
+                    <span class="c1"># Select from the child on the parent&#39;s index (the parent is</span>
+                    <span class="c1"># in the kwargs already).</span>
+                    <span class="n">kwargs</span><span class="p">[</span><span class="n">child</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="p">[</span><span class="n">child</span><span class="p">]</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">kwargs</span><span class="p">[</span><span class="n">parent</span><span class="p">]</span><span class="o">.</span><span class="n">index</span><span class="o">.</span><span class="n">values</span><span class="p">]</span>
+                <span class="k">elif</span> <span class="n">typ</span> <span class="o">==</span> <span class="s1">&#39;index-column&#39;</span><span class="p">:</span>
+                    <span class="c1"># Select from the child where the column (of the same name as</span>
+                    <span class="c1"># the parent) is in the parent&#39;s index values</span>
+                    <span class="n">cdf</span> <span class="o">=</span> <span class="bp">self</span><span class="p">[</span><span class="n">child</span><span class="p">]</span>
+                    <span class="n">kwargs</span><span class="p">[</span><span class="n">child</span><span class="p">]</span> <span class="o">=</span> <span class="n">cdf</span><span class="p">[</span><span class="n">cdf</span><span class="p">[</span><span class="n">parent</span><span class="p">]</span><span class="o">.</span><span class="n">isin</span><span class="p">(</span><span class="n">kwargs</span><span class="p">[</span><span class="n">parent</span><span class="p">]</span><span class="o">.</span><span class="n">index</span><span class="o">.</span><span class="n">values</span><span class="p">)]</span>
+                <span class="k">elif</span> <span class="n">typ</span> <span class="o">==</span> <span class="s1">&#39;column-index&#39;</span><span class="p">:</span>
+                    <span class="c1"># Select from the child where the child&#39;s index is in the</span>
+                    <span class="c1"># column of the parent. Note that this relationship</span>
+                    <span class="n">cdf</span> <span class="o">=</span> <span class="bp">self</span><span class="p">[</span><span class="n">child</span><span class="p">]</span>
+                    <span class="n">cin</span> <span class="o">=</span> <span class="n">cdf</span><span class="o">.</span><span class="n">index</span><span class="o">.</span><span class="n">name</span>
+                    <span class="n">cols</span> <span class="o">=</span> <span class="p">[</span><span class="n">col</span> <span class="k">for</span> <span class="n">col</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="p">[</span><span class="n">parent</span><span class="p">]</span> <span class="k">if</span> <span class="n">cin</span> <span class="o">==</span> <span class="n">col</span> <span class="ow">or</span> <span class="p">(</span><span class="n">cin</span> <span class="o">==</span> <span class="n">col</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="ow">and</span> <span class="n">col</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">isdigit</span><span class="p">())]</span>
+                    <span class="n">index</span> <span class="o">=</span> <span class="n">kwargs</span><span class="p">[</span><span class="n">parent</span><span class="p">][</span><span class="n">cols</span><span class="p">]</span><span class="o">.</span><span class="n">stack</span><span class="p">()</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">int64</span><span class="p">)</span><span class="o">.</span><span class="n">values</span>
+                    <span class="n">kwargs</span><span class="p">[</span><span class="n">child</span><span class="p">]</span> <span class="o">=</span> <span class="n">cdf</span><span class="p">[</span><span class="n">cdf</span><span class="o">.</span><span class="n">index</span><span class="o">.</span><span class="n">isin</span><span class="p">(</span><span class="n">index</span><span class="p">)]</span>
+            <span class="k">return</span> <span class="bp">cls</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="Container.cardinal_groupby"><a class="viewcode-back" href="../../../../exatomic.exa.core.container.html#exatomic.exa.core.container.Container.cardinal_groupby">[docs]</a>    <span class="k">def</span> <span class="nf">cardinal_groupby</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Create an instance of this class for every step in the cardinal dimension.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_cardinal</span><span class="p">:</span>
+            <span class="n">g</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">network</span><span class="p">(</span><span class="n">fig</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+            <span class="n">cardinal_indexes</span> <span class="o">=</span> <span class="bp">self</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">_cardinal</span><span class="p">]</span><span class="o">.</span><span class="n">index</span><span class="o">.</span><span class="n">values</span>
+            <span class="n">selfs</span> <span class="o">=</span> <span class="p">{}</span>
+            <span class="bp">cls</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span>
+            <span class="k">for</span> <span class="n">cardinal_index</span> <span class="ow">in</span> <span class="n">cardinal_indexes</span><span class="p">:</span>
+                <span class="n">kwargs</span> <span class="o">=</span> <span class="p">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_cardinal</span><span class="p">:</span> <span class="bp">self</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">_cardinal</span><span class="p">]</span><span class="o">.</span><span class="n">loc</span><span class="p">[[</span><span class="n">cardinal_index</span><span class="p">]]}</span>
+                <span class="k">for</span> <span class="n">parent</span><span class="p">,</span> <span class="n">child</span> <span class="ow">in</span> <span class="n">nx</span><span class="o">.</span><span class="n">bfs_edges</span><span class="p">(</span><span class="n">g</span><span class="p">):</span>
+                    <span class="k">if</span> <span class="n">child</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="p">:</span>
+                        <span class="k">continue</span>
+                    <span class="n">typ</span> <span class="o">=</span> <span class="n">g</span><span class="o">.</span><span class="n">edge_types</span><span class="p">[(</span><span class="n">parent</span><span class="p">,</span> <span class="n">child</span><span class="p">)]</span>
+                    <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_cardinal</span> <span class="ow">in</span> <span class="bp">self</span><span class="p">[</span><span class="n">child</span><span class="p">]</span><span class="o">.</span><span class="n">columns</span> <span class="ow">and</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="p">[</span><span class="n">child</span><span class="p">],</span> <span class="s1">&#39;slice_cardinal&#39;</span><span class="p">):</span>
+                        <span class="n">kwargs</span><span class="p">[</span><span class="n">child</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="p">[</span><span class="n">child</span><span class="p">]</span><span class="o">.</span><span class="n">slice_cardinal</span><span class="p">(</span><span class="n">key</span><span class="p">)</span>
+                    <span class="k">elif</span> <span class="n">typ</span> <span class="o">==</span> <span class="s1">&#39;index-index&#39;</span><span class="p">:</span>
+                        <span class="c1"># Select from the child on the parent&#39;s index (the parent is</span>
+                        <span class="c1"># in the kwargs already).</span>
+                        <span class="n">kwargs</span><span class="p">[</span><span class="n">child</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="p">[</span><span class="n">child</span><span class="p">]</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">kwargs</span><span class="p">[</span><span class="n">parent</span><span class="p">]</span><span class="o">.</span><span class="n">index</span><span class="o">.</span><span class="n">values</span><span class="p">]</span>
+                    <span class="k">elif</span> <span class="n">typ</span> <span class="o">==</span> <span class="s1">&#39;index-column&#39;</span><span class="p">:</span>
+                        <span class="c1"># Select from the child where the column (of the same name as</span>
+                        <span class="c1"># the parent) is in the parent&#39;s index values</span>
+                        <span class="n">cdf</span> <span class="o">=</span> <span class="bp">self</span><span class="p">[</span><span class="n">child</span><span class="p">]</span>
+                        <span class="n">kwargs</span><span class="p">[</span><span class="n">child</span><span class="p">]</span> <span class="o">=</span> <span class="n">cdf</span><span class="p">[</span><span class="n">cdf</span><span class="p">[</span><span class="n">parent</span><span class="p">]</span><span class="o">.</span><span class="n">isin</span><span class="p">(</span><span class="n">kwargs</span><span class="p">[</span><span class="n">parent</span><span class="p">]</span><span class="o">.</span><span class="n">index</span><span class="o">.</span><span class="n">values</span><span class="p">)]</span>
+                    <span class="k">elif</span> <span class="n">typ</span> <span class="o">==</span> <span class="s1">&#39;column-index&#39;</span><span class="p">:</span>
+                        <span class="c1"># Select from the child where the child&#39;s index is in the</span>
+                        <span class="c1"># column of the parent. Note that this relationship</span>
+                        <span class="n">cdf</span> <span class="o">=</span> <span class="bp">self</span><span class="p">[</span><span class="n">child</span><span class="p">]</span>
+                        <span class="n">cin</span> <span class="o">=</span> <span class="n">cdf</span><span class="o">.</span><span class="n">index</span><span class="o">.</span><span class="n">name</span>
+                        <span class="n">cols</span> <span class="o">=</span> <span class="p">[</span><span class="n">col</span> <span class="k">for</span> <span class="n">col</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="p">[</span><span class="n">parent</span><span class="p">]</span> <span class="k">if</span> <span class="n">cin</span> <span class="o">==</span> <span class="n">col</span> <span class="ow">or</span> <span class="p">(</span><span class="n">cin</span> <span class="o">==</span> <span class="n">col</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="ow">and</span> <span class="n">col</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">isdigit</span><span class="p">())]</span>
+                        <span class="n">index</span> <span class="o">=</span> <span class="n">kwargs</span><span class="p">[</span><span class="n">parent</span><span class="p">][</span><span class="n">cols</span><span class="p">]</span><span class="o">.</span><span class="n">stack</span><span class="p">()</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">int64</span><span class="p">)</span><span class="o">.</span><span class="n">values</span>
+                        <span class="n">kwargs</span><span class="p">[</span><span class="n">child</span><span class="p">]</span> <span class="o">=</span> <span class="n">cdf</span><span class="p">[</span><span class="n">cdf</span><span class="o">.</span><span class="n">index</span><span class="o">.</span><span class="n">isin</span><span class="p">(</span><span class="n">index</span><span class="p">)]</span>
+                <span class="n">selfs</span><span class="p">[</span><span class="n">cardinal_index</span><span class="p">]</span> <span class="o">=</span> <span class="bp">cls</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">selfs</span></div>
+
+<div class="viewcode-block" id="Container.info"><a class="viewcode-back" href="../../../../exatomic.exa.core.container.html#exatomic.exa.core.container.Container.info">[docs]</a>    <span class="k">def</span> <span class="nf">info</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Display information about the container&#39;s data objects (note that info</span>
+<span class="sd">        on metadata and visualization objects is also provided).</span>
+
+<span class="sd">        Note:</span>
+<span class="sd">            Sizes are reported in bytes.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">names</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">types</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">sizes</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">names</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;WIDGET&#39;</span><span class="p">)</span>
+        <span class="n">types</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;-&#39;</span><span class="p">)</span>
+        <span class="n">s</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="n">sizes</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">s</span><span class="p">)</span>
+        <span class="n">names</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;METADATA&#39;</span><span class="p">)</span>
+        <span class="n">types</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;-&#39;</span><span class="p">)</span>
+        <span class="n">s</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="k">for</span> <span class="n">obj</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_rel</span><span class="p">()</span><span class="o">.</span><span class="n">values</span><span class="p">():</span>
+            <span class="n">s</span> <span class="o">+=</span> <span class="n">getsizeof</span><span class="p">(</span><span class="n">obj</span><span class="p">)</span>
+        <span class="n">sizes</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">s</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">obj</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_data</span><span class="p">()</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="n">names</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">name</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span> <span class="k">if</span> <span class="n">name</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s1">&#39;_&#39;</span><span class="p">)</span> <span class="k">else</span> <span class="n">name</span><span class="p">)</span>
+            <span class="n">types</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;.&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">((</span><span class="n">obj</span><span class="o">.</span><span class="vm">__module__</span><span class="p">,</span> <span class="n">obj</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="p">)))</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">):</span>
+                <span class="n">sizes</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">obj</span><span class="o">.</span><span class="n">memory_usage</span><span class="p">())</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">sizes</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">obj</span><span class="o">.</span><span class="n">memory_usage</span><span class="p">()</span><span class="o">.</span><span class="n">sum</span><span class="p">())</span>
+        <span class="n">inf</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="o">.</span><span class="n">from_dict</span><span class="p">({</span><span class="s1">&#39;object&#39;</span><span class="p">:</span> <span class="n">names</span><span class="p">,</span> <span class="s1">&#39;type&#39;</span><span class="p">:</span> <span class="n">types</span><span class="p">,</span> <span class="s1">&#39;size&#39;</span><span class="p">:</span> <span class="n">sizes</span><span class="p">})</span>
+        <span class="n">inf</span><span class="o">.</span><span class="n">set_index</span><span class="p">(</span><span class="s1">&#39;object&#39;</span><span class="p">,</span> <span class="n">inplace</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">inf</span><span class="o">.</span><span class="n">sort_index</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="Container.memory_usage"><a class="viewcode-back" href="../../../../exatomic.exa.core.container.html#exatomic.exa.core.container.Container.memory_usage">[docs]</a>    <span class="k">def</span> <span class="nf">memory_usage</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">string</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Get the memory usage estimate of the container.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            string (bool): Human readable string (default false)</span>
+
+<span class="sd">        See Also:</span>
+<span class="sd">            :func:`~exatomic.exa.core.container.Container.info`</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">string</span><span class="p">:</span>
+            <span class="n">n</span> <span class="o">=</span> <span class="n">getsizeof</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+            <span class="k">return</span> <span class="s1">&#39; &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">((</span><span class="nb">str</span><span class="p">(</span><span class="n">s</span><span class="p">)</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">convert_bytes</span><span class="p">(</span><span class="n">n</span><span class="p">)))</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">info</span><span class="p">()[</span><span class="s1">&#39;size&#39;</span><span class="p">]</span></div>
+
+<div class="viewcode-block" id="Container.network"><a class="viewcode-back" href="../../../../exatomic.exa.core.container.html#exatomic.exa.core.container.Container.network">[docs]</a>    <span class="k">def</span> <span class="nf">network</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">14</span><span class="p">,</span> <span class="mi">9</span><span class="p">),</span> <span class="n">fig</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Display information about the container&#39;s object relationships.</span>
+
+<span class="sd">        Nodes correspond to data objects. The size of the node corresponds</span>
+<span class="sd">        to the size of the table in memory. The color of the node corresponds</span>
+<span class="sd">        to its fundamental data type. Nodes are labeled by their container</span>
+<span class="sd">        name; class information is listed below. The color of the connections</span>
+<span class="sd">        correspond to the type of relationship; either an index of one table</span>
+<span class="sd">        corresponds to a column in another table or the two tables share an</span>
+<span class="sd">        index.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            figsize (tuple): Tuple containing figure dimensions</span>
+<span class="sd">            fig (bool): Generate the figure (default true)</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            graph: Network graph object containing data relationships</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">conn_types</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;index-index&#39;</span><span class="p">,</span> <span class="s1">&#39;index-column&#39;</span><span class="p">]</span>
+        <span class="n">conn_colors</span> <span class="o">=</span> <span class="n">mpl</span><span class="o">.</span><span class="n">sns</span><span class="o">.</span><span class="n">color_palette</span><span class="p">(</span><span class="s1">&#39;viridis&#39;</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">conn_types</span><span class="p">))</span>
+        <span class="n">conn</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="n">conn_types</span><span class="p">,</span> <span class="n">conn_colors</span><span class="p">))</span>
+
+        <span class="k">def</span> <span class="nf">get_node_type_color</span><span class="p">(</span><span class="n">obj</span><span class="p">):</span>
+<span class="w">            </span><span class="sd">&quot;&quot;&quot;Gets the color of a node based on the node&#39;s (sub)type.&quot;&quot;&quot;</span>
+            <span class="n">cols</span> <span class="o">=</span> <span class="n">mpl</span><span class="o">.</span><span class="n">sns</span><span class="o">.</span><span class="n">color_palette</span><span class="p">(</span><span class="s1">&#39;viridis&#39;</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">conn_types</span><span class="p">))</span>
+            <span class="k">for</span> <span class="n">col</span> <span class="ow">in</span> <span class="n">cols</span><span class="p">:</span>
+                <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="p">(</span><span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">)):</span>
+                    <span class="n">typ</span> <span class="o">=</span> <span class="nb">type</span><span class="p">(</span><span class="n">obj</span><span class="p">)</span>
+                    <span class="k">return</span> <span class="s1">&#39;.&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">((</span><span class="n">typ</span><span class="o">.</span><span class="vm">__module__</span><span class="p">,</span> <span class="n">typ</span><span class="o">.</span><span class="vm">__name__</span><span class="p">)),</span> <span class="n">col</span>
+            <span class="k">return</span> <span class="s1">&#39;other&#39;</span><span class="p">,</span> <span class="s1">&#39;gray&#39;</span>
+
+        <span class="k">def</span> <span class="nf">legend</span><span class="p">(</span><span class="n">items</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">loc</span><span class="p">,</span> <span class="n">ax</span><span class="p">):</span>
+<span class="w">            </span><span class="sd">&quot;&quot;&quot;Legend creation helper function.&quot;&quot;&quot;</span>
+            <span class="n">proxies</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="n">descriptions</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="k">for</span> <span class="n">label</span><span class="p">,</span> <span class="n">color</span> <span class="ow">in</span> <span class="n">items</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">label</span> <span class="o">==</span> <span class="s1">&#39;column-index&#39;</span><span class="p">:</span>
+                    <span class="k">continue</span>
+                <span class="k">if</span> <span class="n">name</span> <span class="o">==</span> <span class="s1">&#39;Data Type&#39;</span><span class="p">:</span>
+                    <span class="n">line</span> <span class="o">=</span> <span class="n">mpl</span><span class="o">.</span><span class="n">sns</span><span class="o">.</span><span class="n">mpl</span><span class="o">.</span><span class="n">lines</span><span class="o">.</span><span class="n">Line2D</span><span class="p">([],</span> <span class="p">[],</span> <span class="n">linestyle</span><span class="o">=</span><span class="s1">&#39;none&#39;</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="n">color</span><span class="p">,</span> <span class="n">marker</span><span class="o">=</span><span class="s1">&#39;o&#39;</span><span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">line</span> <span class="o">=</span> <span class="n">mpl</span><span class="o">.</span><span class="n">sns</span><span class="o">.</span><span class="n">mpl</span><span class="o">.</span><span class="n">lines</span><span class="o">.</span><span class="n">Line2D</span><span class="p">([],</span> <span class="p">[],</span> <span class="n">linestyle</span><span class="o">=</span><span class="s1">&#39;-&#39;</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="n">color</span><span class="p">)</span>
+                <span class="n">proxies</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">line</span><span class="p">)</span>
+                <span class="n">descriptions</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">label</span><span class="p">)</span>
+            <span class="n">lgnd</span> <span class="o">=</span> <span class="n">ax</span><span class="o">.</span><span class="n">legend</span><span class="p">(</span><span class="n">proxies</span><span class="p">,</span> <span class="n">descriptions</span><span class="p">,</span> <span class="n">title</span><span class="o">=</span><span class="n">name</span><span class="p">,</span> <span class="n">loc</span><span class="o">=</span><span class="n">loc</span><span class="p">,</span> <span class="n">frameon</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+            <span class="n">lgnd_frame</span> <span class="o">=</span> <span class="n">lgnd</span><span class="o">.</span><span class="n">get_frame</span><span class="p">()</span>
+            <span class="n">lgnd_frame</span><span class="o">.</span><span class="n">set_facecolor</span><span class="p">(</span><span class="s1">&#39;white&#39;</span><span class="p">)</span>
+            <span class="n">lgnd_frame</span><span class="o">.</span><span class="n">set_edgecolor</span><span class="p">(</span><span class="s1">&#39;black&#39;</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">lgnd</span><span class="p">,</span> <span class="n">ax</span>
+
+        <span class="n">info</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">info</span><span class="p">()</span>
+        <span class="n">info</span> <span class="o">=</span> <span class="n">info</span><span class="p">[</span><span class="n">info</span><span class="p">[</span><span class="s1">&#39;type&#39;</span><span class="p">]</span> <span class="o">!=</span> <span class="s1">&#39;-&#39;</span><span class="p">]</span>
+        <span class="c1">#info[&#39;size&#39;] *= 13000/info[&#39;size&#39;].max()</span>
+        <span class="n">info</span><span class="p">[</span><span class="s1">&#39;size&#39;</span><span class="p">]</span> <span class="o">+=</span> <span class="mi">2000</span>
+        <span class="n">node_size_dict</span> <span class="o">=</span> <span class="n">info</span><span class="p">[</span><span class="s1">&#39;size&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">to_dict</span><span class="p">()</span>      <span class="c1"># Can pull all nodes from keys</span>
+        <span class="n">node_class_name_dict</span> <span class="o">=</span> <span class="n">info</span><span class="p">[</span><span class="s1">&#39;type&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">to_dict</span><span class="p">()</span>
+        <span class="n">node_type_dict</span> <span class="o">=</span> <span class="p">{}</span>    <span class="c1"># Values are tuple of &quot;underlying&quot; type and color</span>
+        <span class="n">node_conn_dict</span> <span class="o">=</span> <span class="p">{}</span>    <span class="c1"># Values are tuple of connection type and color</span>
+        <span class="n">items</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_data</span><span class="p">()</span><span class="o">.</span><span class="n">items</span><span class="p">()</span>
+        <span class="k">for</span> <span class="n">k0</span><span class="p">,</span> <span class="n">v0</span> <span class="ow">in</span> <span class="n">items</span><span class="p">:</span>
+            <span class="n">n0</span> <span class="o">=</span> <span class="n">k0</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span> <span class="k">if</span> <span class="n">k0</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s1">&#39;_&#39;</span><span class="p">)</span> <span class="k">else</span> <span class="n">k0</span>
+            <span class="n">node_type_dict</span><span class="p">[</span><span class="n">n0</span><span class="p">]</span> <span class="o">=</span> <span class="n">get_node_type_color</span><span class="p">(</span><span class="n">v0</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">k1</span><span class="p">,</span> <span class="n">v1</span> <span class="ow">in</span> <span class="n">items</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">v0</span> <span class="ow">is</span> <span class="n">v1</span><span class="p">:</span>
+                    <span class="k">continue</span>
+                <span class="n">n1</span> <span class="o">=</span> <span class="n">k1</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span> <span class="k">if</span> <span class="n">k1</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s1">&#39;_&#39;</span><span class="p">)</span> <span class="k">else</span> <span class="n">k1</span>
+                <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">v0</span><span class="o">.</span><span class="n">index</span><span class="o">.</span><span class="n">names</span><span class="p">:</span>    <span class="c1"># Check the index of data object 0 against the index</span>
+                    <span class="k">if</span> <span class="n">name</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>           <span class="c1"># and columns of data object 1</span>
+                        <span class="k">continue</span>
+                    <span class="k">if</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">v1</span><span class="o">.</span><span class="n">index</span><span class="o">.</span><span class="n">names</span><span class="p">:</span>
+                        <span class="n">contyp</span> <span class="o">=</span> <span class="s1">&#39;index-index&#39;</span>
+                        <span class="n">node_conn_dict</span><span class="p">[(</span><span class="n">n0</span><span class="p">,</span> <span class="n">n1</span><span class="p">)]</span> <span class="o">=</span> <span class="p">(</span><span class="n">contyp</span><span class="p">,</span> <span class="n">conn</span><span class="p">[</span><span class="n">contyp</span><span class="p">])</span>
+                        <span class="n">node_conn_dict</span><span class="p">[(</span><span class="n">n1</span><span class="p">,</span> <span class="n">n0</span><span class="p">)]</span> <span class="o">=</span> <span class="p">(</span><span class="n">contyp</span><span class="p">,</span> <span class="n">conn</span><span class="p">[</span><span class="n">contyp</span><span class="p">])</span>
+                    <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">v1</span><span class="p">,</span> <span class="s2">&quot;columns&quot;</span><span class="p">):</span>
+                        <span class="k">for</span> <span class="n">col</span> <span class="ow">in</span> <span class="n">v1</span><span class="o">.</span><span class="n">columns</span><span class="p">:</span>
+                            <span class="c1"># Catches index &quot;atom&quot;, column &quot;atom1&quot;; does not catch atom10</span>
+                            <span class="k">if</span> <span class="n">name</span> <span class="o">==</span> <span class="n">col</span> <span class="ow">or</span> <span class="p">(</span><span class="n">name</span> <span class="o">==</span> <span class="n">col</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="ow">and</span> <span class="n">col</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">isdigit</span><span class="p">()):</span>
+                                <span class="n">contyp</span> <span class="o">=</span> <span class="s1">&#39;index-column&#39;</span>
+                                <span class="n">node_conn_dict</span><span class="p">[(</span><span class="n">n0</span><span class="p">,</span> <span class="n">n1</span><span class="p">)]</span> <span class="o">=</span> <span class="p">(</span><span class="n">contyp</span><span class="p">,</span> <span class="n">conn</span><span class="p">[</span><span class="n">contyp</span><span class="p">])</span>
+                                <span class="n">node_conn_dict</span><span class="p">[(</span><span class="n">n1</span><span class="p">,</span> <span class="n">n0</span><span class="p">)]</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39;column-index&#39;</span><span class="p">,</span> <span class="n">conn</span><span class="p">[</span><span class="n">contyp</span><span class="p">])</span>
+        <span class="n">g</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">Graph</span><span class="p">()</span>
+        <span class="n">g</span><span class="o">.</span><span class="n">add_nodes_from</span><span class="p">(</span><span class="n">node_size_dict</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
+        <span class="n">g</span><span class="o">.</span><span class="n">add_edges_from</span><span class="p">(</span><span class="n">node_conn_dict</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
+        <span class="n">node_sizes</span> <span class="o">=</span> <span class="p">[</span><span class="n">node_size_dict</span><span class="p">[</span><span class="n">node</span><span class="p">]</span> <span class="k">for</span> <span class="n">node</span> <span class="ow">in</span> <span class="n">g</span><span class="o">.</span><span class="n">nodes</span><span class="p">()]</span>
+        <span class="n">node_labels</span> <span class="o">=</span> <span class="p">{</span><span class="n">node</span><span class="p">:</span> <span class="s1">&#39;</span><span class="si">{}</span><span class="se">\n</span><span class="s1">(</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">node_class_name_dict</span><span class="p">[</span><span class="n">node</span><span class="p">])</span> <span class="k">for</span> <span class="n">node</span> <span class="ow">in</span> <span class="n">g</span><span class="o">.</span><span class="n">nodes</span><span class="p">()}</span>
+        <span class="n">node_colors</span> <span class="o">=</span> <span class="p">[</span><span class="n">node_type_dict</span><span class="p">[</span><span class="n">node</span><span class="p">][</span><span class="mi">1</span><span class="p">]</span> <span class="k">for</span> <span class="n">node</span> <span class="ow">in</span> <span class="n">g</span><span class="o">.</span><span class="n">nodes</span><span class="p">()]</span>
+        <span class="n">edge_colors</span> <span class="o">=</span> <span class="p">[</span><span class="n">node_conn_dict</span><span class="p">[</span><span class="n">edge</span><span class="p">][</span><span class="mi">1</span><span class="p">]</span> <span class="k">for</span> <span class="n">edge</span> <span class="ow">in</span> <span class="n">g</span><span class="o">.</span><span class="n">edges</span><span class="p">()]</span>
+        <span class="c1"># Build the figure and legends</span>
+        <span class="k">if</span> <span class="n">fig</span><span class="p">:</span>
+            <span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">figsize</span><span class="o">=</span><span class="n">figsize</span><span class="p">)</span>
+            <span class="n">ax</span><span class="o">.</span><span class="n">axis</span><span class="p">(</span><span class="s1">&#39;off&#39;</span><span class="p">)</span>
+            <span class="n">pos</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">spring_layout</span><span class="p">(</span><span class="n">g</span><span class="p">)</span>
+            <span class="n">nx</span><span class="o">.</span><span class="n">draw_networkx_nodes</span><span class="p">(</span><span class="n">g</span><span class="p">,</span> <span class="n">pos</span><span class="o">=</span><span class="n">pos</span><span class="p">,</span> <span class="n">ax</span><span class="o">=</span><span class="n">ax</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mf">0.7</span><span class="p">,</span> <span class="n">node_size</span><span class="o">=</span><span class="n">node_sizes</span><span class="p">,</span>
+                                   <span class="n">node_color</span><span class="o">=</span><span class="n">node_colors</span><span class="p">)</span>
+            <span class="n">nx</span><span class="o">.</span><span class="n">draw_networkx_labels</span><span class="p">(</span><span class="n">g</span><span class="p">,</span> <span class="n">pos</span><span class="o">=</span><span class="n">pos</span><span class="p">,</span> <span class="n">labels</span><span class="o">=</span><span class="n">node_labels</span><span class="p">,</span> <span class="n">font_size</span><span class="o">=</span><span class="mi">12</span><span class="p">,</span> <span class="n">ax</span><span class="o">=</span><span class="n">ax</span><span class="p">)</span>
+            <span class="n">nx</span><span class="o">.</span><span class="n">draw_networkx_edges</span><span class="p">(</span><span class="n">g</span><span class="p">,</span> <span class="n">pos</span><span class="o">=</span><span class="n">pos</span><span class="p">,</span> <span class="n">edge_color</span><span class="o">=</span><span class="n">edge_colors</span><span class="p">,</span> <span class="n">width</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">ax</span><span class="o">=</span><span class="n">ax</span><span class="p">)</span>
+            <span class="n">l1</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">legend</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">node_conn_dict</span><span class="o">.</span><span class="n">values</span><span class="p">()),</span> <span class="s1">&#39;Connection&#39;</span><span class="p">,</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="n">ax</span><span class="p">)</span>
+            <span class="n">_</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">legend</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">node_type_dict</span><span class="o">.</span><span class="n">values</span><span class="p">()),</span> <span class="s1">&#39;Data Type&#39;</span><span class="p">,</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mf">0.3</span><span class="p">),</span> <span class="n">ax</span><span class="p">)</span>
+            <span class="n">fig</span><span class="o">.</span><span class="n">gca</span><span class="p">()</span><span class="o">.</span><span class="n">add_artist</span><span class="p">(</span><span class="n">l1</span><span class="p">)</span>
+        <span class="n">g</span><span class="o">.</span><span class="n">edge_types</span> <span class="o">=</span> <span class="p">{</span><span class="n">node</span><span class="p">:</span> <span class="n">value</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="k">for</span> <span class="n">node</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">node_conn_dict</span><span class="o">.</span><span class="n">items</span><span class="p">()}</span>  <span class="c1"># Attached connection information to network graph</span>
+        <span class="k">return</span> <span class="n">g</span></div>
+
+<div class="viewcode-block" id="Container.save"><a class="viewcode-back" href="../../../../exatomic.exa.core.container.html#exatomic.exa.core.container.Container.save">[docs]</a>    <span class="k">def</span> <span class="nf">save</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">path</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">complevel</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">complib</span><span class="o">=</span><span class="s1">&#39;zlib&#39;</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Save the container as an HDF5 archive.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            path (str): Path where to save the container</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            savepath (str): Path where the container was saved</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">path</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">path</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">uuid</span> <span class="o">+</span> <span class="s1">&#39;.hdf5&#39;</span>
+        <span class="k">elif</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isdir</span><span class="p">(</span><span class="n">path</span><span class="p">):</span>
+            <span class="n">path</span> <span class="o">+=</span> <span class="n">os</span><span class="o">.</span><span class="n">sep</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">uuid</span> <span class="o">+</span> <span class="s1">&#39;.hdf5&#39;</span>
+        <span class="k">elif</span> <span class="ow">not</span> <span class="p">(</span><span class="n">path</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s1">&#39;.hdf5&#39;</span><span class="p">)</span> <span class="ow">or</span> <span class="n">path</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s1">&#39;.hdf&#39;</span><span class="p">)):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;File path must have a &quot;.hdf5&quot; or &quot;.hdf&quot; extension.&#39;</span><span class="p">)</span>
+        <span class="k">with</span> <span class="n">pd</span><span class="o">.</span><span class="n">HDFStore</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="s1">&#39;w&#39;</span><span class="p">,</span> <span class="n">complevel</span><span class="o">=</span><span class="n">complevel</span><span class="p">,</span> <span class="n">complib</span><span class="o">=</span><span class="n">complib</span><span class="p">)</span> <span class="k">as</span> <span class="n">store</span><span class="p">:</span>
+            <span class="n">store</span><span class="p">[</span><span class="s1">&#39;kwargs&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">()</span>
+            <span class="n">store</span><span class="o">.</span><span class="n">get_storer</span><span class="p">(</span><span class="s1">&#39;kwargs&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">attrs</span><span class="o">.</span><span class="n">metadata</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_rel</span><span class="p">()</span>
+            <span class="n">fc</span> <span class="o">=</span> <span class="mi">0</span>    <span class="c1"># Field counter (see special handling of fields below)</span>
+            <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">data</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_data</span><span class="p">()</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="s1">&#39;_revert_categories&#39;</span><span class="p">):</span>
+                    <span class="n">data</span><span class="o">.</span><span class="n">_revert_categories</span><span class="p">()</span>
+                <span class="n">name</span> <span class="o">=</span> <span class="n">name</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span> <span class="k">if</span> <span class="n">name</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s1">&#39;_&#39;</span><span class="p">)</span> <span class="k">else</span> <span class="n">name</span>
+                <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">Field</span><span class="p">):</span>    <span class="c1"># Fields are handled separately</span>
+                    <span class="n">fname</span> <span class="o">=</span> <span class="s1">&#39;FIELD</span><span class="si">{}</span><span class="s1">_&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">fc</span><span class="p">)</span> <span class="o">+</span> <span class="n">name</span> <span class="o">+</span> <span class="s1">&#39;/&#39;</span>
+                    <span class="n">store</span><span class="p">[</span><span class="n">fname</span> <span class="o">+</span> <span class="s1">&#39;data&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+                    <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">field</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">data</span><span class="o">.</span><span class="n">field_values</span><span class="p">):</span>
+                        <span class="n">ffname</span> <span class="o">=</span> <span class="n">fname</span> <span class="o">+</span> <span class="s1">&#39;values&#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">i</span><span class="p">)</span>
+                        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">field</span><span class="p">,</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">):</span>
+                            <span class="n">store</span><span class="p">[</span><span class="n">ffname</span><span class="p">]</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">(</span><span class="n">field</span><span class="p">)</span>
+                        <span class="k">else</span><span class="p">:</span>
+                            <span class="n">store</span><span class="p">[</span><span class="n">ffname</span><span class="p">]</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">field</span><span class="p">)</span>
+                    <span class="n">fc</span> <span class="o">+=</span> <span class="mi">1</span>
+                <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">Series</span><span class="p">):</span>
+                    <span class="n">s</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+                    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">data</span><span class="o">.</span><span class="n">dtype</span><span class="p">,</span> <span class="n">CategoricalDtype</span><span class="p">):</span>
+                        <span class="n">s</span> <span class="o">=</span> <span class="n">s</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="s1">&#39;O&#39;</span><span class="p">)</span>
+                    <span class="n">store</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">s</span>
+                <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">DataFrame</span><span class="p">):</span>
+                    <span class="n">store</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="s1">&#39;dtype&#39;</span><span class="p">)</span> <span class="ow">and</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">data</span><span class="o">.</span><span class="n">dtype</span><span class="p">,</span> <span class="n">CategoricalDtype</span><span class="p">):</span>
+                        <span class="n">data</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="s1">&#39;O&#39;</span><span class="p">)</span>
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="k">for</span> <span class="n">col</span> <span class="ow">in</span> <span class="n">data</span><span class="p">:</span>
+                            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="n">col</span><span class="p">]</span><span class="o">.</span><span class="n">dtype</span><span class="p">,</span> <span class="n">CategoricalDtype</span><span class="p">):</span>
+                                <span class="n">data</span><span class="p">[</span><span class="n">col</span><span class="p">]</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="n">col</span><span class="p">]</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="s1">&#39;O&#39;</span><span class="p">)</span>
+                    <span class="n">store</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">data</span>
+                <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="s1">&#39;_set_categories&#39;</span><span class="p">):</span>
+                    <span class="n">data</span><span class="o">.</span><span class="n">_set_categories</span><span class="p">()</span>
+        <span class="k">return</span> <span class="n">path</span></div>
+
+<div class="viewcode-block" id="Container.to_hdf"><a class="viewcode-back" href="../../../../exatomic.exa.core.container.html#exatomic.exa.core.container.Container.to_hdf">[docs]</a>    <span class="k">def</span> <span class="nf">to_hdf</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Alias of :func:`~exatomic.exa.core.container.Container`.&quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="Container.load"><a class="viewcode-back" href="../../../../exatomic.exa.core.container.html#exatomic.exa.core.container.Container.load">[docs]</a>    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">load</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">pkid_or_path</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Load a container object from a persistent location or file path.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            pkid_or_path: Integer pkid corresponding to the container table or file path</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            container: The saved container object</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">path</span> <span class="o">=</span> <span class="n">pkid_or_path</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isfile</span><span class="p">(</span><span class="n">path</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">FileNotFoundError</span><span class="p">(</span><span class="s1">&#39;File </span><span class="si">{}</span><span class="s1"> not found.&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">path</span><span class="p">))</span>
+        <span class="n">kwargs</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="n">fields</span> <span class="o">=</span> <span class="n">defaultdict</span><span class="p">(</span><span class="nb">dict</span><span class="p">)</span>
+        <span class="k">with</span> <span class="n">pd</span><span class="o">.</span><span class="n">HDFStore</span><span class="p">(</span><span class="n">path</span><span class="p">)</span> <span class="k">as</span> <span class="n">store</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">store</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+                <span class="k">if</span> <span class="s1">&#39;kwargs&#39;</span> <span class="ow">in</span> <span class="n">key</span><span class="p">:</span>
+                    <span class="n">kwargs</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">store</span><span class="o">.</span><span class="n">get_storer</span><span class="p">(</span><span class="n">key</span><span class="p">)</span><span class="o">.</span><span class="n">attrs</span><span class="o">.</span><span class="n">metadata</span><span class="p">)</span>
+                <span class="k">elif</span> <span class="s2">&quot;FIELD&quot;</span> <span class="ow">in</span> <span class="n">key</span><span class="p">:</span>
+                    <span class="n">name</span><span class="p">,</span> <span class="n">dname</span> <span class="o">=</span> <span class="s2">&quot;_&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">key</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;_&quot;</span><span class="p">)[</span><span class="mi">1</span><span class="p">:])</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;/&quot;</span><span class="p">)</span>
+                    <span class="n">dname</span> <span class="o">=</span> <span class="n">dname</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">&#39;values&#39;</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">)</span>
+                    <span class="n">fields</span><span class="p">[</span><span class="n">name</span><span class="p">][</span><span class="n">dname</span><span class="p">]</span> <span class="o">=</span> <span class="n">store</span><span class="p">[</span><span class="n">key</span><span class="p">]</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">name</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">key</span><span class="p">[</span><span class="mi">1</span><span class="p">:])</span>
+                    <span class="n">kwargs</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">store</span><span class="p">[</span><span class="n">key</span><span class="p">]</span>
+        <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">field_data</span> <span class="ow">in</span> <span class="n">fields</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="n">fps</span> <span class="o">=</span> <span class="n">field_data</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">&#39;data&#39;</span><span class="p">)</span>
+            <span class="n">kwargs</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="n">fps</span><span class="p">,</span> <span class="n">field_values</span><span class="o">=</span><span class="p">[</span><span class="n">field_data</span><span class="p">[</span><span class="nb">str</span><span class="p">(</span><span class="n">arr</span><span class="p">)]</span> <span class="k">for</span> <span class="n">arr</span> <span class="ow">in</span>
+                                                    <span class="nb">sorted</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="nb">int</span><span class="p">,</span> <span class="n">field_data</span><span class="o">.</span><span class="n">keys</span><span class="p">()))])</span>
+        <span class="k">return</span> <span class="bp">cls</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="Container.from_hdf"><a class="viewcode-back" href="../../../../exatomic.exa.core.container.html#exatomic.exa.core.container.Container.from_hdf">[docs]</a>    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">from_hdf</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Alias for :func:`~exatomic.exa.core.container.Container`.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">cls</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div>
+
+    <span class="k">def</span> <span class="nf">_rel</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">copy</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Get descriptive kwargs of the container (e.g. name, description, meta).</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">rel</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">obj</span> <span class="ow">in</span> <span class="nb">vars</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="p">(</span><span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">,</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">))</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">key</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s1">&#39;_&#39;</span><span class="p">):</span>
+                <span class="k">if</span> <span class="n">copy</span> <span class="ow">and</span> <span class="s1">&#39;id&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">key</span><span class="p">:</span>
+                    <span class="n">rel</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">deepcopy</span><span class="p">(</span><span class="n">obj</span><span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">rel</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">obj</span>
+        <span class="k">return</span> <span class="n">rel</span>
+
+    <span class="k">def</span> <span class="nf">_data</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">copy</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Get data kwargs of the container (i.e. dataframe and series objects).</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">data</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">obj</span> <span class="ow">in</span> <span class="nb">vars</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="p">(</span><span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">,</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">)):</span>
+                <span class="k">if</span> <span class="n">copy</span><span class="p">:</span>
+                    <span class="n">data</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">obj</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="n">deep</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">data</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">obj</span>
+        <span class="k">return</span> <span class="n">data</span>
+
+    <span class="k">def</span> <span class="fm">__delitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">key</span> <span class="ow">in</span> <span class="nb">vars</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+            <span class="k">del</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__dict__</span><span class="p">[</span><span class="n">key</span><span class="p">]</span>
+
+    <span class="k">def</span> <span class="nf">__sizeof__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Note that this function must return a Python integer.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="nb">int</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">info</span><span class="p">()[</span><span class="s1">&#39;size&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">sum</span><span class="p">())</span>
+
+    <span class="k">def</span> <span class="fm">__getitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">):</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+            <span class="k">return</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="p">(</span><span class="nb">int</span><span class="p">,</span> <span class="nb">slice</span><span class="p">,</span> <span class="nb">list</span><span class="p">))</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">_cardinal</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">slice_naive</span><span class="p">(</span><span class="n">key</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="p">(</span><span class="nb">int</span><span class="p">,</span> <span class="nb">slice</span><span class="p">,</span> <span class="nb">list</span><span class="p">))</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">_cardinal</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">slice_cardinal</span><span class="p">(</span><span class="n">key</span><span class="p">)</span>
+        <span class="k">raise</span> <span class="ne">KeyError</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">description</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">meta</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">uuid</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;adding </span><span class="si">{}</span><span class="s1"> attrs&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">kwargs</span><span class="p">)))</span>
+        <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="nb">setattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="n">name</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">description</span> <span class="o">=</span> <span class="n">description</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">meta</span> <span class="o">=</span> <span class="n">meta</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">uuid</span> <span class="o">=</span> <span class="n">uuid</span>
+        <span class="k">if</span> <span class="n">uuid</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">uuid</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">uuid4</span><span class="p">())</span></div>
+
+
+<div class="viewcode-block" id="TypedMeta"><a class="viewcode-back" href="../../../../exatomic.exa.core.container.html#exatomic.exa.core.container.TypedMeta">[docs]</a><span class="k">class</span> <span class="nc">TypedMeta</span><span class="p">(</span><span class="nb">type</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    This metaclass creates statically typed class attributes using the property</span>
+<span class="sd">    framework.</span>
+
+<span class="sd">    .. code-block:: Python</span>
+
+<span class="sd">        class TestMeta(TypedMeta):</span>
+<span class="sd">            attr1 = (int, float)</span>
+<span class="sd">            attr2 = DataFrame</span>
+
+<span class="sd">        class TestClass(metaclass=TestMeta):</span>
+<span class="sd">            def __init__(self, attr1, attr2):</span>
+<span class="sd">                self.attr1 = attr1</span>
+<span class="sd">                self.attr2 = attr2</span>
+
+<span class="sd">    The above code dynamically creates code that looks like the following:</span>
+
+<span class="sd">    .. code-block:: Python</span>
+
+<span class="sd">        class TestClass:</span>
+<span class="sd">            @property</span>
+<span class="sd">            def attr1(self):</span>
+<span class="sd">                return self._attr1</span>
+
+<span class="sd">            @attr1.setter</span>
+<span class="sd">            def attr1(self, obj):</span>
+<span class="sd">                if not isinstance(obj, (int, float)):</span>
+<span class="sd">                    raise TypeError(&#39;attr1 must be int&#39;)</span>
+<span class="sd">                self._attr1 = obj</span>
+
+<span class="sd">            @attr1.deleter</span>
+<span class="sd">            def attr1(self):</span>
+<span class="sd">                del self._attr1</span>
+
+<span class="sd">            @property</span>
+<span class="sd">            def attr2(self):</span>
+<span class="sd">                return self._attr2</span>
+
+<span class="sd">            @attr2.setter</span>
+<span class="sd">            def attr2(self, obj):</span>
+<span class="sd">                if not isinstance(obj, DataFrame):</span>
+<span class="sd">                    raise TypeError(&#39;attr2 must be DataFrame&#39;)</span>
+<span class="sd">                self._attr2 = obj</span>
+
+<span class="sd">            @attr2.deleter</span>
+<span class="sd">            def attr2(self):</span>
+<span class="sd">                del self._attr2</span>
+
+<span class="sd">            def __init__(self, attr1, attr2):</span>
+<span class="sd">                self.attr1 = attr1</span>
+<span class="sd">                self.attr2 = attr2</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+<div class="viewcode-block" id="TypedMeta.create_property"><a class="viewcode-back" href="../../../../exatomic.exa.core.container.html#exatomic.exa.core.container.TypedMeta.create_property">[docs]</a>    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">create_property</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">ptype</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Creates a custom property with a getter that performs computing</span>
+<span class="sd">        functionality (if available) and raise a type error if setting</span>
+<span class="sd">        with the wrong type.</span>
+
+<span class="sd">        Note:</span>
+<span class="sd">            By default, the setter attempts to convert the object to the</span>
+<span class="sd">            correct type; a type error is raised if this fails.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">pname</span> <span class="o">=</span> <span class="s1">&#39;_&#39;</span> <span class="o">+</span> <span class="n">name</span>
+        <span class="k">def</span> <span class="nf">getter</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+            <span class="c1"># This will be where the data is store (e.g. self._name)</span>
+            <span class="c1"># This is the default property &quot;getter&quot; for container data objects.</span>
+            <span class="c1"># If the property value is None, this function will check for a</span>
+            <span class="c1"># convenience method with the signature, self.compute_name() and call</span>
+            <span class="c1"># it prior to returning the property value.</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">pname</span><span class="p">)</span> <span class="ow">and</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_getter_prefix</span><span class="si">}{</span><span class="n">pname</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">):</span>
+                <span class="bp">self</span><span class="p">[</span><span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_getter_prefix</span><span class="si">}{</span><span class="n">pname</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">]()</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">pname</span><span class="p">):</span>
+                <span class="k">raise</span> <span class="ne">AttributeError</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Please compute or set </span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s1"> first.&#39;</span><span class="p">)</span>
+            <span class="k">return</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">pname</span><span class="p">)</span>
+
+        <span class="k">def</span> <span class="nf">setter</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">obj</span><span class="p">):</span>
+            <span class="c1"># This is the default property &quot;setter&quot; for container data objects.</span>
+            <span class="c1"># Prior to setting a property value, this function checks that the</span>
+            <span class="c1"># object&#39;s type is correct.</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="n">ptype</span><span class="p">):</span>
+                <span class="k">try</span><span class="p">:</span>
+                    <span class="n">obj</span> <span class="o">=</span> <span class="n">ptype</span><span class="p">(</span><span class="n">obj</span><span class="p">)</span>
+                <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
+                    <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s1">&#39;Must be able to convert object </span><span class="si">{0}</span><span class="s1"> to </span><span class="si">{1}</span><span class="s1"> (or must be of type </span><span class="si">{1}</span><span class="s1">)&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">ptype</span><span class="p">))</span>
+            <span class="nb">setattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">pname</span><span class="p">,</span> <span class="n">obj</span><span class="p">)</span>
+
+        <span class="k">def</span> <span class="nf">deleter</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+            <span class="c1"># Deletes the property&#39;s value.</span>
+            <span class="k">del</span> <span class="bp">self</span><span class="p">[</span><span class="n">pname</span><span class="p">]</span>
+
+        <span class="k">return</span> <span class="nb">property</span><span class="p">(</span><span class="n">getter</span><span class="p">,</span> <span class="n">setter</span><span class="p">,</span> <span class="n">deleter</span><span class="p">)</span></div>
+
+    <span class="k">def</span> <span class="fm">__new__</span><span class="p">(</span><span class="n">mcs</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">bases</span><span class="p">,</span> <span class="n">clsdict</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Modification of the class definition occurs here; we iterate over all</span>
+<span class="sd">        statically typed attributes and attach their property (see</span>
+<span class="sd">        :func:`~exatomic.exa.container.TypedMeta.create_property`) definition, returning</span>
+<span class="sd">        the new class definition.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="nb">vars</span><span class="p">(</span><span class="n">mcs</span><span class="p">)</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="nb">type</span><span class="p">)</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">k</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s1">&#39;_&#39;</span><span class="p">):</span>
+                <span class="n">clsdict</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="n">mcs</span><span class="o">.</span><span class="n">create_property</span><span class="p">(</span><span class="n">k</span><span class="p">,</span> <span class="n">v</span><span class="p">)</span>
+        <span class="k">return</span> <span class="nb">super</span><span class="p">(</span><span class="n">TypedMeta</span><span class="p">,</span> <span class="n">mcs</span><span class="p">)</span><span class="o">.</span><span class="fm">__new__</span><span class="p">(</span><span class="n">mcs</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">bases</span><span class="p">,</span> <span class="n">clsdict</span><span class="p">)</span></div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright .
+      <span class="lastupdated">Last updated on Apr 21, 2023.
+      </span></p>
+  </div>
+
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
