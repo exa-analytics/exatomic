@@ -605,7 +605,7 @@ class Output(six.with_metaclass(OutMeta, Editor)):
                 block = pd.read_csv(StringIO('\n'.join(collated)),
                                     delim_whitespace=True, names=range(ncols))
             alps = (pd.concat([block[1]] * nbas).reset_index(drop=True)
-                    .str.replace('D', 'E').astype(np.float64))
+                    .astype(str).str.replace('D', 'E').astype(np.float64))
             ds = block[list(range(2, nbas + 2))].unstack().reset_index(drop=True)
             pdf = pd.concat([alps, ds], axis=1)
             pdf.columns = ['alpha', 'd']
