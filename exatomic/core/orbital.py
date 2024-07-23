@@ -384,7 +384,7 @@ class MOMatrix(DataFrame):
                 nchi = (irreps.chi.max() + 1).sum()
                 cmat = np.zeros((nchi, norb))
                 for irrep, grp in irreps:
-                    piv = grp.pivot('chi', 'orbital', mocoefs)
+                    piv = grp.pivot_table(index='chi', columns='orbital', values=mocoefs)
                     ii, jj = piv.shape
                     cmat[i : i + ii, j : j + jj] = piv.values
                     i += ii
